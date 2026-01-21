@@ -139,4 +139,3 @@ impl From<&GameState> for GameView {
         }
     }
 }
-

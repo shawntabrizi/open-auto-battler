@@ -25,23 +25,28 @@ pub struct UnitView {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload", rename_all = "camelCase")]
 pub enum CombatEvent {
+    #[serde(rename_all = "camelCase")]
     AbilityTrigger {
         source_instance_id: UnitInstanceId,
         ability_name: String,
     },
+    #[serde(rename_all = "camelCase")]
     Clash {
         p_dmg: i32,
         e_dmg: i32,
     },
+    #[serde(rename_all = "camelCase")]
     DamageTaken {
         target_instance_id: UnitInstanceId,
         team: String, // "PLAYER" or "ENEMY"
         remaining_hp: i32,
     },
+    #[serde(rename_all = "camelCase")]
     UnitDeath {
         team: String, // "PLAYER" or "ENEMY"
         new_board_state: Vec<UnitView>,
     },
+    #[serde(rename_all = "camelCase")]
     BattleEnd {
         result: String, // "VICTORY", "DEFEAT", "DRAW"
     },
