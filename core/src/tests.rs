@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use crate::battle::{BattleResult, BattleSimulator, CombatUnit};
     use crate::state::*;
     use crate::types::*;
 
@@ -54,82 +53,41 @@ mod tests {
 
     #[test]
     fn test_combat_deterministic() {
-        // Run the same battle twice and verify results match
-        let player_units = vec![
-            CombatUnit {
-                name: "Warrior".to_string(),
-                attack: 3,
-                health: 5,
-                max_health: 5,
-            },
-            CombatUnit {
-                name: "Archer".to_string(),
-                attack: 2,
-                health: 3,
-                max_health: 3,
-            },
+        let player_board = vec![
+            BoardUnit::from_card(UnitCard::new(1, "p1", "Warrior", 3, 5, 0, 0)),
+            BoardUnit::from_card(UnitCard::new(2, "p2", "Archer", 2, 3, 0, 0)),
         ];
 
-        let enemy_units = vec![
-            CombatUnit {
-                name: "Goblin".to_string(),
-                attack: 2,
-                health: 4,
-                max_health: 4,
-            },
-            CombatUnit {
-                name: "Orc".to_string(),
-                attack: 3,
-                health: 3,
-                max_health: 3,
-            },
+        let enemy_board = vec![
+            BoardUnit::from_card(UnitCard::new(3, "e1", "Goblin", 2, 4, 0, 0)),
+            BoardUnit::from_card(UnitCard::new(4, "e2", "Orc", 3, 3, 0, 0)),
         ];
 
-        let sim1 = BattleSimulator::new(player_units.clone(), enemy_units.clone());
-        let (result1, events1, _) = sim1.simulate();
+        let events1 = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
+        let events2 = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
 
-        let sim2 = BattleSimulator::new(player_units, enemy_units);
-        let (result2, events2, _) = sim2.simulate();
+        assert_eq!(events1.len(), events2.len());
 
-        // Results should be identical
-        assert_eq!(events1.len(), events2.len(), "Event counts should match");
-
-        match (&result1, &result2) {
-            (BattleResult::Victory { remaining: r1 }, BattleResult::Victory { remaining: r2 }) => {
-                assert_eq!(r1, r2, "Victory remaining counts should match");
-            }
-            (BattleResult::Defeat { remaining: r1 }, BattleResult::Defeat { remaining: r2 }) => {
-                assert_eq!(r1, r2, "Defeat remaining counts should match");
-            }
-            (BattleResult::Draw, BattleResult::Draw) => {}
-            _ => panic!("Results don't match"),
+        for (i, event1) in events1.iter().enumerate() {
+            let event2 = &events2[i];
+            // Using a debug print comparison because of complex enums
+            assert_eq!(format!("{:?}", event1), format!("{:?}", event2));
         }
     }
 
     #[test]
     fn test_combat_simultaneous_damage() {
-        // Both units should damage each other simultaneously
-        let player_units = vec![CombatUnit {
-            name: "Player".to_string(),
-            attack: 10,
-            health: 5,
-            max_health: 5,
-        }];
+        let player_board = vec![BoardUnit::from_card(UnitCard::new(1, "p1", "Glass Cannon", 10, 5, 0, 0))];
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(2, "e1", "Glass Cannon", 10, 5, 0, 0))];
 
-        let enemy_units = vec![CombatUnit {
-            name: "Enemy".to_string(),
-            attack: 10,
-            health: 5,
-            max_health: 5,
-        }];
+        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 123);
 
-        let sim = BattleSimulator::new(player_units, enemy_units);
-        let (result, _events, _) = sim.simulate();
-
-        // Both should die simultaneously = draw
-        match result {
-            BattleResult::Draw => {}
-            _ => panic!("Expected draw when both units kill each other simultaneously"),
+        let last_event = events.last().unwrap();
+        match last_event {
+            crate::battle::CombatEvent::BattleEnd { result } => {
+                assert_eq!(result, "DRAW");
+            }
+            _ => panic!("Last event was not BattleEnd"),
         }
     }
 
@@ -155,41 +113,6 @@ mod tests {
 
         assert_eq!(state.find_empty_board_slot(), None);
     }
-
-    #[test]
-    fn test_battle_simulation_no_side_effects() {
-        // Test that battle simulation doesn't modify the input units
-        let card1 = UnitCard::new(1, "warrior", "Warrior", 3, 10, 5, 2);
-        let card2 = UnitCard::new(2, "archer", "Archer", 2, 8, 3, 1);
-
-        let player_units = vec![
-            CombatUnit::from_board_unit(&BoardUnit::from_card(card1.clone())),
-            CombatUnit::from_board_unit(&BoardUnit::from_card(card2.clone())),
-        ];
-        let enemy_units = vec![
-            CombatUnit::from_board_unit(&BoardUnit::from_card(card1.clone())),
-        ];
-
-        // Record original state
-        let original_player_health: Vec<i32> = player_units.iter().map(|u| u.health).collect();
-        let original_enemy_health: Vec<i32> = enemy_units.iter().map(|u| u.health).collect();
-
-        // Run battle simulation
-        let simulator = BattleSimulator::new(player_units.clone(), enemy_units.clone());
-        let (_result, _events, _final_units) = simulator.simulate();
-
-        // Original units should be unchanged
-        for (i, unit) in player_units.iter().enumerate() {
-            assert_eq!(unit.health, original_player_health[i],
-                "Player unit {} health was modified during simulation", i);
-        }
-        for (i, unit) in enemy_units.iter().enumerate() {
-            assert_eq!(unit.health, original_enemy_health[i],
-                "Enemy unit {} health was modified during simulation", i);
-        }
-    }
-
-
 
     #[test]
     fn test_board_unit_health_tracking() {

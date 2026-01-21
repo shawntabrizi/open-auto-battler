@@ -1,4 +1,3 @@
-use crate::battle::BattleResult;
 use crate::state::*;
 use crate::types::*;
 use serde::{Deserialize, Serialize};
@@ -141,31 +140,3 @@ impl From<&GameState> for GameView {
     }
 }
 
-/// Battle result view for the UI
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BattleResultView {
-    pub result: String, // "victory", "defeat", "draw"
-    pub player_remaining: usize,
-    pub enemy_remaining: usize,
-}
-
-impl From<&BattleResult> for BattleResultView {
-    fn from(result: &BattleResult) -> Self {
-        Self {
-            result: match result {
-                BattleResult::Victory { .. } => "victory".to_string(),
-                BattleResult::Defeat { .. } => "defeat".to_string(),
-                BattleResult::Draw => "draw".to_string(),
-            },
-            player_remaining: match result {
-                BattleResult::Victory { remaining } => *remaining,
-                _ => 0,
-            },
-            enemy_remaining: match result {
-                BattleResult::Defeat { remaining } => *remaining,
-                _ => 0,
-            },
-        }
-    }
-}

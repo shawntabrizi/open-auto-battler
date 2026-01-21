@@ -89,3 +89,36 @@ body {
 .damage-flash {
   animation: damage-flash 0.3s ease-in-out;
 }
+
+@layer utilities {
+  .clash-bump-right {
+    animation: bump-right 0.3s ease-out;
+  }
+  .clash-bump-left {
+    animation: bump-left 0.3s ease-out;
+  }
+  @keyframes bump-right {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(10px); }
+  }
+  @keyframes bump-left {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-10px); }
+  }
+
+  .animate-float-up {
+    animation: float-up 0.8s ease-out forwards;
+  }
+  @keyframes float-up {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-40px) scale(1.2); opacity: 0; }
+  }
+
+  .animate-fade-in-out {
+    animation: fade-in-out 0.8s ease-out forwards;
+  }
+  @keyframes fade-in-out {
+    0%, 100% { opacity: 0; transform: translateY(0); }
+    20%, 80% { opacity: 1; transform: translateY(-10px); }
+  }
+}

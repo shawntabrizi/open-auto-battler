@@ -5,7 +5,6 @@ mod state;
 mod engine;
 mod view;
 mod battle;
-mod abilities;
 mod opponents;
 mod log;
 

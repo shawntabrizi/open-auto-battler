@@ -58,18 +58,12 @@ export interface GameView {
   canAfford: boolean[];
 }
 
-// Combat events
-export type Side = 'player' | 'enemy';
+//--- NEW BATTLE REPLAY TYPES ---
 
-export interface CombatTarget {
-  side: Side;
-  index: number;
-  name: string;
-}
-
-export interface CombatUnitInfo {
-  name: string;
+export interface UnitView {
+  instanceId: string;
   templateId: string;
+  name:string;
   attack: number;
   health: number;
   maxHealth: number;
@@ -77,24 +71,17 @@ export interface CombatUnitInfo {
 }
 
 export type CombatEvent =
-  | { type: 'battleStart'; playerUnits: CombatUnitInfo[]; enemyUnits: CombatUnitInfo[] }
-  | { type: 'unitsClash'; player: CombatTarget; enemy: CombatTarget }
-  | { type: 'damageDealt'; target: CombatTarget; amount: number; newHealth: number }
-  | { type: 'unitDied'; target: CombatTarget }
-  | { type: 'unitsSlide'; side: Side }
-  | { type: 'battleEnd'; result: string };
+  | { type: 'abilityTrigger'; payload: { sourceInstanceId: string; abilityName: string; } }
+  | { type: 'clash'; payload: { pDmg: number; eDmg: number; } }
+  | { type: 'damageTaken'; payload: { targetInstanceId: string; team: 'PLAYER' | 'ENEMY'; remainingHp: number; } }
+  | { type: 'unitDeath'; payload: { team: 'PLAYER' | 'ENEMY'; newBoardState: UnitView[]; } }
+  | { type: 'battleEnd'; payload: { result: 'VICTORY' | 'DEFEAT' | 'DRAW'; } };
 
-export interface BattleResultView {
-  result: 'victory' | 'defeat' | 'draw';
-  playerRemaining: number;
-  enemyRemaining: number;
-}
 
 export interface BattleOutput {
   events: CombatEvent[];
-  result: BattleResultView;
-  initialPlayerUnits: CombatUnitInfo[];
-  initialEnemyUnits: CombatUnitInfo[];
+  initialPlayerUnits: UnitView[];
+  initialEnemyUnits: UnitView[];
 }
 
 // Selection state for UI

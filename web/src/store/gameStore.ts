@@ -19,58 +19,23 @@ interface GameStore {
   error: string | null;
   selection: Selection | null;
   showBattleOverlay: boolean;
-  currentBattleEventIndex: number;
 
   // Actions
   init: () => Promise<void>;
   pitchShopCard: (index: number) => void;
   buyCard: (shopIndex: number) => void;
   toggleFreeze: (shopIndex: number) => void;
-
   swapBoardPositions: (slotA: number, slotB: number) => void;
   pitchBoardUnit: (boardSlot: number) => void;
   endTurn: () => void;
   continueAfterBattle: () => void;
   newRun: () => void;
   setSelection: (selection: Selection | null) => void;
-  advanceBattleEvent: () => void;
   closeBattleOverlay: () => void;
 }
 
 // Module-level state to prevent double initialization
-let wasmModule: WasmModule | null = null;
 let wasmInitialized = false;
-let initPromise: Promise<WasmModule> | null = null;
-
-// Initialize WASM module once
-async function initWasm(): Promise<WasmModule> {
-  // If already initializing, return the existing promise
-  if (initPromise) {
-    return initPromise;
-  }
-
-  // If already initialized, return the module
-  if (wasmInitialized && wasmModule) {
-    return wasmModule;
-  }
-
-  // Start initialization
-  initPromise = (async () => {
-    const wasm = await import('manalimit-core') as unknown as WasmModule;
-
-    // Only call default() once to initialize the WASM binary
-    if (!wasmInitialized) {
-      await wasm.default();
-      wasmInitialized = true;
-      console.log('WASM binary initialized');
-    }
-
-    wasmModule = wasm;
-    return wasm;
-  })();
-
-  return initPromise;
-}
 
 export const useGameStore = create<GameStore>((set, get) => ({
   // Initial state
@@ -81,36 +46,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   error: null,
   selection: null,
   showBattleOverlay: false,
-  currentBattleEventIndex: 0,
 
   // Initialize WASM
   init: async () => {
-    // If already have an engine, don't reinitialize
-    const currentEngine = get().engine;
-    if (currentEngine) {
-      console.log('Engine already exists, skipping init');
-      return;
-    }
+    if (get().engine) return;
 
     try {
       set({ isLoading: true, error: null });
 
-      // Get or initialize the WASM module
-      const wasm = await initWasm();
+      const wasm = await import('manalimit-core') as unknown as WasmModule;
+      if (!wasmInitialized) {
+        await wasm.default();
+        wasmInitialized = true;
+      }
 
-      // Create engine instance
       const engine = new wasm.GameEngine();
-      const view = engine.get_view();
-
-      console.log('Raw view from WASM:', view);
-      console.log('View type:', typeof view);
-      console.log('View keys:', view ? Object.keys(view) : 'null');
-      console.log('View.shop:', view?.shop);
-
-      console.log('View.board:', view?.board);
-      console.log('View JSON stringified:', JSON.stringify(view, null, 2));
-
-      set({ engine, view, isLoading: false });
+      set({ engine, view: engine.get_view(), isLoading: false });
 
       console.log('WASM initialized:', wasm.greet());
     } catch (err) {
@@ -154,10 +105,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   // Board management
-
-
-
-
   swapBoardPositions: (slotA: number, slotB: number) => {
     const { engine } = get();
     if (!engine) return;
@@ -180,8 +127,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-
-
   // Turn management
   endTurn: () => {
     const { engine } = get();
@@ -194,7 +139,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         battleOutput,
         selection: null,
         showBattleOverlay: true,
-        currentBattleEventIndex: 0,
       });
     } catch (err) {
       console.error('Failed to end turn:', err);
@@ -210,7 +154,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         view: engine.get_view(),
         showBattleOverlay: false,
         battleOutput: null,
-        currentBattleEventIndex: 0,
       });
     } catch (err) {
       console.error('Failed to continue:', err);
@@ -227,7 +170,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         battleOutput: null,
         selection: null,
         showBattleOverlay: false,
-        currentBattleEventIndex: 0,
       });
     } catch (err) {
       console.error('Failed to start new run:', err);
@@ -237,41 +179,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // UI state
   setSelection: (selection: Selection | null) => {
     set({ selection });
-  },
-
-  advanceBattleEvent: () => {
-    const { battleOutput, currentBattleEventIndex } = get();
-    if (!battleOutput) return;
-
-    const events = battleOutput.events;
-    const currentEvent = events[currentBattleEventIndex];
-
-    if (!currentEvent) return;
-
-    // For UnitsClash events, advance to show all related damage/death events at once
-    if (currentEvent.type === 'unitsClash') {
-      // Find the end of this combat round (next unitsClash or battleEnd)
-      let nextIndex = currentBattleEventIndex + 1;
-      while (nextIndex < events.length) {
-        const nextEvent = events[nextIndex];
-        if (nextEvent.type === 'unitsClash' || nextEvent.type === 'battleEnd') {
-          break;
-        }
-        nextIndex++;
-      }
-
-      // Advance to show all events in this combat round
-      if (nextIndex < events.length) {
-        set({ currentBattleEventIndex: nextIndex });
-      } else {
-        set({ currentBattleEventIndex: events.length - 1 });
-      }
-    } else {
-      // For other events, advance normally
-      if (currentBattleEventIndex < events.length - 1) {
-        set({ currentBattleEventIndex: currentBattleEventIndex + 1 });
-      }
-    }
   },
 
   closeBattleOverlay: () => {
