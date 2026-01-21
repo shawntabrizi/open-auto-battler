@@ -102,6 +102,7 @@ export function Arena() {
               key={unit.id}
               card={unit}
               showCost={false}
+              showPitch={true}
               isSelected={selection?.type === 'board' && selection.index === arrayIndex}
               onClick={() => handleBoardSlotClick(arrayIndex)}
               draggable={true}

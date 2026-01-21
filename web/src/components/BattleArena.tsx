@@ -56,7 +56,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
   useEffect(() => {
     const processNextEvent = () => {
       if (eventIndex >= battleOutput.events.length) {
-        console.log({ battleOutput })
+        console.log({ battleOutput });
         onBattleEnd();
         return;
       }
@@ -171,6 +171,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
               pitchValue: 0,
             }}
             showCost={false}
+            showPitch={false}
             isSelected={false}
           />
         </div>

@@ -6,6 +6,7 @@ interface UnitCardProps {
   isSelected?: boolean;
   onClick?: () => void;
   showCost?: boolean;
+  showPitch?: boolean;
   frozen?: boolean;
   canAfford?: boolean;
   draggable?: boolean;
@@ -20,6 +21,7 @@ export function UnitCard({
   isSelected = false,
   onClick,
   showCost = true,
+  showPitch = true,
   frozen = false,
   canAfford = true,
   draggable = false,
@@ -94,9 +96,11 @@ export function UnitCard({
       )}
 
       {/* Pitch value badge (top right) */}
-      <div className="absolute -top-2 -right-2 w-6 h-6 bg-pitch-red rounded-full flex items-center justify-center text-xs font-bold border-2 border-red-300">
-        {card.pitchValue}
-      </div>
+      {showPitch && (
+        <div className="absolute -top-2 -right-2 w-6 h-6 bg-pitch-red rounded-full flex items-center justify-center text-xs font-bold border-2 border-red-300">
+          {card.pitchValue}
+        </div>
+      )}
 
       {/* Frozen indicator */}
       {frozen && (

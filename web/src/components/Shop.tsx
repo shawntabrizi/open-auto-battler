@@ -106,6 +106,7 @@ export function Shop() {
                   key={slot.card!.id}
                   card={slot.card!}
                   showCost={true}
+                  showPitch={true}
                   frozen={slot.frozen}
                   canAfford={view.canAfford[i]}
                   isSelected={selection?.type === 'shop' && selection.index === i}
