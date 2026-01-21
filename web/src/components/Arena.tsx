@@ -93,6 +93,8 @@ export function Arena() {
               draggable={true}
               onDragStart={(e) => handleDragStart(e, arrayIndex)}
               onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, arrayIndex)}
             />
           ) : (
             <EmptySlot

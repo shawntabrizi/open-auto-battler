@@ -11,6 +11,8 @@ interface UnitCardProps {
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent) => void;
   onDragEnd?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
 }
 
 export function UnitCard({
@@ -23,6 +25,8 @@ export function UnitCard({
   draggable = false,
   onDragStart,
   onDragEnd,
+  onDragOver,
+  onDrop,
 }: UnitCardProps) {
   const [isDragging, setIsDragging] = React.useState(false);
 
@@ -47,6 +51,8 @@ export function UnitCard({
       draggable={draggable}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
       className={`
         card relative w-24 h-32 ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none bg-card-bg rounded-lg border-2 border-gray-600 p-2 transition-all duration-200
         ${isSelected ? 'card-selected ring-2 ring-yellow-400' : ''}
