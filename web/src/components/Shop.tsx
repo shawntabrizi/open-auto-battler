@@ -1,6 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import React from 'react';
-import { UnitCard, EmptySlot } from './UnitCard';
+import { UnitCard } from './UnitCard';
 
 export function Shop() {
   const { view, selection, setSelection, pitchShopCard, buyCard, toggleFreeze, pitchBoardUnit } = useGameStore();
@@ -99,12 +99,14 @@ export function Shop() {
             <span className="text-xs text-gray-500">({view.deckCount} cards in deck)</span>
           </div>
 
-          <div className="flex gap-3">
-             {view.shop.map((slot, i) => (
-               slot.card ? (
+           <div className="flex gap-3">
+             {view.shop
+               .map((slot, i) => ({ slot, index: i }))
+               .filter(({ slot }) => slot.card) // Only show slots with cards
+               .map(({ slot, index: i }) => (
                  <UnitCard
-                   key={slot.card.id}
-                   card={slot.card}
+                   key={slot.card!.id}
+                   card={slot.card!}
                    showCost={true}
                    frozen={slot.frozen}
                    canAfford={view.canAfford[i]}
@@ -114,11 +116,8 @@ export function Shop() {
                    onDragStart={(e) => handleShopDragStart(e, i)}
                    onDragEnd={handleShopDragEnd}
                  />
-               ) : (
-                 <EmptySlot key={`empty-${i}`} label="Empty" />
-               )
-             ))}
-          </div>
+               ))}
+           </div>
 
           {/* Action buttons for selected shop card */}
           {selection?.type === 'shop' && view.shop[selection.index]?.card && (
