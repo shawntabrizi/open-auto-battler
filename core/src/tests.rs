@@ -157,6 +157,39 @@ mod tests {
     }
 
     #[test]
+    fn test_battle_simulation_no_side_effects() {
+        // Test that battle simulation doesn't modify the input units
+        let card1 = UnitCard::new(1, "warrior", "Warrior", 3, 10, 5, 2);
+        let card2 = UnitCard::new(2, "archer", "Archer", 2, 8, 3, 1);
+
+        let player_units = vec![
+            CombatUnit::from_board_unit(&BoardUnit::from_card(card1.clone())),
+            CombatUnit::from_board_unit(&BoardUnit::from_card(card2.clone())),
+        ];
+        let enemy_units = vec![
+            CombatUnit::from_board_unit(&BoardUnit::from_card(card1.clone())),
+        ];
+
+        // Record original state
+        let original_player_health: Vec<i32> = player_units.iter().map(|u| u.health).collect();
+        let original_enemy_health: Vec<i32> = enemy_units.iter().map(|u| u.health).collect();
+
+        // Run battle simulation
+        let simulator = BattleSimulator::new(player_units.clone(), enemy_units.clone());
+        let (_result, _events, _final_units) = simulator.simulate();
+
+        // Original units should be unchanged
+        for (i, unit) in player_units.iter().enumerate() {
+            assert_eq!(unit.health, original_player_health[i],
+                "Player unit {} health was modified during simulation", i);
+        }
+        for (i, unit) in enemy_units.iter().enumerate() {
+            assert_eq!(unit.health, original_enemy_health[i],
+                "Enemy unit {} health was modified during simulation", i);
+        }
+    }
+
+    #[test]
     fn test_board_unit_health_tracking() {
         let card = UnitCard::new(1, "warrior", "Warrior", 3, 10, 5, 2);
         let mut unit = BoardUnit::from_card(card);

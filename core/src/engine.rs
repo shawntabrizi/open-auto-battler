@@ -656,16 +656,9 @@ impl GameEngine {
             }
         }
 
-        // Update board units with final health from battle (keep dead units)
-        for (i, final_unit) in final_player_units.iter().enumerate() {
-            if let Some(board_unit) = self.state.board.get_mut(i) {
-                if let Some(unit) = board_unit {
-                    unit.current_health = final_unit.health.max(0); // Ensure health doesn't go below 0
-                    log::info(&format!("   Updated {} health to {}", unit.card.name, unit.current_health));
-                }
-            }
-        }
-        log::info("   Board updated with battle results");
+        // Reset board to original state - no permanent battle effects
+        // Just like Super Auto Pets, battles don't damage your actual units
+        log::info("   Board reset - battles have no permanent effects");
 
         // Store battle output for UI playback
         self.last_battle_output = Some(BattleOutput {

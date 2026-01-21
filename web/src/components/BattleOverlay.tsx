@@ -25,21 +25,28 @@ export function BattleOverlay() {
   const currentEvent = battleOutput.events[currentBattleEventIndex];
   const isLastEvent = currentBattleEventIndex >= battleOutput.events.length - 1;
 
-  // Calculate current unit states based on battle events
+  // Calculate current unit states based on battle events (Super Auto Pets style)
   const calculateCurrentUnits = () => {
-    const playerUnits = battleOutput.playerUnits.map(unit => ({ ...unit }));
-    const enemyUnits = battleOutput.enemyUnits.map(unit => ({ ...unit }));
+    const playerUnits = [...battleOutput.playerUnits];
+    const enemyUnits = [...battleOutput.enemyUnits];
 
-    // Process all events up to current index to get current health
+    // Process all events up to current index
     for (let i = 0; i <= currentBattleEventIndex; i++) {
       const event = battleOutput.events[i];
       if (event.type === 'damageDealt') {
         const units = event.target.side === 'player' ? playerUnits : enemyUnits;
-        if (units[event.target.index]) {
-          units[event.target.index] = {
-            ...units[event.target.index],
+        // Update health at the current front position
+        if (units[0]) {
+          units[0] = {
+            ...units[0],
             health: event.newHealth
           };
+        }
+      } else if (event.type === 'unitDied') {
+        const units = event.target.side === 'player' ? playerUnits : enemyUnits;
+        // Remove dead unit from front (they slide forward)
+        if (units.length > 0) {
+          units.shift();
         }
       }
     }
@@ -161,8 +168,9 @@ function EventDisplay({ event }: { event: CombatEvent }) {
       );
 
     case 'unitsClash':
-      const playerPosition = 5 - event.player.index; // Convert array index to position (5=front, 1=back)
-      const enemyPosition = event.enemy.index + 1; // Convert array index to position (1=back, 5=front)
+      // In Super Auto Pets style, index 0 is always the current front unit
+      const playerPosition = event.player.index + 1; // Position 1 is front
+      const enemyPosition = event.enemy.index + 1; // Position 1 is front
       return (
         <div className="text-lg">
           <span className="text-blue-400">[{playerPosition}] {event.player.name}</span>
@@ -172,9 +180,8 @@ function EventDisplay({ event }: { event: CombatEvent }) {
       );
 
     case 'damageDealt':
-      const targetPosition = event.target.side === 'player'
-        ? 5 - event.target.index // Player: 5=front, 1=back
-        : event.target.index + 1; // Enemy: 1=back, 5=front
+      // In Super Auto Pets style, index 0 is always the current front unit
+      const targetPosition = event.target.index + 1; // Position 1 is front
       return (
         <div className="text-lg">
           <span className={event.target.side === 'player' ? 'text-blue-400' : 'text-red-400'}>
@@ -186,9 +193,8 @@ function EventDisplay({ event }: { event: CombatEvent }) {
       );
 
     case 'unitDied':
-      const diedPosition = event.target.side === 'player'
-        ? 5 - event.target.index // Player: 5=front, 1=back
-        : event.target.index + 1; // Enemy: 1=back, 5=front
+      // In Super Auto Pets style, index 0 is always the current front unit
+      const diedPosition = event.target.index + 1; // Position 1 is front
       return (
         <div className="text-lg">
           <span className={event.target.side === 'player' ? 'text-blue-400' : 'text-red-400'}>
