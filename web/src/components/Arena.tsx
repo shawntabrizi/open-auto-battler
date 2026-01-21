@@ -3,13 +3,14 @@ import React from 'react';
 import { UnitCard, EmptySlot } from './UnitCard';
 
 export function Arena() {
-  const { view, selection, setSelection, pitchBoardUnit, swapBoardPositions } = useGameStore();
+  const { view, selection, setSelection, pitchBoardUnit, swapBoardPositions, buyCard } = useGameStore();
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
 
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', `board-${index}`);
   };
 
   const handleDragEnd = () => {
@@ -23,9 +24,23 @@ export function Arena() {
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
-    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+    const data = e.dataTransfer.getData('text/plain');
+
+    if (data.startsWith('board-') && draggedIndex !== null && draggedIndex !== dropIndex) {
+      // Board card dropped on board position - swap
       swapBoardPositions(draggedIndex, dropIndex);
+    } else if (data.startsWith('shop-')) {
+      // Shop card dropped on board position - buy
+      const shopIndex = parseInt(data.split('-')[1]);
+      // First check if we can buy this card
+      if (view && view.canAfford[shopIndex]) {
+        buyCard(shopIndex);
+        // The card will be placed in the first available board slot
+        // But we want it to go to the specific dropIndex
+        // This might need backend changes to support placing in specific slots
+      }
     }
+
     setDraggedIndex(null);
   };
 

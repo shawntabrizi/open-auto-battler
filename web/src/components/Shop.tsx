@@ -1,8 +1,47 @@
 import { useGameStore } from '../store/gameStore';
+import React from 'react';
 import { UnitCard, EmptySlot } from './UnitCard';
 
 export function Shop() {
-  const { view, selection, setSelection, pitchShopCard, buyCard, toggleFreeze } = useGameStore();
+  const { view, selection, setSelection, pitchShopCard, buyCard, toggleFreeze, pitchBoardUnit } = useGameStore();
+  const [isAshHovered, setIsAshHovered] = React.useState(false);
+
+  // Drag and drop handlers for shop cards
+  const handleShopDragStart = (e: React.DragEvent, shopIndex: number) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', `shop-${shopIndex}`);
+  };
+
+  const handleShopDragEnd = () => {
+    // No state to reset since we're not tracking dragged shop cards
+  };
+
+  // Handler for when cards are dropped on ash pile
+  const handleAshDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsAshHovered(false);
+    const data = e.dataTransfer.getData('text/plain');
+
+    if (data.startsWith('board-')) {
+      const boardIndex = parseInt(data.split('-')[1]);
+      pitchBoardUnit(boardIndex);
+      setSelection(null); // Clear selection after pitching
+    } else if (data.startsWith('shop-')) {
+      const shopIndex = parseInt(data.split('-')[1]);
+      pitchShopCard(shopIndex);
+      setSelection(null); // Clear selection after pitching
+    }
+  };
+
+  const handleAshDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setIsAshHovered(true);
+  };
+
+  const handleAshDragLeave = () => {
+    setIsAshHovered(false);
+  };
 
   if (!view) return null;
 
@@ -32,12 +71,19 @@ export function Shop() {
         <div className="w-32 flex flex-col items-center justify-center border-r border-gray-700">
           <div className="text-sm text-gray-400 mb-2">Ash Pile</div>
           <div
-            className="w-20 h-20 rounded-full bg-gradient-to-br from-red-900 to-orange-800 flex items-center justify-center text-3xl shadow-lg shadow-red-900/50 hover:shadow-red-700/70 transition-shadow cursor-pointer"
+            className={`w-20 h-20 rounded-full bg-gradient-to-br from-red-900 to-orange-800 flex items-center justify-center text-3xl shadow-lg transition-all cursor-pointer ${
+              isAshHovered
+                ? 'shadow-red-400/80 scale-110 ring-4 ring-red-400/50'
+                : 'shadow-red-900/50 hover:shadow-red-700/70'
+            }`}
             onClick={() => {
               if (selection?.type === 'shop') {
                 pitchShopCard(selection.index);
               }
             }}
+            onDragOver={handleAshDragOver}
+            onDragLeave={handleAshDragLeave}
+            onDrop={handleAshDrop}
           >
             🔥
           </div>
@@ -54,21 +100,24 @@ export function Shop() {
           </div>
 
           <div className="flex gap-3">
-            {view.shop.map((slot, i) => (
-              slot.card ? (
-                <UnitCard
-                  key={slot.card.id}
-                  card={slot.card}
-                  showCost={true}
-                  frozen={slot.frozen}
-                  canAfford={view.canAfford[i]}
-                  isSelected={selection?.type === 'shop' && selection.index === i}
-                  onClick={() => handleShopSlotClick(i)}
-                />
-              ) : (
-                <EmptySlot key={`empty-${i}`} label="Empty" />
-              )
-            ))}
+             {view.shop.map((slot, i) => (
+               slot.card ? (
+                 <UnitCard
+                   key={slot.card.id}
+                   card={slot.card}
+                   showCost={true}
+                   frozen={slot.frozen}
+                   canAfford={view.canAfford[i]}
+                   isSelected={selection?.type === 'shop' && selection.index === i}
+                   onClick={() => handleShopSlotClick(i)}
+                   draggable={!slot.frozen} // Can't drag frozen cards
+                   onDragStart={(e) => handleShopDragStart(e, i)}
+                   onDragEnd={handleShopDragEnd}
+                 />
+               ) : (
+                 <EmptySlot key={`empty-${i}`} label="Empty" />
+               )
+             ))}
           </div>
 
           {/* Action buttons for selected shop card */}
