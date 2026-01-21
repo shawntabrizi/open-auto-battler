@@ -3,7 +3,7 @@ import React from 'react';
 import { UnitCard } from './UnitCard';
 
 export function Shop() {
-  const { view, selection, setSelection, pitchShopCard, buyCard, toggleFreeze, pitchBoardUnit } = useGameStore();
+  const { view, selection, setSelection, pitchShopCard, pitchBoardUnit } = useGameStore();
   const [isAshHovered, setIsAshHovered] = React.useState(false);
 
   // Drag and drop handlers for shop cards
@@ -88,7 +88,7 @@ export function Shop() {
             🔥
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            {selection?.type === 'shop' ? 'Click to pitch' : 'Select card first'}
+            Drag cards here to pitch
           </div>
         </div>
 
@@ -117,32 +117,7 @@ export function Shop() {
                     onDragEnd={handleShopDragEnd}
                   />
                ))}
-           </div>
-
-          {/* Action buttons for selected shop card */}
-          {selection?.type === 'shop' && view.shop[selection.index]?.card && (
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={() => buyCard(selection.index)}
-                disabled={!view.canAfford[selection.index]}
-                className={`btn text-sm ${view.canAfford[selection.index] ? 'btn-primary' : 'btn-disabled'}`}
-              >
-                Buy (-{view.shop[selection.index].card?.playCost})
-              </button>
-              <button
-                onClick={() => toggleFreeze(selection.index)}
-                className="btn bg-cyan-600 hover:bg-cyan-500 text-white text-sm"
-              >
-                {view.shop[selection.index].frozen ? 'Unfreeze' : 'Freeze'}
-              </button>
-              <button
-                onClick={() => pitchShopCard(selection.index)}
-                className="btn btn-danger text-sm"
-              >
-                Pitch (+{view.shop[selection.index].card?.pitchValue})
-              </button>
             </div>
-          )}
         </div>
 
         {/* Right: Mana Tank */}

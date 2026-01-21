@@ -113,11 +113,13 @@ export function UnitCard({
 function getCardEmoji(templateId: string): string {
   const emojis: Record<string, string> = {
     goblin_scout: '👺',
+    goblin_grunt: '👹',
     goblin_looter: '💰',
     militia: '🛡',
     shield_bearer: '🏰',
     wolf_rider: '🐺',
     orc_warrior: '👹',
+    orc_shaman: '🔮',
     troll_brute: '🧌',
     ogre_mauler: '👊',
     giant_crusher: '🦣',
