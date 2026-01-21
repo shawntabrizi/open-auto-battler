@@ -125,7 +125,9 @@ impl BattleSimulator {
                 remaining: self.enemy_units.len(),
             },
             (true, true) => BattleResult::Draw,
-            (false, false) => unreachable!("Battle should have ended"),
+            // This case should never happen due to the while loop condition,
+            // but we handle it gracefully as a draw instead of panicking
+            (false, false) => BattleResult::Draw,
         };
 
         self.events.push(CombatEvent::BattleEnd {
@@ -141,89 +143,94 @@ impl BattleSimulator {
 
     /// Resolve a single clash between front units
     fn resolve_clash(&mut self) {
-        if self.player_units.is_empty() || self.enemy_units.is_empty() {
-            return;
-        }
-
-        let player_front = &self.player_units[0];
-        let enemy_front = &self.enemy_units[0];
+        // Get front units safely - return early if either side is empty
+        let (player_name, player_damage) = match self.player_units.first() {
+            Some(unit) => (unit.name.clone(), unit.attack),
+            None => return,
+        };
+        let (enemy_name, enemy_damage) = match self.enemy_units.first() {
+            Some(unit) => (unit.name.clone(), unit.attack),
+            None => return,
+        };
 
         // Record the clash
         self.events.push(CombatEvent::UnitsClash {
             player: CombatTarget {
                 side: Side::Player,
                 index: 0,
-                name: player_front.name.clone(),
+                name: player_name.clone(),
             },
             enemy: CombatTarget {
                 side: Side::Enemy,
                 index: 0,
-                name: enemy_front.name.clone(),
+                name: enemy_name.clone(),
             },
         });
 
-        // Calculate damage (simultaneous)
-        let player_damage = player_front.attack;
-        let enemy_damage = enemy_front.attack;
+        // Apply damage to enemy (safely)
+        if let Some(enemy_front) = self.enemy_units.first_mut() {
+            enemy_front.take_damage(player_damage);
+            self.events.push(CombatEvent::DamageDealt {
+                target: CombatTarget {
+                    side: Side::Enemy,
+                    index: 0,
+                    name: enemy_name,
+                },
+                amount: player_damage,
+                new_health: enemy_front.health,
+            });
+        }
 
-        // Apply damage to enemy
-        self.enemy_units[0].take_damage(player_damage);
-        self.events.push(CombatEvent::DamageDealt {
-            target: CombatTarget {
-                side: Side::Enemy,
-                index: 0,
-                name: self.enemy_units[0].name.clone(),
-            },
-            amount: player_damage,
-            new_health: self.enemy_units[0].health,
-        });
-
-        // Apply damage to player
-        self.player_units[0].take_damage(enemy_damage);
-        self.events.push(CombatEvent::DamageDealt {
-            target: CombatTarget {
-                side: Side::Player,
-                index: 0,
-                name: self.player_units[0].name.clone(),
-            },
-            amount: enemy_damage,
-            new_health: self.player_units[0].health,
-        });
+        // Apply damage to player (safely)
+        if let Some(player_front) = self.player_units.first_mut() {
+            player_front.take_damage(enemy_damage);
+            self.events.push(CombatEvent::DamageDealt {
+                target: CombatTarget {
+                    side: Side::Player,
+                    index: 0,
+                    name: player_name,
+                },
+                amount: enemy_damage,
+                new_health: player_front.health,
+            });
+        }
     }
 
     /// Remove dead units and slide remaining units forward
     fn remove_dead_units(&mut self) {
-        // Check player deaths
-        let player_had_deaths = self.player_units.first().map_or(false, |u| !u.is_alive());
-        if player_had_deaths {
-            let dead_name = self.player_units[0].name.clone();
-            self.events.push(CombatEvent::UnitDied {
-                target: CombatTarget {
-                    side: Side::Player,
-                    index: 0,
-                    name: dead_name,
-                },
-            });
-            self.player_units.remove(0);
-            if !self.player_units.is_empty() {
-                self.events.push(CombatEvent::UnitsSlide { side: Side::Player });
+        // Check player deaths (safely get name before removing)
+        if let Some(front) = self.player_units.first() {
+            if !front.is_alive() {
+                let dead_name = front.name.clone();
+                self.events.push(CombatEvent::UnitDied {
+                    target: CombatTarget {
+                        side: Side::Player,
+                        index: 0,
+                        name: dead_name,
+                    },
+                });
+                self.player_units.remove(0);
+                if !self.player_units.is_empty() {
+                    self.events.push(CombatEvent::UnitsSlide { side: Side::Player });
+                }
             }
         }
 
-        // Check enemy deaths
-        let enemy_had_deaths = self.enemy_units.first().map_or(false, |u| !u.is_alive());
-        if enemy_had_deaths {
-            let dead_name = self.enemy_units[0].name.clone();
-            self.events.push(CombatEvent::UnitDied {
-                target: CombatTarget {
-                    side: Side::Enemy,
-                    index: 0,
-                    name: dead_name,
-                },
-            });
-            self.enemy_units.remove(0);
-            if !self.enemy_units.is_empty() {
-                self.events.push(CombatEvent::UnitsSlide { side: Side::Enemy });
+        // Check enemy deaths (safely get name before removing)
+        if let Some(front) = self.enemy_units.first() {
+            if !front.is_alive() {
+                let dead_name = front.name.clone();
+                self.events.push(CombatEvent::UnitDied {
+                    target: CombatTarget {
+                        side: Side::Enemy,
+                        index: 0,
+                        name: dead_name,
+                    },
+                });
+                self.enemy_units.remove(0);
+                if !self.enemy_units.is_empty() {
+                    self.events.push(CombatEvent::UnitsSlide { side: Side::Enemy });
+                }
             }
         }
     }

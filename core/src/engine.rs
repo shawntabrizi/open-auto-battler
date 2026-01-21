@@ -199,18 +199,18 @@ impl GameEngine {
             return Err("Can only pitch during shop phase".to_string());
         }
 
-        if index >= SHOP_SIZE {
+        // Safely get the shop slot
+        let slot = self.state.shop.get_mut(index).ok_or_else(|| {
             log::result(false, &format!("Invalid index {} >= {}", index, SHOP_SIZE));
-            return Err(format!("Invalid shop index: {}", index));
-        }
+            format!("Invalid shop index: {}", index)
+        })?;
 
-        // Check if slot has a card before taking
-        if self.state.shop[index].card.is_none() {
+        // Take the card from the slot
+        let card = slot.card.take().ok_or_else(|| {
             log::result(false, "Shop slot is empty");
-            return Err("Shop slot is empty".to_string());
-        }
+            "Shop slot is empty".to_string()
+        })?;
 
-        let card = self.state.shop[index].card.take().unwrap();
         let pitch_value = card.economy.pitch_value;
         let card_name = card.name.clone();
 
@@ -234,9 +234,12 @@ impl GameEngine {
                 "   Refilled slot {} with '{}' from deck ({} remaining)",
                 index,
                 new_card.name,
-                deck_size - 1
+                deck_size.saturating_sub(1)
             ));
-            self.state.shop[index] = ShopSlot::with_card(new_card);
+            // Safely assign to the slot (we know index is valid from earlier check)
+            if let Some(slot) = self.state.shop.get_mut(index) {
+                *slot = ShopSlot::with_card(new_card);
+            }
         } else {
             log::warn("   Deck empty, slot left empty");
         }
@@ -257,13 +260,13 @@ impl GameEngine {
             return Err("Can only buy during shop phase".to_string());
         }
 
-        if shop_index >= SHOP_SIZE {
+        // Safely get shop slot and extract card info
+        let slot = self.state.shop.get(shop_index).ok_or_else(|| {
             log::result(false, &format!("Invalid index {} >= {}", shop_index, SHOP_SIZE));
-            return Err(format!("Invalid shop index: {}", shop_index));
-        }
+            format!("Invalid shop index: {}", shop_index)
+        })?;
 
-        // Check if slot has a card
-        let (cost, card_name) = match &self.state.shop[shop_index].card {
+        let (cost, card_name) = match &slot.card {
             Some(card) => (card.economy.play_cost, card.name.clone()),
             None => {
                 log::result(false, "Shop slot is empty");
@@ -286,27 +289,36 @@ impl GameEngine {
         }
 
         // Check if bench has space
-        let bench_slot = match self.state.find_empty_bench_slot() {
-            Some(slot) => slot,
-            None => {
-                log::result(false, "Bench is full");
-                return Err("Bench is full".to_string());
-            }
-        };
+        let bench_slot = self.state.find_empty_bench_slot().ok_or_else(|| {
+            log::result(false, "Bench is full");
+            "Bench is full".to_string()
+        })?;
 
         log::info(&format!("   Found empty bench slot: {}", bench_slot));
 
-        // Take the card
-        let card = self.state.shop[shop_index].card.take().unwrap();
+        // Take the card (safely)
+        let card = self.state.shop.get_mut(shop_index)
+            .and_then(|slot| slot.card.take())
+            .ok_or_else(|| {
+                log::result(false, "Failed to take card from shop");
+                "Failed to take card from shop".to_string()
+            })?;
+
         log::info(&format!("   Took card '{}' (id={}) from shop", card.name, card.id));
 
         // Spend mana
         self.state.spend_mana(cost)?;
         log::info(&format!("   Spent {} mana, now have {}", cost, self.state.mana));
 
-        // Place on bench
-        self.state.bench[bench_slot] = Some(card);
-        log::info(&format!("   Placed card on bench slot {}", bench_slot));
+        // Place on bench (safely)
+        if let Some(bench) = self.state.bench.get_mut(bench_slot) {
+            *bench = Some(card);
+            log::info(&format!("   Placed card on bench slot {}", bench_slot));
+        } else {
+            // This shouldn't happen since find_empty_bench_slot returns valid indices
+            log::result(false, "Invalid bench slot");
+            return Err("Invalid bench slot".to_string());
+        }
 
         log::result(true, "Buy successful");
         self.log_state();
@@ -323,12 +335,11 @@ impl GameEngine {
             return Err("Can only freeze during shop phase".to_string());
         }
 
-        if shop_index >= SHOP_SIZE {
+        let slot = self.state.shop.get_mut(shop_index).ok_or_else(|| {
             log::result(false, "Invalid shop index");
-            return Err(format!("Invalid shop index: {}", shop_index));
-        }
+            format!("Invalid shop index: {}", shop_index)
+        })?;
 
-        let slot = &mut self.state.shop[shop_index];
         if slot.card.is_some() {
             slot.frozen = !slot.frozen;
             log::result(true, &format!("Slot {} frozen: {}", shop_index, slot.frozen));
@@ -349,36 +360,48 @@ impl GameEngine {
             return Err("Can only place units during shop phase".to_string());
         }
 
-        if bench_index >= BENCH_SIZE {
+        // Validate indices first
+        if bench_index >= self.state.bench.len() {
             log::result(false, "Invalid bench index");
             return Err(format!("Invalid bench index: {}", bench_index));
         }
 
-        if board_slot >= BOARD_SIZE {
+        if board_slot >= self.state.board.len() {
             log::result(false, "Invalid board slot");
             return Err(format!("Invalid board slot: {}", board_slot));
         }
 
-        // Check if bench slot has a unit
-        let card = self.state.bench[bench_index]
-            .take()
+        // Check if board slot is empty (safely)
+        let board_is_occupied = self.state.board.get(board_slot)
+            .map(|slot| slot.is_some())
+            .unwrap_or(false);
+
+        if board_is_occupied {
+            log::result(false, "Board slot is occupied");
+            return Err("Board slot is occupied".to_string());
+        }
+
+        // Take card from bench (safely)
+        let card = self.state.bench.get_mut(bench_index)
+            .and_then(|slot| slot.take())
             .ok_or_else(|| {
                 log::result(false, "Bench slot is empty");
                 "Bench slot is empty".to_string()
             })?;
 
-        // Check if board slot is empty
-        if self.state.board[board_slot].is_some() {
-            // Put the card back
-            self.state.bench[bench_index] = Some(card);
-            log::result(false, "Board slot is occupied");
-            return Err("Board slot is occupied".to_string());
-        }
-
         log::info(&format!("   Placing '{}' on board slot {}", card.name, board_slot));
 
-        // Place on board
-        self.state.board[board_slot] = Some(BoardUnit::from_card(card));
+        // Place on board (safely)
+        if let Some(slot) = self.state.board.get_mut(board_slot) {
+            *slot = Some(BoardUnit::from_card(card));
+        } else {
+            // Put card back on bench if board placement fails
+            if let Some(bench) = self.state.bench.get_mut(bench_index) {
+                *bench = Some(card);
+            }
+            log::result(false, "Failed to place on board");
+            return Err("Failed to place on board".to_string());
+        }
 
         log::result(true, "Place successful");
         self.log_state();
@@ -395,33 +418,46 @@ impl GameEngine {
             return Err("Can only return units during shop phase".to_string());
         }
 
-        if board_slot >= BOARD_SIZE {
+        // Validate board slot
+        if board_slot >= self.state.board.len() {
             log::result(false, "Invalid board slot");
             return Err(format!("Invalid board slot: {}", board_slot));
         }
 
-        // Check if board slot has a unit
-        if self.state.board[board_slot].is_none() {
+        // Check if board slot has a unit (safely)
+        let has_unit = self.state.board.get(board_slot)
+            .map(|slot| slot.is_some())
+            .unwrap_or(false);
+
+        if !has_unit {
             log::result(false, "Board slot is empty");
             return Err("Board slot is empty".to_string());
         }
 
         // Check if bench has space
-        let bench_slot = match self.state.find_empty_bench_slot() {
-            Some(slot) => slot,
-            None => {
-                log::result(false, "Bench is full");
-                return Err("Bench is full".to_string());
-            }
-        };
+        let bench_slot = self.state.find_empty_bench_slot().ok_or_else(|| {
+            log::result(false, "Bench is full");
+            "Bench is full".to_string()
+        })?;
 
-        // Now take the unit
-        let unit = self.state.board[board_slot].take().unwrap();
+        // Take the unit (safely)
+        let unit = self.state.board.get_mut(board_slot)
+            .and_then(|slot| slot.take())
+            .ok_or_else(|| {
+                log::result(false, "Failed to take unit from board");
+                "Failed to take unit from board".to_string()
+            })?;
+
         log::info(&format!("   Returning '{}' to bench slot {}", unit.card.name, bench_slot));
 
-        // Move to bench
+        // Move to bench (safely)
         let card = unit.card;
-        self.state.bench[bench_slot] = Some(card);
+        if let Some(bench) = self.state.bench.get_mut(bench_slot) {
+            *bench = Some(card);
+        } else {
+            log::result(false, "Invalid bench slot");
+            return Err("Invalid bench slot".to_string());
+        }
 
         log::result(true, "Return successful");
         self.log_state();
@@ -438,11 +474,13 @@ impl GameEngine {
             return Err("Can only swap during shop phase".to_string());
         }
 
-        if slot_a >= BOARD_SIZE || slot_b >= BOARD_SIZE {
+        let board_len = self.state.board.len();
+        if slot_a >= board_len || slot_b >= board_len {
             log::result(false, "Invalid board slot");
             return Err("Invalid board slot".to_string());
         }
 
+        // Safe swap - we've already validated the indices
         self.state.board.swap(slot_a, slot_b);
         log::result(true, "Swap successful");
         Ok(())
@@ -458,13 +496,13 @@ impl GameEngine {
             return Err("Can only pitch during shop phase".to_string());
         }
 
-        if board_slot >= BOARD_SIZE {
+        if board_slot >= self.state.board.len() {
             log::result(false, "Invalid board slot");
             return Err(format!("Invalid board slot: {}", board_slot));
         }
 
-        let unit = self.state.board[board_slot]
-            .take()
+        let unit = self.state.board.get_mut(board_slot)
+            .and_then(|slot| slot.take())
             .ok_or_else(|| {
                 log::result(false, "Board slot is empty");
                 "Board slot is empty".to_string()
@@ -491,13 +529,13 @@ impl GameEngine {
             return Err("Can only pitch during shop phase".to_string());
         }
 
-        if bench_index >= BENCH_SIZE {
+        if bench_index >= self.state.bench.len() {
             log::result(false, "Invalid bench index");
             return Err(format!("Invalid bench index: {}", bench_index));
         }
 
-        let card = self.state.bench[bench_index]
-            .take()
+        let card = self.state.bench.get_mut(bench_index)
+            .and_then(|slot| slot.take())
             .ok_or_else(|| {
                 log::result(false, "Bench slot is empty");
                 "Bench slot is empty".to_string()
