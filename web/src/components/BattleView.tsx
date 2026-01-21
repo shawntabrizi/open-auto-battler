@@ -12,13 +12,13 @@ interface BattleViewProps {
 function combatUnitToBoardUnitView(unit: CombatUnitInfo, index: number): any {
   return {
     id: index + 1000, // Fake ID for battle units
-    templateId: 'battle_unit',
+    templateId: unit.templateId,
     name: unit.name,
     attack: unit.attack,
     maxHealth: unit.maxHealth,
     currentHealth: unit.health,
     playCost: 0, // Not relevant in battle
-    pitchValue: 0, // Not relevant in battle
+    pitchValue: 0, // Not relevant in battle - hide the badge
   };
 }
 

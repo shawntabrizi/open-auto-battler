@@ -1,4 +1,5 @@
 import React from 'react';
+import { useGameStore } from '../store/gameStore';
 import type { CardView } from '../types';
 
 interface CardDetailPanelProps {
@@ -11,8 +12,12 @@ type TabType = 'card' | 'rules';
 export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
   const [showRaw, setShowRaw] = React.useState(false);
+  const { view, selection, buyCard, toggleFreeze, pitchShopCard, setSelection } = useGameStore();
 
   if (!isVisible) return null;
+
+  // Get the selected shop index for actions
+  const selectedShopIndex = selection?.type === 'shop' ? selection.index : -1;
 
   const renderCardTab = () => {
     if (!card) {
@@ -137,6 +142,43 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
             </div>
           </div>
         )}
+
+        {/* Action Buttons */}
+        <div className="mb-6 space-y-2">
+          <button
+            onClick={() => {
+              if (selectedShopIndex >= 0) {
+                buyCard(selectedShopIndex);
+                setSelection(null); // Clear selection after buying
+              }
+            }}
+            disabled={selectedShopIndex < 0 || !view?.canAfford[selectedShopIndex]}
+            className={`w-full btn text-sm ${selectedShopIndex >= 0 && view?.canAfford[selectedShopIndex] ? 'btn-primary' : 'btn-disabled'}`}
+          >
+            Buy (-{card.playCost} mana)
+          </button>
+          <button
+            onClick={() => {
+              if (selectedShopIndex >= 0) {
+                toggleFreeze(selectedShopIndex);
+              }
+            }}
+            className="w-full btn bg-cyan-600 hover:bg-cyan-500 text-white text-sm"
+          >
+            {view?.shop[selectedShopIndex]?.frozen ? 'Unfreeze' : 'Freeze'}
+          </button>
+          <button
+            onClick={() => {
+              if (selectedShopIndex >= 0) {
+                pitchShopCard(selectedShopIndex);
+                setSelection(null); // Clear selection after pitching
+              }
+            }}
+            className="w-full btn btn-danger text-sm"
+          >
+            Pitch (+{card.pitchValue} mana)
+          </button>
+        </div>
 
         {/* Raw JSON Section */}
         <div className="mb-4">
