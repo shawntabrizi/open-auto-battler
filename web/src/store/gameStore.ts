@@ -1,26 +1,12 @@
 import { create } from 'zustand';
 import type { GameView, BattleOutput, Selection } from '../types';
+import type { GameEngine } from '../wasm/manalimit_core';
 
-interface GameEngineInstance {
-  free(): void;
-  get_view(): GameView;
-  get_battle_output(): BattleOutput | null;
-  pitch_shop_card(index: number): void;
-  buy_card(shopIndex: number): void;
-  toggle_freeze(shopIndex: number): void;
-  place_unit(benchIndex: number, boardSlot: number): void;
-  return_unit(boardSlot: number): void;
-  swap_board_positions(slotA: number, slotB: number): void;
-  pitch_board_unit(boardSlot: number): void;
-  pitch_bench_unit(benchIndex: number): void;
-  end_turn(): void;
-  continue_after_battle(): void;
-  new_run(): void;
-}
+type GameEngineInstance = GameEngine;
 
 interface WasmModule {
   default: () => Promise<void>;
-  GameEngine: new () => GameEngineInstance;
+  GameEngine: typeof GameEngine;
   greet: () => string;
 }
 
@@ -40,11 +26,9 @@ interface GameStore {
   pitchShopCard: (index: number) => void;
   buyCard: (shopIndex: number) => void;
   toggleFreeze: (shopIndex: number) => void;
-  placeUnit: (benchIndex: number, boardSlot: number) => void;
-  returnUnit: (boardSlot: number) => void;
+
   swapBoardPositions: (slotA: number, slotB: number) => void;
   pitchBoardUnit: (boardSlot: number) => void;
-  pitchBenchUnit: (benchIndex: number) => void;
   endTurn: () => void;
   continueAfterBattle: () => void;
   newRun: () => void;
@@ -72,7 +56,7 @@ async function initWasm(): Promise<WasmModule> {
 
   // Start initialization
   initPromise = (async () => {
-    const wasm = await import('manalimit-core') as WasmModule;
+    const wasm = await import('manalimit-core') as unknown as WasmModule;
 
     // Only call default() once to initialize the WASM binary
     if (!wasmInitialized) {
@@ -122,7 +106,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       console.log('View type:', typeof view);
       console.log('View keys:', view ? Object.keys(view) : 'null');
       console.log('View.shop:', view?.shop);
-      console.log('View.bench:', view?.bench);
+
       console.log('View.board:', view?.board);
       console.log('View JSON stringified:', JSON.stringify(view, null, 2));
 
@@ -170,27 +154,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   // Board management
-  placeUnit: (benchIndex: number, boardSlot: number) => {
-    const { engine } = get();
-    if (!engine) return;
-    try {
-      engine.place_unit(benchIndex, boardSlot);
-      set({ view: engine.get_view(), selection: null });
-    } catch (err) {
-      console.error('Failed to place unit:', err);
-    }
-  },
 
-  returnUnit: (boardSlot: number) => {
-    const { engine } = get();
-    if (!engine) return;
-    try {
-      engine.return_unit(boardSlot);
-      set({ view: engine.get_view(), selection: null });
-    } catch (err) {
-      console.error('Failed to return unit:', err);
-    }
-  },
+
+
 
   swapBoardPositions: (slotA: number, slotB: number) => {
     const { engine } = get();
@@ -214,16 +180,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  pitchBenchUnit: (benchIndex: number) => {
-    const { engine } = get();
-    if (!engine) return;
-    try {
-      engine.pitch_bench_unit(benchIndex);
-      set({ view: engine.get_view(), selection: null });
-    } catch (err) {
-      console.error('Failed to pitch bench unit:', err);
-    }
-  },
+
 
   // Turn management
   endTurn: () => {

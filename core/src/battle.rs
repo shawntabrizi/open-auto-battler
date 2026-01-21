@@ -103,30 +103,39 @@ impl BattleSimulator {
     }
 
     /// Run the full battle simulation
-    pub fn simulate(mut self) -> (BattleResult, Vec<CombatEvent>) {
+    pub fn simulate(mut self) -> (BattleResult, Vec<CombatEvent>, Vec<CombatUnit>) {
         // Record battle start
         self.events.push(CombatEvent::BattleStart {
             player_units: self.player_units.iter().map(|u| u.name.clone()).collect(),
             enemy_units: self.enemy_units.iter().map(|u| u.name.clone()).collect(),
         });
 
-        // Main combat loop
-        while !self.player_units.is_empty() && !self.enemy_units.is_empty() {
+        // Main combat loop - continue until all units on one side are dead
+        loop {
             self.resolve_clash();
-            self.remove_dead_units();
+            self.check_dead_units();
+
+            // Check if battle should end (all units on one side are dead)
+            let player_alive = self.player_units.iter().any(|u| u.is_alive());
+            let enemy_alive = self.enemy_units.iter().any(|u| u.is_alive());
+
+            if !player_alive || !enemy_alive {
+                break;
+            }
         }
 
         // Determine result
-        let result = match (self.player_units.is_empty(), self.enemy_units.is_empty()) {
-            (false, true) => BattleResult::Victory {
-                remaining: self.player_units.len(),
+        let player_alive_count = self.player_units.iter().filter(|u| u.is_alive()).count();
+        let enemy_alive_count = self.enemy_units.iter().filter(|u| u.is_alive()).count();
+
+        let result = match (player_alive_count > 0, enemy_alive_count > 0) {
+            (true, false) => BattleResult::Victory {
+                remaining: player_alive_count,
             },
-            (true, false) => BattleResult::Defeat {
-                remaining: self.enemy_units.len(),
+            (false, true) => BattleResult::Defeat {
+                remaining: enemy_alive_count,
             },
-            (true, true) => BattleResult::Draw,
-            // This case should never happen due to the while loop condition,
-            // but we handle it gracefully as a draw instead of panicking
+            (true, true) => BattleResult::Draw, // Both sides have living units, but battle ended? This shouldn't happen
             (false, false) => BattleResult::Draw,
         };
 
@@ -138,7 +147,7 @@ impl BattleSimulator {
             },
         });
 
-        (result, self.events)
+        (result, self.events, self.player_units)
     }
 
     /// Resolve a single clash between front units
@@ -196,9 +205,10 @@ impl BattleSimulator {
         }
     }
 
-    /// Remove dead units and slide remaining units forward
-    fn remove_dead_units(&mut self) {
-        // Check player deaths (safely get name before removing)
+    /// Check for dead units but don't remove them - keep them on board with 0 health
+    fn check_dead_units(&mut self) {
+
+        // Check player deaths (don't remove, just record the event)
         if let Some(front) = self.player_units.first() {
             if !front.is_alive() {
                 let dead_name = front.name.clone();
@@ -209,14 +219,12 @@ impl BattleSimulator {
                         name: dead_name,
                     },
                 });
-                self.player_units.remove(0);
-                if !self.player_units.is_empty() {
-                    self.events.push(CombatEvent::UnitsSlide { side: Side::Player });
-                }
+                // Don't remove the unit - keep it on board with 0 health
+                // Don't slide units either since we're keeping dead units
             }
         }
 
-        // Check enemy deaths (safely get name before removing)
+        // Check enemy deaths (don't remove, just record the event)
         if let Some(front) = self.enemy_units.first() {
             if !front.is_alive() {
                 let dead_name = front.name.clone();
@@ -227,10 +235,7 @@ impl BattleSimulator {
                         name: dead_name,
                     },
                 });
-                self.enemy_units.remove(0);
-                if !self.enemy_units.is_empty() {
-                    self.events.push(CombatEvent::UnitsSlide { side: Side::Enemy });
-                }
+                // Don't remove the unit
             }
         }
     }

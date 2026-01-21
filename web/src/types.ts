@@ -28,7 +28,6 @@ export interface ShopSlotView {
 
 export interface GameView {
   shop: ShopSlotView[];
-  bench: (CardView | null)[];
   board: (BoardUnitView | null)[];
   mana: number;
   manaLimit: number;
@@ -70,7 +69,7 @@ export interface BattleOutput {
 }
 
 // Selection state for UI
-export type SelectionType = 'shop' | 'bench' | 'board';
+export type SelectionType = 'shop' | 'board';
 
 export interface Selection {
   type: SelectionType;

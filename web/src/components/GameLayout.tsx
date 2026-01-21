@@ -1,6 +1,5 @@
 import { HUD } from './HUD';
 import { Arena } from './Arena';
-import { Bench } from './Bench';
 import { Shop } from './Shop';
 import { BattleOverlay } from './BattleOverlay';
 import { GameOverScreen } from './GameOverScreen';
@@ -43,10 +42,9 @@ export function GameLayout() {
       {/* Zone 1: Top HUD */}
       <HUD />
 
-      {/* Zone 2: Arena (Board + Bench) */}
+      {/* Zone 2: Arena (Board) */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <Arena />
-        <Bench />
       </div>
 
       {/* Zone 3: Command Deck (Shop) */}

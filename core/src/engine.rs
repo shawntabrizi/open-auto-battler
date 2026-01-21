@@ -143,9 +143,8 @@ impl GameEngine {
 
         // Debug log the view contents
         log::info(&format!(
-            "get_view: shop.len={}, bench.len={}, board.len={}, mana={}, round={}",
+            "get_view: shop.len={}, board.len={}, mana={}, round={}",
             view.shop.len(),
-            view.bench.len(),
             view.board.len(),
             view.mana,
             view.round
@@ -288,13 +287,13 @@ impl GameEngine {
             ));
         }
 
-        // Check if bench has space
-        let bench_slot = self.state.find_empty_bench_slot().ok_or_else(|| {
-            log::result(false, "Bench is full");
-            "Bench is full".to_string()
+        // Check if board has space
+        let board_slot = self.state.find_empty_board_slot().ok_or_else(|| {
+            log::result(false, "Board is full");
+            "Board is full".to_string()
         })?;
 
-        log::info(&format!("   Found empty bench slot: {}", bench_slot));
+        log::info(&format!("   Found empty board slot: {}", board_slot));
 
         // Take the card (safely)
         let card = self.state.shop.get_mut(shop_index)
@@ -310,14 +309,14 @@ impl GameEngine {
         self.state.spend_mana(cost)?;
         log::info(&format!("   Spent {} mana, now have {}", cost, self.state.mana));
 
-        // Place on bench (safely)
-        if let Some(bench) = self.state.bench.get_mut(bench_slot) {
-            *bench = Some(card);
-            log::info(&format!("   Placed card on bench slot {}", bench_slot));
+        // Place on board (safely)
+        if let Some(board) = self.state.board.get_mut(board_slot) {
+            *board = Some(BoardUnit::from_card(card));
+            log::info(&format!("   Placed card on board slot {}", board_slot));
         } else {
-            // This shouldn't happen since find_empty_bench_slot returns valid indices
-            log::result(false, "Invalid bench slot");
-            return Err("Invalid bench slot".to_string());
+            // This shouldn't happen since find_empty_board_slot returns valid indices
+            log::result(false, "Invalid board slot");
+            return Err("Invalid board slot".to_string());
         }
 
         log::result(true, "Buy successful");
@@ -350,119 +349,9 @@ impl GameEngine {
         }
     }
 
-    /// Place a unit from bench to board
-    #[wasm_bindgen]
-    pub fn place_unit(&mut self, bench_index: usize, board_slot: usize) -> Result<(), String> {
-        log::action("place_unit", &format!("bench_index={}, board_slot={}", bench_index, board_slot));
 
-        if self.state.phase != GamePhase::Shop {
-            log::result(false, "Not in shop phase");
-            return Err("Can only place units during shop phase".to_string());
-        }
 
-        // Validate indices first
-        if bench_index >= self.state.bench.len() {
-            log::result(false, "Invalid bench index");
-            return Err(format!("Invalid bench index: {}", bench_index));
-        }
 
-        if board_slot >= self.state.board.len() {
-            log::result(false, "Invalid board slot");
-            return Err(format!("Invalid board slot: {}", board_slot));
-        }
-
-        // Check if board slot is empty (safely)
-        let board_is_occupied = self.state.board.get(board_slot)
-            .map(|slot| slot.is_some())
-            .unwrap_or(false);
-
-        if board_is_occupied {
-            log::result(false, "Board slot is occupied");
-            return Err("Board slot is occupied".to_string());
-        }
-
-        // Take card from bench (safely)
-        let card = self.state.bench.get_mut(bench_index)
-            .and_then(|slot| slot.take())
-            .ok_or_else(|| {
-                log::result(false, "Bench slot is empty");
-                "Bench slot is empty".to_string()
-            })?;
-
-        log::info(&format!("   Placing '{}' on board slot {}", card.name, board_slot));
-
-        // Place on board (safely)
-        if let Some(slot) = self.state.board.get_mut(board_slot) {
-            *slot = Some(BoardUnit::from_card(card));
-        } else {
-            // Put card back on bench if board placement fails
-            if let Some(bench) = self.state.bench.get_mut(bench_index) {
-                *bench = Some(card);
-            }
-            log::result(false, "Failed to place on board");
-            return Err("Failed to place on board".to_string());
-        }
-
-        log::result(true, "Place successful");
-        self.log_state();
-        Ok(())
-    }
-
-    /// Return a unit from board to bench
-    #[wasm_bindgen]
-    pub fn return_unit(&mut self, board_slot: usize) -> Result<(), String> {
-        log::action("return_unit", &format!("board_slot={}", board_slot));
-
-        if self.state.phase != GamePhase::Shop {
-            log::result(false, "Not in shop phase");
-            return Err("Can only return units during shop phase".to_string());
-        }
-
-        // Validate board slot
-        if board_slot >= self.state.board.len() {
-            log::result(false, "Invalid board slot");
-            return Err(format!("Invalid board slot: {}", board_slot));
-        }
-
-        // Check if board slot has a unit (safely)
-        let has_unit = self.state.board.get(board_slot)
-            .map(|slot| slot.is_some())
-            .unwrap_or(false);
-
-        if !has_unit {
-            log::result(false, "Board slot is empty");
-            return Err("Board slot is empty".to_string());
-        }
-
-        // Check if bench has space
-        let bench_slot = self.state.find_empty_bench_slot().ok_or_else(|| {
-            log::result(false, "Bench is full");
-            "Bench is full".to_string()
-        })?;
-
-        // Take the unit (safely)
-        let unit = self.state.board.get_mut(board_slot)
-            .and_then(|slot| slot.take())
-            .ok_or_else(|| {
-                log::result(false, "Failed to take unit from board");
-                "Failed to take unit from board".to_string()
-            })?;
-
-        log::info(&format!("   Returning '{}' to bench slot {}", unit.card.name, bench_slot));
-
-        // Move to bench (safely)
-        let card = unit.card;
-        if let Some(bench) = self.state.bench.get_mut(bench_slot) {
-            *bench = Some(card);
-        } else {
-            log::result(false, "Invalid bench slot");
-            return Err("Invalid bench slot".to_string());
-        }
-
-        log::result(true, "Return successful");
-        self.log_state();
-        Ok(())
-    }
 
     /// Swap two board positions
     #[wasm_bindgen]
@@ -519,38 +408,7 @@ impl GameEngine {
         Ok(())
     }
 
-    /// Pitch a unit from the bench
-    #[wasm_bindgen]
-    pub fn pitch_bench_unit(&mut self, bench_index: usize) -> Result<(), String> {
-        log::action("pitch_bench_unit", &format!("bench_index={}", bench_index));
 
-        if self.state.phase != GamePhase::Shop {
-            log::result(false, "Not in shop phase");
-            return Err("Can only pitch during shop phase".to_string());
-        }
-
-        if bench_index >= self.state.bench.len() {
-            log::result(false, "Invalid bench index");
-            return Err(format!("Invalid bench index: {}", bench_index));
-        }
-
-        let card = self.state.bench.get_mut(bench_index)
-            .and_then(|slot| slot.take())
-            .ok_or_else(|| {
-                log::result(false, "Bench slot is empty");
-                "Bench slot is empty".to_string()
-            })?;
-
-        let pitch_value = card.economy.pitch_value;
-        log::info(&format!("   Pitching '{}' for {} mana", card.name, pitch_value));
-
-        // Add mana from pitch value
-        self.state.add_mana(pitch_value);
-
-        log::result(true, &format!("Pitch successful, mana now {}", self.state.mana));
-        self.log_state();
-        Ok(())
-    }
 
     /// End the shop phase and start battle
     #[wasm_bindgen]
@@ -652,7 +510,6 @@ impl GameEngine {
     /// Log current state summary
     fn log_state(&self) {
         let board_count = self.state.board.iter().filter(|s| s.is_some()).count();
-        let bench_count = self.state.bench.iter().filter(|s| s.is_some()).count();
         let phase = match self.state.phase {
             GamePhase::Shop => "SHOP",
             GamePhase::Battle => "BATTLE",
@@ -669,7 +526,6 @@ impl GameEngine {
             self.state.wins,
             self.state.deck.len(),
             board_count,
-            bench_count,
         );
 
         // Log shop contents
@@ -687,20 +543,7 @@ impl GameEngine {
             .collect();
         log::debug("SHOP", &shop_cards.join(" | "));
 
-        // Log bench contents
-        let bench_cards: Vec<String> = self
-            .state
-            .bench
-            .iter()
-            .enumerate()
-            .map(|(i, slot)| {
-                match slot {
-                    Some(card) => format!("[{}]{}", i, card.name),
-                    None => format!("[{}]-", i),
-                }
-            })
-            .collect();
-        log::debug("BENCH", &bench_cards.join(" | "));
+
 
         // Log board contents
         let board_units: Vec<String> = self
@@ -792,7 +635,7 @@ impl GameEngine {
 
         // Run simulation
         let simulator = BattleSimulator::new(player_units, enemy_units);
-        let (result, events) = simulator.simulate();
+        let (result, events, final_player_units) = simulator.simulate();
 
         log::info(&format!("   Battle generated {} events", events.len()));
 
@@ -811,11 +654,16 @@ impl GameEngine {
             }
         }
 
-        // Clear the board after battle
-        for slot in &mut self.state.board {
-            *slot = None;
+        // Update board units with final health from battle (keep dead units)
+        for (i, final_unit) in final_player_units.iter().enumerate() {
+            if let Some(board_unit) = self.state.board.get_mut(i) {
+                if let Some(unit) = board_unit {
+                    unit.current_health = final_unit.health.max(0); // Ensure health doesn't go below 0
+                    log::info(&format!("   Updated {} health to {}", unit.card.name, unit.current_health));
+                }
+            }
         }
-        log::info("   Board cleared");
+        log::info("   Board updated with battle results");
 
         // Store battle output for UI playback
         self.last_battle_output = Some(BattleOutput {

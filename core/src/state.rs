@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 
 /// Number of shop slots
 pub const SHOP_SIZE: usize = 5;
-/// Number of bench slots
-pub const BENCH_SIZE: usize = 5;
 /// Number of board slots
 pub const BOARD_SIZE: usize = 5;
 /// Starting lives
@@ -34,8 +32,6 @@ pub struct GameState {
     pub deck: Vec<UnitCard>,
     /// Cards displayed in the shop (5 slots)
     pub shop: Vec<ShopSlot>,
-    /// Cards on the bench (5 slots)
-    pub bench: Vec<Option<UnitCard>>,
     /// Units on the player's board (5 slots, index 0 is front)
     pub board: Vec<Option<BoardUnit>>,
     /// Current mana available
@@ -59,7 +55,6 @@ impl GameState {
         Self {
             deck: Vec::new(),
             shop: vec![ShopSlot::empty(); SHOP_SIZE],
-            bench: vec![None; BENCH_SIZE],
             board: vec![None; BOARD_SIZE],
             mana: 0,
             mana_limit: STARTING_MANA_LIMIT,
@@ -105,10 +100,7 @@ impl GameState {
         Ok(())
     }
 
-    /// Find an empty bench slot
-    pub fn find_empty_bench_slot(&self) -> Option<usize> {
-        self.bench.iter().position(|slot| slot.is_none())
-    }
+
 
     /// Find an empty board slot
     pub fn find_empty_board_slot(&self) -> Option<usize> {
@@ -120,10 +112,7 @@ impl GameState {
         self.board.iter().filter(|slot| slot.is_some()).count()
     }
 
-    /// Count units on the bench
-    pub fn bench_unit_count(&self) -> usize {
-        self.bench.iter().filter(|slot| slot.is_some()).count()
-    }
+
 }
 
 impl Default for GameState {

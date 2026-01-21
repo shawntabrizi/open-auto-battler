@@ -82,8 +82,6 @@ impl From<&ShopSlot> for ShopSlotView {
 pub struct GameView {
     /// Shop slots
     pub shop: Vec<ShopSlotView>,
-    /// Bench slots (None = empty)
-    pub bench: Vec<Option<CardView>>,
     /// Board slots (None = empty)
     pub board: Vec<Option<BoardUnitView>>,
     /// Current mana
@@ -119,11 +117,6 @@ impl From<&GameState> for GameView {
 
         Self {
             shop: state.shop.iter().map(ShopSlotView::from).collect(),
-            bench: state
-                .bench
-                .iter()
-                .map(|slot| slot.as_ref().map(CardView::from))
-                .collect(),
             board: state
                 .board
                 .iter()
