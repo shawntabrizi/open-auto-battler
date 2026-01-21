@@ -56,8 +56,8 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
   useEffect(() => {
     const processNextEvent = () => {
       if (eventIndex >= battleOutput.events.length) {
-        // Wait a bit after the last event before allowing the user to continue
-        setTimeout(onBattleEnd, 1000);
+        console.log({ battleOutput })
+        onBattleEnd();
         return;
       }
 
