@@ -209,7 +209,7 @@ impl GameEngine {
             .ok_or_else(|| "Bench is full".to_string())?;
 
         // Take the card and spend mana
-        let card = self.state.shop[shop_index].card.take().unwrap();
+        let card = self.state.shop[shop_index].card.take().ok_or_else(|| "Failed to take card".to_string())?;
         self.state.spend_mana(cost)?;
 
         // Place on bench

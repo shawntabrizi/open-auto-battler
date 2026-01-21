@@ -65,8 +65,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       // Dynamic import of WASM module
       const wasm = await import('manalimit-core');
 
-      // Initialize the WASM module with path to public folder
-      await wasm.default('/manalimit_core_bg.wasm');
+      // Initialize the WASM module (uses relative path automatically)
+      await wasm.default();
 
       // Create engine instance
       const engine = new wasm.GameEngine();

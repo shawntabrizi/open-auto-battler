@@ -10,7 +10,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      'manalimit-core': path.resolve(__dirname, '../core/pkg')
+      'manalimit-core': path.resolve(__dirname, './src/wasm')
     }
   },
   build: {
@@ -18,12 +18,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ['manalimit-core']
-  },
-  server: {
-    fs: {
-      // Allow serving files from the core/pkg directory
-      allow: ['..']
-    }
   },
   assetsInclude: ['**/*.wasm']
 })

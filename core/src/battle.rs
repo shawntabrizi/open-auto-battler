@@ -23,7 +23,9 @@ pub struct CombatTarget {
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum CombatEvent {
     BattleStart {
+        #[serde(rename = "playerUnits")]
         player_units: Vec<String>,
+        #[serde(rename = "enemyUnits")]
         enemy_units: Vec<String>,
     },
     UnitsClash {
@@ -33,6 +35,7 @@ pub enum CombatEvent {
     DamageDealt {
         target: CombatTarget,
         amount: i32,
+        #[serde(rename = "newHealth")]
         new_health: i32,
     },
     UnitDied {

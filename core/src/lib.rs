@@ -18,7 +18,8 @@ pub use battle::*;
 
 #[wasm_bindgen(start)]
 pub fn init() {
-    // WASM initialization
+    // Better panic messages in browser console
+    console_error_panic_hook::set_once();
 }
 
 /// Simple test function to verify WASM is working
