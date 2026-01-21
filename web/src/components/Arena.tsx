@@ -1,8 +1,33 @@
 import { useGameStore } from '../store/gameStore';
+import React from 'react';
 import { UnitCard, EmptySlot } from './UnitCard';
 
 export function Arena() {
   const { view, selection, setSelection, pitchBoardUnit, swapBoardPositions } = useGameStore();
+  const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+      swapBoardPositions(draggedIndex, dropIndex);
+    }
+    setDraggedIndex(null);
+  };
 
   if (!view) return null;
 
@@ -48,27 +73,38 @@ export function Arena() {
       {/* VS Divider */}
       <div className="text-2xl text-gray-500 font-bold">VS</div>
 
-      {/* Player Board */}
+      {/* Player Board - reversed to match battle layout (5 4 3 2 1) */}
       <div className="flex gap-2">
         <div className="text-sm text-gray-400 mr-4 self-center">Board</div>
-        {view.board.map((unit, i) => (
-          unit ? (
+        {Array.from({ length: 5 }).map((_, displayIndex) => {
+          // Convert display index to array index: display 0 = position 5 = array index 4
+          // display 1 = position 4 = array index 3, etc.
+          const arrayIndex = 4 - displayIndex;
+          const unit = view.board[arrayIndex];
+          const displayPosition = 5 - displayIndex; // 5, 4, 3, 2, 1 for labels
+
+          return unit ? (
             <UnitCard
               key={unit.id}
               card={unit}
               showCost={false}
-              isSelected={selection?.type === 'board' && selection.index === i}
-              onClick={() => handleBoardSlotClick(i)}
+              isSelected={selection?.type === 'board' && selection.index === arrayIndex}
+              onClick={() => handleBoardSlotClick(arrayIndex)}
+              draggable={true}
+              onDragStart={(e) => handleDragStart(e, arrayIndex)}
+              onDragEnd={handleDragEnd}
             />
           ) : (
             <EmptySlot
-              key={`empty-${i}`}
-              onClick={() => handleBoardSlotClick(i)}
+              key={`empty-${arrayIndex}`}
+              onClick={() => handleBoardSlotClick(arrayIndex)}
               isTarget={false}
-              label={`Slot ${i + 1}`}
+              label={`${displayPosition}`}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, arrayIndex)}
             />
-          )
-        ))}
+          );
+        })}
       </div>
 
       {/* Action buttons for selected board unit */}

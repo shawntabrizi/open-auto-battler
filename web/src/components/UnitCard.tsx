@@ -1,3 +1,4 @@
+import React from 'react';
 import type { CardView, BoardUnitView } from '../types';
 
 interface UnitCardProps {
@@ -7,6 +8,9 @@ interface UnitCardProps {
   showCost?: boolean;
   frozen?: boolean;
   canAfford?: boolean;
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
 }
 
 export function UnitCard({
@@ -16,8 +20,21 @@ export function UnitCard({
   showCost = true,
   frozen = false,
   canAfford = true,
+  draggable = false,
+  onDragStart,
+  onDragEnd,
 }: UnitCardProps) {
+  const [isDragging, setIsDragging] = React.useState(false);
 
+  const handleDragStart = (e: React.DragEvent) => {
+    setIsDragging(true);
+    onDragStart?.(e);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    setIsDragging(false);
+    onDragEnd?.(e);
+  };
 
   const isBoardUnit = 'currentHealth' in card;
   const currentHealth = isBoardUnit ? card.currentHealth : card.health;
@@ -27,11 +44,15 @@ export function UnitCard({
   return (
     <div
       onClick={onClick}
+      draggable={draggable}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       className={`
-        card relative w-24 h-32 cursor-pointer select-none bg-card-bg rounded-lg border-2 border-gray-600 p-2 transition-all duration-200
+        card relative w-24 h-32 ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none bg-card-bg rounded-lg border-2 border-gray-600 p-2 transition-all duration-200
         ${isSelected ? 'card-selected ring-2 ring-yellow-400' : ''}
         ${frozen ? 'ring-2 ring-cyan-400' : ''}
         ${!canAfford && showCost ? 'opacity-60' : ''}
+        ${isDragging ? 'opacity-50 scale-105' : ''}
       `}
     >
       {/* Card name */}
@@ -104,14 +125,18 @@ interface EmptySlotProps {
   onClick?: () => void;
   isTarget?: boolean;
   label?: string;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
 }
 
-export function EmptySlot({ onClick, isTarget = false, label }: EmptySlotProps) {
+export function EmptySlot({ onClick, isTarget = false, label, onDragOver, onDrop }: EmptySlotProps) {
   return (
     <div
       onClick={onClick}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
       className={`
-        slot w-24 h-32 cursor-pointer bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-600 flex items-center justify-center
+        slot w-24 h-32 cursor-pointer bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-600 flex items-center justify-center transition-all duration-200
         ${isTarget ? 'border-yellow-400 bg-yellow-400/10' : ''}
       `}
     >
