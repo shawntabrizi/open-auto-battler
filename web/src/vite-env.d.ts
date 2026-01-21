@@ -10,11 +10,9 @@ declare module 'manalimit-core' {
     pitch_shop_card(index: number): void;
     buy_card(shopIndex: number): void;
     toggle_freeze(shopIndex: number): void;
-    place_unit(benchIndex: number, boardSlot: number): void;
     return_unit(boardSlot: number): void;
     swap_board_positions(slotA: number, slotB: number): void;
     pitch_board_unit(boardSlot: number): void;
-    pitch_bench_unit(benchIndex: number): void;
     end_turn(): void;
     continue_after_battle(): void;
     new_run(): void;

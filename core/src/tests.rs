@@ -86,10 +86,10 @@ mod tests {
         ];
 
         let sim1 = BattleSimulator::new(player_units.clone(), enemy_units.clone());
-        let (result1, events1) = sim1.simulate();
+        let (result1, events1, _) = sim1.simulate();
 
         let sim2 = BattleSimulator::new(player_units, enemy_units);
-        let (result2, events2) = sim2.simulate();
+        let (result2, events2, _) = sim2.simulate();
 
         // Results should be identical
         assert_eq!(events1.len(), events2.len(), "Event counts should match");
@@ -124,7 +124,7 @@ mod tests {
         }];
 
         let sim = BattleSimulator::new(player_units, enemy_units);
-        let (result, _events) = sim.simulate();
+        let (result, _events, _) = sim.simulate();
 
         // Both should die simultaneously = draw
         match result {
@@ -134,25 +134,26 @@ mod tests {
     }
 
     #[test]
-    fn test_find_empty_slots() {
+    fn test_find_empty_board_slots() {
         let mut state = GameState::new();
 
-        // Initially all bench and board slots should be empty
-        assert_eq!(state.find_empty_bench_slot(), Some(0));
+        // Initially all board slots should be empty
         assert_eq!(state.find_empty_board_slot(), Some(0));
 
-        // Fill first bench slot
+        // Fill first board slot
         let card = UnitCard::new(1, "test", "Test", 1, 1, 1, 1);
-        state.bench[0] = Some(card.clone());
+        state.board[0] = Some(BoardUnit::from_card(card.clone()));
 
-        assert_eq!(state.find_empty_bench_slot(), Some(1));
+        assert_eq!(state.find_empty_board_slot(), Some(1));
 
-        // Fill all bench slots
-        for i in 0..BENCH_SIZE {
-            state.bench[i] = Some(card.clone());
+        // Fill all board slots
+        for i in 0..BOARD_SIZE {
+            if state.board[i].is_none() {
+                state.board[i] = Some(BoardUnit::from_card(card.clone()));
+            }
         }
 
-        assert_eq!(state.find_empty_bench_slot(), None);
+        assert_eq!(state.find_empty_board_slot(), None);
     }
 
     #[test]

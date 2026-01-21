@@ -2,7 +2,7 @@ import { useGameStore } from '../store/gameStore';
 import { UnitCard, EmptySlot } from './UnitCard';
 
 export function Arena() {
-  const { view, selection, setSelection, placeUnit, returnUnit, pitchBoardUnit, swapBoardPositions } = useGameStore();
+  const { view, selection, setSelection, pitchBoardUnit, swapBoardPositions } = useGameStore();
 
   if (!view) return null;
 
@@ -14,14 +14,6 @@ export function Arena() {
 
   const handleBoardSlotClick = (index: number) => {
     const unit = view.board[index];
-
-    // If we have a bench unit selected, try to place it
-    if (selection?.type === 'bench') {
-      if (!unit) {
-        placeUnit(selection.index, index);
-      }
-      return;
-    }
 
     // If we have a board unit selected, try to swap
     if (selection?.type === 'board' && selection.index !== index) {
@@ -70,7 +62,7 @@ export function Arena() {
             <EmptySlot
               key={`empty-${i}`}
               onClick={() => handleBoardSlotClick(i)}
-              isTarget={selection?.type === 'bench'}
+              isTarget={false}
               label={`Slot ${i + 1}`}
             />
           )
@@ -80,12 +72,6 @@ export function Arena() {
       {/* Action buttons for selected board unit */}
       {selection?.type === 'board' && view.board[selection.index] && (
         <div className="flex gap-2">
-          <button
-            onClick={() => returnUnit(selection.index)}
-            className="btn btn-primary text-sm"
-          >
-            Return to Bench
-          </button>
           <button
             onClick={() => pitchBoardUnit(selection.index)}
             className="btn btn-danger text-sm"

@@ -34,12 +34,11 @@ pub fn state_summary(
     wins: i32,
     deck_count: usize,
     board_count: usize,
-    bench_count: usize,
 ) {
     console::log_1(
         &format!(
-            "=== STATE: {} | Round {} | Mana {}/{} | Lives {} | Wins {} | Deck {} | Board {} | Bench {} ===",
-            phase, round, mana, mana_limit, lives, wins, deck_count, board_count, bench_count
+            "=== STATE: {} | Round {} | Mana {}/{} | Lives {} | Wins {} | Deck {} | Board {} ===",
+            phase, round, mana, mana_limit, lives, wins, deck_count, board_count
         )
         .into(),
     );
