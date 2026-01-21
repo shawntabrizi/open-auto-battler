@@ -32,7 +32,7 @@ export function BattleView({
             // display 1 = position 4 = array index 3, etc.
             const arrayIndex = maxUnits - 1 - displayIndex;
 
-            console.log({ "shawn": "shawn", playerUnits, enemyUnits })
+
             const unit = playerUnits[arrayIndex];
             const displayPosition = maxUnits - displayIndex; // 5, 4, 3, 2, 1
             const isAttacking = attackingPlayerIndex === arrayIndex;
