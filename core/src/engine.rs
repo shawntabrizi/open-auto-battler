@@ -670,15 +670,19 @@ impl GameEngine {
             result: BattleResultView::from(&result),
             initial_player_units: initial_player_units.iter().map(|u| CombatUnitInfo {
                 name: u.name.clone(),
+                template_id: u.template_id.clone(),
                 attack: u.attack,
                 health: u.health,
                 max_health: u.max_health,
+                ability: u.ability.clone(),
             }).collect(),
             initial_enemy_units: initial_enemy_units.iter().map(|u| CombatUnitInfo {
                 name: u.name.clone(),
+                template_id: u.template_id.clone(),
                 attack: u.attack,
                 health: u.health,
                 max_health: u.max_health,
+                ability: u.ability.clone(),
             }).collect(),
         });
 

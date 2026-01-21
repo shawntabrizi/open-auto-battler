@@ -3,6 +3,53 @@ use serde::{Deserialize, Serialize};
 /// Unique identifier for cards
 pub type CardId = u32;
 
+/// Ability trigger conditions
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum AbilityTrigger {
+    OnStart,
+    OnFaint,
+    // Future: OnAttack, OnDamage, etc.
+}
+
+/// Ability effect types
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum AbilityEffect {
+    /// Deal damage to target
+    Damage { amount: i32, target: AbilityTarget },
+    /// Heal target
+    Heal { amount: i32, target: AbilityTarget },
+    /// Modify attack stat
+    AttackBuff { amount: i32, target: AbilityTarget, duration: i32 },
+    /// Modify health stat
+    HealthBuff { amount: i32, target: AbilityTarget, duration: i32 },
+    // Future: Summon, RedirectDamage, etc.
+}
+
+/// Ability target specifications
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum AbilityTarget {
+    SelfUnit,
+    AllAllies,
+    AllEnemies,
+    RandomAlly,
+    RandomEnemy,
+    FrontAlly,
+    FrontEnemy,
+}
+
+/// A unit ability
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Ability {
+    pub trigger: AbilityTrigger,
+    pub effect: AbilityEffect,
+    pub name: String,
+    pub description: String,
+}
+
 /// Combat stats for a unit
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -28,6 +75,7 @@ pub struct UnitCard {
     pub name: String,
     pub stats: UnitStats,
     pub economy: EconomyStats,
+    pub ability: Option<Ability>,
 }
 
 impl UnitCard {
@@ -49,7 +97,13 @@ impl UnitCard {
                 play_cost,
                 pitch_value,
             },
+            ability: None,
         }
+    }
+
+    pub fn with_ability(mut self, ability: Ability) -> Self {
+        self.ability = Some(ability);
+        self
     }
 }
 
@@ -108,7 +162,9 @@ impl ShopSlot {
 #[serde(rename_all = "camelCase")]
 pub struct CombatUnitInfo {
     pub name: String,
+    pub template_id: String,
     pub attack: i32,
     pub health: i32,
     pub max_health: i32,
+    pub ability: Option<Ability>,
 }

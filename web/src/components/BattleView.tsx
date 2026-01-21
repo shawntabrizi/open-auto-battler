@@ -1,3 +1,4 @@
+import { UnitCard } from './UnitCard';
 import type { CombatUnitInfo } from '../types';
 
 interface BattleViewProps {
@@ -5,6 +6,20 @@ interface BattleViewProps {
   enemyUnits: CombatUnitInfo[];
   attackingPlayerIndex?: number;
   attackingEnemyIndex?: number;
+}
+
+// Convert CombatUnitInfo to BoardUnitView for UnitCard compatibility
+function combatUnitToBoardUnitView(unit: CombatUnitInfo, index: number): any {
+  return {
+    id: index + 1000, // Fake ID for battle units
+    templateId: 'battle_unit',
+    name: unit.name,
+    attack: unit.attack,
+    maxHealth: unit.maxHealth,
+    currentHealth: unit.health,
+    playCost: 0, // Not relevant in battle
+    pitchValue: 0, // Not relevant in battle
+  };
 }
 
 export function BattleView({
@@ -31,8 +46,6 @@ export function BattleView({
             // Convert display index to array index: display 0 = position 5 = array index 4
             // display 1 = position 4 = array index 3, etc.
             const arrayIndex = maxUnits - 1 - displayIndex;
-
-
             const unit = playerUnits[arrayIndex];
             const displayPosition = maxUnits - displayIndex; // 5, 4, 3, 2, 1
             const isAttacking = attackingPlayerIndex === arrayIndex;
@@ -41,18 +54,15 @@ export function BattleView({
               <div key={`player-${displayIndex}`} className="flex flex-col items-center gap-1">
                 <div className="text-xs text-gray-500">{displayPosition}</div>
                 {unit ? (
-                  <div className={`w-16 h-20 rounded border flex flex-col items-center justify-center text-xs p-1 transition-all duration-200 ${isAttacking ? 'bg-yellow-600 border-yellow-400 shadow-lg scale-110 ring-2 ring-yellow-400' : 'bg-blue-900/50 border-blue-700'
-                    }`}>
-                    <div className="font-bold text-center leading-tight">{unit.name}</div>
-                    <div className="flex gap-1 mt-1">
-                      <span className="text-red-400">⚔️{unit.attack}</span>
-                      <span className="text-green-400">
-                        ❤️{unit.health}
-                      </span>
-                    </div>
+                  <div className={`transition-all duration-200 ${isAttacking ? 'scale-110 ring-2 ring-yellow-400' : ''}`}>
+                    <UnitCard
+                      card={combatUnitToBoardUnitView(unit, arrayIndex)}
+                      showCost={false}
+                      isSelected={false}
+                    />
                   </div>
                 ) : (
-                  <div className="w-16 h-20 rounded border border-gray-600 bg-gray-800/50 flex items-center justify-center">
+                  <div className="w-24 h-32 rounded border border-gray-600 bg-gray-800/50 flex items-center justify-center">
                     <span className="text-gray-600 text-xs">-</span>
                   </div>
                 )}
@@ -81,18 +91,15 @@ export function BattleView({
               <div key={`enemy-${displayIndex}`} className="flex flex-col items-center gap-1">
                 <div className="text-xs text-gray-500">{displayPosition}</div>
                 {unit ? (
-                  <div className={`w-16 h-20 rounded border flex flex-col items-center justify-center text-xs p-1 transition-all duration-200 ${isAttacking ? 'bg-yellow-600 border-yellow-400 shadow-lg scale-110 ring-2 ring-yellow-400' : 'bg-red-900/50 border-red-700'
-                    }`}>
-                    <div className="font-bold text-center leading-tight">{unit.name}</div>
-                    <div className="flex gap-1 mt-1">
-                      <span className="text-red-400">⚔️{unit.attack}</span>
-                      <span className="text-green-400">
-                        ❤️{unit.health}
-                      </span>
-                    </div>
+                  <div className={`transition-all duration-200 ${isAttacking ? 'scale-110 ring-2 ring-yellow-400' : ''}`}>
+                    <UnitCard
+                      card={combatUnitToBoardUnitView(unit, arrayIndex)}
+                      showCost={false}
+                      isSelected={false}
+                    />
                   </div>
                 ) : (
-                  <div className="w-16 h-20 rounded border border-gray-600 bg-gray-800/50 flex items-center justify-center">
+                  <div className="w-24 h-32 rounded border border-gray-600 bg-gray-800/50 flex items-center justify-center">
                     <span className="text-gray-600 text-xs">-</span>
                   </div>
                 )}

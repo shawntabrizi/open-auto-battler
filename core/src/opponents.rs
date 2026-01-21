@@ -1,4 +1,5 @@
 use crate::battle::CombatUnit;
+use crate::types::*;
 
 /// Get the opponent board for a given round (1-10)
 pub fn get_opponent_for_round(round: i32) -> Vec<CombatUnit> {
@@ -6,9 +7,16 @@ pub fn get_opponent_for_round(round: i32) -> Vec<CombatUnit> {
         1 => vec![
             CombatUnit {
                 name: "Goblin Scout".to_string(),
+                template_id: "goblin_scout".to_string(),
                 attack: 1,
                 health: 2,
                 max_health: 2,
+                ability: Some(Ability {
+                    trigger: AbilityTrigger::OnFaint,
+                    effect: AbilityEffect::AttackBuff { amount: 1, target: AbilityTarget::AllAllies, duration: 1 },
+                    name: "Rally Cry".to_string(),
+                    description: "Give all allies +1 attack when this unit dies".to_string(),
+                }),
             },
         ],
         2 => vec![
@@ -27,10 +35,17 @@ pub fn get_opponent_for_round(round: i32) -> Vec<CombatUnit> {
         ],
         3 => vec![
             CombatUnit {
-                name: "Orc Warrior".to_string(),
+                name: "Orc Shaman".to_string(),
+                template_id: "orc_shaman".to_string(),
                 attack: 2,
                 health: 3,
                 max_health: 3,
+                ability: Some(Ability {
+                    trigger: AbilityTrigger::OnStart,
+                    effect: AbilityEffect::Heal { amount: 1, target: AbilityTarget::AllAllies },
+                    name: "Tribal Healing".to_string(),
+                    description: "Heal all allies for 1 at battle start".to_string(),
+                }),
             },
             CombatUnit {
                 name: "Goblin Scout".to_string(),
