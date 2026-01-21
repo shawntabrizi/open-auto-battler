@@ -104,18 +104,18 @@ export function Shop() {
                .map((slot, i) => ({ slot, index: i }))
                .filter(({ slot }) => slot.card) // Only show slots with cards
                .map(({ slot, index: i }) => (
-                 <UnitCard
-                   key={slot.card!.id}
-                   card={slot.card!}
-                   showCost={true}
-                   frozen={slot.frozen}
-                   canAfford={view.canAfford[i]}
-                   isSelected={selection?.type === 'shop' && selection.index === i}
-                   onClick={() => handleShopSlotClick(i)}
-                   draggable={!slot.frozen} // Can't drag frozen cards
-                   onDragStart={(e) => handleShopDragStart(e, i)}
-                   onDragEnd={handleShopDragEnd}
-                 />
+                  <UnitCard
+                    key={slot.card!.id}
+                    card={slot.card!}
+                    showCost={true}
+                    frozen={slot.frozen}
+                    canAfford={view.canAfford[i]}
+                    isSelected={selection?.type === 'shop' && selection.index === i}
+                    onClick={() => handleShopSlotClick(i)}
+                    draggable={!slot.frozen} // Can't drag frozen cards
+                    onDragStart={(e) => handleShopDragStart(e, i)}
+                    onDragEnd={handleShopDragEnd}
+                  />
                ))}
            </div>
 

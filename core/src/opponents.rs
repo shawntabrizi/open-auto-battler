@@ -22,15 +22,24 @@ pub fn get_opponent_for_round(round: i32) -> Vec<CombatUnit> {
         2 => vec![
             CombatUnit {
                 name: "Goblin Scout".to_string(),
+                template_id: "goblin_scout".to_string(),
                 attack: 1,
                 health: 2,
                 max_health: 2,
+                ability: Some(Ability {
+                    trigger: AbilityTrigger::OnFaint,
+                    effect: AbilityEffect::AttackBuff { amount: 1, target: AbilityTarget::AllAllies, duration: 1 },
+                    name: "Rally Cry".to_string(),
+                    description: "Give all allies +1 attack when this unit dies".to_string(),
+                }),
             },
             CombatUnit {
                 name: "Goblin Grunt".to_string(),
+                template_id: "goblin_grunt".to_string(),
                 attack: 2,
                 health: 2,
                 max_health: 2,
+                ability: None,
             },
         ],
         3 => vec![

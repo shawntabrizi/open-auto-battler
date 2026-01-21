@@ -1,3 +1,21 @@
+// Ability types
+export interface Ability {
+  trigger: AbilityTrigger;
+  effect: AbilityEffect;
+  name: string;
+  description: string;
+}
+
+export type AbilityTrigger = 'onStart' | 'onFaint';
+
+export type AbilityTarget = 'selfUnit' | 'allAllies' | 'allEnemies' | 'randomAlly' | 'randomEnemy' | 'frontAlly' | 'frontEnemy';
+
+export type AbilityEffect =
+  | { type: 'damage'; amount: number; target: AbilityTarget }
+  | { type: 'heal'; amount: number; target: AbilityTarget }
+  | { type: 'attackBuff'; amount: number; target: AbilityTarget; duration: number }
+  | { type: 'healthBuff'; amount: number; target: AbilityTarget; duration: number };
+
 // Types matching the Rust view structs
 
 export interface CardView {
@@ -8,6 +26,7 @@ export interface CardView {
   health: number;
   playCost: number;
   pitchValue: number;
+  ability?: Ability;
 }
 
 export interface BoardUnitView {
@@ -50,9 +69,11 @@ export interface CombatTarget {
 
 export interface CombatUnitInfo {
   name: string;
+  templateId: string;
   attack: number;
   health: number;
   maxHealth: number;
+  ability?: Ability;
 }
 
 export type CombatEvent =

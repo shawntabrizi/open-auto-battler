@@ -14,6 +14,7 @@ pub struct CardView {
     pub health: i32,
     pub play_cost: i32,
     pub pitch_value: i32,
+    pub ability: Option<crate::types::Ability>,
 }
 
 impl From<&UnitCard> for CardView {
@@ -26,6 +27,7 @@ impl From<&UnitCard> for CardView {
             health: card.stats.health,
             play_cost: card.economy.play_cost,
             pitch_value: card.economy.pitch_value,
+            ability: card.ability.clone(),
         }
     }
 }
