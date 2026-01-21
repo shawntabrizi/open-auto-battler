@@ -54,7 +54,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const wasm = await import('manalimit-core') as unknown as WasmModule;
+      const wasm = (await import('manalimit-core')) as unknown as WasmModule;
       if (!wasmInitialized) {
         await wasm.default();
         wasmInitialized = true;

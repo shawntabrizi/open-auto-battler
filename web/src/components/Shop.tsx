@@ -87,9 +87,7 @@ export function Shop() {
           >
             🔥
           </div>
-          <div className="text-xs text-gray-500 mt-1">
-            Drag cards here to pitch
-          </div>
+          <div className="text-xs text-gray-500 mt-1">Drag cards here to pitch</div>
         </div>
 
         {/* Center: Shop/Conveyor Belt */}
@@ -99,25 +97,25 @@ export function Shop() {
             <span className="text-xs text-gray-500">({view.deckCount} cards in deck)</span>
           </div>
 
-           <div className="flex gap-3">
-             {view.shop
-               .map((slot, i) => ({ slot, index: i }))
-               .filter(({ slot }) => slot.card) // Only show slots with cards
-               .map(({ slot, index: i }) => (
-                  <UnitCard
-                    key={slot.card!.id}
-                    card={slot.card!}
-                    showCost={true}
-                    frozen={slot.frozen}
-                    canAfford={view.canAfford[i]}
-                    isSelected={selection?.type === 'shop' && selection.index === i}
-                    onClick={() => handleShopSlotClick(i)}
-                    draggable={!slot.frozen} // Can't drag frozen cards
-                    onDragStart={(e) => handleShopDragStart(e, i)}
-                    onDragEnd={handleShopDragEnd}
-                  />
-               ))}
-            </div>
+          <div className="flex gap-3">
+            {view.shop
+              .map((slot, i) => ({ slot, index: i }))
+              .filter(({ slot }) => slot.card) // Only show slots with cards
+              .map(({ slot, index: i }) => (
+                <UnitCard
+                  key={slot.card!.id}
+                  card={slot.card!}
+                  showCost={true}
+                  frozen={slot.frozen}
+                  canAfford={view.canAfford[i]}
+                  isSelected={selection?.type === 'shop' && selection.index === i}
+                  onClick={() => handleShopSlotClick(i)}
+                  draggable={!slot.frozen} // Can't drag frozen cards
+                  onDragStart={(e) => handleShopDragStart(e, i)}
+                  onDragEnd={handleShopDragEnd}
+                />
+              ))}
+          </div>
         </div>
 
         {/* Right: Mana Tank */}
@@ -133,14 +131,10 @@ export function Shop() {
             />
             {/* Level text */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xl font-bold text-white drop-shadow-lg">
-                {view.mana}
-              </span>
+              <span className="text-xl font-bold text-white drop-shadow-lg">{view.mana}</span>
             </div>
           </div>
-          <div className="text-xs text-gray-400 mt-1">
-            Limit: {view.manaLimit}
-          </div>
+          <div className="text-xs text-gray-400 mt-1">Limit: {view.manaLimit}</div>
         </div>
       </div>
     </div>

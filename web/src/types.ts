@@ -8,7 +8,14 @@ export interface Ability {
 
 export type AbilityTrigger = 'onStart' | 'onFaint';
 
-export type AbilityTarget = 'selfUnit' | 'allAllies' | 'allEnemies' | 'randomAlly' | 'randomEnemy' | 'frontAlly' | 'frontEnemy';
+export type AbilityTarget =
+  | 'selfUnit'
+  | 'allAllies'
+  | 'allEnemies'
+  | 'randomAlly'
+  | 'randomEnemy'
+  | 'frontAlly'
+  | 'frontEnemy';
 
 export type AbilityEffect =
   | { type: 'damage'; amount: number; target: AbilityTarget }
@@ -63,7 +70,7 @@ export interface GameView {
 export interface UnitView {
   instanceId: string;
   templateId: string;
-  name:string;
+  name: string;
   attack: number;
   health: number;
   maxHealth: number;
@@ -71,12 +78,14 @@ export interface UnitView {
 }
 
 export type CombatEvent =
-  | { type: 'abilityTrigger'; payload: { sourceInstanceId: string; abilityName: string; } }
-  | { type: 'clash'; payload: { pDmg: number; eDmg: number; } }
-  | { type: 'damageTaken'; payload: { targetInstanceId: string; team: 'PLAYER' | 'ENEMY'; remainingHp: number; } }
-  | { type: 'unitDeath'; payload: { team: 'PLAYER' | 'ENEMY'; newBoardState: UnitView[]; } }
-  | { type: 'battleEnd'; payload: { result: 'VICTORY' | 'DEFEAT' | 'DRAW'; } };
-
+  | { type: 'abilityTrigger'; payload: { sourceInstanceId: string; abilityName: string } }
+  | { type: 'clash'; payload: { pDmg: number; eDmg: number } }
+  | {
+      type: 'damageTaken';
+      payload: { targetInstanceId: string; team: 'PLAYER' | 'ENEMY'; remainingHp: number };
+    }
+  | { type: 'unitDeath'; payload: { team: 'PLAYER' | 'ENEMY'; newBoardState: UnitView[] } }
+  | { type: 'battleEnd'; payload: { result: 'VICTORY' | 'DEFEAT' | 'DRAW' } };
 
 export interface BattleOutput {
   events: CombatEvent[];

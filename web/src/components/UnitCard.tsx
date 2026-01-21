@@ -62,9 +62,7 @@ export function UnitCard({
       `}
     >
       {/* Card name */}
-      <div className="text-xs font-bold text-center truncate mb-1">
-        {card.name}
-      </div>
+      <div className="text-xs font-bold text-center truncate mb-1">{card.name}</div>
 
       {/* Card art placeholder */}
       <div className="w-full h-14 bg-gray-700 rounded flex items-center justify-center text-2xl">
@@ -137,7 +135,13 @@ interface EmptySlotProps {
   onDrop?: (e: React.DragEvent) => void;
 }
 
-export function EmptySlot({ onClick, isTarget = false, label, onDragOver, onDrop }: EmptySlotProps) {
+export function EmptySlot({
+  onClick,
+  isTarget = false,
+  label,
+  onDragOver,
+  onDrop,
+}: EmptySlotProps) {
   return (
     <div
       onClick={onClick}

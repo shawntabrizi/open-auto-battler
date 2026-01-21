@@ -30,9 +30,12 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
 
   const getTriggerDescription = (trigger: string): string => {
     switch (trigger) {
-      case 'onStart': return 'Battle Start';
-      case 'onFaint': return 'When Dies';
-      default: return trigger;
+      case 'onStart':
+        return 'Battle Start';
+      case 'onFaint':
+        return 'When Dies';
+      default:
+        return trigger;
     }
   };
 
@@ -53,27 +56,38 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
 
   const getTargetDescription = (target: string): string => {
     switch (target) {
-      case 'selfUnit': return 'this unit';
-      case 'allAllies': return 'all allies';
-      case 'allEnemies': return 'all enemies';
-      case 'randomAlly': return 'a random ally';
-      case 'randomEnemy': return 'a random enemy';
-      case 'frontAlly': return 'the front ally';
-      case 'frontEnemy': return 'the front enemy';
-      default: return target;
+      case 'selfUnit':
+        return 'this unit';
+      case 'allAllies':
+        return 'all allies';
+      case 'allEnemies':
+        return 'all enemies';
+      case 'randomAlly':
+        return 'a random ally';
+      case 'randomEnemy':
+        return 'a random enemy';
+      case 'frontAlly':
+        return 'the front ally';
+      case 'frontEnemy':
+        return 'the front enemy';
+      default:
+        return target;
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-card-bg border-2 border-gray-600 rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-card-bg border-2 border-gray-600 rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-xl font-bold text-white">{card.name}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white text-xl"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl">
             ×
           </button>
         </div>
@@ -121,9 +135,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
             <div className="text-sm text-gray-300 mb-2">
               <strong>Trigger:</strong> {getTriggerDescription(card.ability.trigger)}
             </div>
-            <div className="text-sm text-white">
-              {card.ability.description}
-            </div>
+            <div className="text-sm text-white">{card.ability.description}</div>
             <div className="text-xs text-gray-400 mt-2 italic">
               {getEffectDescription(card.ability.effect)}
             </div>
@@ -138,10 +150,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           >
             {showRaw ? 'Hide' : 'Show'} Raw JSON
           </button>
-          <button
-            onClick={onClose}
-            className="flex-1 btn btn-primary"
-          >
+          <button onClick={onClose} className="flex-1 btn btn-primary">
             Close
           </button>
         </div>

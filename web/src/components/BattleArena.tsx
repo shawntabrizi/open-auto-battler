@@ -5,7 +5,13 @@ import type { BattleOutput, UnitView } from '../types';
 // --- Helper Components ---
 
 // Floating text for damage numbers
-const DamageNumber = ({ amount, onAnimationEnd }: { amount: number; onAnimationEnd: () => void }) => {
+const DamageNumber = ({
+  amount,
+  onAnimationEnd,
+}: {
+  amount: number;
+  onAnimationEnd: () => void;
+}) => {
   return (
     <div
       className="absolute inset-0 flex items-center justify-center animate-float-up"
@@ -29,7 +35,6 @@ const AbilityToast = ({ name, onAnimationEnd }: { name: string; onAnimationEnd: 
     </div>
   );
 };
-
 
 // --- Main BattleArena Component ---
 
@@ -62,7 +67,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       switch (event.type) {
         case 'abilityTrigger': {
           const { sourceInstanceId, abilityName } = event.payload;
-          setAbilityToasts(prev => new Map(prev).set(sourceInstanceId, abilityName));
+          setAbilityToasts((prev) => new Map(prev).set(sourceInstanceId, abilityName));
           delay = 800; // Show toast for a bit
           break;
         }
@@ -70,7 +75,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
         case 'clash': {
           const pId = (playerBoard || []).length > 0 ? playerBoard[0].instanceId : null;
           const eId = (enemyBoard || []).length > 0 ? enemyBoard[0].instanceId : null;
-          const clashing = [pId, eId].filter(id => id !== null) as string[];
+          const clashing = [pId, eId].filter((id) => id !== null) as string[];
           setClashingUnitIds(clashing);
           delay = 300; // Wait for bump animation
           break;
@@ -78,17 +83,17 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
 
         case 'damageTaken': {
           const { targetInstanceId, remainingHp } = event.payload;
-          const pUnit = playerBoard.find(u => u.instanceId === targetInstanceId);
-          const eUnit = enemyBoard.find(u => u.instanceId === targetInstanceId);
+          const pUnit = playerBoard.find((u) => u.instanceId === targetInstanceId);
+          const eUnit = enemyBoard.find((u) => u.instanceId === targetInstanceId);
           const oldHp = pUnit?.health ?? eUnit?.health ?? 0;
           const damage = oldHp - remainingHp;
 
           if (damage > 0) {
-            setDamageNumbers(prev => new Map(prev).set(targetInstanceId, damage));
+            setDamageNumbers((prev) => new Map(prev).set(targetInstanceId, damage));
           }
 
           const updateBoard = (board: UnitView[]) =>
-            board.map(u =>
+            board.map((u) =>
               u.instanceId === targetInstanceId ? { ...u, health: remainingHp } : u
             );
 
@@ -124,23 +129,24 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
         }
       }
 
-      setTimeout(() => setEventIndex(i => i + 1), delay);
+      setTimeout(() => setEventIndex((i) => i + 1), delay);
     };
 
     processNextEvent();
-
   }, [eventIndex, battleOutput, onBattleEnd]);
-
 
   const renderUnit = (unit: UnitView | undefined, team: 'player' | 'enemy', index: number) => {
     const isPlayer = team === 'player';
     // Player: 5 4 3 2 1 -> array is [0,1,2,3,4] but we want to display from right to left
     // So array[0] is at visual position 1 (far right of player side)
-    const displayIndex = isPlayer ? (4 - index) : index;
+    const displayIndex = isPlayer ? 4 - index : index;
 
     if (!unit) {
       return (
-        <div key={`${team}-empty-${displayIndex}`} className="w-24 h-32 rounded border border-gray-600 bg-gray-800/50 flex items-center justify-center">
+        <div
+          key={`${team}-empty-${displayIndex}`}
+          className="w-24 h-32 rounded border border-gray-600 bg-gray-800/50 flex items-center justify-center"
+        >
           <span className="text-gray-600 text-xs">-</span>
         </div>
       );
@@ -150,7 +156,9 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
 
     return (
       <div key={unit.instanceId} className="relative">
-        <div className={`transition-transform duration-200 ${isClashing ? (isPlayer ? 'clash-bump-right' : 'clash-bump-left') : ''}`}>
+        <div
+          className={`transition-transform duration-200 ${isClashing ? (isPlayer ? 'clash-bump-right' : 'clash-bump-left') : ''}`}
+        >
           <UnitCard
             card={{
               id: 0, // Not used
@@ -159,7 +167,8 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
               attack: unit.attack,
               maxHealth: unit.maxHealth,
               currentHealth: unit.health,
-              playCost: 0, pitchValue: 0
+              playCost: 0,
+              pitchValue: 0,
             }}
             showCost={false}
             isSelected={false}
@@ -168,32 +177,38 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
         {damageNumbers.has(unit.instanceId) && (
           <DamageNumber
             amount={damageNumbers.get(unit.instanceId)!}
-            onAnimationEnd={() => setDamageNumbers(prev => {
-              const next = new Map(prev);
-              next.delete(unit.instanceId);
-              return next;
-            })}
+            onAnimationEnd={() =>
+              setDamageNumbers((prev) => {
+                const next = new Map(prev);
+                next.delete(unit.instanceId);
+                return next;
+              })
+            }
           />
         )}
         {abilityToasts.has(unit.instanceId) && (
           <AbilityToast
             name={abilityToasts.get(unit.instanceId)!}
-            onAnimationEnd={() => setAbilityToasts(prev => {
-              const next = new Map(prev);
-              next.delete(unit.instanceId);
-              return next;
-            })}
+            onAnimationEnd={() =>
+              setAbilityToasts((prev) => {
+                const next = new Map(prev);
+                next.delete(unit.instanceId);
+                return next;
+              })
+            }
           />
         )}
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="flex items-center justify-center gap-8 p-4 bg-gray-800 rounded-lg">
       {/* Player side (left) */}
       <div className="flex gap-2">
-        {Array.from({ length: 5 }).map((_, i) => renderUnit((playerBoard || [])[4 - i], 'player', 4 - i))}
+        {Array.from({ length: 5 }).map((_, i) =>
+          renderUnit((playerBoard || [])[4 - i], 'player', 4 - i)
+        )}
       </div>
 
       <div className="text-4xl font-bold text-gray-500">VS</div>

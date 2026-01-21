@@ -30,10 +30,7 @@ export function HUD() {
         </div>
 
         {view.phase === 'shop' && (
-          <button
-            onClick={endTurn}
-            className="btn btn-primary text-lg px-6 py-3"
-          >
+          <button onClick={endTurn} className="btn btn-primary text-lg px-6 py-3">
             Battle!
           </button>
         )}
@@ -44,10 +41,7 @@ export function HUD() {
         <span className="text-gray-400">Wins:</span>
         <div className="flex gap-1">
           {Array.from({ length: 10 }).map((_, i) => (
-            <span
-              key={i}
-              className={`text-lg ${i < view.wins ? 'text-gold' : 'text-gray-600'}`}
-            >
+            <span key={i} className={`text-lg ${i < view.wins ? 'text-gold' : 'text-gray-600'}`}>
               ★
             </span>
           ))}

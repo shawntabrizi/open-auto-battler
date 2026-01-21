@@ -49,10 +49,7 @@ export function GameOverScreen() {
         </div>
 
         {/* New Run Button */}
-        <button
-          onClick={newRun}
-          className="btn btn-primary text-xl px-12 py-4"
-        >
+        <button onClick={newRun} className="btn btn-primary text-xl px-12 py-4">
           New Run
         </button>
       </div>

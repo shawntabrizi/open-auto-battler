@@ -40,7 +40,10 @@ export function GameLayout() {
 
   // Card panel is always visible during shop phase
   const showCardPanel = view?.phase === 'shop';
-  const selectedCard = view?.phase === 'shop' && selection?.type === 'shop' && view?.shop[selection!.index]?.card ? view.shop[selection!.index].card! : null;
+  const selectedCard =
+    view?.phase === 'shop' && selection?.type === 'shop' && view?.shop[selection!.index]?.card
+      ? view.shop[selection!.index].card!
+      : null;
 
   return (
     <div className="h-full flex flex-col bg-board-bg">
@@ -58,10 +61,7 @@ export function GameLayout() {
       </div>
 
       {/* Card Detail Panel - Always visible during shop */}
-      <CardDetailPanel
-        card={selectedCard}
-        isVisible={showCardPanel}
-      />
+      <CardDetailPanel card={selectedCard} isVisible={showCardPanel} />
 
       {/* Battle Overlay */}
       <BattleOverlay />

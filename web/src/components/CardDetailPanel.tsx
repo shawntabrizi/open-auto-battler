@@ -50,9 +50,12 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
 
     const getTriggerDescription = (trigger: string): string => {
       switch (trigger) {
-        case 'onStart': return 'Battle Start';
-        case 'onFaint': return 'When Dies';
-        default: return trigger;
+        case 'onStart':
+          return 'Battle Start';
+        case 'onFaint':
+          return 'When Dies';
+        default:
+          return trigger;
       }
     };
 
@@ -73,14 +76,22 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
 
     const getTargetDescription = (target: string): string => {
       switch (target) {
-        case 'selfUnit': return 'this unit';
-        case 'allAllies': return 'all allies';
-        case 'allEnemies': return 'all enemies';
-        case 'randomAlly': return 'a random ally';
-        case 'randomEnemy': return 'a random enemy';
-        case 'frontAlly': return 'the front ally';
-        case 'frontEnemy': return 'the front enemy';
-        default: return target;
+        case 'selfUnit':
+          return 'this unit';
+        case 'allAllies':
+          return 'all allies';
+        case 'allEnemies':
+          return 'all enemies';
+        case 'randomAlly':
+          return 'a random ally';
+        case 'randomEnemy':
+          return 'a random enemy';
+        case 'frontAlly':
+          return 'the front ally';
+        case 'frontEnemy':
+          return 'the front enemy';
+        default:
+          return target;
       }
     };
 
@@ -94,9 +105,7 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
           </div>
 
           {/* Card Name */}
-          <div className="text-lg font-bold text-center text-white mb-2">
-            {card.name}
-          </div>
+          <div className="text-lg font-bold text-center text-white mb-2">{card.name}</div>
 
           {/* Stats */}
           <div className="flex gap-4 text-center">
@@ -134,9 +143,7 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
             <div className="text-xs text-gray-300 mb-2">
               <strong>Trigger:</strong> {getTriggerDescription(card.ability.trigger)}
             </div>
-            <div className="text-sm text-white">
-              {card.ability.description}
-            </div>
+            <div className="text-sm text-white">{card.ability.description}</div>
             <div className="text-xs text-gray-400 mt-2 italic">
               {getEffectDescription(card.ability.effect)}
             </div>
@@ -207,7 +214,8 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
         <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
           <h3 className="text-md font-bold text-yellow-400 mb-2">🎯 Game Objective</h3>
           <p className="text-sm text-white">
-            Build a powerful board of units to defeat enemy units in battle. Survive 10 rounds to win!
+            Build a powerful board of units to defeat enemy units in battle. Survive 10 rounds to
+            win!
           </p>
         </div>
 
@@ -234,8 +242,12 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
         <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
           <h3 className="text-md font-bold text-yellow-400 mb-2">💎 Ability Triggers</h3>
           <ul className="text-sm text-white space-y-1">
-            <li><strong>Battle Start:</strong> Triggers when battle begins</li>
-            <li><strong>When Dies:</strong> Triggers when unit is defeated</li>
+            <li>
+              <strong>Battle Start:</strong> Triggers when battle begins
+            </li>
+            <li>
+              <strong>When Dies:</strong> Triggers when unit is defeated
+            </li>
           </ul>
         </div>
       </div>

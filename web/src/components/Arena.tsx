@@ -3,7 +3,8 @@ import React from 'react';
 import { UnitCard, EmptySlot } from './UnitCard';
 
 export function Arena() {
-  const { view, selection, setSelection, pitchBoardUnit, swapBoardPositions, buyCard } = useGameStore();
+  const { view, selection, setSelection, pitchBoardUnit, swapBoardPositions, buyCard } =
+    useGameStore();
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
 
   // Drag and drop handlers
@@ -51,8 +52,6 @@ export function Arena() {
     console.error('Arena: view.board is invalid:', view.board);
     return <div className="text-red-500">Error: Board data not available</div>;
   }
-
-
 
   const handleBoardSlotClick = (index: number) => {
     const unit = view.board[index];
