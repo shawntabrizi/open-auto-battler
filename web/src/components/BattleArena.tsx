@@ -54,6 +54,8 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
   const [abilityToasts, setAbilityToasts] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     const processNextEvent = () => {
       if (eventIndex >= battleOutput.events.length) {
         console.log({ battleOutput });
@@ -127,12 +129,62 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
           delay = 1000;
           break;
         }
+
+        case 'abilityDamage': {
+          const { targetInstanceId, damage, remainingHp } = event.payload;
+          if (damage > 0) {
+            setDamageNumbers((prev) => new Map(prev).set(targetInstanceId, damage));
+          }
+          const updateBoard = (board: UnitView[]) =>
+            board.map((u) =>
+              u.instanceId === targetInstanceId ? { ...u, health: remainingHp } : u
+            );
+          setPlayerBoard(updateBoard);
+          setEnemyBoard(updateBoard);
+          delay = 400;
+          break;
+        }
+
+        case 'abilityHeal': {
+          const { targetInstanceId: healTarget, newHp } = event.payload;
+          const updateBoard = (board: UnitView[]) =>
+            board.map((u) =>
+              u.instanceId === healTarget ? { ...u, health: newHp } : u
+            );
+          setPlayerBoard(updateBoard);
+          setEnemyBoard(updateBoard);
+          delay = 400;
+          break;
+        }
+
+        case 'abilityBuff': {
+          const { targetInstanceId: buffTarget, newAttack, newHealth } = event.payload;
+          setPlayerBoard((board) =>
+            board.map((u) =>
+              u.instanceId === buffTarget ? { ...u, attack: newAttack, health: newHealth } : u
+            )
+          );
+          setEnemyBoard((board) =>
+            board.map((u) =>
+              u.instanceId === buffTarget ? { ...u, attack: newAttack, health: newHealth } : u
+            )
+          );
+          delay = 400;
+          break;
+        }
       }
 
-      setTimeout(() => setEventIndex((i) => i + 1), delay);
+      timeoutId = setTimeout(() => setEventIndex((i) => i + 1), delay);
     };
 
     processNextEvent();
+
+    // Cleanup: cancel timeout if effect re-runs (e.g., due to StrictMode double-invoke)
+    return () => {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [eventIndex, battleOutput, onBattleEnd]);
 
   const renderUnit = (unit: UnitView | undefined, team: 'player' | 'enemy', index: number) => {

@@ -71,6 +71,8 @@ pub enum CombatEvent {
         target_instance_id: UnitInstanceId,
         attack_buff: i32,
         health_buff: i32,
+        new_attack: i32,
+        new_health: i32,
     },
 }
 
@@ -171,6 +173,8 @@ fn apply_ability_effect(
                         target_instance_id: target_id,
                         attack_buff: *amount,
                         health_buff: 0,
+                        new_attack: unit.effective_attack(),
+                        new_health: unit.health,
                     });
                 }
             }
@@ -187,6 +191,8 @@ fn apply_ability_effect(
                         target_instance_id: target_id,
                         attack_buff: 0,
                         health_buff: *amount,
+                        new_attack: unit.effective_attack(),
+                        new_health: unit.health,
                     });
                 }
             }

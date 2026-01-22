@@ -85,7 +85,26 @@ export type CombatEvent =
       payload: { targetInstanceId: string; team: 'PLAYER' | 'ENEMY'; remainingHp: number };
     }
   | { type: 'unitDeath'; payload: { team: 'PLAYER' | 'ENEMY'; newBoardState: UnitView[] } }
-  | { type: 'battleEnd'; payload: { result: 'VICTORY' | 'DEFEAT' | 'DRAW' } };
+  | { type: 'battleEnd'; payload: { result: 'VICTORY' | 'DEFEAT' | 'DRAW' } }
+  | {
+      type: 'abilityDamage';
+      payload: { sourceInstanceId: string; targetInstanceId: string; damage: number; remainingHp: number };
+    }
+  | {
+      type: 'abilityHeal';
+      payload: { sourceInstanceId: string; targetInstanceId: string; heal: number; newHp: number };
+    }
+  | {
+      type: 'abilityBuff';
+      payload: {
+        sourceInstanceId: string;
+        targetInstanceId: string;
+        attackBuff: number;
+        healthBuff: number;
+        newAttack: number;
+        newHealth: number;
+      };
+    };
 
 export interface BattleOutput {
   events: CombatEvent[];
