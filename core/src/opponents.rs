@@ -2,7 +2,10 @@ use crate::types::{BoardUnit, UnitCard};
 use crate::units::get_starter_templates;
 
 /// Create a unit from a template
-fn create_unit_from_template(card_id_counter: &mut u32, template_id: &str) -> BoardUnit {
+fn create_unit_from_template(
+    card_id_counter: &mut u32,
+    template_id: &str,
+) -> Result<BoardUnit, String> {
     *card_id_counter += 1;
 
     // Get all starter templates (this includes all units now)
@@ -12,7 +15,7 @@ fn create_unit_from_template(card_id_counter: &mut u32, template_id: &str) -> Bo
     let template = templates
         .into_iter()
         .find(|t| t.template_id == template_id)
-        .expect(&format!("Template '{}' not found", template_id));
+        .ok_or_else(|| format!("Template '{}' not found", template_id))?;
 
     // Create the unit card with the template data
     let mut card = UnitCard::new(
@@ -30,11 +33,14 @@ fn create_unit_from_template(card_id_counter: &mut u32, template_id: &str) -> Bo
         card = card.with_ability(ability);
     }
 
-    BoardUnit::from_card(card)
+    Ok(BoardUnit::from_card(card))
 }
 
 /// Get the opponent board for a given round (1-10)
-pub fn get_opponent_for_round(round: i32, card_id_counter: &mut u32) -> Vec<BoardUnit> {
+pub fn get_opponent_for_round(
+    round: i32,
+    card_id_counter: &mut u32,
+) -> Result<Vec<BoardUnit>, String> {
     let mut units = Vec::new();
     let template_ids = match round {
         1 => vec!["goblin_scout"],
@@ -73,8 +79,8 @@ pub fn get_opponent_for_round(round: i32, card_id_counter: &mut u32) -> Vec<Boar
     };
 
     for template_id in template_ids {
-        units.push(create_unit_from_template(card_id_counter, template_id));
+        units.push(create_unit_from_template(card_id_counter, template_id)?);
     }
 
-    units
+    Ok(units)
 }

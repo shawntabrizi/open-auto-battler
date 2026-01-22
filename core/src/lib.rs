@@ -12,7 +12,7 @@ mod view;
 #[cfg(test)]
 mod tests;
 
-pub use battle::*;
+pub use battle::{calculate_priority_order, CombatUnit, Team};
 pub use engine::GameEngine;
 pub use state::*;
 pub use types::*;

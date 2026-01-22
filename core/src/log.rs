@@ -1,25 +1,23 @@
+#![allow(unused)]
+
 use web_sys::console;
 
 /// Log an info message to the browser console
-#[allow(unused)]
 pub fn info(msg: &str) {
     console::log_1(&msg.into());
 }
 
 /// Log a warning message to the browser console
-#[allow(unused)]
 pub fn warn(msg: &str) {
     console::warn_1(&msg.into());
 }
 
 /// Log an error message to the browser console
-#[allow(unused)]
 pub fn error(msg: &str) {
     console::error_1(&msg.into());
 }
 
 /// Log a debug message with a label
-#[allow(unused)]
 pub fn debug(label: &str, msg: &str) {
     console::log_1(&format!("[{}] {}", label, msg).into());
 }

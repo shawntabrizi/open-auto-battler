@@ -187,14 +187,14 @@ pub fn resolve_battle(
     events
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-enum Team {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Team {
     Player,
     Enemy,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum BattlePhase {
+pub enum BattlePhase {
     Start,
     BeforeAttack,
     Attack,
@@ -215,16 +215,16 @@ impl Team {
 }
 
 #[derive(Debug, Clone)]
-struct CombatUnit {
-    instance_id: String,
-    team: Team,
-    attack: i32,
-    health: i32,
-    abilities: Vec<Ability>,
-    template_id: String,
-    name: String,
-    attack_buff: i32,
-    health_buff: i32,
+pub struct CombatUnit {
+    pub instance_id: String,
+    pub team: Team,
+    pub attack: i32,
+    pub health: i32,
+    pub abilities: Vec<Ability>,
+    pub template_id: String,
+    pub name: String,
+    pub attack_buff: i32,
+    pub health_buff: i32,
 }
 
 impl CombatUnit {
@@ -394,29 +394,37 @@ fn apply_ability_effect(
 
             // Trigger OnSpawn abilities - these trigger when any unit is spawned
             // The abilities belong to existing units and can affect the spawned unit
-            let mut spawn_triggers: Vec<(String, Team, i32, AbilityEffect, String)> = player_units
-                .iter()
-                .chain(enemy_units.iter())
-                .flat_map(|u| {
-                    u.abilities.iter().filter_map(|a| {
-                        if a.trigger == AbilityTrigger::OnSpawn {
-                            Some((
-                                u.instance_id.clone(),
-                                u.team,
-                                u.attack,
-                                a.effect.clone(),
-                                a.name.clone(),
-                            ))
-                        } else {
-                            None
-                        }
+            let mut spawn_triggers: Vec<(String, Team, usize, AbilityEffect, String)> =
+                player_units
+                    .iter()
+                    .enumerate()
+                    .chain(enemy_units.iter().enumerate().map(|(i, u)| (i, u)))
+                    .flat_map(|(unit_idx, u)| {
+                        u.abilities.iter().filter_map(move |a| {
+                            if a.trigger == AbilityTrigger::OnSpawn {
+                                Some((
+                                    u.instance_id.clone(),
+                                    u.team,
+                                    unit_idx,
+                                    a.effect.clone(),
+                                    a.name.clone(),
+                                ))
+                            } else {
+                                None
+                            }
+                        })
                     })
-                })
-                .collect();
+                    .collect();
 
-            // Sort by Attack Power (Descending), with RNG tie-break
-            spawn_triggers.shuffle(rng);
-            spawn_triggers.sort_by_key(|(_, _, attack, _, _)| -attack);
+            // Sort triggers by priority order
+            let priority_order = calculate_priority_order(player_units, enemy_units, rng);
+            spawn_triggers.sort_by_key(|(_, team, unit_idx, _, _)| {
+                // Find the position of this unit in the priority order
+                priority_order
+                    .iter()
+                    .position(|(p_team, p_idx)| p_team == team && p_idx == unit_idx)
+                    .unwrap_or(usize::MAX)
+            });
 
             for (instance_id, team, _, effect, ability_name) in spawn_triggers {
                 events.push(CombatEvent::AbilityTrigger {
@@ -505,7 +513,7 @@ fn find_unit_mut<'a>(
 }
 
 /// Calculate effect priority for units: attack desc, then health desc, then random
-fn calculate_priority_order(
+pub fn calculate_priority_order(
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
     rng: &mut StdRng,
@@ -623,16 +631,17 @@ fn execute_start_phase(
     rng: &mut StdRng,
 ) {
     // Collect trigger info (we need owned data to avoid borrow issues)
-    let mut start_triggers: Vec<(String, Team, i32, AbilityEffect, String)> = player_units
+    let mut start_triggers: Vec<(String, Team, usize, AbilityEffect, String)> = player_units
         .iter()
-        .chain(enemy_units.iter())
-        .flat_map(|u| {
-            u.abilities.iter().filter_map(|a| {
+        .enumerate()
+        .chain(enemy_units.iter().enumerate().map(|(i, u)| (i, u)))
+        .flat_map(|(unit_idx, u)| {
+            u.abilities.iter().filter_map(move |a| {
                 if a.trigger == AbilityTrigger::OnStart {
                     Some((
                         u.instance_id.clone(),
                         u.team,
-                        u.attack,
+                        unit_idx,
                         a.effect.clone(),
                         a.name.clone(),
                     ))
@@ -643,9 +652,15 @@ fn execute_start_phase(
         })
         .collect();
 
-    // Sort by Attack Power (Descending), with RNG tie-break
-    start_triggers.shuffle(rng);
-    start_triggers.sort_by_key(|(_, _, attack, _, _)| -attack);
+    // Sort triggers by priority order
+    let priority_order = calculate_priority_order(player_units, enemy_units, rng);
+    start_triggers.sort_by_key(|(_, team, unit_idx, _, _)| {
+        // Find the position of this unit in the priority order
+        priority_order
+            .iter()
+            .position(|(p_team, p_idx)| p_team == team && p_idx == unit_idx)
+            .unwrap_or(usize::MAX)
+    });
 
     for (instance_id, team, _, effect, ability_name) in start_triggers {
         events.push(CombatEvent::AbilityTrigger {
