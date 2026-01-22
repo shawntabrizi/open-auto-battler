@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use crate::battle::CombatEvent;
     use crate::state::*;
     use crate::types::*;
 
@@ -142,5 +143,222 @@ mod tests {
         assert_eq!(card.stats.health, 2);
         assert_eq!(card.economy.play_cost, 1);
         assert_eq!(card.economy.pitch_value, 3);
+    }
+
+    #[test]
+    fn test_ability_attack_buff_on_start() {
+        // Create a unit with OnStart +2 Attack buff
+        let ability = Ability {
+            trigger: AbilityTrigger::OnStart,
+            effect: AbilityEffect::AttackBuff {
+                amount: 2,
+                target: AbilityTarget::SelfUnit,
+                duration: 0,
+            },
+            name: "Battle Rage".to_string(),
+            description: "Gain +2 attack".to_string(),
+        };
+        let card = UnitCard::new(1, "warrior", "Warrior", 3, 10, 0, 0).with_ability(ability);
+        let player_board = vec![BoardUnit::from_card(card)];
+
+        // Enemy with no ability
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(2, "goblin", "Goblin", 1, 1, 0, 0))];
+
+        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
+
+        // Find the AbilityBuff event
+        let buff_event = events.iter().find(|e| matches!(e, CombatEvent::AbilityBuff { .. }));
+        assert!(buff_event.is_some(), "Should have an AbilityBuff event");
+
+        if let Some(CombatEvent::AbilityBuff { attack_buff, .. }) = buff_event {
+            assert_eq!(*attack_buff, 2, "Attack buff should be +2");
+        }
+
+        // The clash should use buffed attack (3+2=5 damage)
+        let clash_event = events.iter().find(|e| matches!(e, CombatEvent::Clash { .. }));
+        if let Some(CombatEvent::Clash { p_dmg, .. }) = clash_event {
+            assert_eq!(*p_dmg, 5, "Player damage should include the +2 buff");
+        }
+    }
+
+    #[test]
+    fn test_ability_damage_on_start() {
+        // Create a unit with OnStart damage to front enemy
+        let ability = Ability {
+            trigger: AbilityTrigger::OnStart,
+            effect: AbilityEffect::Damage {
+                amount: 4,
+                target: AbilityTarget::FrontEnemy,
+            },
+            name: "Strike".to_string(),
+            description: "Deal 4 damage".to_string(),
+        };
+        let card = UnitCard::new(1, "mage", "Mage", 1, 5, 0, 0).with_ability(ability);
+        let player_board = vec![BoardUnit::from_card(card)];
+
+        // Enemy with 5 health
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(2, "orc", "Orc", 2, 5, 0, 0))];
+
+        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
+
+        // Find the AbilityDamage event
+        let damage_event = events.iter().find(|e| matches!(e, CombatEvent::AbilityDamage { .. }));
+        assert!(damage_event.is_some(), "Should have an AbilityDamage event");
+
+        if let Some(CombatEvent::AbilityDamage { damage, remaining_hp, .. }) = damage_event {
+            assert_eq!(*damage, 4, "Ability damage should be 4");
+            assert_eq!(*remaining_hp, 1, "Enemy should have 1 HP after ability damage (5-4=1)");
+        }
+    }
+
+    #[test]
+    fn test_ability_heal_on_start() {
+        // Create a damaged unit and a healer
+        let healer_ability = Ability {
+            trigger: AbilityTrigger::OnStart,
+            effect: AbilityEffect::Heal {
+                amount: 3,
+                target: AbilityTarget::FrontAlly,
+            },
+            name: "Heal".to_string(),
+            description: "Heal front ally".to_string(),
+        };
+        let healer = UnitCard::new(1, "healer", "Healer", 1, 5, 0, 0).with_ability(healer_ability);
+        let mut tank = BoardUnit::from_card(UnitCard::new(2, "tank", "Tank", 2, 10, 0, 0));
+        tank.current_health = 5; // Damaged
+
+        let player_board = vec![tank, BoardUnit::from_card(healer)];
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(3, "orc", "Orc", 1, 20, 0, 0))];
+
+        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
+
+        // Find the AbilityHeal event
+        let heal_event = events.iter().find(|e| matches!(e, CombatEvent::AbilityHeal { .. }));
+        assert!(heal_event.is_some(), "Should have an AbilityHeal event");
+
+        if let Some(CombatEvent::AbilityHeal { heal, new_hp, .. }) = heal_event {
+            assert_eq!(*heal, 3, "Heal amount should be 3");
+            assert_eq!(*new_hp, 8, "Tank should have 8 HP after heal (5+3=8)");
+        }
+    }
+
+    #[test]
+    fn test_ability_damage_on_faint() {
+        // Create a unit with OnFaint damage ability
+        let ability = Ability {
+            trigger: AbilityTrigger::OnFaint,
+            effect: AbilityEffect::Damage {
+                amount: 5,
+                target: AbilityTarget::FrontEnemy,
+            },
+            name: "Death Spite".to_string(),
+            description: "Deal 5 damage on death".to_string(),
+        };
+        let card = UnitCard::new(1, "bomber", "Bomber", 1, 1, 0, 0).with_ability(ability);
+        let player_board = vec![BoardUnit::from_card(card)];
+
+        // Enemy with 10 health
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(2, "orc", "Orc", 10, 10, 0, 0))];
+
+        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
+
+        // The bomber should die (1 HP vs 10 attack) and trigger OnFaint
+        let trigger_event = events.iter().find(|e| {
+            matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Death Spite")
+        });
+        assert!(trigger_event.is_some(), "Should have an AbilityTrigger event for Death Spite");
+
+        // Find the AbilityDamage from the faint trigger
+        let damage_events: Vec<_> = events.iter().filter(|e| matches!(e, CombatEvent::AbilityDamage { .. })).collect();
+        assert!(!damage_events.is_empty(), "Should have AbilityDamage event from OnFaint");
+    }
+
+    #[test]
+    fn test_ability_damage_all_enemies() {
+        // Create a unit with OnStart damage to all enemies
+        let ability = Ability {
+            trigger: AbilityTrigger::OnStart,
+            effect: AbilityEffect::Damage {
+                amount: 2,
+                target: AbilityTarget::AllEnemies,
+            },
+            name: "Fire Storm".to_string(),
+            description: "Deal 2 damage to all enemies".to_string(),
+        };
+        let card = UnitCard::new(1, "mage", "Mage", 1, 10, 0, 0).with_ability(ability);
+        let player_board = vec![BoardUnit::from_card(card)];
+
+        // Three enemies
+        let enemy_board = vec![
+            BoardUnit::from_card(UnitCard::new(2, "orc1", "Orc 1", 1, 5, 0, 0)),
+            BoardUnit::from_card(UnitCard::new(3, "orc2", "Orc 2", 1, 5, 0, 0)),
+            BoardUnit::from_card(UnitCard::new(4, "orc3", "Orc 3", 1, 5, 0, 0)),
+        ];
+
+        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
+
+        // Should have 3 AbilityDamage events (one for each enemy)
+        let damage_events: Vec<_> = events.iter().filter(|e| matches!(e, CombatEvent::AbilityDamage { .. })).collect();
+        assert_eq!(damage_events.len(), 3, "Should have 3 AbilityDamage events for AllEnemies");
+
+        // Each should deal 2 damage
+        for event in damage_events {
+            if let CombatEvent::AbilityDamage { damage, remaining_hp, .. } = event {
+                assert_eq!(*damage, 2, "Each target should take 2 damage");
+                assert_eq!(*remaining_hp, 3, "Each enemy should have 3 HP (5-2=3)");
+            }
+        }
+    }
+
+    #[test]
+    fn test_onstart_ability_kills_enemy() {
+        // Test that OnStart damage can kill enemies before combat starts
+        let ability = Ability {
+            trigger: AbilityTrigger::OnStart,
+            effect: AbilityEffect::Damage {
+                amount: 5,
+                target: AbilityTarget::FrontEnemy,
+            },
+            name: "Opening Strike".to_string(),
+            description: "Deal 5 damage at start".to_string(),
+        };
+        let card = UnitCard::new(1, "assassin", "Assassin", 1, 5, 0, 0).with_ability(ability);
+        let player_board = vec![BoardUnit::from_card(card)];
+
+        // Enemy with only 3 health - should die from ability
+        let enemy_board = vec![
+            BoardUnit::from_card(UnitCard::new(2, "weak", "Weak Orc", 2, 3, 0, 0)),
+            BoardUnit::from_card(UnitCard::new(3, "strong", "Strong Orc", 3, 10, 0, 0)),
+        ];
+
+        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
+
+        // Find the AbilityDamage event - should show -2 remaining HP
+        let damage_event = events.iter().find(|e| matches!(e, CombatEvent::AbilityDamage { .. }));
+        if let Some(CombatEvent::AbilityDamage { remaining_hp, .. }) = damage_event {
+            assert_eq!(*remaining_hp, -2, "Weak Orc should have -2 HP (3-5=-2)");
+        }
+
+        // There should be a death event from the ability damage
+        let death_events: Vec<_> = events.iter().filter(|e| matches!(e, CombatEvent::UnitDeath { .. })).collect();
+        assert!(!death_events.is_empty(), "Should have death events");
+    }
+
+    #[test]
+    fn test_unit_card_with_ability() {
+        let ability = Ability {
+            trigger: AbilityTrigger::OnStart,
+            effect: AbilityEffect::Damage {
+                amount: 1,
+                target: AbilityTarget::FrontEnemy,
+            },
+            name: "Test".to_string(),
+            description: "Test ability".to_string(),
+        };
+
+        let card = UnitCard::new(1, "test", "Test", 1, 1, 1, 1).with_ability(ability.clone());
+
+        assert!(card.ability.is_some());
+        assert_eq!(card.ability.unwrap().name, "Test");
     }
 }
