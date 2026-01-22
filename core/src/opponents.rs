@@ -1,4 +1,46 @@
-use crate::types::{BoardUnit, UnitCard};
+use crate::types::{Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, UnitCard};
+
+/// Create a unit with an optional ability
+fn create_unit(
+    card_id_counter: &mut u32,
+    template_id: &str,
+    name: &str,
+    attack: i32,
+    health: i32,
+    ability: Option<Ability>,
+) -> BoardUnit {
+    *card_id_counter += 1;
+    let mut card = UnitCard::new(*card_id_counter, template_id, name, attack, health, 0, 0);
+    if let Some(a) = ability {
+        card = card.with_ability(a);
+    }
+    BoardUnit::from_card(card)
+}
+
+/// Get the ability for a specific opponent unit type
+fn get_opponent_ability(template_id: &str) -> Option<Ability> {
+    match template_id {
+        "orc_shaman" => Some(Ability {
+            trigger: AbilityTrigger::OnStart,
+            effect: AbilityEffect::Heal {
+                amount: 2,
+                target: AbilityTarget::FrontAlly,
+            },
+            name: "Healing Totem".to_string(),
+            description: "Heal front ally for 2 at battle start".to_string(),
+        }),
+        "dragon_tyrant" => Some(Ability {
+            trigger: AbilityTrigger::OnStart,
+            effect: AbilityEffect::Damage {
+                amount: 3,
+                target: AbilityTarget::AllEnemies,
+            },
+            name: "Dragon Breath".to_string(),
+            description: "Deal 3 damage to all enemies at battle start".to_string(),
+        }),
+        _ => None,
+    }
+}
 
 /// Get the opponent board for a given round (1-10)
 pub fn get_opponent_for_round(round: i32, card_id_counter: &mut u32) -> Vec<BoardUnit> {
@@ -60,17 +102,8 @@ pub fn get_opponent_for_round(round: i32, card_id_counter: &mut u32) -> Vec<Boar
     };
 
     for (template_id, name, attack, health) in templates {
-        *card_id_counter += 1;
-        let card = UnitCard::new(
-            *card_id_counter,
-            template_id,
-            name,
-            attack,
-            health,
-            0, // play_cost
-            0, // pitch_value
-        );
-        units.push(BoardUnit::from_card(card));
+        let ability = get_opponent_ability(template_id);
+        units.push(create_unit(card_id_counter, template_id, name, attack, health, ability));
     }
 
     units

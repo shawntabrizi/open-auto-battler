@@ -2,7 +2,9 @@ use crate::battle::{resolve_battle, CombatEvent, UnitView};
 use crate::log;
 use crate::opponents::get_opponent_for_round;
 use crate::state::*;
-use crate::types::*;
+use crate::types::{
+    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, ShopSlot, UnitCard,
+};
 use crate::view::GameView;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
@@ -17,91 +19,162 @@ struct CardTemplate {
     health: i32,
     play_cost: i32,
     pitch_value: i32,
+    ability: Option<Ability>,
 }
 
 /// The 10 unique unit cards for the starter deck
-const STARTER_TEMPLATES: &[CardTemplate] = &[
-    CardTemplate {
-        template_id: "goblin_scout",
-        name: "Goblin Scout",
-        attack: 1,
-        health: 2,
-        play_cost: 1,
-        pitch_value: 2,
-    },
-    CardTemplate {
-        template_id: "goblin_looter",
-        name: "Goblin Looter",
-        attack: 1,
-        health: 1,
-        play_cost: 1,
-        pitch_value: 3,
-    },
-    CardTemplate {
-        template_id: "militia",
-        name: "Militia",
-        attack: 2,
-        health: 2,
-        play_cost: 2,
-        pitch_value: 2,
-    },
-    CardTemplate {
-        template_id: "shield_bearer",
-        name: "Shield Bearer",
-        attack: 1,
-        health: 4,
-        play_cost: 2,
-        pitch_value: 2,
-    },
-    CardTemplate {
-        template_id: "wolf_rider",
-        name: "Wolf Rider",
-        attack: 3,
-        health: 2,
-        play_cost: 3,
-        pitch_value: 2,
-    },
-    CardTemplate {
-        template_id: "orc_warrior",
-        name: "Orc Warrior",
-        attack: 3,
-        health: 3,
-        play_cost: 3,
-        pitch_value: 2,
-    },
-    CardTemplate {
-        template_id: "troll_brute",
-        name: "Troll Brute",
-        attack: 4,
-        health: 5,
-        play_cost: 5,
-        pitch_value: 2,
-    },
-    CardTemplate {
-        template_id: "ogre_mauler",
-        name: "Ogre Mauler",
-        attack: 5,
-        health: 6,
-        play_cost: 6,
-        pitch_value: 2,
-    },
-    CardTemplate {
-        template_id: "giant_crusher",
-        name: "Giant Crusher",
-        attack: 6,
-        health: 8,
-        play_cost: 8,
-        pitch_value: 2,
-    },
-    CardTemplate {
-        template_id: "dragon_tyrant",
-        name: "Dragon Tyrant",
-        attack: 8,
-        health: 10,
-        play_cost: 10,
-        pitch_value: 3,
-    },
-];
+fn get_starter_templates() -> Vec<CardTemplate> {
+    vec![
+        CardTemplate {
+            template_id: "goblin_scout",
+            name: "Goblin Scout",
+            attack: 1,
+            health: 2,
+            play_cost: 1,
+            pitch_value: 2,
+            ability: None,
+        },
+        CardTemplate {
+            template_id: "goblin_looter",
+            name: "Goblin Looter",
+            attack: 1,
+            health: 1,
+            play_cost: 1,
+            pitch_value: 3,
+            ability: None,
+        },
+        CardTemplate {
+            template_id: "militia",
+            name: "Militia",
+            attack: 2,
+            health: 2,
+            play_cost: 2,
+            pitch_value: 2,
+            ability: None,
+        },
+        CardTemplate {
+            template_id: "shield_bearer",
+            name: "Shield Bearer",
+            attack: 1,
+            health: 4,
+            play_cost: 2,
+            pitch_value: 2,
+            ability: Some(Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::Heal {
+                    amount: 2,
+                    target: AbilityTarget::FrontAlly,
+                },
+                name: "Shield Wall".to_string(),
+                description: "Heal front ally for 2".to_string(),
+            }),
+        },
+        CardTemplate {
+            template_id: "wolf_rider",
+            name: "Wolf Rider",
+            attack: 3,
+            health: 2,
+            play_cost: 3,
+            pitch_value: 2,
+            ability: Some(Ability {
+                trigger: AbilityTrigger::OnFaint,
+                effect: AbilityEffect::Damage {
+                    amount: 2,
+                    target: AbilityTarget::FrontEnemy,
+                },
+                name: "Dying Bite".to_string(),
+                description: "Deal 2 damage to front enemy on death".to_string(),
+            }),
+        },
+        CardTemplate {
+            template_id: "orc_warrior",
+            name: "Orc Warrior",
+            attack: 3,
+            health: 3,
+            play_cost: 3,
+            pitch_value: 2,
+            ability: Some(Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::AttackBuff {
+                    amount: 2,
+                    target: AbilityTarget::SelfUnit,
+                    duration: 0,
+                },
+                name: "Battle Rage".to_string(),
+                description: "Gain +2 attack at battle start".to_string(),
+            }),
+        },
+        CardTemplate {
+            template_id: "troll_brute",
+            name: "Troll Brute",
+            attack: 4,
+            health: 5,
+            play_cost: 5,
+            pitch_value: 2,
+            ability: Some(Ability {
+                trigger: AbilityTrigger::OnFaint,
+                effect: AbilityEffect::Damage {
+                    amount: 3,
+                    target: AbilityTarget::AllEnemies,
+                },
+                name: "Death Throes".to_string(),
+                description: "Deal 3 damage to all enemies on death".to_string(),
+            }),
+        },
+        CardTemplate {
+            template_id: "ogre_mauler",
+            name: "Ogre Mauler",
+            attack: 5,
+            health: 6,
+            play_cost: 6,
+            pitch_value: 2,
+            ability: Some(Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::AttackBuff {
+                    amount: 3,
+                    target: AbilityTarget::SelfUnit,
+                    duration: 0,
+                },
+                name: "Crushing Blow".to_string(),
+                description: "Gain +3 attack at battle start".to_string(),
+            }),
+        },
+        CardTemplate {
+            template_id: "giant_crusher",
+            name: "Giant Crusher",
+            attack: 6,
+            health: 8,
+            play_cost: 8,
+            pitch_value: 2,
+            ability: Some(Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::Damage {
+                    amount: 4,
+                    target: AbilityTarget::FrontEnemy,
+                },
+                name: "Earthshaker".to_string(),
+                description: "Deal 4 damage to front enemy at battle start".to_string(),
+            }),
+        },
+        CardTemplate {
+            template_id: "dragon_tyrant",
+            name: "Dragon Tyrant",
+            attack: 8,
+            health: 10,
+            play_cost: 10,
+            pitch_value: 3,
+            ability: Some(Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::Damage {
+                    amount: 3,
+                    target: AbilityTarget::AllEnemies,
+                },
+                name: "Dragon Breath".to_string(),
+                description: "Deal 3 damage to all enemies at battle start".to_string(),
+            }),
+        },
+    ]
+}
 
 /// Result of starting a battle (events for playback)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -344,14 +417,22 @@ impl GameEngine {
 
     fn initialize_deck(&mut self) {
         self.state.deck.clear();
-        for template in STARTER_TEMPLATES {
+        let templates = get_starter_templates();
+        for template in &templates {
             for _ in 0..3 {
                 let id = self.state.generate_card_id();
-                let card = UnitCard::new(
-                    id, template.template_id, template.name,
-                    template.attack, template.health,
-                    template.play_cost, template.pitch_value,
+                let mut card = UnitCard::new(
+                    id,
+                    template.template_id,
+                    template.name,
+                    template.attack,
+                    template.health,
+                    template.play_cost,
+                    template.pitch_value,
                 );
+                if let Some(ability) = &template.ability {
+                    card = card.with_ability(ability.clone());
+                }
                 self.state.deck.push(card);
             }
         }
