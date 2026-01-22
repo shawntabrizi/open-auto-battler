@@ -45,7 +45,7 @@ export function UnitCard({
   const isBoardUnit = 'currentHealth' in card;
   const currentHealth = isBoardUnit ? card.currentHealth : card.health;
   const maxHealth = isBoardUnit ? card.maxHealth : card.health;
-  const isDamaged = currentHealth < maxHealth;
+  const isDamaged = isBoardUnit && currentHealth < maxHealth;
 
   return (
     <div
