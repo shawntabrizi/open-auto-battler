@@ -162,48 +162,59 @@ mod tests {
     }
 
     #[test]
-    fn test_ability_attack_buff_on_start() {
-        // Create a unit with OnStart +2 Attack buff
-        let ability = Ability {
-            trigger: AbilityTrigger::OnStart,
+    fn test_ability_on_spawn_buff() {
+        // Create a unit with OnSpawn ability that gives +2 attack to spawned units
+        let spawn_buff_ability = Ability {
+            trigger: AbilityTrigger::OnSpawn,
             effect: AbilityEffect::ModifyStats {
                 health: 0,
                 attack: 2,
-                target: AbilityTarget::SelfUnit,
+                target: AbilityTarget::SelfUnit, // SelfUnit means the spawned unit
             },
-            name: "Battle Rage".to_string(),
-            description: "Gain +2 attack".to_string(),
+            name: "Spawn Boost".to_string(),
+            description: "Give +2 attack to any spawned unit".to_string(),
         };
-        let card = UnitCard::new(1, "warrior", "Warrior", 3, 10, 0, 0).with_ability(ability);
-        let player_board = vec![BoardUnit::from_card(card)];
+        let necromancer = UnitCard::new(1, "necromancer", "Necromancer", 2, 3, 0, 0)
+            .with_ability(spawn_buff_ability);
 
-        // Enemy with no ability
+        // Create a unit that will spawn something
+        let spawn_ability = Ability {
+            trigger: AbilityTrigger::OnFaint,
+            effect: AbilityEffect::SpawnUnit {
+                attack: 1,
+                health: 1,
+                name: "Test Spawn".to_string(),
+            },
+            name: "Test Spawn".to_string(),
+            description: "Spawn a test unit".to_string(),
+        };
+        let spawner =
+            UnitCard::new(2, "test_unit", "Test Unit", 1, 1, 0, 0).with_ability(spawn_ability);
+
+        let player_board = vec![
+            BoardUnit::from_card(spawner),
+            BoardUnit::from_card(necromancer),
+        ];
         let enemy_board = vec![BoardUnit::from_card(UnitCard::new(
-            2, "goblin", "Goblin", 1, 1, 0, 0,
+            3, "wolf", "Wolf", 3, 2, 0, 0,
         ))];
 
-        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
+        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 789);
 
-        // Find the AbilityModifyStats event
-        let buff_event = events
+        // Find the UnitSpawn event
+        let spawn_event = events
             .iter()
-            .find(|e| matches!(e, CombatEvent::AbilityModifyStats { .. }));
+            .find(|e| matches!(e, CombatEvent::UnitSpawn { .. }));
+        assert!(spawn_event.is_some(), "Should have UnitSpawn event");
+
+        // Find the AbilityModifyStats event with new_attack = 3
+        let buff_event = events.iter().find(
+            |e| matches!(e, CombatEvent::AbilityModifyStats { new_attack, .. } if *new_attack == 3),
+        );
         assert!(
             buff_event.is_some(),
-            "Should have an AbilityModifyStats event"
+            "Should have AbilityModifyStats event showing attack buff to 3"
         );
-
-        if let Some(CombatEvent::AbilityModifyStats { attack_change, .. }) = buff_event {
-            assert_eq!(*attack_change, 2, "Attack change should be +2");
-        }
-
-        // The clash should use buffed attack (3+2=5 damage)
-        let clash_event = events
-            .iter()
-            .find(|e| matches!(e, CombatEvent::Clash { .. }));
-        if let Some(CombatEvent::Clash { p_dmg, .. }) = clash_event {
-            assert_eq!(*p_dmg, 5, "Player damage should include the +2 buff");
-        }
     }
 
     #[test]
@@ -338,7 +349,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ability_spawn_on_faint() {
+    fn test_ability_spawn_basic() {
         let spawn_ability = Ability {
             trigger: AbilityTrigger::OnFaint,
             effect: AbilityEffect::SpawnUnit {

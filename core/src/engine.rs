@@ -124,6 +124,24 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             }),
         },
         CardTemplate {
+            template_id: "necromancer",
+            name: "Necromancer",
+            attack: 2,
+            health: 3,
+            play_cost: 3,
+            pitch_value: 2,
+            ability: Some(Ability {
+                trigger: AbilityTrigger::OnSpawn,
+                effect: AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 2,
+                    target: AbilityTarget::SelfUnit,
+                },
+                name: "Spawn Boost".to_string(),
+                description: "Give +2 attack to any spawned unit".to_string(),
+            }),
+        },
+        CardTemplate {
             template_id: "troll_brute",
             name: "Troll Brute",
             attack: 4,

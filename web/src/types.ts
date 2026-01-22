@@ -6,7 +6,7 @@ export interface Ability {
   description: string;
 }
 
-export type AbilityTrigger = 'onStart' | 'onFaint';
+export type AbilityTrigger = 'onStart' | 'onFaint' | 'onSpawn';
 
 export type AbilityTarget =
   | 'selfUnit'

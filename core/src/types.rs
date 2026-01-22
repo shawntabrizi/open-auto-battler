@@ -9,6 +9,7 @@ pub type CardId = u32;
 pub enum AbilityTrigger {
     OnStart,
     OnFaint,
+    OnSpawn,
     // Future: OnAttack, OnDamage, etc.
 }
 

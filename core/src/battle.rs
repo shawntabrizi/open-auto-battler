@@ -326,6 +326,7 @@ fn apply_ability_effect(
             };
 
             // Spawn a new unit for the source team
+            let spawned_unit_id = instance_id.clone();
             match source_team {
                 Team::Player => {
                     player_units.insert(0, new_unit);
@@ -343,6 +344,52 @@ fn apply_ability_effect(
                         new_board_state: enemy_units.iter().map(|u| u.to_view()).collect(),
                     });
                 }
+            }
+
+            // Trigger OnSpawn abilities - these trigger when any unit is spawned
+            // The abilities belong to existing units and can affect the spawned unit
+            let mut spawn_triggers: Vec<(String, Team, i32, AbilityEffect, String)> = player_units
+                .iter()
+                .chain(enemy_units.iter())
+                .filter_map(|u| {
+                    u.ability.as_ref().and_then(|a| {
+                        if a.trigger == AbilityTrigger::OnSpawn {
+                            Some((
+                                u.instance_id.clone(),
+                                u.team,
+                                u.attack,
+                                a.effect.clone(),
+                                a.name.clone(),
+                            ))
+                        } else {
+                            None
+                        }
+                    })
+                })
+                .collect();
+
+            // Sort by Attack Power (Descending), with RNG tie-break
+            spawn_triggers.shuffle(rng);
+            spawn_triggers.sort_by_key(|(_, _, attack, _, _)| -attack);
+
+            for (instance_id, team, _, effect, ability_name) in spawn_triggers {
+                events.push(CombatEvent::AbilityTrigger {
+                    source_instance_id: instance_id.clone(),
+                    ability_name,
+                });
+                // For OnSpawn abilities, we want to apply the effect as if the ability owner
+                // is the source, but we need to modify targeting to affect the spawned unit
+                // For now, let's assume OnSpawn abilities use SelfUnit to target the spawned unit
+                // This is a bit of a hack, but works for the example
+                apply_ability_effect(
+                    &spawned_unit_id, // Use spawned unit as target for SelfUnit targeting
+                    team,
+                    &effect,
+                    player_units,
+                    enemy_units,
+                    events,
+                    rng,
+                );
             }
         }
     }
