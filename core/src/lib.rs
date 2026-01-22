@@ -6,6 +6,7 @@ mod log;
 mod opponents;
 mod state;
 mod types;
+mod units;
 mod view;
 
 #[cfg(test)]

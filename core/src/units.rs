@@ -1,0 +1,233 @@
+use crate::types::Ability;
+
+/// Card template for creating starter deck cards
+pub struct CardTemplate {
+    pub template_id: &'static str,
+    pub name: &'static str,
+    pub attack: i32,
+    pub health: i32,
+    pub play_cost: i32,
+    pub pitch_value: i32,
+    pub abilities: Vec<Ability>,
+}
+
+/// The 10 unique unit cards for the starter deck
+pub fn get_starter_templates() -> Vec<CardTemplate> {
+    vec![
+        CardTemplate {
+            template_id: "goblin_scout",
+            name: "Goblin Scout",
+            attack: 1,
+            health: 2,
+            play_cost: 1,
+            pitch_value: 2,
+            abilities: vec![],
+        },
+        CardTemplate {
+            template_id: "goblin_looter",
+            name: "Goblin Looter",
+            attack: 1,
+            health: 1,
+            play_cost: 1,
+            pitch_value: 3,
+            abilities: vec![],
+        },
+        CardTemplate {
+            template_id: "militia",
+            name: "Militia",
+            attack: 2,
+            health: 2,
+            play_cost: 2,
+            pitch_value: 2,
+            abilities: vec![],
+        },
+        CardTemplate {
+            template_id: "shield_bearer",
+            name: "Shield Bearer",
+            attack: 1,
+            health: 4,
+            play_cost: 2,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnStart,
+                effect: crate::types::AbilityEffect::ModifyStats {
+                    health: 2,
+                    attack: 0,
+                    target: crate::types::AbilityTarget::FrontAlly,
+                },
+                name: "Shield Wall".to_string(),
+                description: "Heal front ally for 2".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "wolf_rider",
+            name: "Wolf Rider",
+            attack: 3,
+            health: 2,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnFaint,
+                effect: crate::types::AbilityEffect::Damage {
+                    amount: 2,
+                    target: crate::types::AbilityTarget::FrontEnemy,
+                },
+                name: "Dying Bite".to_string(),
+                description: "Deal 2 damage to front enemy on death".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "orc_warrior",
+            name: "Orc Warrior",
+            attack: 3,
+            health: 3,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnStart,
+                effect: crate::types::AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 2,
+                    target: crate::types::AbilityTarget::SelfUnit,
+                },
+                name: "Battle Rage".to_string(),
+                description: "Gain +2 attack at battle start".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "zombie_soldier",
+            name: "Zombie Soldier",
+            attack: 1,
+            health: 1,
+            play_cost: 1,
+            pitch_value: 1,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnFaint,
+                effect: crate::types::AbilityEffect::SpawnUnit {
+                    attack: 1,
+                    health: 1,
+                    name: "Zombie Spawn".to_string(),
+                },
+                name: "Spawn Zombie".to_string(),
+                description: "Spawn a 1/1 Zombie Spawn when killed".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "necromancer",
+            name: "Necromancer",
+            attack: 2,
+            health: 3,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnSpawn,
+                effect: crate::types::AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 2,
+                    target: crate::types::AbilityTarget::SelfUnit,
+                },
+                name: "Spawn Boost".to_string(),
+                description: "Give +2 attack to any spawned unit".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "battle_hardened",
+            name: "Battle Hardened",
+            attack: 2,
+            health: 3,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![
+                Ability {
+                    trigger: crate::types::AbilityTrigger::BeforeAttack,
+                    effect: crate::types::AbilityEffect::ModifyStats {
+                        health: 2,
+                        attack: 0,
+                        target: crate::types::AbilityTarget::SelfUnit,
+                    },
+                    name: "Pre-Battle Prep".to_string(),
+                    description: "Gain +2 health before each clash".to_string(),
+                },
+                Ability {
+                    trigger: crate::types::AbilityTrigger::AfterAttack,
+                    effect: crate::types::AbilityEffect::ModifyStats {
+                        health: 0,
+                        attack: 2,
+                        target: crate::types::AbilityTarget::SelfUnit,
+                    },
+                    name: "Adrenaline Rush".to_string(),
+                    description: "Gain +2 attack after each clash".to_string(),
+                },
+            ],
+        },
+        CardTemplate {
+            template_id: "troll_brute",
+            name: "Troll Brute",
+            attack: 4,
+            health: 5,
+            play_cost: 5,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnFaint,
+                effect: crate::types::AbilityEffect::Damage {
+                    amount: 3,
+                    target: crate::types::AbilityTarget::AllEnemies,
+                },
+                name: "Death Throes".to_string(),
+                description: "Deal 3 damage to all enemies on death".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "ogre_mauler",
+            name: "Ogre Mauler",
+            attack: 5,
+            health: 6,
+            play_cost: 6,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnStart,
+                effect: crate::types::AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 3,
+                    target: crate::types::AbilityTarget::SelfUnit,
+                },
+                name: "Crushing Blow".to_string(),
+                description: "Gain +3 attack at battle start".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "giant_crusher",
+            name: "Giant Crusher",
+            attack: 6,
+            health: 8,
+            play_cost: 8,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnStart,
+                effect: crate::types::AbilityEffect::Damage {
+                    amount: 4,
+                    target: crate::types::AbilityTarget::FrontEnemy,
+                },
+                name: "Earthshaker".to_string(),
+                description: "Deal 4 damage to front enemy at battle start".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "dragon_tyrant",
+            name: "Dragon Tyrant",
+            attack: 8,
+            health: 10,
+            play_cost: 10,
+            pitch_value: 3,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnStart,
+                effect: crate::types::AbilityEffect::Damage {
+                    amount: 3,
+                    target: crate::types::AbilityTarget::AllEnemies,
+                },
+                name: "Dragon Breath".to_string(),
+                description: "Deal 3 damage to all enemies at battle start".to_string(),
+            }],
+        },
+    ]
+}
