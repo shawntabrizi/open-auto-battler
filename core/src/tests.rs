@@ -181,9 +181,7 @@ mod tests {
         let spawn_ability = Ability {
             trigger: AbilityTrigger::OnFaint,
             effect: AbilityEffect::SpawnUnit {
-                attack: 1,
-                health: 1,
-                name: "Test Spawn".to_string(),
+                template_id: "zombie_spawn".to_string(),
             },
             name: "Test Spawn".to_string(),
             description: "Spawn a test unit".to_string(),
@@ -353,12 +351,10 @@ mod tests {
         let spawn_ability = Ability {
             trigger: AbilityTrigger::OnFaint,
             effect: AbilityEffect::SpawnUnit {
-                attack: 1,
-                health: 1,
-                name: "Zombie Spawn".to_string(),
+                template_id: "zombie_spawn".to_string(),
             },
             name: "Spawn Zombie".to_string(),
-            description: "Spawn a 1/1 Zombie Spawn when killed".to_string(),
+            description: "Spawn a Zombie Spawn when killed".to_string(),
         };
         let spawner = UnitCard::new(1, "zombie_soldier", "Zombie Soldier", 1, 1, 0, 0)
             .with_ability(spawn_ability);

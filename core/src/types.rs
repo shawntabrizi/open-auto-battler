@@ -28,11 +28,7 @@ pub enum AbilityEffect {
         target: AbilityTarget,
     },
     /// Spawn a new unit on the board
-    SpawnUnit {
-        attack: i32,
-        health: i32,
-        name: String,
-    },
+    SpawnUnit { template_id: String },
     // Future: RedirectDamage, etc.
 }
 

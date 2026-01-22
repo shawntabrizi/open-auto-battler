@@ -71,6 +71,8 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
           return `Give +${effect.amount} attack to ${getTargetDescription(effect.target)}`;
         case 'healthBuff':
           return `Give +${effect.amount} max health to ${getTargetDescription(effect.target)}`;
+        case 'spawnUnit':
+          return `Spawn a ${effect.templateId.replace('_', ' ')}`;
         default:
           return JSON.stringify(effect);
       }

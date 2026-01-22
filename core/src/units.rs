@@ -104,13 +104,20 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             abilities: vec![Ability {
                 trigger: crate::types::AbilityTrigger::OnFaint,
                 effect: crate::types::AbilityEffect::SpawnUnit {
-                    attack: 1,
-                    health: 1,
-                    name: "Zombie Spawn".to_string(),
+                    template_id: "zombie_spawn".to_string(),
                 },
                 name: "Spawn Zombie".to_string(),
-                description: "Spawn a 1/1 Zombie Spawn when killed".to_string(),
+                description: "Spawn a Zombie Spawn when killed".to_string(),
             }],
+        },
+        CardTemplate {
+            template_id: "zombie_spawn",
+            name: "Zombie Spawn",
+            attack: 1,
+            health: 1,
+            play_cost: 0,
+            pitch_value: 0,
+            abilities: vec![],
         },
         CardTemplate {
             template_id: "necromancer",

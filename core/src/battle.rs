@@ -228,6 +228,20 @@ struct CombatUnit {
 }
 
 impl CombatUnit {
+    fn from_card(card: crate::types::UnitCard) -> Self {
+        Self {
+            instance_id: format!("unit-{}", card.id),
+            team: Team::Player, // This will be overridden when spawning
+            attack: card.stats.attack,
+            health: card.stats.health,
+            abilities: card.abilities,
+            template_id: card.template_id,
+            name: card.name,
+            attack_buff: 0,
+            health_buff: 0,
+        }
+    }
+
     fn to_view(&self) -> UnitView {
         UnitView {
             instance_id: self.instance_id.clone(),
@@ -314,12 +328,17 @@ fn apply_ability_effect(
                 }
             }
         }
-        AbilityEffect::SpawnUnit {
-            attack,
-            health,
-            name,
-        } => {
-            // Calculate instance counter first
+        AbilityEffect::SpawnUnit { template_id } => {
+            // Get all starter templates (this includes all units now)
+            let templates = crate::units::get_starter_templates();
+
+            // Find the template
+            let template = templates
+                .into_iter()
+                .find(|t| t.template_id == *template_id)
+                .expect(&format!("Spawn template '{}' not found", template_id));
+
+            // Calculate instance counter
             let current_count = player_units.len() + enemy_units.len();
             let instance_counter = current_count + 1;
             let instance_id = format!(
@@ -331,18 +350,26 @@ fn apply_ability_effect(
                 instance_counter
             );
 
-            // Create the new unit
-            let new_unit = CombatUnit {
-                instance_id: instance_id.clone(),
-                team: source_team,
-                attack: *attack,
-                health: *health,
-                abilities: vec![], // Spawned units don't have abilities
-                template_id: format!("spawned-{}", name.to_lowercase().replace(" ", "-")),
-                name: name.clone(),
-                attack_buff: 0,
-                health_buff: 0,
-            };
+            // Create the unit card with the template data
+            let mut card = crate::types::UnitCard::new(
+                (instance_counter * 1000) as u32, // Generate a unique ID
+                &template.template_id,
+                &template.name,
+                template.attack,
+                template.health,
+                template.play_cost,
+                template.pitch_value,
+            );
+
+            // Add abilities from template
+            for ability in &template.abilities {
+                card = card.with_ability(ability.clone());
+            }
+
+            // Create the combat unit
+            let mut new_unit = CombatUnit::from_card(card);
+            new_unit.instance_id = instance_id.clone();
+            new_unit.team = source_team;
 
             // Spawn a new unit for the source team
             let spawned_unit_id = instance_id.clone();
