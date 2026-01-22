@@ -391,6 +391,81 @@ mod tests {
     }
 
     #[test]
+    fn test_ability_multiple_triggers() {
+        // Create a unit with both BeforeAttack (+2 health) and AfterAttack (+2 attack) abilities
+        let before_attack_ability = Ability {
+            trigger: AbilityTrigger::BeforeAttack,
+            effect: AbilityEffect::ModifyStats {
+                health: 2,
+                attack: 0,
+                target: AbilityTarget::SelfUnit,
+            },
+            name: "Pre-Battle Prep".to_string(),
+            description: "Gain +2 health before each clash".to_string(),
+        };
+        let after_attack_ability = Ability {
+            trigger: AbilityTrigger::AfterAttack,
+            effect: AbilityEffect::ModifyStats {
+                health: 0,
+                attack: 2,
+                target: AbilityTarget::SelfUnit,
+            },
+            name: "Adrenaline Rush".to_string(),
+            description: "Gain +2 attack after each clash if still alive".to_string(),
+        };
+        let battle_hardened = UnitCard::new(1, "battle_hardened", "Battle Hardened", 2, 3, 0, 0)
+            .with_abilities(vec![before_attack_ability, after_attack_ability]);
+
+        let player_board = vec![BoardUnit::from_card(battle_hardened)];
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(
+            2, "goblin", "Goblin", 1, 2, 0, 0,
+        ))];
+
+        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 123);
+
+        // Find the BeforeAttack ability trigger
+        let before_attack_trigger = events
+            .iter()
+            .find(|e| matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Pre-Battle Prep"));
+        assert!(
+            before_attack_trigger.is_some(),
+            "Should trigger BeforeAttack ability"
+        );
+
+        // Find the AfterAttack ability trigger
+        let after_attack_trigger = events
+            .iter()
+            .find(|e| matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Adrenaline Rush"));
+        assert!(
+            after_attack_trigger.is_some(),
+            "Should trigger AfterAttack ability"
+        );
+
+        // Find the stat modification events
+        let buff_events: Vec<_> = events
+            .iter()
+            .filter(|e| matches!(e, CombatEvent::AbilityModifyStats { .. }))
+            .collect();
+        assert_eq!(
+            buff_events.len(),
+            2,
+            "Should have 2 AbilityModifyStats events"
+        );
+
+        // Check that the unit gets +2 health before attack (3 → 5)
+        let before_buff = buff_events.iter().find(
+            |e| matches!(e, CombatEvent::AbilityModifyStats { new_health, .. } if *new_health == 5),
+        );
+        assert!(before_buff.is_some(), "Should have +2 health buff");
+
+        // Check that the unit gets +2 attack after attack (2 → 4)
+        let after_buff = buff_events.iter().find(
+            |e| matches!(e, CombatEvent::AbilityModifyStats { new_attack, .. } if *new_attack == 4),
+        );
+        assert!(after_buff.is_some(), "Should have +2 attack buff");
+    }
+
+    #[test]
     fn test_ability_damage_all_enemies() {
         // Create a unit with OnStart damage to all enemies
         let ability = Ability {
@@ -492,7 +567,7 @@ mod tests {
 
         let card = UnitCard::new(1, "test", "Test", 1, 1, 1, 1).with_ability(ability.clone());
 
-        assert!(card.ability.is_some());
-        assert_eq!(card.ability.unwrap().name, "Test");
+        assert!(!card.abilities.is_empty());
+        assert_eq!(card.abilities[0].name, "Test");
     }
 }

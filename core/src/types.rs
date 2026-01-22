@@ -10,6 +10,8 @@ pub enum AbilityTrigger {
     OnStart,
     OnFaint,
     OnSpawn,
+    BeforeAttack,
+    AfterAttack,
     // Future: OnAttack, OnDamage, etc.
 }
 
@@ -75,14 +77,13 @@ pub struct EconomyStats {
 
 /// A unit card in the game (MVP: units only)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct UnitCard {
     pub id: CardId,
     pub template_id: String,
     pub name: String,
     pub stats: UnitStats,
     pub economy: EconomyStats,
-    pub ability: Option<Ability>,
+    pub abilities: Vec<Ability>,
 }
 
 impl UnitCard {
@@ -104,13 +105,17 @@ impl UnitCard {
                 play_cost,
                 pitch_value,
             },
-            ability: None,
+            abilities: vec![],
         }
     }
 
-    pub fn with_ability(mut self, ability: Ability) -> Self {
-        self.ability = Some(ability);
+    pub fn with_abilities(mut self, abilities: Vec<Ability>) -> Self {
+        self.abilities = abilities;
         self
+    }
+
+    pub fn with_ability(self, ability: Ability) -> Self {
+        self.with_abilities(vec![ability])
     }
 }
 
