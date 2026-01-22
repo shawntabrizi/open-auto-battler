@@ -76,6 +76,8 @@ export interface UnitView {
 }
 
 export type CombatEvent =
+  | { type: 'phaseStart'; payload: { phase: string } }
+  | { type: 'phaseEnd'; payload: { phase: string } }
   | { type: 'abilityTrigger'; payload: { sourceInstanceId: string; abilityName: string } }
   | { type: 'clash'; payload: { pDmg: number; eDmg: number } }
   | {

@@ -27,6 +27,10 @@ pub struct UnitView {
 #[serde(tag = "type", content = "payload", rename_all = "camelCase")]
 pub enum CombatEvent {
     #[serde(rename_all = "camelCase")]
+    PhaseStart { phase: String },
+    #[serde(rename_all = "camelCase")]
+    PhaseEnd { phase: String },
+    #[serde(rename_all = "camelCase")]
     AbilityTrigger {
         source_instance_id: UnitInstanceId,
         ability_name: String,
@@ -70,6 +74,17 @@ pub enum CombatEvent {
 enum Team {
     Player,
     Enemy,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum BattlePhase {
+    Start,
+    BeforeAttack,
+    Attack,
+    AfterAttack,
+    HurtAndFaint,
+    Knockout,
+    End,
 }
 
 impl Team {
@@ -250,6 +265,287 @@ fn find_unit_mut<'a>(
         .find(|u| u.instance_id == instance_id)
 }
 
+/// Calculate effect priority for units: attack desc, then health desc, then random
+fn calculate_priority_order(
+    player_units: &[CombatUnit],
+    enemy_units: &[CombatUnit],
+    rng: &mut StdRng,
+) -> Vec<(Team, usize)> {
+    let mut units_with_priority: Vec<(Team, usize, i32, i32)> = Vec::new();
+
+    // Collect all units with their stats
+    for (idx, unit) in player_units.iter().enumerate() {
+        if unit.health > 0 {
+            units_with_priority.push((
+                Team::Player,
+                idx,
+                unit.effective_attack(),
+                unit.effective_health(),
+            ));
+        }
+    }
+    for (idx, unit) in enemy_units.iter().enumerate() {
+        if unit.health > 0 {
+            units_with_priority.push((
+                Team::Enemy,
+                idx,
+                unit.effective_attack(),
+                unit.effective_health(),
+            ));
+        }
+    }
+
+    // Sort by: attack desc, health desc, random tiebreaker
+    units_with_priority.shuffle(rng); // Random tiebreaker
+    units_with_priority.sort_by(|a, b| {
+        b.2.cmp(&a.2) // attack desc
+            .then(b.3.cmp(&a.3)) // health desc
+    });
+
+    units_with_priority
+        .into_iter()
+        .map(|(team, idx, _, _)| (team, idx))
+        .collect()
+}
+
+/// Execute effects for a specific battle phase
+fn execute_phase(
+    phase: BattlePhase,
+    player_units: &mut Vec<CombatUnit>,
+    enemy_units: &mut Vec<CombatUnit>,
+    events: &mut Vec<CombatEvent>,
+    rng: &mut StdRng,
+) {
+    let phase_name = match phase {
+        BattlePhase::Start => "start",
+        BattlePhase::BeforeAttack => "beforeAttack",
+        BattlePhase::Attack => "attack",
+        BattlePhase::AfterAttack => "afterAttack",
+        BattlePhase::HurtAndFaint => "hurtAndFaint",
+        BattlePhase::Knockout => "knockout",
+        BattlePhase::End => "end",
+    };
+
+    if phase != BattlePhase::End {
+        events.push(CombatEvent::PhaseStart {
+            phase: phase_name.to_string(),
+        });
+    }
+
+    // For now, only implement the phases we currently have
+    match phase {
+        BattlePhase::Start => {
+            // Start phase logic (OnStartBattle abilities)
+            execute_start_phase(player_units, enemy_units, events, rng);
+        }
+        BattlePhase::HurtAndFaint => {
+            // Handle hurt and faint effects
+            execute_hurt_and_faint_phase(player_units, enemy_units, events, rng);
+        }
+        BattlePhase::Attack => {
+            // Execute attack damage
+            execute_attack_phase(player_units, enemy_units, events, rng);
+        }
+        BattlePhase::End => {
+            // Battle end logic
+            let result = match (player_units.is_empty(), enemy_units.is_empty()) {
+                (false, true) => "VICTORY".to_string(),
+                (true, false) => "DEFEAT".to_string(),
+                (true, true) => "DRAW".to_string(),
+                (false, false) => "DRAW".to_string(), // Should not happen
+            };
+            events.push(CombatEvent::BattleEnd { result });
+            return; // Don't emit PhaseEnd for End phase
+        }
+        _ => {
+            // Placeholder for other phases
+        }
+    }
+
+    events.push(CombatEvent::PhaseEnd {
+        phase: phase_name.to_string(),
+    });
+}
+
+/// Execute start-of-battle abilities
+fn execute_start_phase(
+    player_units: &mut Vec<CombatUnit>,
+    enemy_units: &mut Vec<CombatUnit>,
+    events: &mut Vec<CombatEvent>,
+    rng: &mut StdRng,
+) {
+    // Collect trigger info (we need owned data to avoid borrow issues)
+    let mut start_triggers: Vec<(String, Team, i32, AbilityEffect, String)> = player_units
+        .iter()
+        .chain(enemy_units.iter())
+        .filter_map(|u| {
+            u.ability.as_ref().and_then(|a| {
+                if a.trigger == AbilityTrigger::OnStart {
+                    Some((
+                        u.instance_id.clone(),
+                        u.team,
+                        u.attack,
+                        a.effect.clone(),
+                        a.name.clone(),
+                    ))
+                } else {
+                    None
+                }
+            })
+        })
+        .collect();
+
+    // Sort by Attack Power (Descending), with RNG tie-break
+    start_triggers.shuffle(rng);
+    start_triggers.sort_by_key(|(_, _, attack, _, _)| -attack);
+
+    for (instance_id, team, _, effect, ability_name) in start_triggers {
+        events.push(CombatEvent::AbilityTrigger {
+            source_instance_id: instance_id.clone(),
+            ability_name,
+        });
+        apply_ability_effect(
+            &instance_id,
+            team,
+            &effect,
+            player_units,
+            enemy_units,
+            events,
+            rng,
+        );
+    }
+
+    // Remove any units killed by OnStart abilities
+    remove_dead_units(player_units, enemy_units, events);
+}
+
+/// Execute attack phase (damage dealing)
+fn execute_attack_phase(
+    player_units: &mut Vec<CombatUnit>,
+    enemy_units: &mut Vec<CombatUnit>,
+    events: &mut Vec<CombatEvent>,
+    _rng: &mut StdRng,
+) {
+    if player_units.is_empty() || enemy_units.is_empty() {
+        return;
+    }
+
+    let p_unit = &player_units[0];
+    let e_unit = &enemy_units[0];
+
+    let p_dmg = p_unit.effective_attack();
+    let e_dmg = e_unit.effective_attack();
+
+    events.push(CombatEvent::Clash { p_dmg, e_dmg });
+
+    let p_target_id = p_unit.instance_id.clone();
+    let e_target_id = e_unit.instance_id.clone();
+
+    let new_p_hp = p_unit.health - e_dmg;
+    let new_e_hp = e_unit.health - p_dmg;
+
+    // Damage is calculated for both, then applied.
+    events.push(CombatEvent::DamageTaken {
+        target_instance_id: p_target_id,
+        team: Team::Player.to_string(),
+        remaining_hp: new_p_hp,
+    });
+    player_units[0].health = new_p_hp;
+
+    events.push(CombatEvent::DamageTaken {
+        target_instance_id: e_target_id,
+        team: Team::Enemy.to_string(),
+        remaining_hp: new_e_hp,
+    });
+    enemy_units[0].health = new_e_hp;
+}
+
+/// Execute hurt and faint phase (handle deaths and triggers)
+fn execute_hurt_and_faint_phase(
+    player_units: &mut Vec<CombatUnit>,
+    enemy_units: &mut Vec<CombatUnit>,
+    events: &mut Vec<CombatEvent>,
+    rng: &mut StdRng,
+) {
+    if player_units.is_empty() || enemy_units.is_empty() {
+        return;
+    }
+
+    let p_died = player_units[0].health <= 0;
+    let e_died = enemy_units[0].health <= 0;
+
+    if p_died || e_died {
+        // Collect OnFaint triggers from units about to die
+        let mut faint_triggers: Vec<(String, Team, i32, AbilityEffect, String)> = Vec::new();
+
+        if p_died {
+            if let Some(ability) = &player_units[0].ability {
+                if ability.trigger == AbilityTrigger::OnFaint {
+                    faint_triggers.push((
+                        player_units[0].instance_id.clone(),
+                        player_units[0].team,
+                        player_units[0].attack,
+                        ability.effect.clone(),
+                        ability.name.clone(),
+                    ));
+                }
+            }
+        }
+        if e_died {
+            if let Some(ability) = &enemy_units[0].ability {
+                if ability.trigger == AbilityTrigger::OnFaint {
+                    faint_triggers.push((
+                        enemy_units[0].instance_id.clone(),
+                        enemy_units[0].team,
+                        enemy_units[0].attack,
+                        ability.effect.clone(),
+                        ability.name.clone(),
+                    ));
+                }
+            }
+        }
+
+        // Sort by Attack Power (Descending), with RNG tie-break
+        faint_triggers.shuffle(rng);
+        faint_triggers.sort_by_key(|(_, _, attack, _, _)| -attack);
+
+        // Execute OnFaint abilities
+        for (instance_id, team, _, effect, ability_name) in faint_triggers {
+            events.push(CombatEvent::AbilityTrigger {
+                source_instance_id: instance_id.clone(),
+                ability_name,
+            });
+            apply_ability_effect(
+                &instance_id,
+                team,
+                &effect,
+                player_units,
+                enemy_units,
+                events,
+                rng,
+            );
+        }
+
+        // Remove dead units and emit state changes
+        if p_died {
+            player_units.remove(0);
+            events.push(CombatEvent::UnitDeath {
+                team: Team::Player.to_string(),
+                new_board_state: player_units.iter().map(|u| u.to_view()).collect(),
+            });
+        }
+        if e_died {
+            enemy_units.remove(0);
+            events.push(CombatEvent::UnitDeath {
+                team: Team::Enemy.to_string(),
+                new_board_state: enemy_units.iter().map(|u| u.to_view()).collect(),
+            });
+        }
+
+        // Remove any additional units killed by OnFaint abilities
+        remove_dead_units(player_units, enemy_units, events);
+    }
+}
 /// Remove any dead units (health <= 0) and emit death events
 fn remove_dead_units(
     player_units: &mut Vec<CombatUnit>,
@@ -326,41 +622,16 @@ pub fn resolve_battle(
         })
         .collect();
 
-    // 1. Start Phase: Trigger OnStartBattle abilities
-    // Collect trigger info (we need owned data to avoid borrow issues)
-    let mut start_triggers: Vec<(String, Team, i32, AbilityEffect, String)> = player_units
-        .iter()
-        .chain(enemy_units.iter())
-        .filter_map(|u| {
-            u.ability.as_ref().and_then(|a| {
-                if a.trigger == AbilityTrigger::OnStart {
-                    Some((
-                        u.instance_id.clone(),
-                        u.team,
-                        u.attack,
-                        a.effect.clone(),
-                        a.name.clone(),
-                    ))
-                } else {
-                    None
-                }
-            })
-        })
-        .collect();
+    // Execute battle phases
+    let battle_phases = [
+        BattlePhase::Start,
+        // Future: BattlePhase::BeforeAttack, BattlePhase::Attack, etc.
+    ];
 
-    // Sort by Attack Power (Descending), with RNG tie-break
-    start_triggers.shuffle(&mut rng);
-    start_triggers.sort_by_key(|(_, _, attack, _, _)| -attack);
-
-    for (instance_id, team, _, effect, ability_name) in start_triggers {
-        events.push(CombatEvent::AbilityTrigger {
-            source_instance_id: instance_id.clone(),
-            ability_name,
-        });
-        apply_ability_effect(
-            &instance_id,
-            team,
-            &effect,
+    // Execute initial phases
+    for &phase in &battle_phases {
+        execute_phase(
+            phase,
             &mut player_units,
             &mut enemy_units,
             &mut events,
@@ -368,126 +639,32 @@ pub fn resolve_battle(
         );
     }
 
-    // Remove any units killed by OnStart abilities
-    remove_dead_units(&mut player_units, &mut enemy_units, &mut events);
-
-    // 2. Main Combat Loop
+    // Main combat loop (simplified for now - just attack and hurt/faint)
     while !player_units.is_empty() && !enemy_units.is_empty() {
-        // A. Clash Phase
-        let p_unit = &player_units[0];
-        let e_unit = &enemy_units[0];
-
-        let p_dmg = p_unit.effective_attack();
-        let e_dmg = e_unit.effective_attack();
-
-        events.push(CombatEvent::Clash { p_dmg, e_dmg });
-
-        let p_target_id = p_unit.instance_id.clone();
-        let e_target_id = e_unit.instance_id.clone();
-
-        let new_p_hp = p_unit.health - e_dmg;
-        let new_e_hp = e_unit.health - p_dmg;
-
-        // Damage is calculated for both, then applied.
-        events.push(CombatEvent::DamageTaken {
-            target_instance_id: p_target_id,
-            team: Team::Player.to_string(),
-            remaining_hp: new_p_hp,
-        });
-        player_units[0].health = new_p_hp;
-
-        events.push(CombatEvent::DamageTaken {
-            target_instance_id: e_target_id,
-            team: Team::Enemy.to_string(),
-            remaining_hp: new_e_hp,
-        });
-        enemy_units[0].health = new_e_hp;
-
-        // B. Death Phase
-        let p_died = player_units[0].health <= 0;
-        let e_died = enemy_units[0].health <= 0;
-
-        if p_died || e_died {
-            // Collect OnFaint triggers from units about to die
-            let mut faint_triggers: Vec<(String, Team, i32, AbilityEffect, String)> = Vec::new();
-
-            if p_died {
-                if let Some(ability) = &player_units[0].ability {
-                    if ability.trigger == AbilityTrigger::OnFaint {
-                        faint_triggers.push((
-                            player_units[0].instance_id.clone(),
-                            player_units[0].team,
-                            player_units[0].attack,
-                            ability.effect.clone(),
-                            ability.name.clone(),
-                        ));
-                    }
-                }
-            }
-            if e_died {
-                if let Some(ability) = &enemy_units[0].ability {
-                    if ability.trigger == AbilityTrigger::OnFaint {
-                        faint_triggers.push((
-                            enemy_units[0].instance_id.clone(),
-                            enemy_units[0].team,
-                            enemy_units[0].attack,
-                            ability.effect.clone(),
-                            ability.name.clone(),
-                        ));
-                    }
-                }
-            }
-
-            // Sort by attack power (descending), with RNG tie-break
-            faint_triggers.shuffle(&mut rng);
-            faint_triggers.sort_by_key(|(_, _, attack, _, _)| -attack);
-
-            // Execute OnFaint abilities
-            for (instance_id, team, _, effect, ability_name) in faint_triggers {
-                events.push(CombatEvent::AbilityTrigger {
-                    source_instance_id: instance_id.clone(),
-                    ability_name,
-                });
-                apply_ability_effect(
-                    &instance_id,
-                    team,
-                    &effect,
-                    &mut player_units,
-                    &mut enemy_units,
-                    &mut events,
-                    &mut rng,
-                );
-            }
-
-            // Remove dead units and emit state changes
-            if p_died {
-                player_units.remove(0);
-                events.push(CombatEvent::UnitDeath {
-                    team: Team::Player.to_string(),
-                    new_board_state: player_units.iter().map(|u| u.to_view()).collect(),
-                });
-            }
-            if e_died {
-                enemy_units.remove(0);
-                events.push(CombatEvent::UnitDeath {
-                    team: Team::Enemy.to_string(),
-                    new_board_state: enemy_units.iter().map(|u| u.to_view()).collect(),
-                });
-            }
-
-            // Remove any additional units killed by OnFaint abilities
-            remove_dead_units(&mut player_units, &mut enemy_units, &mut events);
-        }
+        execute_phase(
+            BattlePhase::Attack,
+            &mut player_units,
+            &mut enemy_units,
+            &mut events,
+            &mut rng,
+        );
+        execute_phase(
+            BattlePhase::HurtAndFaint,
+            &mut player_units,
+            &mut enemy_units,
+            &mut events,
+            &mut rng,
+        );
     }
 
-    // 3. Battle End
-    let result = match (player_units.is_empty(), enemy_units.is_empty()) {
-        (false, true) => "VICTORY".to_string(),
-        (true, false) => "DEFEAT".to_string(),
-        (true, true) => "DRAW".to_string(),
-        (false, false) => "DRAW".to_string(), // Should not happen
-    };
-    events.push(CombatEvent::BattleEnd { result });
+    // Battle end
+    execute_phase(
+        BattlePhase::End,
+        &mut player_units,
+        &mut enemy_units,
+        &mut events,
+        &mut rng,
+    );
 
     events
 }
