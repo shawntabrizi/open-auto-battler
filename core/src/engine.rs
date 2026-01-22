@@ -19,7 +19,7 @@ struct CardTemplate {
     health: i32,
     play_cost: i32,
     pitch_value: i32,
-    ability: Option<Ability>,
+    abilities: Vec<Ability>,
 }
 
 /// The 10 unique unit cards for the starter deck
@@ -32,7 +32,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 2,
             play_cost: 1,
             pitch_value: 2,
-            ability: None,
+            abilities: vec![],
         },
         CardTemplate {
             template_id: "goblin_looter",
@@ -41,7 +41,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 1,
             play_cost: 1,
             pitch_value: 3,
-            ability: None,
+            abilities: vec![],
         },
         CardTemplate {
             template_id: "militia",
@@ -50,7 +50,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 2,
             play_cost: 2,
             pitch_value: 2,
-            ability: None,
+            abilities: vec![],
         },
         CardTemplate {
             template_id: "shield_bearer",
@@ -59,7 +59,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 4,
             play_cost: 2,
             pitch_value: 2,
-            ability: Some(Ability {
+            abilities: vec![Ability {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::ModifyStats {
                     health: 2,
@@ -68,7 +68,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Shield Wall".to_string(),
                 description: "Heal front ally for 2".to_string(),
-            }),
+            }],
         },
         CardTemplate {
             template_id: "wolf_rider",
@@ -77,7 +77,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 2,
             play_cost: 3,
             pitch_value: 2,
-            ability: Some(Ability {
+            abilities: vec![Ability {
                 trigger: AbilityTrigger::OnFaint,
                 effect: AbilityEffect::Damage {
                     amount: 2,
@@ -85,7 +85,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Dying Bite".to_string(),
                 description: "Deal 2 damage to front enemy on death".to_string(),
-            }),
+            }],
         },
         CardTemplate {
             template_id: "orc_warrior",
@@ -94,7 +94,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 3,
             play_cost: 3,
             pitch_value: 2,
-            ability: Some(Ability {
+            abilities: vec![Ability {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::ModifyStats {
                     health: 0,
@@ -103,7 +103,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Battle Rage".to_string(),
                 description: "Gain +2 attack at battle start".to_string(),
-            }),
+            }],
         },
         CardTemplate {
             template_id: "zombie_soldier",
@@ -112,7 +112,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 1,
             play_cost: 1,
             pitch_value: 1,
-            ability: Some(Ability {
+            abilities: vec![Ability {
                 trigger: AbilityTrigger::OnFaint,
                 effect: AbilityEffect::SpawnUnit {
                     attack: 1,
@@ -121,7 +121,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Spawn Zombie".to_string(),
                 description: "Spawn a 1/1 Zombie Spawn when killed".to_string(),
-            }),
+            }],
         },
         CardTemplate {
             template_id: "necromancer",
@@ -130,7 +130,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 3,
             play_cost: 3,
             pitch_value: 2,
-            ability: Some(Ability {
+            abilities: vec![Ability {
                 trigger: AbilityTrigger::OnSpawn,
                 effect: AbilityEffect::ModifyStats {
                     health: 0,
@@ -139,7 +139,37 @@ fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Spawn Boost".to_string(),
                 description: "Give +2 attack to any spawned unit".to_string(),
-            }),
+            }],
+        },
+        CardTemplate {
+            template_id: "battle_hardened",
+            name: "Battle Hardened",
+            attack: 2,
+            health: 3,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![
+                Ability {
+                    trigger: AbilityTrigger::BeforeAttack,
+                    effect: AbilityEffect::ModifyStats {
+                        health: 2,
+                        attack: 0,
+                        target: AbilityTarget::SelfUnit,
+                    },
+                    name: "Pre-Battle Prep".to_string(),
+                    description: "Gain +2 health before each clash".to_string(),
+                },
+                Ability {
+                    trigger: AbilityTrigger::AfterAttack,
+                    effect: AbilityEffect::ModifyStats {
+                        health: 0,
+                        attack: 2,
+                        target: AbilityTarget::SelfUnit,
+                    },
+                    name: "Adrenaline Rush".to_string(),
+                    description: "Gain +2 attack after each clash if still alive".to_string(),
+                },
+            ],
         },
         CardTemplate {
             template_id: "troll_brute",
@@ -148,7 +178,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 5,
             play_cost: 5,
             pitch_value: 2,
-            ability: Some(Ability {
+            abilities: vec![Ability {
                 trigger: AbilityTrigger::OnFaint,
                 effect: AbilityEffect::Damage {
                     amount: 3,
@@ -156,7 +186,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Death Throes".to_string(),
                 description: "Deal 3 damage to all enemies on death".to_string(),
-            }),
+            }],
         },
         CardTemplate {
             template_id: "ogre_mauler",
@@ -165,7 +195,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 6,
             play_cost: 6,
             pitch_value: 2,
-            ability: Some(Ability {
+            abilities: vec![Ability {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::ModifyStats {
                     health: 0,
@@ -174,7 +204,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Crushing Blow".to_string(),
                 description: "Gain +3 attack at battle start".to_string(),
-            }),
+            }],
         },
         CardTemplate {
             template_id: "giant_crusher",
@@ -183,7 +213,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 8,
             play_cost: 8,
             pitch_value: 2,
-            ability: Some(Ability {
+            abilities: vec![Ability {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::Damage {
                     amount: 4,
@@ -191,7 +221,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Earthshaker".to_string(),
                 description: "Deal 4 damage to front enemy at battle start".to_string(),
-            }),
+            }],
         },
         CardTemplate {
             template_id: "dragon_tyrant",
@@ -200,7 +230,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             health: 10,
             play_cost: 10,
             pitch_value: 3,
-            ability: Some(Ability {
+            abilities: vec![Ability {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::Damage {
                     amount: 3,
@@ -208,7 +238,7 @@ fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Dragon Breath".to_string(),
                 description: "Deal 3 damage to all enemies at battle start".to_string(),
-            }),
+            }],
         },
     ]
 }
@@ -483,7 +513,7 @@ impl GameEngine {
         for template in &templates {
             for _ in 0..3 {
                 let id = self.state.generate_card_id();
-                let mut card = UnitCard::new(
+                let card = UnitCard::new(
                     id,
                     template.template_id,
                     template.name,
@@ -491,10 +521,8 @@ impl GameEngine {
                     template.health,
                     template.play_cost,
                     template.pitch_value,
-                );
-                if let Some(ability) = &template.ability {
-                    card = card.with_ability(ability.clone());
-                }
+                )
+                .with_abilities(template.abilities.clone());
                 self.state.deck.push(card);
             }
         }
@@ -542,7 +570,7 @@ impl GameEngine {
                     name: u.card.name.clone(),
                     attack: u.card.stats.attack,
                     health: u.current_health,
-                    ability: u.card.ability.clone(),
+                    abilities: u.card.abilities.clone(),
                 }
             })
             .collect();
@@ -556,7 +584,7 @@ impl GameEngine {
                     name: u.card.name.clone(),
                     attack: u.card.stats.attack,
                     health: u.current_health,
-                    ability: u.card.ability.clone(),
+                    abilities: u.card.abilities.clone(),
                 }
             })
             .collect();

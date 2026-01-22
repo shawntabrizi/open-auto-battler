@@ -6,7 +6,7 @@ export interface Ability {
   description: string;
 }
 
-export type AbilityTrigger = 'onStart' | 'onFaint' | 'onSpawn';
+export type AbilityTrigger = 'onStart' | 'onFaint' | 'onSpawn' | 'beforeAttack' | 'afterAttack';
 
 export type AbilityTarget =
   | 'selfUnit'
@@ -32,7 +32,7 @@ export interface CardView {
   health: number;
   playCost: number;
   pitchValue: number;
-  ability?: Ability;
+  abilities: Ability[];
 }
 
 export interface BoardUnitView {
@@ -71,7 +71,7 @@ export interface UnitView {
   name: string;
   attack: number;
   health: number;
-  ability?: Ability;
+  abilities: Ability[];
 }
 
 export type CombatEvent =

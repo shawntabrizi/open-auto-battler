@@ -17,7 +17,7 @@ pub struct UnitView {
     pub name: String,
     pub attack: i32,
     pub health: i32,
-    pub ability: Option<Ability>,
+    pub abilities: Vec<Ability>,
 }
 
 /// Events generated during combat for UI playback.
@@ -95,7 +95,7 @@ pub fn resolve_battle(
                 team: Team::Player,
                 attack: u.card.stats.attack,
                 health: u.current_health,
-                ability: u.card.ability.clone(),
+                abilities: u.card.abilities.clone(),
                 template_id: u.card.template_id.clone(),
                 name: u.card.name.clone(),
                 attack_buff: 0,
@@ -113,7 +113,7 @@ pub fn resolve_battle(
                 team: Team::Enemy,
                 attack: u.card.stats.attack,
                 health: u.current_health,
-                ability: u.card.ability.clone(),
+                abilities: u.card.abilities.clone(),
                 template_id: u.card.template_id.clone(),
                 name: u.card.name.clone(),
                 attack_buff: 0,
@@ -139,10 +139,24 @@ pub fn resolve_battle(
         );
     }
 
-    // Main combat loop (simplified for now - just attack and hurt/faint)
+    // Main combat loop
     while !player_units.is_empty() && !enemy_units.is_empty() {
         execute_phase(
+            BattlePhase::BeforeAttack,
+            &mut player_units,
+            &mut enemy_units,
+            &mut events,
+            &mut rng,
+        );
+        execute_phase(
             BattlePhase::Attack,
+            &mut player_units,
+            &mut enemy_units,
+            &mut events,
+            &mut rng,
+        );
+        execute_phase(
+            BattlePhase::AfterAttack,
             &mut player_units,
             &mut enemy_units,
             &mut events,
@@ -201,7 +215,7 @@ struct CombatUnit {
     team: Team,
     attack: i32,
     health: i32,
-    ability: Option<Ability>,
+    abilities: Vec<Ability>,
     template_id: String,
     name: String,
     attack_buff: i32,
@@ -216,7 +230,7 @@ impl CombatUnit {
             name: self.name.clone(),
             attack: self.effective_attack(),
             health: self.effective_health(),
-            ability: self.ability.clone(),
+            abilities: self.abilities.clone(),
         }
     }
 
@@ -318,7 +332,7 @@ fn apply_ability_effect(
                 team: source_team,
                 attack: *attack,
                 health: *health,
-                ability: None, // Spawned units don't have abilities
+                abilities: vec![], // Spawned units don't have abilities
                 template_id: format!("spawned-{}", name.to_lowercase().replace(" ", "-")),
                 name: name.clone(),
                 attack_buff: 0,
@@ -351,8 +365,8 @@ fn apply_ability_effect(
             let mut spawn_triggers: Vec<(String, Team, i32, AbilityEffect, String)> = player_units
                 .iter()
                 .chain(enemy_units.iter())
-                .filter_map(|u| {
-                    u.ability.as_ref().and_then(|a| {
+                .flat_map(|u| {
+                    u.abilities.iter().filter_map(|a| {
                         if a.trigger == AbilityTrigger::OnSpawn {
                             Some((
                                 u.instance_id.clone(),
@@ -531,13 +545,21 @@ fn execute_phase(
             // Start phase logic (OnStartBattle abilities)
             execute_start_phase(player_units, enemy_units, events, rng);
         }
-        BattlePhase::HurtAndFaint => {
-            // Handle hurt and faint effects
-            execute_hurt_and_faint_phase(player_units, enemy_units, events, rng);
+        BattlePhase::BeforeAttack => {
+            // Before attack phase logic
+            execute_before_attack_phase(player_units, enemy_units, events, rng);
         }
         BattlePhase::Attack => {
             // Execute attack damage
             execute_attack_phase(player_units, enemy_units, events, rng);
+        }
+        BattlePhase::AfterAttack => {
+            // After attack phase logic
+            execute_after_attack_phase(player_units, enemy_units, events, rng);
+        }
+        BattlePhase::HurtAndFaint => {
+            // Handle hurt and faint effects
+            execute_hurt_and_faint_phase(player_units, enemy_units, events, rng);
         }
         BattlePhase::End => {
             // Battle end logic
@@ -571,8 +593,8 @@ fn execute_start_phase(
     let mut start_triggers: Vec<(String, Team, i32, AbilityEffect, String)> = player_units
         .iter()
         .chain(enemy_units.iter())
-        .filter_map(|u| {
-            u.ability.as_ref().and_then(|a| {
+        .flat_map(|u| {
+            u.abilities.iter().filter_map(|a| {
                 if a.trigger == AbilityTrigger::OnStart {
                     Some((
                         u.instance_id.clone(),
@@ -653,6 +675,133 @@ fn execute_attack_phase(
     enemy_units[0].health = new_e_hp;
 }
 
+/// Execute before attack phase (abilities that trigger before attacking)
+fn execute_before_attack_phase(
+    player_units: &mut Vec<CombatUnit>,
+    enemy_units: &mut Vec<CombatUnit>,
+    events: &mut Vec<CombatEvent>,
+    rng: &mut StdRng,
+) {
+    // Trigger BeforeAttack abilities on front units
+    if !player_units.is_empty() {
+        let player_abilities: Vec<(String, AbilityEffect)> = player_units[0]
+            .abilities
+            .iter()
+            .filter(|a| a.trigger == AbilityTrigger::BeforeAttack)
+            .map(|a| (a.name.clone(), a.effect.clone()))
+            .collect();
+
+        for (ability_name, ability_effect) in player_abilities {
+            let instance_id = player_units[0].instance_id.clone();
+
+            events.push(CombatEvent::AbilityTrigger {
+                source_instance_id: instance_id.clone(),
+                ability_name,
+            });
+            apply_ability_effect(
+                &instance_id,
+                Team::Player,
+                &ability_effect,
+                player_units,
+                enemy_units,
+                events,
+                rng,
+            );
+        }
+    }
+
+    if !enemy_units.is_empty() {
+        let enemy_abilities: Vec<(String, AbilityEffect)> = enemy_units[0]
+            .abilities
+            .iter()
+            .filter(|a| a.trigger == AbilityTrigger::BeforeAttack)
+            .map(|a| (a.name.clone(), a.effect.clone()))
+            .collect();
+
+        for (ability_name, ability_effect) in enemy_abilities {
+            let instance_id = enemy_units[0].instance_id.clone();
+
+            events.push(CombatEvent::AbilityTrigger {
+                source_instance_id: instance_id.clone(),
+                ability_name,
+            });
+            apply_ability_effect(
+                &instance_id,
+                Team::Enemy,
+                &ability_effect,
+                player_units,
+                enemy_units,
+                events,
+                rng,
+            );
+        }
+    }
+}
+
+/// Execute after attack phase (abilities that trigger after attacking)
+fn execute_after_attack_phase(
+    player_units: &mut Vec<CombatUnit>,
+    enemy_units: &mut Vec<CombatUnit>,
+    events: &mut Vec<CombatEvent>,
+    rng: &mut StdRng,
+) {
+    // Trigger AfterAttack abilities on units that just attacked (if they're still alive)
+    // Note: We check if units are still at index 0 (they weren't killed in the attack)
+    if !player_units.is_empty() {
+        let player_abilities: Vec<(String, AbilityEffect)> = player_units[0]
+            .abilities
+            .iter()
+            .filter(|a| a.trigger == AbilityTrigger::AfterAttack)
+            .map(|a| (a.name.clone(), a.effect.clone()))
+            .collect();
+
+        for (ability_name, ability_effect) in player_abilities {
+            let instance_id = player_units[0].instance_id.clone();
+
+            events.push(CombatEvent::AbilityTrigger {
+                source_instance_id: instance_id.clone(),
+                ability_name,
+            });
+            apply_ability_effect(
+                &instance_id,
+                Team::Player,
+                &ability_effect,
+                player_units,
+                enemy_units,
+                events,
+                rng,
+            );
+        }
+    }
+
+    if !enemy_units.is_empty() {
+        let enemy_abilities: Vec<(String, AbilityEffect)> = enemy_units[0]
+            .abilities
+            .iter()
+            .filter(|a| a.trigger == AbilityTrigger::AfterAttack)
+            .map(|a| (a.name.clone(), a.effect.clone()))
+            .collect();
+
+        for (ability_name, ability_effect) in enemy_abilities {
+            let instance_id = enemy_units[0].instance_id.clone();
+
+            events.push(CombatEvent::AbilityTrigger {
+                source_instance_id: instance_id.clone(),
+                ability_name,
+            });
+            apply_ability_effect(
+                &instance_id,
+                Team::Enemy,
+                &ability_effect,
+                player_units,
+                enemy_units,
+                events,
+                rng,
+            );
+        }
+    }
+}
+
 /// Execute hurt and faint phase (handle deaths and triggers)
 fn execute_hurt_and_faint_phase(
     player_units: &mut Vec<CombatUnit>,
@@ -675,8 +824,8 @@ fn execute_hurt_and_faint_phase(
             new_board_state: player_units.iter().map(|u| u.to_view()).collect(),
         });
 
-        // Then execute OnFaint ability
-        if let Some(ability) = &dead_unit.ability {
+        // Then execute OnFaint abilities
+        for ability in &dead_unit.abilities {
             if ability.trigger == AbilityTrigger::OnFaint {
                 events.push(CombatEvent::AbilityTrigger {
                     source_instance_id: dead_unit.instance_id.clone(),
@@ -702,8 +851,8 @@ fn execute_hurt_and_faint_phase(
             new_board_state: enemy_units.iter().map(|u| u.to_view()).collect(),
         });
 
-        // Then execute OnFaint ability
-        if let Some(ability) = &dead_unit.ability {
+        // Then execute OnFaint abilities
+        for ability in &dead_unit.abilities {
             if ability.trigger == AbilityTrigger::OnFaint {
                 events.push(CombatEvent::AbilityTrigger {
                     source_instance_id: dead_unit.instance_id.clone(),
