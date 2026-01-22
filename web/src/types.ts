@@ -19,9 +19,7 @@ export type AbilityTarget =
 
 export type AbilityEffect =
   | { type: 'damage'; amount: number; target: AbilityTarget }
-  | { type: 'heal'; amount: number; target: AbilityTarget }
-  | { type: 'attackBuff'; amount: number; target: AbilityTarget; duration: number }
-  | { type: 'healthBuff'; amount: number; target: AbilityTarget; duration: number };
+  | { type: 'modifyStats'; health: number; attack: number; target: AbilityTarget };
 
 // Types matching the Rust view structs
 
@@ -91,16 +89,12 @@ export type CombatEvent =
       payload: { sourceInstanceId: string; targetInstanceId: string; damage: number; remainingHp: number };
     }
   | {
-      type: 'abilityHeal';
-      payload: { sourceInstanceId: string; targetInstanceId: string; heal: number; newHp: number };
-    }
-  | {
-      type: 'abilityBuff';
+      type: 'abilityModifyStats';
       payload: {
         sourceInstanceId: string;
         targetInstanceId: string;
-        attackBuff: number;
-        healthBuff: number;
+        healthChange: number;
+        attackChange: number;
         newAttack: number;
         newHealth: number;
       };

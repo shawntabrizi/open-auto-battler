@@ -22,8 +22,9 @@ fn get_opponent_ability(template_id: &str) -> Option<Ability> {
     match template_id {
         "orc_shaman" => Some(Ability {
             trigger: AbilityTrigger::OnStart,
-            effect: AbilityEffect::Heal {
-                amount: 2,
+            effect: AbilityEffect::ModifyStats {
+                health: 2,
+                attack: 0,
                 target: AbilityTarget::FrontAlly,
             },
             name: "Healing Totem".to_string(),
@@ -103,7 +104,14 @@ pub fn get_opponent_for_round(round: i32, card_id_counter: &mut u32) -> Vec<Boar
 
     for (template_id, name, attack, health) in templates {
         let ability = get_opponent_ability(template_id);
-        units.push(create_unit(card_id_counter, template_id, name, attack, health, ability));
+        units.push(create_unit(
+            card_id_counter,
+            template_id,
+            name,
+            attack,
+            health,
+            ability,
+        ));
     }
 
     units

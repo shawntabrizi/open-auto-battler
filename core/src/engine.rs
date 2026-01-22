@@ -61,8 +61,9 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             pitch_value: 2,
             ability: Some(Ability {
                 trigger: AbilityTrigger::OnStart,
-                effect: AbilityEffect::Heal {
-                    amount: 2,
+                effect: AbilityEffect::ModifyStats {
+                    health: 2,
+                    attack: 0,
                     target: AbilityTarget::FrontAlly,
                 },
                 name: "Shield Wall".to_string(),
@@ -95,10 +96,10 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             pitch_value: 2,
             ability: Some(Ability {
                 trigger: AbilityTrigger::OnStart,
-                effect: AbilityEffect::AttackBuff {
-                    amount: 2,
+                effect: AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 2,
                     target: AbilityTarget::SelfUnit,
-                    duration: 0,
                 },
                 name: "Battle Rage".to_string(),
                 description: "Gain +2 attack at battle start".to_string(),
@@ -130,10 +131,10 @@ fn get_starter_templates() -> Vec<CardTemplate> {
             pitch_value: 2,
             ability: Some(Ability {
                 trigger: AbilityTrigger::OnStart,
-                effect: AbilityEffect::AttackBuff {
-                    amount: 3,
+                effect: AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 3,
                     target: AbilityTarget::SelfUnit,
-                    duration: 0,
                 },
                 name: "Crushing Blow".to_string(),
                 description: "Gain +3 attack at battle start".to_string(),
@@ -240,8 +241,14 @@ impl GameEngine {
             return Err("Can only pitch during shop phase".to_string());
         }
 
-        let card = self.state.shop.get_mut(index).ok_or("Invalid shop index")?
-            .card.take().ok_or("Shop slot is empty")?;
+        let card = self
+            .state
+            .shop
+            .get_mut(index)
+            .ok_or("Invalid shop index")?
+            .card
+            .take()
+            .ok_or("Shop slot is empty")?;
 
         let pitch_value = card.economy.pitch_value;
 
@@ -252,10 +259,10 @@ impl GameEngine {
         if let Some(slot) = self.state.shop.get_mut(index) {
             if let Some(nc) = new_card {
                 log::info(&format!(
-                   "   Refilled slot {} with '{}' from deck ({} remaining)",
-                   index,
-                   nc.name,
-                   self.state.deck.len()
+                    "   Refilled slot {} with '{}' from deck ({} remaining)",
+                    index,
+                    nc.name,
+                    self.state.deck.len()
                 ));
                 *slot = ShopSlot::with_card(nc);
             } else {
@@ -275,18 +282,27 @@ impl GameEngine {
             return Err("Can only buy during shop phase".to_string());
         }
 
-        let cost = self.state.shop.get(shop_index)
+        let cost = self
+            .state
+            .shop
+            .get(shop_index)
             .and_then(|s| s.card.as_ref())
             .map(|c| c.economy.play_cost)
             .ok_or("Shop slot is empty")?;
 
         if !self.state.can_afford(cost) {
-            return Err(format!("Not enough mana: have {}, need {}", self.state.mana, cost));
+            return Err(format!(
+                "Not enough mana: have {}, need {}",
+                self.state.mana, cost
+            ));
         }
 
         let board_slot = self.state.find_empty_board_slot().ok_or("Board is full")?;
 
-        let card = self.state.shop.get_mut(shop_index)
+        let card = self
+            .state
+            .shop
+            .get_mut(shop_index)
             .and_then(|s| s.card.take())
             .ok_or("Failed to take card from shop")?;
 
@@ -305,7 +321,11 @@ impl GameEngine {
             return Err("Can only freeze during shop phase".to_string());
         }
 
-        let slot = self.state.shop.get_mut(shop_index).ok_or("Invalid shop index")?;
+        let slot = self
+            .state
+            .shop
+            .get_mut(shop_index)
+            .ok_or("Invalid shop index")?;
         if slot.card.is_some() {
             slot.frozen = !slot.frozen;
             Ok(())
@@ -317,7 +337,10 @@ impl GameEngine {
     /// Swap two board positions
     #[wasm_bindgen]
     pub fn swap_board_positions(&mut self, slot_a: usize, slot_b: usize) -> Result<(), String> {
-        log::action("swap_board_positions", &format!("a={}, b={}", slot_a, slot_b));
+        log::action(
+            "swap_board_positions",
+            &format!("a={}, b={}", slot_a, slot_b),
+        );
         if self.state.phase != GamePhase::Shop {
             return Err("Can only swap during shop phase".to_string());
         }
@@ -338,7 +361,10 @@ impl GameEngine {
             return Err("Can only pitch during shop phase".to_string());
         }
 
-        let unit = self.state.board.get_mut(board_slot)
+        let unit = self
+            .state
+            .board
+            .get_mut(board_slot)
             .and_then(|s| s.take())
             .ok_or("Board slot is empty")?;
 
@@ -453,7 +479,8 @@ impl GameEngine {
     fn run_battle(&mut self) {
         log::info("=== BATTLE START ===");
 
-        let player_board: Vec<BoardUnit> = self.state.board.iter().filter_map(|s| s.clone()).collect();
+        let player_board: Vec<BoardUnit> =
+            self.state.board.iter().filter_map(|s| s.clone()).collect();
         let enemy_board = get_opponent_for_round(self.state.round, &mut self.state.next_card_id);
 
         let battle_seed = self.state.round as u64;
@@ -469,30 +496,36 @@ impl GameEngine {
         }
 
         let mut instance_counter = 0;
-        let initial_player_units: Vec<UnitView> = player_board.iter().map(|u| {
-            instance_counter += 1;
-            UnitView {
-                instance_id: format!("p-{}", instance_counter),
-                template_id: u.card.template_id.clone(),
-                name: u.card.name.clone(),
-                attack: u.card.stats.attack,
-                health: u.current_health,
-                max_health: u.card.stats.health,
-                ability: u.card.ability.clone(),
-            }
-        }).collect();
-        let initial_enemy_units: Vec<UnitView> = enemy_board.iter().map(|u| {
-            instance_counter += 1;
-            UnitView {
-                instance_id: format!("e-{}", instance_counter),
-                template_id: u.card.template_id.clone(),
-                name: u.card.name.clone(),
-                attack: u.card.stats.attack,
-                health: u.current_health,
-                max_health: u.card.stats.health,
-                ability: u.card.ability.clone(),
-            }
-        }).collect();
+        let initial_player_units: Vec<UnitView> = player_board
+            .iter()
+            .map(|u| {
+                instance_counter += 1;
+                UnitView {
+                    instance_id: format!("p-{}", instance_counter),
+                    template_id: u.card.template_id.clone(),
+                    name: u.card.name.clone(),
+                    attack: u.card.stats.attack,
+                    health: u.current_health,
+                    max_health: u.card.stats.health,
+                    ability: u.card.ability.clone(),
+                }
+            })
+            .collect();
+        let initial_enemy_units: Vec<UnitView> = enemy_board
+            .iter()
+            .map(|u| {
+                instance_counter += 1;
+                UnitView {
+                    instance_id: format!("e-{}", instance_counter),
+                    template_id: u.card.template_id.clone(),
+                    name: u.card.name.clone(),
+                    attack: u.card.stats.attack,
+                    health: u.current_health,
+                    max_health: u.card.stats.health,
+                    ability: u.card.ability.clone(),
+                }
+            })
+            .collect();
 
         self.last_battle_output = Some(BattleOutput {
             events,

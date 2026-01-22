@@ -18,12 +18,12 @@ pub enum AbilityTrigger {
 pub enum AbilityEffect {
     /// Deal damage to target
     Damage { amount: i32, target: AbilityTarget },
-    /// Heal target
-    Heal { amount: i32, target: AbilityTarget },
-    /// Modify attack stat
-    AttackBuff { amount: i32, target: AbilityTarget, duration: i32 },
-    /// Modify health stat
-    HealthBuff { amount: i32, target: AbilityTarget, duration: i32 },
+    /// Modify health and/or attack stats (positive = buff/heal, negative = debuff/damage)
+    ModifyStats {
+        health: i32,
+        attack: i32,
+        target: AbilityTarget,
+    },
     // Future: Summon, RedirectDamage, etc.
 }
 

@@ -32,10 +32,7 @@ pub enum CombatEvent {
         ability_name: String,
     },
     #[serde(rename_all = "camelCase")]
-    Clash {
-        p_dmg: i32,
-        e_dmg: i32,
-    },
+    Clash { p_dmg: i32, e_dmg: i32 },
     #[serde(rename_all = "camelCase")]
     DamageTaken {
         target_instance_id: UnitInstanceId,
@@ -59,18 +56,11 @@ pub enum CombatEvent {
         remaining_hp: i32,
     },
     #[serde(rename_all = "camelCase")]
-    AbilityHeal {
+    AbilityModifyStats {
         source_instance_id: UnitInstanceId,
         target_instance_id: UnitInstanceId,
-        heal: i32,
-        new_hp: i32,
-    },
-    #[serde(rename_all = "camelCase")]
-    AbilityBuff {
-        source_instance_id: UnitInstanceId,
-        target_instance_id: UnitInstanceId,
-        attack_buff: i32,
-        health_buff: i32,
+        health_change: i32,
+        attack_change: i32,
         new_attack: i32,
         new_health: i32,
     },
@@ -111,15 +101,19 @@ impl CombatUnit {
             instance_id: self.instance_id.clone(),
             template_id: self.template_id.clone(),
             name: self.name.clone(),
-            attack: self.attack + self.attack_buff,
-            health: self.health,
-            max_health: self.max_health,
+            attack: self.effective_attack(),
+            health: self.effective_health(),
+            max_health: self.max_health + self.health_buff,
             ability: self.ability.clone(),
         }
     }
 
     fn effective_attack(&self) -> i32 {
         self.attack + self.attack_buff
+    }
+
+    fn effective_health(&self) -> i32 {
+        self.health + self.health_buff
     }
 }
 
@@ -135,7 +129,14 @@ fn apply_ability_effect(
 ) {
     match effect {
         AbilityEffect::Damage { amount, target } => {
-            let targets = get_targets(source_instance_id, source_team, target, player_units, enemy_units, rng);
+            let targets = get_targets(
+                source_instance_id,
+                source_team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+            );
             for target_id in targets {
                 // Find and damage the target
                 if let Some(unit) = find_unit_mut(&target_id, player_units, enemy_units) {
@@ -149,50 +150,36 @@ fn apply_ability_effect(
                 }
             }
         }
-        AbilityEffect::Heal { amount, target } => {
-            let targets = get_targets(source_instance_id, source_team, target, player_units, enemy_units, rng);
+        AbilityEffect::ModifyStats {
+            health,
+            attack,
+            target,
+        } => {
+            let targets = get_targets(
+                source_instance_id,
+                source_team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+            );
             for target_id in targets {
                 if let Some(unit) = find_unit_mut(&target_id, player_units, enemy_units) {
-                    unit.health = (unit.health + amount).min(unit.max_health);
-                    events.push(CombatEvent::AbilityHeal {
+                    // Apply attack buff/debuff
+                    unit.attack_buff += attack;
+
+                    // Apply health buff/debuff
+                    unit.health_buff += health;
+                    unit.health += health;
+                    unit.max_health += health;
+
+                    events.push(CombatEvent::AbilityModifyStats {
                         source_instance_id: source_instance_id.to_string(),
                         target_instance_id: target_id,
-                        heal: *amount,
-                        new_hp: unit.health,
-                    });
-                }
-            }
-        }
-        AbilityEffect::AttackBuff { amount, target, duration: _ } => {
-            let targets = get_targets(source_instance_id, source_team, target, player_units, enemy_units, rng);
-            for target_id in targets {
-                if let Some(unit) = find_unit_mut(&target_id, player_units, enemy_units) {
-                    unit.attack_buff += amount;
-                    events.push(CombatEvent::AbilityBuff {
-                        source_instance_id: source_instance_id.to_string(),
-                        target_instance_id: target_id,
-                        attack_buff: *amount,
-                        health_buff: 0,
+                        health_change: *health,
+                        attack_change: *attack,
                         new_attack: unit.effective_attack(),
-                        new_health: unit.health,
-                    });
-                }
-            }
-        }
-        AbilityEffect::HealthBuff { amount, target, duration: _ } => {
-            let targets = get_targets(source_instance_id, source_team, target, player_units, enemy_units, rng);
-            for target_id in targets {
-                if let Some(unit) = find_unit_mut(&target_id, player_units, enemy_units) {
-                    unit.health_buff += amount;
-                    unit.health += amount;
-                    unit.max_health += amount;
-                    events.push(CombatEvent::AbilityBuff {
-                        source_instance_id: source_instance_id.to_string(),
-                        target_instance_id: target_id,
-                        attack_buff: 0,
-                        health_buff: *amount,
-                        new_attack: unit.effective_attack(),
-                        new_health: unit.health,
+                        new_health: unit.effective_health(),
                     });
                 }
             }

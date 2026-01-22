@@ -78,8 +78,24 @@ mod tests {
 
     #[test]
     fn test_combat_simultaneous_damage() {
-        let player_board = vec![BoardUnit::from_card(UnitCard::new(1, "p1", "Glass Cannon", 10, 5, 0, 0))];
-        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(2, "e1", "Glass Cannon", 10, 5, 0, 0))];
+        let player_board = vec![BoardUnit::from_card(UnitCard::new(
+            1,
+            "p1",
+            "Glass Cannon",
+            10,
+            5,
+            0,
+            0,
+        ))];
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(
+            2,
+            "e1",
+            "Glass Cannon",
+            10,
+            5,
+            0,
+            0,
+        ))];
 
         let events = crate::battle::resolve_battle(&player_board, &enemy_board, 123);
 
@@ -150,10 +166,10 @@ mod tests {
         // Create a unit with OnStart +2 Attack buff
         let ability = Ability {
             trigger: AbilityTrigger::OnStart,
-            effect: AbilityEffect::AttackBuff {
-                amount: 2,
+            effect: AbilityEffect::ModifyStats {
+                health: 0,
+                attack: 2,
                 target: AbilityTarget::SelfUnit,
-                duration: 0,
             },
             name: "Battle Rage".to_string(),
             description: "Gain +2 attack".to_string(),
@@ -162,20 +178,29 @@ mod tests {
         let player_board = vec![BoardUnit::from_card(card)];
 
         // Enemy with no ability
-        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(2, "goblin", "Goblin", 1, 1, 0, 0))];
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(
+            2, "goblin", "Goblin", 1, 1, 0, 0,
+        ))];
 
         let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
 
-        // Find the AbilityBuff event
-        let buff_event = events.iter().find(|e| matches!(e, CombatEvent::AbilityBuff { .. }));
-        assert!(buff_event.is_some(), "Should have an AbilityBuff event");
+        // Find the AbilityModifyStats event
+        let buff_event = events
+            .iter()
+            .find(|e| matches!(e, CombatEvent::AbilityModifyStats { .. }));
+        assert!(
+            buff_event.is_some(),
+            "Should have an AbilityModifyStats event"
+        );
 
-        if let Some(CombatEvent::AbilityBuff { attack_buff, .. }) = buff_event {
-            assert_eq!(*attack_buff, 2, "Attack buff should be +2");
+        if let Some(CombatEvent::AbilityModifyStats { attack_change, .. }) = buff_event {
+            assert_eq!(*attack_change, 2, "Attack change should be +2");
         }
 
         // The clash should use buffed attack (3+2=5 damage)
-        let clash_event = events.iter().find(|e| matches!(e, CombatEvent::Clash { .. }));
+        let clash_event = events
+            .iter()
+            .find(|e| matches!(e, CombatEvent::Clash { .. }));
         if let Some(CombatEvent::Clash { p_dmg, .. }) = clash_event {
             assert_eq!(*p_dmg, 5, "Player damage should include the +2 buff");
         }
@@ -197,17 +222,29 @@ mod tests {
         let player_board = vec![BoardUnit::from_card(card)];
 
         // Enemy with 5 health
-        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(2, "orc", "Orc", 2, 5, 0, 0))];
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(
+            2, "orc", "Orc", 2, 5, 0, 0,
+        ))];
 
         let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
 
         // Find the AbilityDamage event
-        let damage_event = events.iter().find(|e| matches!(e, CombatEvent::AbilityDamage { .. }));
+        let damage_event = events
+            .iter()
+            .find(|e| matches!(e, CombatEvent::AbilityDamage { .. }));
         assert!(damage_event.is_some(), "Should have an AbilityDamage event");
 
-        if let Some(CombatEvent::AbilityDamage { damage, remaining_hp, .. }) = damage_event {
+        if let Some(CombatEvent::AbilityDamage {
+            damage,
+            remaining_hp,
+            ..
+        }) = damage_event
+        {
             assert_eq!(*damage, 4, "Ability damage should be 4");
-            assert_eq!(*remaining_hp, 1, "Enemy should have 1 HP after ability damage (5-4=1)");
+            assert_eq!(
+                *remaining_hp, 1,
+                "Enemy should have 1 HP after ability damage (5-4=1)"
+            );
         }
     }
 
@@ -216,8 +253,9 @@ mod tests {
         // Create a damaged unit and a healer
         let healer_ability = Ability {
             trigger: AbilityTrigger::OnStart,
-            effect: AbilityEffect::Heal {
-                amount: 3,
+            effect: AbilityEffect::ModifyStats {
+                health: 3,
+                attack: 0,
                 target: AbilityTarget::FrontAlly,
             },
             name: "Heal".to_string(),
@@ -228,17 +266,32 @@ mod tests {
         tank.current_health = 5; // Damaged
 
         let player_board = vec![tank, BoardUnit::from_card(healer)];
-        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(3, "orc", "Orc", 1, 20, 0, 0))];
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(
+            3, "orc", "Orc", 1, 20, 0, 0,
+        ))];
 
         let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
 
-        // Find the AbilityHeal event
-        let heal_event = events.iter().find(|e| matches!(e, CombatEvent::AbilityHeal { .. }));
-        assert!(heal_event.is_some(), "Should have an AbilityHeal event");
+        // Find the AbilityModifyStats event
+        let heal_event = events
+            .iter()
+            .find(|e| matches!(e, CombatEvent::AbilityModifyStats { .. }));
+        assert!(
+            heal_event.is_some(),
+            "Should have an AbilityModifyStats event"
+        );
 
-        if let Some(CombatEvent::AbilityHeal { heal, new_hp, .. }) = heal_event {
-            assert_eq!(*heal, 3, "Heal amount should be 3");
-            assert_eq!(*new_hp, 8, "Tank should have 8 HP after heal (5+3=8)");
+        if let Some(CombatEvent::AbilityModifyStats {
+            health_change,
+            new_health,
+            ..
+        }) = heal_event
+        {
+            assert_eq!(*health_change, 3, "Health change should be 3");
+            assert_eq!(
+                *new_health, 11,
+                "Tank should have 11 effective HP after heal (5+3 health + 3 buff)"
+            );
         }
     }
 
@@ -258,7 +311,9 @@ mod tests {
         let player_board = vec![BoardUnit::from_card(card)];
 
         // Enemy with 10 health
-        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(2, "orc", "Orc", 10, 10, 0, 0))];
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(
+            2, "orc", "Orc", 10, 10, 0, 0,
+        ))];
 
         let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
 
@@ -266,11 +321,20 @@ mod tests {
         let trigger_event = events.iter().find(|e| {
             matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Death Spite")
         });
-        assert!(trigger_event.is_some(), "Should have an AbilityTrigger event for Death Spite");
+        assert!(
+            trigger_event.is_some(),
+            "Should have an AbilityTrigger event for Death Spite"
+        );
 
         // Find the AbilityDamage from the faint trigger
-        let damage_events: Vec<_> = events.iter().filter(|e| matches!(e, CombatEvent::AbilityDamage { .. })).collect();
-        assert!(!damage_events.is_empty(), "Should have AbilityDamage event from OnFaint");
+        let damage_events: Vec<_> = events
+            .iter()
+            .filter(|e| matches!(e, CombatEvent::AbilityDamage { .. }))
+            .collect();
+        assert!(
+            !damage_events.is_empty(),
+            "Should have AbilityDamage event from OnFaint"
+        );
     }
 
     #[test]
@@ -298,12 +362,24 @@ mod tests {
         let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
 
         // Should have 3 AbilityDamage events (one for each enemy)
-        let damage_events: Vec<_> = events.iter().filter(|e| matches!(e, CombatEvent::AbilityDamage { .. })).collect();
-        assert_eq!(damage_events.len(), 3, "Should have 3 AbilityDamage events for AllEnemies");
+        let damage_events: Vec<_> = events
+            .iter()
+            .filter(|e| matches!(e, CombatEvent::AbilityDamage { .. }))
+            .collect();
+        assert_eq!(
+            damage_events.len(),
+            3,
+            "Should have 3 AbilityDamage events for AllEnemies"
+        );
 
         // Each should deal 2 damage
         for event in damage_events {
-            if let CombatEvent::AbilityDamage { damage, remaining_hp, .. } = event {
+            if let CombatEvent::AbilityDamage {
+                damage,
+                remaining_hp,
+                ..
+            } = event
+            {
                 assert_eq!(*damage, 2, "Each target should take 2 damage");
                 assert_eq!(*remaining_hp, 3, "Each enemy should have 3 HP (5-2=3)");
             }
@@ -334,13 +410,18 @@ mod tests {
         let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
 
         // Find the AbilityDamage event - should show -2 remaining HP
-        let damage_event = events.iter().find(|e| matches!(e, CombatEvent::AbilityDamage { .. }));
+        let damage_event = events
+            .iter()
+            .find(|e| matches!(e, CombatEvent::AbilityDamage { .. }));
         if let Some(CombatEvent::AbilityDamage { remaining_hp, .. }) = damage_event {
             assert_eq!(*remaining_hp, -2, "Weak Orc should have -2 HP (3-5=-2)");
         }
 
         // There should be a death event from the ability damage
-        let death_events: Vec<_> = events.iter().filter(|e| matches!(e, CombatEvent::UnitDeath { .. })).collect();
+        let death_events: Vec<_> = events
+            .iter()
+            .filter(|e| matches!(e, CombatEvent::UnitDeath { .. }))
+            .collect();
         assert!(!death_events.is_empty(), "Should have death events");
     }
 

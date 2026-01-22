@@ -145,28 +145,16 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
           break;
         }
 
-        case 'abilityHeal': {
-          const { targetInstanceId: healTarget, newHp } = event.payload;
-          const updateBoard = (board: UnitView[]) =>
-            board.map((u) =>
-              u.instanceId === healTarget ? { ...u, health: newHp } : u
-            );
-          setPlayerBoard(updateBoard);
-          setEnemyBoard(updateBoard);
-          delay = 400;
-          break;
-        }
-
-        case 'abilityBuff': {
-          const { targetInstanceId: buffTarget, newAttack, newHealth } = event.payload;
+        case 'abilityModifyStats': {
+          const { targetInstanceId: statsTarget, newAttack, newHealth } = event.payload;
           setPlayerBoard((board) =>
             board.map((u) =>
-              u.instanceId === buffTarget ? { ...u, attack: newAttack, health: newHealth } : u
+              u.instanceId === statsTarget ? { ...u, attack: newAttack, health: newHealth } : u
             )
           );
           setEnemyBoard((board) =>
             board.map((u) =>
-              u.instanceId === buffTarget ? { ...u, attack: newAttack, health: newHealth } : u
+              u.instanceId === statsTarget ? { ...u, attack: newAttack, health: newHealth } : u
             )
           );
           delay = 400;
