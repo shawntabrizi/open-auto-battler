@@ -216,8 +216,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
               templateId: unit.templateId,
               name: unit.name,
               attack: unit.attack,
-              maxHealth: unit.maxHealth,
-              currentHealth: unit.health,
+              health: unit.health,
               playCost: 0,
               pitchValue: 0,
             }}

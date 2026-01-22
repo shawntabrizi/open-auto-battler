@@ -42,10 +42,7 @@ export function UnitCard({
     onDragEnd?.(e);
   };
 
-  const isBoardUnit = 'currentHealth' in card;
-  const currentHealth = isBoardUnit ? card.currentHealth : card.health;
-  const maxHealth = isBoardUnit ? card.maxHealth : card.health;
-  const isDamaged = isBoardUnit && currentHealth < maxHealth;
+  const displayHealth = card.health;
 
   return (
     <div
@@ -81,9 +78,9 @@ export function UnitCard({
 
         {/* Health */}
         <div className="flex items-center text-sm">
-          <span className={isDamaged ? 'text-red-500' : 'text-green-400'}>❤</span>
-          <span className={`font-bold ml-1 ${isDamaged ? 'text-red-400' : ''}`}>
-            {currentHealth}
+          <span className="text-green-400">❤</span>
+          <span className="font-bold ml-1">
+            {displayHealth}
           </span>
         </div>
       </div>

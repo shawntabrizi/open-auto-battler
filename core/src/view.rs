@@ -39,8 +39,7 @@ pub struct BoardUnitView {
     pub template_id: String,
     pub name: String,
     pub attack: i32,
-    pub max_health: i32,
-    pub current_health: i32,
+    pub health: i32,
     pub play_cost: i32,
     pub pitch_value: i32,
 }
@@ -52,8 +51,7 @@ impl From<&BoardUnit> for BoardUnitView {
             template_id: unit.card.template_id.clone(),
             name: unit.card.name.clone(),
             attack: unit.card.stats.attack,
-            max_health: unit.card.stats.health,
-            current_health: unit.current_health,
+            health: unit.current_health,
             play_cost: unit.card.economy.play_cost,
             pitch_value: unit.card.economy.pitch_value,
         }

@@ -40,8 +40,7 @@ export interface BoardUnitView {
   templateId: string;
   name: string;
   attack: number;
-  maxHealth: number;
-  currentHealth: number;
+  health: number;
   playCost: number;
   pitchValue: number;
 }
@@ -72,7 +71,6 @@ export interface UnitView {
   name: string;
   attack: number;
   health: number;
-  maxHealth: number;
   ability?: Ability;
 }
 

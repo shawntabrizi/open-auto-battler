@@ -17,7 +17,6 @@ pub struct UnitView {
     pub name: String,
     pub attack: i32,
     pub health: i32,
-    pub max_health: i32,
     pub ability: Option<Ability>,
 }
 
@@ -96,7 +95,6 @@ pub fn resolve_battle(
                 team: Team::Player,
                 attack: u.card.stats.attack,
                 health: u.current_health,
-                max_health: u.card.stats.health,
                 ability: u.card.ability.clone(),
                 template_id: u.card.template_id.clone(),
                 name: u.card.name.clone(),
@@ -115,7 +113,6 @@ pub fn resolve_battle(
                 team: Team::Enemy,
                 attack: u.card.stats.attack,
                 health: u.current_health,
-                max_health: u.card.stats.health,
                 ability: u.card.ability.clone(),
                 template_id: u.card.template_id.clone(),
                 name: u.card.name.clone(),
@@ -200,11 +197,10 @@ impl Team {
 
 #[derive(Debug, Clone)]
 struct CombatUnit {
-    instance_id: UnitInstanceId,
+    instance_id: String,
     team: Team,
     attack: i32,
     health: i32,
-    max_health: i32,
     ability: Option<Ability>,
     template_id: String,
     name: String,
@@ -220,7 +216,6 @@ impl CombatUnit {
             name: self.name.clone(),
             attack: self.effective_attack(),
             health: self.effective_health(),
-            max_health: self.max_health + self.health_buff,
             ability: self.ability.clone(),
         }
     }
@@ -230,7 +225,7 @@ impl CombatUnit {
     }
 
     fn effective_health(&self) -> i32 {
-        self.health + self.health_buff
+        self.health
     }
 }
 
@@ -286,9 +281,8 @@ fn apply_ability_effect(
                     unit.attack_buff += attack;
 
                     // Apply health buff/debuff
-                    unit.health_buff += health;
                     unit.health += health;
-                    unit.max_health += health;
+                    unit.health_buff += health;
 
                     events.push(CombatEvent::AbilityModifyStats {
                         source_instance_id: source_instance_id.to_string(),
@@ -324,7 +318,6 @@ fn apply_ability_effect(
                 team: source_team,
                 attack: *attack,
                 health: *health,
-                max_health: *health,
                 ability: None, // Spawned units don't have abilities
                 template_id: format!("spawned-{}", name.to_lowercase().replace(" ", "-")),
                 name: name.clone(),

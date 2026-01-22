@@ -524,7 +524,6 @@ impl GameEngine {
                     name: u.card.name.clone(),
                     attack: u.card.stats.attack,
                     health: u.current_health,
-                    max_health: u.card.stats.health,
                     ability: u.card.ability.clone(),
                 }
             })
@@ -539,7 +538,6 @@ impl GameEngine {
                     name: u.card.name.clone(),
                     attack: u.card.stats.attack,
                     health: u.current_health,
-                    max_health: u.card.stats.health,
                     ability: u.card.ability.clone(),
                 }
             })

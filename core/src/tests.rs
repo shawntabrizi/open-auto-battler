@@ -289,8 +289,8 @@ mod tests {
         {
             assert_eq!(*health_change, 3, "Health change should be 3");
             assert_eq!(
-                *new_health, 11,
-                "Tank should have 11 effective HP after heal (5+3 health + 3 buff)"
+                *new_health, 8,
+                "Tank should have 8 effective HP after buff (5 + 3 buff)"
             );
         }
     }
