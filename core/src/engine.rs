@@ -312,7 +312,8 @@ impl GameEngine {
 
         let player_board: Vec<BoardUnit> =
             self.state.board.iter().filter_map(|s| s.clone()).collect();
-        let enemy_board = get_opponent_for_round(self.state.round, &mut self.state.next_card_id);
+        let enemy_board = get_opponent_for_round(self.state.round, &mut self.state.next_card_id)
+            .expect("Failed to generate opponent for round");
 
         let battle_seed = self.state.round as u64;
         let events = resolve_battle(&player_board, &enemy_board, battle_seed);

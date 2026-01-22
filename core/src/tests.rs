@@ -1,8 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use crate::battle::CombatEvent;
+    use crate::battle::{calculate_priority_order, CombatEvent, CombatUnit, Team};
     use crate::state::*;
     use crate::types::*;
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
 
     #[test]
     fn test_mana_respects_limit() {
@@ -565,5 +567,259 @@ mod tests {
 
         assert!(!card.abilities.is_empty());
         assert_eq!(card.abilities[0].name, "Test");
+    }
+
+    #[test]
+    fn test_priority_ordering_basic() {
+        // Test basic priority ordering: higher attack goes first
+        let player_units = vec![
+            CombatUnit {
+                instance_id: "p1".to_string(),
+                team: Team::Player,
+                attack: 2,
+                health: 3,
+                abilities: vec![],
+                template_id: "unit1".to_string(),
+                name: "Unit1".to_string(),
+                attack_buff: 0,
+                health_buff: 0,
+            },
+            CombatUnit {
+                instance_id: "p2".to_string(),
+                team: Team::Player,
+                attack: 4,
+                health: 2,
+                abilities: vec![],
+                template_id: "unit2".to_string(),
+                name: "Unit2".to_string(),
+                attack_buff: 0,
+                health_buff: 0,
+            },
+        ];
+
+        let enemy_units = vec![];
+
+        let mut rng = StdRng::seed_from_u64(12345);
+        let priority_order = calculate_priority_order(&player_units, &enemy_units, &mut rng);
+
+        // Should be ordered by attack descending: p2 (attack 4) before p1 (attack 2)
+        assert_eq!(priority_order, vec![(Team::Player, 1), (Team::Player, 0)]);
+    }
+
+    #[test]
+    fn test_priority_ordering_tie_break_by_health() {
+        // Test tie-breaking by health when attacks are equal
+        let player_units = vec![
+            CombatUnit {
+                instance_id: "p1".to_string(),
+                team: Team::Player,
+                attack: 3,
+                health: 2,
+                abilities: vec![],
+                template_id: "unit1".to_string(),
+                name: "Unit1".to_string(),
+                attack_buff: 0,
+                health_buff: 0,
+            },
+            CombatUnit {
+                instance_id: "p2".to_string(),
+                team: Team::Player,
+                attack: 3,
+                health: 4,
+                abilities: vec![],
+                template_id: "unit2".to_string(),
+                name: "Unit2".to_string(),
+                attack_buff: 0,
+                health_buff: 0,
+            },
+        ];
+
+        let enemy_units = vec![];
+
+        let mut rng = StdRng::seed_from_u64(12345);
+        let priority_order = calculate_priority_order(&player_units, &enemy_units, &mut rng);
+
+        // Both have attack 3, so higher health (p2) should come first
+        assert_eq!(priority_order, vec![(Team::Player, 1), (Team::Player, 0)]);
+    }
+
+    #[test]
+    fn test_priority_ordering_full_tie_random() {
+        // Test tie-breaking by random when both attack and health are equal
+        let player_units = vec![
+            CombatUnit {
+                instance_id: "p1".to_string(),
+                team: Team::Player,
+                attack: 3,
+                health: 3,
+                abilities: vec![],
+                template_id: "unit1".to_string(),
+                name: "Unit1".to_string(),
+                attack_buff: 0,
+                health_buff: 0,
+            },
+            CombatUnit {
+                instance_id: "p2".to_string(),
+                team: Team::Player,
+                attack: 3,
+                health: 3,
+                abilities: vec![],
+                template_id: "unit2".to_string(),
+                name: "Unit2".to_string(),
+                attack_buff: 0,
+                health_buff: 0,
+            },
+        ];
+
+        let enemy_units = vec![];
+
+        // Test deterministic behavior with same seed
+        let mut rng1 = StdRng::seed_from_u64(42);
+        let priority_order1 = calculate_priority_order(&player_units, &enemy_units, &mut rng1);
+
+        let mut rng2 = StdRng::seed_from_u64(42);
+        let priority_order2 = calculate_priority_order(&player_units, &enemy_units, &mut rng2);
+
+        // Should be identical with same seed
+        assert_eq!(priority_order1, priority_order2);
+
+        // Should contain both units in some order
+        assert!(priority_order1.len() == 2);
+        assert!(priority_order1.contains(&(Team::Player, 0)));
+        assert!(priority_order1.contains(&(Team::Player, 1)));
+    }
+
+    #[test]
+    fn test_priority_ordering_mixed_teams() {
+        // Test priority ordering across both teams
+        let player_units = vec![CombatUnit {
+            instance_id: "p1".to_string(),
+            team: Team::Player,
+            attack: 2,
+            health: 3,
+            abilities: vec![],
+            template_id: "unit1".to_string(),
+            name: "Unit1".to_string(),
+            attack_buff: 0,
+            health_buff: 0,
+        }];
+
+        let enemy_units = vec![CombatUnit {
+            instance_id: "e1".to_string(),
+            team: Team::Enemy,
+            attack: 4,
+            health: 2,
+            abilities: vec![],
+            template_id: "unit2".to_string(),
+            name: "Unit2".to_string(),
+            attack_buff: 0,
+            health_buff: 0,
+        }];
+
+        let mut rng = StdRng::seed_from_u64(12345);
+        let priority_order = calculate_priority_order(&player_units, &enemy_units, &mut rng);
+
+        // Enemy unit has higher attack (4) than player unit (2), so should come first
+        assert_eq!(priority_order, vec![(Team::Enemy, 0), (Team::Player, 0)]);
+    }
+
+    #[test]
+    fn test_priority_ordering_complex_scenario() {
+        // Test a complex scenario with multiple tie-breaking cases
+        let player_units = vec![
+            CombatUnit {
+                // Index 0: attack 5, health 1
+                instance_id: "p1".to_string(),
+                team: Team::Player,
+                attack: 5,
+                health: 1,
+                abilities: vec![],
+                template_id: "unit1".to_string(),
+                name: "Unit1".to_string(),
+                attack_buff: 0,
+                health_buff: 0,
+            },
+            CombatUnit {
+                // Index 1: attack 3, health 3
+                instance_id: "p2".to_string(),
+                team: Team::Player,
+                attack: 3,
+                health: 3,
+                abilities: vec![],
+                template_id: "unit2".to_string(),
+                name: "Unit2".to_string(),
+                attack_buff: 0,
+                health_buff: 0,
+            },
+            CombatUnit {
+                // Index 2: attack 3, health 2
+                instance_id: "p3".to_string(),
+                team: Team::Player,
+                attack: 3,
+                health: 2,
+                abilities: vec![],
+                template_id: "unit3".to_string(),
+                name: "Unit3".to_string(),
+                attack_buff: 0,
+                health_buff: 0,
+            },
+        ];
+
+        let enemy_units = vec![
+            CombatUnit {
+                // Index 0: attack 4, health 4
+                instance_id: "e1".to_string(),
+                team: Team::Enemy,
+                attack: 4,
+                health: 4,
+                abilities: vec![],
+                template_id: "unit4".to_string(),
+                name: "Unit4".to_string(),
+                attack_buff: 0,
+                health_buff: 0,
+            },
+            CombatUnit {
+                // Index 1: attack 3, health 3 (same as p2)
+                instance_id: "e2".to_string(),
+                team: Team::Enemy,
+                attack: 3,
+                health: 3,
+                abilities: vec![],
+                template_id: "unit5".to_string(),
+                name: "Unit5".to_string(),
+                attack_buff: 0,
+                health_buff: 0,
+            },
+        ];
+
+        let mut rng = StdRng::seed_from_u64(999); // Use a specific seed for deterministic results
+        let priority_order = calculate_priority_order(&player_units, &enemy_units, &mut rng);
+
+        // Expected order:
+        // 1. p1 (attack 5) - highest attack
+        // 2. e1 (attack 4) - next highest attack
+        // 3. p2 (attack 3, health 3) - higher health than p3 and e2
+        // 4. e2 (attack 3, health 3) - same as p2, but p2 comes first (player priority? wait, actually it's random)
+        // 5. p3 (attack 3, health 2) - lowest health among attack 3 units
+
+        // The exact order between p2 and e2 depends on the random shuffle, but we can verify the basic structure
+        assert_eq!(priority_order.len(), 5);
+
+        // p1 should be first (highest attack)
+        assert_eq!(priority_order[0], (Team::Player, 0));
+
+        // e1 should be second (next highest attack)
+        assert_eq!(priority_order[1], (Team::Enemy, 0));
+
+        // p3 should be last (lowest health among attack 3 units)
+        assert_eq!(priority_order[4], (Team::Player, 2));
+
+        // Verify all units are included (order may vary due to random tie-breaking)
+        assert_eq!(priority_order.len(), 5);
+        assert!(priority_order.contains(&(Team::Player, 0))); // p1
+        assert!(priority_order.contains(&(Team::Player, 1))); // p2
+        assert!(priority_order.contains(&(Team::Player, 2))); // p3
+        assert!(priority_order.contains(&(Team::Enemy, 0))); // e1
+        assert!(priority_order.contains(&(Team::Enemy, 1))); // e2
     }
 }
