@@ -123,10 +123,7 @@ pub fn resolve_battle(
         .collect();
 
     // Execute battle phases
-    let battle_phases = [
-        BattlePhase::Start,
-        // Future: BattlePhase::BeforeAttack, BattlePhase::Attack, etc.
-    ];
+    let battle_phases = [BattlePhase::Start];
 
     // Execute initial phases
     for &phase in &battle_phases {
@@ -155,6 +152,11 @@ pub fn resolve_battle(
             &mut events,
             &mut rng,
         );
+
+        // Death check - remove dead units and collect them for OnFaint processing
+        let dead_units =
+            execute_death_check_phase(&mut player_units, &mut enemy_units, &mut events);
+
         execute_phase(
             BattlePhase::AfterAttack,
             &mut player_units,
@@ -162,8 +164,10 @@ pub fn resolve_battle(
             &mut events,
             &mut rng,
         );
-        execute_phase(
-            BattlePhase::HurtAndFaint,
+
+        // Hurt and faint - execute OnFaint abilities for units that died this turn
+        execute_hurt_and_faint_phase(
+            dead_units,
             &mut player_units,
             &mut enemy_units,
             &mut events,
@@ -194,6 +198,7 @@ enum BattlePhase {
     Start,
     BeforeAttack,
     Attack,
+    DeathCheck,
     AfterAttack,
     HurtAndFaint,
     Knockout,
@@ -527,6 +532,7 @@ fn execute_phase(
         BattlePhase::Start => "start",
         BattlePhase::BeforeAttack => "beforeAttack",
         BattlePhase::Attack => "attack",
+        BattlePhase::DeathCheck => "deathCheck",
         BattlePhase::AfterAttack => "afterAttack",
         BattlePhase::HurtAndFaint => "hurtAndFaint",
         BattlePhase::Knockout => "knockout",
@@ -550,16 +556,16 @@ fn execute_phase(
             execute_before_attack_phase(player_units, enemy_units, events, rng);
         }
         BattlePhase::Attack => {
-            // Execute attack damage
+            // Handle attack phase
             execute_attack_phase(player_units, enemy_units, events, rng);
         }
-        BattlePhase::AfterAttack => {
-            // After attack phase logic
-            execute_after_attack_phase(player_units, enemy_units, events, rng);
+        BattlePhase::DeathCheck => {
+            // Remove dead units
+            let _ = execute_death_check_phase(player_units, enemy_units, events);
         }
-        BattlePhase::HurtAndFaint => {
-            // Handle hurt and faint effects
-            execute_hurt_and_faint_phase(player_units, enemy_units, events, rng);
+        BattlePhase::AfterAttack => {
+            // Handle after attack effects
+            execute_after_attack_phase(player_units, enemy_units, events, rng);
         }
         BattlePhase::End => {
             // Battle end logic
@@ -802,29 +808,54 @@ fn execute_after_attack_phase(
     }
 }
 
-/// Execute hurt and faint phase (handle deaths and triggers)
+/// Execute death check phase (remove units with 0 or less health)
+fn execute_death_check_phase(
+    player_units: &mut Vec<CombatUnit>,
+    enemy_units: &mut Vec<CombatUnit>,
+    events: &mut Vec<CombatEvent>,
+) -> (Option<CombatUnit>, Option<CombatUnit>) {
+    if player_units.is_empty() || enemy_units.is_empty() {
+        return (None, None);
+    }
+
+    let p_died = !player_units.is_empty() && player_units[0].health <= 0;
+    let e_died = !enemy_units.is_empty() && enemy_units[0].health <= 0;
+
+    let mut player_dead = None;
+    let mut enemy_dead = None;
+
+    // Remove dead units and collect them for OnFaint processing
+    if p_died {
+        player_dead = Some(player_units.remove(0));
+        events.push(CombatEvent::UnitDeath {
+            team: Team::Player.to_string(),
+            new_board_state: player_units.iter().map(|u| u.to_view()).collect(),
+        });
+    }
+
+    if e_died {
+        enemy_dead = Some(enemy_units.remove(0));
+        events.push(CombatEvent::UnitDeath {
+            team: Team::Enemy.to_string(),
+            new_board_state: enemy_units.iter().map(|u| u.to_view()).collect(),
+        });
+    }
+
+    (player_dead, enemy_dead)
+}
+
+/// Execute hurt and faint phase (handle OnFaint triggers for units that died this turn)
 fn execute_hurt_and_faint_phase(
+    dead_units: (Option<CombatUnit>, Option<CombatUnit>),
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
     rng: &mut StdRng,
 ) {
-    if player_units.is_empty() || enemy_units.is_empty() {
-        return;
-    }
+    let (player_dead, enemy_dead) = dead_units;
 
-    let p_died = player_units[0].health <= 0;
-    let e_died = enemy_units[0].health <= 0;
-
-    // Remove dead units first
-    if p_died {
-        let dead_unit = player_units.remove(0);
-        events.push(CombatEvent::UnitDeath {
-            team: Team::Player.to_string(),
-            new_board_state: player_units.iter().map(|u| u.to_view()).collect(),
-        });
-
-        // Then execute OnFaint abilities
+    // Execute OnFaint abilities for units that died this turn
+    if let Some(dead_unit) = player_dead {
         for ability in &dead_unit.abilities {
             if ability.trigger == AbilityTrigger::OnFaint {
                 events.push(CombatEvent::AbilityTrigger {
@@ -844,14 +875,7 @@ fn execute_hurt_and_faint_phase(
         }
     }
 
-    if e_died {
-        let dead_unit = enemy_units.remove(0);
-        events.push(CombatEvent::UnitDeath {
-            team: Team::Enemy.to_string(),
-            new_board_state: enemy_units.iter().map(|u| u.to_view()).collect(),
-        });
-
-        // Then execute OnFaint abilities
+    if let Some(dead_unit) = enemy_dead {
         for ability in &dead_unit.abilities {
             if ability.trigger == AbilityTrigger::OnFaint {
                 events.push(CombatEvent::AbilityTrigger {
