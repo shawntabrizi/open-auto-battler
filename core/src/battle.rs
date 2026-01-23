@@ -797,8 +797,8 @@ fn execute_start_phase(
         )?;
     }
 
-    // Remove any units killed by OnStart abilities
-    remove_dead_units(player_units, enemy_units, events, limits)?;
+    // Note: Dead units are NOT removed here - the hurt/faint loop after this phase
+    // will handle death processing and OnFaint triggers properly
     Ok(())
 }
 
@@ -983,32 +983,40 @@ fn execute_after_attack_phase(
 }
 
 /// Execute death check phase (remove units with 0 or less health)
+/// Returns ALL dead units from both teams, not just the front ones
 fn execute_death_check_phase(
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
-) -> (Option<CombatUnit>, Option<CombatUnit>) {
-    if player_units.is_empty() || enemy_units.is_empty() {
-        return (None, None);
+) -> (Vec<CombatUnit>, Vec<CombatUnit>) {
+    // Collect all dead player units
+    let mut player_dead: Vec<CombatUnit> = Vec::new();
+    let mut i = 0;
+    while i < player_units.len() {
+        if player_units[i].health <= 0 {
+            player_dead.push(player_units.remove(i));
+        } else {
+            i += 1;
+        }
     }
-
-    let p_died = !player_units.is_empty() && player_units[0].health <= 0;
-    let e_died = !enemy_units.is_empty() && enemy_units[0].health <= 0;
-
-    let mut player_dead = None;
-    let mut enemy_dead = None;
-
-    // Remove dead units and collect them for OnFaint processing
-    if p_died {
-        player_dead = Some(player_units.remove(0));
+    if !player_dead.is_empty() {
         events.push(CombatEvent::UnitDeath {
             team: Team::Player.to_string(),
             new_board_state: player_units.iter().map(|u| u.to_view()).collect(),
         });
     }
 
-    if e_died {
-        enemy_dead = Some(enemy_units.remove(0));
+    // Collect all dead enemy units
+    let mut enemy_dead: Vec<CombatUnit> = Vec::new();
+    let mut i = 0;
+    while i < enemy_units.len() {
+        if enemy_units[i].health <= 0 {
+            enemy_dead.push(enemy_units.remove(i));
+        } else {
+            i += 1;
+        }
+    }
+    if !enemy_dead.is_empty() {
         events.push(CombatEvent::UnitDeath {
             team: Team::Enemy.to_string(),
             new_board_state: enemy_units.iter().map(|u| u.to_view()).collect(),
@@ -1032,13 +1040,13 @@ fn perform_hurt_faint_loop(
         let dead_units = execute_death_check_phase(player_units, enemy_units, events);
 
         // If no units died, break the loop
-        if dead_units.0.is_none() && dead_units.1.is_none() {
+        if dead_units.0.is_empty() && dead_units.1.is_empty() {
             break;
         }
 
         // Execute OnFaint abilities for the dead units
         execute_hurt_and_faint_phase(
-            (dead_units.0.clone(), dead_units.1.clone()),
+            dead_units,
             player_units,
             enemy_units,
             events,
@@ -1051,7 +1059,7 @@ fn perform_hurt_faint_loop(
 
 /// Execute hurt and faint phase (handle OnFaint triggers for units that died this turn)
 fn execute_hurt_and_faint_phase(
-    dead_units: (Option<CombatUnit>, Option<CombatUnit>),
+    dead_units: (Vec<CombatUnit>, Vec<CombatUnit>),
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
@@ -1060,8 +1068,8 @@ fn execute_hurt_and_faint_phase(
 ) -> Result<(), ()> {
     let (player_dead, enemy_dead) = dead_units;
 
-    // Execute OnFaint abilities for units that died this turn
-    if let Some(dead_unit) = player_dead {
+    // Execute OnFaint abilities for all player units that died this turn
+    for dead_unit in &player_dead {
         for ability in &dead_unit.abilities {
             if ability.trigger == AbilityTrigger::OnFaint {
                 limits.record_trigger(Team::Player)?;
@@ -1083,7 +1091,8 @@ fn execute_hurt_and_faint_phase(
         }
     }
 
-    if let Some(dead_unit) = enemy_dead {
+    // Execute OnFaint abilities for all enemy units that died this turn
+    for dead_unit in &enemy_dead {
         for ability in &dead_unit.abilities {
             if ability.trigger == AbilityTrigger::OnFaint {
                 limits.record_trigger(Team::Enemy)?;
@@ -1105,40 +1114,5 @@ fn execute_hurt_and_faint_phase(
         }
     }
 
-    // Remove any additional units killed by OnFaint abilities
-    remove_dead_units(player_units, enemy_units, events, limits)?;
-    Ok(())
-}
-/// Remove any dead units (health <= 0) and emit death events
-fn remove_dead_units(
-    player_units: &mut Vec<CombatUnit>,
-    enemy_units: &mut Vec<CombatUnit>,
-    events: &mut Vec<CombatEvent>,
-    limits: &mut BattleLimits,
-) -> Result<(), ()> {
-    // Check if limits were already exceeded
-    if limits.is_exceeded() {
-        return Err(());
-    }
-
-    // Check for player deaths
-    let player_had_deaths = player_units.iter().any(|u| u.health <= 0);
-    player_units.retain(|u| u.health > 0);
-    if player_had_deaths {
-        events.push(CombatEvent::UnitDeath {
-            team: Team::Player.to_string(),
-            new_board_state: player_units.iter().map(|u| u.to_view()).collect(),
-        });
-    }
-
-    // Check for enemy deaths
-    let enemy_had_deaths = enemy_units.iter().any(|u| u.health <= 0);
-    enemy_units.retain(|u| u.health > 0);
-    if enemy_had_deaths {
-        events.push(CombatEvent::UnitDeath {
-            team: Team::Enemy.to_string(),
-            new_board_state: enemy_units.iter().map(|u| u.to_view()).collect(),
-        });
-    }
     Ok(())
 }
