@@ -6,7 +6,7 @@ export interface Ability {
   description: string;
 }
 
-export type AbilityTrigger = 'onStart' | 'onFaint' | 'onSpawn' | 'beforeAttack' | 'afterAttack';
+export type AbilityTrigger = 'onStart' | 'onFaint' | 'onAllyFaint' | 'onSpawn' | 'beforeAttack' | 'afterAttack';
 
 export type AbilityTarget =
   | 'selfUnit'
@@ -17,12 +17,14 @@ export type AbilityTarget =
   | 'frontAlly'
   | 'frontEnemy'
   | 'backAlly'
-  | 'backEnemy';
+  | 'backEnemy'
+  | 'allyAhead';
 
 export type AbilityEffect =
   | { type: 'damage'; amount: number; target: AbilityTarget }
   | { type: 'modifyStats'; health: number; attack: number; target: AbilityTarget }
-  | { type: 'spawnUnit'; templateId: string };
+  | { type: 'spawnUnit'; templateId: string }
+  | { type: 'killSpawn'; target: AbilityTarget; templateId: string };
 
 // Types matching the Rust view structs
 

@@ -381,10 +381,46 @@ fn resolve_trigger_queue(
         // Collect Player Deaths
         for (idx, dead_unit) in dead_player {
             queue_on_faint(dead_unit, idx, Team::Player, &mut reaction_queue);
+            // Trigger OnAllyFaint for survivors
+            for (s_idx, survivor) in player_units.iter().enumerate() {
+                for ability in &survivor.abilities {
+                    if ability.trigger == AbilityTrigger::OnAllyFaint {
+                        reaction_queue.push(PendingTrigger {
+                            source_id: survivor.instance_id.clone(),
+                            team: Team::Player,
+                            effect: ability.effect.clone(),
+                            ability_name: ability.name.clone(),
+                            priority_attack: survivor.effective_attack(),
+                            priority_health: survivor.effective_health(),
+                            priority_index: s_idx,
+                            is_from_dead: false,
+                            spawn_index_override: None,
+                        });
+                    }
+                }
+            }
         }
         // Collect Enemy Deaths
         for (idx, dead_unit) in dead_enemy {
             queue_on_faint(dead_unit, idx, Team::Enemy, &mut reaction_queue);
+            // Trigger OnAllyFaint for survivors
+            for (s_idx, survivor) in enemy_units.iter().enumerate() {
+                for ability in &survivor.abilities {
+                    if ability.trigger == AbilityTrigger::OnAllyFaint {
+                        reaction_queue.push(PendingTrigger {
+                            source_id: survivor.instance_id.clone(),
+                            team: Team::Enemy,
+                            effect: ability.effect.clone(),
+                            ability_name: ability.name.clone(),
+                            priority_attack: survivor.effective_attack(),
+                            priority_health: survivor.effective_health(),
+                            priority_index: s_idx,
+                            is_from_dead: false,
+                            spawn_index_override: None,
+                        });
+                    }
+                }
+            }
         }
 
         // E. RECURSION (Depth-First)
@@ -537,7 +573,96 @@ fn apply_ability_effect(
                 new_board_state: my_board.iter().map(|u| u.to_view()).collect(),
             });
 
-            // Trigger OnSpawn here? (Omitted for brevity, but should go here if needed)
+            Ok(())
+        }
+        AbilityEffect::KillSpawn {
+            target,
+            template_id,
+        } => {
+            let targets = get_targets(
+                source_instance_id,
+                source_team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+            );
+
+            for target_id in targets {
+                let (is_player, idx) =
+                    if let Some(pos) = player_units.iter().position(|u| u.instance_id == target_id)
+                    {
+                        (true, pos)
+                    } else if let Some(pos) = enemy_units.iter().position(|u| u.instance_id == target_id)
+                    {
+                        (false, pos)
+                    } else {
+                        continue;
+                    };
+
+                let (board, team_name) = if is_player {
+                    (&mut *player_units, "PLAYER")
+                } else {
+                    (&mut *enemy_units, "ENEMY")
+                };
+
+                // Kill
+                let unit = &mut board[idx];
+                let fatal = unit.health + 666;
+                unit.health -= fatal;
+                events.push(CombatEvent::AbilityDamage {
+                    source_instance_id: source_instance_id.to_string(),
+                    target_instance_id: target_id.clone(),
+                    damage: fatal,
+                    remaining_hp: unit.health,
+                });
+
+                // Spawn Logic
+                limits.record_spawn(source_team)?;
+                // Create Unit
+                let templates = crate::units::get_starter_templates();
+                let template = templates
+                    .into_iter()
+                    .find(|t| t.template_id == *template_id)
+                    .expect(&format!("Spawn template '{}' not found", template_id));
+
+                let current_count = board.len() + 200;
+                let instance_counter = current_count + 1;
+                let instance_id = format!(
+                    "spawn-{}-{}",
+                    match source_team {
+                        Team::Player => "p",
+                        _ => "e",
+                    },
+                    instance_counter
+                );
+
+                let mut card = crate::types::UnitCard::new(
+                    (instance_counter * 6000) as u32,
+                    &template.template_id,
+                    &template.name,
+                    template.attack,
+                    template.health,
+                    template.play_cost,
+                    template.pitch_value,
+                );
+                for ability in &template.abilities {
+                    card = card.with_ability(ability.clone());
+                }
+
+                let mut new_unit = CombatUnit::from_card(card);
+                new_unit.instance_id = instance_id.clone();
+                new_unit.team = source_team;
+
+                // Insert at idx (pushing dead unit to idx+1)
+                board.insert(idx, new_unit);
+
+                events.push(CombatEvent::UnitSpawn {
+                    team: team_name.to_string(),
+                    spawned_unit: board[idx].to_view(),
+                    new_board_state: board.iter().map(|u| u.to_view()).collect(),
+                });
+            }
             Ok(())
         }
     };
@@ -783,6 +908,24 @@ fn resolve_hurt_and_faint_loop(
                 });
             }
         }
+        // Scan Survivors for OnAllyFaint
+        for (s_idx, survivor) in player_units.iter().enumerate() {
+            for ability in &survivor.abilities {
+                if ability.trigger == AbilityTrigger::OnAllyFaint {
+                    queue.push(PendingTrigger {
+                        source_id: survivor.instance_id.clone(),
+                        team: Team::Player,
+                        effect: ability.effect.clone(),
+                        ability_name: ability.name.clone(),
+                        priority_attack: survivor.effective_attack(),
+                        priority_health: survivor.effective_health(),
+                        priority_index: s_idx,
+                        is_from_dead: false,
+                        spawn_index_override: None,
+                    });
+                }
+            }
+        }
     }
     for (idx, u) in dead_enemy {
         for a in &u.abilities {
@@ -798,6 +941,24 @@ fn resolve_hurt_and_faint_loop(
                     is_from_dead: true,
                     spawn_index_override: Some(idx),
                 });
+            }
+        }
+        // Scan Survivors for OnAllyFaint
+        for (s_idx, survivor) in enemy_units.iter().enumerate() {
+            for ability in &survivor.abilities {
+                if ability.trigger == AbilityTrigger::OnAllyFaint {
+                    queue.push(PendingTrigger {
+                        source_id: survivor.instance_id.clone(),
+                        team: Team::Enemy,
+                        effect: ability.effect.clone(),
+                        ability_name: ability.name.clone(),
+                        priority_attack: survivor.effective_attack(),
+                        priority_health: survivor.effective_health(),
+                        priority_index: s_idx,
+                        is_from_dead: false,
+                        spawn_index_override: None,
+                    });
+                }
             }
         }
     }
@@ -862,6 +1023,20 @@ fn get_targets(
         AbilityTarget::BackEnemy => {
             if !enemies.is_empty() {
                 vec![enemies.last().unwrap().instance_id.clone()]
+            } else {
+                vec![]
+            }
+        }
+        AbilityTarget::AllyAhead => {
+            if let Some(pos) = allies
+                .iter()
+                .position(|u| u.instance_id == *source_instance_id)
+            {
+                if pos > 0 {
+                    vec![allies[pos - 1].instance_id.clone()]
+                } else {
+                    vec![]
+                }
             } else {
                 vec![]
             }

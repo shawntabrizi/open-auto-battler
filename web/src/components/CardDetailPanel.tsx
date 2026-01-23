@@ -48,6 +48,9 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
         dragon_tyrant: '🐉',
         sniper: '🎯',
         archer: '🏹',
+        corpse_cart: '⚰️',
+        lich: '💀',
+        golem: '🗿',
       };
       return emojis[templateId] || '❓';
     };
@@ -58,6 +61,8 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
           return 'Battle Start';
         case 'onFaint':
           return 'When Dies';
+        case 'onAllyFaint':
+          return 'When Ally Dies';
         default:
           return trigger;
       }
@@ -75,6 +80,8 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
           return `Give +${effect.amount} max health to ${getTargetDescription(effect.target)}`;
         case 'spawnUnit':
           return `Spawn a ${effect.templateId.replace('_', ' ')}`;
+        case 'killSpawn':
+          return `Kill ${getTargetDescription(effect.target)} to spawn a ${effect.templateId.replace('_', ' ')}`;
         default:
           return JSON.stringify(effect);
       }
@@ -100,6 +107,8 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
           return 'the back ally';
         case 'backEnemy':
           return 'the back enemy';
+        case 'allyAhead':
+          return 'the ally ahead';
         default:
           return target;
       }
