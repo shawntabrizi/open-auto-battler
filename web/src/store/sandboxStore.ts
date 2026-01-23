@@ -23,6 +23,7 @@ interface SandboxStore {
   isLoading: boolean;
   isBattling: boolean;
   battleSeed: number;
+  searchQuery: string;
 
   // Actions
   init: () => Promise<void>;
@@ -37,6 +38,7 @@ interface SandboxStore {
   runBattle: () => void;
   closeBattle: () => void;
   setBattleSeed: (seed: number) => void;
+  setSearchQuery: (query: string) => void;
 }
 
 let wasmInitialized = false;
@@ -51,6 +53,7 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
   isLoading: true,
   isBattling: false,
   battleSeed: 42,
+  searchQuery: '',
 
   init: async () => {
     if (wasmModule) return;
@@ -163,5 +166,9 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
 
   setBattleSeed: (seed) => {
     set({ battleSeed: seed });
+  },
+
+  setSearchQuery: (query) => {
+    set({ searchQuery: query });
   },
 }));

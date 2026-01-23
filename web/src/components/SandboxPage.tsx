@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useSandboxStore } from '../store/sandboxStore';
 import { UnitCard, EmptySlot } from './UnitCard';
 import { BattleArena } from './BattleArena';
+import { CardDetailPanel } from './CardDetailPanel';
 import type { UnitTemplateView } from '../types';
 
 export function SandboxPage() {
   const init = useSandboxStore((state) => state.init);
   const initCalled = useRef(false);
+  const selectedTemplate = useSandboxStore((state) => state.selectedTemplate);
 
   useEffect(() => {
     if (initCalled.current) return;
@@ -15,6 +17,18 @@ export function SandboxPage() {
   }, [init]);
 
   const isLoading = useSandboxStore((state) => state.isLoading);
+
+  // Convert selectedTemplate to CardView format for CardDetailPanel
+  const selectedCard = selectedTemplate ? {
+    id: 0,
+    templateId: selectedTemplate.templateId,
+    name: selectedTemplate.name,
+    attack: selectedTemplate.attack,
+    health: selectedTemplate.health,
+    playCost: selectedTemplate.playCost,
+    pitchValue: selectedTemplate.pitchValue,
+    abilities: selectedTemplate.abilities,
+  } : null;
 
   if (isLoading) {
     return (
@@ -31,11 +45,8 @@ export function SandboxPage() {
 
       {/* Main content */}
       <div className="flex flex-1 min-h-0">
-        {/* Left panel - Card details */}
-        <CardDetailPanel />
-
         {/* Center - Battle arena and gallery */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 ml-80">
           {/* Battle Arena */}
           <div className="flex-shrink-0 p-3 border-b border-gray-700">
             <SandboxArena />
@@ -47,6 +58,9 @@ export function SandboxPage() {
           </div>
         </div>
       </div>
+
+      {/* Card Detail Panel - Always visible in sandbox */}
+      <CardDetailPanel card={selectedCard} isVisible={true} isSandbox={true} />
 
       {/* Battle Overlay */}
       <BattleOverlay />
@@ -220,9 +234,18 @@ function UnitGallery() {
   const templates = useSandboxStore((state) => state.templates);
   const selectedTemplate = useSandboxStore((state) => state.selectedTemplate);
   const selectTemplate = useSandboxStore((state) => state.selectTemplate);
+  const searchQuery = useSandboxStore((state) => state.searchQuery);
+  const setSearchQuery = useSandboxStore((state) => state.setSearchQuery);
 
   // Sort templates by cost
   const sortedTemplates = [...templates].sort((a, b) => a.playCost - b.playCost);
+
+  // Filter templates based on search query (search in full JSON)
+  const filteredTemplates = sortedTemplates.filter((template) => {
+    if (!searchQuery) return true;
+    const templateJson = JSON.stringify(template).toLowerCase();
+    return templateJson.includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div>
@@ -232,8 +255,18 @@ function UnitGallery() {
         </div>
       </div>
 
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search cards..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white placeholder-gray-400 text-sm focus:outline-none focus:border-blue-500"
+        />
+      </div>
+
       <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
-        {sortedTemplates.map((template) => (
+        {filteredTemplates.map((template) => (
           <UnitCard
             key={template.templateId}
             card={{
@@ -259,80 +292,7 @@ function UnitGallery() {
   );
 }
 
-function CardDetailPanel() {
-  const selectedTemplate = useSandboxStore((state) => state.selectedTemplate);
 
-  if (!selectedTemplate) {
-    return (
-      <div className="w-64 bg-gray-900 border-r border-gray-700 p-3 flex-shrink-0">
-        <div className="text-gray-500 text-center text-sm mt-4">
-          Select a unit to see details
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-64 bg-gray-900 border-r border-gray-700 p-3 flex-shrink-0 overflow-y-auto">
-      <div className="space-y-3">
-        {/* Card preview */}
-        <div className="flex justify-center">
-          <UnitCard
-            card={{
-              id: 0,
-              templateId: selectedTemplate.templateId,
-              name: selectedTemplate.name,
-              attack: selectedTemplate.attack,
-              health: selectedTemplate.health,
-              playCost: selectedTemplate.playCost,
-              pitchValue: selectedTemplate.pitchValue,
-              abilities: selectedTemplate.abilities,
-            }}
-            showCost={true}
-            showPitch={true}
-          />
-        </div>
-
-        {/* Stats & Economy combined */}
-        <div className="bg-gray-800 rounded p-2 text-xs space-y-1">
-          <div className="flex justify-between">
-            <span className="text-red-400">⚔ {selectedTemplate.attack}</span>
-            <span className="text-green-400">❤ {selectedTemplate.health}</span>
-            <span className="text-mana-blue">💎 {selectedTemplate.playCost}</span>
-            <span className="text-pitch-red">🔥 {selectedTemplate.pitchValue}</span>
-          </div>
-        </div>
-
-        {/* Abilities */}
-        {selectedTemplate.abilities.length > 0 && (
-          <div className="bg-gray-800 rounded p-2 space-y-2">
-            <div className="text-xs text-gray-400 font-semibold">Abilities</div>
-            {selectedTemplate.abilities.map((ability, i) => (
-              <div key={i} className="text-xs">
-                <div className="text-yellow-400 font-semibold">{ability.name}</div>
-                <div className="text-gray-300 text-xs">{ability.description}</div>
-                <div className="text-gray-500 text-xs">
-                  {formatTrigger(ability.trigger)}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function formatTrigger(trigger: string): string {
-  const triggers: Record<string, string> = {
-    onStart: 'Battle Start',
-    onFaint: 'On Death',
-    onSpawn: 'When Unit Spawns',
-    beforeAttack: 'Before Attack',
-    afterAttack: 'After Attack',
-  };
-  return triggers[trigger] || trigger;
-}
 
 function BattleOverlay() {
   const isBattling = useSandboxStore((state) => state.isBattling);

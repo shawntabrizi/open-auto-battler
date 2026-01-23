@@ -1,18 +1,20 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import type { CardView } from '../types';
 
 interface CardDetailPanelProps {
   card: CardView | null;
   isVisible: boolean;
+  isSandbox?: boolean;
 }
 
 type TabType = 'card' | 'rules';
 
-export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
+export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
-  const [showRaw, setShowRaw] = React.useState(false);
-  const { view, selection, buyCard, toggleFreeze, pitchShopCard, pitchBoardUnit, setSelection } = useGameStore();
+  const navigate = useNavigate();
+  const { view, selection, buyCard, toggleFreeze, pitchShopCard, pitchBoardUnit, setSelection, showRawJson, toggleShowRawJson } = useGameStore();
 
   if (!isVisible) return null;
 
@@ -86,17 +88,21 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
     };
 
     const getEffectDescription = (effect: any): string => {
+      if (!effect || typeof effect !== 'object') {
+        return 'Unknown effect';
+      }
+
       switch (effect.type) {
         case 'damage':
-          return `Deal ${effect.amount} damage to ${getTargetDescription(effect.target)}`;
+          return `Deal ${effect.amount || 0} damage to ${getTargetDescription(effect.target)}`;
         case 'heal':
-          return `Heal ${effect.amount} health to ${getTargetDescription(effect.target)}`;
+          return `Heal ${effect.amount || 0} health to ${getTargetDescription(effect.target)}`;
         case 'attackBuff':
-          return `Give +${effect.amount} attack to ${getTargetDescription(effect.target)}`;
+          return `Give +${effect.amount || 0} attack to ${getTargetDescription(effect.target)}`;
         case 'healthBuff':
-          return `Give +${effect.amount} max health to ${getTargetDescription(effect.target)}`;
+          return `Give +${effect.amount || 0} max health to ${getTargetDescription(effect.target)}`;
         case 'spawnUnit':
-          return `Spawn a ${effect.templateId.replace('_', ' ')}`;
+          return `Spawn a ${effect.templateId ? effect.templateId.replace('_', ' ') : 'unit'}`;
         case 'destroy':
           return `Destroy ${getTargetDescription(effect.target)}`;
         default:
@@ -104,7 +110,9 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
       }
     };
 
-    const getTargetDescription = (target: string): string => {
+    const getTargetDescription = (target: string | undefined): string => {
+      if (!target) return 'unknown target';
+
       switch (target) {
         case 'selfUnit':
           return 'this unit';
@@ -204,71 +212,73 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="mb-6 space-y-2">
-          {isBoardUnit ? (
-            // Board unit actions
-            <button
-              onClick={() => {
-                if (selectedBoardIndex >= 0) {
-                  pitchBoardUnit(selectedBoardIndex);
-                  setSelection(null); // Clear selection after pitching
-                }
-              }}
-              className="w-full btn btn-danger text-sm"
-            >
-              Pitch Board Unit
-            </button>
-          ) : (
-            // Shop card actions
-            <>
+        {/* Action Buttons - Only show in main game, not sandbox */}
+        {!isSandbox && (
+          <div className="mb-6 space-y-2">
+            {isBoardUnit ? (
+              // Board unit actions
               <button
                 onClick={() => {
-                  if (selectedShopIndex >= 0) {
-                    buyCard(selectedShopIndex);
-                    setSelection(null); // Clear selection after buying
-                  }
-                }}
-                disabled={selectedShopIndex < 0 || !view?.canAfford[selectedShopIndex]}
-                className={`w-full btn text-sm ${selectedShopIndex >= 0 && view?.canAfford[selectedShopIndex] ? 'btn-primary' : 'btn-disabled'}`}
-              >
-                Buy (-{card.playCost} mana)
-              </button>
-              <button
-                onClick={() => {
-                  if (selectedShopIndex >= 0) {
-                    toggleFreeze(selectedShopIndex);
-                  }
-                }}
-                className="w-full btn bg-cyan-600 hover:bg-cyan-500 text-white text-sm"
-              >
-                {view?.shop[selectedShopIndex]?.frozen ? 'Unfreeze' : 'Freeze'}
-              </button>
-              <button
-                onClick={() => {
-                  if (selectedShopIndex >= 0) {
-                    pitchShopCard(selectedShopIndex);
+                  if (selectedBoardIndex >= 0) {
+                    pitchBoardUnit(selectedBoardIndex);
                     setSelection(null); // Clear selection after pitching
                   }
                 }}
                 className="w-full btn btn-danger text-sm"
               >
-                Pitch (+{card.pitchValue} mana)
+                Pitch Board Unit
               </button>
-            </>
-          )}
-        </div>
+            ) : (
+              // Shop card actions
+              <>
+                <button
+                  onClick={() => {
+                    if (selectedShopIndex >= 0) {
+                      buyCard(selectedShopIndex);
+                      setSelection(null); // Clear selection after buying
+                    }
+                  }}
+                  disabled={selectedShopIndex < 0 || !view?.canAfford[selectedShopIndex]}
+                  className={`w-full btn text-sm ${selectedShopIndex >= 0 && view?.canAfford[selectedShopIndex] ? 'btn-primary' : 'btn-disabled'}`}
+                >
+                  Buy (-{card.playCost} mana)
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedShopIndex >= 0) {
+                      toggleFreeze(selectedShopIndex);
+                    }
+                  }}
+                  className="w-full btn bg-cyan-600 hover:bg-cyan-500 text-white text-sm"
+                >
+                  {view?.shop[selectedShopIndex]?.frozen ? 'Unfreeze' : 'Freeze'}
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedShopIndex >= 0) {
+                      pitchShopCard(selectedShopIndex);
+                      setSelection(null); // Clear selection after pitching
+                    }
+                  }}
+                  className="w-full btn btn-danger text-sm"
+                >
+                  Pitch (+{card.pitchValue} mana)
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Raw JSON Section */}
         <div className="mb-4">
           <button
-            onClick={() => setShowRaw(!showRaw)}
+            onClick={toggleShowRawJson}
             className="w-full btn bg-gray-600 hover:bg-gray-500 text-white text-sm"
           >
-            {showRaw ? 'Hide' : 'Show'} Raw JSON
+            {showRawJson ? 'Hide' : 'Show'} Raw JSON
           </button>
 
-          {showRaw && (
+          {showRawJson && (
             <div className="mt-2 p-2 bg-gray-900 rounded border border-gray-700">
               <pre className="text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap max-h-40 overflow-y-auto">
                 {JSON.stringify(card, null, 2)}
@@ -321,6 +331,19 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
               <strong>When Dies:</strong> Triggers when unit is defeated
             </li>
           </ul>
+        </div>
+
+        <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+          <h3 className="text-md font-bold text-yellow-400 mb-2">🧪 Sandbox Mode</h3>
+          <p className="text-sm text-white mb-3">
+            Test unit combinations and battle scenarios without affecting your main game progress.
+          </p>
+          <button
+            onClick={() => navigate('/sandbox')}
+            className="w-full btn bg-purple-600 hover:bg-purple-500 text-white text-sm"
+          >
+            Open Sandbox
+          </button>
         </div>
       </div>
     );

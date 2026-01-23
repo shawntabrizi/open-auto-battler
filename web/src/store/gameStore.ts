@@ -19,6 +19,7 @@ interface GameStore {
   error: string | null;
   selection: Selection | null;
   showBattleOverlay: boolean;
+  showRawJson: boolean;
 
   // Actions
   init: () => Promise<void>;
@@ -32,6 +33,7 @@ interface GameStore {
   newRun: () => void;
   setSelection: (selection: Selection | null) => void;
   closeBattleOverlay: () => void;
+  toggleShowRawJson: () => void;
 }
 
 // Module-level state to prevent double initialization
@@ -46,6 +48,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   error: null,
   selection: null,
   showBattleOverlay: false,
+  showRawJson: JSON.parse(localStorage.getItem('showRawJson') || 'false'),
 
   // Initialize WASM
   init: async () => {
@@ -183,5 +186,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   closeBattleOverlay: () => {
     set({ showBattleOverlay: false });
+  },
+
+  toggleShowRawJson: () => {
+    set((state) => {
+      const newValue = !state.showRawJson;
+      localStorage.setItem('showRawJson', JSON.stringify(newValue));
+      return { showRawJson: newValue };
+    });
   },
 }));
