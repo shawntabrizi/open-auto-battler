@@ -189,9 +189,9 @@ pub fn resolve_battle(
         let dead_units =
             execute_death_check_phase(&mut player_units, &mut enemy_units, &mut events);
 
-        limits.reset_phase_counters();
-        if execute_phase(
-            BattlePhase::AfterAttack,
+        // Execute OnFaint abilities immediately after death
+        if execute_hurt_and_faint_phase(
+            (dead_units.0.clone(), dead_units.1.clone()),
             &mut player_units,
             &mut enemy_units,
             &mut events,
@@ -204,10 +204,9 @@ pub fn resolve_battle(
             return finalize_with_limit_exceeded(&mut events, &limits);
         }
 
-        // Hurt and faint - execute OnFaint abilities for units that died this turn
         limits.reset_phase_counters();
-        if execute_hurt_and_faint_phase(
-            dead_units,
+        if execute_phase(
+            BattlePhase::AfterAttack,
             &mut player_units,
             &mut enemy_units,
             &mut events,
@@ -258,7 +257,6 @@ pub enum BattlePhase {
     Start,
     BeforeAttack,
     Attack,
-    DeathCheck,
     AfterAttack,
     HurtAndFaint,
     Knockout,
@@ -635,7 +633,6 @@ fn execute_phase(
         BattlePhase::Start => "start",
         BattlePhase::BeforeAttack => "beforeAttack",
         BattlePhase::Attack => "attack",
-        BattlePhase::DeathCheck => "deathCheck",
         BattlePhase::AfterAttack => "afterAttack",
         BattlePhase::HurtAndFaint => "hurtAndFaint",
         BattlePhase::Knockout => "knockout",
@@ -661,11 +658,6 @@ fn execute_phase(
         BattlePhase::Attack => {
             // Handle attack phase
             execute_attack_phase(player_units, enemy_units, events, rng);
-            Ok(())
-        }
-        BattlePhase::DeathCheck => {
-            // Remove dead units
-            let _ = execute_death_check_phase(player_units, enemy_units, events);
             Ok(())
         }
         BattlePhase::AfterAttack => {
