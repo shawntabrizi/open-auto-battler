@@ -88,8 +88,6 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
           return `Give +${effect.amount} max health to ${getTargetDescription(effect.target)}`;
         case 'spawnUnit':
           return `Spawn a ${effect.templateId.replace('_', ' ')}`;
-        case 'killSpawn':
-          return `Kill ${getTargetDescription(effect.target)} to spawn a ${effect.templateId.replace('_', ' ')}`;
         case 'destroy':
           return `Destroy ${getTargetDescription(effect.target)}`;
         default:
