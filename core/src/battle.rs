@@ -92,6 +92,15 @@ pub enum BattlePhase {
     End,
 }
 
+/// Priority data used for sorting triggers
+#[derive(Debug)]
+struct TriggerPriority {
+    attack: i32,
+    health: i32,
+    unit_position: usize,
+    ability_order: usize,
+}
+
 /// Trigger struct with support for location-based spawning
 #[derive(Debug)]
 struct PendingTrigger {
@@ -99,9 +108,7 @@ struct PendingTrigger {
     team: Team,
     effect: AbilityEffect,
     ability_name: String,
-    priority_attack: i32,
-    priority_health: i32,
-    priority_index: usize,
+    priority: TriggerPriority,
     is_from_dead: bool,
     spawn_index_override: Option<usize>,
 }
@@ -310,18 +317,21 @@ fn resolve_trigger_queue(
     // 1. Attack (Highest First) -> Ascending Sort
     // 2. Health (Highest First) -> Ascending Sort
     // 3. Team (Player First)    -> Player > Enemy
-    // 4. Index (Front First)    -> Descending Sort (Index 1 < Index 0 so 0 ends up at back)
+    // 4. Position (Front First) -> Descending Sort (Index 1 < Index 0 so 0 ends up at back)
+    // 5. Ability Order          -> Descending Sort (First ability ends up at back)
     // Pop takes from the end.
     queue.sort_by(|a, b| {
-        a.priority_attack
-            .cmp(&b.priority_attack)
-            .then(a.priority_health.cmp(&b.priority_health))
+        a.priority
+            .attack
+            .cmp(&b.priority.attack)
+            .then(a.priority.health.cmp(&b.priority.health))
             .then_with(|| match (a.team, b.team) {
                 (Team::Enemy, Team::Player) => std::cmp::Ordering::Less,
                 (Team::Player, Team::Enemy) => std::cmp::Ordering::Greater,
                 _ => std::cmp::Ordering::Equal,
             })
-            .then(b.priority_index.cmp(&a.priority_index))
+            .then(b.priority.unit_position.cmp(&a.priority.unit_position))
+            .then(b.priority.ability_order.cmp(&a.priority.ability_order))
     });
 
     // 2. Iterate
@@ -361,7 +371,7 @@ fn resolve_trigger_queue(
         for unit_id in damaged_ids {
             if let Some(unit) = find_unit(&unit_id, player_units, enemy_units) {
                 let is_fatal = unit.health <= 0;
-                for (_idx, ability) in unit.abilities.iter().enumerate() {
+                for (sub_idx, ability) in unit.abilities.iter().enumerate() {
                     if ability.trigger == AbilityTrigger::OnDamageTaken {
                         // Find index of unit
                         let (idx_in_team, team) = if let Some(pos) =
@@ -381,9 +391,12 @@ fn resolve_trigger_queue(
                             team,
                             effect: ability.effect.clone(),
                             ability_name: ability.name.clone(),
-                            priority_attack: unit.effective_attack(),
-                            priority_health: unit.effective_health(),
-                            priority_index: idx_in_team,
+                            priority: TriggerPriority {
+                                attack: unit.effective_attack(),
+                                health: unit.effective_health(),
+                                unit_position: idx_in_team,
+                                ability_order: sub_idx,
+                            },
                             is_from_dead: is_fatal, // ALLOW execution if it died from this damage
                             spawn_index_override: if is_fatal { Some(idx_in_team) } else { None },
                         });
@@ -399,16 +412,19 @@ fn resolve_trigger_queue(
         // Helper to queue OnFaint
         let queue_on_faint =
             |dead_unit: CombatUnit, index: usize, team: Team, q: &mut Vec<PendingTrigger>| {
-                for ability in &dead_unit.abilities {
+                for (sub_idx, ability) in dead_unit.abilities.iter().enumerate() {
                     if ability.trigger == AbilityTrigger::OnFaint {
                         q.push(PendingTrigger {
                             source_id: dead_unit.instance_id.clone(),
                             team,
                             effect: ability.effect.clone(),
                             ability_name: ability.name.clone(),
-                            priority_attack: dead_unit.effective_attack(),
-                            priority_health: dead_unit.effective_health(),
-                            priority_index: index,
+                            priority: TriggerPriority {
+                                attack: dead_unit.effective_attack(),
+                                health: dead_unit.effective_health(),
+                                unit_position: index,
+                                ability_order: sub_idx,
+                            },
                             is_from_dead: true,
                             spawn_index_override: Some(index), // Remember where it died!
                         });
@@ -421,16 +437,19 @@ fn resolve_trigger_queue(
             queue_on_faint(dead_unit, idx, Team::Player, &mut reaction_queue);
             // Trigger OnAllyFaint for survivors
             for (s_idx, survivor) in player_units.iter().enumerate() {
-                for ability in &survivor.abilities {
+                for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
                     if ability.trigger == AbilityTrigger::OnAllyFaint {
                         reaction_queue.push(PendingTrigger {
                             source_id: survivor.instance_id.clone(),
                             team: Team::Player,
                             effect: ability.effect.clone(),
                             ability_name: ability.name.clone(),
-                            priority_attack: survivor.effective_attack(),
-                            priority_health: survivor.effective_health(),
-                            priority_index: s_idx,
+                            priority: TriggerPriority {
+                                attack: survivor.effective_attack(),
+                                health: survivor.effective_health(),
+                                unit_position: s_idx,
+                                ability_order: sub_idx,
+                            },
                             is_from_dead: false,
                             spawn_index_override: None,
                         });
@@ -443,16 +462,19 @@ fn resolve_trigger_queue(
             queue_on_faint(dead_unit, idx, Team::Enemy, &mut reaction_queue);
             // Trigger OnAllyFaint for survivors
             for (s_idx, survivor) in enemy_units.iter().enumerate() {
-                for ability in &survivor.abilities {
+                for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
                     if ability.trigger == AbilityTrigger::OnAllyFaint {
                         reaction_queue.push(PendingTrigger {
                             source_id: survivor.instance_id.clone(),
                             team: Team::Enemy,
                             effect: ability.effect.clone(),
                             ability_name: ability.name.clone(),
-                            priority_attack: survivor.effective_attack(),
-                            priority_health: survivor.effective_health(),
-                            priority_index: s_idx,
+                            priority: TriggerPriority {
+                                attack: survivor.effective_attack(),
+                                health: survivor.effective_health(),
+                                unit_position: s_idx,
+                                ability_order: sub_idx,
+                            },
                             is_from_dead: false,
                             spawn_index_override: None,
                         });
@@ -618,97 +640,6 @@ fn apply_ability_effect(
 
             Ok(damaged_units)
         }
-        AbilityEffect::KillSpawn {
-            target,
-            template_id,
-        } => {
-            let targets = get_targets(
-                source_instance_id,
-                source_team,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-            );
-
-            for target_id in targets {
-                let (is_player, idx) = if let Some(pos) =
-                    player_units.iter().position(|u| u.instance_id == target_id)
-                {
-                    (true, pos)
-                } else if let Some(pos) =
-                    enemy_units.iter().position(|u| u.instance_id == target_id)
-                {
-                    (false, pos)
-                } else {
-                    continue;
-                };
-
-                let (board, team_name) = if is_player {
-                    (&mut *player_units, "PLAYER")
-                } else {
-                    (&mut *enemy_units, "ENEMY")
-                };
-
-                // Kill
-                let unit = &mut board[idx];
-                let fatal = unit.health + 666;
-                unit.health -= fatal;
-                events.push(CombatEvent::AbilityDamage {
-                    source_instance_id: source_instance_id.to_string(),
-                    target_instance_id: target_id.clone(),
-                    damage: fatal,
-                    remaining_hp: unit.health,
-                });
-
-                // Spawn Logic
-                limits.record_spawn(source_team)?;
-                // Create Unit
-                let templates = crate::units::get_starter_templates();
-                let template = templates
-                    .into_iter()
-                    .find(|t| t.template_id == *template_id)
-                    .expect(&format!("Spawn template '{}' not found", template_id));
-
-                let current_count = board.len() + 200;
-                let instance_counter = current_count + 1;
-                let instance_id = format!(
-                    "spawn-{}-{}",
-                    match source_team {
-                        Team::Player => "p",
-                        _ => "e",
-                    },
-                    instance_counter
-                );
-
-                let mut card = crate::types::UnitCard::new(
-                    (instance_counter * 6000) as u32,
-                    &template.template_id,
-                    &template.name,
-                    template.attack,
-                    template.health,
-                    template.play_cost,
-                    template.pitch_value,
-                );
-                for ability in &template.abilities {
-                    card = card.with_ability(ability.clone());
-                }
-
-                let mut new_unit = CombatUnit::from_card(card);
-                new_unit.instance_id = instance_id.clone();
-                new_unit.team = source_team;
-
-                // Insert at idx (pushing dead unit to idx+1)
-                board.insert(idx, new_unit);
-
-                events.push(CombatEvent::UnitSpawn {
-                    team: team_name.to_string(),
-                    spawned_unit: board[idx].to_view(),
-                    new_board_state: board.iter().map(|u| u.to_view()).collect(),
-                });
-            }
-            Ok(damaged_units)
-        }
         AbilityEffect::Destroy { target } => {
             let targets = get_targets(
                 source_instance_id,
@@ -830,7 +761,7 @@ fn collect_and_resolve_triggers(
         for (i, u) in units.iter().enumerate() {
             // Check Front unit constraint for "BeforeAttack" etc if needed
             // For now, simple scan all
-            for ability in &u.abilities {
+            for (sub_idx, ability) in u.abilities.iter().enumerate() {
                 if ability.trigger == trigger_type {
                     // Check specific logic: BeforeAttack only on index 0?
                     if trigger_type == AbilityTrigger::BeforeAttack && i != 0 {
@@ -845,9 +776,12 @@ fn collect_and_resolve_triggers(
                         team,
                         effect: ability.effect.clone(),
                         ability_name: ability.name.clone(),
-                        priority_attack: u.effective_attack(),
-                        priority_health: u.effective_health(),
-                        priority_index: i,
+                        priority: TriggerPriority {
+                            attack: u.effective_attack(),
+                            health: u.effective_health(),
+                            unit_position: i,
+                            ability_order: sub_idx,
+                        },
                         is_from_dead: false,
                         spawn_index_override: None,
                     });
@@ -975,7 +909,7 @@ fn resolve_hurt_and_faint_loop(
 
                 if let Some(u) = unit_opt {
                     let is_dead = u.health <= 0;
-                    for a in &u.abilities {
+                    for (sub_idx, a) in u.abilities.iter().enumerate() {
                         if a.trigger == AbilityTrigger::OnDamageTaken {
                             // Find current index if survivor, otherwise 0
                             let current_idx = units
@@ -988,9 +922,12 @@ fn resolve_hurt_and_faint_loop(
                                 team,
                                 effect: a.effect.clone(),
                                 ability_name: a.name.clone(),
-                                priority_attack: u.effective_attack(),
-                                priority_health: u.effective_health(),
-                                priority_index: current_idx,
+                                priority: TriggerPriority {
+                                    attack: u.effective_attack(),
+                                    health: u.effective_health(),
+                                    unit_position: current_idx,
+                                    ability_order: sub_idx,
+                                },
                                 is_from_dead: is_dead,
                                 spawn_index_override: if is_dead { Some(0) } else { None },
                             });
@@ -1008,16 +945,19 @@ fn resolve_hurt_and_faint_loop(
     }
 
     for (idx, u) in dead_player {
-        for a in &u.abilities {
+        for (sub_idx, a) in u.abilities.iter().enumerate() {
             if a.trigger == AbilityTrigger::OnFaint {
                 queue.push(PendingTrigger {
                     source_id: u.instance_id.clone(),
                     team: Team::Player,
                     effect: a.effect.clone(),
                     ability_name: a.name.clone(),
-                    priority_attack: u.effective_attack(),
-                    priority_health: u.effective_health(),
-                    priority_index: idx,
+                    priority: TriggerPriority {
+                        attack: u.effective_attack(),
+                        health: u.effective_health(),
+                        unit_position: idx,
+                        ability_order: sub_idx,
+                    },
                     is_from_dead: true,
                     spawn_index_override: Some(idx),
                 });
@@ -1025,16 +965,19 @@ fn resolve_hurt_and_faint_loop(
         }
         // Scan Survivors for OnAllyFaint
         for (s_idx, survivor) in player_units.iter().enumerate() {
-            for ability in &survivor.abilities {
+            for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
                 if ability.trigger == AbilityTrigger::OnAllyFaint {
                     queue.push(PendingTrigger {
                         source_id: survivor.instance_id.clone(),
                         team: Team::Player,
                         effect: ability.effect.clone(),
                         ability_name: ability.name.clone(),
-                        priority_attack: survivor.effective_attack(),
-                        priority_health: survivor.effective_health(),
-                        priority_index: s_idx,
+                        priority: TriggerPriority {
+                            attack: survivor.effective_attack(),
+                            health: survivor.effective_health(),
+                            unit_position: s_idx,
+                            ability_order: sub_idx,
+                        },
                         is_from_dead: false,
                         spawn_index_override: None,
                     });
@@ -1043,16 +986,19 @@ fn resolve_hurt_and_faint_loop(
         }
     }
     for (idx, u) in dead_enemy {
-        for a in &u.abilities {
+        for (sub_idx, a) in u.abilities.iter().enumerate() {
             if a.trigger == AbilityTrigger::OnFaint {
                 queue.push(PendingTrigger {
                     source_id: u.instance_id.clone(),
                     team: Team::Enemy,
                     effect: a.effect.clone(),
                     ability_name: a.name.clone(),
-                    priority_attack: u.effective_attack(),
-                    priority_health: u.effective_health(),
-                    priority_index: idx,
+                    priority: TriggerPriority {
+                        attack: u.effective_attack(),
+                        health: u.effective_health(),
+                        unit_position: idx,
+                        ability_order: sub_idx,
+                    },
                     is_from_dead: true,
                     spawn_index_override: Some(idx),
                 });
@@ -1060,16 +1006,19 @@ fn resolve_hurt_and_faint_loop(
         }
         // Scan Survivors for OnAllyFaint
         for (s_idx, survivor) in enemy_units.iter().enumerate() {
-            for ability in &survivor.abilities {
+            for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
                 if ability.trigger == AbilityTrigger::OnAllyFaint {
                     queue.push(PendingTrigger {
                         source_id: survivor.instance_id.clone(),
                         team: Team::Enemy,
                         effect: ability.effect.clone(),
                         ability_name: ability.name.clone(),
-                        priority_attack: survivor.effective_attack(),
-                        priority_health: survivor.effective_health(),
-                        priority_index: s_idx,
+                        priority: TriggerPriority {
+                            attack: survivor.effective_attack(),
+                            health: survivor.effective_health(),
+                            unit_position: s_idx,
+                            ability_order: sub_idx,
+                        },
                         is_from_dead: false,
                         spawn_index_override: None,
                     });

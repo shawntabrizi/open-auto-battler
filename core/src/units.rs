@@ -366,15 +366,24 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             health: 3,
             play_cost: 5,
             pitch_value: 2,
-            abilities: vec![Ability {
-                trigger: crate::types::AbilityTrigger::OnStart,
-                effect: crate::types::AbilityEffect::KillSpawn {
-                    target: crate::types::AbilityTarget::AllyAhead,
-                    template_id: "golem".to_string(),
+            abilities: vec![
+                Ability {
+                    trigger: crate::types::AbilityTrigger::OnStart,
+                    effect: crate::types::AbilityEffect::Destroy {
+                        target: crate::types::AbilityTarget::AllyAhead,
+                    },
+                    name: "Ritual Sacrifice".to_string(),
+                    description: "Kill the ally in front".to_string(),
                 },
-                name: "Ritual Sacrifice".to_string(),
-                description: "Kill the ally in front to spawn a 5/5 Golem".to_string(),
-            }],
+                Ability {
+                    trigger: crate::types::AbilityTrigger::OnStart,
+                    effect: crate::types::AbilityEffect::SpawnUnit {
+                        template_id: "golem".to_string(),
+                    },
+                    name: "Raise Golem".to_string(),
+                    description: "Spawn a 5/5 Golem".to_string(),
+                },
+            ],
         },
         CardTemplate {
             template_id: "golem",

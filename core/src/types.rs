@@ -31,11 +31,6 @@ pub enum AbilityEffect {
     },
     /// Spawn a new unit on the board
     SpawnUnit { template_id: String },
-    /// Kill a target and spawn a unit in its place (Lich)
-    KillSpawn {
-        target: AbilityTarget,
-        template_id: String,
-    },
     /// Destroy a target directly
     Destroy { target: AbilityTarget },
     // Future: RedirectDamage, etc.
