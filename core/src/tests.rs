@@ -298,13 +298,56 @@ mod tests {
     }
 
     #[test]
-    fn test_priority_full_hierarchy() {
-        // U1: 10 Atk, 1 HP  (Enemy)  -> Should be #1 (Highest Attack)
-        // U2: 5 Atk, 10 HP  (Player) -> Should be #2 (High Health beat U3)
-        // U3: 5 Atk, 1 HP   (Player) -> Should be #3 (Player beat U4)
-        // U4: 5 Atk, 1 HP   (Enemy)  -> Should be #4 (Last)
+    fn test_priority_tiebreaker_index() {
+        // SCENARIO: Absolute Tie (Stats & Team).
+        // Player Unit A: 5/5, Index 0 (Front)
+        // Player Unit B: 5/5, Index 1 (Back)
+        // Expectation: Front Unit triggers before Back Unit.
 
-        // 1. High Attack Enemy
+        let front_unit = create_tester_unit(1, "Front", 5, 5, "FrontTrigger");
+        let back_unit = create_tester_unit(2, "Back", 5, 5, "BackTrigger");
+
+        // Setup board order explicitly: [Front, Back]
+        let player_board = vec![front_unit, back_unit];
+        let enemy_board = vec![create_dummy_enemy()];
+
+        let events = resolve_battle(&player_board, &enemy_board, 42);
+
+        let triggers: Vec<String> = events
+            .iter()
+            .filter_map(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    Some(ability_name.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let front_idx = triggers
+            .iter()
+            .position(|n| n == "FrontTrigger")
+            .expect("Front missing");
+        let back_idx = triggers
+            .iter()
+            .position(|n| n == "BackTrigger")
+            .expect("Back missing");
+
+        assert!(
+            front_idx < back_idx,
+            "Front unit (Index 0) should trigger before Back unit (Index 1)"
+        );
+    }
+    #[test]
+    fn test_priority_full_hierarchy() {
+        // HIERARCHY CHECK:
+        // 1. Attack (Highest)
+        // 2. Health (Highest)
+        // 3. Team (Player > Enemy)
+        // 4. Index (Front > Back)
+
+        // --- 1. Attack Winner (Enemy) ---
+        // U1: 10 Atk.
         let ability_u1 = create_ability(
             AbilityTrigger::OnStart,
             AbilityEffect::ModifyStats {
@@ -318,13 +361,16 @@ mod tests {
             UnitCard::new(1, "U1", "U1", 10, 1, 0, 0).with_ability(ability_u1),
         );
 
-        // 2. Mid Attack, High HP Player
+        // --- 2. Health Winner (Player) ---
+        // U2: 5 Atk, 10 HP.
         let u2 = create_tester_unit(2, "U2", 5, 10, "U2");
 
-        // 3. Mid Attack, Low HP Player
-        let u3 = create_tester_unit(3, "U3", 5, 1, "U3");
+        // --- 3. Team Winner (Player) ---
+        // U3: 5 Atk, 5 HP. (Beat Enemy U4 by Team)
+        let u3 = create_tester_unit(3, "U3", 5, 5, "U3");
 
-        // 4. Mid Attack, Low HP Enemy
+        // --- 4. Team Loser (Enemy) ---
+        // U4: 5 Atk, 5 HP. (Lost to Player U3)
         let ability_u4 = create_ability(
             AbilityTrigger::OnStart,
             AbilityEffect::ModifyStats {
@@ -335,9 +381,18 @@ mod tests {
             "U4",
         );
         let u4 =
-            BoardUnit::from_card(UnitCard::new(4, "U4", "U4", 5, 1, 0, 0).with_ability(ability_u4));
+            BoardUnit::from_card(UnitCard::new(4, "U4", "U4", 5, 5, 0, 0).with_ability(ability_u4));
 
-        let p_board = vec![u2, u3];
+        // --- 5 & 6. Index Tiebreaker (Player) ---
+        // U5: 1 Atk, 1 HP. Index 2 (Front relative to U6).
+        // U6: 1 Atk, 1 HP. Index 3 (Back).
+        let u5 = create_tester_unit(5, "U5", 1, 1, "U5");
+        let u6 = create_tester_unit(6, "U6", 1, 1, "U6");
+
+        // Board Construction
+        // Player: [U2, U3, U5, U6] -> Indices 0, 1, 2, 3
+        // Enemy:  [U1, U4]
+        let p_board = vec![u2, u3, u5, u6];
         let e_board = vec![u1, u4];
 
         let events = resolve_battle(&p_board, &e_board, 42);
@@ -353,7 +408,14 @@ mod tests {
             })
             .collect();
 
-        assert_eq!(triggers, vec!["U1", "U2", "U3", "U4"]);
+        // ASSERTION:
+        // U1 (10 atk)
+        // U2 (5 atk, 10 hp)
+        // U3 (5 atk, 5 hp, Player)
+        // U4 (5 atk, 5 hp, Enemy)
+        // U5 (1 atk, 1 hp, Index 2)
+        // U6 (1 atk, 1 hp, Index 3)
+        assert_eq!(triggers, vec!["U1", "U2", "U3", "U4", "U5", "U6"]);
     }
 
     #[test]
