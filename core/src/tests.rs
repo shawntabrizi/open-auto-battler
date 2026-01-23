@@ -851,26 +851,23 @@ mod tests {
             description: "Deal 3 damage to all enemies on death".to_string(),
         };
 
-        let dragon1 =
-            UnitCard::new(1, "dragon_tyrant", "Dragon Tyrant", 8, 12, 10, 3).with_ability(dragon_ability.clone());
-        let dragon2 =
-            UnitCard::new(2, "dragon_tyrant", "Dragon Tyrant", 8, 12, 10, 3).with_ability(dragon_ability);
+        let dragon1 = UnitCard::new(1, "dragon_tyrant", "Dragon Tyrant", 8, 12, 10, 3)
+            .with_ability(dragon_ability.clone());
+        let dragon2 = UnitCard::new(2, "dragon_tyrant", "Dragon Tyrant", 8, 12, 10, 3)
+            .with_ability(dragon_ability);
 
-        let troll1 =
-            UnitCard::new(3, "troll_brute", "Troll Brute", 4, 5, 5, 2).with_ability(troll_ability.clone());
-        let troll2 =
-            UnitCard::new(4, "troll_brute", "Troll Brute", 4, 5, 5, 2).with_ability(troll_ability.clone());
-        let troll3 =
-            UnitCard::new(5, "troll_brute", "Troll Brute", 4, 5, 5, 2).with_ability(troll_ability.clone());
-        let troll4 =
-            UnitCard::new(6, "troll_brute", "Troll Brute", 4, 5, 5, 2).with_ability(troll_ability.clone());
+        let troll1 = UnitCard::new(3, "troll_brute", "Troll Brute", 4, 5, 5, 2)
+            .with_ability(troll_ability.clone());
+        let troll2 = UnitCard::new(4, "troll_brute", "Troll Brute", 4, 5, 5, 2)
+            .with_ability(troll_ability.clone());
+        let troll3 = UnitCard::new(5, "troll_brute", "Troll Brute", 4, 5, 5, 2)
+            .with_ability(troll_ability.clone());
+        let troll4 = UnitCard::new(6, "troll_brute", "Troll Brute", 4, 5, 5, 2)
+            .with_ability(troll_ability.clone());
         let troll5 =
             UnitCard::new(7, "troll_brute", "Troll Brute", 4, 5, 5, 2).with_ability(troll_ability);
 
-        let player_board = vec![
-            BoardUnit::from_card(dragon1),
-            BoardUnit::from_card(dragon2),
-        ];
+        let player_board = vec![BoardUnit::from_card(dragon1), BoardUnit::from_card(dragon2)];
 
         let enemy_board = vec![
             BoardUnit::from_card(troll1),
@@ -901,6 +898,84 @@ mod tests {
                 assert_eq!(
                     result, "DRAW",
                     "Battle should be a DRAW: dragons killed by 5 Death Throes (15 damage > 12 HP)"
+                );
+            }
+            _ => panic!("Last event was not BattleEnd"),
+        }
+    }
+
+    #[test]
+    fn test_2_dragon_tyrants_vs_4_troll_brutes_draw() {
+        // Test case: 2 Dragon Tyrants vs 4 Troll Brutes should result in a DRAW
+        // Dragons have OnStart ability dealing 3 damage to all enemies
+        // Troll brutes have OnFaint ability dealing 3 damage to all enemies
+        // 2 dragons × 3 damage = 6 damage kills all 4 troll brutes (5 HP each)
+        // 4 troll brutes × 3 damage = 12 damage kills both dragons (12 HP each)
+
+        let dragon_ability = Ability {
+            trigger: AbilityTrigger::OnStart,
+            effect: AbilityEffect::Damage {
+                amount: 3,
+                target: AbilityTarget::AllEnemies,
+            },
+            name: "Dragon Breath".to_string(),
+            description: "Deal 3 damage to all enemies at battle start".to_string(),
+        };
+
+        let troll_ability = Ability {
+            trigger: AbilityTrigger::OnFaint,
+            effect: AbilityEffect::Damage {
+                amount: 3,
+                target: AbilityTarget::AllEnemies,
+            },
+            name: "Death Throes".to_string(),
+            description: "Deal 3 damage to all enemies on death".to_string(),
+        };
+
+        let dragon1 = UnitCard::new(1, "dragon_tyrant", "Dragon Tyrant", 8, 12, 10, 3)
+            .with_ability(dragon_ability.clone());
+        let dragon2 = UnitCard::new(2, "dragon_tyrant", "Dragon Tyrant", 8, 12, 10, 3)
+            .with_ability(dragon_ability);
+
+        let troll1 = UnitCard::new(3, "troll_brute", "Troll Brute", 4, 5, 5, 2)
+            .with_ability(troll_ability.clone());
+        let troll2 = UnitCard::new(4, "troll_brute", "Troll Brute", 4, 5, 5, 2)
+            .with_ability(troll_ability.clone());
+        let troll3 = UnitCard::new(5, "troll_brute", "Troll Brute", 4, 5, 5, 2)
+            .with_ability(troll_ability.clone());
+        let troll4 =
+            UnitCard::new(6, "troll_brute", "Troll Brute", 4, 5, 5, 2).with_ability(troll_ability);
+
+        let player_board = vec![BoardUnit::from_card(dragon1), BoardUnit::from_card(dragon2)];
+
+        let enemy_board = vec![
+            BoardUnit::from_card(troll1),
+            BoardUnit::from_card(troll2),
+            BoardUnit::from_card(troll3),
+            BoardUnit::from_card(troll4),
+        ];
+
+        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
+
+        // Count the Death Throes triggers - should be 4 (one for each troll)
+        let death_throes_count = events
+            .iter()
+            .filter(|e| {
+                matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Death Throes")
+            })
+            .count();
+        assert_eq!(
+            death_throes_count, 4,
+            "All 4 troll brutes should trigger Death Throes on death"
+        );
+
+        // The battle should end in a DRAW
+        let last_event = events.last().unwrap();
+        match last_event {
+            CombatEvent::BattleEnd { result } => {
+                assert_eq!(
+                    result, "DRAW",
+                    "Battle should be a DRAW: dragons killed by 4 Death Throes (12 damage = 12 HP)"
                 );
             }
             _ => panic!("Last event was not BattleEnd"),
