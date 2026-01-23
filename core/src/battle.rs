@@ -357,33 +357,37 @@ fn resolve_trigger_queue(
         // Helper to queue OnDamageTaken
         // We process this BEFORE death checks so we can catch units that took fatal damage.
         for unit_id in damaged_ids {
-             if let Some(unit) = find_unit(&unit_id, player_units, enemy_units) {
-                 let is_fatal = unit.health <= 0;
-                 for (idx, ability) in unit.abilities.iter().enumerate() {
-                     if ability.trigger == AbilityTrigger::OnDamageTaken {
+            if let Some(unit) = find_unit(&unit_id, player_units, enemy_units) {
+                let is_fatal = unit.health <= 0;
+                for (_idx, ability) in unit.abilities.iter().enumerate() {
+                    if ability.trigger == AbilityTrigger::OnDamageTaken {
                         // Find index of unit
-                        let (idx_in_team, team) = if let Some(pos) = player_units.iter().position(|u| u.instance_id == unit_id) {
+                        let (idx_in_team, team) = if let Some(pos) =
+                            player_units.iter().position(|u| u.instance_id == unit_id)
+                        {
                             (pos, Team::Player)
-                        } else if let Some(pos) = enemy_units.iter().position(|u| u.instance_id == unit_id) {
+                        } else if let Some(pos) =
+                            enemy_units.iter().position(|u| u.instance_id == unit_id)
+                        {
                             (pos, Team::Enemy)
                         } else {
                             continue;
                         };
 
-                         reaction_queue.push(PendingTrigger {
-                             source_id: unit_id.clone(),
-                             team,
-                             effect: ability.effect.clone(),
-                             ability_name: ability.name.clone(),
-                             priority_attack: unit.effective_attack(),
-                             priority_health: unit.effective_health(),
-                             priority_index: idx_in_team,
-                             is_from_dead: is_fatal, // ALLOW execution if it died from this damage
-                             spawn_index_override: if is_fatal { Some(idx_in_team) } else { None },
-                         });
-                     }
-                 }
-             }
+                        reaction_queue.push(PendingTrigger {
+                            source_id: unit_id.clone(),
+                            team,
+                            effect: ability.effect.clone(),
+                            ability_name: ability.name.clone(),
+                            priority_attack: unit.effective_attack(),
+                            priority_health: unit.effective_health(),
+                            priority_index: idx_in_team,
+                            is_from_dead: is_fatal, // ALLOW execution if it died from this damage
+                            spawn_index_override: if is_fatal { Some(idx_in_team) } else { None },
+                        });
+                    }
+                }
+            }
         }
 
         // D. INTERRUPT CHECK: Did anyone die?
@@ -626,16 +630,17 @@ fn apply_ability_effect(
             );
 
             for target_id in targets {
-                let (is_player, idx) =
-                    if let Some(pos) = player_units.iter().position(|u| u.instance_id == target_id)
-                    {
-                        (true, pos)
-                    } else if let Some(pos) = enemy_units.iter().position(|u| u.instance_id == target_id)
-                    {
-                        (false, pos)
-                    } else {
-                        continue;
-                    };
+                let (is_player, idx) = if let Some(pos) =
+                    player_units.iter().position(|u| u.instance_id == target_id)
+                {
+                    (true, pos)
+                } else if let Some(pos) =
+                    enemy_units.iter().position(|u| u.instance_id == target_id)
+                {
+                    (false, pos)
+                } else {
+                    continue;
+                };
 
                 let (board, team_name) = if is_player {
                     (&mut *player_units, "PLAYER")
@@ -932,7 +937,7 @@ fn resolve_hurt_and_faint_loop(
         let u = &player_units[0];
         for a in &u.abilities {
             if a.trigger == AbilityTrigger::OnDamageTaken {
-                 queue.push(PendingTrigger {
+                queue.push(PendingTrigger {
                     source_id: u.instance_id.clone(),
                     team: Team::Player,
                     effect: a.effect.clone(),
@@ -951,7 +956,7 @@ fn resolve_hurt_and_faint_loop(
         if *idx == 0 {
             for a in &u.abilities {
                 if a.trigger == AbilityTrigger::OnDamageTaken {
-                     queue.push(PendingTrigger {
+                    queue.push(PendingTrigger {
                         source_id: u.instance_id.clone(),
                         team: Team::Player,
                         effect: a.effect.clone(),
@@ -972,7 +977,7 @@ fn resolve_hurt_and_faint_loop(
         let u = &enemy_units[0];
         for a in &u.abilities {
             if a.trigger == AbilityTrigger::OnDamageTaken {
-                 queue.push(PendingTrigger {
+                queue.push(PendingTrigger {
                     source_id: u.instance_id.clone(),
                     team: Team::Enemy,
                     effect: a.effect.clone(),
@@ -990,7 +995,7 @@ fn resolve_hurt_and_faint_loop(
         if *idx == 0 {
             for a in &u.abilities {
                 if a.trigger == AbilityTrigger::OnDamageTaken {
-                     queue.push(PendingTrigger {
+                    queue.push(PendingTrigger {
                         source_id: u.instance_id.clone(),
                         team: Team::Enemy,
                         effect: a.effect.clone(),

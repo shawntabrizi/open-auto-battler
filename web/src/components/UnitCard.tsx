@@ -122,6 +122,7 @@ function getCardEmoji(templateId: string): string {
     zombie_soldier: '🧟',
     zombie_captain: '🧟‍♂️',
     zombie_spawn: '👶',
+    zombie_breeder: '🧟‍♀️',
     necromancer: '🧙',
     battle_hardened: '💪',
     troll_brute: '🧌',

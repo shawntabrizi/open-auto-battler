@@ -838,10 +838,10 @@ mod tests {
     #[test]
     fn test_sacrifice_combo() {
         // Setup: [Fodder, Lich, Corpse Cart]
-        
+
         // Fodder: Just a unit.
         let fodder = create_dummy_card(1, "Fodder", 1, 1);
-        
+
         // Lich: OnStart -> KillSpawn(AllyAhead, "golem")
         let lich_ability = create_ability(
             AbilityTrigger::OnStart,
@@ -852,7 +852,7 @@ mod tests {
             "Ritual",
         );
         let lich = create_dummy_card(2, "Lich", 3, 3).with_ability(lich_ability);
-        
+
         // Corpse Cart: OnAllyFaint -> Buff Self
         let cart_ability = create_ability(
             AbilityTrigger::OnAllyFaint,
@@ -864,30 +864,41 @@ mod tests {
             "Scavenge",
         );
         let corpse_cart = create_dummy_card(3, "Cart", 0, 4).with_ability(cart_ability);
-        
+
         let p_board = vec![
-            BoardUnit::from_card(fodder), 
-            BoardUnit::from_card(lich), 
-            BoardUnit::from_card(corpse_cart)
+            BoardUnit::from_card(fodder),
+            BoardUnit::from_card(lich),
+            BoardUnit::from_card(corpse_cart),
         ];
         let e_board = vec![create_dummy_enemy()]; // Sandbag
-        
+
         let events = resolve_battle(&p_board, &e_board, 42);
-        
-        let triggers: Vec<&String> = events.iter().filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name)
-            } else {
-                None
-            }
-        }).collect();
-        
+
+        let triggers: Vec<&String> = events
+            .iter()
+            .filter_map(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    Some(ability_name)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
         // Checks
-        assert!(triggers.contains(&&"Ritual".to_string()), "Lich should trigger Ritual");
-        assert!(triggers.contains(&&"Scavenge".to_string()), "Corpse Cart should trigger Scavenge");
-        
+        assert!(
+            triggers.contains(&&"Ritual".to_string()),
+            "Lich should trigger Ritual"
+        );
+        assert!(
+            triggers.contains(&&"Scavenge".to_string()),
+            "Corpse Cart should trigger Scavenge"
+        );
+
         // Check spawn
-        let spawn_event = events.iter().find(|e| matches!(e, CombatEvent::UnitSpawn { .. }));
+        let spawn_event = events
+            .iter()
+            .find(|e| matches!(e, CombatEvent::UnitSpawn { .. }));
         assert!(spawn_event.is_some(), "Golem should have spawned");
     }
 
@@ -918,8 +929,8 @@ mod tests {
         // Push in reverse order of execution (Pop LIFO)
         // We want Damage (Fire) first, then Buff (Sharpen).
         // So Vec = [Sharpen, Fire]. Pop -> Fire. Pop -> Sharpen.
-        let pain_smith = create_dummy_card(1, "Smith", 3, 3)
-            .with_abilities(vec![smith_buff, smith_dmg]);
+        let pain_smith =
+            create_dummy_card(1, "Smith", 3, 3).with_abilities(vec![smith_buff, smith_dmg]);
 
         // Construct Raging Orc
         let orc_rage = create_ability(
@@ -952,16 +963,28 @@ mod tests {
 
         // Filter modify stats on target "p-2" (Unit 2)
         // Actually IDs are "p-1", "p-2". Orc is p-2.
-        let orc_buffs: Vec<i32> = events.iter().filter_map(|e| {
-            if let CombatEvent::AbilityModifyStats { target_instance_id, attack_change, .. } = e {
-                if target_instance_id == "p-2" {
-                    return Some(*attack_change);
+        let orc_buffs: Vec<i32> = events
+            .iter()
+            .filter_map(|e| {
+                if let CombatEvent::AbilityModifyStats {
+                    target_instance_id,
+                    attack_change,
+                    ..
+                } = e
+                {
+                    if target_instance_id == "p-2" {
+                        return Some(*attack_change);
+                    }
                 }
-            }
-            None
-        }).collect();
+                None
+            })
+            .collect();
 
-        assert_eq!(orc_buffs.iter().sum::<i32>(), 4, "Orc should gain +4 Attack total (+2 Self, +2 Smith)");
+        assert_eq!(
+            orc_buffs.iter().sum::<i32>(),
+            4,
+            "Orc should gain +4 Attack total (+2 Self, +2 Smith)"
+        );
         assert_eq!(orc_buffs.len(), 2, "Orc should receive 2 distinct buffs");
 
         // Verify Damage
@@ -1004,14 +1027,20 @@ mod tests {
         assert!(deaths >= 1, "Martyr should have died");
 
         // 2. Verify Revenge Triggered
-        let triggers: Vec<&String> = events.iter().filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name)
-            } else {
-                None
-            }
-        }).collect();
-        assert!(triggers.contains(&&"Revenge".to_string()), "Revenge ability should trigger on fatal damage");
+        let triggers: Vec<&String> = events
+            .iter()
+            .filter_map(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    Some(ability_name)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        assert!(
+            triggers.contains(&&"Revenge".to_string()),
+            "Revenge ability should trigger on fatal damage"
+        );
 
         // 3. Verify Damage to Killer
         // Killer started with 10 HP. Took 1 damage from Martyr attack (clash) + 5 damage from Ability.
@@ -1023,8 +1052,14 @@ mod tests {
 
         // Find final HP update for Killer (e-1)
         let final_hp_event = events.iter().rev().find_map(|e| {
-            if let CombatEvent::DamageTaken { target_instance_id, remaining_hp, .. } = e {
-                if target_instance_id == "e-1" { // Enemy is 2nd unit created, but 1st on enemy team...
+            if let CombatEvent::DamageTaken {
+                target_instance_id,
+                remaining_hp,
+                ..
+            } = e
+            {
+                if target_instance_id == "e-1" {
+                    // Enemy is 2nd unit created, but 1st on enemy team...
                     // Wait, create_dummy_card IDs are for Cards.
                     // resolve_battle maps them.
                     // instance_counter increases.
@@ -1032,11 +1067,16 @@ mod tests {
                     return Some(*remaining_hp);
                 }
             }
-             // Also check AbilityDamage
-            if let CombatEvent::AbilityDamage { target_instance_id, remaining_hp, .. } = e {
-                 if target_instance_id == "e-2" {
-                     return Some(*remaining_hp);
-                 }
+            // Also check AbilityDamage
+            if let CombatEvent::AbilityDamage {
+                target_instance_id,
+                remaining_hp,
+                ..
+            } = e
+            {
+                if target_instance_id == "e-2" {
+                    return Some(*remaining_hp);
+                }
             }
             None
         });
@@ -1047,6 +1087,9 @@ mod tests {
                 if target_instance_id == "e-2" && *damage == 5)
         });
 
-        assert!(ability_dmg.is_some(), "Killer (e-2) should take 5 ability damage");
+        assert!(
+            ability_dmg.is_some(),
+            "Killer (e-2) should take 5 ability damage"
+        );
     }
 }

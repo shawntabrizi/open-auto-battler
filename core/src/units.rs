@@ -404,6 +404,22 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             }],
         },
         CardTemplate {
+            template_id: "zombie_breeder",
+            name: "Zombie Breeder",
+            attack: 2,
+            health: 4,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnDamageTaken,
+                effect: crate::types::AbilityEffect::SpawnUnit {
+                    template_id: "zombie_spawn".to_string(),
+                },
+                name: "Undead Horde".to_string(),
+                description: "Spawn a Zombie Spawn when hurt".to_string(),
+            }],
+        },
+        CardTemplate {
             template_id: "pain_smith",
             name: "Pain Smith",
             attack: 3,
