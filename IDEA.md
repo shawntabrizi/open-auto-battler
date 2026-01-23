@@ -25,9 +25,12 @@
 
 * **Auto-Battle:** Combat is fully automated against a "Ghost" (snapshot) of an opponent with a similar Round/Win record.
 * **Simultaneous Damage:** Units attack Front-to-Back. The two front units strike each other at the same time.
-* **Initiative (Reaction Speed):** Triggers (like "Start of Battle") are resolved based on **Attack Power**.
-* *Rule:* High Attack acts before Low Attack.
-* *Tie-Breaker:* Deterministic RNG (Seeded).
+* **Initiative (Reaction Speed):** Triggers (like "Start of Battle") are resolved based on a deterministic hierarchy:
+    1. **Highest Attack**
+    2. **Highest Health**
+    3. **Player Priority**
+    4. **Front-to-Back Position**
+    5. **Ability Order**
 
 
 * **Draws:** If both teams die simultaneously, it is a "Wash." The player gains no Trophies but loses no Lives.

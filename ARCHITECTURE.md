@@ -53,8 +53,8 @@ Set up the project with two distinct directories:
 ### Rust Guidelines
 
 * Use `ts-rs` (if possible) or ensure JSON keys are `camelCase` via `#[serde(rename_all = "camelCase")]` to match TypeScript standards.
-* Combat logic must be deterministic (seeded RNG).
-* Implement the "Attack Priority" sort: `triggers.sort_by(|a, b| b.attack.cmp(&a.attack))`.
+* Combat logic must be deterministic.
+* Implement the "Initiative Hierarchy" sort: Attack > Health > Player Priority > Position > Ability Order.
 
 ### React Guidelines
 

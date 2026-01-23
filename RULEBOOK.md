@@ -87,9 +87,13 @@ Combat resolves automatically against a "Ghost" of a real opponent with a simila
 **1. Triggers & Initiative (The "Speed" Check)**
 Before attacks happen, abilities like *"Start of Battle"* or *"On Faint"* may trigger.
 
-* **Rule:** If multiple units trigger at the same time, the unit with the **Highest Attack** goes first.
-* **Tie-Breaker:** If Attack is equal, the order is random.
-* *Example: A Sniper (6 Atk) will fire its "Start of Battle" shot before a Turtle (2 Atk) can activate its "Start of Battle" shield.*
+* **Rule:** If multiple units trigger at the same time, the resolution order is determined by a strict hierarchy:
+    1. **Highest Attack:** The unit with more Attack power goes first.
+    2. **Highest Health:** If Attack is tied, the unit with more current Health goes first.
+    3. **Player Priority:** If stats are tied, the Player's unit triggers before the Enemy's unit.
+    4. **Position:** If on the same team, the unit closer to the front (Index 0) triggers first.
+    5. **Ability Order:** If a unit has multiple triggers, they resolve in the order they appear on the card.
+* *Example: A Sniper (6 Atk, 2 HP) and a Brute (6 Atk, 8 HP) both have "Start of Battle" triggers. The Brute triggers first because it has higher Health.*
 
 
 
