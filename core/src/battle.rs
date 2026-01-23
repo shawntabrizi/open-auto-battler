@@ -304,7 +304,7 @@ fn resolve_trigger_queue(
     limits: &mut BattleLimits,
 ) -> Result<(), ()> {
     // 1. Sort by Attack Priority
-    queue.sort_by(|a, b| b.priority_attack.cmp(&a.priority_attack));
+    queue.sort_by(|a, b| a.priority_attack.cmp(&b.priority_attack));
 
     // 2. Iterate
     while let Some(trigger) = queue.pop() {
