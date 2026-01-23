@@ -1613,13 +1613,57 @@ mod tests {
             dead_units.contains(&"e-2".to_string()),
             "Cheap unit should be dead"
         );
-        assert!(
-            dead_units.contains(&"e-4".to_string()),
-            "Expensive unit should be dead"
-        );
-        assert!(
-            !dead_units.contains(&"e-3".to_string()),
-            "Medium unit should be alive"
-        );
-    }
-}
+                assert!(dead_units.contains(&"e-4".to_string()), "Expensive unit should be dead");
+                assert!(!dead_units.contains(&"e-3".to_string()), "Medium unit should be alive");
+            }
+        
+            #[test]
+            fn test_spawn_id_uniqueness_and_buffs() {
+                // SCENARIO: Multiple spawns followed by an "All Allies" buff.
+                // We must ensure every unit gets a unique ID so the buff is applied exactly once per unit.
+                
+                // 1. Spawner: 10 Atk (Goes first). Spawns two units.
+                let spawn_ability = create_ability(
+                    AbilityTrigger::OnStart,
+                    AbilityEffect::SpawnUnit { template_id: "zombie_spawn".to_string() },
+                    "Spawn"
+                );
+                let spawner = create_dummy_card(1, "Spawner", 10, 10).with_abilities(vec![spawn_ability.clone(), spawn_ability]);
+                
+                // 2. Buffer: 5 Atk (Goes second). Buffs all allies +2 Atk.
+                let buff_ability = create_ability(
+                    AbilityTrigger::OnStart,
+                    AbilityEffect::ModifyStats { health: 0, attack: 2, target: AbilityTarget::AllAllies },
+                    "BuffAll"
+                );
+                let buffer = create_dummy_card(2, "Buffer", 5, 10).with_ability(buff_ability);
+                
+                let p_board = vec![BoardUnit::from_card(spawner), BoardUnit::from_card(buffer)];
+                let e_board = vec![create_dummy_enemy()];
+                
+                let events = resolve_battle(&p_board, &e_board, 42);
+                
+                // Verify final attack of one of the spawned units.
+                // It starts at 1. Should be 3 after receiving ONE buff.
+                // If IDs collided, it might be 5 (double buffed).
+                
+                let spawn_final_atk = events.iter().rev().find_map(|e| {
+                    if let CombatEvent::UnitSpawn { spawned_unit, .. } = e {
+                        // We want to find the latest state of this unit in the events
+                        let id = &spawned_unit.instance_id;
+                        // Search for the last AbilityModifyStats for this ID
+                        return events.iter().rev().find_map(|e2| {
+                            if let CombatEvent::AbilityModifyStats { target_instance_id, new_attack, .. } = e2 {
+                                if target_instance_id == id {
+                                    return Some(*new_attack);
+                                }
+                            }
+                            None
+                        });
+                    }
+                    None
+                });
+                
+                assert_eq!(spawn_final_atk, Some(3), "Spawned unit should have 3 attack (1 base + 2 buff). If it's 5, it was double buffed due to ID collision.");
+            }
+        }

@@ -30,6 +30,7 @@ pub struct BattleLimits {
     pub current_executing_team: Option<Team>,
     pub limit_exceeded_by: Option<Team>,
     pub limit_exceeded_reason: Option<String>,
+    pub next_instance_id: u32,
 }
 
 impl BattleLimits {
@@ -42,7 +43,14 @@ impl BattleLimits {
             current_executing_team: None,
             limit_exceeded_by: None,
             limit_exceeded_reason: None,
+            next_instance_id: 1,
         }
+    }
+
+    pub fn generate_instance_id(&mut self) -> u32 {
+        let id = self.next_instance_id;
+        self.next_instance_id += 1;
+        id
     }
 
     pub fn reset_phase_counters(&mut self) {

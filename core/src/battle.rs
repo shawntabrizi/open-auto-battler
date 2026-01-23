@@ -174,16 +174,14 @@ pub fn resolve_battle(
 ) -> Vec<CombatEvent> {
     let mut events = Vec::new();
     let mut rng = StdRng::seed_from_u64(seed);
-    let mut instance_counter = 0;
     let mut limits = BattleLimits::new();
 
     // Initialize Units
     let mut player_units: Vec<CombatUnit> = player_board
         .iter()
         .map(|u| {
-            instance_counter += 1;
             let mut cu = CombatUnit::from_card(u.card.clone());
-            cu.instance_id = format!("p-{}", instance_counter);
+            cu.instance_id = format!("p-{}", limits.generate_instance_id());
             cu.team = Team::Player;
             cu.health = u.current_health;
             cu
@@ -193,9 +191,8 @@ pub fn resolve_battle(
     let mut enemy_units: Vec<CombatUnit> = enemy_board
         .iter()
         .map(|u| {
-            instance_counter += 1;
             let mut cu = CombatUnit::from_card(u.card.clone());
-            cu.instance_id = format!("e-{}", instance_counter);
+            cu.instance_id = format!("e-{}", limits.generate_instance_id());
             cu.team = Team::Enemy;
             cu.health = u.current_health;
             cu
@@ -597,19 +594,18 @@ fn apply_ability_effect(
                 .find(|t| t.template_id == *template_id)
                 .expect(&format!("Spawn template '{}' not found", template_id));
 
-            let current_count = my_board.len() + 100; // Offset to avoid ID collision
-            let instance_counter = current_count + 1;
+            let next_id = limits.generate_instance_id();
             let instance_id = format!(
                 "spawn-{}-{}",
                 match source_team {
                     Team::Player => "p",
                     _ => "e",
                 },
-                instance_counter
+                next_id
             );
 
             let mut card = crate::types::UnitCard::new(
-                (instance_counter * 5000) as u32,
+                (next_id * 5000) as u32,
                 &template.template_id,
                 &template.name,
                 template.attack,
