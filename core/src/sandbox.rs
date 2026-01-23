@@ -47,11 +47,7 @@ pub fn get_unit_templates() -> JsValue {
 
 /// Run a sandbox battle with custom player and enemy boards
 #[wasm_bindgen]
-pub fn run_sandbox_battle(
-    player_units_js: JsValue,
-    enemy_units_js: JsValue,
-    seed: u64,
-) -> JsValue {
+pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, seed: u64) -> JsValue {
     log::action("run_sandbox_battle", "Running custom battle");
 
     let player_sandbox: Vec<SandboxUnit> =
