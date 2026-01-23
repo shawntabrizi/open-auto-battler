@@ -30,12 +30,11 @@ Set up the project with two distinct directories:
 
 ### B. The "Brain" (Rust)
 
-* The Rust `GameState` struct is immutable from the outside.
-* Expose a `GameEngine` struct via `#[wasm_bindgen]`.
-* Input methods (e.g., `engine.burn_card(id)`) return `Result<(), String>`.
-* Output methods (e.g., `engine.get_view()`) return a `JsValue` (serialized JSON).
-* Use `serde` for all data structures.
-* **Matchmaking:** Implement the "Ghost" system where the opponent is just a static struct `OpponentState`.
+* **Source of Truth:** The Rust `GameState` struct holds the canonical state (Deck, Shop, Board, Mana, Round).
+* **Engine Interface:** Exposes a `GameEngine` struct via `#[wasm_bindgen]`.
+* **State Persistence:** The engine is stateful. React calls methods like `engine.buy_card(index)` which mutate the internal Rust state.
+* **View Synchronization:** React polls `engine.get_view()` after every action to get a JSON snapshot (`GameView`) for rendering.
+* **Battle Simulation:** The `engine.end_turn()` method triggers the battle simulation, returning a `BattleOutput` (JSON) containing a list of `CombatEvents` for playback.
 
 ### C. The "Hands" (React)
 
