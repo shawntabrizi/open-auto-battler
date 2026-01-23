@@ -340,23 +340,17 @@ mod tests {
     }
 
     #[test]
-
     fn test_priority_tiebreaker_ability_order() {
         // SCENARIO: Single unit with multiple abilities.
-
         // Ability A: Defined first.
-
         // Ability B: Defined second.
-
         // Expectation: Ability A triggers before Ability B.
 
         let ability_a = create_ability(
             AbilityTrigger::OnStart,
             AbilityEffect::ModifyStats {
                 health: 0,
-
                 attack: 0,
-
                 target: AbilityTarget::SelfUnit,
             },
             "AbilityA",
@@ -366,9 +360,7 @@ mod tests {
             AbilityTrigger::OnStart,
             AbilityEffect::ModifyStats {
                 health: 0,
-
                 attack: 0,
-
                 target: AbilityTarget::SelfUnit,
             },
             "AbilityB",
@@ -379,7 +371,6 @@ mod tests {
         );
 
         let p_board = vec![unit];
-
         let e_board = vec![create_dummy_enemy()];
 
         let events = resolve_battle(&p_board, &e_board, 42);
@@ -412,30 +403,21 @@ mod tests {
     }
 
     #[test]
-
     fn test_priority_full_hierarchy_with_ability_order() {
         // HIERARCHY CHECK:
-
         // 1. Attack (Highest First)
-
         // 2. Health (Highest First)
-
         // 3. Team (Player First)
-
         // 4. Position (Front First)
-
         // 5. Ability Order (Defined First)
 
         // U1: 10 Atk (Priority 1)
-
         let u1 = BoardUnit::from_card(UnitCard::new(1, "U1", "U1", 10, 1, 0, 0).with_ability(
             create_ability(
                 AbilityTrigger::OnStart,
                 AbilityEffect::ModifyStats {
                     health: 0,
-
                     attack: 0,
-
                     target: AbilityTarget::SelfUnit,
                 },
                 "U1",
@@ -443,23 +425,18 @@ mod tests {
         ));
 
         // U2: 5 Atk, 10 HP (Priority 2)
-
         let u2 = create_tester_unit(2, "U2", 5, 10, "U2");
 
         // U3: 5 Atk, 5 HP, Player Team (Priority 3)
-
         let u3 = create_tester_unit(3, "U3", 5, 5, "U3");
 
         // U4: 5 Atk, 5 HP, Enemy Team (Priority 4)
-
         let u4 = BoardUnit::from_card(UnitCard::new(4, "U4", "U4", 5, 5, 0, 0).with_ability(
             create_ability(
                 AbilityTrigger::OnStart,
                 AbilityEffect::ModifyStats {
                     health: 0,
-
                     attack: 0,
-
                     target: AbilityTarget::SelfUnit,
                 },
                 "U4",
@@ -467,14 +444,11 @@ mod tests {
         ));
 
         // U5: 1 Atk, 1 HP, Index 0 (Priority 5 & 6)
-
         let ability_u5_a = create_ability(
             AbilityTrigger::OnStart,
             AbilityEffect::ModifyStats {
                 health: 0,
-
                 attack: 0,
-
                 target: AbilityTarget::SelfUnit,
             },
             "U5-A",
@@ -484,9 +458,7 @@ mod tests {
             AbilityTrigger::OnStart,
             AbilityEffect::ModifyStats {
                 health: 0,
-
                 attack: 0,
-
                 target: AbilityTarget::SelfUnit,
             },
             "U5-B",
@@ -498,17 +470,12 @@ mod tests {
         );
 
         // U6: 1 Atk, 1 HP, Index 1 (Priority 7)
-
         let u6 = create_tester_unit(6, "U6", 1, 1, "U6");
 
         // Board Construction
-
         // Player: [U5, U2, U3, U6] (Positions 0, 1, 2, 3)
-
         // Enemy:  [U1, U4]
-
         let p_board = vec![u5, u2, u3, u6];
-
         let e_board = vec![u1, u4];
 
         let events = resolve_battle(&p_board, &e_board, 42);
@@ -525,26 +492,17 @@ mod tests {
             .collect();
 
         // EXPECTED ORDER:
-
         // 1. U1 (10 Atk)
-
         // 2. U2 (5 Atk, 10 HP)
-
         // 3. U3 (5 Atk, 5 HP, Player)
-
         // 4. U4 (5 Atk, 5 HP, Enemy)
-
         // 5. U5-A (1 Atk, 1 HP, Pos 0, Ability 0)
-
         // 6. U5-B (1 Atk, 1 HP, Pos 0, Ability 1)
-
         // 7. U6 (1 Atk, 1 HP, Pos 3)
-
         assert_eq!(triggers, vec!["U1", "U2", "U3", "U4", "U5-A", "U5-B", "U6"]);
     }
 
     #[test]
-
     fn test_priority_full_hierarchy() {
         // HIERARCHY CHECK:
         // 1. Attack (Highest)
@@ -880,9 +838,12 @@ mod tests {
             .count();
 
         // Count triggers
-        let triggers = events.iter().filter(|e|
-            matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "MultiSpawn")
-        ).count();
+        let triggers = events
+            .iter()
+            .filter(|e| {
+                matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "MultiSpawn")
+            })
+            .count();
 
         assert_eq!(triggers, 2, "Both abilities should trigger");
         assert_eq!(
@@ -986,8 +947,12 @@ mod tests {
         let events = resolve_battle(&p_board, &e_board, 42);
 
         // Verify triggers happened
-        let has_nuke = events.iter().any(|e| matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Nuke"));
-        let has_revenge = events.iter().any(|e| matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Revenge"));
+        let has_nuke = events.iter().any(|e| {
+            matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Nuke")
+        });
+        let has_revenge = events.iter().any(|e| {
+            matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Revenge")
+        });
 
         assert!(has_nuke);
         assert!(has_revenge);
@@ -1268,7 +1233,6 @@ mod tests {
         // Total Killer Damage: 1 + 5 = 6.
 
         // Find final HP update for Killer (e-1)
-
         let _final_hp_event = events.iter().rev().find_map(|e| {
             if let CombatEvent::DamageTaken {
                 target_instance_id,
@@ -1301,8 +1265,7 @@ mod tests {
 
         let ability_dmg = events.iter().find(|e| {
             matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
-
-                        if target_instance_id == "e-2" && *damage == 5)
+                if target_instance_id == "e-2" && *damage == 5)
         });
 
         assert!(
@@ -1312,18 +1275,12 @@ mod tests {
     }
 
     #[test]
-
     fn test_damage_taken_no_slide_trigger() {
         // SCENARIO: Unit dies, next unit slides forward. Slid unit should NOT trigger OnDamageTaken.
-
         // P: [Fodder (1/1), Breeder (2/4)]. Breeder has OnDamageTaken -> Spawn.
-
         // E: [Killer (0/10)]. (Use 0 attack so Breeder survives if it somehow gets hit)
-
         // Clash: Fodder dies. Breeder slides to Index 0.
-
         // BUG: Breeder triggers because it's now at Index 0.
-
         // FIX: Breeder should NOT trigger.
 
         let spawn_ability = create_ability(
@@ -1335,24 +1292,21 @@ mod tests {
         );
 
         let fodder = create_dummy_card(1, "Fodder", 1, 1);
-
         let breeder = create_dummy_card(2, "Breeder", 2, 4).with_ability(spawn_ability);
-
         let killer = create_dummy_card(3, "Killer", 0, 10);
 
         let p_board = vec![BoardUnit::from_card(fodder), BoardUnit::from_card(breeder)];
-
         let e_board = vec![BoardUnit::from_card(killer)];
 
         let events = resolve_battle(&p_board, &e_board, 42);
 
         // Analyze triggers
-
-        let breed_triggers: Vec<_> = events.iter().filter(|e| {
-
-                    matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Breed")
-
-                }).collect();
+        let breed_triggers: Vec<_> = events
+            .iter()
+            .filter(|e| {
+                matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Breed")
+            })
+            .collect();
 
         if breed_triggers.len() > 0 {
             println!(
