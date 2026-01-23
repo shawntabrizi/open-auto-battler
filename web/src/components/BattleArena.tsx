@@ -87,10 +87,10 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
   const [eventIndex, setEventIndex] = useState(0);
 
   // Animation states
-  const [clashingUnitIds, setClashingUnitIds] = useState<string[]>([]);
-  const [damageNumbers, setDamageNumbers] = useState<Map<string, number>>(new Map());
-  const [statChanges, setStatChanges] = useState<Map<string, { health: number; attack: number }>>(new Map());
-  const [abilityToasts, setAbilityToasts] = useState<Map<string, string>>(new Map());
+  const [clashingUnitIds, setClashingUnitIds] = useState<number[]>([]);
+  const [damageNumbers, setDamageNumbers] = useState<Map<number, number>>(new Map());
+  const [statChanges, setStatChanges] = useState<Map<number, { health: number; attack: number }>>(new Map());
+  const [abilityToasts, setAbilityToasts] = useState<Map<number, string>>(new Map());
 
   // Playback speed control
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(() => {
@@ -130,7 +130,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
         case 'clash': {
           const pId = (playerBoard || []).length > 0 ? playerBoard[0].instanceId : null;
           const eId = (enemyBoard || []).length > 0 ? enemyBoard[0].instanceId : null;
-          const clashing = [pId, eId].filter((id) => id !== null) as string[];
+          const clashing = [pId, eId].filter((id) => id !== null) as number[];
           setClashingUnitIds(clashing);
           delay = 300 / playbackSpeed; // Wait for bump animation
           break;

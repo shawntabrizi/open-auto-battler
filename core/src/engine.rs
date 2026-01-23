@@ -1,4 +1,4 @@
-use crate::battle::{resolve_battle, CombatEvent, UnitView};
+use crate::battle::{resolve_battle, CombatEvent, UnitId, UnitView};
 use crate::log;
 use crate::opponents::get_opponent_for_round;
 use crate::state::*;
@@ -327,13 +327,13 @@ impl GameEngine {
             log::info(&format!("Battle Result: {}", result));
         }
 
-        let mut instance_counter = 0;
+        let mut instance_counter: u32 = 0;
         let initial_player_units: Vec<UnitView> = player_board
             .iter()
             .map(|u| {
                 instance_counter += 1;
                 UnitView {
-                    instance_id: format!("p-{}", instance_counter),
+                    instance_id: UnitId::player(instance_counter),
                     template_id: u.card.template_id.clone(),
                     name: u.card.name.clone(),
                     attack: u.card.stats.attack,
@@ -342,12 +342,13 @@ impl GameEngine {
                 }
             })
             .collect();
+        instance_counter = 0;
         let initial_enemy_units: Vec<UnitView> = enemy_board
             .iter()
             .map(|u| {
                 instance_counter += 1;
                 UnitView {
-                    instance_id: format!("e-{}", instance_counter),
+                    instance_id: UnitId::enemy(instance_counter),
                     template_id: u.card.template_id.clone(),
                     name: u.card.name.clone(),
                     attack: u.card.stats.attack,
