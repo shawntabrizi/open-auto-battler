@@ -57,6 +57,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Shield Wall".to_string(),
                 description: "Heal front ally for 2".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -74,6 +75,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Dying Bite".to_string(),
                 description: "Deal 2 damage to front enemy on death".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -92,6 +94,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Battle Rage".to_string(),
                 description: "Gain +2 attack at battle start".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -108,6 +111,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Spawn Zombie".to_string(),
                 description: "Spawn a Zombie Spawn when killed".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -135,6 +139,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Spawn Boost".to_string(),
                 description: "Give +2 attack to any spawned unit".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -154,6 +159,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     },
                     name: "Pre-Battle Prep".to_string(),
                     description: "Gain +2 health before each clash".to_string(),
+                    condition: crate::types::AbilityCondition::default(),
                 },
                 Ability {
                     trigger: crate::types::AbilityTrigger::AfterUnitAttack,
@@ -164,6 +170,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     },
                     name: "Adrenaline Rush".to_string(),
                     description: "Gain +2 attack after each clash".to_string(),
+                    condition: crate::types::AbilityCondition::default(),
                 },
             ],
         },
@@ -182,6 +189,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Death Throes".to_string(),
                 description: "Deal 3 damage to all enemies on death".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -200,6 +208,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Crushing Blow".to_string(),
                 description: "Gain +3 attack at battle start".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -217,6 +226,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Earthshaker".to_string(),
                 description: "Deal 4 damage to front enemy at battle start".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -234,6 +244,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Dragon Breath".to_string(),
                 description: "Deal 3 damage to all enemies at battle start".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -251,6 +262,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Headshot".to_string(),
                 description: "Deal 2 damage to the front enemy at battle start".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -268,6 +280,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Long Shot".to_string(),
                 description: "Deal 1 damage to the back enemy at battle start".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -295,6 +308,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Healing Totem".to_string(),
                 description: "Heal front ally for 2 at battle start".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -330,6 +344,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     },
                     name: "Rally the Dead".to_string(),
                     description: "Spawn a Zombie Soldier on death".to_string(),
+                    condition: crate::types::AbilityCondition::default(),
                 },
                 Ability {
                     trigger: crate::types::AbilityTrigger::OnFaint,
@@ -338,6 +353,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     },
                     name: "Rally the Dead".to_string(),
                     description: "Spawn a Zombie Soldier on death".to_string(),
+                    condition: crate::types::AbilityCondition::default(),
                 },
             ],
         },
@@ -357,6 +373,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Scavenge".to_string(),
                 description: "Gain +2 attack when an ally faints".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -374,6 +391,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     },
                     name: "Ritual Sacrifice".to_string(),
                     description: "Kill the ally in front".to_string(),
+                    condition: crate::types::AbilityCondition::default(),
                 },
                 Ability {
                     trigger: crate::types::AbilityTrigger::OnStart,
@@ -382,6 +400,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     },
                     name: "Raise Golem".to_string(),
                     description: "Spawn a 5/5 Golem".to_string(),
+                    condition: crate::types::AbilityCondition::default(),
                 },
             ],
         },
@@ -410,6 +429,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Berserk".to_string(),
                 description: "Gain +2 attack when hurt".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -426,6 +446,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Undead Horde".to_string(),
                 description: "Spawn a Zombie Spawn when hurt".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -445,6 +466,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     },
                     name: "Sharpen Blades".to_string(),
                     description: "Give all allies +2 attack".to_string(),
+                    condition: crate::types::AbilityCondition::default(),
                 },
                 Ability {
                     trigger: crate::types::AbilityTrigger::OnStart,
@@ -454,6 +476,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     },
                     name: "Forged in Fire".to_string(),
                     description: "Deal 1 damage to all allies".to_string(),
+                    condition: crate::types::AbilityCondition::default(),
                 },
             ],
         },
@@ -472,6 +495,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Assassinate".to_string(),
                 description: "Deal 5 damage to the enemy with the lowest health".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -489,6 +513,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Take Down".to_string(),
                 description: "Deal 3 damage to the enemy with the highest attack".to_string(),
+                condition: crate::types::AbilityCondition::default(),
             }],
         },
         CardTemplate {
@@ -515,6 +540,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     },
                     name: "Harvest the Rich".to_string(),
                     description: "Destroy the highest mana cost enemy".to_string(),
+                    condition: crate::types::AbilityCondition::default(),
                 },
                 Ability {
                     trigger: crate::types::AbilityTrigger::OnStart,
@@ -523,6 +549,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     },
                     name: "Cull the Weak".to_string(),
                     description: "Destroy the lowest mana cost enemy".to_string(),
+                    condition: crate::types::AbilityCondition::default(),
                 },
             ],
         },
@@ -542,6 +569,67 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
                 name: "Squire's Shield".to_string(),
                 description: "Give the unit in front +2 Health before every clash".to_string(),
+                condition: crate::types::AbilityCondition::default(),
+            }],
+        },
+        // Example unit demonstrating conditional abilities
+        CardTemplate {
+            template_id: "nurse_goblin",
+            name: "Nurse Goblin",
+            attack: 1,
+            health: 3,
+            play_cost: 2,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::BeforeAnyAttack,
+                effect: crate::types::AbilityEffect::ModifyStats {
+                    health: 2,
+                    attack: 0,
+                    target: crate::types::AbilityTarget::AllyAhead,
+                },
+                name: "Emergency Heal".to_string(),
+                description: "Give the unit in front +2 Health if its health is 6 or less".to_string(),
+                condition: crate::types::AbilityCondition::TargetHealthLessThanOrEqual { value: 6 },
+            }],
+        },
+        // Example unit demonstrating "Last Stand" conditional (only activates when alone)
+        CardTemplate {
+            template_id: "lone_wolf",
+            name: "Lone Wolf",
+            attack: 2,
+            health: 4,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::BeforeUnitAttack,
+                effect: crate::types::AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 5,
+                    target: crate::types::AbilityTarget::SelfUnit,
+                },
+                name: "Last Stand".to_string(),
+                description: "Gain +5 attack if you are the only ally".to_string(),
+                condition: crate::types::AbilityCondition::AllyCountAtMost { count: 1 },
+            }],
+        },
+        // Example unit demonstrating "Swarm" conditional (activates with many allies)
+        CardTemplate {
+            template_id: "pack_leader",
+            name: "Pack Leader",
+            attack: 2,
+            health: 3,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnStart,
+                effect: crate::types::AbilityEffect::ModifyStats {
+                    health: 1,
+                    attack: 1,
+                    target: crate::types::AbilityTarget::AllAllies,
+                },
+                name: "Pack Tactics".to_string(),
+                description: "Give all allies +1/+1 if you have 3 or more allies".to_string(),
+                condition: crate::types::AbilityCondition::AllyCountAtLeast { count: 3 },
             }],
         },
     ]

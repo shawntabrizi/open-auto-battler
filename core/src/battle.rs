@@ -1,6 +1,6 @@
 use crate::limits::BattleLimits;
 use crate::state::BOARD_SIZE;
-use crate::types::{Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit};
+use crate::types::{Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit};
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
@@ -111,6 +111,7 @@ struct PendingTrigger {
     priority: TriggerPriority,
     is_from_dead: bool,
     spawn_index_override: Option<usize>,
+    condition: AbilityCondition,
 }
 
 #[derive(Debug, Clone)]
@@ -355,7 +356,63 @@ fn resolve_trigger_queue(
             continue;
         }
 
-        // B. Emit Trigger Event
+        // B. Condition Check: Does the condition pass?
+        if !matches!(trigger.condition, AbilityCondition::None) {
+            // Get source unit info for condition evaluation
+            let source_opt = find_unit(&trigger.source_id, player_units, enemy_units).cloned();
+
+            // For dead units triggering OnFaint, we need to construct a temporary context
+            // In this case, source stats are from the trigger priority (captured at death)
+            let (allies, enemies): (&[CombatUnit], &[CombatUnit]) = match trigger.team {
+                Team::Player => (player_units.as_slice(), enemy_units.as_slice()),
+                Team::Enemy => (enemy_units.as_slice(), player_units.as_slice()),
+            };
+
+            // Create a temporary source for dead units
+            let temp_source;
+            let source = if let Some(ref s) = source_opt {
+                s
+            } else if trigger.is_from_dead {
+                // For dead units, create a minimal CombatUnit with captured stats
+                temp_source = CombatUnit {
+                    instance_id: trigger.source_id.clone(),
+                    team: trigger.team,
+                    attack: trigger.priority.attack,
+                    health: trigger.priority.health,
+                    abilities: vec![],
+                    template_id: String::new(),
+                    name: String::new(),
+                    attack_buff: 0,
+                    health_buff: 0,
+                    play_cost: 0,
+                };
+                &temp_source
+            } else {
+                continue; // Source not found and not from dead, skip
+            };
+
+            let ctx = ConditionContext {
+                source,
+                source_position: trigger.priority.unit_position,
+                allies,
+                enemies,
+            };
+
+            let effect_target = get_effect_target(&trigger.effect);
+
+            if !evaluate_condition(
+                &trigger.condition,
+                &ctx,
+                &effect_target,
+                player_units,
+                enemy_units,
+                rng,
+            ) {
+                continue; // Condition not met, skip this trigger
+            }
+        }
+
+        // C. Emit Trigger Event
         limits.record_trigger(trigger.team)?;
         events.push(CombatEvent::AbilityTrigger {
             source_instance_id: trigger.source_id.clone(),
@@ -410,6 +467,7 @@ fn resolve_trigger_queue(
                             },
                             is_from_dead: is_fatal, // ALLOW execution if it died from this damage
                             spawn_index_override: if is_fatal { Some(idx_in_team) } else { None },
+                            condition: ability.condition.clone(),
                         });
                     }
                 }
@@ -438,6 +496,7 @@ fn resolve_trigger_queue(
                             },
                             is_from_dead: true,
                             spawn_index_override: Some(index), // Remember where it died!
+                            condition: ability.condition.clone(),
                         });
                     }
                 }
@@ -463,6 +522,7 @@ fn resolve_trigger_queue(
                             },
                             is_from_dead: false,
                             spawn_index_override: None,
+                            condition: ability.condition.clone(),
                         });
                     }
                 }
@@ -488,6 +548,7 @@ fn resolve_trigger_queue(
                             },
                             is_from_dead: false,
                             spawn_index_override: None,
+                            condition: ability.condition.clone(),
                         });
                     }
                 }
@@ -799,6 +860,7 @@ fn collect_and_resolve_triggers(
                         },
                         is_from_dead: false,
                         spawn_index_override: None,
+                        condition: ability.condition.clone(),
                     });
                 }
             }
@@ -945,6 +1007,7 @@ fn resolve_hurt_and_faint_loop(
                                 },
                                 is_from_dead: is_dead,
                                 spawn_index_override: if is_dead { Some(0) } else { None },
+                                condition: a.condition.clone(),
                             });
                         }
                     }
@@ -975,6 +1038,7 @@ fn resolve_hurt_and_faint_loop(
                     },
                     is_from_dead: true,
                     spawn_index_override: Some(idx),
+                    condition: a.condition.clone(),
                 });
             }
         }
@@ -995,6 +1059,7 @@ fn resolve_hurt_and_faint_loop(
                         },
                         is_from_dead: false,
                         spawn_index_override: None,
+                        condition: ability.condition.clone(),
                     });
                 }
             }
@@ -1016,6 +1081,7 @@ fn resolve_hurt_and_faint_loop(
                     },
                     is_from_dead: true,
                     spawn_index_override: Some(idx),
+                    condition: a.condition.clone(),
                 });
             }
         }
@@ -1036,6 +1102,7 @@ fn resolve_hurt_and_faint_loop(
                         },
                         is_from_dead: false,
                         spawn_index_override: None,
+                        condition: ability.condition.clone(),
                     });
                 }
             }
@@ -1198,6 +1265,211 @@ fn get_targets(
                 vec![target.instance_id.clone()]
             }
         }
+    }
+}
+
+// ==========================================
+// CONDITION EVALUATION
+// ==========================================
+
+/// Context for evaluating conditions
+#[allow(dead_code)]
+struct ConditionContext<'a> {
+    source: &'a CombatUnit,
+    source_position: usize,
+    allies: &'a [CombatUnit],
+    enemies: &'a [CombatUnit], // Reserved for future conditions like EnemyCountAtLeast
+}
+
+/// Evaluates a condition given the context.
+/// For target-based conditions, we evaluate against ALL targets and return true if ANY target passes.
+fn evaluate_condition(
+    condition: &AbilityCondition,
+    ctx: &ConditionContext,
+    target: &AbilityTarget,
+    player_units: &[CombatUnit],
+    enemy_units: &[CombatUnit],
+    rng: &mut StdRng,
+) -> bool {
+    match condition {
+        AbilityCondition::None => true,
+
+        // Target stat checks - evaluate against resolved targets
+        AbilityCondition::TargetHealthLessThanOrEqual { value } => {
+            let target_ids = get_targets(
+                &ctx.source.instance_id,
+                ctx.source.team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+            );
+            if target_ids.is_empty() {
+                return false;
+            }
+            target_ids.iter().any(|tid| {
+                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    .map(|u| u.effective_health() <= *value)
+                    .unwrap_or(false)
+            })
+        }
+        AbilityCondition::TargetHealthGreaterThan { value } => {
+            let target_ids = get_targets(
+                &ctx.source.instance_id,
+                ctx.source.team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+            );
+            if target_ids.is_empty() {
+                return false;
+            }
+            target_ids.iter().any(|tid| {
+                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    .map(|u| u.effective_health() > *value)
+                    .unwrap_or(false)
+            })
+        }
+        AbilityCondition::TargetAttackLessThanOrEqual { value } => {
+            let target_ids = get_targets(
+                &ctx.source.instance_id,
+                ctx.source.team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+            );
+            if target_ids.is_empty() {
+                return false;
+            }
+            target_ids.iter().any(|tid| {
+                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    .map(|u| u.effective_attack() <= *value)
+                    .unwrap_or(false)
+            })
+        }
+        AbilityCondition::TargetAttackGreaterThan { value } => {
+            let target_ids = get_targets(
+                &ctx.source.instance_id,
+                ctx.source.team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+            );
+            if target_ids.is_empty() {
+                return false;
+            }
+            target_ids.iter().any(|tid| {
+                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    .map(|u| u.effective_attack() > *value)
+                    .unwrap_or(false)
+            })
+        }
+
+        // Source stat checks
+        AbilityCondition::SourceHealthLessThanOrEqual { value } => {
+            ctx.source.effective_health() <= *value
+        }
+        AbilityCondition::SourceHealthGreaterThan { value } => {
+            ctx.source.effective_health() > *value
+        }
+        AbilityCondition::SourceAttackLessThanOrEqual { value } => {
+            ctx.source.effective_attack() <= *value
+        }
+        AbilityCondition::SourceAttackGreaterThan { value } => {
+            ctx.source.effective_attack() > *value
+        }
+
+        // Comparative checks - compare source to first target
+        AbilityCondition::SourceAttackGreaterThanTarget => {
+            let target_ids = get_targets(
+                &ctx.source.instance_id,
+                ctx.source.team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+            );
+            target_ids.first().and_then(|tid| {
+                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    .map(|t| ctx.source.effective_attack() > t.effective_attack())
+            }).unwrap_or(false)
+        }
+        AbilityCondition::SourceHealthLessThanTarget => {
+            let target_ids = get_targets(
+                &ctx.source.instance_id,
+                ctx.source.team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+            );
+            target_ids.first().and_then(|tid| {
+                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    .map(|t| ctx.source.effective_health() < t.effective_health())
+            }).unwrap_or(false)
+        }
+        AbilityCondition::SourceHealthGreaterThanTarget => {
+            let target_ids = get_targets(
+                &ctx.source.instance_id,
+                ctx.source.team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+            );
+            target_ids.first().and_then(|tid| {
+                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    .map(|t| ctx.source.effective_health() > t.effective_health())
+            }).unwrap_or(false)
+        }
+        AbilityCondition::SourceAttackLessThanTarget => {
+            let target_ids = get_targets(
+                &ctx.source.instance_id,
+                ctx.source.team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+            );
+            target_ids.first().and_then(|tid| {
+                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    .map(|t| ctx.source.effective_attack() < t.effective_attack())
+            }).unwrap_or(false)
+        }
+
+        // Board state checks
+        AbilityCondition::AllyCountAtLeast { count } => ctx.allies.len() >= *count,
+        AbilityCondition::AllyCountAtMost { count } => ctx.allies.len() <= *count,
+        AbilityCondition::SourceIsFront => ctx.source_position == 0,
+        AbilityCondition::SourceIsBack => {
+            ctx.source_position == ctx.allies.len().saturating_sub(1)
+        }
+
+        // Logic gates
+        AbilityCondition::And { left, right } => {
+            evaluate_condition(left, ctx, target, player_units, enemy_units, rng)
+                && evaluate_condition(right, ctx, target, player_units, enemy_units, rng)
+        }
+        AbilityCondition::Or { left, right } => {
+            evaluate_condition(left, ctx, target, player_units, enemy_units, rng)
+                || evaluate_condition(right, ctx, target, player_units, enemy_units, rng)
+        }
+        AbilityCondition::Not { inner } => {
+            !evaluate_condition(inner, ctx, target, player_units, enemy_units, rng)
+        }
+    }
+}
+
+/// Helper to get the target from an effect
+fn get_effect_target(effect: &AbilityEffect) -> AbilityTarget {
+    match effect {
+        AbilityEffect::Damage { target, .. } => target.clone(),
+        AbilityEffect::ModifyStats { target, .. } => target.clone(),
+        AbilityEffect::SpawnUnit { .. } => AbilityTarget::SelfUnit,
+        AbilityEffect::Destroy { target } => target.clone(),
     }
 }
 

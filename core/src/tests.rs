@@ -22,6 +22,7 @@ mod tests {
             effect,
             name: name.to_string(),
             description: "Test Ability".to_string(),
+            condition: crate::types::AbilityCondition::default(),
         }
     }
 
@@ -100,6 +101,7 @@ mod tests {
             },
             name: ability_name.to_string(),
             description: "Priority Test Ability".to_string(),
+            condition: crate::types::AbilityCondition::default(),
         };
 
         let card = UnitCard {
@@ -262,6 +264,7 @@ mod tests {
             },
             name: "EnemyTrigger".to_string(),
             description: "Test".to_string(),
+            condition: crate::types::AbilityCondition::default(),
         };
         let e_card = UnitCard::new(2, "Enemy", "Enemy", 5, 5, 0, 0).with_ability(ability);
         let e_unit = BoardUnit::from_card(e_card);
@@ -598,6 +601,7 @@ mod tests {
             },
             name: "KillShot".to_string(),
             description: "Deals 5 damage".to_string(),
+            condition: crate::types::AbilityCondition::default(),
         };
 
         let slow_ability = Ability {
@@ -608,6 +612,7 @@ mod tests {
             },
             name: "LateShot".to_string(),
             description: "Deals 5 damage".to_string(),
+            condition: crate::types::AbilityCondition::default(),
         };
 
         // Construct Card A (Fast)
@@ -1945,5 +1950,274 @@ mod tests {
         // 2. Verify LimitExceeded event exists
         let has_limit_exceeded = events.iter().any(|e| matches!(e, CombatEvent::LimitExceeded { .. }));
         assert!(has_limit_exceeded, "Stalemate should trigger a LimitExceeded event");
+    }
+
+    // ==========================================
+    // CONDITION SYSTEM TESTS
+    // ==========================================
+
+    #[test]
+    fn test_condition_target_health_threshold() {
+        // SCENARIO: "Nurse Goblin" heals ally ahead by +2 HP only if target HP <= 6.
+        // Test 1: Ally with 5 HP should be healed.
+        // Test 2: Ally with 10 HP should NOT be healed.
+
+        // Helper to create nurse goblin
+        let create_nurse = || {
+            create_dummy_card(2, "Nurse", 1, 3).with_ability(Ability {
+                trigger: AbilityTrigger::BeforeAnyAttack,
+                effect: AbilityEffect::ModifyStats {
+                    health: 2,
+                    attack: 0,
+                    target: AbilityTarget::AllyAhead,
+                },
+                name: "Emergency Heal".to_string(),
+                description: "Heal ally ahead if HP <= 6".to_string(),
+                condition: AbilityCondition::TargetHealthLessThanOrEqual { value: 6 },
+            })
+        };
+
+        // Test 1: Low HP ally SHOULD be healed
+        {
+            let tank = create_dummy_card(1, "Tank", 5, 5); // HP = 5 <= 6, should heal
+            let nurse = create_nurse();
+            let enemy = create_dummy_card(3, "Enemy", 1, 10);
+
+            let p_board = vec![BoardUnit::from_card(tank), BoardUnit::from_card(nurse)];
+            let e_board = vec![BoardUnit::from_card(enemy)];
+
+            let events = resolve_battle(&p_board, &e_board, 123);
+
+            // Look for the heal trigger
+            let heal_triggered = events.iter().any(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    ability_name == "Emergency Heal"
+                } else {
+                    false
+                }
+            });
+
+            assert!(heal_triggered, "Nurse should heal ally with HP <= 6");
+        }
+
+        // Test 2: High HP ally should NOT be healed
+        {
+            let tank = create_dummy_card(1, "Tank", 5, 10); // HP = 10 > 6, should NOT heal
+            let nurse = create_nurse();
+            let enemy = create_dummy_card(3, "Enemy", 1, 5);
+
+            let p_board = vec![BoardUnit::from_card(tank), BoardUnit::from_card(nurse)];
+            let e_board = vec![BoardUnit::from_card(enemy)];
+
+            let events = resolve_battle(&p_board, &e_board, 456);
+
+            // Nurse's ability should NOT trigger
+            let heal_triggered = events.iter().any(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    ability_name == "Emergency Heal"
+                } else {
+                    false
+                }
+            });
+
+            assert!(!heal_triggered, "Nurse should NOT heal ally with HP > 6");
+        }
+    }
+
+    #[test]
+    fn test_condition_ally_count() {
+        // SCENARIO: "Pack Leader" buffs all allies +1/+1 only if ally count >= 3.
+        // Test 1: With 3 allies, buff should trigger.
+        // Test 2: With 2 allies, buff should NOT trigger.
+
+        let create_pack_leader = || {
+            create_dummy_card(1, "PackLeader", 2, 3).with_ability(Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::ModifyStats {
+                    health: 1,
+                    attack: 1,
+                    target: AbilityTarget::AllAllies,
+                },
+                name: "Pack Tactics".to_string(),
+                description: "Buff all allies if 3+ allies".to_string(),
+                condition: AbilityCondition::AllyCountAtLeast { count: 3 },
+            })
+        };
+
+        // Test 1: 3 allies (leader + 2 others) - SHOULD trigger
+        {
+            let leader = create_pack_leader();
+            let ally1 = create_dummy_card(2, "Ally1", 1, 1);
+            let ally2 = create_dummy_card(3, "Ally2", 1, 1);
+            let enemy = create_dummy_card(4, "Enemy", 1, 1);
+
+            let p_board = vec![
+                BoardUnit::from_card(leader),
+                BoardUnit::from_card(ally1),
+                BoardUnit::from_card(ally2),
+            ];
+            let e_board = vec![BoardUnit::from_card(enemy)];
+
+            let events = resolve_battle(&p_board, &e_board, 789);
+
+            let buff_triggered = events.iter().any(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    ability_name == "Pack Tactics"
+                } else {
+                    false
+                }
+            });
+
+            assert!(buff_triggered, "Pack Leader should buff when 3+ allies");
+        }
+
+        // Test 2: 2 allies (leader + 1 other) - should NOT trigger
+        {
+            let leader = create_pack_leader();
+            let ally1 = create_dummy_card(2, "Ally1", 1, 1);
+            let enemy = create_dummy_card(4, "Enemy", 1, 5);
+
+            let p_board = vec![BoardUnit::from_card(leader), BoardUnit::from_card(ally1)];
+            let e_board = vec![BoardUnit::from_card(enemy)];
+
+            let events = resolve_battle(&p_board, &e_board, 101112);
+
+            let buff_triggered = events.iter().any(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    ability_name == "Pack Tactics"
+                } else {
+                    false
+                }
+            });
+
+            assert!(!buff_triggered, "Pack Leader should NOT buff when < 3 allies");
+        }
+    }
+
+    #[test]
+    fn test_condition_last_stand() {
+        // SCENARIO: "Lone Wolf" gains +5 attack only when it's the sole ally.
+
+        let create_lone_wolf = || {
+            create_dummy_card(1, "LoneWolf", 2, 4).with_ability(Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 5,
+                    target: AbilityTarget::SelfUnit,
+                },
+                name: "Last Stand".to_string(),
+                description: "Gain +5 attack if alone".to_string(),
+                condition: AbilityCondition::AllyCountAtMost { count: 1 },
+            })
+        };
+
+        // Test 1: Alone - SHOULD trigger
+        {
+            let wolf = create_lone_wolf();
+            let enemy = create_dummy_card(2, "Enemy", 3, 5);
+
+            let p_board = vec![BoardUnit::from_card(wolf)];
+            let e_board = vec![BoardUnit::from_card(enemy)];
+
+            let events = resolve_battle(&p_board, &e_board, 1313);
+
+            let buff_triggered = events.iter().any(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    ability_name == "Last Stand"
+                } else {
+                    false
+                }
+            });
+
+            assert!(buff_triggered, "Lone Wolf should trigger Last Stand when alone");
+        }
+
+        // Test 2: With ally - should NOT trigger
+        {
+            let wolf = create_lone_wolf();
+            let ally = create_dummy_card(2, "Ally", 1, 1);
+            let enemy = create_dummy_card(3, "Enemy", 3, 5);
+
+            let p_board = vec![BoardUnit::from_card(wolf), BoardUnit::from_card(ally)];
+            let e_board = vec![BoardUnit::from_card(enemy)];
+
+            let events = resolve_battle(&p_board, &e_board, 1414);
+
+            let buff_triggered = events.iter().any(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    ability_name == "Last Stand"
+                } else {
+                    false
+                }
+            });
+
+            assert!(!buff_triggered, "Lone Wolf should NOT trigger Last Stand with allies");
+        }
+    }
+
+    #[test]
+    fn test_condition_logic_gates() {
+        // SCENARIO: Test AND condition - buff only if HP <= 5 AND ally count >= 2.
+
+        let create_conditional_unit = || {
+            create_dummy_card(1, "Conditional", 2, 3).with_ability(Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 3,
+                    target: AbilityTarget::SelfUnit,
+                },
+                name: "Complex Condition".to_string(),
+                description: "Buff if HP <= 5 AND 2+ allies".to_string(),
+                condition: AbilityCondition::And {
+                    left: Box::new(AbilityCondition::SourceHealthLessThanOrEqual { value: 5 }),
+                    right: Box::new(AbilityCondition::AllyCountAtLeast { count: 2 }),
+                },
+            })
+        };
+
+        // Test 1: HP=3 (<=5) AND 2 allies - SHOULD trigger
+        {
+            let unit = create_conditional_unit();
+            let ally = create_dummy_card(2, "Ally", 1, 1);
+            let enemy = create_dummy_card(3, "Enemy", 1, 5);
+
+            let p_board = vec![BoardUnit::from_card(unit), BoardUnit::from_card(ally)];
+            let e_board = vec![BoardUnit::from_card(enemy)];
+
+            let events = resolve_battle(&p_board, &e_board, 1515);
+
+            let triggered = events.iter().any(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    ability_name == "Complex Condition"
+                } else {
+                    false
+                }
+            });
+
+            assert!(triggered, "Should trigger when both AND conditions are met");
+        }
+
+        // Test 2: HP=3 (<=5) BUT only 1 ally - should NOT trigger
+        {
+            let unit = create_conditional_unit();
+            let enemy = create_dummy_card(3, "Enemy", 1, 5);
+
+            let p_board = vec![BoardUnit::from_card(unit)];
+            let e_board = vec![BoardUnit::from_card(enemy)];
+
+            let events = resolve_battle(&p_board, &e_board, 1616);
+
+            let triggered = events.iter().any(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    ability_name == "Complex Condition"
+                } else {
+                    false
+                }
+            });
+
+            assert!(!triggered, "Should NOT trigger when only one AND condition is met");
+        }
     }
 }

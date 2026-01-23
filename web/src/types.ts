@@ -1,9 +1,38 @@
+// Ability condition types
+export type AbilityCondition =
+  | { type: 'none' }
+  // Target stat checks
+  | { type: 'targetHealthLessThanOrEqual'; value: number }
+  | { type: 'targetHealthGreaterThan'; value: number }
+  | { type: 'targetAttackLessThanOrEqual'; value: number }
+  | { type: 'targetAttackGreaterThan'; value: number }
+  // Source stat checks
+  | { type: 'sourceHealthLessThanOrEqual'; value: number }
+  | { type: 'sourceHealthGreaterThan'; value: number }
+  | { type: 'sourceAttackLessThanOrEqual'; value: number }
+  | { type: 'sourceAttackGreaterThan'; value: number }
+  // Comparative checks
+  | { type: 'sourceAttackGreaterThanTarget' }
+  | { type: 'sourceHealthLessThanTarget' }
+  | { type: 'sourceHealthGreaterThanTarget' }
+  | { type: 'sourceAttackLessThanTarget' }
+  // Board state checks
+  | { type: 'allyCountAtLeast'; count: number }
+  | { type: 'allyCountAtMost'; count: number }
+  | { type: 'sourceIsFront' }
+  | { type: 'sourceIsBack' }
+  // Logic gates
+  | { type: 'and'; left: AbilityCondition; right: AbilityCondition }
+  | { type: 'or'; left: AbilityCondition; right: AbilityCondition }
+  | { type: 'not'; inner: AbilityCondition };
+
 // Ability types
 export interface Ability {
   trigger: AbilityTrigger;
   effect: AbilityEffect;
   name: string;
   description: string;
+  condition?: AbilityCondition;
 }
 
 export type AbilityTrigger = 'onStart' | 'onFaint' | 'onAllyFaint' | 'onDamageTaken' | 'onSpawn' | 'beforeUnitAttack' | 'afterUnitAttack' | 'beforeAnyAttack' | 'afterAnyAttack';
