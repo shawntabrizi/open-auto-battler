@@ -24,6 +24,44 @@ const DamageNumber = ({
   );
 };
 
+// Floating text for stat changes (health/attack gains)
+const StatChangeNumber = ({
+  healthChange,
+  attackChange,
+  onAnimationEnd,
+}: {
+  healthChange: number;
+  attackChange: number;
+  onAnimationEnd: () => void;
+}) => {
+  const hasHealthChange = healthChange !== 0;
+  const hasAttackChange = attackChange !== 0;
+
+  if (!hasHealthChange && !hasAttackChange) return null;
+
+  const formatChange = (value: number) => (value > 0 ? `+${value}` : `${value}`);
+
+  let displayText = '';
+  if (hasAttackChange && hasHealthChange) {
+    displayText = `${formatChange(attackChange)}/${formatChange(healthChange)}`;
+  } else if (hasAttackChange) {
+    displayText = `${formatChange(attackChange)}`;
+  } else if (hasHealthChange) {
+    displayText = `${formatChange(healthChange)}`;
+  }
+
+  return (
+    <div
+      className="absolute inset-0 flex items-center justify-center animate-float-up"
+      onAnimationEnd={onAnimationEnd}
+    >
+      <span className="text-4xl font-bold text-green-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+        {displayText}
+      </span>
+    </div>
+  );
+};
+
 // Toast/bubble for ability triggers
 const AbilityToast = ({ name, onAnimationEnd }: { name: string; onAnimationEnd: () => void }) => {
   return (
@@ -51,6 +89,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
   // Animation states
   const [clashingUnitIds, setClashingUnitIds] = useState<string[]>([]);
   const [damageNumbers, setDamageNumbers] = useState<Map<string, number>>(new Map());
+  const [statChanges, setStatChanges] = useState<Map<string, { health: number; attack: number }>>(new Map());
   const [abilityToasts, setAbilityToasts] = useState<Map<string, string>>(new Map());
 
   // Playback speed control
@@ -160,7 +199,20 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
         }
 
         case 'abilityModifyStats': {
-          const { targetInstanceId: statsTarget, newAttack, newHealth } = event.payload;
+          const { targetInstanceId: statsTarget, newAttack, newHealth, healthChange, attackChange } = event.payload;
+
+          // Find the unit to get current stats before change
+          const pUnit = playerBoard.find((u) => u.instanceId === statsTarget);
+          const eUnit = enemyBoard.find((u) => u.instanceId === statsTarget);
+          const currentUnit = pUnit || eUnit;
+
+          if (currentUnit && (healthChange !== 0 || attackChange !== 0)) {
+            setStatChanges((prev) => new Map(prev).set(statsTarget, {
+              health: healthChange,
+              attack: attackChange
+            }));
+          }
+
           setPlayerBoard((board) =>
             board.map((u) =>
               u.instanceId === statsTarget ? { ...u, attack: newAttack, health: newHealth } : u
@@ -245,6 +297,19 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
             amount={damageNumbers.get(unit.instanceId)!}
             onAnimationEnd={() =>
               setDamageNumbers((prev) => {
+                const next = new Map(prev);
+                next.delete(unit.instanceId);
+                return next;
+              })
+            }
+          />
+        )}
+        {statChanges.has(unit.instanceId) && (
+          <StatChangeNumber
+            healthChange={statChanges.get(unit.instanceId)!.health}
+            attackChange={statChanges.get(unit.instanceId)!.attack}
+            onAnimationEnd={() =>
+              setStatChanges((prev) => {
                 const next = new Map(prev);
                 next.delete(unit.instanceId);
                 return next;
