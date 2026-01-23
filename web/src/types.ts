@@ -15,7 +15,9 @@ export type AbilityTarget =
   | 'randomAlly'
   | 'randomEnemy'
   | 'frontAlly'
-  | 'frontEnemy';
+  | 'frontEnemy'
+  | 'backAlly'
+  | 'backEnemy';
 
 export type AbilityEffect =
   | { type: 'damage'; amount: number; target: AbilityTarget }

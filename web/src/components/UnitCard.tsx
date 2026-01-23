@@ -128,6 +128,8 @@ function getCardEmoji(templateId: string): string {
     ogre_warrior: '🔨',
     giant_crusher: '🦣',
     dragon_tyrant: '🐉',
+    sniper: '🎯',
+    archer: '🏹',
   };
   return emojis[templateId] || '❓';
 }

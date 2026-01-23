@@ -237,6 +237,40 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             }],
         },
         CardTemplate {
+            template_id: "sniper",
+            name: "Sniper",
+            attack: 1,
+            health: 2,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnStart,
+                effect: crate::types::AbilityEffect::Damage {
+                    amount: 2,
+                    target: crate::types::AbilityTarget::FrontEnemy,
+                },
+                name: "Headshot".to_string(),
+                description: "Deal 2 damage to the front enemy at battle start".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "archer",
+            name: "Archer",
+            attack: 1,
+            health: 3,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnStart,
+                effect: crate::types::AbilityEffect::Damage {
+                    amount: 1,
+                    target: crate::types::AbilityTarget::BackEnemy,
+                },
+                name: "Long Shot".to_string(),
+                description: "Deal 1 damage to the back enemy at battle start".to_string(),
+            }],
+        },
+        CardTemplate {
             template_id: "goblin_grunt",
             name: "Goblin Grunt",
             attack: 2,

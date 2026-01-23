@@ -72,6 +72,10 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         return 'the front ally';
       case 'frontEnemy':
         return 'the front enemy';
+      case 'backAlly':
+        return 'the back ally';
+      case 'backEnemy':
+        return 'the back enemy';
       default:
         return target;
     }

@@ -43,6 +43,8 @@ pub enum AbilityTarget {
     RandomEnemy,
     FrontAlly,
     FrontEnemy,
+    BackAlly,
+    BackEnemy,
 }
 
 /// A unit ability

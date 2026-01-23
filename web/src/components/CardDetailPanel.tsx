@@ -46,6 +46,8 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
         ogre_mauler: '👊',
         giant_crusher: '🦣',
         dragon_tyrant: '🐉',
+        sniper: '🎯',
+        archer: '🏹',
       };
       return emojis[templateId] || '❓';
     };
@@ -94,6 +96,10 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
           return 'the front ally';
         case 'frontEnemy':
           return 'the front enemy';
+        case 'backAlly':
+          return 'the back ally';
+        case 'backEnemy':
+          return 'the back enemy';
         default:
           return target;
       }

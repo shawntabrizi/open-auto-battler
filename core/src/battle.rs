@@ -599,6 +599,20 @@ fn get_targets(
                 vec![enemies[0].instance_id.clone()]
             }
         }
+        AbilityTarget::BackAlly => {
+            if allies.is_empty() {
+                vec![]
+            } else {
+                vec![allies[allies.len() - 1].instance_id.clone()]
+            }
+        }
+        AbilityTarget::BackEnemy => {
+            if enemies.is_empty() {
+                vec![]
+            } else {
+                vec![enemies[enemies.len() - 1].instance_id.clone()]
+            }
+        }
     }
 }
 
