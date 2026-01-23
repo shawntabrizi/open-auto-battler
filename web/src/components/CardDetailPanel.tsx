@@ -53,6 +53,9 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
         golem: '🗿',
         raging_orc: '🤬',
         pain_smith: '⛓️',
+        headhunter: '🕵️',
+        giant_slayer: '🗡️',
+        behemoth: '🐘',
       };
       return emojis[templateId] || '❓';
     };
@@ -113,6 +116,14 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
           return 'the back enemy';
         case 'allyAhead':
           return 'the ally ahead';
+        case 'lowestHealthEnemy':
+          return 'the lowest health enemy';
+        case 'highestAttackEnemy':
+          return 'the highest attack enemy';
+        case 'highestHealthEnemy':
+          return 'the highest health enemy';
+        case 'lowestAttackEnemy':
+          return 'the lowest attack enemy';
         default:
           return target;
       }

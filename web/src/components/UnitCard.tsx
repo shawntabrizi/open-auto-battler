@@ -138,6 +138,9 @@ function getCardEmoji(templateId: string): string {
     golem: '🗿',
     raging_orc: '🤬',
     pain_smith: '⛓️',
+    headhunter: '🕵️',
+    giant_slayer: '🗡️',
+    behemoth: '🐘',
   };
   return emojis[templateId] || '❓';
 }

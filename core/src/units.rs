@@ -448,5 +448,48 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
             ],
         },
+        CardTemplate {
+            template_id: "headhunter",
+            name: "Headhunter",
+            attack: 4,
+            health: 2,
+            play_cost: 4,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnStart,
+                effect: crate::types::AbilityEffect::Damage {
+                    amount: 5,
+                    target: crate::types::AbilityTarget::LowestHealthEnemy,
+                },
+                name: "Assassinate".to_string(),
+                description: "Deal 5 damage to the enemy with the lowest health".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "giant_slayer",
+            name: "Giant Slayer",
+            attack: 2,
+            health: 2,
+            play_cost: 4,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnStart,
+                effect: crate::types::AbilityEffect::Damage {
+                    amount: 3,
+                    target: crate::types::AbilityTarget::HighestAttackEnemy,
+                },
+                name: "Take Down".to_string(),
+                description: "Deal 3 damage to the enemy with the highest attack".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "behemoth",
+            name: "Behemoth",
+            attack: 10,
+            health: 10,
+            play_cost: 10,
+            pitch_value: 2,
+            abilities: vec![],
+        },
     ]
 }

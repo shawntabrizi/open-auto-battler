@@ -1176,7 +1176,155 @@ mod tests {
 
         
 
-                assert_eq!(breed_triggers.len(), 0, "Breeder should NOT trigger because it just slid forward, it wasn't hit.");
+        assert_eq!(breed_triggers.len(), 0, "Breeder should NOT trigger because it just slid forward, it wasn't hit.");
+    }
 
+    #[test]
+    fn test_snipe_lowest_health() {
+        // P: [Headhunter]. Ability: OnStart -> 5 dmg to LowestHealthEnemy.
+        // E: [Tank (10 HP), Glass (2 HP), Utility (5 HP)].
+        // Result: Glass should take 5 damage and die.
+
+        let headhunter_ability = create_ability(
+            AbilityTrigger::OnStart,
+            AbilityEffect::Damage {
+                amount: 5,
+                target: AbilityTarget::LowestHealthEnemy,
+            },
+            "SnipeLowest",
+        );
+
+        let hh = create_dummy_card(1, "Headhunter", 4, 2).with_ability(headhunter_ability);
+        
+        let tank = create_dummy_card(2, "Tank", 1, 10);
+        let glass = create_dummy_card(3, "Glass", 1, 2);
+        let utility = create_dummy_card(4, "Utility", 1, 5);
+
+        let p_board = vec![BoardUnit::from_card(hh)];
+        let e_board = vec![
+            BoardUnit::from_card(tank),
+            BoardUnit::from_card(glass),
+            BoardUnit::from_card(utility),
+        ];
+
+        let events = resolve_battle(&p_board, &e_board, 42);
+
+        // Verify "Glass" (e-3) died
+        let glass_death = events.iter().find(|e| {
+            if let CombatEvent::UnitDeath { team, new_board_state } = e {
+                team == "ENEMY" && !new_board_state.iter().any(|u| u.name == "Glass")
+            } else {
+                false
             }
+        });
+
+        assert!(glass_death.is_some(), "Glass cannon should have been sniped and killed");
+    }
+
+    #[test]
+    fn test_snipe_highest_attack() {
+        // P: [GiantSlayer]. Ability: OnStart -> 3 dmg to HighestAttackEnemy.
+        // E: [Weak (1 Atk), Strong (10 Atk), Medium (5 Atk)].
+        // Result: Strong should take 3 damage.
+
+        let giantslayer_ability = create_ability(
+            AbilityTrigger::OnStart,
+            AbilityEffect::Damage {
+                amount: 3,
+                target: AbilityTarget::HighestAttackEnemy,
+            },
+            "SnipeStrongest",
+        );
+
+        let gs = create_dummy_card(1, "GiantSlayer", 2, 2).with_ability(giantslayer_ability);
+        
+        let weak = create_dummy_card(2, "Weak", 1, 10);
+        let strong = create_dummy_card(3, "Strong", 10, 10);
+        let medium = create_dummy_card(4, "Medium", 5, 10);
+
+        let p_board = vec![BoardUnit::from_card(gs)];
+        let e_board = vec![
+            BoardUnit::from_card(weak),
+            BoardUnit::from_card(strong),
+            BoardUnit::from_card(medium),
+        ];
+
+        let events = resolve_battle(&p_board, &e_board, 42);
+
+        // Verify "Strong" (e-3) took 3 damage
+        let strong_hit = events.iter().find(|e| {
+            matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
+                if target_instance_id == "e-3" && *damage == 3)
+        });
+
+        assert!(strong_hit.is_some(), "Strong enemy should have been sniped for 3 damage");
+    }
+
+    #[test]
+    fn test_snipe_highest_health() {
+        let snipe_ability = create_ability(
+            AbilityTrigger::OnStart,
+            AbilityEffect::Damage {
+                amount: 5,
+                target: AbilityTarget::HighestHealthEnemy,
+            },
+            "SnipeHighestHP",
+        );
+
+        let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
+        let weak = create_dummy_card(2, "Weak", 1, 5);
+        let healthy = create_dummy_card(3, "Healthy", 1, 20);
+        let medium = create_dummy_card(4, "Medium", 1, 10);
+
+        let p_board = vec![BoardUnit::from_card(sniper)];
+        let e_board = vec![
+            BoardUnit::from_card(weak),
+            BoardUnit::from_card(healthy),
+            BoardUnit::from_card(medium),
+        ];
+
+        let events = resolve_battle(&p_board, &e_board, 42);
+
+        // Verify "Healthy" (e-3) took damage
+        let hit = events.iter().find(|e| {
+            matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
+                if target_instance_id == "e-3" && *damage == 5)
+        });
+
+        assert!(hit.is_some(), "Highest HP enemy should have been sniped");
+    }
+
+    #[test]
+    fn test_snipe_lowest_attack() {
+        let snipe_ability = create_ability(
+            AbilityTrigger::OnStart,
+            AbilityEffect::Damage {
+                amount: 5,
+                target: AbilityTarget::LowestAttackEnemy,
+            },
+            "SnipeLowestAtk",
+        );
+
+        let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
+        let strong = create_dummy_card(2, "Strong", 10, 10);
+        let weak = create_dummy_card(3, "Weak", 1, 10);
+        let medium = create_dummy_card(4, "Medium", 5, 10);
+
+        let p_board = vec![BoardUnit::from_card(sniper)];
+        let e_board = vec![
+            BoardUnit::from_card(strong),
+            BoardUnit::from_card(weak),
+            BoardUnit::from_card(medium),
+        ];
+
+        let events = resolve_battle(&p_board, &e_board, 42);
+
+        // Verify "Weak" (e-3) took damage
+        let hit = events.iter().find(|e| {
+            matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
+                if target_instance_id == "e-3" && *damage == 5)
+        });
+
+        assert!(hit.is_some(), "Lowest Atk enemy should have been sniped");
+    }
 }

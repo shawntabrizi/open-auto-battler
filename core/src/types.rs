@@ -53,6 +53,10 @@ pub enum AbilityTarget {
     BackAlly,
     BackEnemy,
     AllyAhead,
+    LowestHealthEnemy,
+    HighestAttackEnemy,
+    HighestHealthEnemy,
+    LowestAttackEnemy,
 }
 
 /// A unit ability

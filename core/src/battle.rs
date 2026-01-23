@@ -1127,6 +1127,58 @@ fn get_targets(
                 vec![]
             }
         }
+        AbilityTarget::LowestHealthEnemy => {
+            if enemies.is_empty() {
+                vec![]
+            } else {
+                let mut target = &enemies[0];
+                for e in enemies.iter().skip(1) {
+                    if e.health < target.health {
+                        target = e;
+                    }
+                }
+                vec![target.instance_id.clone()]
+            }
+        }
+        AbilityTarget::HighestAttackEnemy => {
+            if enemies.is_empty() {
+                vec![]
+            } else {
+                let mut target = &enemies[0];
+                for e in enemies.iter().skip(1) {
+                    if e.effective_attack() > target.effective_attack() {
+                        target = e;
+                    }
+                }
+                vec![target.instance_id.clone()]
+            }
+        }
+        AbilityTarget::HighestHealthEnemy => {
+            if enemies.is_empty() {
+                vec![]
+            } else {
+                let mut target = &enemies[0];
+                for e in enemies.iter().skip(1) {
+                    if e.health > target.health {
+                        target = e;
+                    }
+                }
+                vec![target.instance_id.clone()]
+            }
+        }
+        AbilityTarget::LowestAttackEnemy => {
+            if enemies.is_empty() {
+                vec![]
+            } else {
+                let mut target = &enemies[0];
+                for e in enemies.iter().skip(1) {
+                    if e.effective_attack() < target.effective_attack() {
+                        target = e;
+                    }
+                }
+                vec![target.instance_id.clone()]
+            }
+        }
     }
 }
 

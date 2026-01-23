@@ -18,7 +18,11 @@ export type AbilityTarget =
   | 'frontEnemy'
   | 'backAlly'
   | 'backEnemy'
-  | 'allyAhead';
+  | 'allyAhead'
+  | 'lowestHealthEnemy'
+  | 'highestAttackEnemy'
+  | 'highestHealthEnemy'
+  | 'lowestAttackEnemy';
 
 export type AbilityEffect =
   | { type: 'damage'; amount: number; target: AbilityTarget }
