@@ -217,6 +217,10 @@ pub fn resolve_battle(
 
     // 2. Main Loop
     while !player_units.is_empty() && !enemy_units.is_empty() {
+        if limits.record_round().is_err() {
+            return finalize_with_limit_exceeded(&mut events, &limits);
+        }
+
         // Before Attack
         limits.reset_phase_counters();
         if execute_phase(
@@ -282,15 +286,25 @@ fn finalize_with_limit_exceeded(
     events: &mut Vec<CombatEvent>,
     limits: &BattleLimits,
 ) -> Vec<CombatEvent> {
-    let losing_team = limits.limit_exceeded_by.unwrap_or(Team::Player);
-    events.push(CombatEvent::LimitExceeded {
-        losing_team: losing_team.to_string(),
-        reason: limits.limit_exceeded_reason.clone().unwrap_or_default(),
-    });
+    let losing_team = limits.limit_exceeded_by;
+    
+    if let Some(team) = losing_team {
+        events.push(CombatEvent::LimitExceeded {
+            losing_team: team.to_string(),
+            reason: limits.limit_exceeded_reason.clone().unwrap_or_default(),
+        });
+    } else {
+        events.push(CombatEvent::LimitExceeded {
+            losing_team: "NONE".to_string(),
+            reason: limits.limit_exceeded_reason.clone().unwrap_or_default(),
+        });
+    }
+
     events.push(CombatEvent::BattleEnd {
         result: match losing_team {
-            Team::Player => "DEFEAT".to_string(),
-            Team::Enemy => "VICTORY".to_string(),
+            Some(Team::Player) => "DEFEAT".to_string(),
+            Some(Team::Enemy) => "VICTORY".to_string(),
+            None => "DRAW".to_string(),
         },
     });
     events.drain(..).collect()

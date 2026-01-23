@@ -1913,4 +1913,37 @@ mod tests {
 
         assert!(high_idx < low_idx, "High Attack unit should trigger its 'Unit' ability before Low Attack unit triggers its 'Any' ability.");
     }
+
+    #[test]
+    fn test_infinite_battle_draw() {
+        // SCENARIO: Both sides have Goblin Grunt (2/2) + Shield Squire (2/3).
+        // Every round:
+        // 1. Squire buffs Grunt (+2 HP). Grunt is now 2/4.
+        // 2. Grunts clash (2 dmg). Grunt is back to 2/2.
+        // This repeats forever. The engine must catch it.
+        
+        let grunt = create_dummy_card(1, "Grunt", 2, 2);
+        let squire = create_dummy_card(2, "Squire", 2, 3).with_ability(create_ability(
+            AbilityTrigger::BeforeAnyAttack,
+            AbilityEffect::ModifyStats { health: 2, attack: 0, target: AbilityTarget::AllyAhead },
+            "SquireShield"
+        ));
+        
+        let p_board = vec![BoardUnit::from_card(grunt.clone()), BoardUnit::from_card(squire.clone())];
+        let e_board = vec![BoardUnit::from_card(grunt), BoardUnit::from_card(squire)];
+        
+        let events = resolve_battle(&p_board, &e_board, 42);
+        
+        // 1. Verify Battle End result is DRAW
+        let last_event = events.last().unwrap();
+        if let CombatEvent::BattleEnd { result } = last_event {
+            assert_eq!(result, "DRAW", "Stalemate should result in a DRAW");
+        } else {
+            panic!("Battle did not end correctly: {:?}", last_event);
+        }
+        
+        // 2. Verify LimitExceeded event exists
+        let has_limit_exceeded = events.iter().any(|e| matches!(e, CombatEvent::LimitExceeded { .. }));
+        assert!(has_limit_exceeded, "Stalemate should trigger a LimitExceeded event");
+    }
 }

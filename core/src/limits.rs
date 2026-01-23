@@ -4,6 +4,7 @@ pub const MAX_RECURSION_DEPTH: u32 = 50;
 pub const MAX_SPAWNS_PER_BATTLE: u32 = 100;
 pub const MAX_TRIGGERS_PER_PHASE: u32 = 200;
 pub const MAX_TRIGGER_DEPTH: u32 = 10;
+pub const MAX_BATTLE_ROUNDS: u32 = 100;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Team {
@@ -27,6 +28,7 @@ pub struct BattleLimits {
     pub trigger_depth: u32,
     pub total_spawns: u32,
     pub phase_triggers: u32,
+    pub total_rounds: u32,
     pub current_executing_team: Option<Team>,
     pub limit_exceeded_by: Option<Team>,
     pub limit_exceeded_reason: Option<String>,
@@ -40,11 +42,26 @@ impl BattleLimits {
             trigger_depth: 0,
             total_spawns: 0,
             phase_triggers: 0,
+            total_rounds: 0,
             current_executing_team: None,
             limit_exceeded_by: None,
             limit_exceeded_reason: None,
             next_instance_id: 1,
         }
+    }
+
+    pub fn record_round(&mut self) -> Result<(), ()> {
+        self.total_rounds += 1;
+        if self.total_rounds > MAX_BATTLE_ROUNDS {
+            // Draws don't attribute to a specific team
+            self.limit_exceeded_by = None; 
+            self.limit_exceeded_reason = Some(format!(
+                "Battle round limit reached (max {})",
+                MAX_BATTLE_ROUNDS
+            ));
+            return Err(());
+        }
+        Ok(())
     }
 
     pub fn generate_instance_id(&mut self) -> u32 {
