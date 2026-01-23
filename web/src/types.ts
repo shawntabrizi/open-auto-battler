@@ -33,6 +33,7 @@ export interface Ability {
   name: string;
   description: string;
   condition?: AbilityCondition;
+  maxTriggers?: number;
 }
 
 export type AbilityTrigger = 'onStart' | 'onFaint' | 'onAllyFaint' | 'onDamageTaken' | 'onSpawn' | 'beforeUnitAttack' | 'afterUnitAttack' | 'beforeAnyAttack' | 'afterAnyAttack';
