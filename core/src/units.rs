@@ -341,5 +341,49 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 },
             ],
         },
+        CardTemplate {
+            template_id: "corpse_cart",
+            name: "Corpse Cart",
+            attack: 0,
+            health: 4,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnAllyFaint,
+                effect: crate::types::AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 2,
+                    target: crate::types::AbilityTarget::SelfUnit,
+                },
+                name: "Scavenge".to_string(),
+                description: "Gain +2 attack when an ally faints".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "lich",
+            name: "Lich",
+            attack: 3,
+            health: 3,
+            play_cost: 5,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnStart,
+                effect: crate::types::AbilityEffect::KillSpawn {
+                    target: crate::types::AbilityTarget::AllyAhead,
+                    template_id: "golem".to_string(),
+                },
+                name: "Ritual Sacrifice".to_string(),
+                description: "Kill the ally in front to spawn a 5/5 Golem".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "golem",
+            name: "Golem",
+            attack: 5,
+            health: 5,
+            play_cost: 0,
+            pitch_value: 0,
+            abilities: vec![],
+        },
     ]
 }

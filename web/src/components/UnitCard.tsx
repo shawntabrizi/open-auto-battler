@@ -132,6 +132,9 @@ function getCardEmoji(templateId: string): string {
     dragon_tyrant: '🐉',
     sniper: '🎯',
     archer: '🏹',
+    corpse_cart: '⚰️',
+    lich: '💀',
+    golem: '🗿',
   };
   return emojis[templateId] || '❓';
 }

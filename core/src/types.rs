@@ -9,6 +9,7 @@ pub type CardId = u32;
 pub enum AbilityTrigger {
     OnStart,
     OnFaint,
+    OnAllyFaint,
     OnSpawn,
     BeforeAttack,
     AfterAttack,
@@ -17,7 +18,7 @@ pub enum AbilityTrigger {
 
 /// Ability effect types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[serde(tag = "type", rename_all = "camelCase")]
 pub enum AbilityEffect {
     /// Deal damage to target
     Damage { amount: i32, target: AbilityTarget },
@@ -29,6 +30,11 @@ pub enum AbilityEffect {
     },
     /// Spawn a new unit on the board
     SpawnUnit { template_id: String },
+    /// Kill a target and spawn a unit in its place (Lich)
+    KillSpawn {
+        target: AbilityTarget,
+        template_id: String,
+    },
     // Future: RedirectDamage, etc.
 }
 
@@ -45,6 +51,7 @@ pub enum AbilityTarget {
     FrontEnemy,
     BackAlly,
     BackEnemy,
+    AllyAhead,
 }
 
 /// A unit ability

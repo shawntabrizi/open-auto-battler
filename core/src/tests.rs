@@ -834,4 +834,60 @@ mod tests {
             assert_eq!(*health_change, 5);
         }
     }
+
+    #[test]
+    fn test_sacrifice_combo() {
+        // Setup: [Fodder, Lich, Corpse Cart]
+        
+        // Fodder: Just a unit.
+        let fodder = create_dummy_card(1, "Fodder", 1, 1);
+        
+        // Lich: OnStart -> KillSpawn(AllyAhead, "golem")
+        let lich_ability = create_ability(
+            AbilityTrigger::OnStart,
+            AbilityEffect::KillSpawn {
+                target: AbilityTarget::AllyAhead,
+                template_id: "golem".to_string(),
+            },
+            "Ritual",
+        );
+        let lich = create_dummy_card(2, "Lich", 3, 3).with_ability(lich_ability);
+        
+        // Corpse Cart: OnAllyFaint -> Buff Self
+        let cart_ability = create_ability(
+            AbilityTrigger::OnAllyFaint,
+            AbilityEffect::ModifyStats {
+                health: 0,
+                attack: 2,
+                target: AbilityTarget::SelfUnit,
+            },
+            "Scavenge",
+        );
+        let corpse_cart = create_dummy_card(3, "Cart", 0, 4).with_ability(cart_ability);
+        
+        let p_board = vec![
+            BoardUnit::from_card(fodder), 
+            BoardUnit::from_card(lich), 
+            BoardUnit::from_card(corpse_cart)
+        ];
+        let e_board = vec![create_dummy_enemy()]; // Sandbag
+        
+        let events = resolve_battle(&p_board, &e_board, 42);
+        
+        let triggers: Vec<&String> = events.iter().filter_map(|e| {
+            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                Some(ability_name)
+            } else {
+                None
+            }
+        }).collect();
+        
+        // Checks
+        assert!(triggers.contains(&&"Ritual".to_string()), "Lich should trigger Ritual");
+        assert!(triggers.contains(&&"Scavenge".to_string()), "Corpse Cart should trigger Scavenge");
+        
+        // Check spawn
+        let spawn_event = events.iter().find(|e| matches!(e, CombatEvent::UnitSpawn { .. }));
+        assert!(spawn_event.is_some(), "Golem should have spawned");
+    }
 }
