@@ -702,7 +702,15 @@ fn execute_phase(
         }
         BattlePhase::BeforeAttack => {
             collect_and_resolve_triggers(
-                AbilityTrigger::BeforeAttack,
+                AbilityTrigger::BeforeAnyAttack,
+                player_units,
+                enemy_units,
+                events,
+                rng,
+                limits,
+            )?;
+            collect_and_resolve_triggers(
+                AbilityTrigger::BeforeUnitAttack,
                 player_units,
                 enemy_units,
                 events,
@@ -717,7 +725,15 @@ fn execute_phase(
         }
         BattlePhase::AfterAttack => {
             collect_and_resolve_triggers(
-                AbilityTrigger::AfterAttack,
+                AbilityTrigger::AfterAnyAttack,
+                player_units,
+                enemy_units,
+                events,
+                rng,
+                limits,
+            )?;
+            collect_and_resolve_triggers(
+                AbilityTrigger::AfterUnitAttack,
                 player_units,
                 enemy_units,
                 events,
@@ -755,15 +771,14 @@ fn collect_and_resolve_triggers(
     // Helper to scan board
     let mut scan_board = |units: &Vec<CombatUnit>, team: Team| {
         for (i, u) in units.iter().enumerate() {
-            // Check Front unit constraint for "BeforeAttack" etc if needed
-            // For now, simple scan all
             for (sub_idx, ability) in u.abilities.iter().enumerate() {
                 if ability.trigger == trigger_type {
-                    // Check specific logic: BeforeAttack only on index 0?
-                    if trigger_type == AbilityTrigger::BeforeAttack && i != 0 {
-                        continue;
-                    }
-                    if trigger_type == AbilityTrigger::AfterAttack && i != 0 {
+                    // Logic: UnitAttack triggers ONLY for the front unit (index 0).
+                    // AnyAttack triggers for everyone on the board.
+                    let is_front = i == 0;
+                    let is_unit_trigger = trigger_type == AbilityTrigger::BeforeUnitAttack || trigger_type == AbilityTrigger::AfterUnitAttack;
+                    
+                    if is_unit_trigger && !is_front {
                         continue;
                     }
 
