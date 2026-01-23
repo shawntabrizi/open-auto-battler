@@ -12,7 +12,37 @@ use serde::{Deserialize, Serialize};
 pub use crate::limits::Team;
 
 // A unique ID for a unit instance in a battle
-pub type UnitInstanceId = String;
+// High bit (31) determines team: 0 = Player, 1 = Enemy.
+// This ensures IDs are unique and stable per team.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct UnitId(pub u32);
+
+impl UnitId {
+    const ENEMY_MASK: u32 = 0x8000_0000;
+
+    pub fn player(index: u32) -> Self {
+        Self(index)
+    }
+
+    pub fn enemy(index: u32) -> Self {
+        Self(index | Self::ENEMY_MASK)
+    }
+
+    pub fn is_player(&self) -> bool {
+        (self.0 & Self::ENEMY_MASK) == 0
+    }
+
+    pub fn is_enemy(&self) -> bool {
+        !self.is_player()
+    }
+
+    pub fn raw(&self) -> u32 {
+        self.0
+    }
+}
+
+pub type UnitInstanceId = UnitId;
 
 /// Simplified view of a unit for battle replay.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -106,7 +136,7 @@ struct TriggerPriority {
 /// Trigger struct with support for location-based spawning
 #[derive(Debug)]
 struct PendingTrigger {
-    source_id: String,
+    source_id: UnitInstanceId,
     team: Team,
     effect: AbilityEffect,
     ability_name: String,
@@ -122,7 +152,7 @@ struct PendingTrigger {
 
 #[derive(Debug, Clone)]
 pub struct CombatUnit {
-    pub instance_id: String,
+    pub instance_id: UnitInstanceId,
     pub team: Team,
     pub attack: i32,
     pub health: i32,
@@ -140,7 +170,7 @@ impl CombatUnit {
     fn from_card(card: crate::types::UnitCard) -> Self {
         let ability_count = card.abilities.len();
         Self {
-            instance_id: format!("unit-{}", card.id),
+            instance_id: UnitId::player(0), // Placeholder
             team: Team::Player, // This will be overridden when spawning
             attack: card.stats.attack,
             health: card.stats.health,
@@ -156,7 +186,7 @@ impl CombatUnit {
 
     fn to_view(&self) -> UnitView {
         UnitView {
-            instance_id: self.instance_id.clone(),
+            instance_id: self.instance_id,
             template_id: self.template_id.clone(),
             name: self.name.clone(),
             attack: self.effective_attack(),
@@ -192,7 +222,7 @@ pub fn resolve_battle(
         .iter()
         .map(|u| {
             let mut cu = CombatUnit::from_card(u.card.clone());
-            cu.instance_id = format!("p-{}", limits.generate_instance_id());
+            cu.instance_id = limits.generate_instance_id(Team::Player);
             cu.team = Team::Player;
             cu.health = u.current_health;
             cu
@@ -203,7 +233,7 @@ pub fn resolve_battle(
         .iter()
         .map(|u| {
             let mut cu = CombatUnit::from_card(u.card.clone());
-            cu.instance_id = format!("e-{}", limits.generate_instance_id());
+            cu.instance_id = limits.generate_instance_id(Team::Enemy);
             cu.team = Team::Enemy;
             cu.health = u.current_health;
             cu
@@ -361,7 +391,7 @@ fn resolve_trigger_queue(
         // A. Validation: Is source still alive?
         // (We allow dead units to trigger OnFaint, but not living units that died in queue)
         if !trigger.is_from_dead
-            && find_unit(&trigger.source_id, player_units, enemy_units).is_none()
+            && find_unit(trigger.source_id, player_units, enemy_units).is_none()
         {
             continue;
         }
@@ -369,7 +399,7 @@ fn resolve_trigger_queue(
         // B. Trigger Count Check: Has this ability reached its max triggers?
         if let Some(max) = trigger.max_triggers {
             // For living units, check current count
-            if let Some(unit) = find_unit_mut(&trigger.source_id, player_units, enemy_units) {
+            if let Some(unit) = find_unit_mut(trigger.source_id, player_units, enemy_units) {
                 if unit
                     .ability_trigger_counts
                     .get(trigger.ability_index)
@@ -387,7 +417,7 @@ fn resolve_trigger_queue(
         // C. Condition Check: Does the condition pass?
         if !matches!(trigger.condition, AbilityCondition::None) {
             // Get source unit info for condition evaluation
-            let source_opt = find_unit(&trigger.source_id, player_units, enemy_units).cloned();
+            let source_opt = find_unit(trigger.source_id, player_units, enemy_units).cloned();
 
             // For dead units triggering OnFaint, we need to construct a temporary context
             // In this case, source stats are from the trigger priority (captured at death)
@@ -449,7 +479,7 @@ fn resolve_trigger_queue(
         });
 
         // E. Increment trigger count for this ability (if unit is still alive)
-        if let Some(unit) = find_unit_mut(&trigger.source_id, player_units, enemy_units) {
+        if let Some(unit) = find_unit_mut(trigger.source_id, player_units, enemy_units) {
             if let Some(count) = unit.ability_trigger_counts.get_mut(trigger.ability_index) {
                 *count += 1;
             }
@@ -457,7 +487,7 @@ fn resolve_trigger_queue(
 
         // F. Apply Effect
         let damaged_ids = apply_ability_effect(
-            &trigger.source_id,
+            trigger.source_id,
             trigger.team,
             &trigger.effect,
             player_units,
@@ -473,7 +503,7 @@ fn resolve_trigger_queue(
         // Helper to queue OnDamageTaken
         // We process this BEFORE death checks so we can catch units that took fatal damage.
         for unit_id in damaged_ids {
-            if let Some(unit) = find_unit(&unit_id, player_units, enemy_units) {
+            if let Some(unit) = find_unit(unit_id, player_units, enemy_units) {
                 let is_fatal = unit.health <= 0;
                 for (sub_idx, ability) in unit.abilities.iter().enumerate() {
                     if ability.trigger == AbilityTrigger::OnDamageTaken {
@@ -647,7 +677,7 @@ fn resolve_trigger_queue(
 // ==========================================
 
 fn apply_ability_effect(
-    source_instance_id: &str,
+    source_instance_id: UnitInstanceId,
     source_team: Team,
     effect: &AbilityEffect,
     player_units: &mut Vec<CombatUnit>,
@@ -656,7 +686,7 @@ fn apply_ability_effect(
     rng: &mut StdRng,
     limits: &mut BattleLimits,
     spawn_index_override: Option<usize>, // New Param
-) -> Result<Vec<String>, ()> {
+) -> Result<Vec<UnitInstanceId>, ()> {
     limits.enter_recursion(source_team)?;
     let mut damaged_units = Vec::new();
 
@@ -671,13 +701,13 @@ fn apply_ability_effect(
                 rng,
             );
             for target_id in targets {
-                if let Some(unit) = find_unit_mut(&target_id, player_units, enemy_units) {
+                if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
                     let actual_damage = *amount;
                     if actual_damage > 0 {
                         unit.health -= actual_damage;
-                        damaged_units.push(target_id.clone());
+                        damaged_units.push(target_id);
                         events.push(CombatEvent::AbilityDamage {
-                            source_instance_id: source_instance_id.to_string(),
+                            source_instance_id: source_instance_id,
                             target_instance_id: target_id,
                             damage: actual_damage,
                             remaining_hp: unit.health,
@@ -701,12 +731,12 @@ fn apply_ability_effect(
                 rng,
             );
             for target_id in targets {
-                if let Some(unit) = find_unit_mut(&target_id, player_units, enemy_units) {
+                if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
                     unit.attack_buff += attack;
                     unit.health += health;
                     unit.health_buff += health;
                     events.push(CombatEvent::AbilityModifyStats {
-                        source_instance_id: source_instance_id.to_string(),
+                        source_instance_id: source_instance_id,
                         target_instance_id: target_id,
                         health_change: *health,
                         attack_change: *attack,
@@ -737,18 +767,11 @@ fn apply_ability_effect(
                 .find(|t| t.template_id == *template_id)
                 .expect(&format!("Spawn template '{}' not found", template_id));
 
-            let next_id = limits.generate_instance_id();
-            let instance_id = format!(
-                "spawn-{}-{}",
-                match source_team {
-                    Team::Player => "p",
-                    _ => "e",
-                },
-                next_id
-            );
+            let next_id = limits.generate_instance_id(source_team);
+            let instance_id = next_id;
 
             let mut card = crate::types::UnitCard::new(
-                (next_id * 5000) as u32,
+                instance_id.0.wrapping_mul(5000),
                 &template.template_id,
                 &template.name,
                 template.attack,
@@ -761,7 +784,7 @@ fn apply_ability_effect(
             }
 
             let mut new_unit = CombatUnit::from_card(card);
-            new_unit.instance_id = instance_id.clone();
+            new_unit.instance_id = instance_id;
             new_unit.team = source_team;
 
             // INSERTION LOGIC: Use override if provided (e.g. Zombie Cricket), otherwise Front (e.g. Spawner)
@@ -789,7 +812,7 @@ fn apply_ability_effect(
                 rng,
             );
             for target_id in targets {
-                if let Some(unit) = find_unit_mut(&target_id, player_units, enemy_units) {
+                if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
                     let fatal = unit.health + 999;
                     unit.health -= fatal;
                     // We don't add to damaged_units because Destroy usually implies death
@@ -797,7 +820,7 @@ fn apply_ability_effect(
                     // but for consistency with "Hurt triggers on death", maybe we should?
                     // The prompt asked for "kills", so I'll treat it as massive damage.
                     events.push(CombatEvent::AbilityDamage {
-                        source_instance_id: source_instance_id.to_string(),
+                        source_instance_id: source_instance_id,
                         target_instance_id: target_id,
                         damage: fatal,
                         remaining_hp: unit.health,
@@ -959,8 +982,8 @@ fn execute_attack_clash(
 
     events.push(CombatEvent::Clash { p_dmg, e_dmg });
 
-    let p_id = p.instance_id.clone();
-    let e_id = e.instance_id.clone();
+    let p_id = p.instance_id;
+    let e_id = e.instance_id;
 
     // Apply Dmg
     player_units[0].health -= e_dmg;
@@ -1041,7 +1064,7 @@ fn resolve_hurt_and_faint_loop(
     let mut queue = Vec::new();
 
     // Check for OnDamageTaken for the clashing units
-    let mut check_clash_damage = |id: Option<String>,
+    let mut check_clash_damage = |id: Option<UnitInstanceId>,
                                   team: Team,
                                   units: &[CombatUnit],
                                   dead: &[(usize, CombatUnit)]| {
@@ -1213,28 +1236,28 @@ fn resolve_hurt_and_faint_loop(
 }
 
 fn get_targets(
-    source_instance_id: &str,
+    source_instance_id: UnitInstanceId,
     source_team: Team,
     target: &AbilityTarget,
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
     rng: &mut StdRng,
-) -> Vec<String> {
+) -> Vec<UnitInstanceId> {
     let (allies, enemies) = match source_team {
         Team::Player => (player_units, enemy_units),
         Team::Enemy => (enemy_units, player_units),
     };
 
     match target {
-        AbilityTarget::SelfUnit => vec![source_instance_id.to_string()],
-        AbilityTarget::AllAllies => allies.iter().map(|u| u.instance_id.clone()).collect(),
-        AbilityTarget::AllEnemies => enemies.iter().map(|u| u.instance_id.clone()).collect(),
+        AbilityTarget::SelfUnit => vec![source_instance_id],
+        AbilityTarget::AllAllies => allies.iter().map(|u| u.instance_id).collect(),
+        AbilityTarget::AllEnemies => enemies.iter().map(|u| u.instance_id).collect(),
         AbilityTarget::RandomAlly => {
             if allies.is_empty() {
                 vec![]
             } else {
                 let idx = rng.gen_range(0..allies.len());
-                vec![allies[idx].instance_id.clone()]
+                vec![allies[idx].instance_id]
             }
         }
         AbilityTarget::RandomEnemy => {
@@ -1242,33 +1265,33 @@ fn get_targets(
                 vec![]
             } else {
                 let idx = rng.gen_range(0..enemies.len());
-                vec![enemies[idx].instance_id.clone()]
+                vec![enemies[idx].instance_id]
             }
         }
         AbilityTarget::FrontAlly => {
             if !allies.is_empty() {
-                vec![allies[0].instance_id.clone()]
+                vec![allies[0].instance_id]
             } else {
                 vec![]
             }
         }
         AbilityTarget::FrontEnemy => {
             if !enemies.is_empty() {
-                vec![enemies[0].instance_id.clone()]
+                vec![enemies[0].instance_id]
             } else {
                 vec![]
             }
         }
         AbilityTarget::BackAlly => {
             if !allies.is_empty() {
-                vec![allies.last().unwrap().instance_id.clone()]
+                vec![allies.last().unwrap().instance_id]
             } else {
                 vec![]
             }
         }
         AbilityTarget::BackEnemy => {
             if !enemies.is_empty() {
-                vec![enemies.last().unwrap().instance_id.clone()]
+                vec![enemies.last().unwrap().instance_id]
             } else {
                 vec![]
             }
@@ -1276,10 +1299,10 @@ fn get_targets(
         AbilityTarget::AllyAhead => {
             if let Some(pos) = allies
                 .iter()
-                .position(|u| u.instance_id == *source_instance_id)
+                .position(|u| u.instance_id == source_instance_id)
             {
                 if pos > 0 {
-                    vec![allies[pos - 1].instance_id.clone()]
+                    vec![allies[pos - 1].instance_id]
                 } else {
                     vec![]
                 }
@@ -1297,7 +1320,7 @@ fn get_targets(
                         target = e;
                     }
                 }
-                vec![target.instance_id.clone()]
+                vec![target.instance_id]
             }
         }
         AbilityTarget::HighestAttackEnemy => {
@@ -1310,7 +1333,7 @@ fn get_targets(
                         target = e;
                     }
                 }
-                vec![target.instance_id.clone()]
+                vec![target.instance_id]
             }
         }
         AbilityTarget::HighestHealthEnemy => {
@@ -1323,7 +1346,7 @@ fn get_targets(
                         target = e;
                     }
                 }
-                vec![target.instance_id.clone()]
+                vec![target.instance_id]
             }
         }
         AbilityTarget::LowestAttackEnemy => {
@@ -1336,7 +1359,7 @@ fn get_targets(
                         target = e;
                     }
                 }
-                vec![target.instance_id.clone()]
+                vec![target.instance_id]
             }
         }
         AbilityTarget::HighestManaEnemy => {
@@ -1349,7 +1372,7 @@ fn get_targets(
                         target = e;
                     }
                 }
-                vec![target.instance_id.clone()]
+                vec![target.instance_id]
             }
         }
         AbilityTarget::LowestManaEnemy => {
@@ -1362,7 +1385,7 @@ fn get_targets(
                         target = e;
                     }
                 }
-                vec![target.instance_id.clone()]
+                vec![target.instance_id]
             }
         }
     }
@@ -1397,7 +1420,7 @@ fn evaluate_condition(
         // Target stat checks - evaluate against resolved targets
         AbilityCondition::TargetHealthLessThanOrEqual { value } => {
             let target_ids = get_targets(
-                &ctx.source.instance_id,
+                ctx.source.instance_id,
                 ctx.source.team,
                 target,
                 player_units,
@@ -1408,14 +1431,14 @@ fn evaluate_condition(
                 return false;
             }
             target_ids.iter().any(|tid| {
-                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
                     .map(|u| u.effective_health() <= *value)
                     .unwrap_or(false)
             })
         }
         AbilityCondition::TargetHealthGreaterThan { value } => {
             let target_ids = get_targets(
-                &ctx.source.instance_id,
+                ctx.source.instance_id,
                 ctx.source.team,
                 target,
                 player_units,
@@ -1426,14 +1449,14 @@ fn evaluate_condition(
                 return false;
             }
             target_ids.iter().any(|tid| {
-                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
                     .map(|u| u.effective_health() > *value)
                     .unwrap_or(false)
             })
         }
         AbilityCondition::TargetAttackLessThanOrEqual { value } => {
             let target_ids = get_targets(
-                &ctx.source.instance_id,
+                ctx.source.instance_id,
                 ctx.source.team,
                 target,
                 player_units,
@@ -1444,14 +1467,14 @@ fn evaluate_condition(
                 return false;
             }
             target_ids.iter().any(|tid| {
-                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
                     .map(|u| u.effective_attack() <= *value)
                     .unwrap_or(false)
             })
         }
         AbilityCondition::TargetAttackGreaterThan { value } => {
             let target_ids = get_targets(
-                &ctx.source.instance_id,
+                ctx.source.instance_id,
                 ctx.source.team,
                 target,
                 player_units,
@@ -1462,7 +1485,7 @@ fn evaluate_condition(
                 return false;
             }
             target_ids.iter().any(|tid| {
-                find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
                     .map(|u| u.effective_attack() > *value)
                     .unwrap_or(false)
             })
@@ -1485,7 +1508,7 @@ fn evaluate_condition(
         // Comparative checks - compare source to first target
         AbilityCondition::SourceAttackGreaterThanTarget => {
             let target_ids = get_targets(
-                &ctx.source.instance_id,
+                ctx.source.instance_id,
                 ctx.source.team,
                 target,
                 player_units,
@@ -1495,14 +1518,14 @@ fn evaluate_condition(
             target_ids
                 .first()
                 .and_then(|tid| {
-                    find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
                         .map(|t| ctx.source.effective_attack() > t.effective_attack())
                 })
                 .unwrap_or(false)
         }
         AbilityCondition::SourceHealthLessThanTarget => {
             let target_ids = get_targets(
-                &ctx.source.instance_id,
+                ctx.source.instance_id,
                 ctx.source.team,
                 target,
                 player_units,
@@ -1512,14 +1535,14 @@ fn evaluate_condition(
             target_ids
                 .first()
                 .and_then(|tid| {
-                    find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
                         .map(|t| ctx.source.effective_health() < t.effective_health())
                 })
                 .unwrap_or(false)
         }
         AbilityCondition::SourceHealthGreaterThanTarget => {
             let target_ids = get_targets(
-                &ctx.source.instance_id,
+                ctx.source.instance_id,
                 ctx.source.team,
                 target,
                 player_units,
@@ -1529,14 +1552,14 @@ fn evaluate_condition(
             target_ids
                 .first()
                 .and_then(|tid| {
-                    find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
                         .map(|t| ctx.source.effective_health() > t.effective_health())
                 })
                 .unwrap_or(false)
         }
         AbilityCondition::SourceAttackLessThanTarget => {
             let target_ids = get_targets(
-                &ctx.source.instance_id,
+                ctx.source.instance_id,
                 ctx.source.team,
                 target,
                 player_units,
@@ -1546,7 +1569,7 @@ fn evaluate_condition(
             target_ids
                 .first()
                 .and_then(|tid| {
-                    find_unit(tid, &player_units.to_vec(), &enemy_units.to_vec())
+                    find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
                         .map(|t| ctx.source.effective_attack() < t.effective_attack())
                 })
                 .unwrap_or(false)
@@ -1584,7 +1607,7 @@ fn get_effect_target(effect: &AbilityEffect) -> AbilityTarget {
 }
 
 fn find_unit<'a>(
-    instance_id: &str,
+    instance_id: UnitInstanceId,
     player_units: &'a Vec<CombatUnit>,
     enemy_units: &'a Vec<CombatUnit>,
 ) -> Option<&'a CombatUnit> {
@@ -1595,7 +1618,7 @@ fn find_unit<'a>(
 }
 
 fn find_unit_mut<'a>(
-    instance_id: &str,
+    instance_id: UnitInstanceId,
     player_units: &'a mut Vec<CombatUnit>,
     enemy_units: &'a mut Vec<CombatUnit>,
 ) -> Option<&'a mut CombatUnit> {

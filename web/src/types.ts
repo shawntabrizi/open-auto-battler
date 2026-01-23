@@ -107,7 +107,7 @@ export interface GameView {
 //--- NEW BATTLE REPLAY TYPES ---
 
 export interface UnitView {
-  instanceId: string;
+  instanceId: number; // Changed from string to number
   templateId: string;
   name: string;
   attack: number;
@@ -118,23 +118,23 @@ export interface UnitView {
 export type CombatEvent =
   | { type: 'phaseStart'; payload: { phase: string } }
   | { type: 'phaseEnd'; payload: { phase: string } }
-  | { type: 'abilityTrigger'; payload: { sourceInstanceId: string; abilityName: string } }
+  | { type: 'abilityTrigger'; payload: { sourceInstanceId: number; abilityName: string } } // ID changed
   | { type: 'clash'; payload: { pDmg: number; eDmg: number } }
   | {
       type: 'damageTaken';
-      payload: { targetInstanceId: string; team: 'PLAYER' | 'ENEMY'; remainingHp: number };
+      payload: { targetInstanceId: number; team: 'PLAYER' | 'ENEMY'; remainingHp: number }; // ID changed
     }
   | { type: 'unitDeath'; payload: { team: 'PLAYER' | 'ENEMY'; newBoardState: UnitView[] } }
   | { type: 'battleEnd'; payload: { result: 'VICTORY' | 'DEFEAT' | 'DRAW' } }
   | {
       type: 'abilityDamage';
-      payload: { sourceInstanceId: string; targetInstanceId: string; damage: number; remainingHp: number };
+      payload: { sourceInstanceId: number; targetInstanceId: number; damage: number; remainingHp: number }; // IDs changed
     }
   | {
       type: 'abilityModifyStats';
       payload: {
-        sourceInstanceId: string;
-        targetInstanceId: string;
+        sourceInstanceId: number; // ID changed
+        targetInstanceId: number; // ID changed
         healthChange: number;
         attackChange: number;
         newAttack: number;

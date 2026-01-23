@@ -1,4 +1,4 @@
-use crate::battle::{resolve_battle, UnitView};
+use crate::battle::{resolve_battle, UnitId, UnitView};
 use crate::engine::BattleOutput;
 use crate::log;
 use crate::types::{BoardUnit, UnitCard};
@@ -94,7 +94,7 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
         .map(|u| {
             instance_counter += 1;
             UnitView {
-                instance_id: format!("p-{}", instance_counter),
+                instance_id: UnitId::player(instance_counter),
                 template_id: u.card.template_id.clone(),
                 name: u.card.name.clone(),
                 attack: u.card.stats.attack,
@@ -103,12 +103,14 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
             }
         })
         .collect();
+    
+    instance_counter = 0;
     let initial_enemy_units: Vec<UnitView> = enemy_board
         .iter()
         .map(|u| {
             instance_counter += 1;
             UnitView {
-                instance_id: format!("e-{}", instance_counter),
+                instance_id: UnitId::enemy(instance_counter),
                 template_id: u.card.template_id.clone(),
                 name: u.card.name.clone(),
                 attack: u.card.stats.attack,

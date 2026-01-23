@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::battle::{resolve_battle, CombatEvent};
+    use crate::battle::{resolve_battle, CombatEvent, UnitId};
     use crate::state::GameState;
     use crate::types::*;
 
@@ -794,9 +794,9 @@ mod tests {
             target_instance_id, ..
         } = second_dmg_event
         {
-            // The instance ID of a spawned unit usually contains "spawn"
+            // The instance ID of a spawned unit should be the next enemy ID (e-2)
             assert!(
-                target_instance_id.contains("spawn") || target_instance_id.contains("e"),
+                *target_instance_id == UnitId::enemy(2),
                 "Second snipe should hit the new unit"
             );
         }
@@ -1011,7 +1011,7 @@ mod tests {
             ..
         } = buff_event
         {
-            assert!(target_instance_id.contains("1")); // Should target unit with ID 1
+            assert_eq!(*target_instance_id, UnitId::player(1)); // Should target unit with ID 1
             assert_eq!(*health_change, 5);
         }
     }
@@ -1164,7 +1164,7 @@ mod tests {
                     ..
                 } = e
                 {
-                    if target_instance_id == "p-2" {
+                    if *target_instance_id == UnitId::player(2) {
                         return Some(*attack_change);
                     }
                 }
@@ -1181,7 +1181,7 @@ mod tests {
 
         // Verify Damage
         let orc_dmg = events.iter().find(|e| {
-             matches!(e, CombatEvent::AbilityDamage { target_instance_id, .. } if target_instance_id == "p-2")
+             matches!(e, CombatEvent::AbilityDamage { target_instance_id, .. } if *target_instance_id == UnitId::player(2))
         });
         assert!(orc_dmg.is_some(), "Orc should take damage");
     }
@@ -1250,7 +1250,7 @@ mod tests {
                 ..
             } = e
             {
-                if target_instance_id == "e-1" {
+                if *target_instance_id == UnitId::enemy(1) {
                     return Some(*remaining_hp);
                 }
             }
@@ -1263,7 +1263,7 @@ mod tests {
                 ..
             } = e
             {
-                if target_instance_id == "e-2" {
+                if *target_instance_id == UnitId::enemy(1) {
                     return Some(*remaining_hp);
                 }
             }
@@ -1275,12 +1275,12 @@ mod tests {
 
         let ability_dmg = events.iter().find(|e| {
             matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
-                if target_instance_id == "e-2" && *damage == 5)
+                if *target_instance_id == UnitId::enemy(1) && *damage == 5)
         });
 
         assert!(
             ability_dmg.is_some(),
-            "Killer (e-2) should take 5 ability damage"
+            "Killer (e-1) should take 5 ability damage"
         );
     }
 
@@ -1415,10 +1415,10 @@ mod tests {
 
         let events = resolve_battle(&p_board, &e_board, 42);
 
-        // Verify "Strong" (e-3) took 3 damage
+        // Verify "Strong" (e-2) took 3 damage
         let strong_hit = events.iter().find(|e| {
             matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
-                if target_instance_id == "e-3" && *damage == 3)
+                if *target_instance_id == UnitId::enemy(2) && *damage == 3)
         });
 
         assert!(
@@ -1452,10 +1452,10 @@ mod tests {
 
         let events = resolve_battle(&p_board, &e_board, 42);
 
-        // Verify "Healthy" (e-3) took damage
+        // Verify "Healthy" (e-2) took damage
         let hit = events.iter().find(|e| {
             matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
-                if target_instance_id == "e-3" && *damage == 5)
+                if *target_instance_id == UnitId::enemy(2) && *damage == 5)
         });
 
         assert!(hit.is_some(), "Highest HP enemy should have been sniped");
@@ -1486,10 +1486,10 @@ mod tests {
 
         let events = resolve_battle(&p_board, &e_board, 42);
 
-        // Verify "Weak" (e-3) took damage
+        // Verify "Weak" (e-2) took damage
         let hit = events.iter().find(|e| {
             matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
-                if target_instance_id == "e-3" && *damage == 5)
+                if *target_instance_id == UnitId::enemy(2) && *damage == 5)
         });
 
         assert!(hit.is_some(), "Lowest Atk enemy should have been sniped");
@@ -1522,10 +1522,10 @@ mod tests {
 
         let events = resolve_battle(&p_board, &e_board, 42);
 
-        // Verify "Expensive" (e-3) took damage
+        // Verify "Expensive" (e-2) took damage
         let hit = events.iter().find(|e| {
             matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
-                if target_instance_id == "e-3" && *damage == 5)
+                if *target_instance_id == UnitId::enemy(2) && *damage == 5)
         });
 
         assert!(hit.is_some(), "Highest Mana enemy should have been sniped");
@@ -1558,10 +1558,10 @@ mod tests {
 
         let events = resolve_battle(&p_board, &e_board, 42);
 
-        // Verify "Cheap" (e-3) took damage
+        // Verify "Cheap" (e-2) took damage
         let hit = events.iter().find(|e| {
             matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
-                if target_instance_id == "e-3" && *damage == 5)
+                if *target_instance_id == UnitId::enemy(2) && *damage == 5)
         });
 
         assert!(hit.is_some(), "Lowest Mana enemy should have been sniped");
@@ -1618,17 +1618,17 @@ mod tests {
             })
             .collect();
 
-        // Expensive is e-4, Cheap is e-2.
+        // Expensive is e-3, Cheap is e-1.
         assert!(
-            dead_units.contains(&"e-2".to_string()),
+            dead_units.contains(&UnitId::enemy(1)),
             "Cheap unit should be dead"
         );
         assert!(
-            dead_units.contains(&"e-4".to_string()),
+            dead_units.contains(&UnitId::enemy(3)),
             "Expensive unit should be dead"
         );
         assert!(
-            !dead_units.contains(&"e-3".to_string()),
+            !dead_units.contains(&UnitId::enemy(2)),
             "Medium unit should be alive"
         );
     }
@@ -1721,8 +1721,8 @@ mod tests {
 
         // Find the ModifyStats event where Squire (p-2) buffs Fodder (p-1)
         let buff_event = events.iter().find(|e| {
-            matches!(e, CombatEvent::AbilityModifyStats { source_instance_id, target_instance_id, health_change, .. } 
-                if source_instance_id == "p-2" && target_instance_id == "p-1" && *health_change == 2)
+            matches!(e, CombatEvent::AbilityModifyStats { source_instance_id, target_instance_id, health_change, .. }
+                if *source_instance_id == UnitId::player(2) && *target_instance_id == UnitId::player(1) && *health_change == 2)
         });
 
         assert!(

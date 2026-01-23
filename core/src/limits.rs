@@ -1,3 +1,5 @@
+use crate::battle::UnitId;
+
 /// Battle limits to prevent infinite loops and stack overflows
 
 pub const MAX_RECURSION_DEPTH: u32 = 50;
@@ -32,7 +34,8 @@ pub struct BattleLimits {
     pub current_executing_team: Option<Team>,
     pub limit_exceeded_by: Option<Team>,
     pub limit_exceeded_reason: Option<String>,
-    pub next_instance_id: u32,
+    pub next_player_index: u32,
+    pub next_enemy_index: u32,
 }
 
 impl BattleLimits {
@@ -46,7 +49,8 @@ impl BattleLimits {
             current_executing_team: None,
             limit_exceeded_by: None,
             limit_exceeded_reason: None,
-            next_instance_id: 1,
+            next_player_index: 1,
+            next_enemy_index: 1,
         }
     }
 
@@ -64,10 +68,19 @@ impl BattleLimits {
         Ok(())
     }
 
-    pub fn generate_instance_id(&mut self) -> u32 {
-        let id = self.next_instance_id;
-        self.next_instance_id += 1;
-        id
+    pub fn generate_instance_id(&mut self, team: Team) -> UnitId {
+        match team {
+            Team::Player => {
+                let id = self.next_player_index;
+                self.next_player_index += 1;
+                UnitId::player(id)
+            }
+            Team::Enemy => {
+                let id = self.next_enemy_index;
+                self.next_enemy_index += 1;
+                UnitId::enemy(id)
+            }
+        }
     }
 
     pub fn reset_phase_counters(&mut self) {
