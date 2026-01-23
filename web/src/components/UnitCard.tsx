@@ -135,6 +135,8 @@ function getCardEmoji(templateId: string): string {
     corpse_cart: '⚰️',
     lich: '💀',
     golem: '🗿',
+    raging_orc: '🤬',
+    pain_smith: '⛓️',
   };
   return emojis[templateId] || '❓';
 }

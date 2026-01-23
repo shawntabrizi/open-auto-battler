@@ -385,5 +385,52 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             pitch_value: 0,
             abilities: vec![],
         },
+        CardTemplate {
+            template_id: "raging_orc",
+            name: "Raging Orc",
+            attack: 2,
+            health: 8,
+            play_cost: 4,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::OnDamageTaken,
+                effect: crate::types::AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 2,
+                    target: crate::types::AbilityTarget::SelfUnit,
+                },
+                name: "Berserk".to_string(),
+                description: "Gain +2 attack when hurt".to_string(),
+            }],
+        },
+        CardTemplate {
+            template_id: "pain_smith",
+            name: "Pain Smith",
+            attack: 3,
+            health: 3,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![
+                Ability {
+                    trigger: crate::types::AbilityTrigger::OnStart,
+                    effect: crate::types::AbilityEffect::ModifyStats {
+                        health: 0,
+                        attack: 2,
+                        target: crate::types::AbilityTarget::AllAllies,
+                    },
+                    name: "Sharpen Blades".to_string(),
+                    description: "Give all allies +2 attack".to_string(),
+                },
+                Ability {
+                    trigger: crate::types::AbilityTrigger::OnStart,
+                    effect: crate::types::AbilityEffect::Damage {
+                        amount: 1,
+                        target: crate::types::AbilityTarget::AllAllies,
+                    },
+                    name: "Forged in Fire".to_string(),
+                    description: "Deal 1 damage to all allies".to_string(),
+                },
+            ],
+        },
     ]
 }

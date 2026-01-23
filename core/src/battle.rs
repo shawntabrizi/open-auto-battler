@@ -340,7 +340,7 @@ fn resolve_trigger_queue(
         });
 
         // C. Apply Effect
-        apply_ability_effect(
+        let damaged_ids = apply_ability_effect(
             &trigger.source_id,
             trigger.team,
             &trigger.effect,
@@ -352,11 +352,43 @@ fn resolve_trigger_queue(
             trigger.spawn_index_override, // Pass the index where the parent died
         )?;
 
+        let mut reaction_queue = Vec::new();
+
+        // Helper to queue OnDamageTaken
+        // We process this BEFORE death checks so we can catch units that took fatal damage.
+        for unit_id in damaged_ids {
+             if let Some(unit) = find_unit(&unit_id, player_units, enemy_units) {
+                 let is_fatal = unit.health <= 0;
+                 for (idx, ability) in unit.abilities.iter().enumerate() {
+                     if ability.trigger == AbilityTrigger::OnDamageTaken {
+                        // Find index of unit
+                        let (idx_in_team, team) = if let Some(pos) = player_units.iter().position(|u| u.instance_id == unit_id) {
+                            (pos, Team::Player)
+                        } else if let Some(pos) = enemy_units.iter().position(|u| u.instance_id == unit_id) {
+                            (pos, Team::Enemy)
+                        } else {
+                            continue;
+                        };
+
+                         reaction_queue.push(PendingTrigger {
+                             source_id: unit_id.clone(),
+                             team,
+                             effect: ability.effect.clone(),
+                             ability_name: ability.name.clone(),
+                             priority_attack: unit.effective_attack(),
+                             priority_health: unit.effective_health(),
+                             priority_index: idx_in_team,
+                             is_from_dead: is_fatal, // ALLOW execution if it died from this damage
+                             spawn_index_override: if is_fatal { Some(idx_in_team) } else { None },
+                         });
+                     }
+                 }
+             }
+        }
+
         // D. INTERRUPT CHECK: Did anyone die?
         let (dead_player, dead_enemy) =
             execute_death_check_phase(player_units, enemy_units, events);
-
-        let mut reaction_queue = Vec::new();
 
         // Helper to queue OnFaint
         let queue_on_faint =
@@ -456,8 +488,9 @@ fn apply_ability_effect(
     rng: &mut StdRng,
     limits: &mut BattleLimits,
     spawn_index_override: Option<usize>, // New Param
-) -> Result<(), ()> {
+) -> Result<Vec<String>, ()> {
     limits.enter_recursion(source_team)?;
+    let mut damaged_units = Vec::new();
 
     let result = match effect {
         AbilityEffect::Damage { amount, target } => {
@@ -471,16 +504,20 @@ fn apply_ability_effect(
             );
             for target_id in targets {
                 if let Some(unit) = find_unit_mut(&target_id, player_units, enemy_units) {
-                    unit.health -= amount;
-                    events.push(CombatEvent::AbilityDamage {
-                        source_instance_id: source_instance_id.to_string(),
-                        target_instance_id: target_id,
-                        damage: *amount,
-                        remaining_hp: unit.health,
-                    });
+                    let actual_damage = *amount;
+                    if actual_damage > 0 {
+                        unit.health -= actual_damage;
+                        damaged_units.push(target_id.clone());
+                        events.push(CombatEvent::AbilityDamage {
+                            source_instance_id: source_instance_id.to_string(),
+                            target_instance_id: target_id,
+                            damage: actual_damage,
+                            remaining_hp: unit.health,
+                        });
+                    }
                 }
             }
-            Ok(())
+            Ok(damaged_units)
         }
         AbilityEffect::ModifyStats {
             health,
@@ -510,7 +547,7 @@ fn apply_ability_effect(
                     });
                 }
             }
-            Ok(())
+            Ok(damaged_units)
         }
         AbilityEffect::SpawnUnit { template_id } => {
             limits.record_spawn(source_team)?;
@@ -522,7 +559,7 @@ fn apply_ability_effect(
             };
 
             if my_board.len() >= BOARD_SIZE {
-                return Ok(());
+                return Ok(damaged_units);
             }
 
             // Create Unit Logic
@@ -573,7 +610,7 @@ fn apply_ability_effect(
                 new_board_state: my_board.iter().map(|u| u.to_view()).collect(),
             });
 
-            Ok(())
+            Ok(damaged_units)
         }
         AbilityEffect::KillSpawn {
             target,
@@ -663,7 +700,7 @@ fn apply_ability_effect(
                     new_board_state: board.iter().map(|u| u.to_view()).collect(),
                 });
             }
-            Ok(())
+            Ok(damaged_units)
         }
     };
 
@@ -886,12 +923,93 @@ fn resolve_hurt_and_faint_loop(
 
     let (dead_player, dead_enemy) = execute_death_check_phase(player_units, enemy_units, events);
 
-    if dead_player.is_empty() && dead_enemy.is_empty() {
+    // Build the initial reaction queue from the Clash deaths AND DAMAGE
+    let mut queue = Vec::new();
+
+    // Check for OnDamageTaken for the clashing units (Survivors AND Dead)
+    // 1. Survivors (Index 0)
+    if !player_units.is_empty() {
+        let u = &player_units[0];
+        for a in &u.abilities {
+            if a.trigger == AbilityTrigger::OnDamageTaken {
+                 queue.push(PendingTrigger {
+                    source_id: u.instance_id.clone(),
+                    team: Team::Player,
+                    effect: a.effect.clone(),
+                    ability_name: a.name.clone(),
+                    priority_attack: u.effective_attack(),
+                    priority_health: u.effective_health(),
+                    priority_index: 0,
+                    is_from_dead: false,
+                    spawn_index_override: None,
+                });
+            }
+        }
+    }
+    // 2. Dead (Was Index 0)
+    for (idx, u) in &dead_player {
+        if *idx == 0 {
+            for a in &u.abilities {
+                if a.trigger == AbilityTrigger::OnDamageTaken {
+                     queue.push(PendingTrigger {
+                        source_id: u.instance_id.clone(),
+                        team: Team::Player,
+                        effect: a.effect.clone(),
+                        ability_name: a.name.clone(),
+                        priority_attack: u.effective_attack(),
+                        priority_health: u.effective_health(),
+                        priority_index: 0,
+                        is_from_dead: true,
+                        spawn_index_override: Some(0),
+                    });
+                }
+            }
+        }
+    }
+
+    // Same for Enemy
+    if !enemy_units.is_empty() {
+        let u = &enemy_units[0];
+        for a in &u.abilities {
+            if a.trigger == AbilityTrigger::OnDamageTaken {
+                 queue.push(PendingTrigger {
+                    source_id: u.instance_id.clone(),
+                    team: Team::Enemy,
+                    effect: a.effect.clone(),
+                    ability_name: a.name.clone(),
+                    priority_attack: u.effective_attack(),
+                    priority_health: u.effective_health(),
+                    priority_index: 0,
+                    is_from_dead: false,
+                    spawn_index_override: None,
+                });
+            }
+        }
+    }
+    for (idx, u) in &dead_enemy {
+        if *idx == 0 {
+            for a in &u.abilities {
+                if a.trigger == AbilityTrigger::OnDamageTaken {
+                     queue.push(PendingTrigger {
+                        source_id: u.instance_id.clone(),
+                        team: Team::Enemy,
+                        effect: a.effect.clone(),
+                        ability_name: a.name.clone(),
+                        priority_attack: u.effective_attack(),
+                        priority_health: u.effective_health(),
+                        priority_index: 0,
+                        is_from_dead: true,
+                        spawn_index_override: Some(0),
+                    });
+                }
+            }
+        }
+    }
+
+    if dead_player.is_empty() && dead_enemy.is_empty() && queue.is_empty() {
         return Ok(());
     }
 
-    // Build the initial reaction queue from the Clash deaths
-    let mut queue = Vec::new();
     for (idx, u) in dead_player {
         for a in &u.abilities {
             if a.trigger == AbilityTrigger::OnFaint {

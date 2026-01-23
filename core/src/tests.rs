@@ -890,4 +890,163 @@ mod tests {
         let spawn_event = events.iter().find(|e| matches!(e, CombatEvent::UnitSpawn { .. }));
         assert!(spawn_event.is_some(), "Golem should have spawned");
     }
+
+    #[test]
+    fn test_berserker_combo() {
+        // Setup: [Pain Smith, Raging Orc]
+        // Pain Smith: OnStart -> 1. Damage(1, AllAllies), 2. Buff(+2, AllAllies)
+        // Raging Orc: 2/8. OnDamageTaken -> Buff(+2, Self).
+
+        // Construct Pain Smith (Manual)
+        let smith_buff = create_ability(
+            AbilityTrigger::OnStart,
+            AbilityEffect::ModifyStats {
+                health: 0,
+                attack: 2,
+                target: AbilityTarget::AllAllies,
+            },
+            "Sharpen",
+        );
+        let smith_dmg = create_ability(
+            AbilityTrigger::OnStart,
+            AbilityEffect::Damage {
+                amount: 1,
+                target: AbilityTarget::AllAllies,
+            },
+            "Fire",
+        );
+        // Push in reverse order of execution (Pop LIFO)
+        // We want Damage (Fire) first, then Buff (Sharpen).
+        // So Vec = [Sharpen, Fire]. Pop -> Fire. Pop -> Sharpen.
+        let pain_smith = create_dummy_card(1, "Smith", 3, 3)
+            .with_abilities(vec![smith_buff, smith_dmg]);
+
+        // Construct Raging Orc
+        let orc_rage = create_ability(
+            AbilityTrigger::OnDamageTaken,
+            AbilityEffect::ModifyStats {
+                health: 0,
+                attack: 2,
+                target: AbilityTarget::SelfUnit,
+            },
+            "Berserk",
+        );
+        let raging_orc = create_dummy_card(2, "Orc", 2, 8).with_ability(orc_rage);
+
+        let p_board = vec![
+            BoardUnit::from_card(pain_smith),
+            BoardUnit::from_card(raging_orc),
+        ];
+        let e_board = vec![create_dummy_enemy()];
+
+        let events = resolve_battle(&p_board, &e_board, 42);
+
+        // Analyze final stats via events or just trust logic?
+        // Let's trace events for "AbilityModifyStats" on the Orc (ID 2).
+        // Expected events:
+        // 1. AbilityDamage (Smith -> Orc, 1 dmg). Orc HP 8->7.
+        // 2. AbilityTrigger (Orc, Berserk).
+        // 3. AbilityModifyStats (Orc -> Orc, +2 atk). Orc Atk 2->4.
+        // 4. AbilityModifyStats (Smith -> Orc, +2 atk). Orc Atk 4->6.
+        // Final Orc: 6/7.
+
+        // Filter modify stats on target "p-2" (Unit 2)
+        // Actually IDs are "p-1", "p-2". Orc is p-2.
+        let orc_buffs: Vec<i32> = events.iter().filter_map(|e| {
+            if let CombatEvent::AbilityModifyStats { target_instance_id, attack_change, .. } = e {
+                if target_instance_id == "p-2" {
+                    return Some(*attack_change);
+                }
+            }
+            None
+        }).collect();
+
+        assert_eq!(orc_buffs.iter().sum::<i32>(), 4, "Orc should gain +4 Attack total (+2 Self, +2 Smith)");
+        assert_eq!(orc_buffs.len(), 2, "Orc should receive 2 distinct buffs");
+
+        // Verify Damage
+        let orc_dmg = events.iter().find(|e| {
+             matches!(e, CombatEvent::AbilityDamage { target_instance_id, .. } if target_instance_id == "p-2")
+        });
+        assert!(orc_dmg.is_some(), "Orc should take damage");
+    }
+
+    #[test]
+    fn test_fatal_damage_trigger() {
+        // SCENARIO: Unit takes fatal damage but should still trigger its "OnHurt" ability.
+        // Player: "Martyr" (1/1). Ability: OnDamageTaken -> Deal 5 damage to FrontEnemy.
+        // Enemy: "Killer" (10/10).
+        // Result: Killer hits Martyr (10 dmg). Martyr dies (-9 HP). Martyr trigger fires (5 dmg to Killer).
+        // Final Killer HP: 5.
+
+        let revenge_shot = create_ability(
+            AbilityTrigger::OnDamageTaken,
+            AbilityEffect::Damage {
+                amount: 5,
+                target: AbilityTarget::FrontEnemy,
+            },
+            "Revenge",
+        );
+
+        let martyr = create_dummy_card(1, "Martyr", 1, 1).with_ability(revenge_shot);
+        let killer = create_dummy_card(2, "Killer", 10, 10);
+
+        let p_board = vec![BoardUnit::from_card(martyr)];
+        let e_board = vec![BoardUnit::from_card(killer)];
+
+        let events = resolve_battle(&p_board, &e_board, 42);
+
+        // 1. Verify Martyr died
+        let deaths = events
+            .iter()
+            .filter(|e| matches!(e, CombatEvent::UnitDeath { .. }))
+            .count();
+        assert!(deaths >= 1, "Martyr should have died");
+
+        // 2. Verify Revenge Triggered
+        let triggers: Vec<&String> = events.iter().filter_map(|e| {
+            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                Some(ability_name)
+            } else {
+                None
+            }
+        }).collect();
+        assert!(triggers.contains(&&"Revenge".to_string()), "Revenge ability should trigger on fatal damage");
+
+        // 3. Verify Damage to Killer
+        // Killer started with 10 HP. Took 1 damage from Martyr attack (clash) + 5 damage from Ability.
+        // Total damage: 6. Remaining HP: 4.
+        // Wait, did I set Martyr attack to 1? Yes.
+        // Clash: Martyr deals 1 to Killer. Killer deals 10 to Martyr.
+        // Martyr Trigger: Deals 5 to Killer.
+        // Total Killer Damage: 1 + 5 = 6.
+
+        // Find final HP update for Killer (e-1)
+        let final_hp_event = events.iter().rev().find_map(|e| {
+            if let CombatEvent::DamageTaken { target_instance_id, remaining_hp, .. } = e {
+                if target_instance_id == "e-1" { // Enemy is 2nd unit created, but 1st on enemy team...
+                    // Wait, create_dummy_card IDs are for Cards.
+                    // resolve_battle maps them.
+                    // instance_counter increases.
+                    // Player unit: p-1. Enemy unit: e-2.
+                    return Some(*remaining_hp);
+                }
+            }
+             // Also check AbilityDamage
+            if let CombatEvent::AbilityDamage { target_instance_id, remaining_hp, .. } = e {
+                 if target_instance_id == "e-2" {
+                     return Some(*remaining_hp);
+                 }
+            }
+            None
+        });
+
+        // Let's just look for the specific AbilityDamage event
+        let ability_dmg = events.iter().find(|e| {
+            matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
+                if target_instance_id == "e-2" && *damage == 5)
+        });
+
+        assert!(ability_dmg.is_some(), "Killer (e-2) should take 5 ability damage");
+    }
 }

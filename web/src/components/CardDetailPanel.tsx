@@ -51,6 +51,8 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
         corpse_cart: '⚰️',
         lich: '💀',
         golem: '🗿',
+        raging_orc: '🤬',
+        pain_smith: '⛓️',
       };
       return emojis[templateId] || '❓';
     };
@@ -63,6 +65,8 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
           return 'When Dies';
         case 'onAllyFaint':
           return 'When Ally Dies';
+        case 'onDamageTaken':
+          return 'When Hurt';
         default:
           return trigger;
       }
