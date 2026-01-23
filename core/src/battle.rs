@@ -151,6 +151,20 @@ pub fn resolve_battle(
         {
             return finalize_with_limit_exceeded(&mut events, &limits);
         }
+
+        // Perform hurt and faint loop after start abilities
+        if perform_hurt_faint_loop(
+            &mut player_units,
+            &mut enemy_units,
+            &mut events,
+            &mut rng,
+            &mut limits,
+        )
+        .is_err()
+            || limits.is_exceeded()
+        {
+            return finalize_with_limit_exceeded(&mut events, &limits);
+        }
     }
 
     // Main combat loop
@@ -158,6 +172,20 @@ pub fn resolve_battle(
         limits.reset_phase_counters();
         if execute_phase(
             BattlePhase::BeforeAttack,
+            &mut player_units,
+            &mut enemy_units,
+            &mut events,
+            &mut rng,
+            &mut limits,
+        )
+        .is_err()
+            || limits.is_exceeded()
+        {
+            return finalize_with_limit_exceeded(&mut events, &limits);
+        }
+
+        // Perform hurt and faint loop after before-attack abilities
+        if perform_hurt_faint_loop(
             &mut player_units,
             &mut enemy_units,
             &mut events,
@@ -185,13 +213,8 @@ pub fn resolve_battle(
             return finalize_with_limit_exceeded(&mut events, &limits);
         }
 
-        // Death check - remove dead units and collect them for OnFaint processing
-        let dead_units =
-            execute_death_check_phase(&mut player_units, &mut enemy_units, &mut events);
-
-        // Execute OnFaint abilities immediately after death
-        if execute_hurt_and_faint_phase(
-            (dead_units.0.clone(), dead_units.1.clone()),
+        // Perform hurt and faint loop after attack damage
+        if perform_hurt_faint_loop(
             &mut player_units,
             &mut enemy_units,
             &mut events,
@@ -207,6 +230,20 @@ pub fn resolve_battle(
         limits.reset_phase_counters();
         if execute_phase(
             BattlePhase::AfterAttack,
+            &mut player_units,
+            &mut enemy_units,
+            &mut events,
+            &mut rng,
+            &mut limits,
+        )
+        .is_err()
+            || limits.is_exceeded()
+        {
+            return finalize_with_limit_exceeded(&mut events, &limits);
+        }
+
+        // Perform hurt and faint loop after after-attack abilities
+        if perform_hurt_faint_loop(
             &mut player_units,
             &mut enemy_units,
             &mut events,
@@ -965,6 +1002,37 @@ fn execute_death_check_phase(
     }
 
     (player_dead, enemy_dead)
+}
+
+/// Perform hurt and faint loop: repeatedly check for dead units and trigger OnFaint abilities
+/// until no new deaths occur (following SAP AI battle.py pattern)
+fn perform_hurt_faint_loop(
+    player_units: &mut Vec<CombatUnit>,
+    enemy_units: &mut Vec<CombatUnit>,
+    events: &mut Vec<CombatEvent>,
+    rng: &mut StdRng,
+    limits: &mut BattleLimits,
+) -> Result<(), ()> {
+    loop {
+        // Check for dead units
+        let dead_units = execute_death_check_phase(player_units, enemy_units, events);
+
+        // If no units died, break the loop
+        if dead_units.0.is_none() && dead_units.1.is_none() {
+            break;
+        }
+
+        // Execute OnFaint abilities for the dead units
+        execute_hurt_and_faint_phase(
+            (dead_units.0.clone(), dead_units.1.clone()),
+            player_units,
+            enemy_units,
+            events,
+            rng,
+            limits,
+        )?;
+    }
+    Ok(())
 }
 
 /// Execute hurt and faint phase (handle OnFaint triggers for units that died this turn)
