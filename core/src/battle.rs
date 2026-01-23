@@ -921,95 +921,58 @@ fn resolve_hurt_and_faint_loop(
     rng: &mut StdRng,
     limits: &mut BattleLimits,
 ) -> Result<(), ()> {
-    // Just run a check. If deaths occur, `resolve_trigger_queue` will get called
-    // inside a dummy queue or we can manually invoke it.
-    // Actually, `resolve_trigger_queue` handles RECURSION, but we need an ENTRY POINT
-    // for deaths that happened from the raw "Clash".
+    // CAPTURE clashing unit IDs before they potentially die or board slides
+    let clashing_p_id = player_units.first().map(|u| u.instance_id.clone());
+    let clashing_e_id = enemy_units.first().map(|u| u.instance_id.clone());
 
     let (dead_player, dead_enemy) = execute_death_check_phase(player_units, enemy_units, events);
 
     // Build the initial reaction queue from the Clash deaths AND DAMAGE
     let mut queue = Vec::new();
 
-    // Check for OnDamageTaken for the clashing units (Survivors AND Dead)
-    // 1. Survivors (Index 0)
-    if !player_units.is_empty() {
-        let u = &player_units[0];
-        for a in &u.abilities {
-            if a.trigger == AbilityTrigger::OnDamageTaken {
-                queue.push(PendingTrigger {
-                    source_id: u.instance_id.clone(),
-                    team: Team::Player,
-                    effect: a.effect.clone(),
-                    ability_name: a.name.clone(),
-                    priority_attack: u.effective_attack(),
-                    priority_health: u.effective_health(),
-                    priority_index: 0,
-                    is_from_dead: false,
-                    spawn_index_override: None,
-                });
-            }
-        }
-    }
-    // 2. Dead (Was Index 0)
-    for (idx, u) in &dead_player {
-        if *idx == 0 {
-            for a in &u.abilities {
-                if a.trigger == AbilityTrigger::OnDamageTaken {
-                    queue.push(PendingTrigger {
-                        source_id: u.instance_id.clone(),
-                        team: Team::Player,
-                        effect: a.effect.clone(),
-                        ability_name: a.name.clone(),
-                        priority_attack: u.effective_attack(),
-                        priority_health: u.effective_health(),
-                        priority_index: 0,
-                        is_from_dead: true,
-                        spawn_index_override: Some(0),
+    // Check for OnDamageTaken for the clashing units
+    let mut check_clash_damage =
+        |id: Option<String>, team: Team, units: &[CombatUnit], dead: &[(usize, CombatUnit)]| {
+            if let Some(target_id) = id {
+                // Find unit in survivors OR dead
+                let unit_opt = units
+                    .iter()
+                    .find(|u| u.instance_id == target_id)
+                    .or_else(|| {
+                        dead.iter()
+                            .find(|(_, u)| u.instance_id == target_id)
+                            .map(|(_, u)| u)
                     });
-                }
-            }
-        }
-    }
 
-    // Same for Enemy
-    if !enemy_units.is_empty() {
-        let u = &enemy_units[0];
-        for a in &u.abilities {
-            if a.trigger == AbilityTrigger::OnDamageTaken {
-                queue.push(PendingTrigger {
-                    source_id: u.instance_id.clone(),
-                    team: Team::Enemy,
-                    effect: a.effect.clone(),
-                    ability_name: a.name.clone(),
-                    priority_attack: u.effective_attack(),
-                    priority_health: u.effective_health(),
-                    priority_index: 0,
-                    is_from_dead: false,
-                    spawn_index_override: None,
-                });
-            }
-        }
-    }
-    for (idx, u) in &dead_enemy {
-        if *idx == 0 {
-            for a in &u.abilities {
-                if a.trigger == AbilityTrigger::OnDamageTaken {
-                    queue.push(PendingTrigger {
-                        source_id: u.instance_id.clone(),
-                        team: Team::Enemy,
-                        effect: a.effect.clone(),
-                        ability_name: a.name.clone(),
-                        priority_attack: u.effective_attack(),
-                        priority_health: u.effective_health(),
-                        priority_index: 0,
-                        is_from_dead: true,
-                        spawn_index_override: Some(0),
-                    });
+                if let Some(u) = unit_opt {
+                    let is_dead = u.health <= 0;
+                    for a in &u.abilities {
+                        if a.trigger == AbilityTrigger::OnDamageTaken {
+                            // Find current index if survivor, otherwise 0
+                            let current_idx = units
+                                .iter()
+                                .position(|survivor| survivor.instance_id == target_id)
+                                .unwrap_or(0);
+
+                            queue.push(PendingTrigger {
+                                source_id: target_id.clone(),
+                                team,
+                                effect: a.effect.clone(),
+                                ability_name: a.name.clone(),
+                                priority_attack: u.effective_attack(),
+                                priority_health: u.effective_health(),
+                                priority_index: current_idx,
+                                is_from_dead: is_dead,
+                                spawn_index_override: if is_dead { Some(0) } else { None },
+                            });
+                        }
+                    }
                 }
             }
-        }
-    }
+        };
+
+    check_clash_damage(clashing_p_id, Team::Player, player_units, &dead_player);
+    check_clash_damage(clashing_e_id, Team::Enemy, enemy_units, &dead_enemy);
 
     if dead_player.is_empty() && dead_enemy.is_empty() && queue.is_empty() {
         return Ok(());

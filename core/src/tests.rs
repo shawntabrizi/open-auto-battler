@@ -1050,46 +1050,133 @@ mod tests {
         // Martyr Trigger: Deals 5 to Killer.
         // Total Killer Damage: 1 + 5 = 6.
 
-        // Find final HP update for Killer (e-1)
-        let final_hp_event = events.iter().rev().find_map(|e| {
-            if let CombatEvent::DamageTaken {
-                target_instance_id,
-                remaining_hp,
-                ..
-            } = e
-            {
-                if target_instance_id == "e-1" {
-                    // Enemy is 2nd unit created, but 1st on enemy team...
-                    // Wait, create_dummy_card IDs are for Cards.
-                    // resolve_battle maps them.
-                    // instance_counter increases.
-                    // Player unit: p-1. Enemy unit: e-2.
-                    return Some(*remaining_hp);
-                }
-            }
-            // Also check AbilityDamage
-            if let CombatEvent::AbilityDamage {
-                target_instance_id,
-                remaining_hp,
-                ..
-            } = e
-            {
-                if target_instance_id == "e-2" {
-                    return Some(*remaining_hp);
-                }
-            }
-            None
-        });
+                // Find final HP update for Killer (e-1)
 
-        // Let's just look for the specific AbilityDamage event
-        let ability_dmg = events.iter().find(|e| {
-            matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
-                if target_instance_id == "e-2" && *damage == 5)
-        });
+                let _final_hp_event = events.iter().rev().find_map(|e| {
 
-        assert!(
-            ability_dmg.is_some(),
-            "Killer (e-2) should take 5 ability damage"
-        );
-    }
+                    if let CombatEvent::DamageTaken { target_instance_id, remaining_hp, .. } = e {
+
+                        if target_instance_id == "e-1" {
+
+                            return Some(*remaining_hp);
+
+                        }
+
+                    }
+
+                     // Also check AbilityDamage
+
+                    if let CombatEvent::AbilityDamage { target_instance_id, remaining_hp, .. } = e {
+
+                         if target_instance_id == "e-2" {
+
+                             return Some(*remaining_hp);
+
+                         }
+
+                    }
+
+                    None
+
+                });
+
+        
+
+                // Let's just look for the specific AbilityDamage event
+
+                let ability_dmg = events.iter().find(|e| {
+
+                    matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
+
+                        if target_instance_id == "e-2" && *damage == 5)
+
+                });
+
+        
+
+                assert!(ability_dmg.is_some(), "Killer (e-2) should take 5 ability damage");
+
+            }
+
+        
+
+            #[test]
+
+            fn test_damage_taken_no_slide_trigger() {
+
+                // SCENARIO: Unit dies, next unit slides forward. Slid unit should NOT trigger OnDamageTaken.
+
+                // P: [Fodder (1/1), Breeder (2/4)]. Breeder has OnDamageTaken -> Spawn.
+
+                // E: [Killer (0/10)]. (Use 0 attack so Breeder survives if it somehow gets hit)
+
+                // Clash: Fodder dies. Breeder slides to Index 0.
+
+                // BUG: Breeder triggers because it's now at Index 0.
+
+                // FIX: Breeder should NOT trigger.
+
+        
+
+                let spawn_ability = create_ability(
+
+                    AbilityTrigger::OnDamageTaken,
+
+                    AbilityEffect::SpawnUnit {
+
+                        template_id: "zombie_spawn".to_string(),
+
+                    },
+
+                    "Breed",
+
+                );
+
+        
+
+                let fodder = create_dummy_card(1, "Fodder", 1, 1);
+
+                let breeder = create_dummy_card(2, "Breeder", 2, 4).with_ability(spawn_ability);
+
+                let killer = create_dummy_card(3, "Killer", 0, 10);
+
+        
+
+                let p_board = vec![BoardUnit::from_card(fodder), BoardUnit::from_card(breeder)];
+
+                let e_board = vec![BoardUnit::from_card(killer)];
+
+        
+
+                let events = resolve_battle(&p_board, &e_board, 42);
+
+        
+
+                // Analyze triggers
+
+                let breed_triggers: Vec<_> = events.iter().filter(|e| {
+
+                    matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Breed")
+
+                }).collect();
+
+        
+
+                if breed_triggers.len() > 0 {
+
+                    println!("DEBUG: Found {} unexpected breed triggers", breed_triggers.len());
+
+                    for event in &events {
+
+                        println!("DEBUG EVENT: {:?}", event);
+
+                    }
+
+                }
+
+        
+
+                assert_eq!(breed_triggers.len(), 0, "Breeder should NOT trigger because it just slid forward, it wasn't hit.");
+
+            }
 }
