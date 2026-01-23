@@ -1,4 +1,5 @@
 use crate::limits::BattleLimits;
+use crate::state::BOARD_SIZE;
 use crate::types::{Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit};
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
@@ -418,6 +419,13 @@ fn apply_ability_effect(
         AbilityEffect::SpawnUnit { template_id } => {
             // Check spawn limit before spawning
             limits.record_spawn(source_team)?;
+
+            // Check if board is full
+            if (source_team == Team::Player && player_units.len() >= BOARD_SIZE)
+                || (source_team == Team::Enemy && enemy_units.len() >= BOARD_SIZE)
+            {
+                return Ok(()); // Cannot spawn, board full
+            }
 
             // Get all starter templates (this includes all units now)
             let templates = crate::units::get_starter_templates();

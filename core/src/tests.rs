@@ -981,4 +981,60 @@ mod tests {
             _ => panic!("Last event was not BattleEnd"),
         }
     }
+
+    #[test]
+    fn test_zombie_captain_spawns_blocked_by_full_board() {
+        // Test scenario: 5 Zombie Captains on board, enemy kills one
+        // Zombie Captain has 2 OnFaint abilities that spawn Zombie Soldiers
+        // Board starts full (5 units), after one dies (4 units), first spawn succeeds (5 units), second is blocked
+
+        let rally_ability = Ability {
+            trigger: AbilityTrigger::OnFaint,
+            effect: AbilityEffect::SpawnUnit {
+                template_id: "zombie_soldier".to_string(),
+            },
+            name: "Rally the Dead".to_string(),
+            description: "Spawn a Zombie Soldier on death".to_string(),
+        };
+
+        // Create Zombie Captain with 2 OnFaint abilities
+        let zombie_captain = UnitCard::new(1, "zombie_captain", "Zombie Captain", 3, 4, 4, 2)
+            .with_ability(rally_ability.clone())
+            .with_ability(rally_ability);
+
+        let player_board = vec![
+            BoardUnit::from_card(zombie_captain.clone()),
+            BoardUnit::from_card(zombie_captain.clone()),
+            BoardUnit::from_card(zombie_captain.clone()),
+            BoardUnit::from_card(zombie_captain.clone()),
+            BoardUnit::from_card(zombie_captain),
+        ];
+
+        // Enemy with high attack and low health to kill one Zombie Captain and die itself
+        let enemy_board = vec![BoardUnit::from_card(UnitCard::new(
+            6, "killer", "Killer", 10, 1, 1, 1,
+        ))];
+
+        let events = crate::battle::resolve_battle(&player_board, &enemy_board, 42);
+
+        // Should have 2 "Rally the Dead" ability triggers (both OnFaint abilities fire)
+        let rally_triggers = events
+            .iter()
+            .filter(|e| matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Rally the Dead"))
+            .count();
+        assert_eq!(
+            rally_triggers, 1,
+            "The first Rally the Dead ability triggers, the second is blocked by full board"
+        );
+
+        // But only 1 UnitSpawn event (second spawn blocked by full board)
+        let spawn_events = events
+            .iter()
+            .filter(|e| matches!(e, CombatEvent::UnitSpawn { .. }))
+            .count();
+        assert_eq!(
+            spawn_events, 1,
+            "Only 1 Zombie Soldier should spawn due to board being full"
+        );
+    }
 }
