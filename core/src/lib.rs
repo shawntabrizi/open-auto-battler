@@ -5,6 +5,7 @@ mod engine;
 mod limits;
 mod log;
 mod opponents;
+mod sandbox;
 mod state;
 mod types;
 mod units;

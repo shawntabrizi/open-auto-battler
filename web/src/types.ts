@@ -125,3 +125,19 @@ export interface Selection {
   type: SelectionType;
   index: number;
 }
+
+// Unit template for sandbox mode
+export interface UnitTemplateView {
+  templateId: string;
+  name: string;
+  attack: number;
+  health: number;
+  playCost: number;
+  pitchValue: number;
+  abilities: Ability[];
+}
+
+// Sandbox unit for custom battles
+export interface SandboxUnit {
+  templateId: string;
+}
