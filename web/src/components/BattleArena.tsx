@@ -53,6 +53,17 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
   const [damageNumbers, setDamageNumbers] = useState<Map<string, number>>(new Map());
   const [abilityToasts, setAbilityToasts] = useState<Map<string, string>>(new Map());
 
+  // Playback speed control
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(() => {
+    const saved = localStorage.getItem('battlePlaybackSpeed');
+    return saved ? parseFloat(saved) : 1;
+  });
+
+  // Save speed to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('battlePlaybackSpeed', playbackSpeed.toString());
+  }, [playbackSpeed]);
+
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
@@ -64,13 +75,13 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       }
 
       const event = battleOutput.events[eventIndex];
-      let delay = 500; // Default delay
+      let delay = 500 / playbackSpeed; // Default delay adjusted for speed
 
       switch (event.type) {
         case 'abilityTrigger': {
           const { sourceInstanceId, abilityName } = event.payload;
           setAbilityToasts((prev) => new Map(prev).set(sourceInstanceId, abilityName));
-          delay = 800; // Show toast for a bit
+          delay = 800 / playbackSpeed; // Show toast for a bit
           break;
         }
 
@@ -79,7 +90,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
           const eId = (enemyBoard || []).length > 0 ? enemyBoard[0].instanceId : null;
           const clashing = [pId, eId].filter((id) => id !== null) as string[];
           setClashingUnitIds(clashing);
-          delay = 300; // Wait for bump animation
+          delay = 300 / playbackSpeed; // Wait for bump animation
           break;
         }
 
@@ -105,9 +116,9 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
           // If this is the second damage event in a clash, don't wait as long
           const prevEvent = battleOutput.events[eventIndex - 1];
           if (prevEvent?.type === 'damageTaken') {
-            delay = 400;
+            delay = 400 / playbackSpeed;
           } else {
-            delay = 200;
+            delay = 200 / playbackSpeed;
           }
           break;
         }
@@ -120,13 +131,13 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
             setEnemyBoard(newBoardState || []);
           }
           setClashingUnitIds([]); // Stop clash animation
-          delay = 600; // Wait for slide animation
+          delay = 600 / playbackSpeed; // Wait for slide animation
           break;
         }
 
         case 'battleEnd': {
           setClashingUnitIds([]);
-          delay = 1000;
+          delay = 1000 / playbackSpeed;
           break;
         }
 
@@ -141,7 +152,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
             );
           setPlayerBoard(updateBoard);
           setEnemyBoard(updateBoard);
-          delay = 400;
+          delay = 400 / playbackSpeed;
           break;
         }
 
@@ -157,7 +168,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
               u.instanceId === statsTarget ? { ...u, attack: newAttack, health: newHealth } : u
             )
           );
-          delay = 400;
+          delay = 400 / playbackSpeed;
           break;
         }
 
@@ -168,7 +179,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
           } else {
             setEnemyBoard(newBoardState);
           }
-          delay = 600; // Slightly longer delay for spawn animation
+          delay = 600 / playbackSpeed; // Slightly longer delay for spawn animation
           break;
         }
       }
@@ -210,17 +221,17 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
         <div
           className={`transition-transform duration-200 ${isClashing ? (isPlayer ? 'clash-bump-right' : 'clash-bump-left') : ''}`}
         >
-            <UnitCard
-              card={{
-                id: 0, // Not used
-                templateId: unit.templateId,
-                name: unit.name,
-                attack: unit.attack,
-                health: unit.health,
-                playCost: 0,
-                pitchValue: 0,
-                abilities: unit.abilities,
-              }}
+          <UnitCard
+            card={{
+              id: 0, // Not used
+              templateId: unit.templateId,
+              name: unit.name,
+              attack: unit.attack,
+              health: unit.health,
+              playCost: 0,
+              pitchValue: 0,
+              abilities: unit.abilities,
+            }}
             showCost={false}
             showPitch={false}
             isSelected={false}
@@ -254,20 +265,48 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
     );
   };
 
+  const speedOptions = [
+    { label: '1x', value: 1 },
+    { label: '2x', value: 2 },
+    { label: '3x', value: 3 },
+    { label: '4x', value: 4 },
+    { label: '5x', value: 5 },
+  ];
+
   return (
-    <div className="flex items-center justify-center gap-8 p-4 bg-gray-800 rounded-lg">
-      {/* Player side (left) */}
-      <div className="flex gap-2">
-        {Array.from({ length: 5 }).map((_, i) =>
-          renderUnit((playerBoard || [])[4 - i], 'player', 4 - i)
-        )}
+    <div className="flex flex-col items-center gap-4 p-4 bg-gray-800 rounded-lg">
+      {/* Speed Control */}
+      <div className="flex items-center gap-1 flex-wrap justify-center">
+        <span className="text-white text-sm font-medium mr-2">Speed:</span>
+        {speedOptions.map((option) => (
+          <button
+            key={option.value}
+            onClick={() => setPlaybackSpeed(option.value)}
+            className={`px-2 py-1 text-xs font-medium rounded ${playbackSpeed === option.value
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+              }`}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
 
-      <div className="text-4xl font-bold text-gray-500">VS</div>
+      {/* Battle Arena */}
+      <div className="flex items-center justify-center gap-8">
+        {/* Player side (left) */}
+        <div className="flex gap-2">
+          {Array.from({ length: 5 }).map((_, i) =>
+            renderUnit((playerBoard || [])[4 - i], 'player', 4 - i)
+          )}
+        </div>
 
-      {/* Enemy side (right) */}
-      <div className="flex gap-2">
-        {Array.from({ length: 5 }).map((_, i) => renderUnit((enemyBoard || [])[i], 'enemy', i))}
+        <div className="text-4xl font-bold text-gray-500">VS</div>
+
+        {/* Enemy side (right) */}
+        <div className="flex gap-2">
+          {Array.from({ length: 5 }).map((_, i) => renderUnit((enemyBoard || [])[i], 'enemy', i))}
+        </div>
       </div>
     </div>
   );
