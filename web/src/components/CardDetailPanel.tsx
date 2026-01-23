@@ -203,6 +203,11 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
                 <div className="text-xs text-gray-300 mb-2">
                   <strong>Trigger:</strong> {getTriggerDescription(ability.trigger)}
                 </div>
+                {ability.maxTriggers && (
+                  <div className="text-xs text-orange-400 mb-2">
+                    <strong>Max Triggers:</strong> {ability.maxTriggers}
+                  </div>
+                )}
                 <div className="text-sm text-white">{ability.description}</div>
                 <div className="text-xs text-gray-400 mt-2 italic">
                   {getEffectDescription(ability.effect)}
