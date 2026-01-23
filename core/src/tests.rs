@@ -1613,188 +1613,304 @@ mod tests {
             dead_units.contains(&"e-2".to_string()),
             "Cheap unit should be dead"
         );
-                assert!(dead_units.contains(&"e-4".to_string()), "Expensive unit should be dead");
-                assert!(!dead_units.contains(&"e-3".to_string()), "Medium unit should be alive");
-            }
-        
-            #[test]
-            fn test_spawn_id_uniqueness_and_buffs() {
-                // SCENARIO: Multiple spawns followed by an "All Allies" buff.
-                // We must ensure every unit gets a unique ID so the buff is applied exactly once per unit.
-                
-                // 1. Spawner: 10 Atk (Goes first). Spawns two units.
-                let spawn_ability = create_ability(
-                    AbilityTrigger::OnStart,
-                    AbilityEffect::SpawnUnit { template_id: "zombie_spawn".to_string() },
-                    "Spawn"
-                );
-                let spawner = create_dummy_card(1, "Spawner", 10, 10).with_abilities(vec![spawn_ability.clone(), spawn_ability]);
-                
-                // 2. Buffer: 5 Atk (Goes second). Buffs all allies +2 Atk.
-                let buff_ability = create_ability(
-                    AbilityTrigger::OnStart,
-                    AbilityEffect::ModifyStats { health: 0, attack: 2, target: AbilityTarget::AllAllies },
-                    "BuffAll"
-                );
-                let buffer = create_dummy_card(2, "Buffer", 5, 10).with_ability(buff_ability);
-                
-                let p_board = vec![BoardUnit::from_card(spawner), BoardUnit::from_card(buffer)];
-                let e_board = vec![create_dummy_enemy()];
-                
-                let events = resolve_battle(&p_board, &e_board, 42);
-                
-                // Verify final attack of one of the spawned units.
-                // It starts at 1. Should be 3 after receiving ONE buff.
-                // If IDs collided, it might be 5 (double buffed).
-                
-                let spawn_final_atk = events.iter().rev().find_map(|e| {
-                    if let CombatEvent::UnitSpawn { spawned_unit, .. } = e {
-                        // We want to find the latest state of this unit in the events
-                        let id = &spawned_unit.instance_id;
-                        // Search for the last AbilityModifyStats for this ID
-                        return events.iter().rev().find_map(|e2| {
-                            if let CombatEvent::AbilityModifyStats { target_instance_id, new_attack, .. } = e2 {
-                                if target_instance_id == id {
-                                    return Some(*new_attack);
-                                }
-                            }
-                            None
-                        });
+        assert!(
+            dead_units.contains(&"e-4".to_string()),
+            "Expensive unit should be dead"
+        );
+        assert!(
+            !dead_units.contains(&"e-3".to_string()),
+            "Medium unit should be alive"
+        );
+    }
+
+    #[test]
+    fn test_spawn_id_uniqueness_and_buffs() {
+        // SCENARIO: Multiple spawns followed by an "All Allies" buff.
+        // We must ensure every unit gets a unique ID so the buff is applied exactly once per unit.
+
+        // 1. Spawner: 10 Atk (Goes first). Spawns two units.
+        let spawn_ability = create_ability(
+            AbilityTrigger::OnStart,
+            AbilityEffect::SpawnUnit {
+                template_id: "zombie_spawn".to_string(),
+            },
+            "Spawn",
+        );
+        let spawner = create_dummy_card(1, "Spawner", 10, 10)
+            .with_abilities(vec![spawn_ability.clone(), spawn_ability]);
+
+        // 2. Buffer: 5 Atk (Goes second). Buffs all allies +2 Atk.
+        let buff_ability = create_ability(
+            AbilityTrigger::OnStart,
+            AbilityEffect::ModifyStats {
+                health: 0,
+                attack: 2,
+                target: AbilityTarget::AllAllies,
+            },
+            "BuffAll",
+        );
+        let buffer = create_dummy_card(2, "Buffer", 5, 10).with_ability(buff_ability);
+
+        let p_board = vec![BoardUnit::from_card(spawner), BoardUnit::from_card(buffer)];
+        let e_board = vec![create_dummy_enemy()];
+
+        let events = resolve_battle(&p_board, &e_board, 42);
+
+        // Verify final attack of one of the spawned units.
+        // It starts at 1. Should be 3 after receiving ONE buff.
+        // If IDs collided, it might be 5 (double buffed).
+
+        let spawn_final_atk = events.iter().rev().find_map(|e| {
+            if let CombatEvent::UnitSpawn { spawned_unit, .. } = e {
+                // We want to find the latest state of this unit in the events
+                let id = &spawned_unit.instance_id;
+                // Search for the last AbilityModifyStats for this ID
+                return events.iter().rev().find_map(|e2| {
+                    if let CombatEvent::AbilityModifyStats {
+                        target_instance_id,
+                        new_attack,
+                        ..
+                    } = e2
+                    {
+                        if target_instance_id == id {
+                            return Some(*new_attack);
+                        }
                     }
                     None
                 });
-                
-                assert_eq!(spawn_final_atk, Some(3), "Spawned unit should have 3 attack (1 base + 2 buff). If it's 5, it was double buffed due to ID collision.");
             }
+            None
+        });
+
+        assert_eq!(spawn_final_atk, Some(3), "Spawned unit should have 3 attack (1 base + 2 buff). If it's 5, it was double buffed due to ID collision.");
+    }
 
     #[test]
     fn test_shield_squire_support() {
         // P: [Fodder (1/10), Squire (2/3)]. Squire: BeforeAttack -> +2 HP to AllyAhead.
         // E: [Sandbag (0/50)].
         // Result: Fodder should gain 2 HP before the clash.
-        
+
         let squire_ability = create_ability(
             AbilityTrigger::BeforeAnyAttack,
-            AbilityEffect::ModifyStats { health: 2, attack: 0, target: AbilityTarget::AllyAhead },
-            "Squire Shield"
+            AbilityEffect::ModifyStats {
+                health: 2,
+                attack: 0,
+                target: AbilityTarget::AllyAhead,
+            },
+            "Squire Shield",
         );
-        
+
         let fodder = create_dummy_card(1, "Fodder", 1, 10);
         let squire = create_dummy_card(2, "Squire", 2, 3).with_ability(squire_ability);
-        
+
         let p_board = vec![BoardUnit::from_card(fodder), BoardUnit::from_card(squire)];
         let e_board = vec![create_dummy_enemy()]; // 0 Atk enemy
-        
+
         let events = resolve_battle(&p_board, &e_board, 42);
-        
+
         // Find the ModifyStats event where Squire (p-2) buffs Fodder (p-1)
         let buff_event = events.iter().find(|e| {
             matches!(e, CombatEvent::AbilityModifyStats { source_instance_id, target_instance_id, health_change, .. } 
                 if source_instance_id == "p-2" && target_instance_id == "p-1" && *health_change == 2)
         });
-        
-        assert!(buff_event.is_some(), "Shield Squire should have buffed the unit in front before the attack");
+
+        assert!(
+            buff_event.is_some(),
+            "Shield Squire should have buffed the unit in front before the attack"
+        );
     }
 
     #[test]
     fn test_attack_trigger_scopes() {
-        // SCENARIO: 
+        // SCENARIO:
         // P: [Front (1/10), Support (1/10)]
         // Front has BeforeUnitAttack -> +1 Atk
         // Support has BeforeUnitAttack -> +1 Atk (Should NOT trigger)
         // Support has BeforeAnyAttack -> +1 Atk (Should trigger)
-        
+
         let front_unit = BoardUnit::from_card(
-            UnitCard::new(1, "Front", "Front", 1, 10, 0, 0)
-                .with_ability(create_ability(
-                    AbilityTrigger::BeforeUnitAttack,
-                    AbilityEffect::ModifyStats { health: 0, attack: 1, target: AbilityTarget::SelfUnit },
-                    "FrontUnitTrigger"
-                ))
+            UnitCard::new(1, "Front", "Front", 1, 10, 0, 0).with_ability(create_ability(
+                AbilityTrigger::BeforeUnitAttack,
+                AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 1,
+                    target: AbilityTarget::SelfUnit,
+                },
+                "FrontUnitTrigger",
+            )),
         );
-        
+
         let support_unit = BoardUnit::from_card(
-            UnitCard::new(2, "Support", "Support", 1, 10, 0, 0)
-                .with_abilities(vec![
-                    create_ability(
-                        AbilityTrigger::BeforeUnitAttack,
-                        AbilityEffect::ModifyStats { health: 0, attack: 1, target: AbilityTarget::SelfUnit },
-                        "SupportUnitTrigger"
-                    ),
-                    create_ability(
-                        AbilityTrigger::BeforeAnyAttack,
-                        AbilityEffect::ModifyStats { health: 0, attack: 1, target: AbilityTarget::SelfUnit },
-                        "SupportAnyTrigger"
-                    ),
-                ])
+            UnitCard::new(2, "Support", "Support", 1, 10, 0, 0).with_abilities(vec![
+                create_ability(
+                    AbilityTrigger::BeforeUnitAttack,
+                    AbilityEffect::ModifyStats {
+                        health: 0,
+                        attack: 1,
+                        target: AbilityTarget::SelfUnit,
+                    },
+                    "SupportUnitTrigger",
+                ),
+                create_ability(
+                    AbilityTrigger::BeforeAnyAttack,
+                    AbilityEffect::ModifyStats {
+                        health: 0,
+                        attack: 1,
+                        target: AbilityTarget::SelfUnit,
+                    },
+                    "SupportAnyTrigger",
+                ),
+            ]),
         );
-        
+
         let p_board = vec![front_unit, support_unit];
         let e_board = vec![create_dummy_enemy()];
-        
+
         let events = resolve_battle(&p_board, &e_board, 42);
-        
-        let triggers: Vec<String> = events.iter().filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name.clone())
-            } else {
-                None
-            }
-        }).collect();
-        
+
+        let triggers: Vec<String> = events
+            .iter()
+            .filter_map(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    Some(ability_name.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
         // EXPECTATION:
         // 1. "FrontUnitTrigger" fires (Position 0)
         // 2. "SupportAnyTrigger" fires (Position 1 is allowed for "Any")
         // 3. "SupportUnitTrigger" DOES NOT fire (Position 1 is not front)
-        
+
         assert!(triggers.contains(&"FrontUnitTrigger".to_string()));
         assert!(triggers.contains(&"SupportAnyTrigger".to_string()));
-        assert!(!triggers.contains(&"SupportUnitTrigger".to_string()), "Support unit should not fire BeforeUnitAttack triggers");
+        assert!(
+            !triggers.contains(&"SupportUnitTrigger".to_string()),
+            "Support unit should not fire BeforeUnitAttack triggers"
+        );
     }
 
     #[test]
     fn test_after_attack_trigger_scopes() {
         // Similar to above but for After variants
         let front_unit = BoardUnit::from_card(
-            UnitCard::new(1, "Front", "Front", 1, 10, 0, 0)
-                .with_ability(create_ability(
-                    AbilityTrigger::AfterUnitAttack,
-                    AbilityEffect::ModifyStats { health: 0, attack: 1, target: AbilityTarget::SelfUnit },
-                    "FrontAfterUnit"
-                ))
+            UnitCard::new(1, "Front", "Front", 1, 10, 0, 0).with_ability(create_ability(
+                AbilityTrigger::AfterUnitAttack,
+                AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 1,
+                    target: AbilityTarget::SelfUnit,
+                },
+                "FrontAfterUnit",
+            )),
         );
-        
+
         let support_unit = BoardUnit::from_card(
-            UnitCard::new(2, "Support", "Support", 1, 10, 0, 0)
-                .with_abilities(vec![
-                    create_ability(
-                        AbilityTrigger::AfterUnitAttack,
-                        AbilityEffect::ModifyStats { health: 0, attack: 1, target: AbilityTarget::SelfUnit },
-                        "SupportAfterUnit"
-                    ),
-                    create_ability(
-                        AbilityTrigger::AfterAnyAttack,
-                        AbilityEffect::ModifyStats { health: 0, attack: 1, target: AbilityTarget::SelfUnit },
-                        "SupportAfterAny"
-                    ),
-                ])
+            UnitCard::new(2, "Support", "Support", 1, 10, 0, 0).with_abilities(vec![
+                create_ability(
+                    AbilityTrigger::AfterUnitAttack,
+                    AbilityEffect::ModifyStats {
+                        health: 0,
+                        attack: 1,
+                        target: AbilityTarget::SelfUnit,
+                    },
+                    "SupportAfterUnit",
+                ),
+                create_ability(
+                    AbilityTrigger::AfterAnyAttack,
+                    AbilityEffect::ModifyStats {
+                        health: 0,
+                        attack: 1,
+                        target: AbilityTarget::SelfUnit,
+                    },
+                    "SupportAfterAny",
+                ),
+            ]),
         );
-        
+
         let p_board = vec![front_unit, support_unit];
         let e_board = vec![create_dummy_enemy()];
-        
+
         let events = resolve_battle(&p_board, &e_board, 42);
-        
-        let triggers: Vec<String> = events.iter().filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name.clone())
-            } else {
-                None
-            }
-        }).collect();
-        
+
+        let triggers: Vec<String> = events
+            .iter()
+            .filter_map(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    Some(ability_name.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
         assert!(triggers.contains(&"FrontAfterUnit".to_string()));
         assert!(triggers.contains(&"SupportAfterAny".to_string()));
-        assert!(!triggers.contains(&"SupportAfterUnit".to_string()), "Support unit should not fire AfterUnitAttack triggers");
+        assert!(
+            !triggers.contains(&"SupportAfterUnit".to_string()),
+            "Support unit should not fire AfterUnitAttack triggers"
+        );
+    }
+
+    #[test]
+    fn test_unified_priority_cross_triggers() {
+        // SCENARIO: Verify that UnitAttack and AnyAttack triggers are prioritized together.
+        // P: [HighAtkFront (10 Atk), LowAtkBack (1 Atk)]
+        // HighAtkFront: BeforeUnitAttack
+        // LowAtkBack: BeforeAnyAttack
+
+        // EXPECTATION: HighAtkFront should trigger FIRST because it has higher power,
+        // even though it's a different trigger type than LowAtkBack.
+
+        let high_atk_front = BoardUnit::from_card(
+            UnitCard::new(1, "High", "High", 10, 10, 0, 0).with_ability(create_ability(
+                AbilityTrigger::BeforeUnitAttack,
+                AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 1,
+                    target: AbilityTarget::SelfUnit,
+                },
+                "HighUnitTrigger",
+            )),
+        );
+
+        let low_atk_back = BoardUnit::from_card(
+            UnitCard::new(2, "Low", "Low", 1, 10, 0, 0).with_ability(create_ability(
+                AbilityTrigger::BeforeAnyAttack,
+                AbilityEffect::ModifyStats {
+                    health: 0,
+                    attack: 1,
+                    target: AbilityTarget::SelfUnit,
+                },
+                "LowAnyTrigger",
+            )),
+        );
+
+        let p_board = vec![high_atk_front, low_atk_back];
+        let e_board = vec![create_dummy_enemy()];
+
+        let events = resolve_battle(&p_board, &e_board, 42);
+
+        let triggers: Vec<String> = events
+            .iter()
+            .filter_map(|e| {
+                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                    Some(ability_name.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let high_idx = triggers
+            .iter()
+            .position(|n| n == "HighUnitTrigger")
+            .unwrap();
+        let low_idx = triggers.iter().position(|n| n == "LowAnyTrigger").unwrap();
+
+        assert!(high_idx < low_idx, "High Attack unit should trigger its 'Unit' ability before Low Attack unit triggers its 'Any' ability.");
     }
 }

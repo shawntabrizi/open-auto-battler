@@ -692,7 +692,7 @@ fn execute_phase(
     match phase {
         BattlePhase::Start => {
             collect_and_resolve_triggers(
-                AbilityTrigger::OnStart,
+                &[AbilityTrigger::OnStart],
                 player_units,
                 enemy_units,
                 events,
@@ -702,15 +702,10 @@ fn execute_phase(
         }
         BattlePhase::BeforeAttack => {
             collect_and_resolve_triggers(
-                AbilityTrigger::BeforeAnyAttack,
-                player_units,
-                enemy_units,
-                events,
-                rng,
-                limits,
-            )?;
-            collect_and_resolve_triggers(
-                AbilityTrigger::BeforeUnitAttack,
+                &[
+                    AbilityTrigger::BeforeAnyAttack,
+                    AbilityTrigger::BeforeUnitAttack,
+                ],
                 player_units,
                 enemy_units,
                 events,
@@ -725,15 +720,10 @@ fn execute_phase(
         }
         BattlePhase::AfterAttack => {
             collect_and_resolve_triggers(
-                AbilityTrigger::AfterAnyAttack,
-                player_units,
-                enemy_units,
-                events,
-                rng,
-                limits,
-            )?;
-            collect_and_resolve_triggers(
-                AbilityTrigger::AfterUnitAttack,
+                &[
+                    AbilityTrigger::AfterAnyAttack,
+                    AbilityTrigger::AfterUnitAttack,
+                ],
                 player_units,
                 enemy_units,
                 events,
@@ -759,7 +749,7 @@ fn execute_phase(
 }
 
 fn collect_and_resolve_triggers(
-    trigger_type: AbilityTrigger,
+    trigger_types: &[AbilityTrigger],
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
@@ -767,17 +757,17 @@ fn collect_and_resolve_triggers(
     limits: &mut BattleLimits,
 ) -> Result<(), ()> {
     let mut queue = Vec::new();
-
     // Helper to scan board
     let mut scan_board = |units: &Vec<CombatUnit>, team: Team| {
         for (i, u) in units.iter().enumerate() {
             for (sub_idx, ability) in u.abilities.iter().enumerate() {
-                if ability.trigger == trigger_type {
+                if trigger_types.contains(&ability.trigger) {
                     // Logic: UnitAttack triggers ONLY for the front unit (index 0).
                     // AnyAttack triggers for everyone on the board.
                     let is_front = i == 0;
-                    let is_unit_trigger = trigger_type == AbilityTrigger::BeforeUnitAttack || trigger_type == AbilityTrigger::AfterUnitAttack;
-                    
+                    let is_unit_trigger = ability.trigger == AbilityTrigger::BeforeUnitAttack
+                        || ability.trigger == AbilityTrigger::AfterUnitAttack;
+
                     if is_unit_trigger && !is_front {
                         continue;
                     }
