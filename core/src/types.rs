@@ -12,8 +12,10 @@ pub enum AbilityTrigger {
     OnAllyFaint,
     OnDamageTaken,
     OnSpawn,
-    BeforeAttack,
-    AfterAttack,
+    BeforeUnitAttack,
+    AfterUnitAttack,
+    BeforeAnyAttack,
+    AfterAnyAttack,
     // Future: OnAttack, OnDamage, etc.
 }
 

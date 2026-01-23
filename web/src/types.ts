@@ -6,7 +6,7 @@ export interface Ability {
   description: string;
 }
 
-export type AbilityTrigger = 'onStart' | 'onFaint' | 'onAllyFaint' | 'onDamageTaken' | 'onSpawn' | 'beforeAttack' | 'afterAttack';
+export type AbilityTrigger = 'onStart' | 'onFaint' | 'onAllyFaint' | 'onDamageTaken' | 'onSpawn' | 'beforeUnitAttack' | 'afterUnitAttack' | 'beforeAnyAttack' | 'afterAnyAttack';
 
 export type AbilityTarget =
   | 'selfUnit'

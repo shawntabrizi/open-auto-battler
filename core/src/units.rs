@@ -146,7 +146,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             pitch_value: 2,
             abilities: vec![
                 Ability {
-                    trigger: crate::types::AbilityTrigger::BeforeAttack,
+                    trigger: crate::types::AbilityTrigger::BeforeUnitAttack,
                     effect: crate::types::AbilityEffect::ModifyStats {
                         health: 2,
                         attack: 0,
@@ -156,7 +156,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     description: "Gain +2 health before each clash".to_string(),
                 },
                 Ability {
-                    trigger: crate::types::AbilityTrigger::AfterAttack,
+                    trigger: crate::types::AbilityTrigger::AfterUnitAttack,
                     effect: crate::types::AbilityEffect::ModifyStats {
                         health: 0,
                         attack: 2,
@@ -525,6 +525,24 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     description: "Destroy the lowest mana cost enemy".to_string(),
                 },
             ],
+        },
+        CardTemplate {
+            template_id: "shield_squire",
+            name: "Shield Squire",
+            attack: 2,
+            health: 3,
+            play_cost: 4,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: crate::types::AbilityTrigger::BeforeAnyAttack,
+                effect: crate::types::AbilityEffect::ModifyStats {
+                    health: 2,
+                    attack: 0,
+                    target: crate::types::AbilityTarget::AllyAhead,
+                },
+                name: "Squire's Shield".to_string(),
+                description: "Give the unit in front +2 Health before every clash".to_string(),
+            }],
         },
     ]
 }

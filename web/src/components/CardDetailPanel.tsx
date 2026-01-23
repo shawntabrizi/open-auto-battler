@@ -57,6 +57,7 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
         giant_slayer: '🗡️',
         behemoth: '🐘',
         mana_reaper: '⚖️',
+        shield_squire: '🛡️',
       };
       return emojis[templateId] || '❓';
     };
@@ -71,6 +72,14 @@ export function CardDetailPanel({ card, isVisible }: CardDetailPanelProps) {
           return 'When Ally Dies';
         case 'onDamageTaken':
           return 'When Hurt';
+        case 'beforeUnitAttack':
+          return 'Before Attacking';
+        case 'afterUnitAttack':
+          return 'After Attacking';
+        case 'beforeAnyAttack':
+          return 'Before Any Attack';
+        case 'afterAnyAttack':
+          return 'After Any Attack';
         default:
           return trigger;
       }
