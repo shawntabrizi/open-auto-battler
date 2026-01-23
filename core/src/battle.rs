@@ -151,20 +151,6 @@ pub fn resolve_battle(
         {
             return finalize_with_limit_exceeded(&mut events, &limits);
         }
-
-        // Perform hurt and faint loop after start abilities
-        if perform_hurt_faint_loop(
-            &mut player_units,
-            &mut enemy_units,
-            &mut events,
-            &mut rng,
-            &mut limits,
-        )
-        .is_err()
-            || limits.is_exceeded()
-        {
-            return finalize_with_limit_exceeded(&mut events, &limits);
-        }
     }
 
     // Main combat loop
@@ -298,6 +284,16 @@ pub enum BattlePhase {
     HurtAndFaint,
     Knockout,
     End,
+}
+
+#[derive(Debug)]
+struct PendingTrigger {
+    source_id: String,
+    team: Team,
+    effect: AbilityEffect,
+    ability_name: String,
+    priority_attack: i32,
+    is_from_dead: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -616,6 +612,18 @@ fn get_targets(
     }
 }
 
+/// Find a reference to a unit by instance_id
+fn find_unit<'a>(
+    instance_id: &str,
+    player_units: &'a Vec<CombatUnit>,
+    enemy_units: &'a Vec<CombatUnit>,
+) -> Option<&'a CombatUnit> {
+    player_units
+        .iter()
+        .chain(enemy_units.iter())
+        .find(|u| u.instance_id == instance_id)
+}
+
 /// Find a mutable reference to a unit by instance_id
 fn find_unit_mut<'a>(
     instance_id: &str,
@@ -669,6 +677,87 @@ pub fn calculate_priority_order(
         .into_iter()
         .map(|(team, idx, _, _)| (team, idx))
         .collect()
+}
+
+/// Resolve a queue of pending triggers in priority order, handling deaths and recursive triggers
+fn resolve_trigger_queue(
+    queue: &mut Vec<PendingTrigger>,
+    player_units: &mut Vec<CombatUnit>,
+    enemy_units: &mut Vec<CombatUnit>,
+    events: &mut Vec<CombatEvent>,
+    rng: &mut StdRng,
+    limits: &mut BattleLimits,
+) -> Result<(), ()> {
+    // Sort queue by priority_attack descending
+    queue.sort_by(|a, b| b.priority_attack.cmp(&a.priority_attack));
+
+    while let Some(trigger) = queue.pop() {
+        // Check if source is still alive (skip only for alive sources)
+        if !trigger.is_from_dead
+            && find_unit(&trigger.source_id, player_units, enemy_units).is_none()
+        {
+            continue;
+        }
+
+        // Record and emit trigger event
+        limits.record_trigger(trigger.team)?;
+        events.push(CombatEvent::AbilityTrigger {
+            source_instance_id: trigger.source_id.clone(),
+            ability_name: trigger.ability_name,
+        });
+
+        // Apply the effect
+        apply_ability_effect(
+            &trigger.source_id,
+            trigger.team,
+            &trigger.effect,
+            player_units,
+            enemy_units,
+            events,
+            rng,
+            limits,
+        )?;
+
+        // After applying the effect, check for dead units and queue OnFaint triggers
+        let dead_units = execute_death_check_phase(player_units, enemy_units, events);
+
+        // For each dead unit, queue their OnFaint abilities
+        for dead_unit in dead_units.0 {
+            for ability in &dead_unit.abilities {
+                if ability.trigger == AbilityTrigger::OnFaint {
+                    let priority_attack = dead_unit.effective_attack();
+                    queue.push(PendingTrigger {
+                        source_id: dead_unit.instance_id.clone(),
+                        team: Team::Player,
+                        effect: ability.effect.clone(),
+                        ability_name: ability.name.clone(),
+                        priority_attack,
+                        is_from_dead: true,
+                    });
+                }
+            }
+        }
+        for dead_unit in dead_units.1 {
+            for ability in &dead_unit.abilities {
+                if ability.trigger == AbilityTrigger::OnFaint {
+                    let priority_attack = dead_unit.effective_attack();
+                    queue.push(PendingTrigger {
+                        source_id: dead_unit.instance_id.clone(),
+                        team: Team::Enemy,
+                        effect: ability.effect.clone(),
+                        ability_name: ability.name.clone(),
+                        priority_attack,
+                        is_from_dead: true,
+                    });
+                }
+            }
+        }
+
+        // Recursively resolve any new triggers (including the OnFaint ones we just added)
+        resolve_trigger_queue(queue, player_units, enemy_units, events, rng, limits)?;
+    }
+
+    Ok(())
 }
 
 /// Execute effects for a specific battle phase
@@ -769,36 +858,35 @@ fn execute_start_phase(
         })
         .collect();
 
-    // Sort triggers by priority order
-    let priority_order = calculate_priority_order(player_units, enemy_units, rng);
-    start_triggers.sort_by_key(|(_, team, unit_idx, _, _)| {
-        // Find the position of this unit in the priority order
-        priority_order
-            .iter()
-            .position(|(p_team, p_idx)| p_team == team && p_idx == unit_idx)
-            .unwrap_or(usize::MAX)
-    });
+    // Create trigger queue
+    let mut trigger_queue: Vec<PendingTrigger> = start_triggers
+        .into_iter()
+        .map(|(instance_id, team, _, effect, ability_name)| {
+            // Get the unit's current attack for priority
+            let priority_attack = find_unit(&instance_id, player_units, enemy_units)
+                .map(|u| u.effective_attack())
+                .unwrap_or(0);
+            PendingTrigger {
+                source_id: instance_id,
+                team,
+                effect,
+                ability_name,
+                priority_attack,
+                is_from_dead: false,
+            }
+        })
+        .collect();
 
-    for (instance_id, team, _, effect, ability_name) in start_triggers {
-        limits.record_trigger(team)?;
-        events.push(CombatEvent::AbilityTrigger {
-            source_instance_id: instance_id.clone(),
-            ability_name,
-        });
-        apply_ability_effect(
-            &instance_id,
-            team,
-            &effect,
-            player_units,
-            enemy_units,
-            events,
-            rng,
-            limits,
-        )?;
-    }
+    // Resolve the queue (this handles deaths and OnFaint recursively)
+    resolve_trigger_queue(
+        &mut trigger_queue,
+        player_units,
+        enemy_units,
+        events,
+        rng,
+        limits,
+    )?;
 
-    // Note: Dead units are NOT removed here - the hurt/faint loop after this phase
-    // will handle death processing and OnFaint triggers properly
     Ok(())
 }
 
@@ -1045,14 +1133,7 @@ fn perform_hurt_faint_loop(
         }
 
         // Execute OnFaint abilities for the dead units
-        execute_hurt_and_faint_phase(
-            dead_units,
-            player_units,
-            enemy_units,
-            events,
-            rng,
-            limits,
-        )?;
+        execute_hurt_and_faint_phase(dead_units, player_units, enemy_units, events, rng, limits)?;
     }
     Ok(())
 }
