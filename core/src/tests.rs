@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::battle::{resolve_battle, CombatEvent, UnitId};
+    use crate::battle::{resolve_battle, BattleResult, CombatEvent, Team, UnitId};
     use crate::state::GameState;
     use crate::types::*;
 
@@ -73,7 +73,7 @@ mod tests {
 
         let last = events.last().unwrap();
         if let CombatEvent::BattleEnd { result } = last {
-            assert_eq!(result, "DRAW");
+            assert_eq!(*result, BattleResult::Draw);
         } else {
             panic!("Battle did not end");
         }
@@ -969,7 +969,7 @@ mod tests {
 
         // Verify Draw
         if let CombatEvent::BattleEnd { result } = events.last().unwrap() {
-            assert_eq!(result, "DRAW");
+            assert_eq!(*result, BattleResult::Draw);
         } else {
             panic!("Wrong end state");
         }
@@ -1373,7 +1373,7 @@ mod tests {
                 new_board_state,
             } = e
             {
-                team == "ENEMY" && !new_board_state.iter().any(|u| u.name == "Glass")
+                *team == Team::Enemy && !new_board_state.iter().any(|u| u.name == "Glass")
             } else {
                 false
             }
@@ -1954,7 +1954,7 @@ mod tests {
         // 1. Verify Battle End result is DRAW
         let last_event = events.last().unwrap();
         if let CombatEvent::BattleEnd { result } = last_event {
-            assert_eq!(result, "DRAW", "Stalemate should result in a DRAW");
+            assert_eq!(*result, BattleResult::Draw, "Stalemate should result in a DRAW");
         } else {
             panic!("Battle did not end correctly: {:?}", last_event);
         }

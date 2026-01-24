@@ -1,4 +1,5 @@
 use crate::battle::UnitId;
+use serde::{Deserialize, Serialize};
 
 /// Battle limits to prevent infinite loops and stack overflows
 
@@ -8,19 +9,11 @@ pub const MAX_TRIGGERS_PER_PHASE: u32 = 200;
 pub const MAX_TRIGGER_DEPTH: u32 = 10;
 pub const MAX_BATTLE_ROUNDS: u32 = 100;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Team {
     Player,
     Enemy,
-}
-
-impl Team {
-    pub fn to_string(&self) -> String {
-        match self {
-            Team::Player => "PLAYER".to_string(),
-            Team::Enemy => "ENEMY".to_string(),
-        }
-    }
 }
 
 /// Tracks execution limits to prevent infinite loops and stack overflows

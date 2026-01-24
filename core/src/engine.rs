@@ -319,12 +319,12 @@ impl GameEngine {
         let events = resolve_battle(&player_board, &enemy_board, battle_seed);
 
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
-            match result.as_str() {
-                "VICTORY" => self.state.wins += 1,
-                "DEFEAT" => self.state.lives -= 1,
+            match result {
+                crate::battle::BattleResult::Victory => self.state.wins += 1,
+                crate::battle::BattleResult::Defeat => self.state.lives -= 1,
                 _ => {} // DRAW
             }
-            log::info(&format!("Battle Result: {}", result));
+            log::info(&format!("Battle Result: {:?}", result));
         }
 
         let mut instance_counter: u32 = 0;

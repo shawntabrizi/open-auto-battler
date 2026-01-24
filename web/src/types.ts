@@ -107,7 +107,7 @@ export interface GameView {
 //--- NEW BATTLE REPLAY TYPES ---
 
 export interface UnitView {
-  instanceId: number; // Changed from string to number
+  instanceId: number;
   templateId: string;
   name: string;
   attack: number;
@@ -115,26 +115,29 @@ export interface UnitView {
   abilities: Ability[];
 }
 
+export type Team = 'PLAYER' | 'ENEMY';
+export type BattleResult = 'VICTORY' | 'DEFEAT' | 'DRAW';
+
 export type CombatEvent =
   | { type: 'phaseStart'; payload: { phase: string } }
   | { type: 'phaseEnd'; payload: { phase: string } }
-  | { type: 'abilityTrigger'; payload: { sourceInstanceId: number; abilityName: string } } // ID changed
+  | { type: 'abilityTrigger'; payload: { sourceInstanceId: number; abilityName: string } }
   | { type: 'clash'; payload: { pDmg: number; eDmg: number } }
   | {
       type: 'damageTaken';
-      payload: { targetInstanceId: number; team: 'PLAYER' | 'ENEMY'; remainingHp: number }; // ID changed
+      payload: { targetInstanceId: number; team: Team; remainingHp: number };
     }
-  | { type: 'unitDeath'; payload: { team: 'PLAYER' | 'ENEMY'; newBoardState: UnitView[] } }
-  | { type: 'battleEnd'; payload: { result: 'VICTORY' | 'DEFEAT' | 'DRAW' } }
+  | { type: 'unitDeath'; payload: { team: Team; newBoardState: UnitView[] } }
+  | { type: 'battleEnd'; payload: { result: BattleResult } }
   | {
       type: 'abilityDamage';
-      payload: { sourceInstanceId: number; targetInstanceId: number; damage: number; remainingHp: number }; // IDs changed
+      payload: { sourceInstanceId: number; targetInstanceId: number; damage: number; remainingHp: number };
     }
   | {
       type: 'abilityModifyStats';
       payload: {
-        sourceInstanceId: number; // ID changed
-        targetInstanceId: number; // ID changed
+        sourceInstanceId: number;
+        targetInstanceId: number;
         healthChange: number;
         attackChange: number;
         newAttack: number;
@@ -144,9 +147,16 @@ export type CombatEvent =
   | {
       type: 'unitSpawn';
       payload: {
-        team: string;
+        team: Team;
         spawnedUnit: UnitView;
         newBoardState: UnitView[];
+      };
+    }
+  | {
+      type: 'limitExceeded';
+      payload: {
+        losingTeam: Team | null;
+        reason: string;
       };
     };
 

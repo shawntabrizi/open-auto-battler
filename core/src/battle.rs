@@ -56,6 +56,14 @@ pub struct UnitView {
     pub abilities: Vec<Ability>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum BattleResult {
+    Victory,
+    Defeat,
+    Draw,
+}
+
 /// Events generated during combat for UI playback.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload", rename_all = "camelCase")]
@@ -74,17 +82,17 @@ pub enum CombatEvent {
     #[serde(rename_all = "camelCase")]
     DamageTaken {
         target_instance_id: UnitInstanceId,
-        team: String, // "PLAYER" or "ENEMY"
+        team: Team,
         remaining_hp: i32,
     },
     #[serde(rename_all = "camelCase")]
     UnitDeath {
-        team: String, // "PLAYER" or "ENEMY"
+        team: Team,
         new_board_state: Vec<UnitView>,
     },
     #[serde(rename_all = "camelCase")]
     BattleEnd {
-        result: String, // "VICTORY", "DEFEAT", "DRAW"
+        result: BattleResult,
     },
     #[serde(rename_all = "camelCase")]
     AbilityDamage {
@@ -104,13 +112,13 @@ pub enum CombatEvent {
     },
     #[serde(rename_all = "camelCase")]
     UnitSpawn {
-        team: String,
+        team: Team,
         spawned_unit: UnitView,
         new_board_state: Vec<UnitView>,
     },
     #[serde(rename_all = "camelCase")]
     LimitExceeded {
-        losing_team: String, // "PLAYER" or "ENEMY"
+        losing_team: Option<Team>,
         reason: String,
     },
 }
@@ -329,23 +337,16 @@ fn finalize_with_limit_exceeded(
 ) -> Vec<CombatEvent> {
     let losing_team = limits.limit_exceeded_by;
 
-    if let Some(team) = losing_team {
-        events.push(CombatEvent::LimitExceeded {
-            losing_team: team.to_string(),
-            reason: limits.limit_exceeded_reason.clone().unwrap_or_default(),
-        });
-    } else {
-        events.push(CombatEvent::LimitExceeded {
-            losing_team: "NONE".to_string(),
-            reason: limits.limit_exceeded_reason.clone().unwrap_or_default(),
-        });
-    }
+    events.push(CombatEvent::LimitExceeded {
+        losing_team,
+        reason: limits.limit_exceeded_reason.clone().unwrap_or_default(),
+    });
 
     events.push(CombatEvent::BattleEnd {
         result: match losing_team {
-            Some(Team::Player) => "DEFEAT".to_string(),
-            Some(Team::Enemy) => "VICTORY".to_string(),
-            None => "DRAW".to_string(),
+            Some(Team::Player) => BattleResult::Defeat,
+            Some(Team::Enemy) => BattleResult::Victory,
+            None => BattleResult::Draw,
         },
     });
     events.drain(..).collect()
@@ -751,7 +752,7 @@ fn apply_ability_effect(
             limits.record_spawn(source_team)?;
 
             // Check Cap
-            let (my_board, team_name) = match source_team {
+            let (my_board, _team_name) = match source_team {
                 Team::Player => (player_units, "PLAYER"),
                 Team::Enemy => (enemy_units, "ENEMY"),
             };
@@ -795,7 +796,7 @@ fn apply_ability_effect(
 
             // Log Spawn
             events.push(CombatEvent::UnitSpawn {
-                team: team_name.to_string(),
+                team: source_team,
                 spawned_unit: my_board[safe_idx].to_view(),
                 new_board_state: my_board.iter().map(|u| u.to_view()).collect(),
             });
@@ -899,11 +900,10 @@ fn execute_phase(
         }
         BattlePhase::End => {
             let result = match (player_units.is_empty(), enemy_units.is_empty()) {
-                (false, true) => "VICTORY",
-                (true, false) => "DEFEAT",
-                _ => "DRAW",
-            }
-            .to_string();
+                (false, true) => BattleResult::Victory,
+                (true, false) => BattleResult::Defeat,
+                _ => BattleResult::Draw,
+            };
             events.push(CombatEvent::BattleEnd { result });
         }
     }
@@ -991,12 +991,12 @@ fn execute_attack_clash(
 
     events.push(CombatEvent::DamageTaken {
         target_instance_id: p_id,
-        team: "PLAYER".to_string(),
+        team: Team::Player,
         remaining_hp: player_units[0].health,
     });
     events.push(CombatEvent::DamageTaken {
         target_instance_id: e_id,
-        team: "ENEMY".to_string(),
+        team: Team::Enemy,
         remaining_hp: enemy_units[0].health,
     });
 }
@@ -1033,13 +1033,13 @@ fn execute_death_check_phase(
     // Emit Events if needed (Frontend State Sync)
     if !player_dead.is_empty() {
         events.push(CombatEvent::UnitDeath {
-            team: "PLAYER".to_string(),
+            team: Team::Player,
             new_board_state: player_units.iter().map(|u| u.to_view()).collect(),
         });
     }
     if !enemy_dead.is_empty() {
         events.push(CombatEvent::UnitDeath {
-            team: "ENEMY".to_string(),
+            team: Team::Enemy,
             new_board_state: enemy_units.iter().map(|u| u.to_view()).collect(),
         });
     }
