@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CardView, BoardUnitView } from '../types';
+import { getCardEmoji } from '../utils/emoji';
 
 interface UnitCardProps {
   card: CardView | BoardUnitView;
@@ -107,44 +108,6 @@ export function UnitCard({
       )}
     </div>
   );
-}
-
-function getCardEmoji(templateId: string): string {
-  const emojis: Record<string, string> = {
-    goblin_scout: '👺',
-    goblin_grunt: '👹',
-    goblin_looter: '💰',
-    militia: '🛡',
-    shield_bearer: '🏰',
-    wolf_rider: '🐺',
-    orc_warrior: '⚔️',
-    orc_shaman: '🔮',
-    zombie_soldier: '🧟',
-    zombie_captain: '🧟‍♂️',
-    zombie_spawn: '👶',
-    zombie_breeder: '🧟‍♀️',
-    necromancer: '🧙',
-    battle_hardened: '💪',
-    troll_brute: '🧌',
-    troll_warrior: '🪓',
-    ogre_mauler: '👊',
-    ogre_warrior: '🔨',
-    giant_crusher: '🦣',
-    dragon_tyrant: '🐉',
-    sniper: '🎯',
-    archer: '🏹',
-    corpse_cart: '⚰️',
-    lich: '💀',
-    golem: '🗿',
-    raging_orc: '🤬',
-    pain_smith: '⛓️',
-    headhunter: '🕵️',
-    giant_slayer: '🗡️',
-    behemoth: '🐘',
-    mana_reaper: '⚖️',
-    shield_squire: '🛡️',
-  };
-  return emojis[templateId] || '❓';
 }
 
 // Empty slot component

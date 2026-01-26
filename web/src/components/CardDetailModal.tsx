@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CardView } from '../types';
+import { getCardEmoji } from '../utils/emoji';
 
 interface CardDetailModalProps {
   card: CardView;
@@ -11,22 +12,6 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
   const [showRaw, setShowRaw] = React.useState(false);
 
   if (!isOpen) return null;
-
-  const getCardEmoji = (templateId: string): string => {
-    const emojis: Record<string, string> = {
-      goblin_scout: '👺',
-      goblin_looter: '💰',
-      militia: '🛡',
-      shield_bearer: '🏰',
-      wolf_rider: '🐺',
-      orc_warrior: '👹',
-      troll_brute: '🧌',
-      ogre_mauler: '👊',
-      giant_crusher: '🦣',
-      dragon_tyrant: '🐉',
-    };
-    return emojis[templateId] || '❓';
-  };
 
   const getTriggerDescription = (trigger: string): string => {
     switch (trigger) {

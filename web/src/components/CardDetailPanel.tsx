@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { useMultiplayerStore } from '../store/multiplayerStore';
 import type { CardView } from '../types';
+import { getCardEmoji } from '../utils/emoji';
 
 interface CardDetailPanelProps {
   card: CardView | null;
@@ -37,34 +38,6 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
         </div>
       );
     }
-
-    const getCardEmoji = (templateId: string): string => {
-      const emojis: Record<string, string> = {
-        goblin_scout: '👺',
-        goblin_looter: '💰',
-        militia: '🛡',
-        shield_bearer: '🏰',
-        wolf_rider: '🐺',
-        orc_warrior: '👹',
-        troll_brute: '🧌',
-        ogre_mauler: '👊',
-        giant_crusher: '🦣',
-        dragon_tyrant: '🐉',
-        sniper: '🎯',
-        archer: '🏹',
-        corpse_cart: '⚰️',
-        lich: '💀',
-        golem: '🗿',
-        raging_orc: '🤬',
-        pain_smith: '⛓️',
-        headhunter: '🕵️',
-        giant_slayer: '🗡️',
-        behemoth: '🐘',
-        mana_reaper: '⚖️',
-        shield_squire: '🛡️',
-      };
-      return emojis[templateId] || '❓';
-    };
 
     const getTriggerDescription = (trigger: string): string => {
       switch (trigger) {
