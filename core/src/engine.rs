@@ -338,6 +338,7 @@ impl GameEngine {
                     attack: u.card.stats.attack,
                     health: u.current_health,
                     abilities: u.card.abilities.clone(),
+                    is_token: u.card.is_token,
                 }
             })
             .collect();
@@ -354,6 +355,7 @@ impl GameEngine {
                     attack: u.card.stats.attack,
                     health: u.current_health,
                     abilities: u.card.abilities.clone(),
+                    is_token: u.card.is_token,
                 }
             })
             .collect();
@@ -410,6 +412,7 @@ impl GameEngine {
                     template.health,
                     template.play_cost,
                     template.pitch_value,
+                    template.is_token,
                 )
                 .with_abilities(template.abilities.clone());
                 self.state.deck.push(card);
@@ -463,6 +466,7 @@ impl GameEngine {
                     attack: u.card.stats.attack,
                     health: u.current_health,
                     abilities: u.card.abilities.clone(),
+                    is_token: u.card.is_token,
                 }
             })
             .collect();
@@ -478,6 +482,7 @@ impl GameEngine {
                     attack: u.card.stats.attack,
                     health: u.current_health,
                     abilities: u.card.abilities.clone(),
+                    is_token: u.card.is_token,
                 }
             })
             .collect();

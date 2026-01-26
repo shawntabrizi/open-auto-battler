@@ -34,6 +34,7 @@ fn create_unit_from_template(
         template.health,
         template.play_cost,
         template.pitch_value,
+        template.is_token,
     );
 
     // Add abilities if any

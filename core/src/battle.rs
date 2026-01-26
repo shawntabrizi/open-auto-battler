@@ -67,6 +67,7 @@ pub struct UnitView {
     pub attack: i32,
     pub health: i32,
     pub abilities: Vec<Ability>,
+    pub is_token: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
@@ -189,6 +190,7 @@ pub struct CombatUnit {
     pub play_cost: i32,
     /// Tracks how many times each ability has triggered this battle (indexed by ability position)
     pub ability_trigger_counts: Vec<u32>,
+    pub is_token: bool,
 }
 
 impl CombatUnit {
@@ -206,6 +208,7 @@ impl CombatUnit {
             health_buff: 0,
             play_cost: card.economy.play_cost,
             ability_trigger_counts: vec![0; ability_count],
+            is_token: card.is_token,
         }
     }
 
@@ -217,6 +220,7 @@ impl CombatUnit {
             attack: self.effective_attack(),
             health: self.effective_health(),
             abilities: self.abilities.clone(),
+            is_token: self.is_token,
         }
     }
 
@@ -463,6 +467,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                     health_buff: 0,
                     play_cost: 0,
                     ability_trigger_counts: vec![],
+                    is_token: false,
                 };
                 &temp_source
             } else {
@@ -797,6 +802,7 @@ fn apply_ability_effect<R: BattleRng>(
                 template.health,
                 template.play_cost,
                 template.pitch_value,
+                template.is_token,
             );
             for ability in &template.abilities {
                 card = card.with_ability(ability.clone());

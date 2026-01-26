@@ -73,6 +73,7 @@ export interface CardView {
   playCost: number;
   pitchValue: number;
   abilities: Ability[];
+  isToken: boolean;
 }
 
 export interface BoardUnitView {
@@ -84,6 +85,7 @@ export interface BoardUnitView {
   playCost: number;
   pitchValue: number;
   abilities: Ability[];
+  isToken: boolean;
 }
 
 export interface ShopSlotView {
@@ -113,6 +115,7 @@ export interface UnitView {
   attack: number;
   health: number;
   abilities: Ability[];
+  isToken: boolean;
 }
 
 export type Team = 'PLAYER' | 'ENEMY';
@@ -191,6 +194,7 @@ export interface UnitTemplateView {
   playCost: number;
   pitchValue: number;
   abilities: Ability[];
+  isToken: boolean;
 }
 
 // Sandbox unit for custom battles

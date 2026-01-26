@@ -25,6 +25,7 @@ pub struct UnitTemplateView {
     pub play_cost: i32,
     pub pitch_value: i32,
     pub abilities: Vec<crate::types::Ability>,
+    pub is_token: bool,
 }
 
 /// Sandbox unit for custom battles
@@ -48,6 +49,7 @@ pub fn get_unit_templates() -> JsValue {
             play_cost: t.play_cost,
             pitch_value: t.pitch_value,
             abilities: t.abilities,
+            is_token: t.is_token,
         })
         .collect();
     serde_wasm_bindgen::to_value(&templates).unwrap_or(JsValue::NULL)
@@ -80,6 +82,7 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
             template.health,
             template.play_cost,
             template.pitch_value,
+            template.is_token,
         )
         .with_abilities(template.abilities.clone());
         Some(BoardUnit::from_card(card))
@@ -109,6 +112,7 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
                 attack: u.card.stats.attack,
                 health: u.current_health,
                 abilities: u.card.abilities.clone(),
+                is_token: u.card.is_token,
             }
         })
         .collect();
@@ -125,6 +129,7 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
                 attack: u.card.stats.attack,
                 health: u.current_health,
                 abilities: u.card.abilities.clone(),
+                is_token: u.card.is_token,
             }
         })
         .collect();

@@ -26,6 +26,7 @@ pub struct CardView {
     pub play_cost: i32,
     pub pitch_value: i32,
     pub abilities: Vec<crate::types::Ability>,
+    pub is_token: bool,
 }
 
 impl From<&UnitCard> for CardView {
@@ -39,6 +40,7 @@ impl From<&UnitCard> for CardView {
             play_cost: card.economy.play_cost,
             pitch_value: card.economy.pitch_value,
             abilities: card.abilities.clone(),
+            is_token: card.is_token,
         }
     }
 }
@@ -56,6 +58,7 @@ pub struct BoardUnitView {
     pub play_cost: i32,
     pub pitch_value: i32,
     pub abilities: Vec<crate::types::Ability>,
+    pub is_token: bool,
 }
 
 impl From<&BoardUnit> for BoardUnitView {
@@ -69,6 +72,7 @@ impl From<&BoardUnit> for BoardUnitView {
             play_cost: unit.card.economy.play_cost,
             pitch_value: unit.card.economy.pitch_value,
             abilities: unit.card.abilities.clone(),
+            is_token: unit.card.is_token,
         }
     }
 }
