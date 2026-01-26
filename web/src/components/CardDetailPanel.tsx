@@ -272,23 +272,86 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
 
   const renderRulesTab = () => {
     return (
-      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 text-sm text-gray-300">
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6 text-sm text-gray-300 pb-4">
         <section>
-          <h3 className="font-bold text-white mb-1 border-b border-gray-700 pb-1">Planning Phase</h3>
-          <p>Each turn you get a new Hand of 7 cards from your Bag. Unused cards return to your bag.</p>
+          <h3 className="font-bold text-white mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+            <span className="text-blue-400">01.</span> Planning Phase
+          </h3>
+          <p className="leading-relaxed">
+            Every round, you derive a fresh <strong className="text-white">Hand of 7 cards</strong> from your Bag. 
+            The selection is deterministic based on your game seed and the current round.
+          </p>
+          <p className="mt-2 text-gray-400 italic">
+            Unused hand cards return to your Bag. The Bag only shrinks when you play or pitch cards.
+          </p>
         </section>
+
         <section>
-          <h3 className="font-bold text-white mb-1 border-b border-gray-700 pb-1">Mana System</h3>
-          <p>You start each turn with 0 Mana. Pitch cards from your Hand or Units from your Board to gain Mana.</p>
-          <p className="mt-1 text-xs text-gray-400 italic">Your maximum mana capacity increases every round.</p>
+          <h3 className="font-bold text-white mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+            <span className="text-blue-400">02.</span> Mana & Economy
+          </h3>
+          <p className="leading-relaxed">
+            You start each turn with <strong className="text-blue-400">0 Mana</strong>. Gain mana by <strong className="text-orange-400">Pitching</strong> cards from your hand or units already on your board.
+          </p>
+          <ul className="mt-2 space-y-1 list-disc list-inside text-xs">
+            <li><strong className="text-white">Capacity:</strong> Starts at 3, increases by +1 every round (Max 10).</li>
+            <li><strong className="text-white">Refilling:</strong> You can pitch, spend, and pitch again in one turn.</li>
+            <li><strong className="text-white">Hard Limit:</strong> You cannot hold more than your capacity at once.</li>
+          </ul>
         </section>
+
         <section>
-          <h3 className="font-bold text-white mb-1 border-b border-gray-700 pb-1">Combat</h3>
-          <p>Units fight from front to back. High Attack units trigger their abilities first when a trigger is shared.</p>
+          <h3 className="font-bold text-white mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+            <span className="text-blue-400">03.</span> Priority System
+          </h3>
+          <p className="mb-2 leading-relaxed text-xs">
+            When multiple units share a trigger (e.g. "Battle Start"), the game uses a <strong className="text-white">Priority Queue</strong> to decide who goes first:
+          </p>
+          <div className="bg-black/30 p-3 rounded-lg border border-gray-800 font-mono text-[11px] space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500">1. Higher Power</span>
+              <span className="text-red-400">ATTACK</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500">2. Higher Vitality</span>
+              <span className="text-green-400">HEALTH</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500">3. Default Team</span>
+              <span className="text-blue-400">PLAYER</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500">4. Physical Lead</span>
+              <span className="text-yellow-400">FRONT-MOST</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500">5. Internal Logic</span>
+              <span className="text-purple-400">TOP-ABILITY</span>
+            </div>
+          </div>
         </section>
+
         <section>
-          <h3 className="font-bold text-white mb-1 border-b border-gray-700 pb-1">Winning</h3>
-          <p>Reach 10 Wins before you lose all 3 Lives!</p>
+          <h3 className="font-bold text-white mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+            <span className="text-blue-400">04.</span> Recursive Logic
+          </h3>
+          <p className="leading-relaxed">
+            The game state is <strong className="text-white">Live</strong>. If an ability kills a unit or spawns a new one, that unit's "On Death" or "On Spawn" triggers happen <strong className="text-yellow-500">immediately</strong>—even if it interrupts the current priority queue.
+          </p>
+          <p className="mt-2 text-xs text-gray-400 leading-relaxed">
+            Example: If a fast sniper kills a unit with "On Death: Damage", that damage fires before the next unit in the sniper's original phase acts.
+          </p>
+        </section>
+
+        <section>
+          <h3 className="font-bold text-white mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+            <span className="text-blue-400">05.</span> Victory
+          </h3>
+          <p className="leading-relaxed text-xs">
+            Battles are automated from <strong className="text-white">Front to Back</strong>. 
+            The first team to have all units defeated loses the round. 
+            Accumulate <strong className="text-yellow-500">10 Stars</strong> to win the run!
+          </p>
         </section>
       </div>
     );
