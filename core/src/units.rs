@@ -368,11 +368,11 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             play_cost: 3,
             pitch_value: 2,
             abilities: vec![Ability {
-                trigger: AbilityTrigger::OnSpawn,
+                trigger: AbilityTrigger::OnAllySpawn,
                 effect: AbilityEffect::ModifyStats {
                     health: 0,
                     attack: 2,
-                    target: AbilityTarget::SelfUnit,
+                    target: AbilityTarget::TriggerTarget,
                 },
                 name: String::from("Spawn Boost"),
                 description: String::from("Give +2 attack to any spawned unit"),

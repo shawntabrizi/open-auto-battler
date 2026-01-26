@@ -36,10 +36,10 @@ export interface Ability {
   maxTriggers?: number;
 }
 
-export type AbilityTrigger = 'onStart' | 'onFaint' | 'onAllyFaint' | 'onDamageTaken' | 'onSpawn' | 'beforeUnitAttack' | 'afterUnitAttack' | 'beforeAnyAttack' | 'afterAnyAttack';
+export type AbilityTrigger = 'onStart' | 'onFaint' | 'onAllyFaint' | 'onDamageTaken' | 'onSpawn' | 'onAllySpawn' | 'beforeUnitAttack' | 'afterUnitAttack' | 'beforeAnyAttack' | 'afterAnyAttack';
 
 export type AbilityTarget =
-  | 'selfUnit'
+  | 'selfUnit' | 'triggerTarget'
   | 'allAllies'
   | 'allEnemies'
   | 'randomAlly'

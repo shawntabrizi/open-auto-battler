@@ -104,6 +104,7 @@ pub enum AbilityTrigger {
     OnAllyFaint,
     OnDamageTaken,
     OnSpawn,
+    OnAllySpawn,
     BeforeUnitAttack,
     AfterUnitAttack,
     BeforeAnyAttack,
@@ -137,6 +138,7 @@ pub enum AbilityEffect {
 #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub enum AbilityTarget {
     SelfUnit,
+    TriggerTarget,
     AllAllies,
     AllEnemies,
     RandomAlly,

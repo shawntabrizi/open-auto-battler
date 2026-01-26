@@ -169,6 +169,7 @@ struct PendingTrigger {
     priority: TriggerPriority,
     is_from_dead: bool,
     spawn_index_override: Option<usize>,
+    trigger_target_id: Option<UnitInstanceId>,
     condition: AbilityCondition,
     /// Index of this ability in the source unit's abilities vec (for tracking trigger counts)
     ability_index: usize,
@@ -283,6 +284,14 @@ pub fn resolve_battle<R: BattleRng>(
     {
         return finalize_with_limit_exceeded(&mut events, &limits);
     }
+
+    // Since initial board units are effectively "spawned" at once,
+    // we should trigger OnAllySpawn for them if they have it.
+    // (Optional: depending on game rules, usually they don't buff each other at start
+    // unless it is an OnStart ability, but we can enable it here for consistency).
+    // Actually, usually OnAllySpawn is for things spawned DURING battle.
+    // But if we want initial Necromancers to buff each other, we could call it here.
+    // Let's stick to the prompt's focus on the rat token spawn first.
 
     // 2. Main Loop
     while !player_units.is_empty() && !enemy_units.is_empty() {
@@ -490,6 +499,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger.trigger_target_id,
             ) {
                 continue; // Condition not met, skip this trigger
             }
@@ -520,6 +530,7 @@ fn resolve_trigger_queue<R: BattleRng>(
             rng,
             limits,
             trigger.spawn_index_override, // Pass the index where the parent died
+            trigger.trigger_target_id,
         )?;
 
         let mut reaction_queue = Vec::new();
@@ -569,6 +580,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             },
                             is_from_dead: is_fatal, // ALLOW execution if it died from this damage
                             spawn_index_override: if is_fatal { Some(idx_in_team) } else { None },
+                            trigger_target_id: Some(unit_id),
                             condition: ability.condition.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
@@ -612,6 +624,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             },
                             is_from_dead: true,
                             spawn_index_override: Some(index), // Remember where it died!
+                            trigger_target_id: Some(dead_unit.instance_id),
                             condition: ability.condition.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
@@ -622,6 +635,7 @@ fn resolve_trigger_queue<R: BattleRng>(
 
         // Collect Player Deaths
         for (idx, dead_unit) in dead_player {
+            let dead_id = dead_unit.instance_id;
             queue_on_faint(dead_unit, idx, Team::Player, &mut reaction_queue);
             // Trigger OnAllyFaint for survivors
             for (s_idx, survivor) in player_units.iter().enumerate() {
@@ -640,6 +654,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             },
                             is_from_dead: false,
                             spawn_index_override: None,
+                            trigger_target_id: Some(dead_id),
                             condition: ability.condition.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
@@ -650,6 +665,7 @@ fn resolve_trigger_queue<R: BattleRng>(
         }
         // Collect Enemy Deaths
         for (idx, dead_unit) in dead_enemy {
+            let dead_id = dead_unit.instance_id;
             queue_on_faint(dead_unit, idx, Team::Enemy, &mut reaction_queue);
             // Trigger OnAllyFaint for survivors
             for (s_idx, survivor) in enemy_units.iter().enumerate() {
@@ -668,6 +684,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             },
                             is_from_dead: false,
                             spawn_index_override: None,
+                            trigger_target_id: Some(dead_id),
                             condition: ability.condition.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
@@ -709,7 +726,8 @@ fn apply_ability_effect<R: BattleRng>(
     events: &mut Vec<CombatEvent>,
     rng: &mut R,
     limits: &mut BattleLimits,
-    spawn_index_override: Option<usize>, // New Param
+    spawn_index_override: Option<usize>,
+    trigger_target_id: Option<UnitInstanceId>,
 ) -> Result<Vec<UnitInstanceId>, ()> {
     limits.enter_recursion(source_team)?;
     let mut damaged_units = Vec::new();
@@ -723,6 +741,7 @@ fn apply_ability_effect<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger_target_id,
             );
             for target_id in targets {
                 if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
@@ -753,6 +772,7 @@ fn apply_ability_effect<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger_target_id,
             );
             for target_id in targets {
                 if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
@@ -774,56 +794,138 @@ fn apply_ability_effect<R: BattleRng>(
         AbilityEffect::SpawnUnit { template_id } => {
             limits.record_spawn(source_team)?;
 
-            // Check Cap
-            let my_board = match source_team {
-                Team::Player => player_units,
-                Team::Enemy => enemy_units,
+            // 1. Create the unit and determine its insertion point
+            let (new_unit, safe_idx) = {
+                let my_board = match source_team {
+                    Team::Player => &mut *player_units,
+                    Team::Enemy => &mut *enemy_units,
+                };
+
+                if my_board.len() >= BOARD_SIZE {
+                    return Ok(damaged_units);
+                }
+
+                // Create Unit Logic
+                let templates = crate::units::get_starter_templates();
+                let template = templates
+                    .into_iter()
+                    .find(|t| t.template_id == *template_id)
+                    .expect("Spawn template not found");
+
+                let next_id = limits.generate_instance_id(source_team);
+                let instance_id = next_id;
+
+                let mut card = crate::types::UnitCard::new(
+                    instance_id.0.wrapping_mul(5000),
+                    template.template_id,
+                    template.name,
+                    template.attack,
+                    template.health,
+                    template.play_cost,
+                    template.pitch_value,
+                    template.is_token,
+                );
+                for ability in &template.abilities {
+                    card = card.with_ability(ability.clone());
+                }
+
+                let mut new_unit = CombatUnit::from_card(card);
+                new_unit.instance_id = instance_id;
+                new_unit.team = source_team;
+
+                // INSERTION LOGIC: Use override if provided (e.g. Zombie Cricket), otherwise Front (e.g. Spawner)
+                let insert_idx = spawn_index_override.unwrap_or(0);
+                let safe_idx = core::cmp::min(insert_idx, my_board.len());
+
+                my_board.insert(safe_idx, new_unit.clone());
+
+                // Log Spawn
+                events.push(CombatEvent::UnitSpawn {
+                    team: source_team,
+                    spawned_unit: new_unit.to_view(),
+                    new_board_state: my_board.iter().map(|u| u.to_view()).collect(),
+                });
+
+                (new_unit, safe_idx)
             };
 
-            if my_board.len() >= BOARD_SIZE {
-                return Ok(damaged_units);
+            // 2. TRIGGER REACTIONS: OnSpawn for the spawned unit, OnAllySpawn for others
+            // We do this AFTER dropping the 'my_board' borrow
+            let mut reactions = Vec::new();
+            let spawned_id = new_unit.instance_id;
+
+            {
+                let my_board = match source_team {
+                    Team::Player => &mut *player_units,
+                    Team::Enemy => &mut *enemy_units,
+                };
+
+                // 1. OnSpawn for the new unit itself
+                for (sub_idx, ability) in my_board[safe_idx].abilities.iter().enumerate() {
+                    if ability.trigger == AbilityTrigger::OnSpawn {
+                        reactions.push(PendingTrigger {
+                            source_id: spawned_id,
+                            team: source_team,
+                            effect: ability.effect.clone(),
+                            ability_name: ability.name.clone(),
+                            priority: TriggerPriority {
+                                attack: my_board[safe_idx].effective_attack(),
+                                health: my_board[safe_idx].effective_health(),
+                                unit_position: safe_idx,
+                                ability_order: sub_idx,
+                            },
+                            is_from_dead: false,
+                            spawn_index_override: None,
+                            trigger_target_id: Some(spawned_id),
+                            condition: ability.condition.clone(),
+                            ability_index: sub_idx,
+                            max_triggers: ability.max_triggers,
+                        });
+                    }
+                }
+
+                // 2. OnAllySpawn for existing units
+                for (i, unit) in my_board.iter().enumerate() {
+                    if unit.instance_id == spawned_id {
+                        continue;
+                    }
+                    for (sub_idx, ability) in unit.abilities.iter().enumerate() {
+                        if ability.trigger == AbilityTrigger::OnAllySpawn {
+                            reactions.push(PendingTrigger {
+                                source_id: unit.instance_id,
+                                team: source_team,
+                                effect: ability.effect.clone(),
+                                ability_name: ability.name.clone(),
+                                priority: TriggerPriority {
+                                    attack: unit.effective_attack(),
+                                    health: unit.effective_health(),
+                                    unit_position: i,
+                                    ability_order: sub_idx,
+                                },
+                                is_from_dead: false,
+                                spawn_index_override: None,
+                                trigger_target_id: Some(spawned_id),
+                                condition: ability.condition.clone(),
+                                ability_index: sub_idx,
+                                max_triggers: ability.max_triggers,
+                            });
+                        }
+                    }
+                }
             }
 
-            // Create Unit Logic
-            let templates = crate::units::get_starter_templates();
-            let template = templates
-                .into_iter()
-                .find(|t| t.template_id == *template_id)
-                .expect("Spawn template not found");
-
-            let next_id = limits.generate_instance_id(source_team);
-            let instance_id = next_id;
-
-            let mut card = crate::types::UnitCard::new(
-                instance_id.0.wrapping_mul(5000),
-                template.template_id,
-                template.name,
-                template.attack,
-                template.health,
-                template.play_cost,
-                template.pitch_value,
-                template.is_token,
-            );
-            for ability in &template.abilities {
-                card = card.with_ability(ability.clone());
+            if !reactions.is_empty() {
+                limits.enter_trigger_depth(source_team)?;
+                resolve_trigger_queue(
+                    &mut reactions,
+                    player_units,
+                    enemy_units,
+                    events,
+                    rng,
+                    limits,
+                )?;
+                limits.exit_trigger_depth();
             }
-
-            let mut new_unit = CombatUnit::from_card(card);
-            new_unit.instance_id = instance_id;
-            new_unit.team = source_team;
-
-            // INSERTION LOGIC: Use override if provided (e.g. Zombie Cricket), otherwise Front (e.g. Spawner)
-            let insert_idx = spawn_index_override.unwrap_or(0);
-            let safe_idx = core::cmp::min(insert_idx, my_board.len());
-
-            my_board.insert(safe_idx, new_unit);
-
-            // Log Spawn
-            events.push(CombatEvent::UnitSpawn {
-                team: source_team,
-                spawned_unit: my_board[safe_idx].to_view(),
-                new_board_state: my_board.iter().map(|u| u.to_view()).collect(),
-            });
 
             Ok(damaged_units)
         }
@@ -835,15 +937,12 @@ fn apply_ability_effect<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger_target_id,
             );
             for target_id in targets {
                 if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
                     let fatal = unit.health;
                     unit.health = unit.health.saturating_sub(fatal);
-                    // We don't add to damaged_units because Destroy usually implies death
-                    // and we want to avoid redundant "Hurt" triggers if it's an absolute kill,
-                    // but for consistency with "Hurt triggers on death", maybe we should?
-                    // The prompt asked for "kills", so I'll treat it as massive damage.
                     events.push(CombatEvent::AbilityDamage {
                         source_instance_id,
                         target_instance_id: target_id,
@@ -971,6 +1070,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
                         },
                         is_from_dead: false,
                         spawn_index_override: None,
+                        trigger_target_id: None,
                         condition: ability.condition.clone(),
                         ability_index: sub_idx,
                         max_triggers: ability.max_triggers,
@@ -1128,6 +1228,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                             },
                             is_from_dead: is_dead,
                             spawn_index_override: if is_dead { Some(current_idx) } else { None },
+                            trigger_target_id: Some(target_id),
                             condition: a.condition.clone(),
                             ability_index: sub_idx,
                             max_triggers: a.max_triggers,
@@ -1167,6 +1268,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                     },
                     is_from_dead: true,
                     spawn_index_override: Some(idx),
+                    trigger_target_id: Some(u.instance_id),
                     condition: a.condition.clone(),
                     ability_index: sub_idx,
                     max_triggers: a.max_triggers,
@@ -1190,6 +1292,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                         },
                         is_from_dead: false,
                         spawn_index_override: None,
+                        trigger_target_id: Some(u.instance_id), // u is the dead ally
                         condition: ability.condition.clone(),
                         ability_index: sub_idx,
                         max_triggers: ability.max_triggers,
@@ -1220,6 +1323,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                     },
                     is_from_dead: true,
                     spawn_index_override: Some(idx),
+                    trigger_target_id: Some(u.instance_id),
                     condition: a.condition.clone(),
                     ability_index: sub_idx,
                     max_triggers: a.max_triggers,
@@ -1243,6 +1347,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                         },
                         is_from_dead: false,
                         spawn_index_override: None,
+                        trigger_target_id: Some(u.instance_id), // u is the dead ally
                         condition: ability.condition.clone(),
                         ability_index: sub_idx,
                         max_triggers: ability.max_triggers,
@@ -1262,6 +1367,7 @@ fn get_targets<R: BattleRng>(
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
     rng: &mut R,
+    trigger_target_id: Option<UnitInstanceId>,
 ) -> Vec<UnitInstanceId> {
     let (allies, enemies) = match source_team {
         Team::Player => (player_units, enemy_units),
@@ -1270,6 +1376,7 @@ fn get_targets<R: BattleRng>(
 
     match target {
         AbilityTarget::SelfUnit => vec![source_instance_id],
+        AbilityTarget::TriggerTarget => trigger_target_id.map(|id| vec![id]).unwrap_or_default(),
         AbilityTarget::AllAllies => allies.iter().map(|u| u.instance_id).collect(),
         AbilityTarget::AllEnemies => enemies.iter().map(|u| u.instance_id).collect(),
         AbilityTarget::RandomAlly => {
@@ -1433,6 +1540,7 @@ fn evaluate_condition<R: BattleRng>(
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
     rng: &mut R,
+    trigger_target_id: Option<UnitInstanceId>,
 ) -> bool {
     match condition {
         AbilityCondition::None => true,
@@ -1446,6 +1554,7 @@ fn evaluate_condition<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger_target_id,
             );
             if target_ids.is_empty() {
                 return false;
@@ -1464,6 +1573,7 @@ fn evaluate_condition<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger_target_id,
             );
             if target_ids.is_empty() {
                 return false;
@@ -1482,6 +1592,7 @@ fn evaluate_condition<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger_target_id,
             );
             if target_ids.is_empty() {
                 return false;
@@ -1500,6 +1611,7 @@ fn evaluate_condition<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger_target_id,
             );
             if target_ids.is_empty() {
                 return false;
@@ -1534,6 +1646,7 @@ fn evaluate_condition<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger_target_id,
             );
             target_ids
                 .first()
@@ -1551,6 +1664,7 @@ fn evaluate_condition<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger_target_id,
             );
             target_ids
                 .first()
@@ -1568,6 +1682,7 @@ fn evaluate_condition<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger_target_id,
             );
             target_ids
                 .first()
@@ -1585,6 +1700,7 @@ fn evaluate_condition<R: BattleRng>(
                 player_units,
                 enemy_units,
                 rng,
+                trigger_target_id,
             );
             target_ids
                 .first()
@@ -1603,16 +1719,52 @@ fn evaluate_condition<R: BattleRng>(
 
         // Logic gates
         AbilityCondition::And { left, right } => {
-            evaluate_condition(left, ctx, target, player_units, enemy_units, rng)
-                && evaluate_condition(right, ctx, target, player_units, enemy_units, rng)
+            evaluate_condition(
+                left,
+                ctx,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+                trigger_target_id,
+            ) && evaluate_condition(
+                right,
+                ctx,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+                trigger_target_id,
+            )
         }
         AbilityCondition::Or { left, right } => {
-            evaluate_condition(left, ctx, target, player_units, enemy_units, rng)
-                || evaluate_condition(right, ctx, target, player_units, enemy_units, rng)
+            evaluate_condition(
+                left,
+                ctx,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+                trigger_target_id,
+            ) || evaluate_condition(
+                right,
+                ctx,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+                trigger_target_id,
+            )
         }
-        AbilityCondition::Not { inner } => {
-            !evaluate_condition(inner, ctx, target, player_units, enemy_units, rng)
-        }
+        AbilityCondition::Not { inner } => !evaluate_condition(
+            inner,
+            ctx,
+            target,
+            player_units,
+            enemy_units,
+            rng,
+            trigger_target_id,
+        ),
     }
 }
 

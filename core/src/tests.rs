@@ -202,6 +202,70 @@ mod tests {
     }
 
     #[test]
+    fn test_necromancer_spawn_boost() {
+        // SCENARIO: [Rat Swarm (1/1), Necromancer (2/3)].
+        // Necromancer has OnAllySpawn -> Give +2 Atk to TriggerTarget.
+        // Rat Swarm dies -> Spawns Rat Token (1/1).
+        // Necromancer should trigger and give Rat Token +2 Atk -> Rat Token is now 3/1.
+
+        let rat_swarm = create_dummy_card(1, "Rat Swarm", 1, 1).with_ability(Ability {
+            trigger: AbilityTrigger::OnFaint,
+            effect: AbilityEffect::SpawnUnit {
+                template_id: "rat_token".to_string(),
+            },
+            name: "Infestation".to_string(),
+            description: "Spawn token on death".to_string(),
+            condition: AbilityCondition::None,
+            max_triggers: None,
+        });
+
+        let necromancer = create_dummy_card(2, "Necromancer", 2, 3).with_ability(Ability {
+            trigger: AbilityTrigger::OnAllySpawn,
+            effect: AbilityEffect::ModifyStats {
+                health: 0,
+                attack: 2,
+                target: AbilityTarget::TriggerTarget,
+            },
+            name: "Spawn Boost".to_string(),
+            description: "Buff spawned units".to_string(),
+            condition: AbilityCondition::None,
+            max_triggers: None,
+        });
+
+        let p_board = vec![BoardUnit::from_card(rat_swarm), BoardUnit::from_card(necromancer)];
+        
+        // Enemy killer
+        let killer = create_dummy_card(3, "Killer", 10, 10);
+        let e_board = vec![BoardUnit::from_card(killer)];
+
+        let events = run_battle(&p_board, &e_board, 42);
+
+        // Analyze events:
+        // 1. Rat Swarm (p-1) dies.
+        // 2. UnitSpawn (rat_token, p-4).
+        // 3. AbilityTrigger (Necromancer p-2, Spawn Boost).
+        // 4. AbilityModifyStats (target p-4, +2 Atk).
+
+        let buff_event = events.iter().find(|e| {
+            if let CombatEvent::AbilityModifyStats { source_instance_id, attack_change, .. } = e {
+                // source is Necromancer (p-2), target is new Rat Token (p-4? usually next ID)
+                // Actually, let's just check if ANY buff from Necromancer to someone else (+2 atk) exists.
+                *source_instance_id == UnitId::player(2) && *attack_change == 2
+            } else {
+                false
+            }
+        });
+
+        assert!(buff_event.is_some(), "Necromancer should have triggered Spawn Boost");
+        
+        if let Some(CombatEvent::AbilityModifyStats { target_instance_id, new_attack, .. }) = buff_event {
+            assert_eq!(*new_attack, 3, "Rat Token should have 3 attack (1 base + 2 buff)");
+            // Verify it didn't target itself
+            assert_ne!(*target_instance_id, UnitId::player(2));
+        }
+    }
+
+    #[test]
     fn test_board_unit_health() {
         let mut unit = create_board_unit(1, "Test", 10, 10);
         assert!(unit.is_alive());
