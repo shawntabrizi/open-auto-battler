@@ -38,6 +38,7 @@ pub use battle::{
 pub use commit::verify_and_apply_turn;
 pub use error::{GameError, GameResult};
 pub use limits::{BattleLimits, LimitReason, Team};
+pub use opponents::get_opponent_for_round;
 pub use rng::{BattleRng, XorShiftRng};
 pub use state::*;
 pub use types::*;

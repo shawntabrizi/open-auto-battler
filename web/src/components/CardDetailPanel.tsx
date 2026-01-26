@@ -15,7 +15,7 @@ type TabType = 'card' | 'rules' | 'mode';
 export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
   const navigate = useNavigate();
-  const { view, selection, playHandCard, pitchHandCard, pitchBoardUnit, setSelection, showRawJson, toggleShowRawJson } = useGameStore();
+  const { view, selection, pitchHandCard, pitchBoardUnit, setSelection, showRawJson, toggleShowRawJson } = useGameStore();
 
   if (!isVisible) return null;
 
@@ -131,8 +131,6 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
           return target;
       }
     };
-
-    const emptyBoardSlot = view?.board.findIndex(slot => slot === null) ?? -1;
 
     return (
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
