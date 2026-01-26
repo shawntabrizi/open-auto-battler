@@ -21,6 +21,7 @@ const EMOJI_MAP: Record<string, string> = {
   assassin: '🥷',
   headhunter: '🕵️',
   giant_slayer: '🗡️',
+  warder: '💂',
 
   // Orcs
   orc_warrior: '⚔️',

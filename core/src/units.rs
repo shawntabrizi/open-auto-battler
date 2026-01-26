@@ -442,6 +442,26 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             }],
             is_token: false,
         },
+        CardTemplate {
+            template_id: "warder",
+            name: "Warder",
+            attack: 2,
+            health: 4,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: AbilityTrigger::OnEnemySpawn,
+                effect: AbilityEffect::Damage {
+                    amount: 1,
+                    target: AbilityTarget::TriggerTarget,
+                },
+                name: String::from("Seal Fate"),
+                description: String::from("Deal 1 damage to any enemy that spawns"),
+                condition: AbilityCondition::None,
+                max_triggers: None,
+            }],
+            is_token: false,
+        },
 
         // ==========================================
         // TIER 3 (COST 5-7): High Impact

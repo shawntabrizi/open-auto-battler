@@ -266,6 +266,66 @@ mod tests {
     }
 
     #[test]
+    fn test_warder_seal_fate() {
+        // SCENARIO: [Warder (2/4)] on Player team.
+        // Enemy has [Rat Swarm (1/1)].
+        // Rat Swarm dies -> Spawns Rat Token (1/1).
+        // Warder should trigger and deal 1 damage to the Rat Token -> Rat Token dies immediately.
+
+        let warder = create_dummy_card(1, "Warder", 2, 4).with_ability(Ability {
+            trigger: AbilityTrigger::OnEnemySpawn,
+            effect: AbilityEffect::Damage {
+                amount: 1,
+                target: AbilityTarget::TriggerTarget,
+            },
+            name: "Seal Fate".to_string(),
+            description: "Damage enemies on spawn".to_string(),
+            condition: AbilityCondition::None,
+            max_triggers: None,
+        });
+
+        let rat_swarm = create_dummy_card(2, "Rat Swarm", 1, 1).with_ability(Ability {
+            trigger: AbilityTrigger::OnFaint,
+            effect: AbilityEffect::SpawnUnit {
+                template_id: "rat_token".to_string(),
+            },
+            name: "Infestation".to_string(),
+            description: "Spawn token on death".to_string(),
+            condition: AbilityCondition::None,
+            max_triggers: None,
+        });
+
+        let p_board = vec![BoardUnit::from_card(warder)];
+        let e_board = vec![BoardUnit::from_card(rat_swarm)];
+
+        let events = run_battle(&p_board, &e_board, 42);
+
+        // Analyze events:
+        // 1. Rat Swarm (e-1) dies.
+        // 2. UnitSpawn (rat_token, e-3).
+        // 3. AbilityTrigger (Warder p-1, Seal Fate).
+        // 4. AbilityDamage (target e-3, 1 Dmg).
+        // 5. UnitDeath (rat_token).
+
+        let trigger_event = events.iter().find(|e| {
+            matches!(e, CombatEvent::AbilityTrigger { source_instance_id, ability_name } 
+                if *source_instance_id == UnitId::player(1) && ability_name == "Seal Fate")
+        });
+
+        assert!(trigger_event.is_some(), "Warder should have triggered Seal Fate");
+
+        let damage_event = events.iter().find(|e| {
+            if let CombatEvent::AbilityDamage { source_instance_id, damage, .. } = e {
+                *source_instance_id == UnitId::player(1) && *damage == 1
+            } else {
+                false
+            }
+        });
+
+        assert!(damage_event.is_some(), "Warder should have dealt 1 damage");
+    }
+
+    #[test]
     fn test_board_unit_health() {
         let mut unit = create_board_unit(1, "Test", 10, 10);
         assert!(unit.is_alive());

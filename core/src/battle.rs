@@ -912,6 +912,41 @@ fn apply_ability_effect<R: BattleRng>(
                         }
                     }
                 }
+
+                // 3. OnEnemySpawn for units on the opposite team
+                let opposing_board = match source_team {
+                    Team::Player => &mut *enemy_units,
+                    Team::Enemy => &mut *player_units,
+                };
+                let opposing_team = match source_team {
+                    Team::Player => Team::Enemy,
+                    Team::Enemy => Team::Player,
+                };
+
+                for (i, unit) in opposing_board.iter().enumerate() {
+                    for (sub_idx, ability) in unit.abilities.iter().enumerate() {
+                        if ability.trigger == AbilityTrigger::OnEnemySpawn {
+                            reactions.push(PendingTrigger {
+                                source_id: unit.instance_id,
+                                team: opposing_team,
+                                effect: ability.effect.clone(),
+                                ability_name: ability.name.clone(),
+                                priority: TriggerPriority {
+                                    attack: unit.effective_attack(),
+                                    health: unit.effective_health(),
+                                    unit_position: i,
+                                    ability_order: sub_idx,
+                                },
+                                is_from_dead: false,
+                                spawn_index_override: None,
+                                trigger_target_id: Some(spawned_id),
+                                condition: ability.condition.clone(),
+                                ability_index: sub_idx,
+                                max_triggers: ability.max_triggers,
+                            });
+                        }
+                    }
+                }
             }
 
             if !reactions.is_empty() {

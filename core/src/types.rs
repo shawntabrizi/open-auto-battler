@@ -105,6 +105,7 @@ pub enum AbilityTrigger {
     OnDamageTaken,
     OnSpawn,
     OnAllySpawn,
+    OnEnemySpawn,
     BeforeUnitAttack,
     AfterUnitAttack,
     BeforeAnyAttack,

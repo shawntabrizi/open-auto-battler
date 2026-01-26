@@ -50,6 +50,8 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
         case 'onSpawn':
           return 'On Spawn';
         case 'onAllySpawn':
+        case 'onEnemySpawn':
+          return 'Enemy Spawned';
           return 'Ally Spawned';
         case 'beforeUnitAttack':
           return 'Before Attacking';
