@@ -20,7 +20,7 @@ mod tests {
     // ==========================================
 
     fn create_dummy_card(id: u32, name: &str, atk: i32, hp: i32) -> UnitCard {
-        UnitCard::new(id, name, name, atk, hp, 1, 1)
+        UnitCard::new(id, name, name, atk, hp, 1, 1, false)
     }
 
     fn create_board_unit(id: u32, name: &str, atk: i32, hp: i32) -> BoardUnit {
@@ -127,6 +127,7 @@ mod tests {
                 pitch_value: 1,
             },
             abilities: vec![ability],
+            is_token: false,
         };
 
         BoardUnit {
@@ -149,6 +150,7 @@ mod tests {
                 pitch_value: 0,
             },
             abilities: vec![],
+            is_token: false,
         };
         BoardUnit {
             card,
@@ -280,7 +282,7 @@ mod tests {
             condition: crate::types::AbilityCondition::default(),
             max_triggers: None,
         };
-        let e_card = UnitCard::new(2, "Enemy", "Enemy", 5, 5, 0, 0).with_ability(ability);
+        let e_card = UnitCard::new(2, "Enemy", "Enemy", 5, 5, 0, 0, false).with_ability(ability);
         let e_unit = BoardUnit::from_card(e_card);
 
         let p_board = vec![p_unit];
@@ -384,7 +386,7 @@ mod tests {
         );
 
         let unit = BoardUnit::from_card(
-            UnitCard::new(1, "Unit", "Unit", 5, 5, 0, 0).with_abilities(vec![ability_a, ability_b]),
+            UnitCard::new(1, "Unit", "Unit", 5, 5, 0, 0, false).with_abilities(vec![ability_a, ability_b]),
         );
 
         let p_board = vec![unit];
@@ -429,7 +431,7 @@ mod tests {
         // 5. Ability Order (Defined First)
 
         // U1: 10 Atk (Priority 1)
-        let u1 = BoardUnit::from_card(UnitCard::new(1, "U1", "U1", 10, 1, 0, 0).with_ability(
+        let u1 = BoardUnit::from_card(UnitCard::new(1, "U1", "U1", 10, 1, 0, 0, false).with_ability(
             create_ability(
                 AbilityTrigger::OnStart,
                 AbilityEffect::ModifyStats {
@@ -448,7 +450,7 @@ mod tests {
         let u3 = create_tester_unit(3, "U3", 5, 5, "U3");
 
         // U4: 5 Atk, 5 HP, Enemy Team (Priority 4)
-        let u4 = BoardUnit::from_card(UnitCard::new(4, "U4", "U4", 5, 5, 0, 0).with_ability(
+        let u4 = BoardUnit::from_card(UnitCard::new(4, "U4", "U4", 5, 5, 0, 0, false).with_ability(
             create_ability(
                 AbilityTrigger::OnStart,
                 AbilityEffect::ModifyStats {
@@ -482,7 +484,7 @@ mod tests {
         );
 
         let u5 = BoardUnit::from_card(
-            UnitCard::new(5, "U5", "U5", 1, 1, 0, 0)
+            UnitCard::new(5, "U5", "U5", 1, 1, 0, 0, false)
                 .with_abilities(vec![ability_u5_a, ability_u5_b]),
         );
 
@@ -539,7 +541,7 @@ mod tests {
             "U1",
         );
         let u1 = BoardUnit::from_card(
-            UnitCard::new(1, "U1", "U1", 10, 1, 0, 0).with_ability(ability_u1),
+            UnitCard::new(1, "U1", "U1", 10, 1, 0, 0, false).with_ability(ability_u1),
         );
 
         // --- 2. Health Winner (Player) ---
@@ -562,7 +564,7 @@ mod tests {
             "U4",
         );
         let u4 =
-            BoardUnit::from_card(UnitCard::new(4, "U4", "U4", 5, 5, 0, 0).with_ability(ability_u4));
+            BoardUnit::from_card(UnitCard::new(4, "U4", "U4", 5, 5, 0, 0, false).with_ability(ability_u4));
 
         // --- 5 & 6. Index Tiebreaker (Player) ---
         // U5: 1 Atk, 1 HP. Index 2 (Front relative to U6).
@@ -645,6 +647,7 @@ mod tests {
                 pitch_value: 0,
             },
             abilities: vec![killer_ability],
+            is_token: false,
         };
         // Construct Card B (Slow)
         let card_b = UnitCard {
@@ -660,6 +663,7 @@ mod tests {
                 pitch_value: 0,
             },
             abilities: vec![slow_ability],
+            is_token: false,
         };
 
         // Enemy (Weak)
@@ -676,6 +680,7 @@ mod tests {
                 pitch_value: 0,
             },
             abilities: vec![],
+            is_token: false,
         };
 
         let p_board = vec![
@@ -1520,9 +1525,9 @@ mod tests {
         let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
 
         // Manual units with specific costs
-        let cheap = UnitCard::new(2, "Cheap", "Cheap", 1, 10, 1, 0);
-        let expensive = UnitCard::new(3, "Expensive", "Expensive", 1, 10, 10, 0);
-        let medium = UnitCard::new(4, "Medium", "Medium", 1, 10, 5, 0);
+        let cheap = UnitCard::new(2, "Cheap", "Cheap", 1, 10, 1, 0, false);
+        let expensive = UnitCard::new(3, "Expensive", "Expensive", 1, 10, 10, 0, false);
+        let medium = UnitCard::new(4, "Medium", "Medium", 1, 10, 5, 0, false);
 
         let p_board = vec![BoardUnit::from_card(sniper)];
         let e_board = vec![
@@ -1556,9 +1561,9 @@ mod tests {
         let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
 
         // Manual units with specific costs
-        let expensive = UnitCard::new(2, "Expensive", "Expensive", 1, 10, 10, 0);
-        let cheap = UnitCard::new(3, "Cheap", "Cheap", 1, 10, 1, 0);
-        let medium = UnitCard::new(4, "Medium", "Medium", 1, 10, 5, 0);
+        let expensive = UnitCard::new(2, "Expensive", "Expensive", 1, 10, 10, 0, false);
+        let cheap = UnitCard::new(3, "Cheap", "Cheap", 1, 10, 1, 0, false);
+        let medium = UnitCard::new(4, "Medium", "Medium", 1, 10, 5, 0, false);
 
         let p_board = vec![BoardUnit::from_card(sniper)];
         let e_board = vec![
@@ -1602,9 +1607,9 @@ mod tests {
         let reaper = create_dummy_card(1, "ManaReaper", 2, 2)
             .with_abilities(vec![reaper_ability_high, reaper_ability_low]);
 
-        let cheap = UnitCard::new(2, "Cheap", "Cheap", 1, 10, 1, 0);
-        let medium = UnitCard::new(3, "Medium", "Medium", 1, 10, 5, 0);
-        let expensive = UnitCard::new(4, "Expensive", "Expensive", 1, 10, 10, 0);
+        let cheap = UnitCard::new(2, "Cheap", "Cheap", 1, 10, 1, 0, false);
+        let medium = UnitCard::new(3, "Medium", "Medium", 1, 10, 5, 0, false);
+        let expensive = UnitCard::new(4, "Expensive", "Expensive", 1, 10, 10, 0, false);
 
         let p_board = vec![BoardUnit::from_card(reaper)];
         let e_board = vec![
@@ -1751,7 +1756,7 @@ mod tests {
         // Support has BeforeAnyAttack -> +1 Atk (Should trigger)
 
         let front_unit = BoardUnit::from_card(
-            UnitCard::new(1, "Front", "Front", 1, 10, 0, 0).with_ability(create_ability(
+            UnitCard::new(1, "Front", "Front", 1, 10, 0, 0, false).with_ability(create_ability(
                 AbilityTrigger::BeforeUnitAttack,
                 AbilityEffect::ModifyStats {
                     health: 0,
@@ -1763,7 +1768,7 @@ mod tests {
         );
 
         let support_unit = BoardUnit::from_card(
-            UnitCard::new(2, "Support", "Support", 1, 10, 0, 0).with_abilities(vec![
+            UnitCard::new(2, "Support", "Support", 1, 10, 0, 0, false).with_abilities(vec![
                 create_ability(
                     AbilityTrigger::BeforeUnitAttack,
                     AbilityEffect::ModifyStats {
@@ -1818,7 +1823,7 @@ mod tests {
     fn test_after_attack_trigger_scopes() {
         // Similar to above but for After variants
         let front_unit = BoardUnit::from_card(
-            UnitCard::new(1, "Front", "Front", 1, 10, 0, 0).with_ability(create_ability(
+            UnitCard::new(1, "Front", "Front", 1, 10, 0, 0, false).with_ability(create_ability(
                 AbilityTrigger::AfterUnitAttack,
                 AbilityEffect::ModifyStats {
                     health: 0,
@@ -1830,7 +1835,7 @@ mod tests {
         );
 
         let support_unit = BoardUnit::from_card(
-            UnitCard::new(2, "Support", "Support", 1, 10, 0, 0).with_abilities(vec![
+            UnitCard::new(2, "Support", "Support", 1, 10, 0, 0, false).with_abilities(vec![
                 create_ability(
                     AbilityTrigger::AfterUnitAttack,
                     AbilityEffect::ModifyStats {
@@ -1887,7 +1892,7 @@ mod tests {
         // even though it's a different trigger type than LowAtkBack.
 
         let high_atk_front = BoardUnit::from_card(
-            UnitCard::new(1, "High", "High", 10, 10, 0, 0).with_ability(create_ability(
+            UnitCard::new(1, "High", "High", 10, 10, 0, 0, false).with_ability(create_ability(
                 AbilityTrigger::BeforeUnitAttack,
                 AbilityEffect::ModifyStats {
                     health: 0,
@@ -1899,7 +1904,7 @@ mod tests {
         );
 
         let low_atk_back = BoardUnit::from_card(
-            UnitCard::new(2, "Low", "Low", 1, 10, 0, 0).with_ability(create_ability(
+            UnitCard::new(2, "Low", "Low", 1, 10, 0, 0, false).with_ability(create_ability(
                 AbilityTrigger::BeforeAnyAttack,
                 AbilityEffect::ModifyStats {
                     health: 0,
