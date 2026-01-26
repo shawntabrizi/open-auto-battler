@@ -28,12 +28,10 @@ export function Arena() {
     const data = e.dataTransfer.getData('text/plain');
 
     if (data.startsWith('board-') && draggedIndex !== null && draggedIndex !== dropIndex) {
-      // Board card dropped on board position - swap
+      // Swapping existing units is still allowed via Drag and Drop
       swapBoardPositions(draggedIndex, dropIndex);
     } else if (data.startsWith('shop-')) {
-      // Shop card dropped on board position - buy
       const shopIndex = parseInt(data.split('-')[1]);
-      // Buy and target this specific slot
       buyAndPlace(shopIndex, dropIndex);
     }
 
@@ -42,40 +40,36 @@ export function Arena() {
 
   if (!view) return null;
 
-  // Defensive check for board array
   if (!view.board || !Array.isArray(view.board)) {
-    console.error('Arena: view.board is invalid:', view.board);
     return <div className="text-red-500">Error: Board data not available</div>;
   }
 
   const handleBoardSlotClick = (index: number) => {
     const unit = view.board[index];
 
-    // If we have a shop card selected, try to buy and place here
+    // If we have a shop card selected, we still allow "Click to Place" 
+    // because the user intent to buy is specific.
     if (selection?.type === 'shop') {
       buyAndPlace(selection.index, index);
       return;
     }
 
-    // If we have a board unit selected, try to swap
-    if (selection?.type === 'board' && selection.index !== index) {
-      swapBoardPositions(selection.index, index);
-      return;
-    }
-
-    // Select/deselect this board slot
+    // DISBALED: swapBoardPositions on click. 
+    // Clicking a board unit now only handles selection/inspection.
     if (unit) {
       if (selection?.type === 'board' && selection.index === index) {
         setSelection(null);
       } else {
         setSelection({ type: 'board', index });
       }
+    } else {
+      // Clicked an empty slot with no shop card selected
+      setSelection(null);
     }
   };
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-8 py-4">
-      {/* Enemy Board (placeholder during shop, shown during battle) */}
       <div className="flex gap-2 opacity-50">
         <div className="text-sm text-gray-500 mr-4 self-center">Enemy</div>
         {Array.from({ length: 5 }).map((_, i) => (
@@ -85,18 +79,14 @@ export function Arena() {
         ))}
       </div>
 
-      {/* VS Divider */}
       <div className="text-2xl text-gray-500 font-bold">VS</div>
 
-      {/* Player Board - reversed to match battle layout (5 4 3 2 1) */}
       <div className="flex gap-2">
         <div className="text-sm text-gray-400 mr-4 self-center">Board</div>
         {Array.from({ length: 5 }).map((_, displayIndex) => {
-          // Convert display index to array index: display 0 = position 5 = array index 4
-          // display 1 = position 4 = array index 3, etc.
           const arrayIndex = 4 - displayIndex;
           const unit = view.board[arrayIndex];
-          const displayPosition = 5 - displayIndex; // 5, 4, 3, 2, 1 for labels
+          const displayPosition = 5 - displayIndex;
 
           return unit ? (
             <UnitCard
@@ -125,7 +115,6 @@ export function Arena() {
         })}
       </div>
 
-      {/* Action buttons for selected board unit */}
       {selection?.type === 'board' && view.board[selection.index] && (
         <div className="flex gap-2">
           <button
