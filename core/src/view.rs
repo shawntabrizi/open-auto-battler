@@ -68,7 +68,7 @@ impl From<&BoardUnit> for BoardUnitView {
             template_id: unit.card.template_id.clone(),
             name: unit.card.name.clone(),
             attack: unit.card.stats.attack,
-            health: unit.current_health,
+            health: unit.effective_health(),
             play_cost: unit.card.economy.play_cost,
             pitch_value: unit.card.economy.pitch_value,
             abilities: unit.card.abilities.clone(),

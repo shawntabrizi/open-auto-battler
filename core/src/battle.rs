@@ -225,11 +225,11 @@ impl CombatUnit {
     }
 
     fn effective_attack(&self) -> i32 {
-        self.attack + self.attack_buff
+        self.attack.saturating_add(self.attack_buff).max(0)
     }
 
     fn effective_health(&self) -> i32 {
-        self.health
+        self.health.max(0)
     }
 }
 
@@ -252,7 +252,7 @@ pub fn resolve_battle<R: BattleRng>(
             let mut cu = CombatUnit::from_card(u.card.clone());
             cu.instance_id = limits.generate_instance_id(Team::Player);
             cu.team = Team::Player;
-            cu.health = u.current_health;
+            cu.health = u.current_health.max(0);
             cu
         })
         .collect();
@@ -263,7 +263,7 @@ pub fn resolve_battle<R: BattleRng>(
             let mut cu = CombatUnit::from_card(u.card.clone());
             cu.instance_id = limits.generate_instance_id(Team::Enemy);
             cu.team = Team::Enemy;
-            cu.health = u.current_health;
+            cu.health = u.current_health.max(0);
             cu
         })
         .collect();
@@ -726,9 +726,9 @@ fn apply_ability_effect<R: BattleRng>(
             );
             for target_id in targets {
                 if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
-                    let actual_damage = *amount;
+                    let actual_damage = (*amount).max(0);
                     if actual_damage > 0 {
-                        unit.health -= actual_damage;
+                        unit.health = unit.health.saturating_sub(actual_damage);
                         damaged_units.push(target_id);
                         events.push(CombatEvent::AbilityDamage {
                             source_instance_id,
@@ -756,9 +756,9 @@ fn apply_ability_effect<R: BattleRng>(
             );
             for target_id in targets {
                 if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
-                    unit.attack_buff += attack;
-                    unit.health += health;
-                    unit.health_buff += health;
+                    unit.attack_buff = unit.attack_buff.saturating_add(*attack);
+                    unit.health = unit.health.saturating_add(*health);
+                    unit.health_buff = unit.health_buff.saturating_add(*health);
                     events.push(CombatEvent::AbilityModifyStats {
                         source_instance_id,
                         target_instance_id: target_id,
@@ -838,8 +838,8 @@ fn apply_ability_effect<R: BattleRng>(
             );
             for target_id in targets {
                 if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
-                    let fatal = unit.health + 999;
-                    unit.health -= fatal;
+                    let fatal = unit.health;
+                    unit.health = unit.health.saturating_sub(fatal);
                     // We don't add to damaged_units because Destroy usually implies death
                     // and we want to avoid redundant "Hurt" triggers if it's an absolute kill,
                     // but for consistency with "Hurt triggers on death", maybe we should?
@@ -1006,8 +1006,8 @@ fn execute_attack_clash(
     let e_id = e.instance_id;
 
     // Apply Dmg
-    player_units[0].health -= e_dmg;
-    enemy_units[0].health -= p_dmg;
+    player_units[0].health = player_units[0].health.saturating_sub(e_dmg);
+    enemy_units[0].health = enemy_units[0].health.saturating_sub(p_dmg);
 
     events.push(CombatEvent::DamageTaken {
         target_instance_id: p_id,
@@ -1336,7 +1336,7 @@ fn get_targets<R: BattleRng>(
             } else {
                 let mut target = &enemies[0];
                 for e in enemies.iter().skip(1) {
-                    if e.health < target.health {
+                    if e.effective_health() < target.effective_health() {
                         target = e;
                     }
                 }
@@ -1362,7 +1362,7 @@ fn get_targets<R: BattleRng>(
             } else {
                 let mut target = &enemies[0];
                 for e in enemies.iter().skip(1) {
-                    if e.health > target.health {
+                    if e.effective_health() > target.effective_health() {
                         target = e;
                     }
                 }
