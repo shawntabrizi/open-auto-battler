@@ -379,6 +379,12 @@ impl GameEngine {
         }
         Ok(())
     }
+
+    /// Set the game phase to Battle (for P2P)
+    #[wasm_bindgen]
+    pub fn set_phase_battle(&mut self) {
+        self.state.phase = GamePhase::Battle;
+    }
 }
 
 // Private implementation methods
