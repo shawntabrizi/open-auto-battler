@@ -49,9 +49,7 @@ impl XorShiftRng {
 
     /// Create a new RNG from a u32 seed
     pub fn seed_from_u32(seed: u32) -> Self {
-        Self {
-            state: seed.max(1),
-        }
+        Self { state: seed.max(1) }
     }
 }
 

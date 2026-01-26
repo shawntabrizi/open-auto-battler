@@ -32,7 +32,9 @@ mod sandbox;
 mod tests;
 
 // Core exports (always available)
-pub use battle::{resolve_battle, BattlePhase, BattleResult, CombatEvent, CombatUnit, UnitId, UnitView};
+pub use battle::{
+    resolve_battle, BattlePhase, BattleResult, CombatEvent, CombatUnit, UnitId, UnitView,
+};
 pub use commit::verify_and_apply_turn;
 pub use error::{GameError, GameResult};
 pub use limits::{BattleLimits, LimitReason, Team};

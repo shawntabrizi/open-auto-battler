@@ -82,7 +82,10 @@ pub enum BattleResult {
 /// Events generated during combat for UI playback.
 #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(tag = "type", content = "payload", rename_all = "camelCase"))]
+#[cfg_attr(
+    feature = "std",
+    serde(tag = "type", content = "payload", rename_all = "camelCase")
+)]
 pub enum CombatEvent {
     #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     PhaseStart { phase: BattlePhase },
@@ -107,9 +110,7 @@ pub enum CombatEvent {
         new_board_state: Vec<UnitView>,
     },
     #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
-    BattleEnd {
-        result: BattleResult,
-    },
+    BattleEnd { result: BattleResult },
     #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     AbilityDamage {
         source_instance_id: UnitInstanceId,
@@ -199,7 +200,7 @@ impl CombatUnit {
         let ability_count = card.abilities.len();
         Self {
             instance_id: UnitId::player(0), // Placeholder
-            team: Team::Player, // This will be overridden when spawning
+            team: Team::Player,             // This will be overridden when spawning
             attack: card.stats.attack,
             health: card.stats.health,
             abilities: card.abilities,
@@ -1475,7 +1476,11 @@ fn get_targets<R: BattleRng>(
                         pos - 1
                     } else {
                         // Dead unit was removed, so the unit that was at pos-1 is still at pos-1
-                        if pos > 0 && pos - 1 < allies.len() { pos - 1 } else { return vec![] }
+                        if pos > 0 && pos - 1 < allies.len() {
+                            pos - 1
+                        } else {
+                            return vec![];
+                        }
                     };
                     vec![allies[idx].instance_id]
                 } else {

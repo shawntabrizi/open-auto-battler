@@ -8,8 +8,8 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::battle::{resolve_battle, CombatEvent, UnitId, UnitView};
-use crate::log;
 use crate::commit::verify_and_apply_turn;
+use crate::log;
 use crate::opponents::get_opponent_for_round;
 use crate::rng::XorShiftRng;
 use crate::state::*;
@@ -36,10 +36,10 @@ pub struct GameEngine {
     // Per-turn local tracking (transient, not persisted)
     current_mana: i32,
     hand_indices: Vec<usize>,
-    hand_used: Vec<bool>,   // true = pitched or played
-    hand_pitched: Vec<bool>, // true = pitched for mana
-    hand_played: Vec<bool>,  // true = played to board
-    board_pitched: Vec<usize>, // board slots that were pitched
+    hand_used: Vec<bool>,                // true = pitched or played
+    hand_pitched: Vec<bool>,             // true = pitched for mana
+    hand_played: Vec<bool>,              // true = played to board
+    board_pitched: Vec<usize>,           // board slots that were pitched
     start_board: Vec<Option<BoardUnit>>, // board state at the start of the turn
 }
 
@@ -70,7 +70,12 @@ impl GameEngine {
     #[wasm_bindgen]
     pub fn get_view(&self) -> JsValue {
         log::debug("get_view", "Serializing game state to view");
-        let view = GameView::from_state(&self.state, self.current_mana, &self.hand_indices, &self.hand_used);
+        let view = GameView::from_state(
+            &self.state,
+            self.current_mana,
+            &self.hand_indices,
+            &self.hand_used,
+        );
         match serde_wasm_bindgen::to_value(&view) {
             Ok(val) => val,
             Err(e) => {

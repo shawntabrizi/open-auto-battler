@@ -169,11 +169,17 @@ pub struct Ability {
     pub description: String,
     /// Optional condition that must be met for this ability to activate.
     /// If None or AbilityCondition::None, the ability always triggers.
-    #[cfg_attr(feature = "std", serde(default, skip_serializing_if = "is_condition_none"))]
+    #[cfg_attr(
+        feature = "std",
+        serde(default, skip_serializing_if = "is_condition_none")
+    )]
     pub condition: AbilityCondition,
     /// Optional limit on how many times this ability can trigger per battle.
     /// If None, the ability can trigger unlimited times.
-    #[cfg_attr(feature = "std", serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(
+        feature = "std",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub max_triggers: Option<u32>,
 }
 

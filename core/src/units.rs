@@ -138,7 +138,6 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             }],
             is_token: false,
         },
-
         // ==========================================
         // TIER 2 (COST 3-4): Mid Game Synergies
         // ==========================================
@@ -483,7 +482,6 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             }],
             is_token: false,
         },
-
         // ==========================================
         // TIER 3 (COST 5-7): High Impact
         // ==========================================
@@ -673,7 +671,6 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             ],
             is_token: false,
         },
-
         // ==========================================
         // TIER 4 (COST 8-10): Legendary
         // ==========================================
