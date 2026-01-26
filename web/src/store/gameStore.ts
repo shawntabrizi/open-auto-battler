@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
-import type { GameView, BattleOutput, Selection } from '../types';
+import type { GameView, BattleOutput, Selection, BoardUnitView } from '../types';
 import type { GameEngine } from '../wasm/manalimit_core';
 
 type GameEngineInstance = GameEngine;
@@ -12,7 +12,6 @@ interface WasmModule {
 }
 
 interface GameStore {
-  // State
   engine: GameEngineInstance | null;
   view: GameView | null;
   battleOutput: BattleOutput | null;
@@ -22,10 +21,10 @@ interface GameStore {
   showBattleOverlay: boolean;
   showRawJson: boolean;
 
-  // Actions
   init: () => Promise<void>;
   pitchShopCard: (index: number) => void;
   buyCard: (shopIndex: number) => void;
+  buyAndPlace: (shopIndex: number, boardIndex: number) => void;
   toggleFreeze: (shopIndex: number) => void;
   swapBoardPositions: (slotA: number, slotB: number) => void;
   pitchBoardUnit: (boardSlot: number) => void;
@@ -36,16 +35,13 @@ interface GameStore {
   closeBattleOverlay: () => void;
   toggleShowRawJson: () => void;
 
-  // Multiplayer Actions
   startMultiplayerGame: (seed: number) => void;
   resolveMultiplayerBattle: (opponentBoard: any, seed: number) => void;
 }
 
-// Module-level state to prevent double initialization
 let wasmInitialized = false;
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  // Initial state
   engine: null,
   view: null,
   battleOutput: null,
@@ -55,39 +51,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showBattleOverlay: false,
   showRawJson: JSON.parse(localStorage.getItem('showRawJson') || 'false'),
 
-  // Initialize WASM
   init: async () => {
     if (get().engine) return;
-
     try {
       set({ isLoading: true, error: null });
-
       const wasm = (await import('manalimit-core')) as unknown as WasmModule;
       if (!wasmInitialized) {
         await wasm.default();
         wasmInitialized = true;
       }
-
       const engine = new wasm.GameEngine();
       set({ engine, view: engine.get_view(), isLoading: false });
-
-      console.log('WASM initialized:', wasm.greet());
     } catch (err) {
       console.error('Failed to initialize WASM:', err);
       set({ error: String(err), isLoading: false });
     }
   },
 
-  // Shop actions
   pitchShopCard: (index: number) => {
     const { engine } = get();
     if (!engine) return;
     try {
       engine.pitch_shop_card(index);
       set({ view: engine.get_view(), selection: null });
-    } catch (err) {
-      console.error('Failed to pitch card:', err);
-    }
+    } catch (err) { console.error(err); }
   },
 
   buyCard: (shopIndex: number) => {
@@ -97,8 +84,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
       engine.buy_card(shopIndex);
       set({ view: engine.get_view(), selection: null });
     } catch (err) {
-      toast.error("Not enough mana!");
-      console.error('Failed to buy card:', err);
+      toast.error('Not enough mana!');
+      console.error(err);
+    }
+  },
+
+  buyAndPlace: (shopIndex: number, boardIndex: number) => {
+    const { engine } = get();
+    if (!engine) return;
+    const viewBefore = engine.get_view();
+    if (!viewBefore || !viewBefore.board) return;
+    const firstEmpty = viewBefore.board.findIndex((u: BoardUnitView | null) => !u);
+    if (firstEmpty === -1) {
+      toast.error('Board is full!');
+      return;
+    }
+    try {
+      engine.buy_card(shopIndex);
+      if (firstEmpty !== boardIndex) {
+        engine.swap_board_positions(firstEmpty, boardIndex);
+      }
+      set({ view: engine.get_view(), selection: null });
+    } catch (err) {
+      toast.error('Not enough mana!');
+      console.error(err);
     }
   },
 
@@ -108,21 +117,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       engine.toggle_freeze(shopIndex);
       set({ view: engine.get_view() });
-    } catch (err) {
-      console.error('Failed to toggle freeze:', err);
-    }
+    } catch (err) { console.error(err); }
   },
 
-  // Board management
   swapBoardPositions: (slotA: number, slotB: number) => {
     const { engine } = get();
     if (!engine) return;
     try {
       engine.swap_board_positions(slotA, slotB);
       set({ view: engine.get_view(), selection: null });
-    } catch (err) {
-      console.error('Failed to swap positions:', err);
-    }
+    } catch (err) { console.error(err); }
   },
 
   pitchBoardUnit: (boardSlot: number) => {
@@ -131,27 +135,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       engine.pitch_board_unit(boardSlot);
       set({ view: engine.get_view(), selection: null });
-    } catch (err) {
-      console.error('Failed to pitch board unit:', err);
-    }
+    } catch (err) { console.error(err); }
   },
 
-  // Turn management
   endTurn: () => {
     const { engine } = get();
     if (!engine) return;
     try {
       engine.end_turn();
-      const battleOutput = engine.get_battle_output();
       set({
         view: engine.get_view(),
-        battleOutput,
+        battleOutput: engine.get_battle_output(),
         selection: null,
         showBattleOverlay: true,
       });
-    } catch (err) {
-      console.error('Failed to end turn:', err);
-    }
+    } catch (err) { console.error(err); }
   },
 
   continueAfterBattle: () => {
@@ -159,14 +157,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       engine.continue_after_battle();
-      set({
-        view: engine.get_view(),
-        showBattleOverlay: false,
-        battleOutput: null,
-      });
-    } catch (err) {
-      console.error('Failed to continue:', err);
-    }
+      set({ view: engine.get_view(), showBattleOverlay: false, battleOutput: null });
+    } catch (err) { console.error(err); }
   },
 
   newRun: () => {
@@ -174,73 +166,36 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       engine.new_run();
-      set({
-        view: engine.get_view(),
-        battleOutput: null,
-        selection: null,
-        showBattleOverlay: false,
-      });
-    } catch (err) {
-      console.error('Failed to start new run:', err);
-    }
+      set({ view: engine.get_view(), battleOutput: null, selection: null, showBattleOverlay: false });
+    } catch (err) { console.error(err); }
   },
 
-  // Multiplayer Actions
   startMultiplayerGame: (_seed: number) => {
     const { engine } = get();
     if (!engine) return;
     try {
-      // For now, we reuse new_run. In future, engine.new_run(seed)
       engine.new_run();
-      set({
-        view: engine.get_view(),
-        battleOutput: null,
-        selection: null,
-        showBattleOverlay: false,
-      });
-    } catch (err) {
-      console.error('Failed to start multiplayer game:', err);
-    }
+      set({ view: engine.get_view(), battleOutput: null, selection: null, showBattleOverlay: false });
+    } catch (err) { console.error(err); }
   },
 
   resolveMultiplayerBattle: (opponentBoard: any, seed: number) => {
     const { engine } = get();
     if (!engine) return;
     try {
-      const myBoard = engine.get_board();
-      
-      // Set phase to battle so continue_after_battle works
       engine.set_phase_battle();
-
-      const battleOutput = engine.resolve_battle_p2p(myBoard, opponentBoard, BigInt(seed));
-      
-      // Update local state based on result
-      const events = (battleOutput as BattleOutput).events;
+      const battleOutput = engine.resolve_battle_p2p(engine.get_board(), opponentBoard, BigInt(seed));
+      const events = (battleOutput as any).events;
       const lastEvent = events[events.length - 1];
       if (lastEvent && lastEvent.type === 'battleEnd') {
-          engine.apply_battle_result(lastEvent.payload.result);
+        engine.apply_battle_result(lastEvent.payload.result);
       }
-
-      set({
-        view: engine.get_view(),
-        battleOutput: battleOutput as BattleOutput,
-        selection: null,
-        showBattleOverlay: true,
-      });
-    } catch (err) {
-      console.error('Failed to resolve multiplayer battle:', err);
-    }
+      set({ view: engine.get_view(), battleOutput: battleOutput as any, selection: null, showBattleOverlay: true });
+    } catch (err) { console.error(err); }
   },
 
-  // UI state
-  setSelection: (selection: Selection | null) => {
-    set({ selection });
-  },
-
-  closeBattleOverlay: () => {
-    set({ showBattleOverlay: false });
-  },
-
+  setSelection: (selection: Selection | null) => { set({ selection }); },
+  closeBattleOverlay: () => { set({ showBattleOverlay: false }); },
   toggleShowRawJson: () => {
     set((state) => {
       const newValue = !state.showRawJson;

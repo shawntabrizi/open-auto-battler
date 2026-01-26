@@ -3,7 +3,7 @@ import React from 'react';
 import { UnitCard, EmptySlot } from './UnitCard';
 
 export function Arena() {
-  const { view, selection, setSelection, pitchBoardUnit, swapBoardPositions, buyCard } =
+  const { view, selection, setSelection, pitchBoardUnit, swapBoardPositions, buyAndPlace } =
     useGameStore();
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
 
@@ -33,8 +33,8 @@ export function Arena() {
     } else if (data.startsWith('shop-')) {
       // Shop card dropped on board position - buy
       const shopIndex = parseInt(data.split('-')[1]);
-      // Always try to buy - store handles the error toast if mana is insufficient
-      buyCard(shopIndex);
+      // Buy and target this specific slot
+      buyAndPlace(shopIndex, dropIndex);
     }
 
     setDraggedIndex(null);
@@ -50,6 +50,12 @@ export function Arena() {
 
   const handleBoardSlotClick = (index: number) => {
     const unit = view.board[index];
+
+    // If we have a shop card selected, try to buy and place here
+    if (selection?.type === 'shop') {
+      buyAndPlace(selection.index, index);
+      return;
+    }
 
     // If we have a board unit selected, try to swap
     if (selection?.type === 'board' && selection.index !== index) {
@@ -110,7 +116,7 @@ export function Arena() {
             <EmptySlot
               key={`empty-${arrayIndex}`}
               onClick={() => handleBoardSlotClick(arrayIndex)}
-              isTarget={false}
+              isTarget={selection?.type === 'shop'}
               label={`${displayPosition}`}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, arrayIndex)}
