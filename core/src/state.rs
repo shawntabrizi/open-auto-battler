@@ -1,4 +1,16 @@
+//! Game state management
+//!
+//! This module defines the game state and phase tracking.
+
+use alloc::vec;
+use alloc::vec::Vec;
+use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
+
+use crate::error::{GameError, GameResult};
 use crate::types::*;
+
+#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 /// Number of shop slots
@@ -15,8 +27,9 @@ pub const MAX_MANA_LIMIT: i32 = 10;
 pub const WINS_TO_VICTORY: i32 = 10;
 
 /// Current phase of the game
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub enum GamePhase {
     Shop,
     Battle,
@@ -25,8 +38,9 @@ pub enum GamePhase {
 }
 
 /// The complete game state
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct GameState {
     /// Cards remaining in the deck
     pub deck: Vec<UnitCard>,
@@ -89,12 +103,12 @@ impl GameState {
     }
 
     /// Spend mana
-    pub fn spend_mana(&mut self, amount: i32) -> Result<(), String> {
+    pub fn spend_mana(&mut self, amount: i32) -> GameResult<()> {
         if self.mana < amount {
-            return Err(format!(
-                "Not enough mana: have {}, need {}",
-                self.mana, amount
-            ));
+            return Err(GameError::NotEnoughMana {
+                have: self.mana,
+                need: amount,
+            });
         }
         self.mana -= amount;
         Ok(())

@@ -1,11 +1,24 @@
+//! Core game types
+//!
+//! This module defines the fundamental types used throughout the game engine.
+
+use alloc::boxed::Box;
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
+use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
+
+#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 /// Unique identifier for cards
 pub type CardId = u32;
 
 /// Conditions that must be met for an ability to activate
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(tag = "type", rename_all = "camelCase"))]
 pub enum AbilityCondition {
     /// No condition, always triggers (default)
     None,
@@ -50,9 +63,9 @@ pub enum AbilityCondition {
     // BOARD STATE
     // ==========================================
     /// Ally count (including self) is >= threshold (e.g., "Swarm: if 3+ allies")
-    AllyCountAtLeast { count: usize },
+    AllyCountAtLeast { count: u32 },
     /// Ally count (including self) is <= threshold (e.g., "Last Stand: if <= 2 allies")
-    AllyCountAtMost { count: usize },
+    AllyCountAtMost { count: u32 },
     /// Source is in the front position (index 0)
     SourceIsFront,
     /// Source is in the back position (last index)
@@ -82,8 +95,9 @@ impl Default for AbilityCondition {
 }
 
 /// Ability trigger conditions
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub enum AbilityTrigger {
     OnStart,
     OnFaint,
@@ -98,8 +112,9 @@ pub enum AbilityTrigger {
 }
 
 /// Ability effect types
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(tag = "type", rename_all = "camelCase"))]
 pub enum AbilityEffect {
     /// Deal damage to target
     Damage { amount: i32, target: AbilityTarget },
@@ -117,8 +132,9 @@ pub enum AbilityEffect {
 }
 
 /// Ability target specifications
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub enum AbilityTarget {
     SelfUnit,
     AllAllies,
@@ -139,8 +155,9 @@ pub enum AbilityTarget {
 }
 
 /// A unit ability
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct Ability {
     pub trigger: AbilityTrigger,
     pub effect: AbilityEffect,
@@ -148,11 +165,11 @@ pub struct Ability {
     pub description: String,
     /// Optional condition that must be met for this ability to activate.
     /// If None or AbilityCondition::None, the ability always triggers.
-    #[serde(default, skip_serializing_if = "is_condition_none")]
+    #[cfg_attr(feature = "std", serde(default, skip_serializing_if = "is_condition_none"))]
     pub condition: AbilityCondition,
     /// Optional limit on how many times this ability can trigger per battle.
     /// If None, the ability can trigger unlimited times.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "std", serde(default, skip_serializing_if = "Option::is_none"))]
     pub max_triggers: Option<u32>,
 }
 
@@ -161,23 +178,26 @@ fn is_condition_none(c: &AbilityCondition) -> bool {
 }
 
 /// Combat stats for a unit
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct UnitStats {
     pub attack: i32,
     pub health: i32,
 }
 
 /// Economy stats shared by all cards
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct EconomyStats {
     pub play_cost: i32,
     pub pitch_value: i32,
 }
 
 /// A unit card in the game (MVP: units only)
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct UnitCard {
     pub id: CardId,
     pub template_id: String,
@@ -199,8 +219,8 @@ impl UnitCard {
     ) -> Self {
         Self {
             id,
-            template_id: template_id.to_string(),
-            name: name.to_string(),
+            template_id: String::from(template_id),
+            name: String::from(name),
             stats: UnitStats { attack, health },
             economy: EconomyStats {
                 play_cost,
@@ -221,8 +241,9 @@ impl UnitCard {
 }
 
 /// A unit instance on the board (tracks current health)
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct BoardUnit {
     pub card: UnitCard,
     pub current_health: i32,
@@ -247,8 +268,9 @@ impl BoardUnit {
 }
 
 /// Shop slot that can hold a card or be empty
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct ShopSlot {
     pub card: Option<UnitCard>,
     pub frozen: bool,

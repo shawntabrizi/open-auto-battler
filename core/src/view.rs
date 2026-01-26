@@ -1,10 +1,22 @@
+//! View types for UI serialization
+//!
+//! This module provides view structs for sending game state to frontends.
+
+use alloc::string::String;
+use alloc::vec::Vec;
+use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
+
 use crate::state::*;
 use crate::types::*;
+
+#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 /// View of a unit card for the UI
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct CardView {
     pub id: CardId,
     pub template_id: String,
@@ -32,8 +44,9 @@ impl From<&UnitCard> for CardView {
 }
 
 /// View of a unit on the board
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct BoardUnitView {
     pub id: CardId,
     pub template_id: String,
@@ -61,8 +74,9 @@ impl From<&BoardUnit> for BoardUnitView {
 }
 
 /// View of a shop slot
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct ShopSlotView {
     pub card: Option<CardView>,
     pub frozen: bool,
@@ -78,8 +92,9 @@ impl From<&ShopSlot> for ShopSlotView {
 }
 
 /// The complete game view sent to React
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct GameView {
     /// Shop slots
     pub shop: Vec<ShopSlotView>,
@@ -98,7 +113,7 @@ pub struct GameView {
     /// Current game phase
     pub phase: String,
     /// Cards remaining in deck
-    pub deck_count: usize,
+    pub deck_count: u32,
     /// Whether we can afford each shop item
     pub can_afford: Vec<bool>,
 }
@@ -129,12 +144,12 @@ impl From<&GameState> for GameView {
             lives: state.lives,
             wins: state.wins,
             phase: match state.phase {
-                GamePhase::Shop => "shop".to_string(),
-                GamePhase::Battle => "battle".to_string(),
-                GamePhase::Victory => "victory".to_string(),
-                GamePhase::Defeat => "defeat".to_string(),
+                GamePhase::Shop => String::from("shop"),
+                GamePhase::Battle => String::from("battle"),
+                GamePhase::Victory => String::from("victory"),
+                GamePhase::Defeat => String::from("defeat"),
             },
-            deck_count: state.deck.len(),
+            deck_count: state.deck.len() as u32,
             can_afford,
         }
     }

@@ -1,12 +1,19 @@
+//! Game engine for browser WASM builds
+//!
+//! This module provides the main game engine exposed to JavaScript via wasm-bindgen.
+
+use alloc::format;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
+
 use crate::battle::{resolve_battle, CombatEvent, UnitId, UnitView};
 use crate::log;
 use crate::opponents::get_opponent_for_round;
+use crate::rng::{BattleRng, XorShiftRng};
 use crate::state::*;
 use crate::types::{BoardUnit, ShopSlot, UnitCard};
 use crate::units::get_starter_templates;
 use crate::view::GameView;
-use rand::seq::SliceRandom;
-use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -139,7 +146,9 @@ impl GameEngine {
             .and_then(|s| s.card.take())
             .ok_or("Failed to take card from shop")?;
 
-        self.state.spend_mana(cost)?;
+        self.state
+            .spend_mana(cost)
+            .map_err(|e| format!("{:?}", e))?;
         self.state.board[board_slot] = Some(BoardUnit::from_card(card));
 
         self.log_state();
@@ -293,8 +302,9 @@ impl GameEngine {
                 self.state.deck.push(card);
             }
         }
-        let mut rng = rand::rngs::StdRng::seed_from_u64(42);
-        self.state.deck.shuffle(&mut rng);
+        // Shuffle the deck using XorShiftRng
+        let mut rng = XorShiftRng::seed_from_u64(42);
+        rng.shuffle(&mut self.state.deck);
     }
 
     fn fill_shop(&mut self) {
@@ -316,7 +326,8 @@ impl GameEngine {
             .expect("Failed to generate opponent for round");
 
         let battle_seed = self.state.round as u64;
-        let events = resolve_battle(&player_board, &enemy_board, battle_seed);
+        let mut rng = XorShiftRng::seed_from_u64(battle_seed);
+        let events = resolve_battle(&player_board, &enemy_board, &mut rng);
 
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {

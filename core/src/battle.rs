@@ -1,11 +1,22 @@
+//! Battle resolution system
+//!
+//! This module handles combat resolution between player and enemy units.
+
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::cmp::Ordering;
+use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
+
 use crate::limits::{BattleLimits, LimitReason};
+use crate::rng::BattleRng;
 use crate::state::BOARD_SIZE;
 use crate::types::{
     Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit,
 };
-use rand::rngs::StdRng;
-use rand::Rng;
-use rand::SeedableRng;
+
+#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 // Re-export Team for backward compatibility
@@ -14,8 +25,9 @@ pub use crate::limits::Team;
 // A unique ID for a unit instance in a battle
 // High bit (31) determines team: 0 = Player, 1 = Enemy.
 // This ensures IDs are unique and stable per team.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(transparent))]
 pub struct UnitId(pub u32);
 
 impl UnitId {
@@ -45,8 +57,9 @@ impl UnitId {
 pub type UnitInstanceId = UnitId;
 
 /// Simplified view of a unit for battle replay.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct UnitView {
     pub instance_id: UnitInstanceId,
     pub template_id: String,
@@ -56,8 +69,9 @@ pub struct UnitView {
     pub abilities: Vec<Ability>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "SCREAMING_SNAKE_CASE"))]
 pub enum BattleResult {
     Victory,
     Defeat,
@@ -65,43 +79,44 @@ pub enum BattleResult {
 }
 
 /// Events generated during combat for UI playback.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", content = "payload", rename_all = "camelCase")]
+#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "payload", rename_all = "camelCase"))]
 pub enum CombatEvent {
-    #[serde(rename_all = "camelCase")]
+    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     PhaseStart { phase: BattlePhase },
-    #[serde(rename_all = "camelCase")]
+    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     PhaseEnd { phase: BattlePhase },
-    #[serde(rename_all = "camelCase")]
+    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     AbilityTrigger {
         source_instance_id: UnitInstanceId,
         ability_name: String,
     },
-    #[serde(rename_all = "camelCase")]
+    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     Clash { p_dmg: i32, e_dmg: i32 },
-    #[serde(rename_all = "camelCase")]
+    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     DamageTaken {
         target_instance_id: UnitInstanceId,
         team: Team,
         remaining_hp: i32,
     },
-    #[serde(rename_all = "camelCase")]
+    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     UnitDeath {
         team: Team,
         new_board_state: Vec<UnitView>,
     },
-    #[serde(rename_all = "camelCase")]
+    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     BattleEnd {
         result: BattleResult,
     },
-    #[serde(rename_all = "camelCase")]
+    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     AbilityDamage {
         source_instance_id: UnitInstanceId,
         target_instance_id: UnitInstanceId,
         damage: i32,
         remaining_hp: i32,
     },
-    #[serde(rename_all = "camelCase")]
+    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     AbilityModifyStats {
         source_instance_id: UnitInstanceId,
         target_instance_id: UnitInstanceId,
@@ -110,21 +125,22 @@ pub enum CombatEvent {
         new_attack: i32,
         new_health: i32,
     },
-    #[serde(rename_all = "camelCase")]
+    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     UnitSpawn {
         team: Team,
         spawned_unit: UnitView,
         new_board_state: Vec<UnitView>,
     },
-    #[serde(rename_all = "camelCase")]
+    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     LimitExceeded {
         losing_team: Option<Team>,
         reason: LimitReason,
     },
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "SCREAMING_SNAKE_CASE"))]
 pub enum BattlePhase {
     Start,
     BeforeAttack,
@@ -217,13 +233,12 @@ impl CombatUnit {
 // MAIN BATTLE RESOLVER
 // ==========================================
 
-pub fn resolve_battle(
+pub fn resolve_battle<R: BattleRng>(
     player_board: &[BoardUnit],
     enemy_board: &[BoardUnit],
-    seed: u64,
+    rng: &mut R,
 ) -> Vec<CombatEvent> {
     let mut events = Vec::new();
-    let mut rng = StdRng::seed_from_u64(seed);
     let mut limits = BattleLimits::new();
 
     // Initialize Units
@@ -256,7 +271,7 @@ pub fn resolve_battle(
         &mut player_units,
         &mut enemy_units,
         &mut events,
-        &mut rng,
+        rng,
         &mut limits,
     )
     .is_err()
@@ -278,7 +293,7 @@ pub fn resolve_battle(
             &mut player_units,
             &mut enemy_units,
             &mut events,
-            &mut rng,
+            rng,
             &mut limits,
         )
         .is_err()
@@ -294,7 +309,7 @@ pub fn resolve_battle(
             &mut player_units,
             &mut enemy_units,
             &mut events,
-            &mut rng,
+            rng,
             &mut limits,
         )
         .is_err()
@@ -310,7 +325,7 @@ pub fn resolve_battle(
             &mut player_units,
             &mut enemy_units,
             &mut events,
-            &mut rng,
+            rng,
             &mut limits,
         )
         .is_err()
@@ -326,7 +341,7 @@ pub fn resolve_battle(
         &mut player_units,
         &mut enemy_units,
         &mut events,
-        &mut rng,
+        rng,
         &mut limits,
     );
     events
@@ -361,12 +376,12 @@ fn finalize_with_limit_exceeded(
 
 /// Resolves triggers depth-first.
 /// If a trigger causes a state change (Death), we resolve reactions IMMEDIATELY.
-fn resolve_trigger_queue(
+fn resolve_trigger_queue<R: BattleRng>(
     queue: &mut Vec<PendingTrigger>,
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
-    rng: &mut StdRng,
+    rng: &mut R,
     limits: &mut BattleLimits,
 ) -> Result<(), ()> {
     // Trigger Priority:
@@ -382,9 +397,9 @@ fn resolve_trigger_queue(
             .cmp(&b.priority.attack)
             .then(a.priority.health.cmp(&b.priority.health))
             .then_with(|| match (a.team, b.team) {
-                (Team::Enemy, Team::Player) => std::cmp::Ordering::Less,
-                (Team::Player, Team::Enemy) => std::cmp::Ordering::Greater,
-                _ => std::cmp::Ordering::Equal,
+                (Team::Enemy, Team::Player) => Ordering::Less,
+                (Team::Player, Team::Enemy) => Ordering::Greater,
+                _ => Ordering::Equal,
             })
             .then(b.priority.unit_position.cmp(&a.priority.unit_position))
             .then(b.priority.ability_order.cmp(&a.priority.ability_order))
@@ -437,7 +452,7 @@ fn resolve_trigger_queue(
             } else if trigger.is_from_dead {
                 // For dead units, create a minimal CombatUnit with captured stats
                 temp_source = CombatUnit {
-                    instance_id: trigger.source_id.clone(),
+                    instance_id: trigger.source_id,
                     team: trigger.team,
                     attack: trigger.priority.attack,
                     health: trigger.priority.health,
@@ -478,7 +493,7 @@ fn resolve_trigger_queue(
         // D. Emit Trigger Event
         limits.record_trigger(trigger.team)?;
         events.push(CombatEvent::AbilityTrigger {
-            source_instance_id: trigger.source_id.clone(),
+            source_instance_id: trigger.source_id,
             ability_name: trigger.ability_name,
         });
 
@@ -537,7 +552,7 @@ fn resolve_trigger_queue(
                         };
 
                         reaction_queue.push(PendingTrigger {
-                            source_id: unit_id.clone(),
+                            source_id: unit_id,
                             team,
                             effect: ability.effect.clone(),
                             ability_name: ability.name.clone(),
@@ -580,7 +595,7 @@ fn resolve_trigger_queue(
                             }
                         }
                         q.push(PendingTrigger {
-                            source_id: dead_unit.instance_id.clone(),
+                            source_id: dead_unit.instance_id,
                             team,
                             effect: ability.effect.clone(),
                             ability_name: ability.name.clone(),
@@ -608,7 +623,7 @@ fn resolve_trigger_queue(
                 for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
                     if ability.trigger == AbilityTrigger::OnAllyFaint {
                         reaction_queue.push(PendingTrigger {
-                            source_id: survivor.instance_id.clone(),
+                            source_id: survivor.instance_id,
                             team: Team::Player,
                             effect: ability.effect.clone(),
                             ability_name: ability.name.clone(),
@@ -636,7 +651,7 @@ fn resolve_trigger_queue(
                 for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
                     if ability.trigger == AbilityTrigger::OnAllyFaint {
                         reaction_queue.push(PendingTrigger {
-                            source_id: survivor.instance_id.clone(),
+                            source_id: survivor.instance_id,
                             team: Team::Enemy,
                             effect: ability.effect.clone(),
                             ability_name: ability.name.clone(),
@@ -680,14 +695,14 @@ fn resolve_trigger_queue(
 // EFFECT APPLICATION
 // ==========================================
 
-fn apply_ability_effect(
+fn apply_ability_effect<R: BattleRng>(
     source_instance_id: UnitInstanceId,
     source_team: Team,
     effect: &AbilityEffect,
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
-    rng: &mut StdRng,
+    rng: &mut R,
     limits: &mut BattleLimits,
     spawn_index_override: Option<usize>, // New Param
 ) -> Result<Vec<UnitInstanceId>, ()> {
@@ -711,7 +726,7 @@ fn apply_ability_effect(
                         unit.health -= actual_damage;
                         damaged_units.push(target_id);
                         events.push(CombatEvent::AbilityDamage {
-                            source_instance_id: source_instance_id,
+                            source_instance_id,
                             target_instance_id: target_id,
                             damage: actual_damage,
                             remaining_hp: unit.health,
@@ -740,7 +755,7 @@ fn apply_ability_effect(
                     unit.health += health;
                     unit.health_buff += health;
                     events.push(CombatEvent::AbilityModifyStats {
-                        source_instance_id: source_instance_id,
+                        source_instance_id,
                         target_instance_id: target_id,
                         health_change: *health,
                         attack_change: *attack,
@@ -755,9 +770,9 @@ fn apply_ability_effect(
             limits.record_spawn(source_team)?;
 
             // Check Cap
-            let (my_board, _team_name) = match source_team {
-                Team::Player => (player_units, "PLAYER"),
-                Team::Enemy => (enemy_units, "ENEMY"),
+            let my_board = match source_team {
+                Team::Player => player_units,
+                Team::Enemy => enemy_units,
             };
 
             if my_board.len() >= BOARD_SIZE {
@@ -769,15 +784,15 @@ fn apply_ability_effect(
             let template = templates
                 .into_iter()
                 .find(|t| t.template_id == *template_id)
-                .expect(&format!("Spawn template '{}' not found", template_id));
+                .expect("Spawn template not found");
 
             let next_id = limits.generate_instance_id(source_team);
             let instance_id = next_id;
 
             let mut card = crate::types::UnitCard::new(
                 instance_id.0.wrapping_mul(5000),
-                &template.template_id,
-                &template.name,
+                template.template_id,
+                template.name,
                 template.attack,
                 template.health,
                 template.play_cost,
@@ -793,7 +808,7 @@ fn apply_ability_effect(
 
             // INSERTION LOGIC: Use override if provided (e.g. Zombie Cricket), otherwise Front (e.g. Spawner)
             let insert_idx = spawn_index_override.unwrap_or(0);
-            let safe_idx = std::cmp::min(insert_idx, my_board.len());
+            let safe_idx = core::cmp::min(insert_idx, my_board.len());
 
             my_board.insert(safe_idx, new_unit);
 
@@ -824,7 +839,7 @@ fn apply_ability_effect(
                     // but for consistency with "Hurt triggers on death", maybe we should?
                     // The prompt asked for "kills", so I'll treat it as massive damage.
                     events.push(CombatEvent::AbilityDamage {
-                        source_instance_id: source_instance_id,
+                        source_instance_id,
                         target_instance_id: target_id,
                         damage: fatal,
                         remaining_hp: unit.health,
@@ -843,12 +858,12 @@ fn apply_ability_effect(
 // HELPERS
 // ==========================================
 
-fn execute_phase(
+fn execute_phase<R: BattleRng>(
     phase: BattlePhase,
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
-    rng: &mut StdRng,
+    rng: &mut R,
     limits: &mut BattleLimits,
 ) -> Result<(), ()> {
     if phase != BattlePhase::End {
@@ -913,12 +928,12 @@ fn execute_phase(
     Ok(())
 }
 
-fn collect_and_resolve_triggers(
+fn collect_and_resolve_triggers<R: BattleRng>(
     trigger_types: &[AbilityTrigger],
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
-    rng: &mut StdRng,
+    rng: &mut R,
     limits: &mut BattleLimits,
 ) -> Result<(), ()> {
     let mut queue = Vec::new();
@@ -938,7 +953,7 @@ fn collect_and_resolve_triggers(
                     }
 
                     queue.push(PendingTrigger {
-                        source_id: u.instance_id.clone(),
+                        source_id: u.instance_id,
                         team,
                         effect: ability.effect.clone(),
                         ability_name: ability.name.clone(),
@@ -1046,16 +1061,16 @@ fn execute_death_check_phase(
     (player_dead, enemy_dead)
 }
 
-fn resolve_hurt_and_faint_loop(
+fn resolve_hurt_and_faint_loop<R: BattleRng>(
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
-    rng: &mut StdRng,
+    rng: &mut R,
     limits: &mut BattleLimits,
 ) -> Result<(), ()> {
     // CAPTURE clashing unit IDs before they potentially die or board slides
-    let clashing_p_id = player_units.first().map(|u| u.instance_id.clone());
-    let clashing_e_id = enemy_units.first().map(|u| u.instance_id.clone());
+    let clashing_p_id = player_units.first().map(|u| u.instance_id);
+    let clashing_e_id = enemy_units.first().map(|u| u.instance_id);
 
     let (dead_player, dead_enemy) = execute_death_check_phase(player_units, enemy_units, events);
 
@@ -1095,7 +1110,7 @@ fn resolve_hurt_and_faint_loop(
                             .unwrap_or(0);
 
                         queue.push(PendingTrigger {
-                            source_id: target_id.clone(),
+                            source_id: target_id,
                             team,
                             effect: a.effect.clone(),
                             ability_name: a.name.clone(),
@@ -1134,7 +1149,7 @@ fn resolve_hurt_and_faint_loop(
                     }
                 }
                 queue.push(PendingTrigger {
-                    source_id: u.instance_id.clone(),
+                    source_id: u.instance_id,
                     team: Team::Player,
                     effect: a.effect.clone(),
                     ability_name: a.name.clone(),
@@ -1157,7 +1172,7 @@ fn resolve_hurt_and_faint_loop(
             for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
                 if ability.trigger == AbilityTrigger::OnAllyFaint {
                     queue.push(PendingTrigger {
-                        source_id: survivor.instance_id.clone(),
+                        source_id: survivor.instance_id,
                         team: Team::Player,
                         effect: ability.effect.clone(),
                         ability_name: ability.name.clone(),
@@ -1187,7 +1202,7 @@ fn resolve_hurt_and_faint_loop(
                     }
                 }
                 queue.push(PendingTrigger {
-                    source_id: u.instance_id.clone(),
+                    source_id: u.instance_id,
                     team: Team::Enemy,
                     effect: a.effect.clone(),
                     ability_name: a.name.clone(),
@@ -1210,7 +1225,7 @@ fn resolve_hurt_and_faint_loop(
             for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
                 if ability.trigger == AbilityTrigger::OnAllyFaint {
                     queue.push(PendingTrigger {
-                        source_id: survivor.instance_id.clone(),
+                        source_id: survivor.instance_id,
                         team: Team::Enemy,
                         effect: ability.effect.clone(),
                         ability_name: ability.name.clone(),
@@ -1234,13 +1249,13 @@ fn resolve_hurt_and_faint_loop(
     resolve_trigger_queue(&mut queue, player_units, enemy_units, events, rng, limits)
 }
 
-fn get_targets(
+fn get_targets<R: BattleRng>(
     source_instance_id: UnitInstanceId,
     source_team: Team,
     target: &AbilityTarget,
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
-    rng: &mut StdRng,
+    rng: &mut R,
 ) -> Vec<UnitInstanceId> {
     let (allies, enemies) = match source_team {
         Team::Player => (player_units, enemy_units),
@@ -1255,7 +1270,7 @@ fn get_targets(
             if allies.is_empty() {
                 vec![]
             } else {
-                let idx = rng.gen_range(0..allies.len());
+                let idx = rng.gen_range(allies.len());
                 vec![allies[idx].instance_id]
             }
         }
@@ -1263,7 +1278,7 @@ fn get_targets(
             if enemies.is_empty() {
                 vec![]
             } else {
-                let idx = rng.gen_range(0..enemies.len());
+                let idx = rng.gen_range(enemies.len());
                 vec![enemies[idx].instance_id]
             }
         }
@@ -1405,13 +1420,13 @@ struct ConditionContext<'a> {
 
 /// Evaluates a condition given the context.
 /// For target-based conditions, we evaluate against ALL targets and return true if ANY target passes.
-fn evaluate_condition(
+fn evaluate_condition<R: BattleRng>(
     condition: &AbilityCondition,
     ctx: &ConditionContext,
     target: &AbilityTarget,
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
-    rng: &mut StdRng,
+    rng: &mut R,
 ) -> bool {
     match condition {
         AbilityCondition::None => true,
@@ -1575,8 +1590,8 @@ fn evaluate_condition(
         }
 
         // Board state checks
-        AbilityCondition::AllyCountAtLeast { count } => ctx.allies.len() >= *count,
-        AbilityCondition::AllyCountAtMost { count } => ctx.allies.len() <= *count,
+        AbilityCondition::AllyCountAtLeast { count } => ctx.allies.len() as u32 >= *count,
+        AbilityCondition::AllyCountAtMost { count } => ctx.allies.len() as u32 <= *count,
         AbilityCondition::SourceIsFront => ctx.source_position == 0,
         AbilityCondition::SourceIsBack => ctx.source_position == ctx.allies.len().saturating_sub(1),
 

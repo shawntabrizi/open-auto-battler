@@ -1,7 +1,13 @@
-use crate::battle::UnitId;
-use serde::{Deserialize, Serialize};
+//! Battle limits to prevent infinite loops and stack overflows
+//!
+//! This module provides safeguards against runaway battle computations.
 
-/// Battle limits to prevent infinite loops and stack overflows
+use crate::battle::UnitId;
+use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
+
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
 
 pub const MAX_RECURSION_DEPTH: u32 = 50;
 pub const MAX_SPAWNS_PER_BATTLE: u32 = 100;
@@ -9,15 +15,17 @@ pub const MAX_TRIGGERS_PER_PHASE: u32 = 200;
 pub const MAX_TRIGGER_DEPTH: u32 = 10;
 pub const MAX_BATTLE_ROUNDS: u32 = 100;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "SCREAMING_SNAKE_CASE"))]
 pub enum Team {
     Player,
     Enemy,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "type", content = "payload", rename_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "payload", rename_all = "SCREAMING_SNAKE_CASE"))]
 pub enum LimitReason {
     RoundLimit { current: u32, max: u32 },
     RecursionLimit { current: u32, max: u32 },
@@ -27,7 +35,7 @@ pub enum LimitReason {
 }
 
 /// Tracks execution limits to prevent infinite loops and stack overflows
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
 pub struct BattleLimits {
     pub recursion_depth: u32,
     pub trigger_depth: u32,
@@ -160,5 +168,11 @@ impl BattleLimits {
         if self.trigger_depth > 0 {
             self.trigger_depth -= 1;
         }
+    }
+}
+
+impl Default for BattleLimits {
+    fn default() -> Self {
+        Self::new()
     }
 }

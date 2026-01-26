@@ -1,3 +1,11 @@
+//! Opponent generation for battles
+//!
+//! This module handles generating enemy boards for battles.
+
+use alloc::vec;
+use alloc::vec::Vec;
+
+use crate::error::{GameError, GameResult};
 use crate::types::{BoardUnit, UnitCard};
 use crate::units::get_starter_templates;
 
@@ -5,7 +13,7 @@ use crate::units::get_starter_templates;
 fn create_unit_from_template(
     card_id_counter: &mut u32,
     template_id: &str,
-) -> Result<BoardUnit, String> {
+) -> GameResult<BoardUnit> {
     *card_id_counter += 1;
 
     // Get all starter templates (this includes all units now)
@@ -15,13 +23,13 @@ fn create_unit_from_template(
     let template = templates
         .into_iter()
         .find(|t| t.template_id == template_id)
-        .ok_or_else(|| format!("Template '{}' not found", template_id))?;
+        .ok_or(GameError::TemplateNotFound)?;
 
     // Create the unit card with the template data
     let mut card = UnitCard::new(
         *card_id_counter,
         template.template_id,
-        &template.name,
+        template.name,
         template.attack,
         template.health,
         template.play_cost,
@@ -40,7 +48,7 @@ fn create_unit_from_template(
 pub fn get_opponent_for_round(
     round: i32,
     card_id_counter: &mut u32,
-) -> Result<Vec<BoardUnit>, String> {
+) -> GameResult<Vec<BoardUnit>> {
     let mut units = Vec::new();
     let template_ids = match round {
         1 => vec!["goblin_scout"],

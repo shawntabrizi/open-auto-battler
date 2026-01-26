@@ -1,8 +1,19 @@
 #[cfg(test)]
 mod tests {
     use crate::battle::{resolve_battle, BattleResult, CombatEvent, Team, UnitId};
+    use crate::rng::XorShiftRng;
     use crate::state::GameState;
     use crate::types::*;
+
+    /// Helper to run a battle with a seed (creates XorShiftRng internally)
+    fn run_battle(
+        player_board: &[BoardUnit],
+        enemy_board: &[BoardUnit],
+        seed: u64,
+    ) -> Vec<CombatEvent> {
+        let mut rng = XorShiftRng::seed_from_u64(seed);
+        resolve_battle(player_board, enemy_board, &mut rng)
+    }
 
     // ==========================================
     // HELPER FUNCTIONS (Boilerplate Reduction)
@@ -69,7 +80,7 @@ mod tests {
         let p_board = vec![create_board_unit(1, "P1", 10, 10)];
         let e_board = vec![create_board_unit(2, "E1", 10, 10)];
 
-        let events = resolve_battle(&p_board, &e_board, 123);
+        let events = run_battle(&p_board, &e_board, 123);
 
         let last = events.last().unwrap();
         if let CombatEvent::BattleEnd { result } = last {
@@ -168,7 +179,7 @@ mod tests {
         let enemy_board = vec![create_dummy_enemy()];
 
         // Run the engine
-        let events = resolve_battle(&player_board, &enemy_board, 12345);
+        let events = run_battle(&player_board, &enemy_board, 12345);
 
         // Filter the log to find our specific triggers
         let triggers: Vec<String> = events
@@ -219,7 +230,7 @@ mod tests {
         let player_board = vec![fragile_unit, healthy_unit];
         let enemy_board = vec![create_dummy_enemy()];
 
-        let events = resolve_battle(&player_board, &enemy_board, 42);
+        let events = run_battle(&player_board, &enemy_board, 42);
 
         let triggers: Vec<String> = events
             .iter()
@@ -275,7 +286,7 @@ mod tests {
         let p_board = vec![p_unit];
         let e_board = vec![e_unit];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         let triggers: Vec<String> = events
             .iter()
@@ -317,7 +328,7 @@ mod tests {
         let player_board = vec![front_unit, back_unit];
         let enemy_board = vec![create_dummy_enemy()];
 
-        let events = resolve_battle(&player_board, &enemy_board, 42);
+        let events = run_battle(&player_board, &enemy_board, 42);
 
         let triggers: Vec<String> = events
             .iter()
@@ -379,7 +390,7 @@ mod tests {
         let p_board = vec![unit];
         let e_board = vec![create_dummy_enemy()];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         let triggers: Vec<String> = events
             .iter()
@@ -484,7 +495,7 @@ mod tests {
         let p_board = vec![u5, u2, u3, u6];
         let e_board = vec![u1, u4];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         let triggers: Vec<String> = events
             .iter()
@@ -565,7 +576,7 @@ mod tests {
         let p_board = vec![u2, u3, u5, u6];
         let e_board = vec![u1, u4];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         let triggers: Vec<String> = events
             .iter()
@@ -682,7 +693,7 @@ mod tests {
             current_health: 1,
         }];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // 1. Verify Trigger Order
         let triggers: Vec<&String> = events
@@ -760,7 +771,7 @@ mod tests {
         let p_board = vec![BoardUnit::from_card(sniper1), BoardUnit::from_card(sniper2)];
         let e_board = vec![BoardUnit::from_card(spawner)];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Analyze Event Stream
         let triggers: Vec<&String> = events
@@ -839,7 +850,7 @@ mod tests {
         let killer = create_dummy_card(10, "Killer", 10, 10);
         let e_board = vec![BoardUnit::from_card(killer)];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Count spawns
         let spawns = events
@@ -900,7 +911,7 @@ mod tests {
         ));
         let e_board = vec![BoardUnit::from_card(aoe_killer)];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Find the UnitSpawn event
         let spawn_event = events
@@ -954,7 +965,7 @@ mod tests {
         let p_board = vec![BoardUnit::from_card(p1)];
         let e_board = vec![BoardUnit::from_card(e1)];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Verify triggers happened
         let has_nuke = events.iter().any(|e| {
@@ -997,7 +1008,7 @@ mod tests {
         let p_board = vec![BoardUnit::from_card(front), BoardUnit::from_card(back)];
         let e_board = vec![create_board_unit(3, "Dummy", 1, 50)];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Find buff event
         let buff_event = events
@@ -1060,7 +1071,7 @@ mod tests {
         ];
         let e_board = vec![create_dummy_enemy()]; // Sandbag
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         let triggers: Vec<&String> = events
             .iter()
@@ -1142,7 +1153,7 @@ mod tests {
         ];
         let e_board = vec![create_dummy_enemy()];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Analyze final stats via events or just trust logic?
         // Let's trace events for "AbilityModifyStats" on the Orc (ID 2).
@@ -1209,7 +1220,7 @@ mod tests {
         let p_board = vec![BoardUnit::from_card(martyr)];
         let e_board = vec![BoardUnit::from_card(killer)];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // 1. Verify Martyr died
         let deaths = events
@@ -1308,7 +1319,7 @@ mod tests {
         let p_board = vec![BoardUnit::from_card(fodder), BoardUnit::from_card(breeder)];
         let e_board = vec![BoardUnit::from_card(killer)];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Analyze triggers
         let breed_triggers: Vec<_> = events
@@ -1364,7 +1375,7 @@ mod tests {
             BoardUnit::from_card(utility),
         ];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Verify "Glass" (e-3) died
         let glass_death = events.iter().find(|e| {
@@ -1413,7 +1424,7 @@ mod tests {
             BoardUnit::from_card(medium),
         ];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Verify "Strong" (e-2) took 3 damage
         let strong_hit = events.iter().find(|e| {
@@ -1450,7 +1461,7 @@ mod tests {
             BoardUnit::from_card(medium),
         ];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Verify "Healthy" (e-2) took damage
         let hit = events.iter().find(|e| {
@@ -1484,7 +1495,7 @@ mod tests {
             BoardUnit::from_card(medium),
         ];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Verify "Weak" (e-2) took damage
         let hit = events.iter().find(|e| {
@@ -1520,7 +1531,7 @@ mod tests {
             BoardUnit::from_card(medium),
         ];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Verify "Expensive" (e-2) took damage
         let hit = events.iter().find(|e| {
@@ -1556,7 +1567,7 @@ mod tests {
             BoardUnit::from_card(medium),
         ];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Verify "Cheap" (e-2) took damage
         let hit = events.iter().find(|e| {
@@ -1602,7 +1613,7 @@ mod tests {
             BoardUnit::from_card(expensive),
         ];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Analyze deaths
         let dead_units: Vec<_> = events
@@ -1664,7 +1675,7 @@ mod tests {
         let p_board = vec![BoardUnit::from_card(spawner), BoardUnit::from_card(buffer)];
         let e_board = vec![create_dummy_enemy()];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Verify final attack of one of the spawned units.
         // It starts at 1. Should be 3 after receiving ONE buff.
@@ -1717,7 +1728,7 @@ mod tests {
         let p_board = vec![BoardUnit::from_card(fodder), BoardUnit::from_card(squire)];
         let e_board = vec![create_dummy_enemy()]; // 0 Atk enemy
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Find the ModifyStats event where Squire (p-2) buffs Fodder (p-1)
         let buff_event = events.iter().find(|e| {
@@ -1777,7 +1788,7 @@ mod tests {
         let p_board = vec![front_unit, support_unit];
         let e_board = vec![create_dummy_enemy()];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         let triggers: Vec<String> = events
             .iter()
@@ -1844,7 +1855,7 @@ mod tests {
         let p_board = vec![front_unit, support_unit];
         let e_board = vec![create_dummy_enemy()];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         let triggers: Vec<String> = events
             .iter()
@@ -1902,7 +1913,7 @@ mod tests {
         let p_board = vec![high_atk_front, low_atk_back];
         let e_board = vec![create_dummy_enemy()];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         let triggers: Vec<String> = events
             .iter()
@@ -1949,7 +1960,7 @@ mod tests {
         ];
         let e_board = vec![BoardUnit::from_card(grunt), BoardUnit::from_card(squire)];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // 1. Verify Battle End result is DRAW
         let last_event = events.last().unwrap();
@@ -2004,7 +2015,7 @@ mod tests {
             let p_board = vec![BoardUnit::from_card(tank), BoardUnit::from_card(nurse)];
             let e_board = vec![BoardUnit::from_card(enemy)];
 
-            let events = resolve_battle(&p_board, &e_board, 123);
+            let events = run_battle(&p_board, &e_board, 123);
 
             // Look for the heal trigger
             let heal_triggered = events.iter().any(|e| {
@@ -2027,7 +2038,7 @@ mod tests {
             let p_board = vec![BoardUnit::from_card(tank), BoardUnit::from_card(nurse)];
             let e_board = vec![BoardUnit::from_card(enemy)];
 
-            let events = resolve_battle(&p_board, &e_board, 456);
+            let events = run_battle(&p_board, &e_board, 456);
 
             // Nurse's ability should NOT trigger
             let heal_triggered = events.iter().any(|e| {
@@ -2077,7 +2088,7 @@ mod tests {
             ];
             let e_board = vec![BoardUnit::from_card(enemy)];
 
-            let events = resolve_battle(&p_board, &e_board, 789);
+            let events = run_battle(&p_board, &e_board, 789);
 
             let buff_triggered = events.iter().any(|e| {
                 if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
@@ -2099,7 +2110,7 @@ mod tests {
             let p_board = vec![BoardUnit::from_card(leader), BoardUnit::from_card(ally1)];
             let e_board = vec![BoardUnit::from_card(enemy)];
 
-            let events = resolve_battle(&p_board, &e_board, 101112);
+            let events = run_battle(&p_board, &e_board, 101112);
 
             let buff_triggered = events.iter().any(|e| {
                 if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
@@ -2143,7 +2154,7 @@ mod tests {
             let p_board = vec![BoardUnit::from_card(wolf)];
             let e_board = vec![BoardUnit::from_card(enemy)];
 
-            let events = resolve_battle(&p_board, &e_board, 1313);
+            let events = run_battle(&p_board, &e_board, 1313);
 
             let buff_triggered = events.iter().any(|e| {
                 if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
@@ -2168,7 +2179,7 @@ mod tests {
             let p_board = vec![BoardUnit::from_card(wolf), BoardUnit::from_card(ally)];
             let e_board = vec![BoardUnit::from_card(enemy)];
 
-            let events = resolve_battle(&p_board, &e_board, 1414);
+            let events = run_battle(&p_board, &e_board, 1414);
 
             let buff_triggered = events.iter().any(|e| {
                 if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
@@ -2216,7 +2227,7 @@ mod tests {
             let p_board = vec![BoardUnit::from_card(unit), BoardUnit::from_card(ally)];
             let e_board = vec![BoardUnit::from_card(enemy)];
 
-            let events = resolve_battle(&p_board, &e_board, 1515);
+            let events = run_battle(&p_board, &e_board, 1515);
 
             let triggered = events.iter().any(|e| {
                 if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
@@ -2237,7 +2248,7 @@ mod tests {
             let p_board = vec![BoardUnit::from_card(unit)];
             let e_board = vec![BoardUnit::from_card(enemy)];
 
-            let events = resolve_battle(&p_board, &e_board, 1616);
+            let events = run_battle(&p_board, &e_board, 1616);
 
             let triggered = events.iter().any(|e| {
                 if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
@@ -2284,7 +2295,7 @@ mod tests {
         let p_board = vec![BoardUnit::from_card(limited)];
         let e_board = vec![BoardUnit::from_card(enemy)];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Count how many times "Limited Rage" triggered
         let trigger_count = events
@@ -2332,7 +2343,7 @@ mod tests {
         let p_board = vec![BoardUnit::from_card(unlimited)];
         let e_board = vec![BoardUnit::from_card(enemy)];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Count how many times "Unlimited Rage" triggered
         let trigger_count = events
@@ -2390,7 +2401,7 @@ mod tests {
         let p_board = vec![BoardUnit::from_card(limited)];
         let e_board = vec![BoardUnit::from_card(enemy)];
 
-        let events = resolve_battle(&p_board, &e_board, 42);
+        let events = run_battle(&p_board, &e_board, 42);
 
         // Count triggers
         let trigger_count = events

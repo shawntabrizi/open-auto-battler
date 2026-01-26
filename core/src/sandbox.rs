@@ -1,6 +1,14 @@
+//! Sandbox mode for custom battles
+//!
+//! This module provides sandbox battle functionality for browser builds.
+
+use alloc::string::String;
+use alloc::vec::Vec;
+
 use crate::battle::{resolve_battle, UnitId, UnitView};
 use crate::engine::BattleOutput;
 use crate::log;
+use crate::rng::XorShiftRng;
 use crate::types::{BoardUnit, UnitCard};
 use crate::units::get_starter_templates;
 use serde::{Deserialize, Serialize};
@@ -33,8 +41,8 @@ pub fn get_unit_templates() -> JsValue {
     let templates: Vec<UnitTemplateView> = get_starter_templates()
         .into_iter()
         .map(|t| UnitTemplateView {
-            template_id: t.template_id.to_string(),
-            name: t.name.to_string(),
+            template_id: String::from(t.template_id),
+            name: String::from(t.name),
             attack: t.attack,
             health: t.health,
             play_cost: t.play_cost,
@@ -86,7 +94,8 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
         .filter_map(|s| make_board_unit(s))
         .collect();
 
-    let events = resolve_battle(&player_board, &enemy_board, seed);
+    let mut rng = XorShiftRng::seed_from_u64(seed);
+    let events = resolve_battle(&player_board, &enemy_board, &mut rng);
 
     let mut instance_counter = 0;
     let initial_player_units: Vec<UnitView> = player_board
@@ -103,7 +112,7 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
             }
         })
         .collect();
-    
+
     instance_counter = 0;
     let initial_enemy_units: Vec<UnitView> = enemy_board
         .iter()
