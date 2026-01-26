@@ -9,8 +9,9 @@ use alloc::vec::Vec;
 
 use crate::battle::{resolve_battle, CombatEvent, UnitId, UnitView};
 use crate::log;
+use crate::commit::verify_and_apply_turn;
 use crate::opponents::get_opponent_for_round;
-use crate::rng::{BattleRng, XorShiftRng};
+use crate::rng::XorShiftRng;
 use crate::state::*;
 use crate::types::{BoardUnit, UnitCard};
 use crate::units::get_starter_templates;
@@ -39,6 +40,7 @@ pub struct GameEngine {
     hand_pitched: Vec<bool>, // true = pitched for mana
     hand_played: Vec<bool>,  // true = played to board
     board_pitched: Vec<usize>, // board slots that were pitched
+    start_board: Vec<Option<BoardUnit>>, // board state at the start of the turn
 }
 
 #[wasm_bindgen]
@@ -56,6 +58,7 @@ impl GameEngine {
             hand_pitched: Vec::new(),
             hand_played: Vec::new(),
             board_pitched: Vec::new(),
+            start_board: vec![None; BOARD_SIZE],
         };
         engine.initialize_bag();
         engine.start_planning_phase();
@@ -219,30 +222,33 @@ impl GameEngine {
             return Err("Can only end turn during shop phase".to_string());
         }
 
-        // Remove played+pitched cards from bag directly.
-        // The engine has already applied board changes incrementally and validated each step.
-        let hand_indices = self.state.derive_hand_indices();
-        let mut bag_indices_to_remove: Vec<usize> = Vec::new();
+        // Build CommitTurnAction from local tracking
+        let action = crate::types::CommitTurnAction {
+            new_board: self.state.board.clone(),
+            pitched_from_hand: self
+                .hand_pitched
+                .iter()
+                .enumerate()
+                .filter(|(_, &p)| p)
+                .map(|(i, _)| i as u32)
+                .collect(),
+            played_from_hand: self
+                .hand_played
+                .iter()
+                .enumerate()
+                .filter(|(_, &p)| p)
+                .map(|(i, _)| i as u32)
+                .collect(),
+            pitched_from_board: self.board_pitched.iter().map(|&i| i as u32).collect(),
+        };
 
-        for (hi, &pitched) in self.hand_pitched.iter().enumerate() {
-            if pitched {
-                bag_indices_to_remove.push(hand_indices[hi]);
-            }
-        }
-        for (hi, &played) in self.hand_played.iter().enumerate() {
-            if played {
-                bag_indices_to_remove.push(hand_indices[hi]);
-            }
-        }
+        // We must rollback board to start_board because verify_and_apply_turn expects
+        // state as it was at the beginning of the turn.
+        self.state.board = self.start_board.clone();
 
-        // Sort descending, dedup, and remove
-        bag_indices_to_remove.sort_unstable();
-        bag_indices_to_remove.dedup();
-        bag_indices_to_remove.reverse();
-
-        for idx in bag_indices_to_remove {
-            self.state.bag.swap_remove(idx);
-        }
+        // Use the centralized verification logic to apply the turn
+        verify_and_apply_turn(&mut self.state, &action)
+            .map_err(|e| format!("Turn verification failed: {:?}", e))?;
 
         self.current_mana = 0;
         self.state.phase = GamePhase::Battle;
@@ -442,6 +448,7 @@ impl GameEngine {
         self.hand_pitched = vec![false; hand_size];
         self.hand_played = vec![false; hand_size];
         self.board_pitched = Vec::new();
+        self.start_board = self.state.board.clone();
         self.current_mana = 0;
     }
 

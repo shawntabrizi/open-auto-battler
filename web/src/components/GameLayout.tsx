@@ -41,8 +41,8 @@ export function GameLayout() {
   // Card panel is visible during shop phase or when a board unit is selected
   const showCardPanel = view?.phase === 'shop' || (selection?.type === 'board');
   const selectedCard =
-    view?.phase === 'shop' && selection?.type === 'shop' && view?.shop[selection!.index]?.card
-      ? view.shop[selection!.index].card!
+    view?.phase === 'shop' && selection?.type === 'hand' && view?.hand[selection!.index]
+      ? view.hand[selection!.index]!
       : null;
 
   // For board selections, create a card-like object from the unit data
