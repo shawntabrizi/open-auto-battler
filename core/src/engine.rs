@@ -397,6 +397,9 @@ impl GameEngine {
         self.state.deck.clear();
         let templates = get_starter_templates();
         for template in &templates {
+            if template.is_token {
+                continue;
+            }
             for _ in 0..3 {
                 let id = self.state.generate_card_id();
                 let card = UnitCard::new(

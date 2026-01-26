@@ -18,6 +18,9 @@ const EMOJI_MAP: Record<string, string> = {
   sniper: '🎯',
   archer: '🏹',
   pack_leader: '👑',
+  assassin: '🥷',
+  headhunter: '🕵️',
+  giant_slayer: '🗡️',
 
   // Orcs
   orc_warrior: '⚔️',
@@ -43,10 +46,17 @@ const EMOJI_MAP: Record<string, string> = {
   giant_crusher: '🦣',
   dragon_tyrant: '🐉',
   behemoth: '🐘',
-  headhunter: '🕵️',
-  giant_slayer: '🗡️',
   mana_reaper: '⚖️',
   lone_wolf: '🐕',
+  rat_swarm: '🐀',
+  scaredy_cat: '🙀',
+  skeleton_archer: '💀',
+  vampire: '🧛',
+  fire_elemental: '🔥',
+  phoenix: '🐦‍🔥',
+  phoenix_egg: '🥚',
+  shield_master: '👑',
+  void_walker: '🌑',
 };
 
 /**
