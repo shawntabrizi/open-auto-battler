@@ -10,7 +10,7 @@ interface CardDetailPanelProps {
   isSandbox?: boolean;
 }
 
-type TabType = 'card' | 'rules';
+type TabType = 'card' | 'rules' | 'mode';
 
 export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
@@ -272,45 +272,45 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
     return (
       <div className="space-y-4">
         <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-md font-bold text-yellow-400 mb-2">🎯 Game Objective</h3>
+          <h3 className="text-md font-bold text-yellow-400 mb-2">🎯 Objective</h3>
           <p className="text-sm text-white">
-            Build a powerful board of units to defeat enemy units in battle. Survive 10 rounds to
-            win!
+            Build a team of up to 5 units to defeat 10 rounds of opponents. You start with 3 lives; losing a battle costs 1 life.
           </p>
         </div>
 
         <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-md font-bold text-yellow-400 mb-2">⚔️ Battle Mechanics</h3>
-          <ul className="text-sm text-white space-y-1">
-            <li>• Front units clash simultaneously</li>
-            <li>• Units die when health reaches 0</li>
-            <li>• Survivors slide forward to fill gaps</li>
-            <li>• Abilities trigger at specific times</li>
+          <h3 className="text-md font-bold text-yellow-400 mb-2">💎 Economy & Mana</h3>
+          <ul className="text-sm text-white space-y-2">
+            <li>• <strong>Mana Limit:</strong> Starts at 3 and increases by 1 each round (max 10).</li>
+            <li>• <strong>Gaining Mana:</strong> You start each shop phase with 0 mana. Pitch cards from the shop or board to gain mana equal to their <span className="text-red-400 font-bold">Pitch Value</span>.</li>
+            <li>• <strong>Spending Mana:</strong> Buy cards from the shop using mana equal to their <span className="text-blue-400 font-bold">Play Cost</span>.</li>
           </ul>
         </div>
 
         <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-md font-bold text-yellow-400 mb-2">🏪 Shop Phase</h3>
-          <ul className="text-sm text-white space-y-1">
-            <li>• Select cards to buy with mana</li>
-            <li>• Freeze cards to keep them</li>
-            <li>• Pitch cards to gain mana</li>
-            <li>• Build your board strategically</li>
+          <h3 className="text-md font-bold text-yellow-400 mb-2">⚔️ Battle Phase</h3>
+          <ul className="text-sm text-white space-y-2">
+            <li>• <strong>Clash:</strong> The units at the front (index 0) attack each other simultaneously.</li>
+            <li>• <strong>Movement:</strong> When a unit dies, units behind it slide forward to fill the gap.</li>
+            <li>• <strong>Abilities:</strong> Triggers occur at specific times (Start of Battle, Before/After Attack, On Death, etc.).</li>
+            <li>• <strong>Limits:</strong> Battles are bounded to prevent infinite loops (max 100 rounds).</li>
           </ul>
         </div>
 
         <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-md font-bold text-yellow-400 mb-2">💎 Ability Triggers</h3>
-          <ul className="text-sm text-white space-y-1">
-            <li>
-              <strong>Battle Start:</strong> Triggers when battle begins
-            </li>
-            <li>
-              <strong>When Dies:</strong> Triggers when unit is defeated
-            </li>
+          <h3 className="text-md font-bold text-yellow-400 mb-2">🧊 Shop Management</h3>
+          <ul className="text-sm text-white space-y-2">
+            <li>• <strong>Freezing:</strong> Lock a card in the shop so it persists to the next round. Unfrozen slots are refilled from the deck.</li>
+            <li>• <strong>Cycling:</strong> When you buy or pitch a card, it is immediately replaced by a new card from your deck.</li>
           </ul>
         </div>
+      </div>
+    );
+  };
 
+  const renderModeTab = () => {
+    return (
+      <div className="space-y-4">
         <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
           <h3 className="text-md font-bold text-yellow-400 mb-2">🤝 Multiplayer</h3>
           <p className="text-sm text-white mb-3">
@@ -320,14 +320,14 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
             onClick={() => navigate('/multiplayer')}
             className="w-full btn bg-blue-600 hover:bg-blue-500 text-white text-sm"
           >
-            Multiplayer Mode
+            Enter Multiplayer
           </button>
         </div>
 
         <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
           <h3 className="text-md font-bold text-yellow-400 mb-2">🧪 Sandbox Mode</h3>
           <p className="text-sm text-white mb-3">
-            Test unit combinations and battle scenarios without affecting your main game progress.
+            Test unit combinations and battle scenarios with a full library of cards.
           </p>
           <button
             onClick={() => navigate('/sandbox')}
@@ -352,7 +352,7 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
               : 'text-gray-400 hover:text-white hover:bg-gray-800'
           }`}
         >
-          Card Details
+          Card
         </button>
         <button
           onClick={() => setActiveTab('rules')}
@@ -364,11 +364,21 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
         >
           Rules
         </button>
+        <button
+          onClick={() => setActiveTab('mode')}
+          className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${
+            activeTab === 'mode'
+              ? 'bg-gray-700 text-white border-b-2 border-yellow-400'
+              : 'text-gray-400 hover:text-white hover:bg-gray-800'
+          }`}
+        >
+          Mode
+        </button>
       </div>
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        {activeTab === 'card' ? renderCardTab() : renderRulesTab()}
+        {activeTab === 'card' ? renderCardTab() : activeTab === 'rules' ? renderRulesTab() : renderModeTab()}
       </div>
     </div>
   );
