@@ -126,6 +126,11 @@ impl GameView {
             })
             .collect();
 
+        let hand_ids: Vec<CardId> = hand_indices
+            .iter()
+            .filter_map(|&idx| state.bag.get(idx).map(|c| c.id))
+            .collect();
+
         let can_afford: Vec<bool> = hand
             .iter()
             .map(|card_opt| {
@@ -154,8 +159,17 @@ impl GameView {
                 GamePhase::Victory => String::from("victory"),
                 GamePhase::Defeat => String::from("defeat"),
             },
-            bag: state.bag.iter().map(CardView::from).collect(),
-            bag_count: state.bag.len() as u32,
+            bag: state
+                .bag
+                .iter()
+                .filter(|card| !hand_ids.contains(&card.id))
+                .map(CardView::from)
+                .collect(),
+            bag_count: state
+                .bag
+                .iter()
+                .filter(|card| !hand_ids.contains(&card.id))
+                .count() as u32,
             can_afford,
         }
     }

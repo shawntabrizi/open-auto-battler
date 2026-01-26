@@ -62,7 +62,7 @@ export function HUD() {
         <button 
           onClick={() => setShowBag(true)}
           className="btn bg-gray-800 hover:bg-gray-700 text-white border-gray-600 flex items-center gap-2 px-4"
-          title="View your bag"
+          title="View your draw pool"
         >
           <span className="text-xl">🎒</span>
           <span className="font-bold">{view.bagCount}</span>

@@ -116,7 +116,7 @@ export function Shop() {
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="flex items-center gap-1 mb-2">
             <span className="text-sm text-gray-400">Hand</span>
-            <span className="text-xs text-gray-500">({view.bagCount} cards in bag)</span>
+            <span className="text-xs text-gray-500">({view.bagCount} in draw pool)</span>
           </div>
 
           <div className="flex gap-3">
