@@ -248,6 +248,24 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
           <div>INSTANCE_ID: {card.id}</div>
           {card.isToken && <div className="text-yellow-600 font-bold">TOKEN UNIT</div>}
         </div>
+
+        {/* Card Raw JSON */}
+        {showRawJson && (
+          <div className="mt-4 p-2 bg-black/50 rounded border border-gray-800">
+            <div className="text-[10px] text-gray-500 mb-1 flex justify-between items-center">
+              <span>CARD_DATA.JSON</span>
+              <button 
+                onClick={() => navigator.clipboard.writeText(JSON.stringify(card, null, 2))}
+                className="text-blue-500 hover:text-blue-400 font-mono text-[9px]"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="text-[9px] text-blue-400/80 custom-scrollbar max-h-48 overflow-auto">
+              {JSON.stringify(card, null, 2)}
+            </pre>
+          </div>
+        )}
       </div>
     );
   };
@@ -293,6 +311,12 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
               className="w-full btn bg-purple-900/50 hover:bg-purple-800 text-purple-200 border border-purple-700 text-xs py-2"
             >
               Enter Sandbox Mode
+            </button>
+            <button 
+              onClick={() => navigate('/multiplayer')}
+              className="w-full btn bg-blue-900/50 hover:bg-blue-800 text-blue-200 border border-blue-700 text-xs py-2"
+            >
+              Enter Multiplayer Mode
             </button>
           </div>
         </div>
