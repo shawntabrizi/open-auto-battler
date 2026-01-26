@@ -1127,7 +1127,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                                 ability_order: sub_idx,
                             },
                             is_from_dead: is_dead,
-                            spawn_index_override: if is_dead { Some(0) } else { None },
+                            spawn_index_override: if is_dead { Some(current_idx) } else { None },
                             condition: a.condition.clone(),
                             ability_index: sub_idx,
                             max_triggers: a.max_triggers,

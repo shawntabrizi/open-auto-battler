@@ -36,10 +36,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             abilities: vec![Ability {
                 trigger: AbilityTrigger::OnFaint,
                 effect: AbilityEffect::SpawnUnit {
-                    template_id: String::from("rat_swarm"),
+                    template_id: String::from("rat_token"),
                 },
                 name: String::from("Infestation"),
-                description: String::from("Spawn another Rat Swarm when killed"),
+                description: String::from("Spawn a Rat Token when killed"),
                 condition: AbilityCondition::None,
                 max_triggers: Some(1),
             }],
@@ -666,10 +666,19 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             }],
             is_token: false,
         },
-
         // ==========================================
         // TOKENS (Non-deck cards)
         // ==========================================
+        CardTemplate {
+            template_id: "rat_token",
+            name: "Rat Token",
+            attack: 1,
+            health: 1,
+            play_cost: 0,
+            pitch_value: 0,
+            abilities: vec![],
+            is_token: true,
+        },
         CardTemplate {
             template_id: "zombie_soldier",
             name: "Zombie Soldier",

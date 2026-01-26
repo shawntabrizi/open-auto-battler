@@ -49,6 +49,7 @@ const EMOJI_MAP: Record<string, string> = {
   mana_reaper: '⚖️',
   lone_wolf: '🐕',
   rat_swarm: '🐀',
+  rat_token: '🐀',
   scaredy_cat: '🙀',
   skeleton_archer: '💀',
   vampire: '🧛',
