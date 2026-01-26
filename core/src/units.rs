@@ -183,6 +183,26 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             is_token: false,
         },
         CardTemplate {
+            template_id: "sniper",
+            name: "Sniper",
+            attack: 2,
+            health: 2,
+            play_cost: 3,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::Damage {
+                    amount: 2,
+                    target: AbilityTarget::BackEnemy,
+                },
+                name: String::from("Assassinate"),
+                description: String::from("Deal 2 damage to the back enemy at start"),
+                condition: AbilityCondition::None,
+                max_triggers: None,
+            }],
+            is_token: false,
+        },
+        CardTemplate {
             template_id: "skeleton_archer",
             name: "Skeleton Archer",
             attack: 2,
