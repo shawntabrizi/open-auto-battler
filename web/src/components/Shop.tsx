@@ -43,6 +43,14 @@ export function Shop() {
     setIsAshHovered(false);
   };
 
+  const handleAshMouseEnter = () => {
+    setIsAshHovered(true);
+  };
+
+  const handleAshMouseLeave = () => {
+    setIsAshHovered(false);
+  };
+
   if (!view) return null;
 
   // Defensive check for shop array
@@ -68,26 +76,39 @@ export function Shop() {
     <div className="h-48 bg-shop-bg border-t-2 border-gray-600">
       <div className="flex h-full">
         {/* Left: Ash Pile */}
-        <div className="w-32 flex flex-col items-center justify-center border-r border-gray-700">
+        <div 
+          className={`w-32 flex flex-col items-center justify-center border-r border-gray-700 transition-colors duration-200 ${
+            isAshHovered ? 'bg-red-900/30' : ''
+          }`}
+          onDragOver={handleAshDragOver}
+          onDragLeave={handleAshDragLeave}
+          onMouseEnter={handleAshMouseEnter}
+          onMouseLeave={handleAshMouseLeave}
+          onDrop={handleAshDrop}
+        >
           <div className="text-sm text-gray-400 mb-2">Ash Pile</div>
           <div
-            className={`w-20 h-20 rounded-full bg-gradient-to-br from-red-900 to-orange-800 flex items-center justify-center text-3xl shadow-lg transition-all cursor-pointer ${
+            className={`w-16 h-16 rounded-full bg-gradient-to-br from-red-900 to-orange-800 flex items-center justify-center text-2xl shadow-lg transition-all cursor-pointer border-2 border-orange-500/50 ${
               isAshHovered
-                ? 'shadow-red-400/80 scale-110 ring-4 ring-red-400/50'
+                ? 'shadow-red-400/80 scale-110 ring-4 ring-red-400/30'
                 : 'shadow-red-900/50 hover:shadow-red-700/70'
             }`}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               if (selection?.type === 'shop') {
                 pitchShopCard(selection.index);
+                setSelection(null);
+              } else if (selection?.type === 'board') {
+                pitchBoardUnit(selection.index);
+                setSelection(null);
               }
             }}
-            onDragOver={handleAshDragOver}
-            onDragLeave={handleAshDragLeave}
-            onDrop={handleAshDrop}
           >
             🔥
           </div>
-          <div className="text-xs text-gray-500 mt-1">Drag cards here to pitch</div>
+          <div className="text-[10px] text-gray-500 mt-2 text-center px-2">
+            {isAshHovered ? 'BURN IT!' : 'Drop to Pitch'}
+          </div>
         </div>
 
         {/* Center: Shop/Conveyor Belt */}
