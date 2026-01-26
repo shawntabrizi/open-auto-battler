@@ -1,22 +1,51 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { useSandboxStore } from '../store/sandboxStore';
 import { BattleArena } from './BattleArena';
 
-export function BattleOverlay() {
-  const battleOutput = useGameStore((state) => state.battleOutput);
-  const showBattleOverlay = useGameStore((state) => state.showBattleOverlay);
-  const continueAfterBattle = useGameStore((state) => state.continueAfterBattle);
-  const view = useGameStore((state) => state.view);
+interface BattleOverlayProps {
+  mode?: 'game' | 'sandbox';
+}
+
+export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
+  // Use hooks for both stores but decide which values to use based on mode
+  const gameBattleOutput = useGameStore((state) => state.battleOutput);
+  const gameShowOverlay = useGameStore((state) => state.showBattleOverlay);
+  const gameContinue = useGameStore((state) => state.continueAfterBattle);
+  const gameView = useGameStore((state) => state.view);
+
+  const sandboxBattleOutput = useSandboxStore((state) => state.battleOutput);
+  const sandboxShowOverlay = useSandboxStore((state) => state.isBattling);
+  const sandboxClose = useSandboxStore((state) => state.closeBattle);
+  const sandboxSeed = useSandboxStore((state) => state.battleSeed);
+
+  // Derive active states based on mode
+  const isSandbox = mode === 'sandbox';
+  const battleOutput = isSandbox ? sandboxBattleOutput : gameBattleOutput;
+  const showOverlay = isSandbox ? sandboxShowOverlay : gameShowOverlay;
+  const onContinue = isSandbox ? sandboxClose : gameContinue;
+  const title = isSandbox ? `Sandbox Battle (Seed: ${sandboxSeed})` : `Round ${gameView?.round} Battle`;
 
   const [battleFinished, setBattleFinished] = useState(false);
 
   useEffect(() => {
-    if (showBattleOverlay) {
+    if (showOverlay) {
       setBattleFinished(false);
     }
-  }, [showBattleOverlay]);
+  }, [showOverlay]);
 
-  if (!showBattleOverlay || !battleOutput) {
+  // Escape key to close (especially useful in sandbox)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showOverlay && isSandbox) {
+        onContinue();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showOverlay, isSandbox, onContinue]);
+
+  if (!showOverlay || !battleOutput) {
     return null;
   }
 
@@ -37,29 +66,49 @@ export function BattleOverlay() {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-xl p-6 max-w-5xl w-full mx-4 border border-gray-700">
-        <h2 className="text-2xl font-bold text-center mb-4">Round {view?.round} Battle</h2>
+      <div className="bg-gray-900 rounded-xl p-6 max-w-[95vw] w-full mx-4 border border-gray-700 overflow-hidden flex flex-col max-h-[90vh] relative shadow-2xl">
+        {/* Close X button for sandbox mode */}
+        {isSandbox && (
+          <button
+            onClick={onContinue}
+            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors z-10"
+            title="Close (Esc)"
+          >
+            ×
+          </button>
+        )}
 
-        <BattleArena battleOutput={battleOutput} onBattleEnd={() => setBattleFinished(true)} />
+        <h2 className="text-2xl font-bold text-center mb-4 flex-shrink-0 text-white">{title}</h2>
 
-        <div className="flex justify-center gap-4 mt-4">
-          {battleFinished ? (
-            <button
-              onClick={continueAfterBattle}
-              className="btn btn-primary text-lg px-8 animate-pulse"
-            >
-              Continue
-            </button>
-          ) : (
-            <div className="h-10"> {/* Placeholder to prevent layout shift */} </div>
-          )}
+        <div className="flex-1 overflow-x-auto overflow-y-auto min-h-0 custom-scrollbar pb-4">
+          <div className="min-w-max flex justify-center py-4 px-8">
+            <BattleArena battleOutput={battleOutput} onBattleEnd={() => setBattleFinished(true)} />
+          </div>
         </div>
 
-        {battleFinished && (
-          <div className={`mt-4 p-4 rounded-lg text-center text-2xl font-bold ${resultBgColor}`}>
-            {resultText}
+        <div className="flex flex-col items-center gap-4 mt-4 flex-shrink-0 border-t border-gray-800 pt-4">
+          <div className="h-12 flex items-center justify-center">
+            {battleFinished ? (
+              <button
+                onClick={onContinue}
+                className={`btn ${isSandbox ? 'bg-gray-700 hover:bg-gray-600' : 'btn-primary'} text-lg px-16 py-2 animate-pulse shadow-[0_0_15px_rgba(234,179,8,0.3)]`}
+              >
+                {isSandbox ? 'Close' : 'Continue'}
+              </button>
+            ) : (
+              <div className="text-gray-500 italic animate-pulse flex items-center gap-2">
+                <span className="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></span>
+                Battle in progress...
+              </div>
+            )}
           </div>
-        )}
+
+          {battleFinished && (
+            <div className={`w-full max-w-sm py-3 rounded-lg text-center text-2xl font-bold border ${resultBgColor} border-current/20 shadow-lg`}>
+              {resultText}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
