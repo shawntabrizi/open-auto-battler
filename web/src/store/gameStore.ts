@@ -206,6 +206,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       const myBoard = engine.get_board();
+      
+      // Set phase to battle so continue_after_battle works
+      engine.set_phase_battle();
+
       const battleOutput = engine.resolve_battle_p2p(myBoard, opponentBoard, BigInt(seed));
       
       // Update local state based on result
