@@ -15,12 +15,12 @@ type TabType = 'card' | 'rules' | 'mode';
 export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
   const navigate = useNavigate();
-  const { view, selection, buyCard, toggleFreeze, pitchShopCard, pitchBoardUnit, setSelection, showRawJson, toggleShowRawJson } = useGameStore();
+  const { view, selection, playHandCard, pitchHandCard, pitchBoardUnit, setSelection, showRawJson, toggleShowRawJson } = useGameStore();
 
   if (!isVisible) return null;
 
-  // Get the selected shop/board index for actions
-  const selectedShopIndex = selection?.type === 'shop' ? selection.index : -1;
+  // Get the selected hand/board index for actions
+  const selectedHandIndex = selection?.type === 'hand' ? selection.index : -1;
   const selectedBoardIndex = selection?.type === 'board' ? selection.index : -1;
   const isBoardUnit = selection?.type === 'board';
 
@@ -31,7 +31,7 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
           <div className="text-4xl mb-4">👆</div>
           <h3 className="text-lg font-bold text-gray-300 mb-2">Select a Card</h3>
           <p className="text-sm text-gray-400">
-            Click on any card in the shop to view its detailed information, abilities, and stats.
+            Click on any card in your hand or board to view its detailed information.
           </p>
         </div>
       );
@@ -98,7 +98,7 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
         case 'selfUnit':
           return 'this unit';
         case 'triggerTarget':
-          return 'triggered unit';
+          return 'the target';
         case 'allAllies':
           return 'all allies';
         case 'allEnemies':
@@ -116,66 +116,25 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
         case 'backEnemy':
           return 'the back enemy';
         case 'allyAhead':
-          return 'the ally ahead';
+          return 'the ally in front';
         case 'lowestHealthEnemy':
-          return 'the lowest health enemy';
+          return 'the weakest enemy';
         case 'highestAttackEnemy':
-          return 'the highest attack enemy';
+          return 'the strongest enemy';
         case 'highestHealthEnemy':
-          return 'the highest health enemy';
+          return 'the healthiest enemy';
         case 'lowestAttackEnemy':
-          return 'the lowest attack enemy';
-        case 'highestManaEnemy':
-          return 'the highest mana enemy';
-        case 'lowestManaEnemy':
-          return 'the lowest mana enemy';
+          return 'the weakest enemy';
         default:
           return target;
       }
     };
 
+    const emptyBoardSlot = view?.board.findIndex(slot => slot === null) ?? -1;
+
     return (
-      <>
-        {/* Card Display */}
-        <div className="flex flex-col items-center mb-6">
-          {/* Card Art */}
-          <div className="w-24 h-24 bg-gray-700 rounded-lg flex items-center justify-center text-4xl mb-4">
-            {getCardEmoji(card.templateId)}
-          </div>
-
-          {/* Card Name */}
-          <div className="text-lg font-bold text-center text-white mb-2">{card.name}</div>
-
-          {/* Stats */}
-          <div className="flex gap-4 text-center">
-            <div>
-              <div className="text-red-400 text-xs">⚔ ATTACK</div>
-              <div className="text-xl font-bold text-white">{card.attack}</div>
-            </div>
-            <div>
-              <div className="text-green-400 text-xs">❤ HEALTH</div>
-              <div className="text-xl font-bold text-white">{card.health}</div>
-            </div>
-          </div>
-
-          {/* Costs */}
-          <div className="flex gap-3 mt-3">
-            <div className="flex items-center gap-1">
-              <div className="w-5 h-5 bg-mana-blue rounded-full flex items-center justify-center text-xs font-bold border border-blue-300">
-                {card.playCost}
-              </div>
-              <span className="text-xs text-gray-400">Play</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-5 h-5 bg-pitch-red rounded-full flex items-center justify-center text-xs font-bold border border-red-300">
-                {card.pitchValue}
-              </div>
-              <span className="text-xs text-gray-400">Pitch</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Buttons - Moved above abilities */}
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+        {/* Action Buttons */}
         {!isSandbox && (
           <div className="mb-6 space-y-2">
             {isBoardUnit ? (
@@ -192,34 +151,24 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
                 Pitch Board Unit (+{card.pitchValue} mana)
               </button>
             ) : (
-              // Shop card actions
+              // Hand card actions
               <>
                 <button
                   onClick={() => {
-                    if (selectedShopIndex >= 0) {
-                      buyCard(selectedShopIndex);
-                      setSelection(null); // Clear selection after buying
+                    if (selectedHandIndex >= 0 && emptyBoardSlot >= 0) {
+                      playHandCard(selectedHandIndex, emptyBoardSlot);
+                      setSelection(null); // Clear selection after playing
                     }
                   }}
-                  disabled={selectedShopIndex < 0 || !view?.canAfford[selectedShopIndex]}
-                  className={`w-full btn text-sm ${selectedShopIndex >= 0 && view?.canAfford[selectedShopIndex] ? 'btn-primary' : 'btn-disabled'}`}
+                  disabled={selectedHandIndex < 0 || emptyBoardSlot < 0 || !view?.canAfford[selectedHandIndex]}
+                  className={`w-full btn text-sm ${selectedHandIndex >= 0 && emptyBoardSlot >= 0 && view?.canAfford[selectedHandIndex] ? 'btn-primary' : 'btn-disabled'}`}
                 >
-                  Buy (-{card.playCost} mana)
+                  {emptyBoardSlot < 0 ? 'Board Full' : `Play (-${card.playCost} mana)`}
                 </button>
                 <button
                   onClick={() => {
-                    if (selectedShopIndex >= 0) {
-                      toggleFreeze(selectedShopIndex);
-                    }
-                  }}
-                  className="w-full btn bg-cyan-600 hover:bg-cyan-500 text-white text-sm"
-                >
-                  {view?.shop[selectedShopIndex]?.frozen ? 'Unfreeze' : 'Freeze'}
-                </button>
-                <button
-                  onClick={() => {
-                    if (selectedShopIndex >= 0) {
-                      pitchShopCard(selectedShopIndex);
+                    if (selectedHandIndex >= 0) {
+                      pitchHandCard(selectedHandIndex);
                       setSelection(null); // Clear selection after pitching
                     }
                   }}
@@ -231,6 +180,24 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
             )}
           </div>
         )}
+
+        {/* Card Basic Info */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-20 h-20 bg-gray-800 rounded-xl border-2 border-gray-700 flex items-center justify-center text-4xl shadow-inner">
+            {getCardEmoji(card.templateId)}
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-white leading-tight">{card.name}</h2>
+            <div className="flex gap-2 mt-1">
+              <span className="px-2 py-0.5 bg-red-900/50 text-red-400 border border-red-800 rounded text-xs font-bold">
+                ATK: {card.attack}
+              </span>
+              <span className="px-2 py-0.5 bg-green-900/50 text-green-400 border border-green-800 rounded text-xs font-bold">
+                HP: {card.health}
+              </span>
+            </div>
+          </div>
+        </div>
 
         {/* Ability Section */}
         {card.abilities.length > 0 && (
@@ -248,147 +215,148 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
                     <strong>Max Triggers:</strong> {ability.maxTriggers}
                   </div>
                 )}
-                <div className="text-sm text-white">{ability.description}</div>
-                <div className="text-xs text-gray-400 mt-2 italic">
-                  {getEffectDescription(ability.effect)}
+                <div className="text-sm text-gray-200 bg-gray-900/50 p-2 rounded border border-gray-700/50 italic">
+                  "{ability.description}"
+                </div>
+                <div className="mt-2 text-xs text-blue-400 font-semibold">
+                  Result: {getEffectDescription(ability.effect)}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Raw JSON Section */}
-        <div className="mb-4">
-          <button
-            onClick={toggleShowRawJson}
-            className="w-full btn bg-gray-600 hover:bg-gray-500 text-white text-sm"
-          >
-            {showRawJson ? 'Hide' : 'Show'} Raw JSON
-          </button>
-
-          {showRawJson && (
-            <div className="mt-2 p-2 bg-gray-900 rounded border border-gray-700">
-              <pre className="text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap max-h-40 overflow-y-auto">
-                {JSON.stringify(card, null, 2)}
-              </pre>
+        {/* Economy Section */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="p-3 bg-blue-900/20 border border-blue-800/50 rounded-lg">
+            <div className="text-[10px] text-blue-400 uppercase font-bold mb-1">Play Cost</div>
+            <div className="text-xl font-bold text-white flex items-center gap-1">
+              {card.playCost} <span className="text-blue-400 text-sm">Mana</span>
             </div>
-          )}
+          </div>
+          <div className="p-3 bg-orange-900/20 border border-orange-800/50 rounded-lg">
+            <div className="text-[10px] text-orange-400 uppercase font-bold mb-1">Pitch Value</div>
+            <div className="text-xl font-bold text-white flex items-center gap-1">
+              +{card.pitchValue} <span className="text-orange-400 text-sm">Mana</span>
+            </div>
+          </div>
         </div>
-      </>
+
+        {/* Metadata */}
+        <div className="text-[10px] text-gray-500 font-mono flex flex-col gap-1 border-t border-gray-800 pt-4">
+          <div>TEMPLATE_ID: {card.templateId}</div>
+          <div>INSTANCE_ID: {card.id}</div>
+          {card.isToken && <div className="text-yellow-600 font-bold">TOKEN UNIT</div>}
+        </div>
+      </div>
     );
   };
 
   const renderRulesTab = () => {
     return (
-      <div className="space-y-4">
-        <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-md font-bold text-yellow-400 mb-2">🎯 Objective</h3>
-          <p className="text-sm text-white">
-            Build a team of up to 5 units to defeat 10 rounds of opponents. You start with 3 lives; losing a battle costs 1 life.
-          </p>
-        </div>
-
-        <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-md font-bold text-yellow-400 mb-2">💎 Economy & Mana</h3>
-          <ul className="text-sm text-white space-y-2">
-            <li>• <strong>Mana Limit:</strong> Starts at 3 and increases by 1 each round (max 10).</li>
-            <li>• <strong>Gaining Mana:</strong> You start each shop phase with 0 mana. Pitch cards from the shop or board to gain mana equal to their <span className="text-red-400 font-bold">Pitch Value</span>.</li>
-            <li>• <strong>Spending Mana:</strong> Buy cards from the shop using mana equal to their <span className="text-blue-400 font-bold">Play Cost</span>.</li>
-          </ul>
-        </div>
-
-        <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-md font-bold text-yellow-400 mb-2">⚔️ Battle Phase</h3>
-          <ul className="text-sm text-white space-y-2">
-            <li>• <strong>Clash:</strong> The units at the front (index 0) attack each other simultaneously.</li>
-            <li>• <strong>Movement:</strong> When a unit dies, units behind it slide forward to fill the gap.</li>
-            <li>• <strong>Abilities:</strong> Triggers occur at specific times (Start of Battle, Before/After Attack, On Death, etc.).</li>
-            <li>• <strong>Limits:</strong> Battles are bounded to prevent infinite loops (max 100 rounds).</li>
-          </ul>
-        </div>
-
-        <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-md font-bold text-yellow-400 mb-2">🧊 Shop Management</h3>
-          <ul className="text-sm text-white space-y-2">
-            <li>• <strong>Freezing:</strong> Lock a card in the shop so it persists to the next round. Unfrozen slots are refilled from the deck.</li>
-            <li>• <strong>Cycling:</strong> When you buy or pitch a card, it is immediately replaced by a new card from your deck.</li>
-          </ul>
-        </div>
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 text-sm text-gray-300">
+        <section>
+          <h3 className="font-bold text-white mb-1 border-b border-gray-700 pb-1">Planning Phase</h3>
+          <p>Each turn you get a new Hand of 7 cards from your Bag. Unused cards return to your bag.</p>
+        </section>
+        <section>
+          <h3 className="font-bold text-white mb-1 border-b border-gray-700 pb-1">Mana System</h3>
+          <p>You start each turn with 0 Mana. Pitch cards from your Hand or Units from your Board to gain Mana.</p>
+          <p className="mt-1 text-xs text-gray-400 italic">Your maximum mana capacity increases every round.</p>
+        </section>
+        <section>
+          <h3 className="font-bold text-white mb-1 border-b border-gray-700 pb-1">Combat</h3>
+          <p>Units fight from front to back. High Attack units trigger their abilities first when a trigger is shared.</p>
+        </section>
+        <section>
+          <h3 className="font-bold text-white mb-1 border-b border-gray-700 pb-1">Winning</h3>
+          <p>Reach 10 Wins before you lose all 3 Lives!</p>
+        </section>
       </div>
     );
   };
 
   const renderModeTab = () => {
     return (
-      <div className="space-y-4">
-        <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-md font-bold text-yellow-400 mb-2">🤝 Multiplayer</h3>
-          <p className="text-sm text-white mb-3">
-            Connect with a friend using P2P WebRTC to play a head-to-head match!
-          </p>
-          <button
-            onClick={() => navigate('/multiplayer')}
-            className="w-full btn bg-blue-600 hover:bg-blue-500 text-white text-sm"
-          >
-            Enter Multiplayer
-          </button>
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
+        <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+          <h3 className="font-bold text-white mb-2">Debug Tools</h3>
+          <div className="space-y-3">
+            <button 
+              onClick={toggleShowRawJson}
+              className="w-full btn btn-secondary text-xs py-2"
+            >
+              {showRawJson ? 'Hide Raw State' : 'View Raw Game State'}
+            </button>
+            <button 
+              onClick={() => navigate('/sandbox')}
+              className="w-full btn bg-purple-900/50 hover:bg-purple-800 text-purple-200 border border-purple-700 text-xs py-2"
+            >
+              Enter Sandbox Mode
+            </button>
+          </div>
         </div>
-
-        <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-md font-bold text-yellow-400 mb-2">🧪 Sandbox Mode</h3>
-          <p className="text-sm text-white mb-3">
-            Test unit combinations and battle scenarios with a full library of cards.
-          </p>
-          <button
-            onClick={() => navigate('/sandbox')}
-            className="w-full btn bg-purple-600 hover:bg-purple-500 text-white text-sm"
-          >
-            Open Sandbox
-          </button>
-        </div>
+        
+        {showRawJson && view && (
+          <div className="mt-4 p-2 bg-black/50 rounded border border-gray-800">
+            <div className="text-[10px] text-gray-500 mb-1 flex justify-between items-center">
+              <span>GAME_VIEW.JSON</span>
+              <button 
+                onClick={() => navigator.clipboard.writeText(JSON.stringify(view, null, 2))}
+                className="text-blue-500 hover:text-blue-400"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="text-[9px] text-green-500/80 custom-scrollbar max-h-64 overflow-auto">
+              {JSON.stringify(view, null, 2)}
+            </pre>
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="fixed left-0 top-16 bottom-0 w-80 bg-card-bg border-r-2 border-gray-600 shadow-2xl z-40 overflow-hidden flex flex-col">
-      {/* Tab Navigation */}
-      <div className="flex border-b border-gray-600">
+    <div className="fixed left-0 top-16 bottom-0 w-80 bg-gray-900 border-r border-gray-700 shadow-2xl flex flex-col z-10">
+      {/* Tabs */}
+      <div className="flex border-b border-gray-800">
         <button
           onClick={() => setActiveTab('card')}
-          className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${
-            activeTab === 'card'
-              ? 'bg-gray-700 text-white border-b-2 border-yellow-400'
-              : 'text-gray-400 hover:text-white hover:bg-gray-800'
+          className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+            activeTab === 'card' ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500' : 'text-gray-500 hover:text-gray-300'
           }`}
         >
           Card
         </button>
         <button
           onClick={() => setActiveTab('rules')}
-          className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${
-            activeTab === 'rules'
-              ? 'bg-gray-700 text-white border-b-2 border-yellow-400'
-              : 'text-gray-400 hover:text-white hover:bg-gray-800'
+          className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+            activeTab === 'rules' ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500' : 'text-gray-500 hover:text-gray-300'
           }`}
         >
           Rules
         </button>
         <button
           onClick={() => setActiveTab('mode')}
-          className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${
-            activeTab === 'mode'
-              ? 'bg-gray-700 text-white border-b-2 border-yellow-400'
-              : 'text-gray-400 hover:text-white hover:bg-gray-800'
+          className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+            activeTab === 'mode' ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500' : 'text-gray-500 hover:text-gray-300'
           }`}
         >
-          Mode
+          System
         </button>
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {activeTab === 'card' ? renderCardTab() : activeTab === 'rules' ? renderRulesTab() : renderModeTab()}
+      <div className="flex-1 p-5 flex flex-col overflow-hidden">
+        {activeTab === 'card' && renderCardTab()}
+        {activeTab === 'rules' && renderRulesTab()}
+        {activeTab === 'mode' && renderModeTab()}
+      </div>
+
+      {/* Footer */}
+      <div className="p-4 border-t border-gray-800 bg-black/20 text-[10px] text-gray-600 text-center uppercase tracking-tighter">
+        Manalimit Engine v0.2.0 • Build 2026.01
       </div>
     </div>
   );
