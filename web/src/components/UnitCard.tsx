@@ -8,7 +8,7 @@ interface UnitCardProps {
   onClick?: () => void;
   showCost?: boolean;
   showPitch?: boolean;
-  frozen?: boolean;
+  
   canAfford?: boolean;
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent) => void;
@@ -23,7 +23,7 @@ export function UnitCard({
   onClick,
   showCost = true,
   showPitch = true,
-  frozen = false,
+  
   canAfford = true,
   draggable = false,
   onDragStart,
@@ -56,7 +56,7 @@ export function UnitCard({
       className={`
         card relative w-24 h-32 ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none bg-card-bg rounded-lg border-2 border-gray-600 p-2 transition-all duration-200
         ${isSelected ? 'card-selected ring-2 ring-yellow-400' : ''}
-        ${frozen ? 'ring-2 ring-cyan-400' : ''}
+        
         ${!canAfford && showCost ? 'opacity-60' : ''}
         ${isDragging ? 'opacity-50 scale-105' : ''}
       `}
@@ -100,12 +100,6 @@ export function UnitCard({
         </div>
       )}
 
-      {/* Frozen indicator */}
-      {frozen && (
-        <div className="absolute inset-0 bg-cyan-400/20 rounded-lg flex items-center justify-center">
-          <span className="text-2xl">❄</span>
-        </div>
-      )}
     </div>
   );
 }

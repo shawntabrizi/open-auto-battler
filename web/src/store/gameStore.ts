@@ -80,7 +80,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       engine.play_hand_card(handIndex, boardSlot);
-      set({ view: engine.get_view(), selection: null });
+      set({ view: engine.get_view(), selection: { type: 'board', index: boardSlot } });
     } catch (err) {
       toast.error('Not enough mana!');
       console.error(err);
@@ -92,7 +92,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       engine.swap_board_positions(slotA, slotB);
-      set({ view: engine.get_view(), selection: null });
+      set({ view: engine.get_view(), selection: { type: 'board', index: slotB } });
     } catch (err) { console.error(err); }
   },
 

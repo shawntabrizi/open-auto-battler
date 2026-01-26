@@ -8,6 +8,7 @@ export function Shop() {
 
   // Drag and drop handlers for hand cards
   const handleHandDragStart = (e: React.DragEvent, handIndex: number) => {
+    setSelection({ type: "hand", index: handIndex });
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', `hand-${handIndex}`);
   };

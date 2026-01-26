@@ -155,18 +155,6 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
               <>
                 <button
                   onClick={() => {
-                    if (selectedHandIndex >= 0 && emptyBoardSlot >= 0) {
-                      playHandCard(selectedHandIndex, emptyBoardSlot);
-                      setSelection(null); // Clear selection after playing
-                    }
-                  }}
-                  disabled={selectedHandIndex < 0 || emptyBoardSlot < 0 || !view?.canAfford[selectedHandIndex]}
-                  className={`w-full btn text-sm ${selectedHandIndex >= 0 && emptyBoardSlot >= 0 && view?.canAfford[selectedHandIndex] ? 'btn-primary' : 'btn-disabled'}`}
-                >
-                  {emptyBoardSlot < 0 ? 'Board Full' : `Play (-${card.playCost} mana)`}
-                </button>
-                <button
-                  onClick={() => {
                     if (selectedHandIndex >= 0) {
                       pitchHandCard(selectedHandIndex);
                       setSelection(null); // Clear selection after pitching

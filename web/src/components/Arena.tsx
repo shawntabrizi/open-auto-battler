@@ -10,6 +10,7 @@ export function Arena() {
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
+    setSelection({ type: "board", index });
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', `board-${index}`);
   };
@@ -47,21 +48,16 @@ export function Arena() {
   const handleBoardSlotClick = (index: number) => {
     const unit = view.board[index];
 
-    // If we have a hand card selected, play it to this slot
-    if (selection?.type === 'hand') {
-      playHandCard(selection.index, index);
-      return;
-    }
-
     // Clicking a board unit handles selection/inspection
     if (unit) {
+      // Toggle selection or switch to this board unit
       if (selection?.type === 'board' && selection.index === index) {
         setSelection(null);
       } else {
         setSelection({ type: 'board', index });
       }
     } else {
-      // Clicked an empty slot with no hand card selected
+      // Clicked an empty slot
       setSelection(null);
     }
   };
