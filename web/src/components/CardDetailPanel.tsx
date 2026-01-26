@@ -254,7 +254,7 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
           <div className="mt-4 p-2 bg-black/50 rounded border border-gray-800">
             <div className="text-[10px] text-gray-500 mb-1 flex justify-between items-center">
               <span>CARD_DATA.JSON</span>
-              <button 
+              <button
                 onClick={() => navigator.clipboard.writeText(JSON.stringify(card, null, 2))}
                 className="text-blue-500 hover:text-blue-400 font-mono text-[9px]"
               >
@@ -278,7 +278,7 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
             <span className="text-blue-400">01.</span> Planning Phase
           </h3>
           <p className="leading-relaxed">
-            Every round, you derive a fresh <strong className="text-white">Hand of 7 cards</strong> from your Bag. 
+            Every round, you derive a fresh <strong className="text-white">Hand of 7 cards</strong> from your Bag.
             The selection is deterministic based on your game seed and the current round.
           </p>
           <p className="mt-2 text-gray-400 italic">
@@ -348,8 +348,8 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
             <span className="text-blue-400">05.</span> Victory
           </h3>
           <p className="leading-relaxed text-xs">
-            Battles are automated from <strong className="text-white">Front to Back</strong>. 
-            The first team to have all units defeated loses the round. 
+            Battles are automated from <strong className="text-white">Front to Back</strong>.
+            The first team to have all units defeated loses the round.
             Accumulate <strong className="text-yellow-500">10 Stars</strong> to win the run!
           </p>
         </section>
@@ -361,34 +361,40 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
     return (
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
         <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="font-bold text-white mb-2">Debug Tools</h3>
+          <h3 className="font-bold text-white mb-2">Game Mode</h3>
           <div className="space-y-3">
-            <button 
-              onClick={toggleShowRawJson}
-              className="w-full btn btn-secondary text-xs py-2"
-            >
-              {showRawJson ? 'Hide Raw State' : 'View Raw Game State'}
-            </button>
-            <button 
+            <button
               onClick={() => navigate('/sandbox')}
               className="w-full btn bg-purple-900/50 hover:bg-purple-800 text-purple-200 border border-purple-700 text-xs py-2"
             >
               Enter Sandbox Mode
             </button>
-            <button 
+            <button
               onClick={() => navigate('/multiplayer')}
-              className="w-full btn bg-blue-900/50 hover:bg-blue-800 text-blue-200 border border-blue-700 text-xs py-2"
+              className="w-full btn bg-green-900/50 hover:bg-green-800 text-green-200 border border-green-700 text-xs py-2"
             >
               Enter Multiplayer Mode
             </button>
           </div>
         </div>
-        
+
+        <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+          <h3 className="font-bold text-white mb-2">Debug Tools</h3>
+          <div className="space-y-3">
+            <button
+              onClick={toggleShowRawJson}
+              className="w-full btn bg-blue-900/50 hover:bg-blue-800 text-blue-200 border border-blue-700 text-xs py-2"
+            >
+              {showRawJson ? 'Hide Raw State' : 'View Raw Game State'}
+            </button>
+          </div>
+        </div>
+
         {showRawJson && view && (
           <div className="mt-4 p-2 bg-black/50 rounded border border-gray-800">
             <div className="text-[10px] text-gray-500 mb-1 flex justify-between items-center">
               <span>GAME_VIEW.JSON</span>
-              <button 
+              <button
                 onClick={() => navigator.clipboard.writeText(JSON.stringify(view, null, 2))}
                 className="text-blue-500 hover:text-blue-400"
               >
@@ -410,25 +416,22 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
       <div className="flex border-b border-gray-800">
         <button
           onClick={() => setActiveTab('card')}
-          className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-            activeTab === 'card' ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500' : 'text-gray-500 hover:text-gray-300'
-          }`}
+          className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === 'card' ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500' : 'text-gray-500 hover:text-gray-300'
+            }`}
         >
           Card
         </button>
         <button
           onClick={() => setActiveTab('rules')}
-          className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-            activeTab === 'rules' ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500' : 'text-gray-500 hover:text-gray-300'
-          }`}
+          className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === 'rules' ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500' : 'text-gray-500 hover:text-gray-300'
+            }`}
         >
           Rules
         </button>
         <button
           onClick={() => setActiveTab('mode')}
-          className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-            activeTab === 'mode' ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500' : 'text-gray-500 hover:text-gray-300'
-          }`}
+          className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === 'mode' ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500' : 'text-gray-500 hover:text-gray-300'
+            }`}
         >
           System
         </button>
