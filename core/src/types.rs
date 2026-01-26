@@ -265,8 +265,13 @@ impl BoardUnit {
         self.current_health > 0
     }
 
+    pub fn effective_health(&self) -> i32 {
+        self.current_health.max(0)
+    }
+
     pub fn take_damage(&mut self, amount: i32) {
-        self.current_health -= amount;
+        let actual_damage = amount.max(0);
+        self.current_health = self.current_health.saturating_sub(actual_damage);
     }
 }
 
