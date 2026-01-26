@@ -1,0 +1,158 @@
+use crate::battle::{CombatEvent, UnitId};
+use crate::tests::*;
+use crate::types::*;
+
+#[test]
+fn test_enemy_position_targeting() {
+    // P: [Artillery Mage]. Ability: OnStart -> 5 dmg to EnemyUnitPosition(2).
+    // E: [Target0, Target1, Target2 (5 HP)].
+    // Result: Target2 should take 5 damage and die.
+
+    let mage_ability = create_ability(
+        AbilityTrigger::OnStart,
+        AbilityEffect::Damage {
+            amount: 5,
+            target: AbilityTarget::EnemyUnitPosition(2),
+        },
+        "ArtilleryStrike",
+    );
+
+    let mage = create_dummy_card(1, "Artillery Mage", 3, 3).with_ability(mage_ability);
+
+    let t0 = create_dummy_card(2, "T0", 1, 10);
+    let t1 = create_dummy_card(3, "T1", 1, 10);
+    let t2 = create_dummy_card(4, "T2", 1, 5);
+
+    let p_board = vec![BoardUnit::from_card(mage)];
+    let e_board = vec![
+        BoardUnit::from_card(t0),
+        BoardUnit::from_card(t1),
+        BoardUnit::from_card(t2),
+    ];
+
+    let events = run_battle(&p_board, &e_board, 42);
+
+    // Verify Target2 (enemy id 3, since IDs are 1-based in my dummy setup usually)
+    // UnitId::enemy(3) should be the 3rd unit (pos 2)
+    let hit = events.iter().any(|e| {
+        matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
+            if *target_instance_id == UnitId::enemy(3) && *damage == 5)
+    });
+
+    assert!(hit, "Enemy at position 2 should have been hit for 5 damage");
+}
+
+#[test]
+fn test_enemy_position_fizzle() {
+    // P: [Artillery Mage]. Ability: OnStart -> 5 dmg to EnemyUnitPosition(2).
+    // E: [Target0, Target1]. (No unit at pos 2)
+    // Result: No AbilityDamage event should occur.
+
+    let mage_ability = create_ability(
+        AbilityTrigger::OnStart,
+        AbilityEffect::Damage {
+            amount: 5,
+            target: AbilityTarget::EnemyUnitPosition(2),
+        },
+        "ArtilleryStrike",
+    );
+
+    let mage = create_dummy_card(1, "Artillery Mage", 3, 3).with_ability(mage_ability);
+
+    let t0 = create_dummy_card(2, "T0", 1, 10);
+    let t1 = create_dummy_card(3, "T1", 1, 10);
+
+    let p_board = vec![BoardUnit::from_card(mage)];
+    let e_board = vec![BoardUnit::from_card(t0), BoardUnit::from_card(t1)];
+
+    let events = run_battle(&p_board, &e_board, 42);
+
+    // Verify no AbilityDamage event
+    let hit = events
+        .iter()
+        .any(|e| matches!(e, CombatEvent::AbilityDamage { .. }));
+
+    assert!(
+        !hit,
+        "Ability should have fizzled as there is no unit at position 2"
+    );
+}
+
+#[test]
+fn test_ally_position_targeting() {
+    // P: [Rear Guard, Ally1, Ally2, Ally3, Ally4 (5/5)]. Ability: OnStart -> +3/+3 to AllyUnitPosition(4).
+    // E: [Enemy].
+    // Result: Ally4 should become 8/8.
+
+    let guard_ability = create_ability(
+        AbilityTrigger::OnStart,
+        AbilityEffect::ModifyStats {
+            health: 3,
+            attack: 3,
+            target: AbilityTarget::AllyUnitPosition(4),
+        },
+        "SupplyLine",
+    );
+
+    let guard = create_dummy_card(1, "Rear Guard", 2, 5).with_ability(guard_ability);
+    let a1 = create_dummy_card(2, "A1", 1, 1);
+    let a2 = create_dummy_card(3, "A2", 1, 1);
+    let a3 = create_dummy_card(4, "A3", 1, 1);
+    let a4 = create_dummy_card(5, "A4", 5, 5);
+
+    let enemy = create_dummy_card(6, "Enemy", 1, 10);
+
+    let p_board = vec![
+        BoardUnit::from_card(guard),
+        BoardUnit::from_card(a1),
+        BoardUnit::from_card(a2),
+        BoardUnit::from_card(a3),
+        BoardUnit::from_card(a4),
+    ];
+    let e_board = vec![BoardUnit::from_card(enemy)];
+
+    let events = run_battle(&p_board, &e_board, 42);
+
+    // Verify Ally4 (player id 5) got buffed
+    let buff = events.iter().any(|e| {
+        matches!(e, CombatEvent::AbilityModifyStats { target_instance_id, health_change, attack_change, .. }
+            if *target_instance_id == UnitId::player(5) && *health_change == 3 && *attack_change == 3)
+    });
+
+    assert!(buff, "Ally at position 4 should have been buffed +3/+3");
+}
+
+#[test]
+fn test_ally_position_fizzle() {
+    // P: [Rear Guard]. Ability: OnStart -> +3/+3 to AllyUnitPosition(4). (No unit at pos 4)
+    // E: [Enemy].
+    // Result: No AbilityModifyStats event.
+
+    let guard_ability = create_ability(
+        AbilityTrigger::OnStart,
+        AbilityEffect::ModifyStats {
+            health: 3,
+            attack: 3,
+            target: AbilityTarget::AllyUnitPosition(4),
+        },
+        "SupplyLine",
+    );
+
+    let guard = create_dummy_card(1, "Rear Guard", 2, 5).with_ability(guard_ability);
+    let enemy = create_dummy_card(6, "Enemy", 1, 10);
+
+    let p_board = vec![BoardUnit::from_card(guard)];
+    let e_board = vec![BoardUnit::from_card(enemy)];
+
+    let events = run_battle(&p_board, &e_board, 42);
+
+    // Verify no AbilityModifyStats event
+    let buff = events
+        .iter()
+        .any(|e| matches!(e, CombatEvent::AbilityModifyStats { .. }));
+
+    assert!(
+        !buff,
+        "Ability should have fizzled as there is no unit at position 4"
+    );
+}

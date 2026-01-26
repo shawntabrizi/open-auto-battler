@@ -149,6 +149,8 @@ pub enum AbilityTarget {
     FrontEnemy,
     BackAlly,
     BackEnemy,
+    AllyUnitPosition(u32),
+    EnemyUnitPosition(u32),
     AllyAhead,
     AllyBehind,
     LowestHealthEnemy,

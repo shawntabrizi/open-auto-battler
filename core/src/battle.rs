@@ -1280,8 +1280,20 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
         }
     };
 
-    check_clash_damage(clashing_p_id, clashing_e_id, Team::Player, player_units, &dead_player);
-    check_clash_damage(clashing_e_id, clashing_p_id, Team::Enemy, enemy_units, &dead_enemy);
+    check_clash_damage(
+        clashing_p_id,
+        clashing_e_id,
+        Team::Player,
+        player_units,
+        &dead_player,
+    );
+    check_clash_damage(
+        clashing_e_id,
+        clashing_p_id,
+        Team::Enemy,
+        enemy_units,
+        &dead_enemy,
+    );
 
     if dead_player.is_empty() && dead_enemy.is_empty() && queue.is_empty() {
         return Ok(());
@@ -1466,6 +1478,22 @@ fn get_targets<R: BattleRng>(
         AbilityTarget::BackEnemy => {
             if !enemies.is_empty() {
                 vec![enemies.last().unwrap().instance_id]
+            } else {
+                vec![]
+            }
+        }
+        AbilityTarget::AllyUnitPosition(pos) => {
+            let idx = *pos as usize;
+            if idx < allies.len() {
+                vec![allies[idx].instance_id]
+            } else {
+                vec![]
+            }
+        }
+        AbilityTarget::EnemyUnitPosition(pos) => {
+            let idx = *pos as usize;
+            if idx < enemies.len() {
+                vec![enemies[idx].instance_id]
             } else {
                 vec![]
             }

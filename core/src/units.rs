@@ -526,6 +526,47 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
         // TIER 3 (COST 5-7): High Impact
         // ==========================================
         CardTemplate {
+            template_id: "artillery_mage",
+            name: "Artillery Mage",
+            attack: 3,
+            health: 3,
+            play_cost: 5,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::Damage {
+                    amount: 5,
+                    target: AbilityTarget::EnemyUnitPosition(2),
+                },
+                name: String::from("Artillery Strike"),
+                description: String::from("Deal 5 damage to enemy in 3rd slot (pos 2) at start"),
+                condition: AbilityCondition::None,
+                max_triggers: None,
+            }],
+            is_token: false,
+        },
+        CardTemplate {
+            template_id: "rear_guard",
+            name: "Rear Guard",
+            attack: 2,
+            health: 5,
+            play_cost: 4,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::ModifyStats {
+                    health: 3,
+                    attack: 3,
+                    target: AbilityTarget::AllyUnitPosition(4),
+                },
+                name: String::from("Supply Line"),
+                description: String::from("Give unit in 5th slot (pos 4) +3/+3 at start"),
+                condition: AbilityCondition::None,
+                max_triggers: None,
+            }],
+            is_token: false,
+        },
+        CardTemplate {
             template_id: "troll_brute",
             name: "Troll Brute",
             attack: 4,

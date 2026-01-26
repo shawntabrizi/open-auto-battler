@@ -41,6 +41,8 @@ const EMOJI_MAP: Record<string, string> = {
 
   // Beasts / Monsters
   abyssal_bomber: '💣',
+  artillery_mage: '☄️',
+  rear_guard: '🧱',
   wolf_rider: '🐺',
   troll_brute: '🧌',
   troll_warrior: '🪓',

@@ -6,7 +6,7 @@ use crate::types::*;
 fn test_spined_urchin_retribution() {
     // P: [Spined Urchin (4 HP, 1 Atk)]
     // E: [Wolf Rider (2 HP, 3 Atk)]
-    // Clash: 
+    // Clash:
     // Urchin takes 3 damage.
     // Urchin's Spines triggers, deals 1 damage to Wolf Rider.
     // Result:
@@ -35,7 +35,10 @@ fn test_spined_urchin_retribution() {
         matches!(e, CombatEvent::DamageTaken { target_instance_id, team, remaining_hp, .. }
             if *target_instance_id == UnitId::player(1) && *team == Team::Player && *remaining_hp == 1)
     });
-    assert!(urchin_clash_hit, "Urchin should have taken 3 damage from clash");
+    assert!(
+        urchin_clash_hit,
+        "Urchin should have taken 3 damage from clash"
+    );
 
     // 2. Verify Spines triggered
     let spines_trigger = events.iter().any(|e| {
@@ -49,12 +52,15 @@ fn test_spined_urchin_retribution() {
         matches!(e, CombatEvent::AbilityDamage { source_instance_id, target_instance_id, damage, .. }
             if *source_instance_id == UnitId::player(1) && *target_instance_id == UnitId::enemy(1) && *damage == 1)
     });
-    assert!(wolf_spines_hit, "Wolf should have taken 1 damage from Spines");
+    assert!(
+        wolf_spines_hit,
+        "Wolf should have taken 1 damage from Spines"
+    );
 
     // 4. Verify Wolf died
-    let wolf_death = events.iter().any(|e| {
-        matches!(e, CombatEvent::UnitDeath { team, .. } if *team == Team::Enemy)
-    });
+    let wolf_death = events
+        .iter()
+        .any(|e| matches!(e, CombatEvent::UnitDeath { team, .. } if *team == Team::Enemy));
     assert!(wolf_death, "Wolf Rider should have died");
 }
 
@@ -106,7 +112,7 @@ fn test_spined_urchin_self_harm_retribution() {
             if *source_instance_id == UnitId::player(2) && ability_name == "Spines")
     });
     assert!(spines_trigger, "Spines should have triggered");
-    
+
     // Damage to dead bomber won't emit an AbilityDamage event because the unit is gone from the board.
     // But we can verify it didn't crash and the trigger happened.
 }

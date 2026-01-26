@@ -27,21 +27,15 @@ fn test_abyssal_bomber_death_nova() {
     let enemy1 = create_dummy_card(3, "Enemy1", 2, 5);
     let enemy2 = create_dummy_card(4, "Enemy2", 1, 2);
 
-    let p_board = vec![
-        BoardUnit::from_card(bomber),
-        BoardUnit::from_card(ally),
-    ];
-    let e_board = vec![
-        BoardUnit::from_card(enemy1),
-        BoardUnit::from_card(enemy2),
-    ];
+    let p_board = vec![BoardUnit::from_card(bomber), BoardUnit::from_card(ally)];
+    let e_board = vec![BoardUnit::from_card(enemy1), BoardUnit::from_card(enemy2)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
     // 1. Verify Bomber died (player id 1)
-    let bomber_death = events.iter().any(|e| {
-        matches!(e, CombatEvent::UnitDeath { team, .. } if *team == Team::Player)
-    });
+    let bomber_death = events
+        .iter()
+        .any(|e| matches!(e, CombatEvent::UnitDeath { team, .. } if *team == Team::Player));
     assert!(bomber_death, "Abyssal Bomber should have died");
 
     // 2. Verify damage to Ally (player id 2)
@@ -66,12 +60,21 @@ fn test_abyssal_bomber_death_nova() {
     assert!(enemy2_hit, "Enemy2 should have taken 3 damage from Bomber");
 
     // 5. Verify Enemy1 and Enemy2 died
-    let enemy_death_event = events.iter().find(|e| {
-        matches!(e, CombatEvent::UnitDeath { team, .. } if *team == Team::Enemy)
-    });
-    
-    assert!(enemy_death_event.is_some(), "Enemy death event should have occurred");
-    if let Some(CombatEvent::UnitDeath { new_board_state, .. }) = enemy_death_event {
-        assert!(new_board_state.is_empty(), "Both enemies should have been removed from the board");
+    let enemy_death_event = events
+        .iter()
+        .find(|e| matches!(e, CombatEvent::UnitDeath { team, .. } if *team == Team::Enemy));
+
+    assert!(
+        enemy_death_event.is_some(),
+        "Enemy death event should have occurred"
+    );
+    if let Some(CombatEvent::UnitDeath {
+        new_board_state, ..
+    }) = enemy_death_event
+    {
+        assert!(
+            new_board_state.is_empty(),
+            "Both enemies should have been removed from the board"
+        );
     }
 }
