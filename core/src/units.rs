@@ -87,6 +87,27 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             is_token: false,
         },
         CardTemplate {
+            template_id: "brave_commander",
+            name: "Brave Commander",
+            attack: 2,
+            health: 3,
+            play_cost: 4,
+            pitch_value: 2,
+            abilities: vec![Ability {
+                trigger: AbilityTrigger::OnStart,
+                effect: AbilityEffect::ModifyStats {
+                    health: 2,
+                    attack: 2,
+                    target: AbilityTarget::RandomAllyOther,
+                },
+                name: String::from("Command"),
+                description: String::from("Give a random other ally +2/+2 at start"),
+                condition: AbilityCondition::None,
+                max_triggers: None,
+            }],
+            is_token: false,
+        },
+        CardTemplate {
             template_id: "militia",
             name: "Militia",
             attack: 2,

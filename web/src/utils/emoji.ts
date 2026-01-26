@@ -12,6 +12,7 @@ const EMOJI_MAP: Record<string, string> = {
 
   // Humans / Soldiers
   militia: '🛡️',
+  brave_commander: '🫡',
   shield_bearer: '🏰',
   shield_squire: '🛡️',
   battle_hardened: '💪',

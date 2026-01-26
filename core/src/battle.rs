@@ -1446,6 +1446,18 @@ fn get_targets<R: BattleRng>(
                 vec![allies[idx].instance_id]
             }
         }
+        AbilityTarget::RandomAllyOther => {
+            let others: Vec<_> = allies
+                .iter()
+                .filter(|u| u.instance_id != source_instance_id)
+                .collect();
+            if others.is_empty() {
+                vec![]
+            } else {
+                let idx = rng.gen_range(others.len());
+                vec![others[idx].instance_id]
+            }
+        }
         AbilityTarget::RandomEnemy => {
             if enemies.is_empty() {
                 vec![]

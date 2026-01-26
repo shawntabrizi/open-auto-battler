@@ -144,6 +144,7 @@ pub enum AbilityTarget {
     AllEnemies,
     AllUnits,
     RandomAlly,
+    RandomAllyOther,
     RandomEnemy,
     FrontAlly,
     FrontEnemy,
