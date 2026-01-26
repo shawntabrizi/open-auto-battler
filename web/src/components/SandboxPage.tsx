@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useSandboxStore } from '../store/sandboxStore';
 import { UnitCard, EmptySlot } from './UnitCard';
-import { BattleArena } from './BattleArena';
 import { CardDetailPanel } from './CardDetailPanel';
+import { BattleOverlay } from './BattleOverlay';
 import type { UnitTemplateView } from '../types';
 
 export function SandboxPage() {
@@ -63,8 +63,8 @@ export function SandboxPage() {
       {/* Card Detail Panel - Always visible in sandbox */}
       <CardDetailPanel card={selectedCard} isVisible={true} isSandbox={true} />
 
-      {/* Battle Overlay */}
-      <BattleOverlay />
+      {/* Battle Overlay - Sandbox Mode */}
+      <BattleOverlay mode="sandbox" />
     </div>
   );
 }
@@ -288,83 +288,6 @@ function UnitGallery() {
             }
           />
         ))}
-      </div>
-    </div>
-  );
-}
-
-
-
-function BattleOverlay() {
-  const isBattling = useSandboxStore((state) => state.isBattling);
-  const battleOutput = useSandboxStore((state) => state.battleOutput);
-  const closeBattle = useSandboxStore((state) => state.closeBattle);
-  const [battleEnded, setBattleEnded] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isBattling) {
-      setBattleEnded(false);
-      setResult(null);
-    }
-  }, [isBattling]);
-
-  // Escape key to close
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isBattling) {
-        closeBattle();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isBattling, closeBattle]);
-
-  if (!isBattling || !battleOutput) return null;
-
-  const handleBattleEnd = () => {
-    const lastEvent = battleOutput.events[battleOutput.events.length - 1];
-    if (lastEvent?.type === 'battleEnd') {
-      setResult(lastEvent.payload.result);
-    }
-    setBattleEnded(true);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg p-6 max-w-5xl w-full mx-4 relative">
-        {/* Close button - always visible */}
-        <button
-          onClick={closeBattle}
-          className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
-          title="Close (Esc)"
-        >
-          ×
-        </button>
-
-        <BattleArena battleOutput={battleOutput} onBattleEnd={handleBattleEnd} />
-
-        {battleEnded && (
-          <div className="mt-6 text-center space-y-4">
-            <div
-              className={`text-4xl font-bold ${
-                result === 'VICTORY'
-                  ? 'text-green-400'
-                  : result === 'DEFEAT'
-                    ? 'text-red-400'
-                    : 'text-yellow-400'
-              }`}
-            >
-              {result}
-            </div>
-            <button
-              onClick={closeBattle}
-              className="px-8 py-3 bg-gold text-black font-bold rounded hover:bg-yellow-400 transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
