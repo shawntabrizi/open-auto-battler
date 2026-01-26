@@ -7,14 +7,14 @@ use alloc::vec::Vec;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 
-use crate::error::{GameError, GameResult};
+use crate::rng::{BattleRng, XorShiftRng};
 use crate::types::*;
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-/// Number of shop slots
-pub const SHOP_SIZE: usize = 5;
+/// Number of cards drawn per round as the player's hand
+pub const HAND_SIZE: usize = 7;
 /// Number of board slots
 pub const BOARD_SIZE: usize = 5;
 /// Starting lives
@@ -42,14 +42,10 @@ pub enum GamePhase {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct GameState {
-    /// Cards remaining in the deck
-    pub deck: Vec<UnitCard>,
-    /// Cards displayed in the shop (5 slots)
-    pub shop: Vec<ShopSlot>,
+    /// Cards remaining in the bag (unordered pool)
+    pub bag: Vec<UnitCard>,
     /// Units on the player's board (5 slots, index 0 is front)
     pub board: Vec<Option<BoardUnit>>,
-    /// Current mana available
-    pub mana: i32,
     /// Maximum mana that can be held (increases each round)
     pub mana_limit: i32,
     /// Current round number (1-indexed)
@@ -62,21 +58,22 @@ pub struct GameState {
     pub phase: GamePhase,
     /// Counter for generating unique card IDs
     pub next_card_id: CardId,
+    /// Seed for deterministic hand derivation
+    pub game_seed: u64,
 }
 
 impl GameState {
-    pub fn new() -> Self {
+    pub fn new(game_seed: u64) -> Self {
         Self {
-            deck: Vec::new(),
-            shop: vec![ShopSlot::empty(); SHOP_SIZE],
+            bag: Vec::new(),
             board: vec![None; BOARD_SIZE],
-            mana: 0,
             mana_limit: STARTING_MANA_LIMIT,
             round: 1,
             lives: STARTING_LIVES,
             wins: 0,
             phase: GamePhase::Shop,
             next_card_id: 1,
+            game_seed,
         }
     }
 
@@ -92,26 +89,35 @@ impl GameState {
         (STARTING_MANA_LIMIT + self.round - 1).min(MAX_MANA_LIMIT)
     }
 
-    /// Add mana, respecting the limit
-    pub fn add_mana(&mut self, amount: i32) {
-        self.mana = (self.mana + amount).min(self.mana_limit);
-    }
-
-    /// Check if player can afford a cost
-    pub fn can_afford(&self, cost: i32) -> bool {
-        self.mana >= cost
-    }
-
-    /// Spend mana
-    pub fn spend_mana(&mut self, amount: i32) -> GameResult<()> {
-        if self.mana < amount {
-            return Err(GameError::NotEnoughMana {
-                have: self.mana,
-                need: amount,
-            });
+    /// Derive hand indices from bag using deterministic RNG
+    /// Uses game_seed XOR round to produce repeatable hand selection
+    pub fn derive_hand_indices(&self) -> Vec<usize> {
+        let bag_len = self.bag.len();
+        if bag_len == 0 {
+            return Vec::new();
         }
-        self.mana -= amount;
-        Ok(())
+
+        let hand_count = HAND_SIZE.min(bag_len);
+        let seed = self.game_seed ^ (self.round as u64);
+        let mut rng = XorShiftRng::seed_from_u64(seed);
+
+        // Partial Fisher-Yates: select hand_count unique indices
+        let mut indices: Vec<usize> = (0..bag_len).collect();
+        for i in 0..hand_count {
+            let j = i + rng.gen_range(bag_len - i);
+            indices.swap(i, j);
+        }
+
+        indices.truncate(hand_count);
+        indices
+    }
+
+    /// Derive the hand as (bag_index, card_ref) pairs
+    pub fn derive_hand(&self) -> Vec<(usize, &UnitCard)> {
+        self.derive_hand_indices()
+            .into_iter()
+            .map(|idx| (idx, &self.bag[idx]))
+            .collect()
     }
 
     /// Find an empty board slot
@@ -127,6 +133,6 @@ impl GameState {
 
 impl Default for GameState {
     fn default() -> Self {
-        Self::new()
+        Self::new(42)
     }
 }

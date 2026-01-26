@@ -275,27 +275,20 @@ impl BoardUnit {
     }
 }
 
-/// Shop slot that can hold a card or be empty
+/// A committed turn action submitted by the player
+///
+/// Contains the full description of what the player did during their planning phase.
+/// This is verified deterministically by `verify_and_apply_turn`.
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
-pub struct ShopSlot {
-    pub card: Option<UnitCard>,
-    pub frozen: bool,
-}
-
-impl ShopSlot {
-    pub fn empty() -> Self {
-        Self {
-            card: None,
-            frozen: false,
-        }
-    }
-
-    pub fn with_card(card: UnitCard) -> Self {
-        Self {
-            card: Some(card),
-            frozen: false,
-        }
-    }
+pub struct CommitTurnAction {
+    /// Final board state after the turn
+    pub new_board: Vec<Option<BoardUnit>>,
+    /// Hand indices pitched for mana
+    pub pitched_from_hand: Vec<u32>,
+    /// Hand indices played to board
+    pub played_from_hand: Vec<u32>,
+    /// Board slots removed for mana
+    pub pitched_from_board: Vec<u32>,
 }

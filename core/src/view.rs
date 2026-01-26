@@ -77,34 +77,16 @@ impl From<&BoardUnit> for BoardUnitView {
     }
 }
 
-/// View of a shop slot
-#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
-pub struct ShopSlotView {
-    pub card: Option<CardView>,
-    pub frozen: bool,
-}
-
-impl From<&ShopSlot> for ShopSlotView {
-    fn from(slot: &ShopSlot) -> Self {
-        Self {
-            card: slot.card.as_ref().map(CardView::from),
-            frozen: slot.frozen,
-        }
-    }
-}
-
 /// The complete game view sent to React
 #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct GameView {
-    /// Shop slots
-    pub shop: Vec<ShopSlotView>,
+    /// Hand cards (derived from bag each round)
+    pub hand: Vec<Option<CardView>>,
     /// Board slots (None = empty)
     pub board: Vec<Option<BoardUnitView>>,
-    /// Current mana
+    /// Current mana (transient, per-turn)
     pub mana: i32,
     /// Maximum mana capacity
     pub mana_limit: i32,
@@ -116,33 +98,50 @@ pub struct GameView {
     pub wins: i32,
     /// Current game phase
     pub phase: String,
-    /// Cards remaining in deck
-    pub deck_count: u32,
-    /// Whether we can afford each shop item
+    /// Cards remaining in bag
+    pub bag_count: u32,
+    /// Whether we can afford each hand card
     pub can_afford: Vec<bool>,
 }
 
-impl From<&GameState> for GameView {
-    fn from(state: &GameState) -> Self {
-        let can_afford: Vec<bool> = state
-            .shop
+impl GameView {
+    /// Construct a GameView from state plus transient per-turn data
+    pub fn from_state(
+        state: &GameState,
+        current_mana: i32,
+        hand_indices: &[usize],
+        hand_used: &[bool],
+    ) -> Self {
+        let hand: Vec<Option<CardView>> = hand_indices
             .iter()
-            .map(|slot| {
-                slot.card
+            .enumerate()
+            .map(|(i, &bag_idx)| {
+                if hand_used.get(i).copied().unwrap_or(false) {
+                    None // Card already used (pitched or played)
+                } else {
+                    Some(CardView::from(&state.bag[bag_idx]))
+                }
+            })
+            .collect();
+
+        let can_afford: Vec<bool> = hand
+            .iter()
+            .map(|card_opt| {
+                card_opt
                     .as_ref()
-                    .map(|c| state.can_afford(c.economy.play_cost))
+                    .map(|c| current_mana >= c.play_cost)
                     .unwrap_or(false)
             })
             .collect();
 
         Self {
-            shop: state.shop.iter().map(ShopSlotView::from).collect(),
+            hand,
             board: state
                 .board
                 .iter()
                 .map(|slot| slot.as_ref().map(BoardUnitView::from))
                 .collect(),
-            mana: state.mana,
+            mana: current_mana,
             mana_limit: state.mana_limit,
             round: state.round,
             lives: state.lives,
@@ -153,7 +152,7 @@ impl From<&GameState> for GameView {
                 GamePhase::Victory => String::from("victory"),
                 GamePhase::Defeat => String::from("defeat"),
             },
-            deck_count: state.deck.len() as u32,
+            bag_count: state.bag.len() as u32,
             can_afford,
         }
     }

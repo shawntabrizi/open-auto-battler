@@ -20,18 +20,26 @@ pub enum GameError {
     BoardFull,
     /// Invalid board slot index
     InvalidBoardSlot { index: u8 },
-    /// Invalid shop slot index
-    InvalidShopSlot { index: u8 },
     /// Attempted to interact with empty slot
     EmptySlot,
     /// Action not allowed in current phase
     WrongPhase,
-    /// Cannot freeze an empty shop slot
-    CannotFreezeEmptySlot,
     /// Unit template not found
     TemplateNotFound,
     /// Battle limit exceeded
     LimitExceeded,
+    /// Invalid hand index (out of bounds)
+    InvalidHandIndex { index: u32 },
+    /// Card was already used this turn (double-use of same hand index)
+    CardAlreadyUsed { index: u32 },
+    /// Invalid board slot pitched (empty or out of bounds)
+    InvalidBoardPitch { index: u32 },
+    /// Board state mismatch: a unit in new_board doesn't match any valid source
+    BoardMismatch,
+    /// Wrong board size submitted
+    WrongBoardSize,
+    /// Mana limit exceeded
+    ManaLimitExceeded { earned: i32, limit: i32 },
 }
 
 /// Result type alias for game operations

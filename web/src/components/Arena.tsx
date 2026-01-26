@@ -3,7 +3,7 @@ import React from 'react';
 import { UnitCard, EmptySlot } from './UnitCard';
 
 export function Arena() {
-  const { view, selection, setSelection, pitchBoardUnit, swapBoardPositions, buyAndPlace } =
+  const { view, selection, setSelection, pitchBoardUnit, swapBoardPositions, playHandCard } =
     useGameStore();
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
 
@@ -30,9 +30,9 @@ export function Arena() {
     if (data.startsWith('board-') && draggedIndex !== null && draggedIndex !== dropIndex) {
       // Swapping existing units is still allowed via Drag and Drop
       swapBoardPositions(draggedIndex, dropIndex);
-    } else if (data.startsWith('shop-')) {
-      const shopIndex = parseInt(data.split('-')[1]);
-      buyAndPlace(shopIndex, dropIndex);
+    } else if (data.startsWith('hand-')) {
+      const handIndex = parseInt(data.split('-')[1]);
+      playHandCard(handIndex, dropIndex);
     }
 
     setDraggedIndex(null);
@@ -47,15 +47,13 @@ export function Arena() {
   const handleBoardSlotClick = (index: number) => {
     const unit = view.board[index];
 
-    // If we have a shop card selected, we still allow "Click to Place" 
-    // because the user intent to buy is specific.
-    if (selection?.type === 'shop') {
-      buyAndPlace(selection.index, index);
+    // If we have a hand card selected, play it to this slot
+    if (selection?.type === 'hand') {
+      playHandCard(selection.index, index);
       return;
     }
 
-    // DISBALED: swapBoardPositions on click. 
-    // Clicking a board unit now only handles selection/inspection.
+    // Clicking a board unit handles selection/inspection
     if (unit) {
       if (selection?.type === 'board' && selection.index === index) {
         setSelection(null);
@@ -63,7 +61,7 @@ export function Arena() {
         setSelection({ type: 'board', index });
       }
     } else {
-      // Clicked an empty slot with no shop card selected
+      // Clicked an empty slot with no hand card selected
       setSelection(null);
     }
   };
@@ -106,7 +104,7 @@ export function Arena() {
             <EmptySlot
               key={`empty-${arrayIndex}`}
               onClick={() => handleBoardSlotClick(arrayIndex)}
-              isTarget={selection?.type === 'shop'}
+              isTarget={selection?.type === 'hand'}
               label={`${displayPosition}`}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, arrayIndex)}

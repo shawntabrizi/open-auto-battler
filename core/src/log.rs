@@ -59,13 +59,13 @@ pub fn state_summary(
     mana_limit: i32,
     lives: i32,
     wins: i32,
-    deck_count: usize,
+    bag_count: usize,
     board_count: usize,
 ) {
     console::log_1(
         &format!(
-            "=== STATE: {} | Round {} | Mana {}/{} | Lives {} | Wins {} | Deck {} | Board {} ===",
-            phase, round, mana, mana_limit, lives, wins, deck_count, board_count
+            "=== STATE: {} | Round {} | Mana {}/{} | Lives {} | Wins {} | Bag {} | Board {} ===",
+            phase, round, mana, mana_limit, lives, wins, bag_count, board_count
         )
         .into(),
     );
@@ -80,7 +80,7 @@ pub fn state_summary(
     _mana_limit: i32,
     _lives: i32,
     _wins: i32,
-    _deck_count: usize,
+    _bag_count: usize,
     _board_count: usize,
 ) {
 }

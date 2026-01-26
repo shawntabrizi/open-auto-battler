@@ -3,17 +3,17 @@ import React from 'react';
 import { UnitCard } from './UnitCard';
 
 export function Shop() {
-  const { view, selection, setSelection, pitchShopCard, pitchBoardUnit } = useGameStore();
+  const { view, selection, setSelection, pitchHandCard, pitchBoardUnit } = useGameStore();
   const [isAshHovered, setIsAshHovered] = React.useState(false);
 
-  // Drag and drop handlers for shop cards
-  const handleShopDragStart = (e: React.DragEvent, shopIndex: number) => {
+  // Drag and drop handlers for hand cards
+  const handleHandDragStart = (e: React.DragEvent, handIndex: number) => {
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', `shop-${shopIndex}`);
+    e.dataTransfer.setData('text/plain', `hand-${handIndex}`);
   };
 
-  const handleShopDragEnd = () => {
-    // No state to reset since we're not tracking dragged shop cards
+  const handleHandDragEnd = () => {
+    // No state to reset
   };
 
   // Handler for when cards are dropped on ash pile
@@ -25,11 +25,11 @@ export function Shop() {
     if (data.startsWith('board-')) {
       const boardIndex = parseInt(data.split('-')[1]);
       pitchBoardUnit(boardIndex);
-      setSelection(null); // Clear selection after pitching
-    } else if (data.startsWith('shop-')) {
-      const shopIndex = parseInt(data.split('-')[1]);
-      pitchShopCard(shopIndex);
-      setSelection(null); // Clear selection after pitching
+      setSelection(null);
+    } else if (data.startsWith('hand-')) {
+      const handIndex = parseInt(data.split('-')[1]);
+      pitchHandCard(handIndex);
+      setSelection(null);
     }
   };
 
@@ -53,21 +53,21 @@ export function Shop() {
 
   if (!view) return null;
 
-  // Defensive check for shop array
-  if (!view.shop || !Array.isArray(view.shop)) {
-    console.error('Shop: view.shop is invalid:', view.shop);
-    return <div className="text-red-500">Error: Shop data not available</div>;
+  // Defensive check for hand array
+  if (!view.hand || !Array.isArray(view.hand)) {
+    console.error('Shop: view.hand is invalid:', view.hand);
+    return <div className="text-red-500">Error: Hand data not available</div>;
   }
 
-  const handleShopSlotClick = (index: number) => {
-    const slot = view.shop[index];
+  const handleHandSlotClick = (index: number) => {
+    const card = view.hand[index];
 
-    if (slot.card) {
+    if (card) {
       // Toggle selection
-      if (selection?.type === 'shop' && selection.index === index) {
+      if (selection?.type === 'hand' && selection.index === index) {
         setSelection(null);
       } else {
-        setSelection({ type: 'shop', index });
+        setSelection({ type: 'hand', index });
       }
     }
   };
@@ -76,7 +76,7 @@ export function Shop() {
     <div className="h-48 bg-shop-bg border-t-2 border-gray-600">
       <div className="flex h-full">
         {/* Left: Ash Pile */}
-        <div 
+        <div
           className={`w-32 flex flex-col items-center justify-center border-r border-gray-700 transition-colors duration-200 ${
             isAshHovered ? 'bg-red-900/30' : ''
           }`}
@@ -95,8 +95,8 @@ export function Shop() {
             }`}
             onClick={(e) => {
               e.stopPropagation();
-              if (selection?.type === 'shop') {
-                pitchShopCard(selection.index);
+              if (selection?.type === 'hand') {
+                pitchHandCard(selection.index);
                 setSelection(null);
               } else if (selection?.type === 'board') {
                 pitchBoardUnit(selection.index);
@@ -111,30 +111,29 @@ export function Shop() {
           </div>
         </div>
 
-        {/* Center: Shop/Conveyor Belt */}
+        {/* Center: Hand */}
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="flex items-center gap-1 mb-2">
-            <span className="text-sm text-gray-400">Shop</span>
-            <span className="text-xs text-gray-500">({view.deckCount} cards in deck)</span>
+            <span className="text-sm text-gray-400">Hand</span>
+            <span className="text-xs text-gray-500">({view.bagCount} cards in bag)</span>
           </div>
 
           <div className="flex gap-3">
-            {view.shop
-              .map((slot, i) => ({ slot, index: i }))
-              .filter(({ slot }) => slot.card) // Only show slots with cards
-              .map(({ slot, index: i }) => (
+            {view.hand
+              .map((card, i) => ({ card, index: i }))
+              .filter(({ card }) => card) // Only show non-null cards (not yet used)
+              .map(({ card, index: i }) => (
                 <UnitCard
-                  key={slot.card!.id}
-                  card={slot.card!}
+                  key={card!.id}
+                  card={card!}
                   showCost={true}
                   showPitch={true}
-                  frozen={slot.frozen}
                   canAfford={view.canAfford[i]}
-                  isSelected={selection?.type === 'shop' && selection.index === i}
-                  onClick={() => handleShopSlotClick(i)}
-                  draggable={!slot.frozen} // Can't drag frozen cards
-                  onDragStart={(e) => handleShopDragStart(e, i)}
-                  onDragEnd={handleShopDragEnd}
+                  isSelected={selection?.type === 'hand' && selection.index === i}
+                  onClick={() => handleHandSlotClick(i)}
+                  draggable={true}
+                  onDragStart={(e) => handleHandDragStart(e, i)}
+                  onDragEnd={handleHandDragEnd}
                 />
               ))}
           </div>

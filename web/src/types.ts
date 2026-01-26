@@ -88,13 +88,8 @@ export interface BoardUnitView {
   isToken: boolean;
 }
 
-export interface ShopSlotView {
-  card: CardView | null;
-  frozen: boolean;
-}
-
 export interface GameView {
-  shop: ShopSlotView[];
+  hand: (CardView | null)[];
   board: (BoardUnitView | null)[];
   mana: number;
   manaLimit: number;
@@ -102,7 +97,7 @@ export interface GameView {
   lives: number;
   wins: number;
   phase: 'shop' | 'battle' | 'victory' | 'defeat';
-  deckCount: number;
+  bagCount: number;
   canAfford: boolean[];
 }
 
@@ -178,7 +173,7 @@ export interface BattleOutput {
 }
 
 // Selection state for UI
-export type SelectionType = 'shop' | 'board';
+export type SelectionType = 'hand' | 'board';
 
 export interface Selection {
   type: SelectionType;

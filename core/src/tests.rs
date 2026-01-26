@@ -43,19 +43,162 @@ mod tests {
     // ==========================================
 
     #[test]
-    fn test_mana_mechanics() {
-        let mut state = GameState::new();
+    fn test_mana_limit_calculation() {
+        let state = GameState::new(42);
+        assert_eq!(state.calculate_mana_limit(), 3, "Round 1 mana limit should be 3");
+
+        let mut state2 = GameState::new(42);
+        state2.round = 5;
+        assert_eq!(state2.calculate_mana_limit(), 7, "Round 5 mana limit should be 7");
+
+        let mut state3 = GameState::new(42);
+        state3.round = 20;
+        assert_eq!(state3.calculate_mana_limit(), 10, "Mana limit caps at 10");
+    }
+
+    #[test]
+    fn test_hand_derivation_deterministic() {
+        use crate::units::get_starter_templates;
+
+        // Create a state with a known bag
+        let mut state = GameState::new(12345);
+        let templates = get_starter_templates();
+        for template in &templates {
+            if template.is_token {
+                continue;
+            }
+            for _ in 0..3 {
+                let id = state.generate_card_id();
+                let card = UnitCard::new(
+                    id, template.template_id, template.name,
+                    template.attack, template.health,
+                    template.play_cost, template.pitch_value,
+                    template.is_token,
+                );
+                state.bag.push(card);
+            }
+        }
+
+        // Same seed + round should always produce same hand
+        let hand1 = state.derive_hand_indices();
+        let hand2 = state.derive_hand_indices();
+        assert_eq!(hand1, hand2, "Same state should produce same hand");
+
+        // Different round should produce different hand
+        let mut state2 = state.clone();
+        state2.round = 2;
+        let hand3 = state2.derive_hand_indices();
+        assert_ne!(hand1, hand3, "Different round should produce different hand");
+
+        // Different seed should produce different hand
+        let mut state3 = state.clone();
+        state3.game_seed = 99999;
+        let hand4 = state3.derive_hand_indices();
+        assert_ne!(hand1, hand4, "Different seed should produce different hand");
+    }
+
+    #[test]
+    fn test_hand_derivation_unique_indices() {
+        let mut state = GameState::new(42);
+        // Add enough cards
+        for i in 0..20 {
+            let card = UnitCard::new(i + 1, "test", "Test", 1, 1, 1, 1, false);
+            state.bag.push(card);
+        }
+
+        let hand = state.derive_hand_indices();
+        assert_eq!(hand.len(), 7, "Hand should have HAND_SIZE cards");
+
+        // All indices should be unique
+        let mut sorted = hand.clone();
+        sorted.sort();
+        sorted.dedup();
+        assert_eq!(sorted.len(), hand.len(), "Hand indices must be unique");
+
+        // All indices should be valid
+        for &idx in &hand {
+            assert!(idx < state.bag.len(), "Hand index should be within bag bounds");
+        }
+    }
+
+    #[test]
+    fn test_verify_and_apply_turn() {
+        use crate::commit::verify_and_apply_turn;
+        use crate::state::BOARD_SIZE;
+
+        let mut state = GameState::new(42);
         state.mana_limit = 5;
-        state.mana = 3;
+        // Add cards with known costs
+        for i in 0..10 {
+            let card = UnitCard::new(i + 1, "test", "Test", 2, 2, 1, 2, false);
+            state.bag.push(card);
+        }
 
-        // Cap check
-        state.add_mana(4);
-        assert_eq!(state.mana, 5, "Mana should cap at limit");
+        let hand_indices = state.derive_hand_indices();
+        let bag_len_before = state.bag.len();
 
-        // Spend check
-        assert!(state.spend_mana(2).is_ok());
-        assert_eq!(state.mana, 3);
-        assert!(state.spend_mana(10).is_err());
+        // Pitch hand card 0 for mana, play hand card 1 to board slot 0
+        let card_to_play = state.bag[hand_indices[1]].clone();
+        let mut new_board: Vec<Option<BoardUnit>> = vec![None; BOARD_SIZE];
+        new_board[0] = Some(BoardUnit::from_card(card_to_play));
+
+        let action = CommitTurnAction {
+            new_board,
+            pitched_from_hand: vec![0],
+            played_from_hand: vec![1],
+            pitched_from_board: vec![],
+        };
+
+        let result = verify_and_apply_turn(&mut state, &action);
+        assert!(result.is_ok(), "Valid turn should succeed: {:?}", result);
+
+        // 2 cards removed from bag (1 pitched + 1 played)
+        assert_eq!(state.bag.len(), bag_len_before - 2);
+
+        // Board should have the played card
+        assert!(state.board[0].is_some());
+    }
+
+    #[test]
+    fn test_verify_and_apply_turn_with_refill() {
+        use crate::commit::verify_and_apply_turn;
+        use crate::state::BOARD_SIZE;
+
+        let mut state = GameState::new(42);
+        state.mana_limit = 4; // Capacity is 4
+
+        // Add cards with cost 4 and pitch 4
+        for i in 0..10 {
+            let card = UnitCard::new(i + 1, "test", "Test", 2, 2, 4, 4, false);
+            state.bag.push(card);
+        }
+
+        let hand_indices = state.derive_hand_indices();
+        
+        // Scenario: 
+        // 1. Pitch hand[0] (value 4). Current mana = 4.
+        // 2. Play hand[1] (cost 4). Current mana = 0.
+        // 3. Pitch hand[2] (value 4). Current mana = 4.
+        // 4. Play hand[3] (cost 4). Current mana = 0.
+        // Total spent = 8. Total earned = 8. Limit = 4.
+        // This should be LEGAL because each card is <= limit and total spend <= total earned.
+
+        let card_1 = state.bag[hand_indices[1]].clone();
+        let card_3 = state.bag[hand_indices[3]].clone();
+        
+        let mut new_board: Vec<Option<BoardUnit>> = vec![None; BOARD_SIZE];
+        new_board[0] = Some(BoardUnit::from_card(card_1));
+        new_board[1] = Some(BoardUnit::from_card(card_3));
+
+        let action = CommitTurnAction {
+            new_board,
+            pitched_from_hand: vec![0, 2],
+            played_from_hand: vec![1, 3],
+            pitched_from_board: vec![],
+        };
+
+        let result = verify_and_apply_turn(&mut state, &action);
+        assert!(result.is_ok(), "Turn with refill should succeed: {:?}", result);
     }
 
     #[test]

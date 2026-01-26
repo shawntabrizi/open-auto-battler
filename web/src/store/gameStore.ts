@@ -22,10 +22,8 @@ interface GameStore {
   showRawJson: boolean;
 
   init: () => Promise<void>;
-  pitchShopCard: (index: number) => void;
-  buyCard: (shopIndex: number) => void;
-  buyAndPlace: (shopIndex: number, boardIndex: number) => void;
-  toggleFreeze: (shopIndex: number) => void;
+  pitchHandCard: (index: number) => void;
+  playHandCard: (handIndex: number, boardSlot: number) => void;
   swapBoardPositions: (slotA: number, slotB: number) => void;
   pitchBoardUnit: (boardSlot: number) => void;
   endTurn: () => void;
@@ -68,56 +66,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  pitchShopCard: (index: number) => {
+  pitchHandCard: (index: number) => {
     const { engine } = get();
     if (!engine) return;
     try {
-      engine.pitch_shop_card(index);
+      engine.pitch_hand_card(index);
       set({ view: engine.get_view(), selection: null });
     } catch (err) { console.error(err); }
   },
 
-  buyCard: (shopIndex: number) => {
+  playHandCard: (handIndex: number, boardSlot: number) => {
     const { engine } = get();
     if (!engine) return;
     try {
-      engine.buy_card(shopIndex);
+      engine.play_hand_card(handIndex, boardSlot);
       set({ view: engine.get_view(), selection: null });
     } catch (err) {
       toast.error('Not enough mana!');
       console.error(err);
     }
-  },
-
-  buyAndPlace: (shopIndex: number, boardIndex: number) => {
-    const { engine } = get();
-    if (!engine) return;
-    const viewBefore = engine.get_view();
-    if (!viewBefore || !viewBefore.board) return;
-    const firstEmpty = viewBefore.board.findIndex((u: BoardUnitView | null) => !u);
-    if (firstEmpty === -1) {
-      toast.error('Board is full!');
-      return;
-    }
-    try {
-      engine.buy_card(shopIndex);
-      if (firstEmpty !== boardIndex) {
-        engine.swap_board_positions(firstEmpty, boardIndex);
-      }
-      set({ view: engine.get_view(), selection: null });
-    } catch (err) {
-      toast.error('Not enough mana!');
-      console.error(err);
-    }
-  },
-
-  toggleFreeze: (shopIndex: number) => {
-    const { engine } = get();
-    if (!engine) return;
-    try {
-      engine.toggle_freeze(shopIndex);
-      set({ view: engine.get_view() });
-    } catch (err) { console.error(err); }
   },
 
   swapBoardPositions: (slotA: number, slotB: number) => {
