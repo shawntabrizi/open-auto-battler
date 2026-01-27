@@ -14,8 +14,11 @@
   },
   "dependencies": {
     "@polkadot-api/descriptors": "file:.papi/descriptors",
-    "polkadot-api": "^1.23.3",
+    "@polkadot-api/substrate-bindings": "^0.17.0",
+    "@polkadot-labs/hdkd": "^0.0.26",
+    "@polkadot-labs/hdkd-helpers": "^0.0.27",
     "peerjs": "^1.5.5",
+    "polkadot-api": "^1.23.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.6.0",

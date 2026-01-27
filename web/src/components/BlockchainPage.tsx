@@ -93,7 +93,9 @@ export const BlockchainPage: React.FC = () => {
             className="bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none focus:border-yellow-500/50"
           >
             {accounts.map(acc => (
-              <option key={acc.address} value={acc.address}>{acc.name} ({acc.address.slice(0, 6)}...)</option>
+              <option key={acc.address} value={acc.address}>
+                {acc.source === 'dev' ? '🛠️ ' : ''}{acc.name} ({acc.address.slice(0, 6)}...)
+              </option>
             ))}
           </select>
         </div>

@@ -5,6 +5,14 @@ import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
 import { getInjectedExtensions, connectInjectedExtension } from 'polkadot-api/pjs-signer';
 import { auto_battle } from '@polkadot-api/descriptors';
 import { useGameStore } from './gameStore';
+import { sr25519CreateDerive } from "@polkadot-labs/hdkd"
+import {
+  DEV_PHRASE,
+  entropyToMiniSecret,
+  mnemonicToEntropy,
+} from "@polkadot-labs/hdkd-helpers"
+import { getPolkadotSigner } from "polkadot-api/signer"
+import { AccountId } from "@polkadot-api/substrate-bindings";
 
 interface BlockchainStore {
   client: any;
@@ -22,6 +30,31 @@ interface BlockchainStore {
   refreshGameState: () => Promise<void>;
   submitTurnOnChain: () => Promise<void>;
 }
+
+const DEV_ACCOUNTS = ["Alice", "Bob", "Charlie", "Dave", "Eve", "Ferdie"];
+
+const getDevAccounts = () => {
+  const miniSecret = entropyToMiniSecret(mnemonicToEntropy(DEV_PHRASE));
+  const derive = sr25519CreateDerive(miniSecret);
+  const accountId = AccountId(42);
+  
+  return DEV_ACCOUNTS.map(name => {
+    const hdkdKeyPair = derive(`//${name}`);
+    const address = accountId.dec(hdkdKeyPair.publicKey);
+    const polkadotSigner = getPolkadotSigner(
+      hdkdKeyPair.publicKey,
+      "Sr25519",
+      hdkdKeyPair.sign,
+    );
+    
+    return {
+      address,
+      name,
+      polkadotSigner,
+      source: 'dev'
+    };
+  });
+};
 
 export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   client: null,
@@ -51,11 +84,16 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
 
       const api = client.getTypedApi(auto_battle);
 
+      const devAccounts = getDevAccounts();
+      let allAccounts: any[] = [...devAccounts];
+
       set({
         client,
         api,
         isConnected: true,
         isConnecting: false,
+        accounts: allAccounts,
+        selectedAccount: allAccounts[0],
       });
 
       // Try to connect wallet extension (non-blocking)
@@ -63,17 +101,18 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         const extensions = getInjectedExtensions();
         if (extensions && extensions.length > 0) {
           const pjs = await connectInjectedExtension(extensions[0]);
-          const accounts = pjs.getAccounts();
+          const pjsAccounts = pjs.getAccounts();
+          allAccounts = [...allAccounts, ...pjsAccounts];
           set({
-            accounts,
-            selectedAccount: accounts[0] || null,
+            accounts: allAccounts,
           });
-          if (accounts[0]) {
-            await get().refreshGameState();
-          }
         }
       } catch (walletErr) {
         console.warn("Wallet extension not available:", walletErr);
+      }
+
+      if (get().selectedAccount) {
+        await get().refreshGameState();
       }
     } catch (err) {
       console.error("Blockchain connection failed:", err);
