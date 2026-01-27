@@ -2,7 +2,11 @@ import { useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useMultiplayerStore } from '../store/multiplayerStore';
 
-export function HUD() {
+interface HUDProps {
+  hideEndTurn?: boolean;
+}
+
+export function HUD({ hideEndTurn }: HUDProps) {
   const { view, endTurn, engine, setShowBag, showBag } = useGameStore();
   const { status, setIsReady, sendMessage, isReady, opponentReady } = useMultiplayerStore();
   // Keyboard shortcut for Bag view
@@ -67,13 +71,15 @@ export function HUD() {
           <span className="text-xl">🎒</span>
           <span className="font-bold">{view.bagCount}</span>
         </button>
-          <button 
-            onClick={handleEndTurn} 
-            disabled={isWaiting}
-            className={`btn btn-primary text-lg px-6 py-3 transition-all ${isWaiting ? 'bg-gray-600 scale-95 opacity-80 cursor-not-allowed' : ''}`}
-          >
-            {isWaiting ? 'Waiting...' : 'Battle!'}
-          </button>
+          {!hideEndTurn && (
+            <button 
+              onClick={handleEndTurn} 
+              disabled={isWaiting}
+              className={`btn btn-primary text-lg px-6 py-3 transition-all ${isWaiting ? 'bg-gray-600 scale-95 opacity-80 cursor-not-allowed' : ''}`}
+            >
+              {isWaiting ? 'Waiting...' : 'Battle!'}
+            </button>
+          )}
       </div>
         )}
       </div>

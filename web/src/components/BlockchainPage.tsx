@@ -5,6 +5,9 @@ import { Arena } from './Arena';
 import { Shop } from './Shop';
 import { HUD } from './HUD';
 import { BattleOverlay } from './BattleOverlay';
+import { CardDetailPanel } from './CardDetailPanel';
+import { BagOverlay } from './BagOverlay';
+import { GameOverScreen } from './GameOverScreen';
 import { Link } from 'react-router-dom';
 
 export const BlockchainPage: React.FC = () => {
@@ -26,7 +29,9 @@ export const BlockchainPage: React.FC = () => {
     view, 
     showBattleOverlay,
     endTurn,
-    battleOutput
+    battleOutput,
+    selection,
+    showBag
   } = useGameStore();
 
   const [txLoading, setTxLoading] = useState(false);
@@ -57,6 +62,26 @@ export const BlockchainPage: React.FC = () => {
     }
   };
 
+  // Logic for CardDetailPanel
+  const showCardPanel = view?.phase === 'shop' || (selection?.type === 'board') || showBag;
+  const selectedCard =
+    (view?.phase === 'shop' && selection?.type === 'hand' && view?.hand[selection!.index])
+      ? view.hand[selection!.index]!
+      : (selection?.type === 'bag' && view?.bag[selection!.index])
+        ? view.bag[selection!.index]
+        : null;
+
+  const selectedBoardUnit = selection?.type === 'board' && view?.board[selection!.index]
+    ? view.board[selection!.index]!
+    : null;
+
+  const cardToShow = selectedCard || selectedBoardUnit;
+
+  // Show game over screen
+  if (view?.phase === 'victory' || view?.phase === 'defeat') {
+    return <GameOverScreen />;
+  }
+
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
@@ -76,9 +101,9 @@ export const BlockchainPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans selection:bg-yellow-500/30">
+    <div className="h-screen bg-board-bg text-slate-200 overflow-hidden font-sans selection:bg-yellow-500/30 flex flex-col">
       {/* Blockchain Header */}
-      <div className="bg-slate-900/80 border-b border-white/5 px-6 py-3 flex items-center justify-between backdrop-blur-md">
+      <div className="bg-slate-900/80 border-b border-white/5 px-6 py-3 flex items-center justify-between backdrop-blur-md z-50">
         <div className="flex items-center gap-4">
           <h2 className="font-bold text-yellow-500">CHAIN MODE</h2>
           <div className="flex items-center gap-2 px-2 py-1 bg-slate-800 rounded border border-white/5">
@@ -115,7 +140,7 @@ export const BlockchainPage: React.FC = () => {
       </div>
 
       {!chainState ? (
-        <div className="flex-1 flex items-center justify-center h-[calc(100vh-64px)]">
+        <div className="flex-1 flex items-center justify-center bg-slate-950">
           <div className="text-center">
             <p className="text-slate-500 mb-4">No active game found for this account.</p>
             <button
@@ -127,28 +152,39 @@ export const BlockchainPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <main className="relative h-[calc(100vh-64px)] flex flex-col">
-          <HUD />
+        <div className="flex-1 relative flex flex-col min-h-0">
+          <HUD hideEndTurn={true} />
           
-          <div className="flex-1 flex flex-col overflow-hidden relative">
-            <Arena />
-            <div className="h-1/2 relative bg-slate-900/30 border-t border-white/5">
-              <Shop />
-            </div>
-            
-            {/* Override End Turn button for Blockchain */}
-            <div className="absolute bottom-4 right-4 z-50">
+          {/* Commit to Chain button - Placed in the HUD center area via absolute positioning */}
+          {view?.phase === 'shop' && (
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 h-16 flex items-center z-[60] ml-32">
                <button
                 onClick={handleSubmitTurn}
                 disabled={txLoading}
-                className="bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-black py-4 px-12 rounded-xl shadow-2xl shadow-yellow-500/20 transform hover:scale-105 active:scale-95 transition-all flex flex-col items-center"
+                className={`px-8 py-2 rounded-lg font-black text-slate-900 shadow-lg transform transition-all active:scale-95 flex flex-col items-center border-b-4 ${
+                  txLoading 
+                    ? 'bg-slate-600 border-slate-800 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 border-orange-700 hover:translate-y-[-2px]'
+                }`}
               >
-                <span>{txLoading ? 'SUBMITTING...' : 'COMMIT TO CHAIN'}</span>
-                <span className="text-[10px] opacity-70">Round {view?.round}</span>
+                <span className="text-sm leading-tight">{txLoading ? 'SUBMITTING...' : 'COMMIT TO CHAIN'}</span>
+                <span className="text-[9px] opacity-70 font-mono tracking-widest uppercase">GENESIS BLOCK</span>
               </button>
             </div>
+          )}
+
+          <div className={`flex-1 flex flex-col overflow-hidden relative ${showCardPanel ? 'ml-80' : ''}`}>
+            <div className="flex-1 overflow-hidden relative">
+              <Arena />
+            </div>
+            <div className="flex-shrink-0">
+              <Shop />
+            </div>
           </div>
-        </main>
+
+          <CardDetailPanel card={cardToShow} isVisible={showCardPanel} topOffset="7rem" />
+          <BagOverlay />
+        </div>
       )}
 
       {showBattleOverlay && battleOutput && (

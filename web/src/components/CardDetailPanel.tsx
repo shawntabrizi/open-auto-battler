@@ -8,11 +8,17 @@ interface CardDetailPanelProps {
   card: CardView | null;
   isVisible: boolean;
   isSandbox?: boolean;
+  topOffset?: string;
 }
 
 type TabType = 'card' | 'rules' | 'mode';
 
-export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDetailPanelProps) {
+export function CardDetailPanel({ 
+  card, 
+  isVisible, 
+  isSandbox = false,
+  topOffset = '4rem' // Default top-16 (16 * 0.25rem = 4rem)
+}: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
   const navigate = useNavigate();
   const { view, selection, pitchHandCard, pitchBoardUnit, setSelection, showRawJson, toggleShowRawJson } = useGameStore();
@@ -415,7 +421,10 @@ export function CardDetailPanel({ card, isVisible, isSandbox = false }: CardDeta
   };
 
   return (
-    <div className="fixed left-0 top-16 bottom-0 w-80 bg-gray-900 border-r border-gray-700 shadow-2xl flex flex-col z-10">
+    <div 
+      className="fixed left-0 bottom-0 w-80 bg-gray-900 border-r border-gray-700 shadow-2xl flex flex-col z-10"
+      style={{ top: topOffset }}
+    >
       {/* Tabs */}
       <div className="flex border-b border-gray-800">
         <button
