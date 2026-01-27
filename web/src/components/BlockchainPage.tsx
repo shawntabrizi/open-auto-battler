@@ -16,6 +16,7 @@ export const BlockchainPage: React.FC = () => {
     selectedAccount, 
     selectAccount,
     chainState,
+    blockNumber,
     startGame,
     submitTurnOnChain
   } = useBlockchainStore();
@@ -80,6 +81,12 @@ export const BlockchainPage: React.FC = () => {
       <div className="bg-slate-900/80 border-b border-white/5 px-6 py-3 flex items-center justify-between backdrop-blur-md">
         <div className="flex items-center gap-4">
           <h2 className="font-bold text-yellow-500">CHAIN MODE</h2>
+          <div className="flex items-center gap-2 px-2 py-1 bg-slate-800 rounded border border-white/5">
+            <div className={`w-2 h-2 rounded-full ${blockNumber ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+            <span className="text-[10px] font-mono text-slate-400">
+              {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'DISCONNECTED'}
+            </span>
+          </div>
           <select 
             value={selectedAccount?.address} 
             onChange={(e) => selectAccount(accounts.find(a => a.address === e.target.value))}

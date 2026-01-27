@@ -13,11 +13,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@polkadot-api/client": "^0.1.0",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
-    "@polkadot-api/node-polkadot-provider": "^0.0.1-9ec1b77fa23d0b4a103b842511687343a72ff08a.1.0",
-    "@polkadot-api/observable-client": "^0.17.3",
-    "@polkadot-api/ws-provider": "^0.7.5",
+    "polkadot-api": "^1.23.3",
     "peerjs": "^1.5.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -28,7 +25,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
-    "@polkadot-api/cli": "^0.18.1",
     "@types/peerjs": "^0.0.30",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
@@ -38,7 +34,6 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.12.0",
-    "polkadot-api": "^1.23.3",
     "postcss": "^8.4.49",
     "prettier": "^3.8.1",
     "tailwindcss": "^3.4.15",
