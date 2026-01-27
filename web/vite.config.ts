@@ -11,14 +11,14 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      'manalimit-core': path.resolve(__dirname, './src/wasm'),
+      'manalimit-client': path.resolve(__dirname, './src/wasm'),
     },
   },
   build: {
     target: 'esnext',
   },
   optimizeDeps: {
-    exclude: ['manalimit-core'],
+    exclude: ['manalimit-client'],
   },
   assetsInclude: ['**/*.wasm'],
 });

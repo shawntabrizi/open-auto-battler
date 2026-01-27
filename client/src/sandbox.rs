@@ -2,15 +2,15 @@
 //!
 //! This module provides sandbox battle functionality for browser builds.
 
-use alloc::string::String;
-use alloc::vec::Vec;
+use std::string::String;
+use std::vec::Vec;
 
-use crate::battle::{resolve_battle, UnitId, UnitView};
+use manalimit_core::battle::{resolve_battle, UnitId, UnitView};
 use crate::engine::BattleOutput;
-use crate::log;
-use crate::rng::XorShiftRng;
-use crate::types::{BoardUnit, UnitCard};
-use crate::units::get_starter_templates;
+use manalimit_core::log;
+use manalimit_core::rng::XorShiftRng;
+use manalimit_core::types::{BoardUnit, UnitCard};
+use manalimit_core::units::get_starter_templates;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -24,7 +24,7 @@ pub struct UnitTemplateView {
     pub health: i32,
     pub play_cost: i32,
     pub pitch_value: i32,
-    pub abilities: Vec<crate::types::Ability>,
+    pub abilities: Vec<manalimit_core::types::Ability>,
     pub is_token: bool,
 }
 

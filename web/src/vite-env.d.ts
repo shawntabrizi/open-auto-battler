@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-declare module 'manalimit-core' {
+declare module 'manalimit-client' {
   export default function init(module_or_path?: string | URL | Request): Promise<void>;
 
   export class GameEngine {

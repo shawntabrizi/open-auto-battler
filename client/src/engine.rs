@@ -2,20 +2,20 @@
 //!
 //! This module provides the main game engine exposed to JavaScript via wasm-bindgen.
 
-use alloc::format;
-use alloc::string::{String, ToString};
-use alloc::vec;
-use alloc::vec::Vec;
+use std::format;
+use std::string::{String, ToString};
+use std::vec;
+use std::vec::Vec;
 
-use crate::battle::{resolve_battle, CombatEvent, UnitId, UnitView};
-use crate::commit::verify_and_apply_turn;
-use crate::log;
-use crate::opponents::get_opponent_for_round;
-use crate::rng::XorShiftRng;
-use crate::state::*;
-use crate::types::{BoardUnit, UnitCard};
-use crate::units::get_starter_templates;
-use crate::view::GameView;
+use manalimit_core::battle::{resolve_battle, CombatEvent, UnitId, UnitView};
+use manalimit_core::commit::verify_and_apply_turn;
+use manalimit_core::log;
+use manalimit_core::opponents::get_opponent_for_round;
+use manalimit_core::rng::XorShiftRng;
+use manalimit_core::state::*;
+use manalimit_core::types::{BoardUnit, UnitCard};
+use manalimit_core::units::get_starter_templates;
+use manalimit_core::view::GameView;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -45,12 +45,13 @@ pub struct GameEngine {
 
 #[wasm_bindgen]
 impl GameEngine {
-    /// Create a new game engine with a fresh game state
+    /// Create a new game engine with an optional seed
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
+    pub fn new(seed: Option<u64>) -> Self {
         log::info("=== MANALIMIT ENGINE INITIALIZED ===");
+        let seed_val = seed.unwrap_or(42);
         let mut engine = Self {
-            state: GameState::new(42),
+            state: GameState::new(seed_val),
             last_battle_output: None,
             current_mana: 0,
             hand_indices: Vec::new(),
@@ -64,6 +65,27 @@ impl GameEngine {
         engine.start_planning_phase();
         engine.log_state();
         engine
+    }
+
+    /// Submit a turn action from JavaScript
+    #[wasm_bindgen]
+    pub fn submit_turn(&mut self, action_js: JsValue) -> Result<(), String> {
+        log::action("submit_turn", "Applying turn action from JS");
+        let action: manalimit_core::types::CommitTurnAction = serde_wasm_bindgen::from_value(action_js)
+            .map_err(|e| format!("Failed to parse action: {:?}", e))?;
+
+        // We must rollback board to start_board because verify_and_apply_turn expects
+        // state as it was at the beginning of the turn.
+        self.state.board = self.start_board.clone();
+
+        verify_and_apply_turn(&mut self.state, &action)
+            .map_err(|e| format!("Turn verification failed: {:?}", e))?;
+
+        self.current_mana = 0;
+        self.state.phase = GamePhase::Battle;
+        self.run_battle();
+        self.log_state();
+        Ok(())
     }
 
     /// Get the current game view as JSON
@@ -228,7 +250,7 @@ impl GameEngine {
         }
 
         // Build CommitTurnAction from local tracking
-        let action = crate::types::CommitTurnAction {
+        let action = manalimit_core::types::CommitTurnAction {
             new_board: self.state.board.clone(),
             pitched_from_hand: self
                 .hand_pitched
@@ -396,12 +418,12 @@ impl GameEngine {
     /// Apply a battle result to the game state (for P2P)
     #[wasm_bindgen]
     pub fn apply_battle_result(&mut self, result_val: JsValue) -> Result<(), String> {
-        let result: crate::battle::BattleResult = serde_wasm_bindgen::from_value(result_val)
+        let result: manalimit_core::battle::BattleResult = serde_wasm_bindgen::from_value(result_val)
             .map_err(|e| format!("Failed to parse result: {:?}", e))?;
 
         match result {
-            crate::battle::BattleResult::Victory => self.state.wins += 1,
-            crate::battle::BattleResult::Defeat => self.state.lives -= 1,
+            manalimit_core::battle::BattleResult::Victory => self.state.wins += 1,
+            manalimit_core::battle::BattleResult::Defeat => self.state.lives -= 1,
             _ => {}
         }
         Ok(())
@@ -476,8 +498,8 @@ impl GameEngine {
 
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {
-                crate::battle::BattleResult::Victory => self.state.wins += 1,
-                crate::battle::BattleResult::Defeat => self.state.lives -= 1,
+                manalimit_core::battle::BattleResult::Victory => self.state.wins += 1,
+                manalimit_core::battle::BattleResult::Defeat => self.state.lives -= 1,
                 _ => {} // DRAW
             }
             log::info(&format!("Battle Result: {:?}", result));
@@ -528,6 +550,6 @@ impl GameEngine {
 
 impl Default for GameEngine {
     fn default() -> Self {
-        Self::new()
+        Self::new(Some(42))
     }
 }

@@ -1,32 +1,23 @@
 //! Manalimit Core - Auto-battler game engine
 //!
 //! This crate provides the core game logic for the Manalimit auto-battler.
-//! It is designed to be no_std compatible for Substrate SDK pallet integration
-//! while maintaining browser WASM functionality via feature flags.
+//! It is designed to be no_std compatible for Substrate SDK pallet integration.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
 
-#[cfg(feature = "browser")]
-use wasm_bindgen::prelude::*;
-
-mod battle;
-mod commit;
-mod error;
-mod limits;
-mod log;
-mod opponents;
-mod rng;
-mod state;
-mod types;
-mod units;
-mod view;
-
-#[cfg(feature = "browser")]
-mod engine;
-#[cfg(feature = "browser")]
-mod sandbox;
+pub mod battle;
+pub mod commit;
+pub mod error;
+pub mod limits;
+pub mod log;
+pub mod opponents;
+pub mod rng;
+pub mod state;
+pub mod types;
+pub mod units;
+pub mod view;
 
 #[cfg(test)]
 mod tests;
@@ -34,7 +25,7 @@ mod tests;
 #[cfg(feature = "bounded")]
 pub mod bounded;
 
-// Core exports (always available)
+// Core exports
 pub use battle::{
     resolve_battle, BattlePhase, BattleResult, CombatEvent, CombatUnit, UnitId, UnitView,
 };
@@ -47,19 +38,3 @@ pub use state::*;
 pub use types::*;
 pub use units::get_starter_templates;
 pub use view::*;
-
-// Browser exports (wasm-bindgen)
-#[cfg(feature = "browser")]
-pub use engine::GameEngine;
-
-#[cfg(feature = "browser")]
-#[wasm_bindgen(start)]
-pub fn init() {
-    console_error_panic_hook::set_once();
-}
-
-#[cfg(feature = "browser")]
-#[wasm_bindgen]
-pub fn greet() -> alloc::string::String {
-    alloc::string::String::from("Hello from Manalimit WASM!")
-}
