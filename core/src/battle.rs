@@ -287,14 +287,6 @@ pub fn resolve_battle<R: BattleRng>(
         return finalize_with_limit_exceeded(&mut events, &limits);
     }
 
-    // Since initial board units are effectively "spawned" at once,
-    // we should trigger OnAllySpawn for them if they have it.
-    // (Optional: depending on game rules, usually they don't buff each other at start
-    // unless it is an OnStart ability, but we can enable it here for consistency).
-    // Actually, usually OnAllySpawn is for things spawned DURING battle.
-    // But if we want initial Necromancers to buff each other, we could call it here.
-    // Let's stick to the prompt's focus on the rat token spawn first.
-
     // 2. Main Loop
     while !player_units.is_empty() && !enemy_units.is_empty() {
         if limits.record_round().is_err() {
