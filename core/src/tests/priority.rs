@@ -658,3 +658,63 @@ fn test_recursive_interrupt_timing() {
         );
     }
 }
+
+#[test]
+fn test_unified_priority_cross_triggers() {
+    // SCENARIO: Verify that UnitAttack and AnyAttack triggers are prioritized together.
+    // P: [HighAtkFront (10 Atk), LowAtkBack (1 Atk)]
+    // HighAtkFront: BeforeUnitAttack
+    // LowAtkBack: BeforeAnyAttack
+
+    let high_atk_front = BoardUnit::from_card(
+        UnitCard::new(1, "High", "High", 10, 10, 0, 0, false).with_ability(create_ability(
+            AbilityTrigger::BeforeUnitAttack,
+            AbilityEffect::ModifyStats {
+                health: 0,
+                attack: 1,
+                target: AbilityTarget::All {
+                    scope: TargetScope::SelfUnit,
+                },
+            },
+            "HighUnitTrigger",
+        )),
+    );
+
+    let low_atk_back = BoardUnit::from_card(
+        UnitCard::new(2, "Low", "Low", 1, 10, 0, 0, false).with_ability(create_ability(
+            AbilityTrigger::BeforeAnyAttack,
+            AbilityEffect::ModifyStats {
+                health: 0,
+                attack: 1,
+                target: AbilityTarget::All {
+                    scope: TargetScope::SelfUnit,
+                },
+            },
+            "LowAnyTrigger",
+        )),
+    );
+
+    let p_board = vec![high_atk_front, low_atk_back];
+    let e_board = vec![create_dummy_enemy()];
+
+    let events = run_battle(&p_board, &e_board, 42);
+
+    let triggers: Vec<String> = events
+        .iter()
+        .filter_map(|e| {
+            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
+                Some(ability_name.clone())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    let high_idx = triggers
+        .iter()
+        .position(|n| n == "HighUnitTrigger")
+        .unwrap();
+    let low_idx = triggers.iter().position(|n| n == "LowAnyTrigger").unwrap();
+
+    assert!(high_idx < low_idx, "High Attack unit should trigger its 'Unit' ability before Low Attack unit triggers its 'Any' ability.");
+}

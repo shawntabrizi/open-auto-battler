@@ -1,6 +1,13 @@
 mod abyssal_bomber;
+mod combos;
+mod conditions;
+mod damage;
+mod faint;
 mod positions;
 mod random_ally_other;
+mod scopes;
 mod snipe;
 mod spawn;
 mod spines;
+mod support;
+mod targeting;

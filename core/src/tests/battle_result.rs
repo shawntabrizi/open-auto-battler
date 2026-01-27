@@ -65,3 +65,47 @@ fn test_mutual_destruction_chain() {
         panic!("Wrong end state");
     }
 }
+
+#[test]
+fn test_infinite_battle_draw() {
+    let grunt = create_dummy_card(1, "Grunt", 2, 2);
+    let squire = create_dummy_card(2, "Squire", 2, 3).with_ability(create_ability(
+        AbilityTrigger::BeforeAnyAttack,
+        AbilityEffect::ModifyStats {
+            health: 2,
+            attack: 0,
+            target: AbilityTarget::Position {
+                scope: TargetScope::SelfUnit,
+                index: -1,
+            },
+        },
+        "SquireShield",
+    ));
+
+    let p_board = vec![
+        BoardUnit::from_card(grunt.clone()),
+        BoardUnit::from_card(squire.clone()),
+    ];
+    let e_board = vec![BoardUnit::from_card(grunt), BoardUnit::from_card(squire)];
+
+    let events = run_battle(&p_board, &e_board, 42);
+
+    let last_event = events.last().unwrap();
+    if let CombatEvent::BattleEnd { result } = last_event {
+        assert_eq!(
+            *result,
+            BattleResult::Draw,
+            "Stalemate should result in a DRAW"
+        );
+    } else {
+        panic!("Battle did not end correctly: {:?}", last_event);
+    }
+
+    let has_limit_exceeded = events
+        .iter()
+        .any(|e| matches!(e, CombatEvent::LimitExceeded { .. }));
+    assert!(
+        has_limit_exceeded,
+        "Stalemate should trigger a LimitExceeded event"
+    );
+}

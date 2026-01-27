@@ -115,3 +115,15 @@ fn test_negative_attack_prevention() {
         );
     }
 }
+
+#[test]
+fn test_board_unit_health() {
+    let mut unit = create_board_unit(1, "Test", 10, 10);
+    assert!(unit.is_alive());
+
+    unit.take_damage(5);
+    assert_eq!(unit.current_health, 5);
+
+    unit.take_damage(5);
+    assert!(!unit.is_alive());
+}
