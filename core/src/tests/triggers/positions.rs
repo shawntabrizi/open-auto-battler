@@ -4,15 +4,14 @@ use crate::types::*;
 
 #[test]
 fn test_enemy_position_targeting() {
-    // P: [Artillery Mage]. Ability: OnStart -> 5 dmg to EnemyUnitPosition(2).
-    // E: [Target0, Target1, Target2 (5 HP)].
-    // Result: Target2 should take 5 damage and die.
-
     let mage_ability = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::Damage {
             amount: 5,
-            target: AbilityTarget::EnemyUnitPosition(2),
+            target: AbilityTarget::Position {
+                scope: TargetScope::Enemies,
+                index: 2,
+            },
         },
         "ArtilleryStrike",
     );
@@ -32,8 +31,6 @@ fn test_enemy_position_targeting() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Verify Target2 (enemy id 3, since IDs are 1-based in my dummy setup usually)
-    // UnitId::enemy(3) should be the 3rd unit (pos 2)
     let hit = events.iter().any(|e| {
         matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
             if *target_instance_id == UnitId::enemy(3) && *damage == 5)
@@ -44,15 +41,14 @@ fn test_enemy_position_targeting() {
 
 #[test]
 fn test_enemy_position_fizzle() {
-    // P: [Artillery Mage]. Ability: OnStart -> 5 dmg to EnemyUnitPosition(2).
-    // E: [Target0, Target1]. (No unit at pos 2)
-    // Result: No AbilityDamage event should occur.
-
     let mage_ability = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::Damage {
             amount: 5,
-            target: AbilityTarget::EnemyUnitPosition(2),
+            target: AbilityTarget::Position {
+                scope: TargetScope::Enemies,
+                index: 2,
+            },
         },
         "ArtilleryStrike",
     );
@@ -67,7 +63,6 @@ fn test_enemy_position_fizzle() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Verify no AbilityDamage event
     let hit = events
         .iter()
         .any(|e| matches!(e, CombatEvent::AbilityDamage { .. }));
@@ -80,16 +75,15 @@ fn test_enemy_position_fizzle() {
 
 #[test]
 fn test_ally_position_targeting() {
-    // P: [Rear Guard, Ally1, Ally2, Ally3, Ally4 (5/5)]. Ability: OnStart -> +3/+3 to AllyUnitPosition(4).
-    // E: [Enemy].
-    // Result: Ally4 should become 8/8.
-
     let guard_ability = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStats {
             health: 3,
             attack: 3,
-            target: AbilityTarget::AllyUnitPosition(4),
+            target: AbilityTarget::Position {
+                scope: TargetScope::Allies,
+                index: 4,
+            },
         },
         "SupplyLine",
     );
@@ -113,7 +107,6 @@ fn test_ally_position_targeting() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Verify Ally4 (player id 5) got buffed
     let buff = events.iter().any(|e| {
         matches!(e, CombatEvent::AbilityModifyStats { target_instance_id, health_change, attack_change, .. }
             if *target_instance_id == UnitId::player(5) && *health_change == 3 && *attack_change == 3)
@@ -124,16 +117,15 @@ fn test_ally_position_targeting() {
 
 #[test]
 fn test_ally_position_fizzle() {
-    // P: [Rear Guard]. Ability: OnStart -> +3/+3 to AllyUnitPosition(4). (No unit at pos 4)
-    // E: [Enemy].
-    // Result: No AbilityModifyStats event.
-
     let guard_ability = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStats {
             health: 3,
             attack: 3,
-            target: AbilityTarget::AllyUnitPosition(4),
+            target: AbilityTarget::Position {
+                scope: TargetScope::Allies,
+                index: 4,
+            },
         },
         "SupplyLine",
     );
@@ -146,7 +138,6 @@ fn test_ally_position_fizzle() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Verify no AbilityModifyStats event
     let buff = events
         .iter()
         .any(|e| matches!(e, CombatEvent::AbilityModifyStats { .. }));

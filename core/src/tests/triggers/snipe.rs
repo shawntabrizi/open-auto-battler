@@ -4,15 +4,16 @@ use crate::types::*;
 
 #[test]
 fn test_snipe_lowest_health() {
-    // P: [Headhunter]. Ability: OnStart -> 5 dmg to LowestHealthEnemy.
-    // E: [Tank (10 HP), Glass (2 HP), Utility (5 HP)].
-    // Result: Glass should take 5 damage and die.
-
     let headhunter_ability = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::Damage {
             amount: 5,
-            target: AbilityTarget::LowestHealthEnemy,
+            target: AbilityTarget::Standard {
+                scope: TargetScope::Enemies,
+                stat: StatType::Health,
+                order: SortOrder::Ascending,
+                count: 1,
+            },
         },
         "SnipeLowest",
     );
@@ -32,7 +33,6 @@ fn test_snipe_lowest_health() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Verify "Glass" (e-3) died
     let glass_death = events.iter().find(|e| {
         if let CombatEvent::UnitDeath {
             team,
@@ -53,15 +53,16 @@ fn test_snipe_lowest_health() {
 
 #[test]
 fn test_snipe_highest_attack() {
-    // P: [GiantSlayer]. Ability: OnStart -> 3 dmg to HighestAttackEnemy.
-    // E: [Weak (1 Atk), Strong (10 Atk), Medium (5 Atk)].
-    // Result: Strong should take 3 damage.
-
     let giantslayer_ability = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::Damage {
             amount: 3,
-            target: AbilityTarget::HighestAttackEnemy,
+            target: AbilityTarget::Standard {
+                scope: TargetScope::Enemies,
+                stat: StatType::Attack,
+                order: SortOrder::Descending,
+                count: 1,
+            },
         },
         "SnipeStrongest",
     );
@@ -81,7 +82,6 @@ fn test_snipe_highest_attack() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Verify "Strong" (e-2) took 3 damage
     let strong_hit = events.iter().find(|e| {
         matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
                 if *target_instance_id == UnitId::enemy(2) && *damage == 3)
@@ -99,7 +99,12 @@ fn test_snipe_highest_health() {
         AbilityTrigger::OnStart,
         AbilityEffect::Damage {
             amount: 5,
-            target: AbilityTarget::HighestHealthEnemy,
+            target: AbilityTarget::Standard {
+                scope: TargetScope::Enemies,
+                stat: StatType::Health,
+                order: SortOrder::Descending,
+                count: 1,
+            },
         },
         "SnipeHighestHP",
     );
@@ -118,7 +123,6 @@ fn test_snipe_highest_health() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Verify "Healthy" (e-2) took damage
     let hit = events.iter().find(|e| {
         matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
                 if *target_instance_id == UnitId::enemy(2) && *damage == 5)
@@ -133,7 +137,12 @@ fn test_snipe_lowest_attack() {
         AbilityTrigger::OnStart,
         AbilityEffect::Damage {
             amount: 5,
-            target: AbilityTarget::LowestAttackEnemy,
+            target: AbilityTarget::Standard {
+                scope: TargetScope::Enemies,
+                stat: StatType::Attack,
+                order: SortOrder::Ascending,
+                count: 1,
+            },
         },
         "SnipeLowestAtk",
     );
@@ -152,7 +161,6 @@ fn test_snipe_lowest_attack() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Verify "Weak" (e-2) took damage
     let hit = events.iter().find(|e| {
         matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
                 if *target_instance_id == UnitId::enemy(2) && *damage == 5)
@@ -167,14 +175,18 @@ fn test_snipe_highest_mana() {
         AbilityTrigger::OnStart,
         AbilityEffect::Damage {
             amount: 5,
-            target: AbilityTarget::HighestManaEnemy,
+            target: AbilityTarget::Standard {
+                scope: TargetScope::Enemies,
+                stat: StatType::Mana,
+                order: SortOrder::Descending,
+                count: 1,
+            },
         },
         "SnipeHighestMana",
     );
 
     let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
 
-    // Manual units with specific costs
     let cheap = UnitCard::new(2, "Cheap", "Cheap", 1, 10, 1, 0, false);
     let expensive = UnitCard::new(3, "Expensive", "Expensive", 1, 10, 10, 0, false);
     let medium = UnitCard::new(4, "Medium", "Medium", 1, 10, 5, 0, false);
@@ -188,7 +200,6 @@ fn test_snipe_highest_mana() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Verify "Expensive" (e-2) took damage
     let hit = events.iter().find(|e| {
         matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
                 if *target_instance_id == UnitId::enemy(2) && *damage == 5)
@@ -203,14 +214,18 @@ fn test_snipe_lowest_mana() {
         AbilityTrigger::OnStart,
         AbilityEffect::Damage {
             amount: 5,
-            target: AbilityTarget::LowestManaEnemy,
+            target: AbilityTarget::Standard {
+                scope: TargetScope::Enemies,
+                stat: StatType::Mana,
+                order: SortOrder::Ascending,
+                count: 1,
+            },
         },
         "SnipeLowestMana",
     );
 
     let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
 
-    // Manual units with specific costs
     let expensive = UnitCard::new(2, "Expensive", "Expensive", 1, 10, 10, 0, false);
     let cheap = UnitCard::new(3, "Cheap", "Cheap", 1, 10, 1, 0, false);
     let medium = UnitCard::new(4, "Medium", "Medium", 1, 10, 5, 0, false);
@@ -224,7 +239,6 @@ fn test_snipe_lowest_mana() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Verify "Cheap" (e-2) took damage
     let hit = events.iter().find(|e| {
         matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
                 if *target_instance_id == UnitId::enemy(2) && *damage == 5)
@@ -235,21 +249,27 @@ fn test_snipe_lowest_mana() {
 
 #[test]
 fn test_mana_reaper_dual_kill() {
-    // P: [ManaReaper]. Abilities: 1. Destroy HighestMana, 2. Destroy LowestMana
-    // E: [Cheap (1 Mana), Medium (5 Mana), Expensive (10 Mana)]
-    // Result: Cheap and Expensive should both die.
-
     let reaper_ability_high = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::Destroy {
-            target: AbilityTarget::HighestManaEnemy,
+            target: AbilityTarget::Standard {
+                scope: TargetScope::Enemies,
+                stat: StatType::Mana,
+                order: SortOrder::Descending,
+                count: 1,
+            },
         },
         "Harvest",
     );
     let reaper_ability_low = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::Destroy {
-            target: AbilityTarget::LowestManaEnemy,
+            target: AbilityTarget::Standard {
+                scope: TargetScope::Enemies,
+                stat: StatType::Mana,
+                order: SortOrder::Ascending,
+                count: 1,
+            },
         },
         "Cull",
     );
@@ -270,7 +290,6 @@ fn test_mana_reaper_dual_kill() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Analyze deaths
     let dead_units: Vec<_> = events
         .iter()
         .filter_map(|e| {
@@ -284,7 +303,6 @@ fn test_mana_reaper_dual_kill() {
         })
         .collect();
 
-    // Expensive is e-3, Cheap is e-1.
     assert!(
         dead_units.contains(&UnitId::enemy(1)),
         "Cheap unit should be dead"

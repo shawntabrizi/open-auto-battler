@@ -1,30 +1,19 @@
+// Composable ability building blocks
+export type TargetScope = 'selfUnit' | 'allies' | 'enemies' | 'all' | 'alliesOther' | 'triggerSource' | 'aggressor';
+export type StatType = 'health' | 'attack' | 'mana';
+export type SortOrder = 'ascending' | 'descending';
+export type CompareOp = 'greaterThan' | 'lessThan' | 'equal' | 'greaterThanOrEqual' | 'lessThanOrEqual';
+
 // Ability condition types
 export type AbilityCondition =
   | { type: 'none' }
-  // Target stat checks
-  | { type: 'targetHealthLessThanOrEqual'; value: number }
-  | { type: 'targetHealthGreaterThan'; value: number }
-  | { type: 'targetAttackLessThanOrEqual'; value: number }
-  | { type: 'targetAttackGreaterThan'; value: number }
-  // Source stat checks
-  | { type: 'sourceHealthLessThanOrEqual'; value: number }
-  | { type: 'sourceHealthGreaterThan'; value: number }
-  | { type: 'sourceAttackLessThanOrEqual'; value: number }
-  | { type: 'sourceAttackGreaterThan'; value: number }
-  // Comparative checks
-  | { type: 'sourceAttackGreaterThanTarget' }
-  | { type: 'sourceHealthLessThanTarget' }
-  | { type: 'sourceHealthGreaterThanTarget' }
-  | { type: 'sourceAttackLessThanTarget' }
-  // Board state checks
-  | { type: 'allyCountAtLeast'; count: number }
-  | { type: 'allyCountAtMost'; count: number }
-  | { type: 'sourceIsFront' }
-  | { type: 'sourceIsBack' }
-  // Logic gates
-  | { type: 'and'; left: AbilityCondition; right: AbilityCondition }
-  | { type: 'or'; left: AbilityCondition; right: AbilityCondition }
-  | { type: 'not'; inner: AbilityCondition };
+  | { type: 'statValueCompare'; data: { scope: TargetScope; stat: StatType; op: CompareOp; value: number } }
+  | { type: 'statStatCompare'; data: { sourceStat: StatType; op: CompareOp; targetScope: TargetScope; targetStat: StatType } }
+  | { type: 'unitCount'; data: { scope: TargetScope; op: CompareOp; value: number } }
+  | { type: 'isPosition'; data: { scope: TargetScope; index: number } }
+  | { type: 'and'; data: { left: AbilityCondition; right: AbilityCondition } }
+  | { type: 'or'; data: { left: AbilityCondition; right: AbilityCondition } }
+  | { type: 'not'; data: { inner: AbilityCondition } };
 
 // Ability types
 export interface Ability {
@@ -36,25 +25,14 @@ export interface Ability {
   maxTriggers?: number;
 }
 
-export type AbilityTrigger = 'onStart' | 'onFaint' | 'onAllyFaint' | 'onDamageTaken' | 'onSpawn' | 'onAllySpawn' | 'onEnemySpawn' | 'beforeUnitAttack' | 'afterUnitAttack' | 'beforeAnyAttack' | 'afterAnyAttack';
+export type AbilityTrigger = 'onStart' | 'onFaint' | 'onAllyFaint' | 'onHurt' | 'onSpawn' | 'onAllySpawn' | 'onEnemySpawn' | 'beforeUnitAttack' | 'afterUnitAttack' | 'beforeAnyAttack' | 'afterAnyAttack';
 
 export type AbilityTarget =
-  | 'selfUnit' | 'triggerTarget'
-  | 'allAllies'
-  | 'allEnemies'
-  | 'randomAlly'
-  | 'randomEnemy'
-  | 'frontAlly'
-  | 'frontEnemy'
-  | 'backAlly'
-  | 'backEnemy'
-  | 'allyAhead'
-  | 'lowestHealthEnemy'
-  | 'highestAttackEnemy'
-  | 'highestHealthEnemy'
-  | 'lowestAttackEnemy'
-  | 'highestManaEnemy'
-  | 'lowestManaEnemy';
+  | { type: 'position'; data: { scope: TargetScope; index: number } }
+  | { type: 'adjacent'; data: { scope: TargetScope } }
+  | { type: 'random'; data: { scope: TargetScope; count: number } }
+  | { type: 'standard'; data: { scope: TargetScope; stat: StatType; order: SortOrder; count: number } }
+  | { type: 'all'; data: { scope: TargetScope } };
 
 export type AbilityEffect =
   | { type: 'damage'; amount: number; target: AbilityTarget }

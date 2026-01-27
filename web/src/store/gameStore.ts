@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
-import type { GameView, BattleOutput, Selection, BoardUnitView } from '../types';
+import type { GameView, BattleOutput, Selection } from '../types';
 import type { GameEngine } from '../wasm/manalimit_core';
 
 type GameEngineInstance = GameEngine;

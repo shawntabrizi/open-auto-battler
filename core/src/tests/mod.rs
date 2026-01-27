@@ -46,7 +46,9 @@ fn create_tester_unit(
         effect: AbilityEffect::ModifyStats {
             health: 1,
             attack: 0,
-            target: AbilityTarget::SelfUnit,
+            target: AbilityTarget::All {
+                scope: TargetScope::SelfUnit,
+            },
         },
         name: ability_name.to_string(),
         description: "Priority Test Ability".to_string(),

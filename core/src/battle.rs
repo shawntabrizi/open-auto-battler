@@ -13,7 +13,8 @@ use crate::limits::{BattleLimits, LimitReason};
 use crate::rng::BattleRng;
 use crate::state::BOARD_SIZE;
 use crate::types::{
-    Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit,
+    Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CompareOp,
+    SortOrder, StatType, TargetScope,
 };
 
 #[cfg(feature = "std")]
@@ -543,7 +544,7 @@ fn resolve_trigger_queue<R: BattleRng>(
             if let Some(unit) = find_unit(unit_id, player_units, enemy_units) {
                 let is_fatal = unit.health <= 0;
                 for (sub_idx, ability) in unit.abilities.iter().enumerate() {
-                    if ability.trigger == AbilityTrigger::OnDamageTaken {
+                    if ability.trigger == AbilityTrigger::OnHurt {
                         // Check max_triggers before queuing
                         if let Some(max) = ability.max_triggers {
                             if unit
@@ -1223,7 +1224,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
     // Build the initial reaction queue from the Clash deaths AND DAMAGE
     let mut queue = Vec::new();
 
-    // Check for OnDamageTaken for the clashing units
+    // Check for OnHurt for the clashing units
     let mut check_clash_damage = |id: Option<UnitInstanceId>,
                                   dealer_id: Option<UnitInstanceId>,
                                   team: Team,
@@ -1243,7 +1244,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
             if let Some(u) = unit_opt {
                 let is_dead = u.health <= 0;
                 for (sub_idx, a) in u.abilities.iter().enumerate() {
-                    if a.trigger == AbilityTrigger::OnDamageTaken {
+                    if a.trigger == AbilityTrigger::OnHurt {
                         // Check max_triggers before queuing
                         if let Some(max) = a.max_triggers {
                             if u.ability_trigger_counts.get(sub_idx).copied().unwrap_or(0) >= max {
@@ -1423,112 +1424,124 @@ fn get_targets<R: BattleRng>(
     trigger_target_id: Option<UnitInstanceId>,
     source_position_override: Option<usize>,
 ) -> Vec<UnitInstanceId> {
+    match target {
+        AbilityTarget::Position { scope, index } => {
+            if *scope == TargetScope::SelfUnit {
+                resolve_relative_position(
+                    source_instance_id,
+                    source_team,
+                    *index,
+                    player_units,
+                    enemy_units,
+                    source_position_override,
+                )
+            } else {
+                resolve_absolute_position(*scope, source_team, *index, player_units, enemy_units)
+            }
+        }
+        AbilityTarget::Adjacent { scope: _ } => {
+            // Stub implementation as per instructions
+            vec![]
+        }
+        AbilityTarget::Random { scope, count } => {
+            let candidates = resolve_scope_ids(
+                *scope,
+                source_instance_id,
+                source_team,
+                player_units,
+                enemy_units,
+                trigger_target_id,
+            );
+            if candidates.is_empty() {
+                return vec![];
+            }
+            let actual_count = (*count as usize).min(candidates.len());
+            let mut results = candidates;
+            rng.shuffle(&mut results);
+            results.truncate(actual_count);
+            results
+        }
+        AbilityTarget::Standard {
+            scope,
+            stat,
+            order,
+            count,
+        } => resolve_stat_based(
+            *scope,
+            source_instance_id,
+            source_team,
+            *stat,
+            *order,
+            *count,
+            player_units,
+            enemy_units,
+            trigger_target_id,
+        ),
+        AbilityTarget::All { scope } => resolve_scope_ids(
+            *scope,
+            source_instance_id,
+            source_team,
+            player_units,
+            enemy_units,
+            trigger_target_id,
+        ),
+    }
+}
+
+// ==========================================
+// TARGETING HELPERS
+// ==========================================
+
+fn resolve_scope_ids(
+    scope: TargetScope,
+    source_id: UnitInstanceId,
+    source_team: Team,
+    player_units: &[CombatUnit],
+    enemy_units: &[CombatUnit],
+    trigger_target_id: Option<UnitInstanceId>,
+) -> Vec<UnitInstanceId> {
+    resolve_scope_units(
+        scope,
+        source_id,
+        source_team,
+        player_units,
+        enemy_units,
+        trigger_target_id,
+    )
+    .iter()
+    .map(|u| u.instance_id)
+    .collect()
+}
+
+fn resolve_scope_units<'a>(
+    scope: TargetScope,
+    source_id: UnitInstanceId,
+    source_team: Team,
+    player_units: &'a [CombatUnit],
+    enemy_units: &'a [CombatUnit],
+    trigger_target_id: Option<UnitInstanceId>,
+) -> Vec<&'a CombatUnit> {
     let (allies, enemies) = match source_team {
         Team::Player => (player_units, enemy_units),
         Team::Enemy => (enemy_units, player_units),
     };
 
-    match target {
-        AbilityTarget::SelfUnit => vec![source_instance_id],
-        AbilityTarget::TriggerTarget => trigger_target_id.map(|id| vec![id]).unwrap_or_default(),
-        AbilityTarget::AllAllies => allies.iter().map(|u| u.instance_id).collect(),
-        AbilityTarget::AllEnemies => enemies.iter().map(|u| u.instance_id).collect(),
-        AbilityTarget::AllUnits => player_units
-            .iter()
-            .chain(enemy_units.iter())
-            .map(|u| u.instance_id)
-            .collect(),
-        AbilityTarget::RandomAlly => {
-            if allies.is_empty() {
-                vec![]
-            } else {
-                let idx = rng.gen_range(allies.len());
-                vec![allies[idx].instance_id]
-            }
-        }
-        AbilityTarget::RandomAllyOther => {
-            let others: Vec<_> = allies
-                .iter()
-                .filter(|u| u.instance_id != source_instance_id)
-                .collect();
-            if others.is_empty() {
-                vec![]
-            } else {
-                let idx = rng.gen_range(others.len());
-                vec![others[idx].instance_id]
-            }
-        }
-        AbilityTarget::RandomEnemy => {
-            if enemies.is_empty() {
-                vec![]
-            } else {
-                let idx = rng.gen_range(enemies.len());
-                vec![enemies[idx].instance_id]
-            }
-        }
-        AbilityTarget::FrontAlly => {
-            if !allies.is_empty() {
-                vec![allies[0].instance_id]
+    match scope {
+        TargetScope::SelfUnit => {
+            if let Some(u) = find_unit_in_slices(source_id, player_units, enemy_units) {
+                vec![u]
             } else {
                 vec![]
             }
         }
-        AbilityTarget::FrontEnemy => {
-            if !enemies.is_empty() {
-                vec![enemies[0].instance_id]
-            } else {
-                vec![]
-            }
-        }
-        AbilityTarget::BackAlly => {
-            if !allies.is_empty() {
-                vec![allies.last().unwrap().instance_id]
-            } else {
-                vec![]
-            }
-        }
-        AbilityTarget::BackEnemy => {
-            if !enemies.is_empty() {
-                vec![enemies.last().unwrap().instance_id]
-            } else {
-                vec![]
-            }
-        }
-        AbilityTarget::AllyUnitPosition(pos) => {
-            let idx = *pos as usize;
-            if idx < allies.len() {
-                vec![allies[idx].instance_id]
-            } else {
-                vec![]
-            }
-        }
-        AbilityTarget::EnemyUnitPosition(pos) => {
-            let idx = *pos as usize;
-            if idx < enemies.len() {
-                vec![enemies[idx].instance_id]
-            } else {
-                vec![]
-            }
-        }
-        AbilityTarget::AllyAhead => {
-            let pos = allies
-                .iter()
-                .position(|u| u.instance_id == source_instance_id)
-                .or(source_position_override);
-            if let Some(pos) = pos {
-                if pos > 0 && pos <= allies.len() {
-                    // When using override, the unit was removed so positions shifted down
-                    let idx = if allies.iter().any(|u| u.instance_id == source_instance_id) {
-                        pos - 1
-                    } else {
-                        // Dead unit was removed, so the unit that was at pos-1 is still at pos-1
-                        if pos > 0 && pos - 1 < allies.len() {
-                            pos - 1
-                        } else {
-                            return vec![];
-                        }
-                    };
-                    vec![allies[idx].instance_id]
+        TargetScope::Allies => allies.iter().collect(),
+        TargetScope::Enemies => enemies.iter().collect(),
+        TargetScope::All => player_units.iter().chain(enemy_units.iter()).collect(),
+        TargetScope::AlliesOther => allies.iter().filter(|u| u.instance_id != source_id).collect(),
+        TargetScope::TriggerSource | TargetScope::Aggressor => {
+            if let Some(tid) = trigger_target_id {
+                if let Some(u) = find_unit_in_slices(tid, player_units, enemy_units) {
+                    vec![u]
                 } else {
                     vec![]
                 }
@@ -1536,109 +1549,165 @@ fn get_targets<R: BattleRng>(
                 vec![]
             }
         }
-        AbilityTarget::AllyBehind => {
-            let pos = allies
-                .iter()
-                .position(|u| u.instance_id == source_instance_id)
-                .or(source_position_override);
-            if let Some(pos) = pos {
-                if allies.iter().any(|u| u.instance_id == source_instance_id) {
-                    // Unit is alive, behind is pos + 1
-                    if pos + 1 < allies.len() {
-                        vec![allies[pos + 1].instance_id]
-                    } else {
-                        vec![]
-                    }
+    }
+}
+
+fn find_unit_in_slices<'a>(
+    instance_id: UnitInstanceId,
+    player_units: &'a [CombatUnit],
+    enemy_units: &'a [CombatUnit],
+) -> Option<&'a CombatUnit> {
+    player_units
+        .iter()
+        .chain(enemy_units.iter())
+        .find(|u| u.instance_id == instance_id)
+}
+
+fn resolve_relative_position(
+    source_id: UnitInstanceId,
+    source_team: Team,
+    index: i32,
+    player_units: &[CombatUnit],
+    enemy_units: &[CombatUnit],
+    source_position_override: Option<usize>,
+) -> Vec<UnitInstanceId> {
+    let allies = match source_team {
+        Team::Player => player_units,
+        Team::Enemy => enemy_units,
+    };
+
+    let pos = allies
+        .iter()
+        .position(|u| u.instance_id == source_id)
+        .or(source_position_override);
+
+    if let Some(pos) = pos {
+        let is_alive = allies.iter().any(|u| u.instance_id == source_id);
+        let target_idx = if index == -1 {
+            // Ahead
+            if is_alive {
+                if pos > 0 {
+                    Some(pos - 1)
                 } else {
-                    // Unit is dead and removed, so what was at pos+1 is now at pos
-                    if pos < allies.len() {
-                        vec![allies[pos].instance_id]
-                    } else {
-                        vec![]
-                    }
+                    None
                 }
             } else {
-                vec![]
-            }
-        }
-        AbilityTarget::LowestHealthEnemy => {
-            if enemies.is_empty() {
-                vec![]
-            } else {
-                let mut target = &enemies[0];
-                for e in enemies.iter().skip(1) {
-                    if e.effective_health() < target.effective_health() {
-                        target = e;
-                    }
+                // Dead unit removed, pos-1 is still pos-1
+                if pos > 0 {
+                    Some(pos - 1)
+                } else {
+                    None
                 }
-                vec![target.instance_id]
             }
-        }
-        AbilityTarget::HighestAttackEnemy => {
-            if enemies.is_empty() {
-                vec![]
-            } else {
-                let mut target = &enemies[0];
-                for e in enemies.iter().skip(1) {
-                    if e.effective_attack() > target.effective_attack() {
-                        target = e;
-                    }
+        } else if index == 1 {
+            // Behind
+            if is_alive {
+                if pos + 1 < allies.len() {
+                    Some(pos + 1)
+                } else {
+                    None
                 }
-                vec![target.instance_id]
-            }
-        }
-        AbilityTarget::HighestHealthEnemy => {
-            if enemies.is_empty() {
-                vec![]
             } else {
-                let mut target = &enemies[0];
-                for e in enemies.iter().skip(1) {
-                    if e.effective_health() > target.effective_health() {
-                        target = e;
-                    }
+                // Dead unit removed, pos+1 is now pos
+                if pos < allies.len() {
+                    Some(pos)
+                } else {
+                    None
                 }
-                vec![target.instance_id]
             }
-        }
-        AbilityTarget::LowestAttackEnemy => {
-            if enemies.is_empty() {
-                vec![]
+        } else if index == 0 {
+            if is_alive {
+                Some(pos)
             } else {
-                let mut target = &enemies[0];
-                for e in enemies.iter().skip(1) {
-                    if e.effective_attack() < target.effective_attack() {
-                        target = e;
-                    }
-                }
-                vec![target.instance_id]
+                None
+            }
+        } else {
+            None
+        };
+
+        if let Some(idx) = target_idx {
+            if idx < allies.len() {
+                return vec![allies[idx].instance_id];
             }
         }
-        AbilityTarget::HighestManaEnemy => {
-            if enemies.is_empty() {
-                vec![]
-            } else {
-                let mut target = &enemies[0];
-                for e in enemies.iter().skip(1) {
-                    if e.play_cost > target.play_cost {
-                        target = e;
-                    }
-                }
-                vec![target.instance_id]
-            }
+    }
+    vec![]
+}
+
+fn resolve_absolute_position(
+    scope: TargetScope,
+    source_team: Team,
+    index: i32,
+    player_units: &[CombatUnit],
+    enemy_units: &[CombatUnit],
+) -> Vec<UnitInstanceId> {
+    let targets = match (scope, source_team) {
+        (TargetScope::Allies, Team::Player) | (TargetScope::Enemies, Team::Enemy) => player_units,
+        (TargetScope::Allies, Team::Enemy) | (TargetScope::Enemies, Team::Player) => enemy_units,
+        _ => return vec![],
+    };
+
+    if targets.is_empty() {
+        return vec![];
+    }
+
+    let idx = if index == -1 {
+        targets.len().saturating_sub(1)
+    } else {
+        index as usize
+    };
+
+    if idx < targets.len() {
+        vec![targets[idx].instance_id]
+    } else {
+        vec![]
+    }
+}
+
+fn resolve_stat_based(
+    scope: TargetScope,
+    source_id: UnitInstanceId,
+    source_team: Team,
+    stat: StatType,
+    order: SortOrder,
+    count: u32,
+    player_units: &[CombatUnit],
+    enemy_units: &[CombatUnit],
+    trigger_target_id: Option<UnitInstanceId>,
+) -> Vec<UnitInstanceId> {
+    let mut units = resolve_scope_units(
+        scope,
+        source_id,
+        source_team,
+        player_units,
+        enemy_units,
+        trigger_target_id,
+    );
+    if units.is_empty() {
+        return vec![];
+    }
+
+    units.sort_by(|a, b| {
+        let val_a = get_stat_value(a, stat);
+        let val_b = get_stat_value(b, stat);
+        match order {
+            SortOrder::Ascending => val_a.cmp(&val_b),
+            SortOrder::Descending => val_b.cmp(&val_a),
         }
-        AbilityTarget::LowestManaEnemy => {
-            if enemies.is_empty() {
-                vec![]
-            } else {
-                let mut target = &enemies[0];
-                for e in enemies.iter().skip(1) {
-                    if e.play_cost < target.play_cost {
-                        target = e;
-                    }
-                }
-                vec![target.instance_id]
-            }
-        }
+    });
+
+    units
+        .into_iter()
+        .take(count as usize)
+        .map(|u| u.instance_id)
+        .collect()
+}
+
+fn get_stat_value(unit: &CombatUnit, stat: StatType) -> i32 {
+    match stat {
+        StatType::Health => unit.effective_health(),
+        StatType::Attack => unit.effective_attack(),
+        StatType::Mana => unit.play_cost,
     }
 }
 
@@ -1652,11 +1721,10 @@ struct ConditionContext<'a> {
     source: &'a CombatUnit,
     source_position: usize,
     allies: &'a [CombatUnit],
-    enemies: &'a [CombatUnit], // Reserved for future conditions like EnemyCountAtLeast
+    enemies: &'a [CombatUnit],
 }
 
 /// Evaluates a condition given the context.
-/// For target-based conditions, we evaluate against ALL targets and return true if ANY target passes.
 fn evaluate_condition<R: BattleRng>(
     condition: &AbilityCondition,
     ctx: &ConditionContext,
@@ -1669,125 +1737,44 @@ fn evaluate_condition<R: BattleRng>(
 ) -> bool {
     match condition {
         AbilityCondition::None => true,
-
-        // Target stat checks - evaluate against resolved targets
-        AbilityCondition::TargetHealthLessThanOrEqual { value } => {
-            let target_ids = get_targets(
-                ctx.source.instance_id,
-                ctx.source.team,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                source_position_override,
-            );
-            if target_ids.is_empty() {
-                return false;
-            }
-            target_ids.iter().any(|tid| {
-                find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
-                    .map(|u| u.effective_health() <= *value)
-                    .unwrap_or(false)
-            })
-        }
-        AbilityCondition::TargetHealthGreaterThan { value } => {
-            let target_ids = get_targets(
-                ctx.source.instance_id,
-                ctx.source.team,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                source_position_override,
-            );
-            if target_ids.is_empty() {
-                return false;
-            }
-            target_ids.iter().any(|tid| {
-                find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
-                    .map(|u| u.effective_health() > *value)
-                    .unwrap_or(false)
-            })
-        }
-        AbilityCondition::TargetAttackLessThanOrEqual { value } => {
-            let target_ids = get_targets(
-                ctx.source.instance_id,
-                ctx.source.team,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                source_position_override,
-            );
-            if target_ids.is_empty() {
-                return false;
-            }
-            target_ids.iter().any(|tid| {
-                find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
-                    .map(|u| u.effective_attack() <= *value)
-                    .unwrap_or(false)
-            })
-        }
-        AbilityCondition::TargetAttackGreaterThan { value } => {
-            let target_ids = get_targets(
-                ctx.source.instance_id,
-                ctx.source.team,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                source_position_override,
-            );
-            if target_ids.is_empty() {
-                return false;
-            }
-            target_ids.iter().any(|tid| {
-                find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
-                    .map(|u| u.effective_attack() > *value)
-                    .unwrap_or(false)
-            })
-        }
-
-        // Source stat checks
-        AbilityCondition::SourceHealthLessThanOrEqual { value } => {
-            ctx.source.effective_health() <= *value
-        }
-        AbilityCondition::SourceHealthGreaterThan { value } => {
-            ctx.source.effective_health() > *value
-        }
-        AbilityCondition::SourceAttackLessThanOrEqual { value } => {
-            ctx.source.effective_attack() <= *value
-        }
-        AbilityCondition::SourceAttackGreaterThan { value } => {
-            ctx.source.effective_attack() > *value
-        }
-
-        // Comparative checks - compare source to first target
-        AbilityCondition::SourceAttackGreaterThanTarget => {
-            let target_ids = get_targets(
-                ctx.source.instance_id,
-                ctx.source.team,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                source_position_override,
-            );
-            target_ids
-                .first()
-                .and_then(|tid| {
-                    find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
-                        .map(|t| ctx.source.effective_attack() > t.effective_attack())
+        AbilityCondition::StatValueCompare {
+            scope,
+            stat,
+            op,
+            value,
+        } => {
+            if *scope == TargetScope::SelfUnit {
+                compare_i32(get_stat_value(ctx.source, *stat), *op, *value)
+            } else {
+                let targets = get_targets(
+                    ctx.source.instance_id,
+                    ctx.source.team,
+                    target,
+                    player_units,
+                    enemy_units,
+                    rng,
+                    trigger_target_id,
+                    source_position_override,
+                );
+                if targets.is_empty() {
+                    return false;
+                }
+                targets.iter().any(|tid| {
+                    if let Some(u) = find_unit_in_slices(*tid, player_units, enemy_units) {
+                        compare_i32(get_stat_value(u, *stat), *op, *value)
+                    } else {
+                        false
+                    }
                 })
-                .unwrap_or(false)
+            }
         }
-        AbilityCondition::SourceHealthLessThanTarget => {
-            let target_ids = get_targets(
+        AbilityCondition::StatStatCompare {
+            source_stat,
+            op,
+            target_scope: _,
+            target_stat,
+        } => {
+            let targets = get_targets(
                 ctx.source.instance_id,
                 ctx.source.team,
                 target,
@@ -1797,60 +1784,45 @@ fn evaluate_condition<R: BattleRng>(
                 trigger_target_id,
                 source_position_override,
             );
-            target_ids
-                .first()
-                .and_then(|tid| {
-                    find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
-                        .map(|t| ctx.source.effective_health() < t.effective_health())
-                })
-                .unwrap_or(false)
+            if let Some(tid) = targets.first() {
+                if let Some(u) = find_unit_in_slices(*tid, player_units, enemy_units) {
+                    compare_i32(
+                        get_stat_value(ctx.source, *source_stat),
+                        *op,
+                        get_stat_value(u, *target_stat),
+                    )
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
         }
-        AbilityCondition::SourceHealthGreaterThanTarget => {
-            let target_ids = get_targets(
+        AbilityCondition::UnitCount { scope, op, value } => {
+            let count = resolve_scope_ids(
+                *scope,
                 ctx.source.instance_id,
                 ctx.source.team,
-                target,
                 player_units,
                 enemy_units,
-                rng,
                 trigger_target_id,
-                source_position_override,
-            );
-            target_ids
-                .first()
-                .and_then(|tid| {
-                    find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
-                        .map(|t| ctx.source.effective_health() > t.effective_health())
-                })
-                .unwrap_or(false)
+            )
+            .len() as u32;
+            compare_u32(count, *op, *value)
         }
-        AbilityCondition::SourceAttackLessThanTarget => {
-            let target_ids = get_targets(
-                ctx.source.instance_id,
-                ctx.source.team,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                source_position_override,
-            );
-            target_ids
-                .first()
-                .and_then(|tid| {
-                    find_unit(*tid, &player_units.to_vec(), &enemy_units.to_vec())
-                        .map(|t| ctx.source.effective_attack() < t.effective_attack())
-                })
-                .unwrap_or(false)
+        AbilityCondition::IsPosition { scope: _, index } => {
+            let allies = if ctx.source.team == Team::Player {
+                ctx.allies
+            } else {
+                ctx.allies
+            };
+            let actual_idx = if *index == -1 {
+                allies.len().saturating_sub(1)
+            } else {
+                *index as usize
+            };
+            ctx.source_position == actual_idx
         }
-
-        // Board state checks
-        AbilityCondition::AllyCountAtLeast { count } => ctx.allies.len() as u32 >= *count,
-        AbilityCondition::AllyCountAtMost { count } => ctx.allies.len() as u32 <= *count,
-        AbilityCondition::SourceIsFront => ctx.source_position == 0,
-        AbilityCondition::SourceIsBack => ctx.source_position == ctx.allies.len().saturating_sub(1),
-
-        // Logic gates
         AbilityCondition::And { left, right } => {
             evaluate_condition(
                 left,
@@ -1906,12 +1878,34 @@ fn evaluate_condition<R: BattleRng>(
     }
 }
 
+fn compare_i32(a: i32, op: CompareOp, b: i32) -> bool {
+    match op {
+        CompareOp::GreaterThan => a > b,
+        CompareOp::LessThan => a < b,
+        CompareOp::Equal => a == b,
+        CompareOp::GreaterThanOrEqual => a >= b,
+        CompareOp::LessThanOrEqual => a <= b,
+    }
+}
+
+fn compare_u32(a: u32, op: CompareOp, b: u32) -> bool {
+    match op {
+        CompareOp::GreaterThan => a > b,
+        CompareOp::LessThan => a < b,
+        CompareOp::Equal => a == b,
+        CompareOp::GreaterThanOrEqual => a >= b,
+        CompareOp::LessThanOrEqual => a <= b,
+    }
+}
+
 /// Helper to get the target from an effect
 fn get_effect_target(effect: &AbilityEffect) -> AbilityTarget {
     match effect {
         AbilityEffect::Damage { target, .. } => target.clone(),
         AbilityEffect::ModifyStats { target, .. } => target.clone(),
-        AbilityEffect::SpawnUnit { .. } => AbilityTarget::SelfUnit,
+        AbilityEffect::SpawnUnit { .. } => AbilityTarget::All {
+            scope: TargetScope::SelfUnit,
+        },
         AbilityEffect::Destroy { target } => target.clone(),
     }
 }

@@ -19,50 +19,102 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         return 'Battle Start';
       case 'onFaint':
         return 'When Dies';
+      case 'onAllyFaint':
+        return 'When Ally Dies';
+      case 'onHurt':
+        return 'When Hurt';
+      case 'onSpawn':
+        return 'On Spawn';
+      case 'onAllySpawn':
+        return 'Ally Spawned';
+      case 'onEnemySpawn':
+        return 'Enemy Spawned';
+      case 'beforeUnitAttack':
+        return 'Before Attacking';
+      case 'afterUnitAttack':
+        return 'After Attacking';
+      case 'beforeAnyAttack':
+        return 'Before Any Attack';
+      case 'afterAnyAttack':
+        return 'After Any Attack';
       default:
         return trigger;
     }
   };
 
   const getEffectDescription = (effect: any): string => {
+    if (!effect || typeof effect !== 'object') {
+      return 'Unknown effect';
+    }
+
     switch (effect.type) {
       case 'damage':
-        return `Deal ${effect.amount} damage to ${getTargetDescription(effect.target)}`;
-      case 'heal':
-        return `Heal ${effect.amount} health to ${getTargetDescription(effect.target)}`;
-      case 'attackBuff':
-        return `Give +${effect.amount} attack to ${getTargetDescription(effect.target)}`;
-      case 'healthBuff':
-        return `Give +${effect.amount} max health to ${getTargetDescription(effect.target)}`;
+        return `Deal ${effect.amount || 0} damage to ${getTargetDescription(effect.target)}`;
+      case 'modifyStats':
+        const h = effect.health || 0;
+        const a = effect.attack || 0;
+        return `Give ${a >= 0 ? '+' : ''}${a}/${h >= 0 ? '+' : ''}${h} to ${getTargetDescription(effect.target)}`;
       case 'spawnUnit':
-        return `Spawn a ${effect.templateId.replace('_', ' ')}`;
+        return `Spawn a ${effect.templateId ? effect.templateId.replace('_', ' ') : 'unit'}`;
+      case 'destroy':
+        return `Destroy ${getTargetDescription(effect.target)}`;
       default:
         return JSON.stringify(effect);
     }
   };
 
-  const getTargetDescription = (target: string): string => {
-    switch (target) {
-      case 'selfUnit':
-        return 'this unit';
-      case 'allAllies':
-        return 'all allies';
-      case 'allEnemies':
-        return 'all enemies';
-      case 'randomAlly':
-        return 'a random ally';
-      case 'randomEnemy':
-        return 'a random enemy';
-      case 'frontAlly':
-        return 'the front ally';
-      case 'frontEnemy':
-        return 'the front enemy';
-      case 'backAlly':
-        return 'the back ally';
-      case 'backEnemy':
-        return 'the back enemy';
+  const getTargetDescription = (target: any): string => {
+    if (!target || typeof target !== 'object') return 'unknown target';
+
+    const describeScope = (scope: string) => {
+      switch (scope) {
+        case 'selfUnit': return 'this unit';
+        case 'allies': return 'all allies';
+        case 'enemies': return 'all enemies';
+        case 'all': return 'all units';
+        case 'alliesOther': return 'all other allies';
+        case 'triggerSource': return 'the target';
+        case 'aggressor': return 'the attacker';
+        default: return scope;
+      }
+    };
+
+    const describeScopeSingular = (scope: string) => {
+      switch (scope) {
+        case 'selfUnit': return 'this unit';
+        case 'allies': return 'ally';
+        case 'enemies': return 'enemy';
+        case 'all': return 'unit';
+        case 'alliesOther': return 'other ally';
+        case 'triggerSource': return 'target';
+        case 'aggressor': return 'attacker';
+        default: return scope;
+      }
+    };
+
+    switch (target.type) {
+      case 'all':
+        return describeScope(target.data.scope);
+      case 'position':
+        const { scope, index } = target.data;
+        if (scope === 'selfUnit') {
+          if (index === -1) return 'the unit ahead';
+          if (index === 1) return 'the unit behind';
+          return 'this unit';
+        }
+        const posName = index === 0 ? 'front' : index === -1 ? 'back' : `slot ${index + 1}`;
+        return `the ${posName} ${describeScopeSingular(scope)}`;
+      case 'random':
+        return `a random ${describeScopeSingular(target.data.scope)}`;
+      case 'standard':
+        const { stat, order, count } = target.data;
+        const orderName = order === 'ascending' ? 'lowest' : 'highest';
+        const countStr = count === 1 ? 'the' : `the ${count}`;
+        return `${countStr} ${orderName} ${stat} ${describeScopeSingular(target.data.scope)}`;
+      case 'adjacent':
+        return `units adjacent to ${describeScope(target.data.scope)}`;
       default:
-        return target;
+        return 'unknown';
     }
   };
 

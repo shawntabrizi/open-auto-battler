@@ -3,8 +3,6 @@ use crate::battle::{BattleResult, CombatEvent, UnitId};
 use crate::state::GameState;
 use crate::types::*;
 
-// TODO: Move more tests to appropriate files and folders.
-
 // ==========================================
 // 1. SANITY CHECKS (Mana & Basic State)
 // ==========================================
@@ -129,7 +127,10 @@ fn test_targeting_logic_front_ally() {
         AbilityEffect::ModifyStats {
             health: 5,
             attack: 0,
-            target: AbilityTarget::FrontAlly,
+            target: AbilityTarget::Position {
+                scope: TargetScope::Allies,
+                index: 0,
+            },
         },
         "Buff",
     );
@@ -163,7 +164,7 @@ fn test_targeting_logic_front_ally() {
 fn test_berserker_combo() {
     // Setup: [Pain Smith, Raging Orc]
     // Pain Smith: OnStart -> 1. Damage(1, AllAllies), 2. Buff(+2, AllAllies)
-    // Raging Orc: 2/8. OnDamageTaken -> Buff(+2, Self).
+    // Raging Orc: 2/8. OnHurt -> Buff(+2, Self).
 
     // Construct Pain Smith (Manual)
     let smith_buff = create_ability(
@@ -171,7 +172,9 @@ fn test_berserker_combo() {
         AbilityEffect::ModifyStats {
             health: 0,
             attack: 2,
-            target: AbilityTarget::AllAllies,
+            target: AbilityTarget::All {
+                scope: TargetScope::Allies,
+            },
         },
         "Sharpen",
     );
@@ -179,7 +182,9 @@ fn test_berserker_combo() {
         AbilityTrigger::OnStart,
         AbilityEffect::Damage {
             amount: 1,
-            target: AbilityTarget::AllAllies,
+            target: AbilityTarget::All {
+                scope: TargetScope::Allies,
+            },
         },
         "Fire",
     );
@@ -191,11 +196,13 @@ fn test_berserker_combo() {
 
     // Construct Raging Orc
     let orc_rage = create_ability(
-        AbilityTrigger::OnDamageTaken,
+        AbilityTrigger::OnHurt,
         AbilityEffect::ModifyStats {
             health: 0,
             attack: 2,
-            target: AbilityTarget::SelfUnit,
+            target: AbilityTarget::All {
+                scope: TargetScope::SelfUnit,
+            },
         },
         "Berserk",
     );
@@ -208,15 +215,6 @@ fn test_berserker_combo() {
     let e_board = vec![create_dummy_enemy()];
 
     let events = run_battle(&p_board, &e_board, 42);
-
-    // Analyze final stats via events or just trust logic?
-    // Let's trace events for "AbilityModifyStats" on the Orc (ID 2).
-    // Expected events:
-    // 1. AbilityDamage (Smith -> Orc, 1 dmg). Orc HP 8->7.
-    // 2. AbilityTrigger (Orc, Berserk).
-    // 3. AbilityModifyStats (Orc -> Orc, +2 atk). Orc Atk 2->4.
-    // 4. AbilityModifyStats (Smith -> Orc, +2 atk). Orc Atk 4->6.
-    // Final Orc: 6/7.
 
     // Filter modify stats on target "p-2" (Unit 2)
     // Actually IDs are "p-1", "p-2". Orc is p-2.
@@ -254,16 +252,19 @@ fn test_berserker_combo() {
 #[test]
 fn test_fatal_damage_trigger() {
     // SCENARIO: Unit takes fatal damage but should still trigger its "OnHurt" ability.
-    // Player: "Martyr" (1/1). Ability: OnDamageTaken -> Deal 5 damage to FrontEnemy.
+    // Player: "Martyr" (1/1). Ability: OnHurt -> Deal 5 damage to FrontEnemy.
     // Enemy: "Killer" (10/10).
     // Result: Killer hits Martyr (10 dmg). Martyr dies (-9 HP). Martyr trigger fires (5 dmg to Killer).
     // Final Killer HP: 5.
 
     let revenge_shot = create_ability(
-        AbilityTrigger::OnDamageTaken,
+        AbilityTrigger::OnHurt,
         AbilityEffect::Damage {
             amount: 5,
-            target: AbilityTarget::FrontEnemy,
+            target: AbilityTarget::Position {
+                scope: TargetScope::Enemies,
+                index: 0,
+            },
         },
         "Revenge",
     );
@@ -299,45 +300,6 @@ fn test_fatal_damage_trigger() {
         "Revenge ability should trigger on fatal damage"
     );
 
-    // 3. Verify Damage to Killer
-    // Killer started with 10 HP. Took 1 damage from Martyr attack (clash) + 5 damage from Ability.
-    // Total damage: 6. Remaining HP: 4.
-    // Wait, did I set Martyr attack to 1? Yes.
-    // Clash: Martyr deals 1 to Killer. Killer deals 10 to Martyr.
-    // Martyr Trigger: Deals 5 to Killer.
-    // Total Killer Damage: 1 + 5 = 6.
-
-    // Find final HP update for Killer (e-1)
-    let _final_hp_event = events.iter().rev().find_map(|e| {
-        if let CombatEvent::DamageTaken {
-            target_instance_id,
-            remaining_hp,
-            ..
-        } = e
-        {
-            if *target_instance_id == UnitId::enemy(1) {
-                return Some(*remaining_hp);
-            }
-        }
-
-        // Also check AbilityDamage
-
-        if let CombatEvent::AbilityDamage {
-            target_instance_id,
-            remaining_hp,
-            ..
-        } = e
-        {
-            if *target_instance_id == UnitId::enemy(1) {
-                return Some(*remaining_hp);
-            }
-        }
-
-        None
-    });
-
-    // Let's just look for the specific AbilityDamage event
-
     let ability_dmg = events.iter().find(|e| {
         matches!(e, CombatEvent::AbilityDamage { target_instance_id, damage, .. }
                 if *target_instance_id == UnitId::enemy(1) && *damage == 5)
@@ -360,7 +322,10 @@ fn test_shield_squire_support() {
         AbilityEffect::ModifyStats {
             health: 2,
             attack: 0,
-            target: AbilityTarget::AllyAhead,
+            target: AbilityTarget::Position {
+                scope: TargetScope::SelfUnit,
+                index: -1,
+            },
         },
         "Squire Shield",
     );
@@ -399,7 +364,9 @@ fn test_attack_trigger_scopes() {
             AbilityEffect::ModifyStats {
                 health: 0,
                 attack: 1,
-                target: AbilityTarget::SelfUnit,
+                target: AbilityTarget::All {
+                    scope: TargetScope::SelfUnit,
+                },
             },
             "FrontUnitTrigger",
         )),
@@ -412,7 +379,9 @@ fn test_attack_trigger_scopes() {
                 AbilityEffect::ModifyStats {
                     health: 0,
                     attack: 1,
-                    target: AbilityTarget::SelfUnit,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::SelfUnit,
+                    },
                 },
                 "SupportUnitTrigger",
             ),
@@ -421,7 +390,9 @@ fn test_attack_trigger_scopes() {
                 AbilityEffect::ModifyStats {
                     health: 0,
                     attack: 1,
-                    target: AbilityTarget::SelfUnit,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::SelfUnit,
+                    },
                 },
                 "SupportAnyTrigger",
             ),
@@ -444,11 +415,6 @@ fn test_attack_trigger_scopes() {
         })
         .collect();
 
-    // EXPECTATION:
-    // 1. "FrontUnitTrigger" fires (Position 0)
-    // 2. "SupportAnyTrigger" fires (Position 1 is allowed for "Any")
-    // 3. "SupportUnitTrigger" DOES NOT fire (Position 1 is not front)
-
     assert!(triggers.contains(&"FrontUnitTrigger".to_string()));
     assert!(triggers.contains(&"SupportAnyTrigger".to_string()));
     assert!(
@@ -466,7 +432,9 @@ fn test_after_attack_trigger_scopes() {
             AbilityEffect::ModifyStats {
                 health: 0,
                 attack: 1,
-                target: AbilityTarget::SelfUnit,
+                target: AbilityTarget::All {
+                    scope: TargetScope::SelfUnit,
+                },
             },
             "FrontAfterUnit",
         )),
@@ -479,7 +447,9 @@ fn test_after_attack_trigger_scopes() {
                 AbilityEffect::ModifyStats {
                     health: 0,
                     attack: 1,
-                    target: AbilityTarget::SelfUnit,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::SelfUnit,
+                    },
                 },
                 "SupportAfterUnit",
             ),
@@ -488,7 +458,9 @@ fn test_after_attack_trigger_scopes() {
                 AbilityEffect::ModifyStats {
                     health: 0,
                     attack: 1,
-                    target: AbilityTarget::SelfUnit,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::SelfUnit,
+                    },
                 },
                 "SupportAfterAny",
             ),
@@ -526,16 +498,15 @@ fn test_unified_priority_cross_triggers() {
     // HighAtkFront: BeforeUnitAttack
     // LowAtkBack: BeforeAnyAttack
 
-    // EXPECTATION: HighAtkFront should trigger FIRST because it has higher power,
-    // even though it's a different trigger type than LowAtkBack.
-
     let high_atk_front = BoardUnit::from_card(
         UnitCard::new(1, "High", "High", 10, 10, 0, 0, false).with_ability(create_ability(
             AbilityTrigger::BeforeUnitAttack,
             AbilityEffect::ModifyStats {
                 health: 0,
                 attack: 1,
-                target: AbilityTarget::SelfUnit,
+                target: AbilityTarget::All {
+                    scope: TargetScope::SelfUnit,
+                },
             },
             "HighUnitTrigger",
         )),
@@ -547,7 +518,9 @@ fn test_unified_priority_cross_triggers() {
             AbilityEffect::ModifyStats {
                 health: 0,
                 attack: 1,
-                target: AbilityTarget::SelfUnit,
+                target: AbilityTarget::All {
+                    scope: TargetScope::SelfUnit,
+                },
             },
             "LowAnyTrigger",
         )),
@@ -580,19 +553,16 @@ fn test_unified_priority_cross_triggers() {
 
 #[test]
 fn test_infinite_battle_draw() {
-    // SCENARIO: Both sides have Goblin Grunt (2/2) + Shield Squire (2/3).
-    // Every round:
-    // 1. Squire buffs Grunt (+2 HP). Grunt is now 2/4.
-    // 2. Grunts clash (2 dmg). Grunt is back to 2/2.
-    // This repeats forever. The engine must catch it.
-
     let grunt = create_dummy_card(1, "Grunt", 2, 2);
     let squire = create_dummy_card(2, "Squire", 2, 3).with_ability(create_ability(
         AbilityTrigger::BeforeAnyAttack,
         AbilityEffect::ModifyStats {
             health: 2,
             attack: 0,
-            target: AbilityTarget::AllyAhead,
+            target: AbilityTarget::Position {
+                scope: TargetScope::SelfUnit,
+                index: -1,
+            },
         },
         "SquireShield",
     ));
@@ -605,7 +575,6 @@ fn test_infinite_battle_draw() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // 1. Verify Battle End result is DRAW
     let last_event = events.last().unwrap();
     if let CombatEvent::BattleEnd { result } = last_event {
         assert_eq!(
@@ -617,7 +586,6 @@ fn test_infinite_battle_draw() {
         panic!("Battle did not end correctly: {:?}", last_event);
     }
 
-    // 2. Verify LimitExceeded event exists
     let has_limit_exceeded = events
         .iter()
         .any(|e| matches!(e, CombatEvent::LimitExceeded { .. }));
@@ -633,29 +601,31 @@ fn test_infinite_battle_draw() {
 
 #[test]
 fn test_condition_target_health_threshold() {
-    // SCENARIO: "Nurse Goblin" heals ally ahead by +2 HP only if target HP <= 6.
-    // Test 1: Ally with 5 HP should be healed.
-    // Test 2: Ally with 10 HP should NOT be healed.
-
-    // Helper to create nurse goblin
     let create_nurse = || {
         create_dummy_card(2, "Nurse", 1, 3).with_ability(Ability {
             trigger: AbilityTrigger::BeforeAnyAttack,
             effect: AbilityEffect::ModifyStats {
                 health: 2,
                 attack: 0,
-                target: AbilityTarget::AllyAhead,
+                target: AbilityTarget::Position {
+                    scope: TargetScope::SelfUnit,
+                    index: -1,
+                },
             },
             name: "Emergency Heal".to_string(),
             description: "Heal ally ahead if HP <= 6".to_string(),
-            condition: AbilityCondition::TargetHealthLessThanOrEqual { value: 6 },
+            condition: AbilityCondition::StatValueCompare {
+                scope: TargetScope::Allies,
+                stat: StatType::Health,
+                op: CompareOp::LessThanOrEqual,
+                value: 6,
+            },
             max_triggers: None,
         })
     };
 
-    // Test 1: Low HP ally SHOULD be healed
     {
-        let tank = create_dummy_card(1, "Tank", 5, 5); // HP = 5 <= 6, should heal
+        let tank = create_dummy_card(1, "Tank", 5, 5);
         let nurse = create_nurse();
         let enemy = create_dummy_card(3, "Enemy", 1, 10);
 
@@ -664,7 +634,6 @@ fn test_condition_target_health_threshold() {
 
         let events = run_battle(&p_board, &e_board, 123);
 
-        // Look for the heal trigger
         let heal_triggered = events.iter().any(|e| {
             if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
                 ability_name == "Emergency Heal"
@@ -676,9 +645,8 @@ fn test_condition_target_health_threshold() {
         assert!(heal_triggered, "Nurse should heal ally with HP <= 6");
     }
 
-    // Test 2: High HP ally should NOT be healed
     {
-        let tank = create_dummy_card(1, "Tank", 5, 10); // HP = 10 > 6, should NOT heal
+        let tank = create_dummy_card(1, "Tank", 5, 10);
         let nurse = create_nurse();
         let enemy = create_dummy_card(3, "Enemy", 1, 5);
 
@@ -687,7 +655,6 @@ fn test_condition_target_health_threshold() {
 
         let events = run_battle(&p_board, &e_board, 456);
 
-        // Nurse's ability should NOT trigger
         let heal_triggered = events.iter().any(|e| {
             if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
                 ability_name == "Emergency Heal"
@@ -702,26 +669,27 @@ fn test_condition_target_health_threshold() {
 
 #[test]
 fn test_condition_ally_count() {
-    // SCENARIO: "Pack Leader" buffs all allies +1/+1 only if ally count >= 3.
-    // Test 1: With 3 allies, buff should trigger.
-    // Test 2: With 2 allies, buff should NOT trigger.
-
     let create_pack_leader = || {
         create_dummy_card(1, "PackLeader", 2, 3).with_ability(Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::ModifyStats {
                 health: 1,
                 attack: 1,
-                target: AbilityTarget::AllAllies,
+                target: AbilityTarget::All {
+                    scope: TargetScope::Allies,
+                },
             },
             name: "Pack Tactics".to_string(),
             description: "Buff all allies if 3+ allies".to_string(),
-            condition: AbilityCondition::AllyCountAtLeast { count: 3 },
+            condition: AbilityCondition::UnitCount {
+                scope: TargetScope::Allies,
+                op: CompareOp::GreaterThanOrEqual,
+                value: 3,
+            },
             max_triggers: None,
         })
     };
 
-    // Test 1: 3 allies (leader + 2 others) - SHOULD trigger
     {
         let leader = create_pack_leader();
         let ally1 = create_dummy_card(2, "Ally1", 1, 1);
@@ -748,7 +716,6 @@ fn test_condition_ally_count() {
         assert!(buff_triggered, "Pack Leader should buff when 3+ allies");
     }
 
-    // Test 2: 2 allies (leader + 1 other) - should NOT trigger
     {
         let leader = create_pack_leader();
         let ally1 = create_dummy_card(2, "Ally1", 1, 1);
@@ -776,24 +743,27 @@ fn test_condition_ally_count() {
 
 #[test]
 fn test_condition_last_stand() {
-    // SCENARIO: "Lone Wolf" gains +5 attack only when it's the sole ally.
-
     let create_lone_wolf = || {
         create_dummy_card(1, "LoneWolf", 2, 4).with_ability(Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::ModifyStats {
                 health: 0,
                 attack: 5,
-                target: AbilityTarget::SelfUnit,
+                target: AbilityTarget::All {
+                    scope: TargetScope::SelfUnit,
+                },
             },
             name: "Last Stand".to_string(),
             description: "Gain +5 attack if alone".to_string(),
-            condition: AbilityCondition::AllyCountAtMost { count: 1 },
+            condition: AbilityCondition::UnitCount {
+                scope: TargetScope::Allies,
+                op: CompareOp::LessThanOrEqual,
+                value: 1,
+            },
             max_triggers: None,
         })
     };
 
-    // Test 1: Alone - SHOULD trigger
     {
         let wolf = create_lone_wolf();
         let enemy = create_dummy_card(2, "Enemy", 3, 5);
@@ -817,7 +787,6 @@ fn test_condition_last_stand() {
         );
     }
 
-    // Test 2: With ally - should NOT trigger
     {
         let wolf = create_lone_wolf();
         let ally = create_dummy_card(2, "Ally", 1, 1);
@@ -845,27 +814,35 @@ fn test_condition_last_stand() {
 
 #[test]
 fn test_condition_logic_gates() {
-    // SCENARIO: Test AND condition - buff only if HP <= 5 AND ally count >= 2.
-
     let create_conditional_unit = || {
         create_dummy_card(1, "Conditional", 2, 3).with_ability(Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::ModifyStats {
                 health: 0,
                 attack: 3,
-                target: AbilityTarget::SelfUnit,
+                target: AbilityTarget::All {
+                    scope: TargetScope::SelfUnit,
+                },
             },
             name: "Complex Condition".to_string(),
             description: "Buff if HP <= 5 AND 2+ allies".to_string(),
             condition: AbilityCondition::And {
-                left: Box::new(AbilityCondition::SourceHealthLessThanOrEqual { value: 5 }),
-                right: Box::new(AbilityCondition::AllyCountAtLeast { count: 2 }),
+                left: Box::new(AbilityCondition::StatValueCompare {
+                    scope: TargetScope::SelfUnit,
+                    stat: StatType::Health,
+                    op: CompareOp::LessThanOrEqual,
+                    value: 5,
+                }),
+                right: Box::new(AbilityCondition::UnitCount {
+                    scope: TargetScope::Allies,
+                    op: CompareOp::GreaterThanOrEqual,
+                    value: 2,
+                }),
             },
             max_triggers: None,
         })
     };
 
-    // Test 1: HP=3 (<=5) AND 2 allies - SHOULD trigger
     {
         let unit = create_conditional_unit();
         let ally = create_dummy_card(2, "Ally", 1, 1);
@@ -887,7 +864,6 @@ fn test_condition_logic_gates() {
         assert!(triggered, "Should trigger when both AND conditions are met");
     }
 
-    // Test 2: HP=3 (<=5) BUT only 1 ally - should NOT trigger
     {
         let unit = create_conditional_unit();
         let enemy = create_dummy_card(3, "Enemy", 1, 5);
@@ -914,17 +890,15 @@ fn test_condition_logic_gates() {
 
 #[test]
 fn test_ally_behind_on_faint_buffs_correctly() {
-    // SCENARIO: Martyr Knight (2/3) is in front, a 5/5 ally is behind.
-    // Enemy has a 10/10 that will kill the Martyr Knight.
-    // On death, Martyr Knight's "Last Stand" should give the ally behind +2/+2.
-    // The ally behind should become 7/7.
-
     let martyr = create_dummy_card(1, "Martyr", 2, 3).with_ability(Ability {
         trigger: AbilityTrigger::OnFaint,
         effect: AbilityEffect::ModifyStats {
             health: 2,
             attack: 2,
-            target: AbilityTarget::AllyBehind,
+            target: AbilityTarget::Position {
+                scope: TargetScope::SelfUnit,
+                index: 1,
+            },
         },
         name: "Last Stand".to_string(),
         description: "Give the ally behind +2/+2 on death".to_string(),
@@ -942,7 +916,6 @@ fn test_ally_behind_on_faint_buffs_correctly() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // The Martyr should die and trigger Last Stand
     let trigger_event = events.iter().find(|e| {
             matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Last Stand")
         });
@@ -951,7 +924,6 @@ fn test_ally_behind_on_faint_buffs_correctly() {
         "Last Stand should trigger on Martyr's death"
     );
 
-    // The ally behind should receive the +2/+2 buff
     let buff_event = events.iter().find(|e| {
         if let CombatEvent::AbilityModifyStats {
             target_instance_id,
@@ -973,16 +945,15 @@ fn test_ally_behind_on_faint_buffs_correctly() {
 
 #[test]
 fn test_ally_behind_on_faint_with_lich_sacrifice() {
-    // SCENARIO from real game: [MK, MK, MK, Lich, MK] vs [MK, MK, Lich]
-    // Lich destroys the ally ahead (MK3). MK3's Last Stand should buff
-    // the ally behind MK3 (which is the Lich itself, now at that position).
-
     let mk_ability = Ability {
         trigger: AbilityTrigger::OnFaint,
         effect: AbilityEffect::ModifyStats {
             health: 2,
             attack: 2,
-            target: AbilityTarget::AllyBehind,
+            target: AbilityTarget::Position {
+                scope: TargetScope::SelfUnit,
+                index: 1,
+            },
         },
         name: "Last Stand".to_string(),
         description: "Give the ally behind +2/+2 on death".to_string(),
@@ -997,7 +968,10 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
         Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::Destroy {
-                target: AbilityTarget::AllyAhead,
+                target: AbilityTarget::Position {
+                    scope: TargetScope::SelfUnit,
+                    index: -1,
+                },
             },
             name: "Ritual".to_string(),
             description: "Sacrifice the ally in front".to_string(),
@@ -1023,7 +997,10 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
         Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::Destroy {
-                target: AbilityTarget::AllyAhead,
+                target: AbilityTarget::Position {
+                    scope: TargetScope::SelfUnit,
+                    index: -1,
+                },
             },
             name: "Ritual".to_string(),
             description: "Sacrifice the ally in front".to_string(),
@@ -1057,8 +1034,6 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // MK3 is sacrificed by Lich. Its Last Stand should trigger and buff the Lich
-    // (the ally behind MK3).
     let mk3_trigger = events.iter().find(|e| {
         if let CombatEvent::AbilityTrigger {
             source_instance_id,
@@ -1075,7 +1050,6 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
         "MK3's Last Stand should trigger when sacrificed by Lich"
     );
 
-    // The buff should land on the Lich (instance 4), which was behind MK3
     let lich_buff = events.iter().find(|e| {
         if let CombatEvent::AbilityModifyStats {
             source_instance_id,
@@ -1101,25 +1075,25 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
 
 #[test]
 fn test_destroy_exact_health() {
-    // SCENARIO: Destroy effect should deal exactly the unit's current health.
-
     let reaper_ability = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::Destroy {
-            target: AbilityTarget::FrontEnemy,
+            target: AbilityTarget::Position {
+                scope: TargetScope::Enemies,
+                index: 0,
+            },
         },
         "GrimReaper",
     );
 
     let reaper = create_dummy_card(1, "Reaper", 1, 1).with_ability(reaper_ability);
-    let victim = create_dummy_card(2, "Victim", 1, 42); // 42 Health
+    let victim = create_dummy_card(2, "Victim", 1, 42);
 
     let p_board = vec![BoardUnit::from_card(reaper)];
     let e_board = vec![BoardUnit::from_card(victim)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Find the AbilityDamage event
     let damage = events
         .iter()
         .find_map(|e| {

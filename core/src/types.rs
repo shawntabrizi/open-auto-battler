@@ -15,65 +15,88 @@ use serde::{Deserialize, Serialize};
 /// Unique identifier for cards
 pub type CardId = u32;
 
+/// Scope for targeting and condition evaluation
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
+pub enum TargetScope {
+    SelfUnit,
+    Allies,
+    Enemies,
+    All,
+    AlliesOther,
+    TriggerSource,
+    Aggressor,
+}
+
+/// Stat types for targeting and comparison
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
+pub enum StatType {
+    Health,
+    Attack,
+    Mana,
+}
+
+/// Sort order for stat-based targeting
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
+pub enum SortOrder {
+    Ascending,
+    Descending,
+}
+
+/// Comparison operators for conditions
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
+pub enum CompareOp {
+    GreaterThan,
+    LessThan,
+    Equal,
+    GreaterThanOrEqual,
+    LessThanOrEqual,
+}
+
 /// Conditions that must be met for an ability to activate
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(tag = "type", rename_all = "camelCase"))]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "data", rename_all = "camelCase"))]
 pub enum AbilityCondition {
     /// No condition, always triggers (default)
     None,
 
-    // ==========================================
-    // TARGET STAT CHECKS
-    // ==========================================
-    /// Target's health is <= threshold (e.g., "Execute: if target HP <= 5")
-    TargetHealthLessThanOrEqual { value: i32 },
-    /// Target's health is > threshold (e.g., "Tank Buster: if target HP > 10")
-    TargetHealthGreaterThan { value: i32 },
-    /// Target's attack is <= threshold (e.g., "Bully: if target ATK <= 2")
-    TargetAttackLessThanOrEqual { value: i32 },
-    /// Target's attack is > threshold (e.g., "Giant Slayer: if target ATK > 5")
-    TargetAttackGreaterThan { value: i32 },
+    /// Compare a unit's stat to a constant value
+    StatValueCompare {
+        scope: TargetScope,
+        stat: StatType,
+        op: CompareOp,
+        value: i32,
+    },
 
-    // ==========================================
-    // SOURCE STAT CHECKS
-    // ==========================================
-    /// Source's health is <= threshold (e.g., "Desperate: if my HP <= 3")
-    SourceHealthLessThanOrEqual { value: i32 },
-    /// Source's health is > threshold (e.g., "Healthy: if my HP > 5")
-    SourceHealthGreaterThan { value: i32 },
-    /// Source's attack is <= threshold
-    SourceAttackLessThanOrEqual { value: i32 },
-    /// Source's attack is > threshold (e.g., "Powered Up: if my ATK > 5")
-    SourceAttackGreaterThan { value: i32 },
+    /// Compare one unit's stat to another unit's stat
+    StatStatCompare {
+        source_stat: StatType,
+        op: CompareOp,
+        target_scope: TargetScope,
+        target_stat: StatType,
+    },
 
-    // ==========================================
-    // COMPARATIVE CHECKS
-    // ==========================================
-    /// Source has more attack than the target (e.g., "Dominate")
-    SourceAttackGreaterThanTarget,
-    /// Source has less health than the target (e.g., "Underdog")
-    SourceHealthLessThanTarget,
-    /// Source has more health than the target (e.g., "Tank")
-    SourceHealthGreaterThanTarget,
-    /// Source has less attack than the target (e.g., "Outmatched")
-    SourceAttackLessThanTarget,
+    /// Count units in a scope and compare to a value
+    UnitCount {
+        scope: TargetScope,
+        op: CompareOp,
+        value: u32,
+    },
 
-    // ==========================================
-    // BOARD STATE
-    // ==========================================
-    /// Ally count (including self) is >= threshold (e.g., "Swarm: if 3+ allies")
-    AllyCountAtLeast { count: u32 },
-    /// Ally count (including self) is <= threshold (e.g., "Last Stand: if <= 2 allies")
-    AllyCountAtMost { count: u32 },
-    /// Source is in the front position (index 0)
-    SourceIsFront,
-    /// Source is in the back position (last index)
-    SourceIsBack,
+    /// Check if unit is at a specific position
+    IsPosition {
+        scope: TargetScope,
+        index: i32,
+    },
 
-    // ==========================================
-    // LOGIC GATES
-    // ==========================================
     /// Both conditions must be true
     And {
         left: Box<AbilityCondition>,
@@ -102,7 +125,7 @@ pub enum AbilityTrigger {
     OnStart,
     OnFaint,
     OnAllyFaint,
-    OnDamageTaken,
+    OnHurt,
     OnSpawn,
     OnAllySpawn,
     OnEnemySpawn,
@@ -110,7 +133,6 @@ pub enum AbilityTrigger {
     AfterUnitAttack,
     BeforeAnyAttack,
     AfterAnyAttack,
-    // Future: OnAttack, OnDamage, etc.
 }
 
 /// Ability effect types
@@ -130,36 +152,28 @@ pub enum AbilityEffect {
     SpawnUnit { template_id: String },
     /// Destroy a target directly
     Destroy { target: AbilityTarget },
-    // Future: RedirectDamage, etc.
 }
 
 /// Ability target specifications
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "data", rename_all = "camelCase"))]
 pub enum AbilityTarget {
-    SelfUnit,
-    TriggerTarget,
-    AllAllies,
-    AllEnemies,
-    AllUnits,
-    RandomAlly,
-    RandomAllyOther,
-    RandomEnemy,
-    FrontAlly,
-    FrontEnemy,
-    BackAlly,
-    BackEnemy,
-    AllyUnitPosition(u32),
-    EnemyUnitPosition(u32),
-    AllyAhead,
-    AllyBehind,
-    LowestHealthEnemy,
-    HighestAttackEnemy,
-    HighestHealthEnemy,
-    LowestAttackEnemy,
-    HighestManaEnemy,
-    LowestManaEnemy,
+    /// Specific position (0=front, -1=back). scope=SelfUnit means relative.
+    Position { scope: TargetScope, index: i32 },
+    /// Neighbors of the unit(s) in scope.
+    Adjacent { scope: TargetScope },
+    /// Random units from scope.
+    Random { scope: TargetScope, count: u32 },
+    /// Selection based on stats (e.g., Highest Attack).
+    Standard {
+        scope: TargetScope,
+        stat: StatType,
+        order: SortOrder,
+        count: u32,
+    },
+    /// Everyone in scope.
+    All { scope: TargetScope },
 }
 
 /// A unit ability

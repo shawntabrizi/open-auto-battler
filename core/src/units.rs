@@ -6,7 +6,10 @@ use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 
-use crate::types::{Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger};
+use crate::types::{
+    Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, CompareOp, SortOrder,
+    StatType, TargetScope,
+};
 
 /// Card template for creating starter deck cards
 pub struct CardTemplate {
@@ -77,7 +80,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 2,
                     attack: 0,
-                    target: AbilityTarget::BackAlly,
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::SelfUnit,
+                        index: 1,
+                    },
                 },
                 name: String::from("Hiss"),
                 description: String::from("Give the ally behind +2 Health at start"),
@@ -98,7 +104,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 2,
                     attack: 2,
-                    target: AbilityTarget::RandomAllyOther,
+                    target: AbilityTarget::Random {
+                        scope: TargetScope::AlliesOther,
+                        count: 1,
+                    },
                 },
                 name: String::from("Command"),
                 description: String::from("Give a random other ally +2/+2 at start"),
@@ -129,7 +138,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 2,
                     attack: 0,
-                    target: AbilityTarget::FrontAlly,
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::Allies,
+                        index: 0,
+                    },
                 },
                 name: String::from("Shield Wall"),
                 description: String::from("Heal front ally for 2 at start"),
@@ -150,11 +162,19 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 2,
                     attack: 0,
-                    target: AbilityTarget::FrontAlly,
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::Allies,
+                        index: 0,
+                    },
                 },
                 name: String::from("Emergency Heal"),
                 description: String::from("Heal front ally for 2 if its health is <= 6"),
-                condition: AbilityCondition::TargetHealthLessThanOrEqual { value: 6 },
+                condition: AbilityCondition::StatValueCompare {
+                    scope: TargetScope::Allies, // Will check target front unit via get_targets
+                    stat: StatType::Health,
+                    op: CompareOp::LessThanOrEqual,
+                    value: 6,
+                },
                 max_triggers: None,
             }],
             is_token: false,
@@ -173,7 +193,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnFaint,
                 effect: AbilityEffect::Damage {
                     amount: 2,
-                    target: AbilityTarget::FrontEnemy,
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::Enemies,
+                        index: 0,
+                    },
                 },
                 name: String::from("Dying Bite"),
                 description: String::from("Deal 2 damage to front enemy on death"),
@@ -194,7 +217,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 2,
                     attack: 2,
-                    target: AbilityTarget::AllyBehind,
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::SelfUnit,
+                        index: 1,
+                    },
                 },
                 name: String::from("Last Stand"),
                 description: String::from("Give the ally behind +2/+2 on death"),
@@ -214,7 +240,9 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnFaint,
                 effect: AbilityEffect::Damage {
                     amount: 3,
-                    target: AbilityTarget::AllUnits,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::All,
+                    },
                 },
                 name: String::from("Abyssal Blast"),
                 description: String::from("Deal 3 damage to ALL units on death"),
@@ -234,7 +262,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::Damage {
                     amount: 1,
-                    target: AbilityTarget::BackEnemy,
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::Enemies,
+                        index: -1,
+                    },
                 },
                 name: String::from("Long Shot"),
                 description: String::from("Deal 1 damage to the back enemy at start"),
@@ -254,7 +285,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::Damage {
                     amount: 2,
-                    target: AbilityTarget::BackEnemy,
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::Enemies,
+                        index: -1,
+                    },
                 },
                 name: String::from("Assassinate"),
                 description: String::from("Deal 2 damage to the back enemy at start"),
@@ -274,7 +308,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::Damage {
                     amount: 2,
-                    target: AbilityTarget::RandomEnemy,
+                    target: AbilityTarget::Random {
+                        scope: TargetScope::Enemies,
+                        count: 1,
+                    },
                 },
                 name: String::from("Bone Arrow"),
                 description: String::from("Deal 2 damage to a random enemy at start"),
@@ -296,7 +333,9 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     effect: AbilityEffect::ModifyStats {
                         health: 2,
                         attack: 0,
-                        target: AbilityTarget::SelfUnit,
+                        target: AbilityTarget::All {
+                            scope: TargetScope::SelfUnit,
+                        },
                     },
                     name: String::from("Brace"),
                     description: String::from("Gain +2 health before attacking"),
@@ -308,7 +347,9 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     effect: AbilityEffect::ModifyStats {
                         health: 0,
                         attack: 2,
-                        target: AbilityTarget::SelfUnit,
+                        target: AbilityTarget::All {
+                            scope: TargetScope::SelfUnit,
+                        },
                     },
                     name: String::from("Adrenaline"),
                     description: String::from("Gain +2 attack after attacking"),
@@ -330,11 +371,17 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 0,
                     attack: 5,
-                    target: AbilityTarget::SelfUnit,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::SelfUnit,
+                    },
                 },
                 name: String::from("Last Stand"),
                 description: String::from("Gain +5 attack if you are the only ally"),
-                condition: AbilityCondition::AllyCountAtMost { count: 1 },
+                condition: AbilityCondition::UnitCount {
+                    scope: TargetScope::Allies,
+                    op: CompareOp::LessThanOrEqual,
+                    value: 1,
+                },
                 max_triggers: None,
             }],
             is_token: false,
@@ -351,11 +398,17 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 1,
                     attack: 1,
-                    target: AbilityTarget::AllAllies,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::Allies,
+                    },
                 },
                 name: String::from("Strength in Numbers"),
                 description: String::from("Give all allies +1/+1 if you have 3+ allies"),
-                condition: AbilityCondition::AllyCountAtLeast { count: 3 },
+                condition: AbilityCondition::UnitCount {
+                    scope: TargetScope::Allies,
+                    op: CompareOp::GreaterThanOrEqual,
+                    value: 3,
+                },
                 max_triggers: None,
             }],
             is_token: false,
@@ -368,10 +421,12 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             play_cost: 2,
             pitch_value: 2,
             abilities: vec![Ability {
-                trigger: AbilityTrigger::OnDamageTaken,
+                trigger: AbilityTrigger::OnHurt,
                 effect: AbilityEffect::Damage {
                     amount: 1,
-                    target: AbilityTarget::TriggerTarget,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::TriggerSource,
+                    },
                 },
                 name: String::from("Spines"),
                 description: String::from("Deal 1 damage to the attacker when hurt"),
@@ -392,7 +447,9 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 2,
                     attack: 0,
-                    target: AbilityTarget::SelfUnit,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::SelfUnit,
+                    },
                 },
                 name: String::from("Lifesteal"),
                 description: String::from("Heal 2 health after attacking"),
@@ -409,11 +466,13 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             play_cost: 4,
             pitch_value: 2,
             abilities: vec![Ability {
-                trigger: AbilityTrigger::OnDamageTaken,
+                trigger: AbilityTrigger::OnHurt,
                 effect: AbilityEffect::ModifyStats {
                     health: 0,
                     attack: 2,
-                    target: AbilityTarget::SelfUnit,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::SelfUnit,
+                    },
                 },
                 name: String::from("Berserk"),
                 description: String::from("Gain +2 attack when hurt"),
@@ -453,7 +512,9 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 0,
                     attack: 2,
-                    target: AbilityTarget::TriggerTarget,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::TriggerSource,
+                    },
                 },
                 name: String::from("Spawn Boost"),
                 description: String::from("Give +2 attack to any spawned unit"),
@@ -473,7 +534,12 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::Damage {
                     amount: 5,
-                    target: AbilityTarget::LowestHealthEnemy,
+                    target: AbilityTarget::Standard {
+                        scope: TargetScope::Enemies,
+                        stat: StatType::Health,
+                        order: SortOrder::Ascending,
+                        count: 1,
+                    },
                 },
                 name: String::from("Assassinate"),
                 description: String::from("Deal 5 damage to the enemy with the lowest health"),
@@ -493,7 +559,12 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::Damage {
                     amount: 3,
-                    target: AbilityTarget::HighestAttackEnemy,
+                    target: AbilityTarget::Standard {
+                        scope: TargetScope::Enemies,
+                        stat: StatType::Attack,
+                        order: SortOrder::Descending,
+                        count: 1,
+                    },
                 },
                 name: String::from("Weak Point"),
                 description: String::from("Deal 3 damage to the enemy with the highest attack"),
@@ -514,7 +585,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 2,
                     attack: 0,
-                    target: AbilityTarget::AllyAhead,
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::SelfUnit,
+                        index: -1,
+                    },
                 },
                 name: String::from("Squire's Aegis"),
                 description: String::from("Give unit in front +2 health before every clash"),
@@ -534,7 +608,9 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnEnemySpawn,
                 effect: AbilityEffect::Damage {
                     amount: 1,
-                    target: AbilityTarget::TriggerTarget,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::TriggerSource,
+                    },
                 },
                 name: String::from("Seal Fate"),
                 description: String::from("Deal 1 damage to any enemy that spawns"),
@@ -557,7 +633,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::Damage {
                     amount: 5,
-                    target: AbilityTarget::EnemyUnitPosition(2),
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::Enemies,
+                        index: 2,
+                    },
                 },
                 name: String::from("Artillery Strike"),
                 description: String::from("Deal 5 damage to enemy in 3rd slot (pos 2) at start"),
@@ -578,7 +657,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 3,
                     attack: 3,
-                    target: AbilityTarget::AllyUnitPosition(4),
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::Allies,
+                        index: 4,
+                    },
                 },
                 name: String::from("Supply Line"),
                 description: String::from("Give unit in 5th slot (pos 4) +3/+3 at start"),
@@ -598,7 +680,9 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnFaint,
                 effect: AbilityEffect::Damage {
                     amount: 3,
-                    target: AbilityTarget::AllEnemies,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::Enemies,
+                    },
                 },
                 name: String::from("Death Nova"),
                 description: String::from("Deal 3 damage to all enemies on death"),
@@ -618,7 +702,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 Ability {
                     trigger: AbilityTrigger::OnStart,
                     effect: AbilityEffect::Destroy {
-                        target: AbilityTarget::AllyAhead,
+                        target: AbilityTarget::Position {
+                            scope: TargetScope::SelfUnit,
+                            index: -1,
+                        },
                     },
                     name: String::from("Ritual"),
                     description: String::from("Sacrifice the ally in front..."),
@@ -648,11 +735,19 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             abilities: vec![Ability {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::Destroy {
-                    target: AbilityTarget::FrontEnemy,
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::Enemies,
+                        index: 0,
+                    },
                 },
                 name: String::from("Execute"),
                 description: String::from("Destroy front enemy if its health is <= 10"),
-                condition: AbilityCondition::TargetHealthLessThanOrEqual { value: 10 },
+                condition: AbilityCondition::StatValueCompare {
+                    scope: TargetScope::Enemies,
+                    stat: StatType::Health,
+                    op: CompareOp::LessThanOrEqual,
+                    value: 10,
+                },
                 max_triggers: None,
             }],
             is_token: false,
@@ -668,7 +763,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::AfterUnitAttack,
                 effect: AbilityEffect::Damage {
                     amount: 2,
-                    target: AbilityTarget::RandomEnemy,
+                    target: AbilityTarget::Random {
+                        scope: TargetScope::Enemies,
+                        count: 1,
+                    },
                 },
                 name: String::from("Spark"),
                 description: String::from("Deal 2 damage to a random enemy after attacking"),
@@ -689,7 +787,9 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 0,
                     attack: 3,
-                    target: AbilityTarget::SelfUnit,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::SelfUnit,
+                    },
                 },
                 name: String::from("Crushing Blow"),
                 description: String::from("Gain +3 attack at battle start"),
@@ -729,7 +829,9 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 effect: AbilityEffect::ModifyStats {
                     health: 3,
                     attack: 0,
-                    target: AbilityTarget::AllAllies,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::Allies,
+                    },
                 },
                 name: String::from("Guardian's Aura"),
                 description: String::from("Give ALL allies +3 health before every clash"),
@@ -751,7 +853,9 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     effect: AbilityEffect::ModifyStats {
                         health: 0,
                         attack: 2,
-                        target: AbilityTarget::SelfUnit,
+                        target: AbilityTarget::All {
+                            scope: TargetScope::SelfUnit,
+                        },
                     },
                     name: String::from("Leech"),
                     description: String::from("Steal 2 attack from the front enemy at start"),
@@ -763,7 +867,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     effect: AbilityEffect::ModifyStats {
                         health: 0,
                         attack: -2,
-                        target: AbilityTarget::FrontEnemy,
+                        target: AbilityTarget::Position {
+                            scope: TargetScope::Enemies,
+                            index: 0,
+                        },
                     },
                     name: String::from("Void Touch"),
                     description: String::from(" (Steal Effect Continued)"),
@@ -787,7 +894,12 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 Ability {
                     trigger: AbilityTrigger::OnStart,
                     effect: AbilityEffect::Destroy {
-                        target: AbilityTarget::HighestManaEnemy,
+                        target: AbilityTarget::Standard {
+                            scope: TargetScope::Enemies,
+                            stat: StatType::Mana,
+                            order: SortOrder::Descending,
+                            count: 1,
+                        },
                     },
                     name: String::from("Harvest the Rich"),
                     description: String::from("Destroy the highest mana cost enemy"),
@@ -797,7 +909,12 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 Ability {
                     trigger: AbilityTrigger::OnStart,
                     effect: AbilityEffect::Destroy {
-                        target: AbilityTarget::LowestManaEnemy,
+                        target: AbilityTarget::Standard {
+                            scope: TargetScope::Enemies,
+                            stat: StatType::Mana,
+                            order: SortOrder::Ascending,
+                            count: 1,
+                        },
                     },
                     name: String::from("Cull the Weak"),
                     description: String::from("Destroy the lowest mana cost enemy"),
@@ -818,7 +935,10 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::Damage {
                     amount: 4,
-                    target: AbilityTarget::FrontEnemy,
+                    target: AbilityTarget::Position {
+                        scope: TargetScope::Enemies,
+                        index: 0,
+                    },
                 },
                 name: String::from("Earthshaker"),
                 description: String::from("Deal 4 damage to front enemy at start"),
@@ -848,7 +968,9 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 trigger: AbilityTrigger::OnStart,
                 effect: AbilityEffect::Damage {
                     amount: 3,
-                    target: AbilityTarget::AllEnemies,
+                    target: AbilityTarget::All {
+                        scope: TargetScope::Enemies,
+                    },
                 },
                 name: String::from("Dragon Breath"),
                 description: String::from("Deal 3 damage to all enemies at start"),

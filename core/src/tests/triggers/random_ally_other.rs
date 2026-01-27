@@ -4,15 +4,15 @@ use crate::types::*;
 
 #[test]
 fn test_random_ally_other_targeting() {
-    // P: [Commander, Soldier]. Ability: OnStart -> +2/+2 to RandomAllyOther.
-    // Result: Soldier should get +2/+2. Commander should NOT get it.
-
     let commander_ability = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStats {
             health: 2,
             attack: 2,
-            target: AbilityTarget::RandomAllyOther,
+            target: AbilityTarget::Random {
+                scope: TargetScope::AlliesOther,
+                count: 1,
+            },
         },
         "Command",
     );
@@ -29,13 +29,11 @@ fn test_random_ally_other_targeting() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    // Verify Soldier (player id 2) got buffed
     let soldier_buffed = events.iter().any(|e| {
         matches!(e, CombatEvent::AbilityModifyStats { target_instance_id, health_change, attack_change, .. }
             if *target_instance_id == UnitId::player(2) && *health_change == 2 && *attack_change == 2)
     });
 
-    // Verify Commander (player id 1) did NOT get buffed
     let commander_buffed = events.iter().any(|e| {
         matches!(e, CombatEvent::AbilityModifyStats { target_instance_id, .. }
             if *target_instance_id == UnitId::player(1))
@@ -47,15 +45,15 @@ fn test_random_ally_other_targeting() {
 
 #[test]
 fn test_random_ally_other_fizzle() {
-    // P: [Commander]. Ability: OnStart -> +2/+2 to RandomAllyOther.
-    // Result: No buff event (no other allies).
-
     let commander_ability = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStats {
             health: 2,
             attack: 2,
-            target: AbilityTarget::RandomAllyOther,
+            target: AbilityTarget::Random {
+                scope: TargetScope::AlliesOther,
+                count: 1,
+            },
         },
         "Command",
     );
