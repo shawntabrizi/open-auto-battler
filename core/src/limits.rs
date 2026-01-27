@@ -3,7 +3,7 @@
 //! This module provides safeguards against runaway battle computations.
 
 use crate::battle::UnitId;
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
 #[cfg(feature = "std")]
@@ -15,7 +15,7 @@ pub const MAX_TRIGGERS_PER_PHASE: u32 = 200;
 pub const MAX_TRIGGER_DEPTH: u32 = 10;
 pub const MAX_BATTLE_ROUNDS: u32 = 100;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(rename_all = "SCREAMING_SNAKE_CASE"))]
 pub enum Team {
@@ -23,7 +23,7 @@ pub enum Team {
     Enemy,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(
     feature = "std",
@@ -38,7 +38,7 @@ pub enum LimitReason {
 }
 
 /// Tracks execution limits to prevent infinite loops and stack overflows
-#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Encode, Decode, TypeInfo, MaxEncodedLen)]
 pub struct BattleLimits {
     pub recursion_depth: u32,
     pub trigger_depth: u32,
