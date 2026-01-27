@@ -1263,6 +1263,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "auto-battle-node"
+version = "0.1.0"
+dependencies = [
+ "auto-battle-runtime",
+ "clap",
+ "color-print",
+ "docify",
+ "futures",
+ "jsonrpsee",
+ "log",
+ "polkadot-sdk 2503.0.1",
+ "serde",
+ "substrate-prometheus-endpoint",
+]
+
+[[package]]
+name = "auto-battle-runtime"
+version = "0.1.0"
+dependencies = [
+ "cumulus-pallet-parachain-system",
+ "docify",
+ "hex-literal",
+ "log",
+ "pallet-auto-battle",
+ "parity-scale-codec",
+ "polkadot-sdk 2503.0.1",
+ "scale-info",
+ "serde_json",
+ "smallvec",
+ "substrate-wasm-builder",
+]
+
+[[package]]
 name = "auto_impl"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8191,6 +8224,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-auto-battle"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "polkadot-sdk-frame",
+ "scale-info",
+]
+
+[[package]]
 name = "pallet-babe"
 version = "40.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9155,15 +9197,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-parachain-template"
-version = "0.1.0"
-dependencies = [
- "parity-scale-codec",
- "polkadot-sdk-frame",
- "scale-info",
-]
-
-[[package]]
 name = "pallet-parameters"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9988,39 +10021,6 @@ dependencies = [
  "sp-std",
  "staging-xcm",
  "staging-xcm-builder",
-]
-
-[[package]]
-name = "parachain-template-node"
-version = "0.1.0"
-dependencies = [
- "clap",
- "color-print",
- "docify",
- "futures",
- "jsonrpsee",
- "log",
- "parachain-template-runtime",
- "polkadot-sdk 2503.0.1",
- "serde",
- "substrate-prometheus-endpoint",
-]
-
-[[package]]
-name = "parachain-template-runtime"
-version = "0.1.0"
-dependencies = [
- "cumulus-pallet-parachain-system",
- "docify",
- "hex-literal",
- "log",
- "pallet-parachain-template",
- "parity-scale-codec",
- "polkadot-sdk 2503.0.1",
- "scale-info",
- "serde_json",
- "smallvec",
- "substrate-wasm-builder",
 ]
 
 [[package]]

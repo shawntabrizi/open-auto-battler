@@ -39,7 +39,7 @@ jobs:
         with:
           push: true
           tags: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-  
+
   release-binaries:
     runs-on: ubuntu-latest
     steps:
@@ -61,5 +61,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            target/production/parachain-template-node
-            target/production/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
+            target/production/auto-battle-node
+            target/production/wbuild/auto-battle-runtime/auto_battle_runtime.compact.compressed.wasm

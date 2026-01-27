@@ -23,7 +23,7 @@
 
   - [Omni Node](#omni-node-prerequisites)
   - [Zombienet setup with Omni Node](#zombienet-setup-with-omni-node)
-  - [Parachain Template Node](#parachain-template-node)
+  - [Parachain Template Node](#auto-battle-node)
   - [Connect with the Polkadot-JS Apps Front-End](#connect-with-the-polkadot-js-apps-front-end)
   - [Takeaways](#takeaways)
 
@@ -66,9 +66,9 @@ A Polkadot SDK based project such as this one consists of:
 Fetch parachain template code:
 
 ```sh
-git clone https://github.com/paritytech/polkadot-sdk-parachain-template.git parachain-template
+git clone https://github.com/paritytech/polkadot-sdk-auto-battle.git auto-battle
 
-cd parachain-template
+cd auto-battle
 ```
 
 ## Starting a Development Chain
@@ -91,7 +91,7 @@ be used to run the parachain template's runtime. `polkadot-omni-node` binary cra
 
 Please see the installation section at [`crates.io/omni-node`](https://crates.io/crates/polkadot-omni-node).
 
-#### Build `parachain-template-runtime`
+#### Build `auto-battle-runtime`
 
 ```sh
 cargo build --profile production
@@ -105,14 +105,14 @@ Please see the installation section at [`crates.io/staging-chain-spec-builder`](
 
 ```sh
 chain-spec-builder create --relay-chain "rococo-local" --para-id {{PARACHAIN_ID}} --runtime \
-    target/release/wbuild/parachain-template-runtime/parachain_template_runtime.wasm named-preset development
+    target/release/wbuild/auto-battle-runtime/auto_battle_runtime.wasm named-preset development
 ```
 
 **Note**: the `relay-chain` and `para-id` flags are mandatory information required by
 Omni Node, and for parachain template case the value for `para-id` must be set to `{{PARACHAIN_ID}}`, since this
 is also the value injected through [ParachainInfo](https://docs.rs/staging-parachain-info/0.17.0/staging_parachain_info/)
-pallet into the `parachain-template-runtime`'s storage. The `relay-chain` value is set in accordance
-with the relay chain ID where this instantiation of parachain-template will connect to.
+pallet into the `auto-battle-runtime`'s storage. The `relay-chain` value is set in accordance
+with the relay chain ID where this instantiation of auto-battle will connect to.
 
 #### Run Omni Node
 
@@ -146,7 +146,7 @@ export PATH="$PATH:<path/to/binaries>"
 
 #### Update `zombienet-omni-node.toml` with a valid chain spec path
 
-To simplify the process of using the parachain-template with zombienet and Omni Node, we've added a pre-configured
+To simplify the process of using the auto-battle with zombienet and Omni Node, we've added a pre-configured
 development chain spec (dev_chain_spec.json) to the parachain template. The zombienet-omni-node.toml file of this
 template points to it, but you can update it to an updated chain spec generated on your machine. To generate a
 chain spec refer to [staging-chain-spec-builder](https://crates.io/crates/staging-chain-spec-builder)
@@ -172,7 +172,7 @@ zombienet --provider native spawn zombienet-omni-node.toml
 As mentioned in the `Template Structure` section, the `node` crate is optionally compiled and it is an alternative
 to `Omni Node`. Similarly, it requires setting up a relay chain, and we'll use `zombienet` once more.
 
-#### Install the `parachain-template-node`
+#### Install the `auto-battle-node`
 
 ```sh
 cargo install --path node
@@ -222,12 +222,12 @@ To use `chopsticks`, please install the latest version according to the installa
 
 ### Build a raw chain spec
 
-Build the `parachain-template-runtime` as mentioned before in this guide and use `chain-spec-builder`
+Build the `auto-battle-runtime` as mentioned before in this guide and use `chain-spec-builder`
 again but this time by passing `--raw-storage` flag:
 
 ```sh
 chain-spec-builder create --raw-storage --relay-chain "rococo-local" --para-id {{PARACHAIN_ID}} --runtime \
-    target/release/wbuild/parachain-template-runtime/parachain_template_runtime.wasm named-preset development
+    target/release/wbuild/auto-battle-runtime/auto_battle_runtime.wasm named-preset development
 ```
 
 ### Start `chopsticks` with the chain spec
@@ -238,9 +238,9 @@ npx @acala-network/chopsticks@latest --chain-spec <path/to/chain_spec.json>
 
 ### Alternatives
 
-`OmniNode` can be still used for runtime development if using the `--dev` flag, while `parachain-template-node` doesn't
+`OmniNode` can be still used for runtime development if using the `--dev` flag, while `auto-battle-node` doesn't
 support it at this moment. It can still be used to test a runtime in a full setup where it is started alongside a
-relay chain network (see [Parachain Template node](#parachain-template-node) setup).
+relay chain network (see [Parachain Template node](#auto-battle-node) setup).
 
 ## Contributing
 

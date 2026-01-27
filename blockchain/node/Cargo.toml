@@ -1,5 +1,5 @@
 [package]
-name = "parachain-template-node"
+name = "auto-battle-node"
 description = "A parachain node template built with Substrate and Cumulus, part of Polkadot Sdk."
 version = "0.1.0"
 license = "Unlicense"
@@ -17,7 +17,7 @@ docify = { workspace = true }
 futures = { workspace = true }
 jsonrpsee = { features = ["server"], workspace = true }
 log = { workspace = true, default-features = true }
-parachain-template-runtime.workspace = true
+auto-battle-runtime.workspace = true
 polkadot-sdk = { workspace = true, features = ["node"] }
 prometheus-endpoint.default-features = true
 prometheus-endpoint.workspace = true
@@ -30,14 +30,14 @@ polkadot-sdk = { workspace = true, features = ["substrate-build-script-utils"] }
 default = ["std"]
 std = [
 	"log/std",
-	"parachain-template-runtime/std",
+	"auto-battle-runtime/std",
 	"polkadot-sdk/std",
 ]
 runtime-benchmarks = [
-	"parachain-template-runtime/runtime-benchmarks",
+	"auto-battle-runtime/runtime-benchmarks",
 	"polkadot-sdk/runtime-benchmarks",
 ]
 try-runtime = [
-	"parachain-template-runtime/try-runtime",
+	"auto-battle-runtime/try-runtime",
 	"polkadot-sdk/try-runtime",
 ]

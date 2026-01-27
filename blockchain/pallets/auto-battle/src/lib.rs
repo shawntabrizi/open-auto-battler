@@ -43,7 +43,7 @@
 //! - A **set of dispatchable functions** that define the pallet's functionality (denoted by the
 //!   `#[pallet::call]` attribute). See: [`dispatchables`].
 //!
-//! Run `cargo doc --package pallet-template --open` to view this pallet's documentation.
+//! Run `cargo doc --package pallet-auto-battle --open` to view this pallet's documentation.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 

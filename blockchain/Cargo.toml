@@ -2,21 +2,21 @@
 license = "MIT-0"
 authors = ["Parity Technologies <admin@parity.io>"]
 homepage = "https://paritytech.github.io/polkadot-sdk/"
-repository = "https://github.com/paritytech/polkadot-sdk-parachain-template.git"
+repository = "https://github.com/paritytech/polkadot-sdk-auto-battle.git"
 edition = "2021"
 
 [workspace]
-default-members = ["pallets/template", "runtime"]
+default-members = ["pallets/auto-battle", "runtime"]
 members = [
     "node",
-    "pallets/template",
+    "pallets/auto-battle",
     "runtime",
 ]
 resolver = "2"
 
 [workspace.dependencies]
-parachain-template-runtime = { path = "./runtime", default-features = false }
-pallet-parachain-template = { path = "./pallets/template", default-features = false }
+auto-battle-runtime = { path = "./runtime", default-features = false }
+pallet-auto-battle = { path = "./pallets/auto-battle", default-features = false }
 clap = { version = "4.5.13" }
 color-print = { version = "0.3.4" }
 docify = { version = "0.2.9" }
@@ -43,4 +43,3 @@ panic = "unwind"
 codegen-units = 1
 inherits = "release"
 lto = true
-

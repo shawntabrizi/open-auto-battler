@@ -1,4 +1,4 @@
-//! Benchmarking setup for pallet-template
+//! Benchmarking setup for pallet-auto-battle
 
 use super::*;
 use frame::{deps::frame_benchmarking::v2::*, prelude::*};
