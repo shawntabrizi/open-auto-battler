@@ -7239,6 +7239,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "manalimit-core"
+version = "0.2.0"
+dependencies = [
+ "bounded-collections",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+]
+
+[[package]]
 name = "maplit"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8227,6 +8237,7 @@ dependencies = [
 name = "pallet-auto-battle"
 version = "0.1.0"
 dependencies = [
+ "manalimit-core",
  "parity-scale-codec",
  "polkadot-sdk-frame",
  "scale-info",

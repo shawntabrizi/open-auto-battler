@@ -1,50 +1,3 @@
-//! # Template Pallet
-//!
-//! A pallet with minimal functionality to help developers understand the essential components of
-//! writing a FRAME pallet. It is typically used in beginner tutorials or in Polkadot SDK template
-//! as a starting point for creating a new pallet and **not meant to be used in production**.
-//!
-//! ## Overview
-//!
-//! This template pallet contains basic examples of:
-//! - declaring a storage item that stores a single block-number
-//! - declaring and using events
-//! - declaring and using errors
-//! - a dispatchable function that allows a user to set a new value to storage and emits an event
-//!   upon success
-//! - another dispatchable function that causes a custom error to be thrown
-//!
-//! Each pallet section is annotated with an attribute using the `#[pallet::...]` procedural macro.
-//! This macro generates the necessary code for a pallet to be aggregated into a FRAME runtime.
-//!
-//! To get started with pallet development, consider using this tutorial:
-//!
-//! <https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/guides/your_first_pallet/index.html>
-//!
-//! And reading the main documentation of the `frame` crate:
-//!
-//! <https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/polkadot_sdk/frame_runtime/index.html>
-//!
-//! And looking at the frame [`kitchen-sink`](https://paritytech.github.io/polkadot-sdk/master/pallet_example_kitchensink/index.html)
-//! pallet, a showcase of all pallet macros.
-//!
-//! ### Pallet Sections
-//!
-//! The pallet sections in this template are:
-//!
-//! - A **configuration trait** that defines the types and parameters which the pallet depends on
-//!   (denoted by the `#[pallet::config]` attribute). See: [`Config`].
-//! - A **means to store pallet-specific data** (denoted by the `#[pallet::storage]` attribute).
-//!   See: [`storage_types`].
-//! - A **declaration of the events** this pallet emits (denoted by the `#[pallet::event]`
-//!   attribute). See: [`Event`].
-//! - A **declaration of the errors** that this pallet can throw (denoted by the `#[pallet::error]`
-//!   attribute). See: [`Error`].
-//! - A **set of dispatchable functions** that define the pallet's functionality (denoted by the
-//!   `#[pallet::call]` attribute). See: [`dispatchables`].
-//!
-//! Run `cargo doc --package pallet-auto-battle --open` to view this pallet's documentation.
-
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use pallet::*;
@@ -55,128 +8,306 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-pub mod weights;
-
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
-// <https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/polkadot_sdk/frame_runtime/index.html>
-// <https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/guides/your_first_pallet/index.html>
-//
-// To see a full list of `pallet` macros and their use cases, see:
-// <https://paritytech.github.io/polkadot-sdk/master/pallet_example_kitchensink/index.html>
-// <https://paritytech.github.io/polkadot-sdk/master/frame_support/pallet_macros/index.html>
 #[frame::pallet]
 pub mod pallet {
 	use frame::prelude::*;
+	use frame::traits::{Randomness, Get};
+
+	// Import types from core engine
+	use manalimit_core::{
+		GameState, CommitTurnAction, verify_and_apply_turn,
+		UnitCard, GamePhase, BattleResult,
+	};
+	use manalimit_core::bounded::{
+		BoundedGameState as CoreBoundedGameState,
+		BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
+	};
+
+	#[pallet::pallet]
+	#[pallet::without_storage_info]
+	pub struct Pallet<T>(_);
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
+		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
-		/// A type representing the weights required by the dispatchables of this pallet.
-		type WeightInfo: crate::weights::WeightInfo;
+		/// Type representing the weight of this pallet
+		//type WeightInfo: (); // Using () for now until weights are generated
+
+		/// Source of randomness
+		type Randomness: Randomness<Self::Hash, BlockNumberFor<Self>>;
+
+		/// Maximum number of cards in the bag
+		#[pallet::constant]
+		type MaxBagSize: Get<u32>;
+
+		/// Maximum number of board slots
+		#[pallet::constant]
+		type MaxBoardSize: Get<u32>;
+
+		/// Maximum number of cards that can be played/pitched from hand in one turn.
+		#[pallet::constant]
+		type MaxHandActions: Get<u32>;
+
+		/// Maximum number of abilities per card.
+		#[pallet::constant]
+		type MaxAbilities: Get<u32>;
+
+		/// Maximum length of strings (names, descriptions, template IDs).
+		#[pallet::constant]
+		type MaxStringLen: Get<u32>;
 	}
 
-	#[pallet::pallet]
-	pub struct Pallet<T>(_);
+	/// Type alias for the bounded game state using pallet config.
+	pub type BoundedGameState<T> = CoreBoundedGameState<
+		<T as Config>::MaxBagSize,
+		<T as Config>::MaxBoardSize,
+		<T as Config>::MaxAbilities,
+		<T as Config>::MaxStringLen,
+	>;
 
-	/// A struct to store a single block-number. Has all the right derives to store it in storage.
-	/// <https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/reference_docs/frame_storage_derives/index.html>
-	#[derive(
-		Encode, Decode, MaxEncodedLen, TypeInfo, CloneNoBound, PartialEqNoBound, DefaultNoBound,
-	)]
+	/// Type alias for the bounded turn action using pallet config.
+	pub type BoundedCommitTurnAction<T> = CoreBoundedCommitTurnAction<
+		<T as Config>::MaxBoardSize,
+		<T as Config>::MaxAbilities,
+		<T as Config>::MaxStringLen,
+		<T as Config>::MaxHandActions,
+	>;
+
+	/// A game session stored on-chain.
+	#[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound)]
 	#[scale_info(skip_type_params(T))]
-	pub struct CompositeStruct<T: Config> {
-		/// A block number.
-		pub(crate) block_number: BlockNumberFor<T>,
+	pub struct GameSession<T: Config> {
+		pub state: BoundedGameState<T>,
+		pub current_seed: u64,
+		pub owner: T::AccountId,
 	}
 
-	/// The pallet's storage items.
-	/// <https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/guides/your_first_pallet/index.html#storage>
-	/// <https://paritytech.github.io/polkadot-sdk/master/frame_support/pallet_macros/attr.storage.html>
+	/// Map of Active Games: AccountId -> GameSession
 	#[pallet::storage]
-	pub type Something<T: Config> = StorageValue<_, CompositeStruct<T>>;
+	#[pallet::getter(fn active_game)]
+	pub type ActiveGame<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		GameSession<T>,
+		OptionQuery
+	>;
 
-	/// Pallets use events to inform users when important changes are made.
-	/// <https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/guides/your_first_pallet/index.html#event-and-error>
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// We usually use passive tense for events.
-		SomethingStored { block_number: BlockNumberFor<T>, who: T::AccountId },
+		/// A new game has started.
+		GameStarted { owner: T::AccountId, seed: u64 },
+		/// A turn has been committed (Shop Phase complete).
+		TurnCommitted { owner: T::AccountId, round: i32, new_seed: u64 },
+		/// A battle result has been reported (Battle Phase complete).
+		BattleReported { owner: T::AccountId, round: i32, result: BattleResult, new_seed: u64 },
 	}
 
-	/// Errors inform users that something went wrong.
-	/// <https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/guides/your_first_pallet/index.html#event-and-error>
 	#[pallet::error]
 	pub enum Error<T> {
-		/// Error names should be descriptive.
-		NoneValue,
-		/// Errors should have helpful documentation associated with them.
-		StorageOverflow,
+		/// User tried to submit a turn without starting a game.
+		NoActiveGame,
+		/// The turn action failed verification (e.g. invalid move, cheating).
+		InvalidTurn,
+		/// User tried to start a new game while one exists.
+		GameAlreadyActive,
+		/// Tried to perform an action in the wrong phase
+		WrongPhase,
 	}
 
-	#[pallet::hooks]
-	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
-
-	/// Dispatchable functions allows users to interact with the pallet and invoke state changes.
-	/// These functions materialize as "extrinsics", which are often compared to transactions.
-	/// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
-	/// <https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/guides/your_first_pallet/index.html#dispatchables>
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// An example dispatchable that takes a singles value as a parameter, writes the value to
-		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
+		/// Start a new game session.
+		/// Generates a random seed and initializes the game state with a mock deck.
 		#[pallet::call_index(0)]
-		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().writes(1))]
-		pub fn do_something(origin: OriginFor<T>, bn: u32) -> DispatchResultWithPostInfo {
-			// Check that the extrinsic was signed and get the signer.
-			// This function will return an error if the extrinsic is not signed.
-			// <https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/reference_docs/frame_origin/index.html>
+		#[pallet::weight(10_000)] // TODO: Calculate weights
+		pub fn start_game(origin: OriginFor<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			// Convert the u32 into a block number. This is possible because the set of trait bounds
-			// defined in [`frame_system::Config::BlockNumber`].
-			let block_number: BlockNumberFor<T> = bn.into();
+			ensure!(!ActiveGame::<T>::contains_key(&who), Error::<T>::GameAlreadyActive);
 
-			// Update storage.
-			<Something<T>>::put(CompositeStruct { block_number });
+			// Generate initial seed
+			let seed = Self::generate_next_seed(&who, b"start_game");
 
-			// Emit an event.
-			Self::deposit_event(Event::SomethingStored { block_number, who });
+			// Create initial state
+			let mut state = GameState::new(seed);
 
-			// Return a successful [`DispatchResultWithPostInfo`] or [`DispatchResult`].
-			Ok(().into())
+			// Initialize with mock bag (Rat cards)
+			// In the future this would come from a "Set" or "Deck" selection
+			state.bag = Self::get_mock_genesis_bag();
+
+			let session = GameSession {
+				state: state.into(),
+				current_seed: seed,
+				owner: who.clone(),
+			};
+
+			ActiveGame::<T>::insert(&who, session);
+
+			Self::deposit_event(Event::GameStarted { owner: who, seed });
+
+			Ok(())
 		}
 
-		/// An example dispatchable that may throw a custom error.
+		/// Submit actions for the Shop Phase.
+		/// Verifies the moves using the core engine and updates the state.
 		#[pallet::call_index(1)]
-		#[pallet::weight(Weight::from_parts(10_000, 0) + T::DbWeight::get().reads_writes(1,1))]
-		pub fn cause_error(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
-			let _who = ensure_signed(origin)?;
+		#[pallet::weight(10_000)]
+		pub fn submit_shop_phase(origin: OriginFor<T>, action: BoundedCommitTurnAction<T>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
 
-			// Read a value from storage.
-			match <Something<T>>::get() {
-				// Return an error if the value has not been set.
-				None => Err(Error::<T>::NoneValue)?,
-				Some(mut old) => {
-					// Increment the value read from storage; will error in the event of overflow.
-					old.block_number = old
-						.block_number
-						.checked_add(&One::one())
-						// ^^ equivalent is to:
-						// .checked_add(&1u32.into())
-						// both of which build a `One` instance for the type `BlockNumber`.
-						.ok_or(Error::<T>::StorageOverflow)?;
-					// Update the value in storage with the incremented result.
-					<Something<T>>::put(old);
-					// Explore how you can rewrite this using
-					// [`frame_support::storage::StorageValue::mutate`].
-					Ok(().into())
+			let mut session = ActiveGame::<T>::get(&who).ok_or(Error::<T>::NoActiveGame)?;
+
+			// Ensure we are in the correct phase
+			ensure!(session.state.phase == GamePhase::Shop, Error::<T>::WrongPhase);
+
+			// Convert to core state
+			let mut core_state: GameState = session.state.clone().into();
+			let core_action: CommitTurnAction = action.into();
+
+			// Verify and apply logic
+			verify_and_apply_turn(&mut core_state, &core_action)
+				.map_err(|_| Error::<T>::InvalidTurn)?;
+
+			// Set phase to battle
+			core_state.phase = GamePhase::Battle;
+
+			// If success, generate new seed for the battle phase
+			let new_seed = Self::generate_next_seed(&who, b"battle");
+			session.current_seed = new_seed;
+			core_state.game_seed = new_seed;
+
+			// Update session state
+			session.state = core_state.into();
+
+			ActiveGame::<T>::insert(&who, &session);
+
+			Self::deposit_event(Event::TurnCommitted {
+				owner: who,
+				round: session.state.round,
+				new_seed
+			});
+
+			Ok(())
+		}
+
+		/// Report the result of a battle (Optimistic).
+		/// Updates wins/lives and proceeds to next round.
+		#[pallet::call_index(2)]
+		#[pallet::weight(10_000)]
+		pub fn report_battle_outcome(origin: OriginFor<T>, result: BattleResult) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			let mut session = ActiveGame::<T>::get(&who).ok_or(Error::<T>::NoActiveGame)?;
+
+			// Ensure we are in the correct phase
+			ensure!(session.state.phase == GamePhase::Battle, Error::<T>::WrongPhase);
+
+			// Apply result
+			match result {
+				BattleResult::Victory => {
+					session.state.wins += 1;
 				},
+				BattleResult::Defeat => {
+					session.state.lives -= 1;
+				},
+				BattleResult::Draw => {
+					// No change in wins or lives usually
+				}
 			}
+
+			// Check Game Over
+			if session.state.lives <= 0 {
+				session.state.phase = GamePhase::Defeat;
+				// Remove session
+				ActiveGame::<T>::remove(&who);
+				Self::deposit_event(Event::BattleReported {
+					owner: who,
+					round: session.state.round,
+					result,
+					new_seed: 0, // Game over
+				});
+				return Ok(());
+			} else if session.state.wins >= 10 { // WINS_TO_VICTORY is 10 in core
+				session.state.phase = GamePhase::Victory;
+				ActiveGame::<T>::remove(&who);
+				Self::deposit_event(Event::BattleReported {
+					owner: who,
+					round: session.state.round,
+					result,
+					new_seed: 0, // Game over
+				});
+				return Ok(());
+			}
+
+			// Generate new seed for next Shop phase
+			let new_seed = Self::generate_next_seed(&who, b"shop");
+			session.current_seed = new_seed;
+			session.state.game_seed = new_seed;
+
+			// Capture completed round for event
+			let completed_round = session.state.round;
+
+			// Increment round for next phase
+			session.state.round += 1;
+			session.state.phase = GamePhase::Shop;
+
+			// Update mana limit for new round
+			// 3 + round - 1 = 2 + round
+			session.state.mana_limit = (2 + session.state.round).min(10);
+
+			ActiveGame::<T>::insert(&who, session);
+
+			Self::deposit_event(Event::BattleReported {
+				owner: who,
+				round: completed_round,
+				result,
+				new_seed,
+			});
+
+			Ok(())
+		}
+	}
+
+	impl<T: Config> Pallet<T> {
+		/// Helper to generate a unique seed per user/block/context
+		fn generate_next_seed(who: &T::AccountId, context: &[u8]) -> u64 {
+			let random = T::Randomness::random(context);
+			let mut seed_data = Vec::new();
+			seed_data.extend_from_slice(&random.0.encode());
+			seed_data.extend_from_slice(&who.encode());
+
+			// Simple hash to u64
+			let hash = frame::hashing::blake2_128(&seed_data);
+			let mut bytes = [0u8; 8];
+			bytes.copy_from_slice(&hash[0..8]);
+			u64::from_le_bytes(bytes)
+		}
+
+		/// Create a mock genesis bag of 10 "Rat" cards
+		fn get_mock_genesis_bag() -> Vec<UnitCard> {
+			let mut bag = Vec::new();
+			// Create 10 Rats
+			for i in 0..10 {
+				bag.push(UnitCard::new(
+					i + 1, // IDs 1-10
+					"rat",
+					"Rat",
+					1, // 1 Atk
+					1, // 1 HP
+					1, // 1 Mana Cost
+					1, // 1 Pitch Value
+					false,
+				));
+			}
+			bag
 		}
 	}
 }
