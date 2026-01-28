@@ -9,19 +9,49 @@ const DATA_WRAPPED_VARIANTS = [
 ];
 
 /**
+ * Helper to convert Map or Entries array to a plain object.
+ */
+const mapToRecord = (val: any, converter: (v: any) => any): Record<string, any> => {
+  const res: Record<string, any> = {};
+  if (val instanceof Map) {
+    val.forEach((v, k) => {
+      const keyStr = typeof k === 'object' && k !== null && 'value' in k ? String(k.value) : String(k);
+      res[keyStr] = converter(v);
+    });
+  } else if (Array.isArray(val)) {
+    // Check if it looks like entries [[k, v], ...]
+    for (const item of val) {
+      if (Array.isArray(item) && item.length === 2) {
+        const k = item[0];
+        const v = item[1];
+        const keyStr = typeof k === 'object' && k !== null && 'value' in k ? String(k.value) : String(k);
+        res[keyStr] = converter(v);
+      }
+    }
+  }
+  return res;
+};
+
+/**
  * Deep flattens any value to a plain JSON-safe object.
  * - Converts undefined to null (for Option::None)
  * - Converts BigInt to number
  * - Strips Proxies and class instances to plain objects
  */
 const deepFlatten = (val: any): any => {
-  if (val === undefined) return null;
-  if (val === null) return null;
+  if (val === undefined || val === null) return null;
   if (typeof val === 'boolean' || typeof val === 'string' || typeof val === 'number') return val;
   if (typeof val === 'bigint') return Number(val);
   if (typeof val === 'function') return null;
 
+  if (val instanceof Map) {
+    return mapToRecord(val, deepFlatten);
+  }
+
   if (Array.isArray(val)) {
+    // If it's an array of pairs, it MIGHT be a map, but we'll keep it as an array
+    // unless we specifically know we want a map. For deepFlatten, we'll keep it
+    // as an array to be safe, unless it's explicitly a Map instance.
     return val.map(deepFlatten);
   }
 
@@ -38,11 +68,6 @@ const deepFlatten = (val: any): any => {
 
 /**
  * Converts on-chain data (from PAPI) to the format expected by the WASM engine (Serde).
- *
- * This function performs three critical transformations:
- * 1. Deep Flatten: Strips all Proxies, Classes, and Getters by copying to plain objects
- * 2. Enum Fix: Converts PAPI Enums {type, value} to Serde-compatible tags
- * 3. BigInt: Converts all BigInt to number to prevent TypeError during JSON.stringify
  */
 export const chainStateToWasm = (val: any): any => {
   if (val === null || val === undefined) return val;
@@ -54,41 +79,35 @@ export const chainStateToWasm = (val: any): any => {
     return Number(val);
   }
 
-  // Robust check for Binary without instanceof
+  // Robust check for Binary
   if (val && typeof val === 'object' && typeof val.asText === 'function' && val.asBytes) {
     return val.asText();
   }
 
-  // Robust check for PAPI Enum without instanceof
+  // Robust check for PAPI Enum
   if (val && typeof val === 'object' && 'type' in val && 'value' in val) {
     const type = val.type;
     const value = val.value;
 
     if (value === undefined) {
-      // Unit variants handling:
-      // - AbilityCondition::None is adjacently tagged and needs: { type: "None" }
-      // - Other simple enum variants like TargetScope::Allies are plain strings: "Allies"
-      // Note: Option::None typically comes as null/undefined from PAPI, not {type: "None"}
-      if (type === "None") {
-         return { type };
-      }
+      if (type === "None") return { type };
       return type;
     }
 
     const processedValue = chainStateToWasm(value);
 
-    // If it's an object (not array/primitive), handle tagging
     if (processedValue && typeof processedValue === 'object' && !Array.isArray(processedValue)) {
        if (DATA_WRAPPED_VARIANTS.includes(type)) {
          return { type, data: processedValue };
        } else {
-         // Internally tagged: { type: "Variant", ...fields }
          return { type, ...processedValue };
        }
     }
-
-    // Default: externally tagged { Variant: value }
     return { [type]: processedValue };
+  }
+
+  if (val instanceof Map) {
+    return mapToRecord(val, chainStateToWasm);
   }
 
   if (Array.isArray(val)) {
@@ -96,22 +115,28 @@ export const chainStateToWasm = (val: any): any => {
   }
 
   if (typeof val === 'object') {
-    // Avoid processing already processed or non-plain objects
-    // But still recurse into them after flattening
     const res: Record<string, any> = {};
     for (const key in val) {
       if (Object.prototype.hasOwnProperty.call(val, key)) {
         try {
           res[key] = chainStateToWasm(val[key]);
-        } catch {
-          // Skip properties that throw
-        }
+        } catch { /* ignore */ }
       }
     }
     return res;
   }
 
   return val;
+};
+
+/**
+ * Specifically convert map-like data (Map or entries array) to a Record.
+ */
+export const ensureRecord = (val: any): Record<string, any> => {
+  if (val instanceof Map) return mapToRecord(val, prepareForJsonBridge);
+  if (Array.isArray(val)) return mapToRecord(val, prepareForJsonBridge);
+  if (val && typeof val === 'object') return prepareForJsonBridge(val);
+  return {};
 };
 
 /**

@@ -13,7 +13,7 @@ import {
 } from "@polkadot-labs/hdkd-helpers"
 import { getPolkadotSigner } from "polkadot-api/signer"
 import { AccountId } from "@polkadot-api/substrate-bindings";
-import { prepareForJsonBridge, extractSeedBigInt, wasmActionToChain } from '../utils/chainConvert';
+import { prepareForJsonBridge, extractSeedBigInt, wasmActionToChain, ensureRecord } from '../utils/chainConvert';
 
 interface BlockchainStore {
   client: any;
@@ -159,7 +159,16 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
             
             // 1. Sanitize: Convert PAPI types and deep flatten to plain objects
             const cleanState = prepareForJsonBridge(game.state);
-            const cleanCardPool = prepareForJsonBridge(cardSet.card_pool);
+            // The cardSet might be returned as the map itself if it's a single-field struct
+            const cleanCardPool = ensureRecord(cardSet);
+
+            if (!cleanCardPool || Object.keys(cleanCardPool).length === 0) {
+              console.error("Clean card pool is empty or invalid!", { 
+                rawCardSet: cardSet, 
+                clean: cleanCardPool 
+              });
+              throw new Error("Failed to prepare card pool for WASM");
+            }
 
             // 2. Reconstruct full GameState for WASM
             const fullState = {
@@ -173,7 +182,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
               game_seed: fullState.game_seed,
               next_card_id: fullState.next_card_id,
               board: fullState.board,
-              card_pool_size: Object.keys(fullState.card_pool).length,
+              card_pool_size: fullState.card_pool ? Object.keys(fullState.card_pool).length : 0,
             });
 
             // 3. Extract seed safely (handles BigInt) - must pass as BigInt for u64
