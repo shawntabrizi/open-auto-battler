@@ -78,9 +78,8 @@ export function Shop() {
       <div className="flex h-full">
         {/* Left: Ash Pile */}
         <div
-          className={`w-32 flex flex-col items-center justify-center border-r border-gray-700 transition-colors duration-200 ${
-            isAshHovered ? 'bg-red-900/30' : ''
-          }`}
+          className={`w-32 flex flex-col items-center justify-center border-r border-gray-700 transition-colors duration-200 ${isAshHovered ? 'bg-red-900/30' : ''
+            }`}
           onDragOver={handleAshDragOver}
           onDragLeave={handleAshDragLeave}
           onMouseEnter={handleAshMouseEnter}
@@ -89,11 +88,10 @@ export function Shop() {
         >
           <div className="text-sm text-gray-400 mb-2">Ash Pile</div>
           <div
-            className={`w-16 h-16 rounded-full bg-gradient-to-br from-red-900 to-orange-800 flex items-center justify-center text-2xl shadow-lg transition-all cursor-pointer border-2 border-orange-500/50 ${
-              isAshHovered
-                ? 'shadow-red-400/80 scale-110 ring-4 ring-red-400/30'
-                : 'shadow-red-900/50 hover:shadow-red-700/70'
-            }`}
+            className={`w-16 h-16 rounded-full bg-gradient-to-br from-red-900 to-orange-800 flex items-center justify-center text-2xl shadow-lg transition-all cursor-pointer border-2 border-orange-500/50 ${isAshHovered
+              ? 'shadow-red-400/80 scale-110 ring-4 ring-red-400/30'
+              : 'shadow-red-900/50 hover:shadow-red-700/70'
+              }`}
             onClick={(e) => {
               e.stopPropagation();
               if (selection?.type === 'hand') {

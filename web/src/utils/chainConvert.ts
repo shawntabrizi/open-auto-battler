@@ -1,4 +1,4 @@
-import { Binary, Enum } from "polkadot-api";
+import { Binary } from "polkadot-api";
 
 /**
  * List of enum variants that use #[serde(tag = "type", content = "data")]
@@ -14,19 +14,21 @@ const DATA_WRAPPED_VARIANTS = [
 export const chainStateToWasm = (val: any): any => {
   if (val === null || val === undefined) return val;
 
-  if (val instanceof Binary) {
+  // Robust check for Binary without instanceof
+  if (val && typeof val === 'object' && typeof val.asText === 'function' && val.asBytes) {
     return val.asText();
   }
 
-  if (val instanceof Enum) {
-    const enumVal = val as any;
-    const type = enumVal.type;
-    const value = enumVal.value;
+  // Robust check for PAPI Enum without instanceof
+  if (val && typeof val === 'object' && 'type' in val && 'value' in val) {
+    const type = val.type;
+    const value = val.value;
 
     if (value === undefined) {
-      // For unit variants, check if they belong to a tagged enum type
-      // Heuristic: If it's "None", "SelfUnit", etc.
-      if (["None", "SelfUnit", "Allies", "Enemies", "All", "AlliesOther", "TriggerSource", "Aggressor"].includes(type)) {
+      // Unit variants
+      // AbilityCondition::None is tagged and needs wrapping: { type: "None" }
+      // Other unit variants like TargetScope::Allies are plain: "Allies"
+      if (type === "None") {
          return { type };
       }
       return type; 
@@ -34,14 +36,17 @@ export const chainStateToWasm = (val: any): any => {
 
     const processedValue = chainStateToWasm(value);
 
-    if (typeof processedValue === 'object' && !Array.isArray(processedValue)) {
+    // If it's an object (not array/primitive), handle tagging
+    if (processedValue && typeof processedValue === 'object' && !Array.isArray(processedValue)) {
        if (DATA_WRAPPED_VARIANTS.includes(type)) {
          return { type, data: processedValue };
        } else {
+         // Internally tagged: { type: "Variant", ...fields }
          return { type, ...processedValue };
        }
     }
 
+    // Default: externally tagged { Variant: value }
     return { [type]: processedValue };
   }
 
@@ -50,6 +55,10 @@ export const chainStateToWasm = (val: any): any => {
   }
 
   if (typeof val === 'object') {
+    // Avoid processing already processed or non-plain objects
+    if (val.constructor && val.constructor.name !== 'Object' && val.constructor.name !== 'Array') {
+        return val;
+    }
     const res: any = {};
     for (const key in val) {
       res[key] = chainStateToWasm(val[key]);

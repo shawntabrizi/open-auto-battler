@@ -143,11 +143,13 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
           try {
             // Convert PAPI types to WASM-friendly format
             const stateObj = chainStateToWasm(game.state);
+            console.log("Cleaned state for WASM:", stateObj);
+            
             engine.set_state(stateObj);
             
             // Immediately update the view from the synchronized engine
             const newView = engine.get_view();
-            console.log("WASM engine synced. New bag count:", newView.bag_count);
+            console.log("WASM engine synced successfully. View:", newView);
             useGameStore.setState({ view: newView });
           } catch (e) {
             console.error("Failed to sync engine with chain state:", e);
