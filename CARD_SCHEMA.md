@@ -12,7 +12,6 @@ The core structure is defined in `core/src/types.rs`. We use a flat `UnitCard` s
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct UnitCard {
     pub id: CardId,             // Unique runtime ID (u32)
     pub template_id: String,    // "static_id" (e.g., "goblin_looter")
@@ -28,14 +27,12 @@ pub struct UnitCard {
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct UnitStats {
     pub attack: i32,
     pub health: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct EconomyStats {
     pub play_cost: i32,    // Blue Gem: Cost to play
     pub pitch_value: i32,  // Red Flame: Mana gained when burned
@@ -83,7 +80,6 @@ pub enum CompareOp {
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Ability {
     pub name: String,
     pub description: String,
@@ -123,7 +119,7 @@ pub enum AbilityTrigger {
 Defines *who* is affected using composable logic.
 
 ```rust
-#[serde(tag = "type", content = "data", rename_all = "camelCase")]
+#[serde(tag = "type", content = "data")]
 pub enum AbilityTarget {
     /// Specific position (0=front, -1=back). scope=SelfUnit means relative (-1 ahead, 1 behind).
     Position { scope: TargetScope, index: i32 },
@@ -148,7 +144,7 @@ pub enum AbilityTarget {
 Composable logic gates.
 
 ```rust
-#[serde(tag = "type", content = "data", rename_all = "camelCase")]
+#[serde(tag = "type", content = "data")]
 pub enum AbilityCondition {
     None,
     /// Compare a unit's stat to a constant value
@@ -173,21 +169,21 @@ pub enum AbilityCondition {
 
 ```json
 {
-  "templateId": "headhunter",
+  "template_id": "headhunter",
   "name": "Headhunter",
   "abilities": [
     {
       "name": "Assassinate",
-      "trigger": "onStart",
+      "trigger": "OnStart",
       "effect": {
-        "type": "damage",
+        "type": "Damage",
         "amount": 5,
         "target": {
-          "type": "standard",
+          "type": "Standard",
           "data": {
-            "scope": "enemies",
-            "stat": "health",
-            "order": "ascending",
+            "scope": "Enemies",
+            "stat": "Health",
+            "order": "Ascending",
             "count": 1
           }
         }
@@ -201,27 +197,27 @@ pub enum AbilityCondition {
 
 ```json
 {
-  "templateId": "nurse_goblin",
+  "template_id": "nurse_goblin",
   "name": "Nurse Goblin",
   "abilities": [
     {
       "name": "Emergency Heal",
-      "trigger": "beforeAnyAttack",
+      "trigger": "BeforeAnyAttack",
       "effect": {
-        "type": "modifyStats",
+        "type": "ModifyStats",
         "health": 2,
         "attack": 0,
         "target": {
-          "type": "position",
-          "data": { "scope": "allies", "index": 0 }
+          "type": "Position",
+          "data": { "scope": "Allies", "index": 0 }
         }
       },
       "condition": {
-        "type": "statValueCompare",
+        "type": "StatValueCompare",
         "data": {
-          "scope": "allies",
-          "stat": "health",
-          "op": "lessThanOrEqual",
+          "scope": "Allies",
+          "stat": "Health",
+          "op": "LessThanOrEqual",
           "value": 6
         }
       }

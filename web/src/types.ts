@@ -1,19 +1,19 @@
 // Composable ability building blocks
-export type TargetScope = 'selfUnit' | 'allies' | 'enemies' | 'all' | 'alliesOther' | 'triggerSource' | 'aggressor';
-export type StatType = 'health' | 'attack' | 'mana';
-export type SortOrder = 'ascending' | 'descending';
-export type CompareOp = 'greaterThan' | 'lessThan' | 'equal' | 'greaterThanOrEqual' | 'lessThanOrEqual';
+export type TargetScope = 'SelfUnit' | 'Allies' | 'Enemies' | 'All' | 'AlliesOther' | 'TriggerSource' | 'Aggressor';
+export type StatType = 'Health' | 'Attack' | 'Mana';
+export type SortOrder = 'Ascending' | 'Descending';
+export type CompareOp = 'GreaterThan' | 'LessThan' | 'Equal' | 'GreaterThanOrEqual' | 'LessThanOrEqual';
 
 // Ability condition types
 export type AbilityCondition =
-  | { type: 'none' }
-  | { type: 'statValueCompare'; data: { scope: TargetScope; stat: StatType; op: CompareOp; value: number } }
-  | { type: 'statStatCompare'; data: { sourceStat: StatType; op: CompareOp; targetScope: TargetScope; targetStat: StatType } }
-  | { type: 'unitCount'; data: { scope: TargetScope; op: CompareOp; value: number } }
-  | { type: 'isPosition'; data: { scope: TargetScope; index: number } }
-  | { type: 'and'; data: { left: AbilityCondition; right: AbilityCondition } }
-  | { type: 'or'; data: { left: AbilityCondition; right: AbilityCondition } }
-  | { type: 'not'; data: { inner: AbilityCondition } };
+  | { type: 'None' }
+  | { type: 'StatValueCompare'; data: { scope: TargetScope; stat: StatType; op: CompareOp; value: number } }
+  | { type: 'StatStatCompare'; data: { source_stat: StatType; op: CompareOp; target_scope: TargetScope; target_stat: StatType } }
+  | { type: 'UnitCount'; data: { scope: TargetScope; op: CompareOp; value: number } }
+  | { type: 'IsPosition'; data: { scope: TargetScope; index: number } }
+  | { type: 'And'; data: { left: AbilityCondition; right: AbilityCondition } }
+  | { type: 'Or'; data: { left: AbilityCondition; right: AbilityCondition } }
+  | { type: 'Not'; data: { inner: AbilityCondition } };
 
 // Ability types
 export interface Ability {
@@ -22,133 +22,133 @@ export interface Ability {
   name: string;
   description: string;
   condition?: AbilityCondition;
-  maxTriggers?: number;
+  max_triggers?: number;
 }
 
-export type AbilityTrigger = 'onStart' | 'onFaint' | 'onAllyFaint' | 'onHurt' | 'onSpawn' | 'onAllySpawn' | 'onEnemySpawn' | 'beforeUnitAttack' | 'afterUnitAttack' | 'beforeAnyAttack' | 'afterAnyAttack';
+export type AbilityTrigger = 'OnStart' | 'OnFaint' | 'OnAllyFaint' | 'OnHurt' | 'OnSpawn' | 'OnAllySpawn' | 'OnEnemySpawn' | 'BeforeUnitAttack' | 'AfterUnitAttack' | 'BeforeAnyAttack' | 'AfterAnyAttack';
 
 export type AbilityTarget =
-  | { type: 'position'; data: { scope: TargetScope; index: number } }
-  | { type: 'adjacent'; data: { scope: TargetScope } }
-  | { type: 'random'; data: { scope: TargetScope; count: number } }
-  | { type: 'standard'; data: { scope: TargetScope; stat: StatType; order: SortOrder; count: number } }
-  | { type: 'all'; data: { scope: TargetScope } };
+  | { type: 'Position'; data: { scope: TargetScope; index: number } }
+  | { type: 'Adjacent'; data: { scope: TargetScope } }
+  | { type: 'Random'; data: { scope: TargetScope; count: number } }
+  | { type: 'Standard'; data: { scope: TargetScope; stat: StatType; order: SortOrder; count: number } }
+  | { type: 'All'; data: { scope: TargetScope } };
 
 export type AbilityEffect =
-  | { type: 'damage'; amount: number; target: AbilityTarget }
-  | { type: 'modifyStats'; health: number; attack: number; target: AbilityTarget }
-  | { type: 'spawnUnit'; templateId: string }
-  | { type: 'destroy'; target: AbilityTarget };
+  | { type: 'Damage'; amount: number; target: AbilityTarget }
+  | { type: 'ModifyStats'; health: number; attack: number; target: AbilityTarget }
+  | { type: 'SpawnUnit'; template_id: string }
+  | { type: 'Destroy'; target: AbilityTarget };
 
 // Types matching the Rust view structs
 
 export interface CardView {
   id: number;
-  templateId: string;
+  template_id: string;
   name: string;
   attack: number;
   health: number;
-  playCost: number;
-  pitchValue: number;
+  play_cost: number;
+  pitch_value: number;
   abilities: Ability[];
-  isToken: boolean;
+  is_token: boolean;
 }
 
 export interface BoardUnitView {
   id: number;
-  templateId: string;
+  template_id: string;
   name: string;
   attack: number;
   health: number;
-  playCost: number;
-  pitchValue: number;
+  play_cost: number;
+  pitch_value: number;
   abilities: Ability[];
-  isToken: boolean;
+  is_token: boolean;
 }
 
 export interface GameView {
   hand: (CardView | null)[];
   board: (BoardUnitView | null)[];
   mana: number;
-  manaLimit: number;
+  mana_limit: number;
   round: number;
   lives: number;
   wins: number;
-  phase: 'shop' | 'battle' | 'victory' | 'defeat';
+  phase: string; // Changed from enum to string to match Rust core/src/view.rs
   bag: CardView[];
-  bagCount: number;
-  canAfford: boolean[];
+  bag_count: number;
+  can_afford: boolean[];
 }
 
 //--- NEW BATTLE REPLAY TYPES ---
 
 export interface UnitView {
-  instanceId: number;
-  templateId: string;
+  instance_id: number;
+  template_id: string;
   name: string;
   attack: number;
   health: number;
   abilities: Ability[];
-  isToken: boolean;
+  is_token: boolean;
 }
 
-export type Team = 'PLAYER' | 'ENEMY';
-export type BattleResult = 'VICTORY' | 'DEFEAT' | 'DRAW';
-export type BattlePhase = 'START' | 'BEFORE_ATTACK' | 'ATTACK' | 'AFTER_ATTACK' | 'END';
+export type Team = 'Player' | 'Enemy';
+export type BattleResult = 'Victory' | 'Defeat' | 'Draw';
+export type BattlePhase = 'Start' | 'BeforeAttack' | 'Attack' | 'AfterAttack' | 'End';
 
 export type LimitReason =
-  | { type: 'ROUND_LIMIT'; payload: { current: number; max: number } }
-  | { type: 'RECURSION_LIMIT'; payload: { current: number; max: number } }
-  | { type: 'SPAWN_LIMIT'; payload: { current: number; max: number } }
-  | { type: 'TRIGGER_LIMIT'; payload: { current: number; max: number } }
-  | { type: 'TRIGGER_DEPTH_LIMIT'; payload: { current: number; max: number } };
+  | { type: 'RoundLimit'; payload: { current: number; max: number } }
+  | { type: 'RecursionLimit'; payload: { current: number; max: number } }
+  | { type: 'SpawnLimit'; payload: { current: number; max: number } }
+  | { type: 'TriggerLimit'; payload: { current: number; max: number } }
+  | { type: 'TriggerDepthLimit'; payload: { current: number; max: number } };
 
 export type CombatEvent =
-  | { type: 'phaseStart'; payload: { phase: BattlePhase } }
-  | { type: 'phaseEnd'; payload: { phase: BattlePhase } }
-  | { type: 'abilityTrigger'; payload: { sourceInstanceId: number; abilityName: string } }
-  | { type: 'clash'; payload: { pDmg: number; eDmg: number } }
+  | { type: 'PhaseStart'; payload: { phase: BattlePhase } }
+  | { type: 'PhaseEnd'; payload: { phase: BattlePhase } }
+  | { type: 'AbilityTrigger'; payload: { source_instance_id: number; ability_name: string } }
+  | { type: 'Clash'; payload: { p_dmg: number; e_dmg: number } }
   | {
-      type: 'damageTaken';
-      payload: { targetInstanceId: number; team: Team; remainingHp: number };
+      type: 'DamageTaken';
+      payload: { target_instance_id: number; team: Team; remaining_hp: number };
     }
-  | { type: 'unitDeath'; payload: { team: Team; newBoardState: UnitView[] } }
-  | { type: 'battleEnd'; payload: { result: BattleResult } }
+  | { type: 'UnitDeath'; payload: { team: Team; new_board_state: UnitView[] } }
+  | { type: 'BattleEnd'; payload: { result: BattleResult } }
   | {
-      type: 'abilityDamage';
-      payload: { sourceInstanceId: number; targetInstanceId: number; damage: number; remainingHp: number };
+      type: 'AbilityDamage';
+      payload: { source_instance_id: number; target_instance_id: number; damage: number; remaining_hp: number };
     }
   | {
-      type: 'abilityModifyStats';
+      type: 'AbilityModifyStats';
       payload: {
-        sourceInstanceId: number;
-        targetInstanceId: number;
-        healthChange: number;
-        attackChange: number;
-        newAttack: number;
-        newHealth: number;
+        source_instance_id: number;
+        target_instance_id: number;
+        health_change: number;
+        attack_change: number;
+        new_attack: number;
+        new_health: number;
       };
     }
   | {
-      type: 'unitSpawn';
+      type: 'UnitSpawn';
       payload: {
         team: Team;
-        spawnedUnit: UnitView;
-        newBoardState: UnitView[];
+        spawned_unit: UnitView;
+        new_board_state: UnitView[];
       };
     }
   | {
-      type: 'limitExceeded';
+      type: 'LimitExceeded';
       payload: {
-        losingTeam: Team | null;
+        losing_team: Team | null;
         reason: LimitReason;
       };
     };
 
 export interface BattleOutput {
   events: CombatEvent[];
-  initialPlayerUnits: UnitView[];
-  initialEnemyUnits: UnitView[];
+  initial_player_units: UnitView[];
+  initial_enemy_units: UnitView[];
 }
 
 // Selection state for UI
@@ -161,17 +161,17 @@ export interface Selection {
 
 // Unit template for sandbox mode
 export interface UnitTemplateView {
-  templateId: string;
+  template_id: string;
   name: string;
   attack: number;
   health: number;
-  playCost: number;
-  pitchValue: number;
+  play_cost: number;
+  pitch_value: number;
   abilities: Ability[];
-  isToken: boolean;
+  is_token: boolean;
 }
 
 // Sandbox unit for custom battles
 export interface SandboxUnit {
-  templateId: string;
+  template_id: string;
 }

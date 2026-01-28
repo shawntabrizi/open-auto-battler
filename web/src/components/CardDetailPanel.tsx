@@ -45,27 +45,27 @@ export function CardDetailPanel({
 
     const getTriggerDescription = (trigger: string): string => {
       switch (trigger) {
-        case 'onStart':
+        case 'OnStart':
           return 'Battle Start';
-        case 'onFaint':
+        case 'OnFaint':
           return 'When Dies';
-        case 'onAllyFaint':
+        case 'OnAllyFaint':
           return 'When Ally Dies';
-        case 'onHurt':
+        case 'OnHurt':
           return 'When Hurt';
-        case 'onSpawn':
+        case 'OnSpawn':
           return 'On Spawn';
-        case 'onAllySpawn':
+        case 'OnAllySpawn':
           return 'Ally Spawned';
-        case 'onEnemySpawn':
+        case 'OnEnemySpawn':
           return 'Enemy Spawned';
-        case 'beforeUnitAttack':
+        case 'BeforeUnitAttack':
           return 'Before Attacking';
-        case 'afterUnitAttack':
+        case 'AfterUnitAttack':
           return 'After Attacking';
-        case 'beforeAnyAttack':
+        case 'BeforeAnyAttack':
           return 'Before Any Attack';
-        case 'afterAnyAttack':
+        case 'AfterAnyAttack':
           return 'After Any Attack';
         default:
           return trigger;
@@ -78,15 +78,15 @@ export function CardDetailPanel({
       }
 
       switch (effect.type) {
-        case 'damage':
+        case 'Damage':
           return `Deal ${effect.amount || 0} damage to ${getTargetDescription(effect.target)}`;
-        case 'modifyStats':
+        case 'ModifyStats':
           const h = effect.health || 0;
           const a = effect.attack || 0;
           return `Give ${a >= 0 ? '+' : ''}${a}/${h >= 0 ? '+' : ''}${h} to ${getTargetDescription(effect.target)}`;
-        case 'spawnUnit':
-          return `Spawn a ${effect.templateId ? effect.templateId.replace('_', ' ') : 'unit'}`;
-        case 'destroy':
+        case 'SpawnUnit':
+          return `Spawn a ${effect.template_id ? effect.template_id.replace('_', ' ') : 'unit'}`;
+        case 'Destroy':
           return `Destroy ${getTargetDescription(effect.target)}`;
         default:
           return JSON.stringify(effect);
@@ -98,50 +98,50 @@ export function CardDetailPanel({
 
       const describeScope = (scope: string) => {
         switch (scope) {
-          case 'selfUnit': return 'this unit';
-          case 'allies': return 'all allies';
-          case 'enemies': return 'all enemies';
-          case 'all': return 'all units';
-          case 'alliesOther': return 'all other allies';
-          case 'triggerSource': return 'the target';
-          case 'aggressor': return 'the attacker';
+          case 'SelfUnit': return 'this unit';
+          case 'Allies': return 'all allies';
+          case 'Enemies': return 'all enemies';
+          case 'All': return 'all units';
+          case 'AlliesOther': return 'all other allies';
+          case 'TriggerSource': return 'the target';
+          case 'Aggressor': return 'the attacker';
           default: return scope;
         }
       };
 
       const describeScopeSingular = (scope: string) => {
         switch (scope) {
-          case 'selfUnit': return 'this unit';
-          case 'allies': return 'ally';
-          case 'enemies': return 'enemy';
-          case 'all': return 'unit';
-          case 'alliesOther': return 'other ally';
-          case 'triggerSource': return 'target';
-          case 'aggressor': return 'attacker';
+          case 'SelfUnit': return 'this unit';
+          case 'Allies': return 'ally';
+          case 'Enemies': return 'enemy';
+          case 'All': return 'unit';
+          case 'AlliesOther': return 'other ally';
+          case 'TriggerSource': return 'target';
+          case 'Aggressor': return 'attacker';
           default: return scope;
         }
       };
 
       switch (target.type) {
-        case 'all':
+        case 'All':
           return describeScope(target.data.scope);
-        case 'position':
+        case 'Position':
           const { scope, index } = target.data;
-          if (scope === 'selfUnit') {
+          if (scope === 'SelfUnit') {
             if (index === -1) return 'the unit ahead';
             if (index === 1) return 'the unit behind';
             return 'this unit';
           }
           const posName = index === 0 ? 'front' : index === -1 ? 'back' : `slot ${index + 1}`;
           return `the ${posName} ${describeScopeSingular(scope)}`;
-        case 'random':
+        case 'Random':
           return `a random ${describeScopeSingular(target.data.scope)}`;
-        case 'standard':
+        case 'Standard':
           const { stat, order, count } = target.data;
-          const orderName = order === 'ascending' ? 'lowest' : 'highest';
+          const orderName = order === 'Ascending' ? 'lowest' : 'highest';
           const countStr = count === 1 ? 'the' : `the ${count}`;
           return `${countStr} ${orderName} ${stat} ${describeScopeSingular(target.data.scope)}`;
-        case 'adjacent':
+        case 'Adjacent':
           return `units adjacent to ${describeScope(target.data.scope)}`;
         default:
           return 'unknown';
@@ -164,7 +164,7 @@ export function CardDetailPanel({
                 }}
                 className="w-full btn btn-danger text-sm"
               >
-                Pitch Board Unit (+{card.pitchValue} mana)
+                Pitch Board Unit (+{card.pitch_value} mana)
               </button>
             ) : (
               // Hand card actions
@@ -178,7 +178,7 @@ export function CardDetailPanel({
                   }}
                   className="w-full btn btn-danger text-sm"
                 >
-                  Pitch (+{card.pitchValue} mana)
+                  Pitch (+{card.pitch_value} mana)
                 </button>
               </>
             )}
@@ -188,7 +188,7 @@ export function CardDetailPanel({
         {/* Card Basic Info */}
         <div className="flex items-center gap-4 mb-6">
           <div className="w-20 h-20 bg-gray-800 rounded-xl border-2 border-gray-700 flex items-center justify-center text-4xl shadow-inner">
-            {getCardEmoji(card.templateId)}
+            {getCardEmoji(card.template_id)}
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white leading-tight">{card.name}</h2>
@@ -214,9 +214,9 @@ export function CardDetailPanel({
                 <div className="text-xs text-gray-300 mb-2">
                   <strong>Trigger:</strong> {getTriggerDescription(ability.trigger)}
                 </div>
-                {ability.maxTriggers && (
+                {ability.max_triggers && (
                   <div className="text-xs text-orange-400 mb-2">
-                    <strong>Max Triggers:</strong> {ability.maxTriggers}
+                    <strong>Max Triggers:</strong> {ability.max_triggers}
                   </div>
                 )}
                 <div className="text-sm text-gray-200 bg-gray-900/50 p-2 rounded border border-gray-700/50 italic">
@@ -235,22 +235,22 @@ export function CardDetailPanel({
           <div className="p-3 bg-blue-900/20 border border-blue-800/50 rounded-lg">
             <div className="text-[10px] text-blue-400 uppercase font-bold mb-1">Play Cost</div>
             <div className="text-xl font-bold text-white flex items-center gap-1">
-              {card.playCost} <span className="text-blue-400 text-sm">Mana</span>
+              {card.play_cost} <span className="text-blue-400 text-sm">Mana</span>
             </div>
           </div>
           <div className="p-3 bg-orange-900/20 border border-orange-800/50 rounded-lg">
             <div className="text-[10px] text-orange-400 uppercase font-bold mb-1">Pitch Value</div>
             <div className="text-xl font-bold text-white flex items-center gap-1">
-              +{card.pitchValue} <span className="text-orange-400 text-sm">Mana</span>
+              +{card.pitch_value} <span className="text-orange-400 text-sm">Mana</span>
             </div>
           </div>
         </div>
 
         {/* Metadata */}
         <div className="text-[10px] text-gray-500 font-mono flex flex-col gap-1 border-t border-gray-800 pt-4">
-          <div>TEMPLATE_ID: {card.templateId}</div>
+          <div>TEMPLATE_ID: {card.template_id}</div>
           <div>INSTANCE_ID: {card.id}</div>
-          {card.isToken && <div className="text-yellow-600 font-bold">TOKEN UNIT</div>}
+          {card.is_token && <div className="text-yellow-600 font-bold">TOKEN UNIT</div>}
         </div>
 
         {/* Card Raw JSON */}

@@ -69,7 +69,7 @@ export function HUD({ hideEndTurn }: HUDProps) {
           title="View your draw pool"
         >
           <span className="text-xl">🎒</span>
-          <span className="font-bold">{view.bagCount}</span>
+          <span className="font-bold">{view.bag_count}</span>
         </button>
           {!hideEndTurn && (
             <button 

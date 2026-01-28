@@ -21,7 +21,6 @@ use wasm_bindgen::prelude::*;
 
 /// Result of starting a battle (events for playback)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct BattleOutput {
     pub events: Vec<CombatEvent>,
     pub initial_player_units: Vec<UnitView>,

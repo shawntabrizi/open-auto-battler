@@ -53,12 +53,12 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
   let resultBgColor = 'bg-yellow-900/50 text-yellow-400';
   let resultText = '🤝 DRAW';
 
-  if (result?.type === 'battleEnd') {
+  if (result?.type === 'BattleEnd') {
     const res = result.payload.result;
-    if (res === 'VICTORY') {
+    if (res === 'Victory') {
       resultBgColor = 'bg-green-900/50 text-green-400';
       resultText = '🏆 VICTORY!';
-    } else if (res === 'DEFEAT') {
+    } else if (res === 'Defeat') {
       resultBgColor = 'bg-red-900/50 text-red-400';
       resultText = '💀 DEFEAT';
     }

@@ -16,7 +16,6 @@ use serde::{Deserialize, Serialize};
 /// View of a unit card for the UI
 #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct CardView {
     pub id: CardId,
     pub template_id: String,
@@ -48,7 +47,6 @@ impl From<&UnitCard> for CardView {
 /// View of a unit on the board
 #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct BoardUnitView {
     pub id: CardId,
     pub template_id: String,
@@ -80,7 +78,6 @@ impl From<&BoardUnit> for BoardUnitView {
 /// The complete game view sent to React
 #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct GameView {
     /// Hand cards (derived from bag each round)
     pub hand: Vec<Option<CardView>>,

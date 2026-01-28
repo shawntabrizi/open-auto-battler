@@ -29,7 +29,6 @@ pub const MAX_BATTLE_ROUNDS: u32 = 100;
     MaxEncodedLen,
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "SCREAMING_SNAKE_CASE"))]
 pub enum Team {
     Player,
     Enemy,
@@ -41,7 +40,7 @@ pub enum Team {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(
     feature = "std",
-    serde(tag = "type", content = "payload", rename_all = "SCREAMING_SNAKE_CASE")
+    serde(tag = "type", content = "payload")
 )]
 pub enum LimitReason {
     RoundLimit { current: u32, max: u32 },

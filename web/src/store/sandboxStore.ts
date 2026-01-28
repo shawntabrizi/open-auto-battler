@@ -137,11 +137,11 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
     // Convert boards to SandboxUnit arrays (only non-null entries)
     const playerUnits: SandboxUnit[] = playerBoard
       .filter((t): t is UnitTemplateView => t !== null)
-      .map((t) => ({ templateId: t.templateId }));
+      .map((t) => ({ template_id: t.template_id }));
 
     const enemyUnits: SandboxUnit[] = enemyBoard
       .filter((t): t is UnitTemplateView => t !== null)
-      .map((t) => ({ templateId: t.templateId }));
+      .map((t) => ({ template_id: t.template_id }));
 
     if (playerUnits.length === 0 && enemyUnits.length === 0) {
       console.warn('Both boards are empty, cannot run battle');

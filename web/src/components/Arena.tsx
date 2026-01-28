@@ -115,7 +115,7 @@ export function Arena() {
             onClick={() => pitchBoardUnit(selection.index)}
             className="btn btn-danger text-sm"
           >
-            Pitch (+{view.board[selection.index]?.pitchValue})
+            Pitch (+{view.board[selection.index]?.pitch_value})
           </button>
         </div>
       )}

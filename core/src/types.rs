@@ -18,7 +18,6 @@ pub type CardId = u32;
 /// Scope for targeting and condition evaluation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub enum TargetScope {
     SelfUnit,
     Allies,
@@ -32,7 +31,6 @@ pub enum TargetScope {
 /// Stat types for targeting and comparison
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub enum StatType {
     Health,
     Attack,
@@ -42,7 +40,6 @@ pub enum StatType {
 /// Sort order for stat-based targeting
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub enum SortOrder {
     Ascending,
     Descending,
@@ -51,7 +48,6 @@ pub enum SortOrder {
 /// Comparison operators for conditions
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub enum CompareOp {
     GreaterThan,
     LessThan,
@@ -65,7 +61,7 @@ pub enum CompareOp {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(
     feature = "std",
-    serde(tag = "type", content = "data", rename_all = "camelCase")
+    serde(tag = "type", content = "data")
 )]
 pub enum AbilityCondition {
     /// No condition, always triggers (default)
@@ -120,7 +116,6 @@ impl Default for AbilityCondition {
 /// Ability trigger conditions
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub enum AbilityTrigger {
     OnStart,
     OnFaint,
@@ -138,7 +133,7 @@ pub enum AbilityTrigger {
 /// Ability effect types
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(tag = "type", rename_all = "camelCase"))]
+#[cfg_attr(feature = "std", serde(tag = "type"))]
 pub enum AbilityEffect {
     /// Deal damage to target
     Damage { amount: i32, target: AbilityTarget },
@@ -159,7 +154,7 @@ pub enum AbilityEffect {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(
     feature = "std",
-    serde(tag = "type", content = "data", rename_all = "camelCase")
+    serde(tag = "type", content = "data")
 )]
 pub enum AbilityTarget {
     /// Specific position (0=front, -1=back). scope=SelfUnit means relative.
@@ -182,7 +177,6 @@ pub enum AbilityTarget {
 /// A unit ability
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct Ability {
     pub trigger: AbilityTrigger,
     pub effect: AbilityEffect,
@@ -212,7 +206,6 @@ fn is_condition_none(c: &AbilityCondition) -> bool {
 /// Combat stats for a unit
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct UnitStats {
     pub attack: i32,
     pub health: i32,
@@ -221,7 +214,6 @@ pub struct UnitStats {
 /// Economy stats shared by all cards
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct EconomyStats {
     pub play_cost: i32,
     pub pitch_value: i32,
@@ -278,7 +270,6 @@ impl UnitCard {
 /// A unit instance on the board (tracks current health)
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct BoardUnit {
     pub card: UnitCard,
     pub current_health: i32,
@@ -313,7 +304,6 @@ impl BoardUnit {
 /// This is verified deterministically by `verify_and_apply_turn`.
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct CommitTurnAction {
     /// Final board state after the turn
     pub new_board: Vec<Option<BoardUnit>>,

@@ -116,7 +116,7 @@ export function Shop() {
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="flex items-center gap-1 mb-2">
             <span className="text-sm text-gray-400">Hand</span>
-            <span className="text-xs text-gray-500">({view.bagCount} in draw pool)</span>
+            <span className="text-xs text-gray-500">({view.bag_count} in draw pool)</span>
           </div>
 
           <div className="flex gap-3">
@@ -129,7 +129,7 @@ export function Shop() {
                   card={card!}
                   showCost={true}
                   showPitch={true}
-                  canAfford={view.canAfford[i]}
+                  can_afford={view.can_afford[i]}
                   isSelected={selection?.type === 'hand' && selection.index === i}
                   onClick={() => handleHandSlotClick(i)}
                   draggable={true}
@@ -148,7 +148,7 @@ export function Shop() {
             <div
               className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-mana-blue to-blue-400 transition-all duration-300"
               style={{
-                height: `${(view.mana / view.manaLimit) * 100}%`,
+                height: `${(view.mana / view.mana_limit) * 100}%`,
               }}
             />
             {/* Level text */}
@@ -156,7 +156,7 @@ export function Shop() {
               <span className="text-xl font-bold text-white drop-shadow-lg">{view.mana}</span>
             </div>
           </div>
-          <div className="text-xs text-gray-400 mt-1">Limit: {view.manaLimit}</div>
+          <div className="text-xs text-gray-400 mt-1">Limit: {view.mana_limit}</div>
         </div>
       </div>
     </div>

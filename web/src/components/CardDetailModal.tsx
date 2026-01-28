@@ -15,27 +15,27 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
 
   const getTriggerDescription = (trigger: string): string => {
     switch (trigger) {
-      case 'onStart':
+      case 'OnStart':
         return 'Battle Start';
-      case 'onFaint':
+      case 'OnFaint':
         return 'When Dies';
-      case 'onAllyFaint':
+      case 'OnAllyFaint':
         return 'When Ally Dies';
-      case 'onHurt':
+      case 'OnHurt':
         return 'When Hurt';
-      case 'onSpawn':
+      case 'OnSpawn':
         return 'On Spawn';
-      case 'onAllySpawn':
+      case 'OnAllySpawn':
         return 'Ally Spawned';
-      case 'onEnemySpawn':
+      case 'OnEnemySpawn':
         return 'Enemy Spawned';
-      case 'beforeUnitAttack':
+      case 'BeforeUnitAttack':
         return 'Before Attacking';
-      case 'afterUnitAttack':
+      case 'AfterUnitAttack':
         return 'After Attacking';
-      case 'beforeAnyAttack':
+      case 'BeforeAnyAttack':
         return 'Before Any Attack';
-      case 'afterAnyAttack':
+      case 'AfterAnyAttack':
         return 'After Any Attack';
       default:
         return trigger;
@@ -48,15 +48,15 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
     }
 
     switch (effect.type) {
-      case 'damage':
+      case 'Damage':
         return `Deal ${effect.amount || 0} damage to ${getTargetDescription(effect.target)}`;
-      case 'modifyStats':
+      case 'ModifyStats':
         const h = effect.health || 0;
         const a = effect.attack || 0;
         return `Give ${a >= 0 ? '+' : ''}${a}/${h >= 0 ? '+' : ''}${h} to ${getTargetDescription(effect.target)}`;
-      case 'spawnUnit':
-        return `Spawn a ${effect.templateId ? effect.templateId.replace('_', ' ') : 'unit'}`;
-      case 'destroy':
+      case 'SpawnUnit':
+        return `Spawn a ${effect.template_id ? effect.template_id.replace('_', ' ') : 'unit'}`;
+      case 'Destroy':
         return `Destroy ${getTargetDescription(effect.target)}`;
       default:
         return JSON.stringify(effect);
@@ -68,50 +68,50 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
 
     const describeScope = (scope: string) => {
       switch (scope) {
-        case 'selfUnit': return 'this unit';
-        case 'allies': return 'all allies';
-        case 'enemies': return 'all enemies';
-        case 'all': return 'all units';
-        case 'alliesOther': return 'all other allies';
-        case 'triggerSource': return 'the target';
-        case 'aggressor': return 'the attacker';
+        case 'SelfUnit': return 'this unit';
+        case 'Allies': return 'all allies';
+        case 'Enemies': return 'all enemies';
+        case 'All': return 'all units';
+        case 'AlliesOther': return 'all other allies';
+        case 'TriggerSource': return 'the target';
+        case 'Aggressor': return 'the attacker';
         default: return scope;
       }
     };
 
     const describeScopeSingular = (scope: string) => {
       switch (scope) {
-        case 'selfUnit': return 'this unit';
-        case 'allies': return 'ally';
-        case 'enemies': return 'enemy';
-        case 'all': return 'unit';
-        case 'alliesOther': return 'other ally';
-        case 'triggerSource': return 'target';
-        case 'aggressor': return 'attacker';
+        case 'SelfUnit': return 'this unit';
+        case 'Allies': return 'ally';
+        case 'Enemies': return 'enemy';
+        case 'All': return 'unit';
+        case 'AlliesOther': return 'other ally';
+        case 'TriggerSource': return 'target';
+        case 'Aggressor': return 'attacker';
         default: return scope;
       }
     };
 
     switch (target.type) {
-      case 'all':
+      case 'All':
         return describeScope(target.data.scope);
-      case 'position':
+      case 'Position':
         const { scope, index } = target.data;
-        if (scope === 'selfUnit') {
+        if (scope === 'SelfUnit') {
           if (index === -1) return 'the unit ahead';
           if (index === 1) return 'the unit behind';
           return 'this unit';
         }
         const posName = index === 0 ? 'front' : index === -1 ? 'back' : `slot ${index + 1}`;
         return `the ${posName} ${describeScopeSingular(scope)}`;
-      case 'random':
+      case 'Random':
         return `a random ${describeScopeSingular(target.data.scope)}`;
-      case 'standard':
+      case 'Standard':
         const { stat, order, count } = target.data;
-        const orderName = order === 'ascending' ? 'lowest' : 'highest';
+        const orderName = order === 'Ascending' ? 'lowest' : 'highest';
         const countStr = count === 1 ? 'the' : `the ${count}`;
         return `${countStr} ${orderName} ${stat} ${describeScopeSingular(target.data.scope)}`;
-      case 'adjacent':
+      case 'Adjacent':
         return `units adjacent to ${describeScope(target.data.scope)}`;
       default:
         return 'unknown';
@@ -139,7 +139,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         <div className="flex flex-col items-center mb-6">
           {/* Card Art */}
           <div className="w-32 h-32 bg-gray-700 rounded-lg flex items-center justify-center text-6xl mb-4">
-            {getCardEmoji(card.templateId)}
+            {getCardEmoji(card.template_id)}
           </div>
 
           {/* Stats */}
@@ -158,13 +158,13 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           <div className="flex gap-4 mt-4">
             <div className="flex items-center gap-1">
               <div className="w-6 h-6 bg-mana-blue rounded-full flex items-center justify-center text-xs font-bold border border-blue-300">
-                {card.playCost}
+                {card.play_cost}
               </div>
               <span className="text-xs text-gray-400">Play</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-6 h-6 bg-pitch-red rounded-full flex items-center justify-center text-xs font-bold border border-red-300">
-                {card.pitchValue}
+                {card.pitch_value}
               </div>
               <span className="text-xs text-gray-400">Pitch</span>
             </div>

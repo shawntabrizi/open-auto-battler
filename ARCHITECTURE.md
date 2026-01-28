@@ -51,7 +51,7 @@ Set up the project with two distinct directories:
 
 ### Rust Guidelines
 
-* Use `ts-rs` (if possible) or ensure JSON keys are `camelCase` via `#[serde(rename_all = "camelCase")]` to match TypeScript standards.
+* Use idiomatic Rust naming for JSON keys (`snake_case` for fields, `PascalCase` for variants) to match the internal logic and simplify serialization.
 * Combat logic must be deterministic.
 * Implement the "Initiative Hierarchy" sort: Attack > Health > Player Priority > Position > Ability Order.
 * **Composable Ability System**: Abilities are constructed from building blocks (`TargetScope`, `StatType`, `SortOrder`, `CompareOp`) rather than flat enums. This allows for complex targeting (e.g. "Highest HP enemy") and conditions (e.g. "If ally count >= 3") without variant explosion.

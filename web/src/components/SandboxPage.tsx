@@ -22,14 +22,14 @@ export function SandboxPage() {
   // Convert selectedTemplate to CardView format for CardDetailPanel
   const selectedCard = selectedTemplate ? {
     id: 0,
-    templateId: selectedTemplate.templateId,
+    template_id: selectedTemplate.template_id,
     name: selectedTemplate.name,
     attack: selectedTemplate.attack,
     health: selectedTemplate.health,
-    playCost: selectedTemplate.playCost,
-    pitchValue: selectedTemplate.pitchValue,
+    play_cost: selectedTemplate.play_cost,
+    pitch_value: selectedTemplate.pitch_value,
     abilities: selectedTemplate.abilities,
-    isToken: selectedTemplate.isToken,
+    is_token: selectedTemplate.is_token,
   } : null;
 
   if (isLoading) {
@@ -165,14 +165,14 @@ function SandboxArena() {
           <UnitCard
             card={{
               id: 0,
-              templateId: unit.templateId,
+              template_id: unit.template_id,
               name: unit.name,
               attack: unit.attack,
               health: unit.health,
-              playCost: unit.playCost,
-              pitchValue: unit.pitchValue,
+              play_cost: unit.play_cost,
+              pitch_value: unit.pitch_value,
               abilities: unit.abilities,
-              isToken: unit.isToken,
+              is_token: unit.is_token,
             }}
             showCost={false}
             showPitch={false}
@@ -241,7 +241,7 @@ function UnitGallery() {
   const setSearchQuery = useSandboxStore((state) => state.setSearchQuery);
 
   // Sort templates by cost
-  const sortedTemplates = [...templates].sort((a, b) => a.playCost - b.playCost);
+  const sortedTemplates = [...templates].sort((a, b) => a.play_cost - b.play_cost);
 
   // Filter templates based on search query (search in full JSON)
   const filteredTemplates = sortedTemplates.filter((template) => {
@@ -271,22 +271,22 @@ function UnitGallery() {
       <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-2">
         {filteredTemplates.map((template) => (
           <UnitCard
-            key={template.templateId}
+            key={template.template_id}
             card={{
               id: 0,
-              templateId: template.templateId,
+              template_id: template.template_id,
               name: template.name,
               attack: template.attack,
               health: template.health,
-              playCost: template.playCost,
-              pitchValue: template.pitchValue,
+              play_cost: template.play_cost,
+              pitch_value: template.pitch_value,
               abilities: template.abilities,
-              isToken: template.isToken,
+              is_token: template.is_token,
             }}
-            isSelected={selectedTemplate?.templateId === template.templateId}
+            isSelected={selectedTemplate?.template_id === template.template_id}
             onClick={() =>
               selectTemplate(
-                selectedTemplate?.templateId === template.templateId ? null : template
+                selectedTemplate?.template_id === template.template_id ? null : template
               )
             }
           />

@@ -71,6 +71,6 @@ const EMOJI_MAP: Record<string, string> = {
  * Returns the emoji associated with a card template ID.
  * Returns a question mark emoji if no mapping is found.
  */
-export function getCardEmoji(templateId: string): string {
-  return EMOJI_MAP[templateId] || '❓';
+export function getCardEmoji(template_id: string): string {
+  return EMOJI_MAP[template_id] || '❓';
 }

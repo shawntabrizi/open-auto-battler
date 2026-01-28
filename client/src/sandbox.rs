@@ -16,7 +16,6 @@ use wasm_bindgen::prelude::*;
 
 /// Unit template view for sandbox mode
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct UnitTemplateView {
     pub template_id: String,
     pub name: String,
@@ -30,7 +29,6 @@ pub struct UnitTemplateView {
 
 /// Sandbox unit for custom battles
 #[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct SandboxUnit {
     pub template_id: String,
 }

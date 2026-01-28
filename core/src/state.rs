@@ -29,7 +29,6 @@ pub const WINS_TO_VICTORY: i32 = 10;
 /// Current phase of the game
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub enum GamePhase {
     Shop,
     Battle,
@@ -40,7 +39,6 @@ pub enum GamePhase {
 /// The complete game state
 #[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, PartialEq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct GameState {
     /// Cards remaining in the bag (unordered pool)
     pub bag: Vec<UnitCard>,

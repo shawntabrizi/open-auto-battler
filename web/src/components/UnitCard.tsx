@@ -9,7 +9,7 @@ interface UnitCardProps {
   showCost?: boolean;
   showPitch?: boolean;
   
-  canAfford?: boolean;
+  can_afford?: boolean;
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent) => void;
   onDragEnd?: (e: React.DragEvent) => void;
@@ -24,7 +24,7 @@ export function UnitCard({
   showCost = true,
   showPitch = true,
   
-  canAfford = true,
+  can_afford = true,
   draggable = false,
   onDragStart,
   onDragEnd,
@@ -57,7 +57,7 @@ export function UnitCard({
         card relative w-24 h-32 ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none bg-card-bg rounded-lg border-2 border-gray-600 p-2 transition-all duration-200
         ${isSelected ? 'card-selected ring-2 ring-yellow-400' : ''}
         
-        ${!canAfford && showCost ? 'opacity-60' : ''}
+        ${!can_afford && showCost ? 'opacity-60' : ''}
         ${isDragging ? 'opacity-50 scale-105' : ''}
       `}
     >
@@ -66,7 +66,7 @@ export function UnitCard({
 
       {/* Card art placeholder */}
       <div className="w-full h-14 bg-gray-700 rounded flex items-center justify-center text-2xl">
-        {getCardEmoji(card.templateId)}
+        {getCardEmoji(card.template_id)}
       </div>
 
       {/* Stats row */}
@@ -89,14 +89,14 @@ export function UnitCard({
       {/* Cost badge (top left) */}
       {showCost && (
         <div className="absolute -top-2 -left-2 w-6 h-6 bg-mana-blue rounded-full flex items-center justify-center text-xs font-bold border-2 border-blue-300">
-          {card.playCost}
+          {card.play_cost}
         </div>
       )}
 
       {/* Pitch value badge (top right) */}
       {showPitch && (
         <div className="absolute -top-2 -right-2 w-6 h-6 bg-pitch-red rounded-full flex items-center justify-center text-xs font-bold border-2 border-red-300">
-          {card.pitchValue}
+          {card.pitch_value}
         </div>
       )}
 

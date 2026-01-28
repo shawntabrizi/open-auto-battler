@@ -72,7 +72,6 @@ pub type UnitInstanceId = UnitId;
 /// Simplified view of a unit for battle replay.
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
 pub struct UnitView {
     pub instance_id: UnitInstanceId,
     pub template_id: String,
@@ -87,7 +86,6 @@ pub struct UnitView {
     Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "SCREAMING_SNAKE_CASE"))]
 pub enum BattleResult {
     Victory,
     Defeat,
@@ -99,41 +97,32 @@ pub enum BattleResult {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(
     feature = "std",
-    serde(tag = "type", content = "payload", rename_all = "camelCase")
+    serde(tag = "type", content = "payload")
 )]
 pub enum CombatEvent {
-    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     PhaseStart { phase: BattlePhase },
-    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     PhaseEnd { phase: BattlePhase },
-    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     AbilityTrigger {
         source_instance_id: UnitInstanceId,
         ability_name: String,
     },
-    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     Clash { p_dmg: i32, e_dmg: i32 },
-    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     DamageTaken {
         target_instance_id: UnitInstanceId,
         team: Team,
         remaining_hp: i32,
     },
-    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     UnitDeath {
         team: Team,
         new_board_state: Vec<UnitView>,
     },
-    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     BattleEnd { result: BattleResult },
-    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     AbilityDamage {
         source_instance_id: UnitInstanceId,
         target_instance_id: UnitInstanceId,
         damage: i32,
         remaining_hp: i32,
     },
-    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     AbilityModifyStats {
         source_instance_id: UnitInstanceId,
         target_instance_id: UnitInstanceId,
@@ -142,13 +131,11 @@ pub enum CombatEvent {
         new_attack: i32,
         new_health: i32,
     },
-    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     UnitSpawn {
         team: Team,
         spawned_unit: UnitView,
         new_board_state: Vec<UnitView>,
     },
-    #[cfg_attr(feature = "std", serde(rename_all = "camelCase"))]
     LimitExceeded {
         losing_team: Option<Team>,
         reason: LimitReason,
@@ -157,7 +144,6 @@ pub enum CombatEvent {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(rename_all = "SCREAMING_SNAKE_CASE"))]
 pub enum BattlePhase {
     Start,
     BeforeAttack,

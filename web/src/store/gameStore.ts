@@ -174,7 +174,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const battleOutput = engine.resolve_battle_p2p(engine.get_board(), opponentBoard, BigInt(seed));
       const events = (battleOutput as any).events;
       const lastEvent = events[events.length - 1];
-      if (lastEvent && lastEvent.type === 'battleEnd') {
+      if (lastEvent && lastEvent.type === 'BattleEnd') {
         engine.apply_battle_result(lastEvent.payload.result);
       }
       set({ view: engine.get_view(), battleOutput: battleOutput as any, selection: null, showBattleOverlay: true });

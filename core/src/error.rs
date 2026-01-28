@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// Game errors that can occur during gameplay
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "std", serde(tag = "type", rename_all = "camelCase"))]
+#[cfg_attr(feature = "std", serde(tag = "type"))]
 pub enum GameError {
     /// Not enough mana to perform action
     NotEnoughMana { have: i32, need: i32 },
