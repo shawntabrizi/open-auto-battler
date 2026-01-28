@@ -34,7 +34,6 @@ pub struct GameEngine {
     last_battle_output: Option<BattleOutput>,
     // Per-turn local tracking (transient, not persisted)
     current_mana: i32,
-    hand_indices: Vec<usize>,
     hand_used: Vec<bool>,                // true = pitched or played
     hand_pitched: Vec<bool>,             // true = pitched for mana
     hand_played: Vec<bool>,              // true = played to board
@@ -53,7 +52,6 @@ impl GameEngine {
             state: GameState::new(seed_val),
             last_battle_output: None,
             current_mana: 0,
-            hand_indices: Vec::new(),
             hand_used: Vec::new(),
             hand_pitched: Vec::new(),
             hand_played: Vec::new(),
@@ -95,7 +93,6 @@ impl GameEngine {
         let view = GameView::from_state(
             &self.state,
             self.current_mana,
-            &self.hand_indices,
             &self.hand_used,
         );
         match serde_wasm_bindgen::to_value(&view) {
@@ -125,7 +122,7 @@ impl GameEngine {
             return Err("Can only pitch during shop phase".to_string());
         }
 
-        if hand_index >= self.hand_indices.len() {
+        if hand_index >= self.state.hand.len() {
             return Err("Invalid hand index".to_string());
         }
 
@@ -133,8 +130,7 @@ impl GameEngine {
             return Err("Card already used this turn".to_string());
         }
 
-        let bag_idx = self.hand_indices[hand_index];
-        let pitch_value = self.state.bag[bag_idx].economy.pitch_value;
+        let pitch_value = self.state.hand[hand_index].economy.pitch_value;
 
         self.current_mana = (self.current_mana + pitch_value).min(self.state.mana_limit);
         self.hand_used[hand_index] = true;
@@ -155,7 +151,7 @@ impl GameEngine {
             return Err("Can only play during shop phase".to_string());
         }
 
-        if hand_index >= self.hand_indices.len() {
+        if hand_index >= self.state.hand.len() {
             return Err("Invalid hand index".to_string());
         }
 
@@ -171,8 +167,7 @@ impl GameEngine {
             return Err("Board slot is occupied".to_string());
         }
 
-        let bag_idx = self.hand_indices[hand_index];
-        let play_cost = self.state.bag[bag_idx].economy.play_cost;
+        let play_cost = self.state.hand[hand_index].economy.play_cost;
 
         if self.current_mana < play_cost {
             return Err(format!(
@@ -186,7 +181,7 @@ impl GameEngine {
         self.hand_played[hand_index] = true;
 
         // Place the card on the board
-        let card = self.state.bag[bag_idx].clone();
+        let card = self.state.hand[hand_index].clone();
         self.state.board[board_slot] = Some(BoardUnit::from_card(card));
 
         self.log_state();
@@ -304,6 +299,7 @@ impl GameEngine {
         self.state.round += 1;
         self.state.mana_limit = self.state.calculate_mana_limit();
         self.state.phase = GamePhase::Shop;
+        self.state.draw_hand();
         self.start_planning_phase();
 
         self.log_state();
@@ -490,12 +486,17 @@ impl GameEngine {
                 self.state.bag.push(card);
             }
         }
-        // No shuffle needed for bag -- hand is derived via RNG
+        // Draw initial hand once bag is ready
+        self.state.draw_hand();
     }
 
     fn start_planning_phase(&mut self) {
-        self.hand_indices = self.state.derive_hand_indices();
-        let hand_size = self.hand_indices.len();
+        // If hand is empty, draw it (should have been drawn by initialize_bag or continue_after_battle)
+        if self.state.hand.is_empty() {
+             self.state.draw_hand();
+        }
+        
+        let hand_size = self.state.hand.len();
         self.hand_used = vec![false; hand_size];
         self.hand_pitched = vec![false; hand_size];
         self.hand_played = vec![false; hand_size];

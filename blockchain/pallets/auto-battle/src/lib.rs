@@ -74,6 +74,7 @@ pub mod pallet {
         <T as Config>::MaxBoardSize,
         <T as Config>::MaxAbilities,
         <T as Config>::MaxStringLen,
+        <T as Config>::MaxHandActions,
     >;
 
     /// Type alias for the bounded turn action using pallet config.
@@ -154,8 +155,8 @@ pub mod pallet {
             // Generate the Bag deterministically
             state.bag = create_genesis_bag();
 
-            // Set lives to 3 as requested
-            state.lives = 3;
+            // Draw initial hand from bag
+            state.draw_hand();
 
             let session = GameSession {
                 state: state.into(),
@@ -284,8 +285,10 @@ pub mod pallet {
             session.state.phase = GamePhase::Shop;
 
             // Update mana limit for new round
-            // 3 + round - 1 = 2 + round
-            session.state.mana_limit = (2 + session.state.round).min(10);
+            session.state.mana_limit = session.state.calculate_mana_limit();
+
+            // Draw hand for the next shop phase
+            session.state.draw_hand();
 
             ActiveGame::<T>::insert(&who, session);
 

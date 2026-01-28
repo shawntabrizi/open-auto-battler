@@ -6,6 +6,7 @@
 //! Requires the `bounded` feature.
 
 use alloc::string::String;
+use alloc::vec::Vec;
 use bounded_collections::{BoundedVec, Get};
 use core::fmt::Debug;
 use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode};
@@ -13,11 +14,55 @@ use scale_info::TypeInfo;
 
 use crate::battle::{BattlePhase, BattleResult, UnitId};
 use crate::limits::{LimitReason, Team};
+use crate::state::{calculate_mana_limit, derive_hand_indices_logic};
 use crate::types::{
     Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CardId,
     CommitTurnAction, EconomyStats, UnitCard, UnitStats,
 };
 use crate::{GamePhase, GameState};
+
+// --- Bounded Game State Implementation ---
+
+impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxAbilities: Get<u32>,
+    MaxStringLen: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    /// Populate the hand by drawing from the bag.
+    pub fn draw_hand(&mut self) {
+        let indices = derive_hand_indices_logic(self.bag.len(), self.game_seed, self.round);
+        if indices.is_empty() {
+            return;
+        }
+
+        // Sort indices descending to remove from bag without shifting issues
+        let mut sorted_indices = indices;
+        sorted_indices.sort_unstable_by(|a, b| b.cmp(a));
+
+        self.hand.clear();
+        let mut drawn_cards = Vec::with_capacity(sorted_indices.len());
+        for idx in sorted_indices {
+            // Safety: indices are derived from bag.len()
+            drawn_cards.push(self.bag.remove(idx));
+        }
+
+        // reverse to maintain original derived order
+        drawn_cards.reverse();
+        
+        for card in drawn_cards {
+            let _ = self.hand.try_push(card);
+        }
+    }
+
+    /// Calculate mana limit for the current round
+    pub fn calculate_mana_limit(&self) -> i32 {
+        calculate_mana_limit(self.round)
+    }
+}
 
 // --- Conversion Helpers ---
 
@@ -457,15 +502,17 @@ where
 // --- Bounded Game State ---
 
 #[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
-#[scale_info(skip_type_params(MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen))]
-pub struct BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen>
+#[scale_info(skip_type_params(MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions))]
+pub struct BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 where
     MaxBagSize: Get<u32>,
     MaxBoardSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxHandActions: Get<u32>,
 {
     pub bag: BoundedVec<BoundedUnitCard<MaxAbilities, MaxStringLen>, MaxBagSize>,
+    pub hand: BoundedVec<BoundedUnitCard<MaxAbilities, MaxStringLen>, MaxHandActions>,
     pub board: BoundedVec<Option<BoundedBoardUnit<MaxAbilities, MaxStringLen>>, MaxBoardSize>,
     pub mana_limit: i32,
     pub round: i32,
@@ -481,11 +528,13 @@ impl<
         MaxBoardSize: Get<u32>,
         MaxAbilities: Get<u32>,
         MaxStringLen: Get<u32>,
-    > Clone for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen>
+        MaxHandActions: Get<u32>,
+    > Clone for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 {
     fn clone(&self) -> Self {
         Self {
             bag: self.bag.clone(),
+            hand: self.hand.clone(),
             board: self.board.clone(),
             mana_limit: self.mana_limit,
             round: self.round,
@@ -503,10 +552,13 @@ impl<
         MaxBoardSize: Get<u32>,
         MaxAbilities: Get<u32>,
         MaxStringLen: Get<u32>,
-    > PartialEq for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen>
+        MaxHandActions: Get<u32>,
+    > PartialEq
+    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 {
     fn eq(&self, other: &Self) -> bool {
         self.bag == other.bag
+            && self.hand == other.hand
             && self.board == other.board
             && self.mana_limit == other.mana_limit
             && self.round == other.round
@@ -523,7 +575,8 @@ impl<
         MaxBoardSize: Get<u32>,
         MaxAbilities: Get<u32>,
         MaxStringLen: Get<u32>,
-    > Eq for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen>
+        MaxHandActions: Get<u32>,
+    > Eq for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 {
 }
 
@@ -532,11 +585,13 @@ impl<
         MaxBoardSize: Get<u32>,
         MaxAbilities: Get<u32>,
         MaxStringLen: Get<u32>,
-    > Debug for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen>
+        MaxHandActions: Get<u32>,
+    > Debug for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedGameState")
             .field("bag", &self.bag)
+            .field("hand", &self.hand)
             .field("board", &self.board)
             .field("mana_limit", &self.mana_limit)
             .field("round", &self.round)
@@ -549,17 +604,19 @@ impl<
     }
 }
 
-impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen> From<GameState>
-    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen>
+impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions> From<GameState>
+    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 where
     MaxBagSize: Get<u32>,
     MaxBoardSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxHandActions: Get<u32>,
 {
     fn from(state: GameState) -> Self {
         Self {
             bag: BoundedVec::truncate_from(state.bag.into_iter().map(Into::into).collect()),
+            hand: BoundedVec::truncate_from(state.hand.into_iter().map(Into::into).collect()),
             board: BoundedVec::truncate_from(
                 state
                     .board
@@ -578,20 +635,28 @@ where
     }
 }
 
-impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen>
-    From<BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen>> for GameState
+impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    From<BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>>
+    for GameState
 where
     MaxBagSize: Get<u32>,
     MaxBoardSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxHandActions: Get<u32>,
 {
     fn from(
-        bounded: BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen>,
+        bounded: BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>,
     ) -> Self {
         Self {
             bag: bounded
                 .bag
+                .into_inner()
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+            hand: bounded
+                .hand
                 .into_inner()
                 .into_iter()
                 .map(Into::into)

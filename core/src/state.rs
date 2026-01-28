@@ -42,6 +42,8 @@ pub enum GamePhase {
 pub struct GameState {
     /// Cards remaining in the bag (unordered pool)
     pub bag: Vec<UnitCard>,
+    /// Player's current hand for the shop phase
+    pub hand: Vec<UnitCard>,
     /// Units on the player's board (5 slots, index 0 is front)
     pub board: Vec<Option<BoardUnit>>,
     /// Maximum mana that can be held (increases each round)
@@ -64,6 +66,7 @@ impl GameState {
     pub fn new(game_seed: u64) -> Self {
         Self {
             bag: Vec::new(),
+            hand: Vec::new(),
             board: vec![None; BOARD_SIZE],
             mana_limit: STARTING_MANA_LIMIT,
             round: 1,
@@ -75,6 +78,28 @@ impl GameState {
         }
     }
 
+    /// Populate the hand by drawing from the bag.
+    /// This should be called after the bag is initialized.
+    pub fn draw_hand(&mut self) {
+        let indices = self.derive_hand_indices();
+        if indices.is_empty() {
+            return;
+        }
+
+        // Sort indices descending to remove from bag without shifting issues
+        let mut sorted_indices = indices;
+        sorted_indices.sort_unstable_by(|a, b| b.cmp(a));
+
+        let mut drawn_hand = Vec::with_capacity(sorted_indices.len());
+        for idx in sorted_indices {
+            drawn_hand.push(self.bag.remove(idx));
+        }
+
+        // reverse to maintain original derived order (aesthetic)
+        drawn_hand.reverse();
+        self.hand = drawn_hand;
+    }
+
     /// Generate a unique card ID
     pub fn generate_card_id(&mut self) -> CardId {
         let id = self.next_card_id;
@@ -84,30 +109,13 @@ impl GameState {
 
     /// Calculate mana limit for the current round
     pub fn calculate_mana_limit(&self) -> i32 {
-        (STARTING_MANA_LIMIT + self.round - 1).min(MAX_MANA_LIMIT)
+        calculate_mana_limit(self.round)
     }
 
     /// Derive hand indices from bag using deterministic RNG
     /// Uses game_seed XOR round to produce repeatable hand selection
     pub fn derive_hand_indices(&self) -> Vec<usize> {
-        let bag_len = self.bag.len();
-        if bag_len == 0 {
-            return Vec::new();
-        }
-
-        let hand_count = HAND_SIZE.min(bag_len);
-        let seed = self.game_seed ^ (self.round as u64);
-        let mut rng = XorShiftRng::seed_from_u64(seed);
-
-        // Partial Fisher-Yates: select hand_count unique indices
-        let mut indices: Vec<usize> = (0..bag_len).collect();
-        for i in 0..hand_count {
-            let j = i + rng.gen_range(bag_len - i);
-            indices.swap(i, j);
-        }
-
-        indices.truncate(hand_count);
-        indices
+        derive_hand_indices_logic(self.bag.len(), self.game_seed, self.round)
     }
 
     /// Derive the hand as (bag_index, card_ref) pairs
@@ -127,6 +135,32 @@ impl GameState {
     pub fn board_unit_count(&self) -> usize {
         self.board.iter().filter(|slot| slot.is_some()).count()
     }
+}
+
+/// Shared logic to calculate mana limit
+pub fn calculate_mana_limit(round: i32) -> i32 {
+    (STARTING_MANA_LIMIT + round - 1).min(MAX_MANA_LIMIT)
+}
+
+/// Shared logic to derive hand indices
+pub fn derive_hand_indices_logic(bag_len: usize, game_seed: u64, round: i32) -> Vec<usize> {
+    if bag_len == 0 {
+        return Vec::new();
+    }
+
+    let hand_count = HAND_SIZE.min(bag_len);
+    let seed = game_seed ^ (round as u64);
+    let mut rng = XorShiftRng::seed_from_u64(seed);
+
+    // Partial Fisher-Yates: select hand_count unique indices
+    let mut indices: Vec<usize> = (0..bag_len).collect();
+    for i in 0..hand_count {
+        let j = i + rng.gen_range(bag_len - i);
+        indices.swap(i, j);
+    }
+
+    indices.truncate(hand_count);
+    indices
 }
 
 impl Default for GameState {

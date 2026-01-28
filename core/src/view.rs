@@ -108,24 +108,19 @@ impl GameView {
     pub fn from_state(
         state: &GameState,
         current_mana: i32,
-        hand_indices: &[usize],
         hand_used: &[bool],
     ) -> Self {
-        let hand: Vec<Option<CardView>> = hand_indices
+        let hand: Vec<Option<CardView>> = state
+            .hand
             .iter()
             .enumerate()
-            .map(|(i, &bag_idx)| {
+            .map(|(i, card)| {
                 if hand_used.get(i).copied().unwrap_or(false) {
                     None // Card already used (pitched or played)
                 } else {
-                    Some(CardView::from(&state.bag[bag_idx]))
+                    Some(CardView::from(card))
                 }
             })
-            .collect();
-
-        let hand_ids: Vec<CardId> = hand_indices
-            .iter()
-            .filter_map(|&idx| state.bag.get(idx).map(|c| c.id))
             .collect();
 
         let can_afford: Vec<bool> = hand
@@ -159,14 +154,9 @@ impl GameView {
             bag: state
                 .bag
                 .iter()
-                .filter(|card| !hand_ids.contains(&card.id))
                 .map(CardView::from)
                 .collect(),
-            bag_count: state
-                .bag
-                .iter()
-                .filter(|card| !hand_ids.contains(&card.id))
-                .count() as u32,
+            bag_count: state.bag.len() as u32,
             can_afford,
         }
     }

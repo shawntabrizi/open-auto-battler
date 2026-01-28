@@ -20,9 +20,8 @@ use crate::types::CommitTurnAction;
 /// 4. Board check: every unit in new_board came from old board or played hand cards
 /// 5. Apply: update board, remove played+pitched cards from bag
 pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -> GameResult<()> {
-    // 1. Re-derive hand
-    let hand_indices = state.derive_hand_indices();
-    let hand_size = hand_indices.len();
+    // 1. Get current hand size
+    let hand_size = state.hand.len();
 
     // 2. Validate new_board size
     if action.new_board.len() != BOARD_SIZE {
@@ -71,8 +70,7 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
         .pitched_from_hand
         .iter()
         .map(|&hi_u32| {
-            let bag_idx = hand_indices[hi_u32 as usize];
-            state.bag[bag_idx].economy.pitch_value
+            state.hand[hi_u32 as usize].economy.pitch_value
         })
         .sum::<i32>()
         + action
@@ -90,9 +88,7 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
         .played_from_hand
         .iter()
         .map(|&hi_u32| {
-            let bag_idx = hand_indices[hi_u32 as usize];
-            let cost = state.bag[bag_idx].economy.play_cost;
-            cost
+            state.hand[hi_u32 as usize].economy.play_cost
         })
         .sum();
 
@@ -106,10 +102,8 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
     }
 
     // 2. Each individual card must be affordable (cost <= mana_limit)
-    // This matches the engine's incremental logic where you can never hold more than the limit.
     for &hi_u32 in &action.played_from_hand {
-        let bag_idx = hand_indices[hi_u32 as usize];
-        let cost = state.bag[bag_idx].economy.play_cost;
+        let cost = state.hand[hi_u32 as usize].economy.play_cost;
         if cost > state.mana_limit {
             return Err(GameError::NotEnoughMana {
                 have: state.mana_limit,
@@ -118,9 +112,7 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
         }
     }
 
-    // 4. Board check: every unit in new_board must come from either:
-    //    - The old board (not pitched), matched by CardId
-    //    - A played hand card, matched by CardId
+    // 4. Board check
     let pitched_board_set: Vec<usize> = action
         .pitched_from_board
         .iter()
@@ -144,8 +136,7 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
         .played_from_hand
         .iter()
         .map(|&hi_u32| {
-            let bag_idx = hand_indices[hi_u32 as usize];
-            Some(state.bag[bag_idx].id)
+            Some(state.hand[hi_u32 as usize].id)
         })
         .collect();
 
@@ -175,23 +166,22 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
         }
     }
 
-    // 5. Apply: remove played and pitched cards from bag (unused hand cards stay)
-    let mut bag_indices_to_remove: Vec<usize> = Vec::new();
+    // 5. Apply: remove played and pitched cards from hand
+    let mut hand_indices_to_remove: Vec<usize> = Vec::new();
 
     for &hi_u32 in &action.pitched_from_hand {
-        bag_indices_to_remove.push(hand_indices[hi_u32 as usize]);
+        hand_indices_to_remove.push(hi_u32 as usize);
     }
     for &hi_u32 in &action.played_from_hand {
-        bag_indices_to_remove.push(hand_indices[hi_u32 as usize]);
+        hand_indices_to_remove.push(hi_u32 as usize);
     }
 
-    // Sort descending so we can remove from back to front without index shifting
-    bag_indices_to_remove.sort_unstable();
-    bag_indices_to_remove.dedup();
-    bag_indices_to_remove.reverse();
+    hand_indices_to_remove.sort_unstable();
+    hand_indices_to_remove.dedup();
+    hand_indices_to_remove.reverse();
 
-    for idx in bag_indices_to_remove {
-        state.bag.swap_remove(idx);
+    for idx in hand_indices_to_remove {
+        state.hand.remove(idx);
     }
 
     // Apply board state

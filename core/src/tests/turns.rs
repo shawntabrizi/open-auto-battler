@@ -13,12 +13,13 @@ fn test_verify_and_apply_turn() {
         let card = UnitCard::new(i + 1, "test", "Test", 2, 2, 1, 2, false);
         state.bag.push(card);
     }
+    state.draw_hand();
 
-    let hand_indices = state.derive_hand_indices();
+    let hand_size = state.hand.len();
     let bag_len_before = state.bag.len();
 
     // Pitch hand card 0 for mana, play hand card 1 to board slot 0
-    let card_to_play = state.bag[hand_indices[1]].clone();
+    let card_to_play = state.hand[1].clone();
     let mut new_board: Vec<Option<BoardUnit>> = vec![None; BOARD_SIZE];
     new_board[0] = Some(BoardUnit::from_card(card_to_play));
 
@@ -32,8 +33,10 @@ fn test_verify_and_apply_turn() {
     let result = verify_and_apply_turn(&mut state, &action);
     assert!(result.is_ok(), "Valid turn should succeed: {:?}", result);
 
-    // 2 cards removed from bag (1 pitched + 1 played)
-    assert_eq!(state.bag.len(), bag_len_before - 2);
+    // 2 cards removed from hand
+    assert_eq!(state.hand.len(), hand_size - 2);
+    // bag size should be unchanged because verify_and_apply_turn now removes from hand
+    assert_eq!(state.bag.len(), bag_len_before);
 
     // Board should have the played card
     assert!(state.board[0].is_some());
@@ -52,8 +55,7 @@ fn test_verify_and_apply_turn_with_refill() {
         let card = UnitCard::new(i + 1, "test", "Test", 2, 2, 4, 4, false);
         state.bag.push(card);
     }
-
-    let hand_indices = state.derive_hand_indices();
+    state.draw_hand();
 
     // Scenario:
     // 1. Pitch hand[0] (value 4). Current mana = 4.
@@ -63,8 +65,8 @@ fn test_verify_and_apply_turn_with_refill() {
     // Total spent = 8. Total earned = 8. Limit = 4.
     // This should be LEGAL because each card is <= limit and total spend <= total earned.
 
-    let card_1 = state.bag[hand_indices[1]].clone();
-    let card_3 = state.bag[hand_indices[3]].clone();
+    let card_1 = state.hand[1].clone();
+    let card_3 = state.hand[3].clone();
 
     let mut new_board: Vec<Option<BoardUnit>> = vec![None; BOARD_SIZE];
     new_board[0] = Some(BoardUnit::from_card(card_1));
