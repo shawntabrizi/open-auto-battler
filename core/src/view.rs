@@ -75,7 +75,7 @@ impl From<&BoardUnit> for BoardUnitView {
     }
 }
 
-/// The complete game view sent to React
+/// The complete game view sent to React (Hot Path - lightweight)
 #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GameView {
@@ -95,9 +95,7 @@ pub struct GameView {
     pub wins: i32,
     /// Current game phase
     pub phase: String,
-    /// All cards currently in the bag
-    pub bag: Vec<CardView>,
-    /// Cards remaining in bag
+    /// Cards remaining in bag (lightweight - use get_full_bag_json for full data)
     pub bag_count: u32,
     /// Whether we can afford each hand card
     pub can_afford: Vec<bool>,
@@ -151,11 +149,6 @@ impl GameView {
                 GamePhase::Victory => String::from("victory"),
                 GamePhase::Defeat => String::from("defeat"),
             },
-            bag: state
-                .bag
-                .iter()
-                .map(CardView::from)
-                .collect(),
             bag_count: state.bag.len() as u32,
             can_afford,
         }

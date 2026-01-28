@@ -13,7 +13,7 @@ import {
 } from "@polkadot-labs/hdkd-helpers"
 import { getPolkadotSigner } from "polkadot-api/signer"
 import { AccountId } from "@polkadot-api/substrate-bindings";
-import { chainStateToWasm, wasmActionToChain } from '../utils/chainConvert';
+import { prepareForJsonBridge, extractSeedBigInt, wasmActionToChain } from '../utils/chainConvert';
 
 interface BlockchainStore {
   client: any;
@@ -22,38 +22,17 @@ interface BlockchainStore {
   selectedAccount: any | null;
   isConnected: boolean;
   isConnecting: boolean;
-  isRefreshing: boolean; // Add this
+  isRefreshing: boolean;
   chainState: any | null;
   blockNumber: number | null;
 
   connect: () => Promise<void>;
-  selectAccount: (account: any) => void;
+  selectAccount: (account: any) => Promise<void>;
   startGame: () => Promise<void>;
   refreshGameState: () => Promise<void>;
   submitTurnOnChain: () => Promise<void>;
+  fetchDeck: () => any[];
 }
-
-// Utility to deeply clone an object and remove any non-plain object/array/primitive types.
-// This is critical for SES/Lockdown environments where WASM-linked objects can cause aliasing errors.
-const safeClone = (val: any): any => {
-  if (val === null || val === undefined) return val;
-  if (typeof val === 'number' || typeof val === 'string' || typeof val === 'boolean' || typeof val === 'bigint') {
-    return val;
-  }
-  if (Array.isArray(val)) {
-    return val.map(safeClone);
-  }
-  if (typeof val === 'object') {
-    const res: any = {};
-    for (const key in val) {
-      if (Object.prototype.hasOwnProperty.call(val, key)) {
-        res[key] = safeClone(val[key]);
-      }
-    }
-    return res;
-  }
-  return val;
-};
 
 const DEV_ACCOUNTS = ["Alice", "Bob", "Charlie", "Dave", "Eve", "Ferdie"];
 
@@ -145,9 +124,16 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     }
   },
 
-  selectAccount: (account) => {
+  selectAccount: async (account) => {
+    // Wait for any pending refresh to complete before switching
+    const { isRefreshing } = get();
+    if (isRefreshing) {
+      console.log("Waiting for current refresh to complete before switching accounts...");
+      // Simple wait - in production you'd want a more robust solution
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     set({ selectedAccount: account });
-    get().refreshGameState();
+    await get().refreshGameState();
   },
 
   refreshGameState: async () => {
@@ -161,26 +147,64 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       set({ chainState: game });
 
       if (game) {
-        // Sync local WASM engine with chain state
+        // Sync local WASM engine with chain state using Universal JSON String Bridge
         const { engine } = useGameStore.getState();
         if (engine) {
-          console.log("On-chain game found. Syncing WASM engine...", game.state);
+          console.log("On-chain game found. Syncing WASM engine via JSON bridge...", game.state);
           try {
-            // 1. Convert PAPI types to WASM-friendly format (strings, objects)
-            const cleaned = chainStateToWasm(game.state);
-            // 2. Deep clone to plain objects to satisfy SES/Lockdown and prevent aliasing errors
-            const stateObj = safeClone(cleaned);
-            
-            console.log("Cleaned state for WASM:", stateObj);
-            
-            engine.set_state(stateObj);
-            
-            // Immediately update the view from the synchronized engine
-            const newView = engine.get_view();
-            console.log("WASM engine synced successfully. View:", newView);
-            useGameStore.setState({ view: newView });
+            // === UNIVERSAL JSON STRING BRIDGE ===
+            // Debug: Log key fields before conversion
+            console.log("Raw state from chain:", {
+              phase: game.state.phase,
+              game_seed: game.state.game_seed,
+              next_card_id: game.state.next_card_id,
+              board: game.state.board,
+            });
+
+            // 1. Sanitize: Convert PAPI types and deep flatten to plain objects
+            const clean = prepareForJsonBridge(game.state);
+
+            // Debug: Log key fields after conversion
+            console.log("Clean state after conversion:", {
+              phase: clean.phase,
+              game_seed: clean.game_seed,
+              next_card_id: clean.next_card_id,
+              board: clean.board,
+            });
+
+            // 2. Extract seed safely (handles BigInt) - must pass as BigInt for u64
+            const seed = extractSeedBigInt(game.state);
+
+            // 3. Serialize to JSON string
+            const json = JSON.stringify(clean);
+            console.log("Prepared JSON for WASM (length):", json.length);
+            console.log("Seed for WASM:", seed);
+
+            // Debug: Log board JSON specifically
+            const boardJson = JSON.stringify(clean.board);
+            console.log("Board JSON:", boardJson);
+
+            // Debug: Log a sample of the JSON to help diagnose issues
+            if (json.length < 5000) {
+              console.log("Full JSON:", json);
+            } else {
+              console.log("JSON preview (first 2000 chars):", json.substring(0, 2000));
+            }
+
+            // 4. Send to WASM via JSON string (bypasses JsValue recursion limits)
+            // Note: seed must be BigInt for wasm-bindgen u64 binding
+            engine.init_from_json(json, seed);
+
+            // 5. Receive view as JSON string and parse
+            const viewJson = engine.get_view_json();
+            const view = JSON.parse(viewJson);
+
+            console.log("WASM engine synced successfully via JSON bridge. View:", view);
+            useGameStore.setState({ view });
           } catch (e) {
             console.error("Failed to sync engine with chain state:", e);
+            // Log the clean state for debugging
+            console.error("Clean state that caused the error:", prepareForJsonBridge(game.state));
           }
         } else {
           console.warn("WASM engine not ready yet, skipping sync.");
@@ -217,9 +241,13 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     if (!api || !selectedAccount || !engine) return;
 
     try {
-      const action = engine.get_commit_action();
+      // Get commit action as JSON string and parse
+      const actionJson = engine.get_commit_action_json();
+      const action = JSON.parse(actionJson);
+
       // Convert WASM format to PAPI format (e.g. strings to Binary)
       const chainAction = wasmActionToChain(action);
+      console.log({ action, chainAction });
       const tx = api.tx.AutoBattle.submit_shop_phase({ action: chainAction });
 
       await tx.signAndSubmit(selectedAccount.polkadotSigner);
@@ -229,6 +257,28 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       // For now, assume it's done or triggered manually
     } catch (err) {
       console.error("Submit turn failed:", err);
+    }
+  },
+
+  /**
+   * Fetch the full deck/bag from the WASM engine (Cold Path - on demand only)
+   * Use sparingly as this includes all card data.
+   */
+  fetchDeck: () => {
+    const { engine } = useGameStore.getState();
+    if (!engine) {
+      console.warn("WASM engine not ready, cannot fetch deck.");
+      return [];
+    }
+
+    try {
+      const bagJson = engine.get_full_bag_json();
+      const bag = JSON.parse(bagJson);
+      console.log("Fetched full deck from WASM:", bag.length, "cards");
+      return bag;
+    } catch (e) {
+      console.error("Failed to fetch deck:", e);
+      return [];
     }
   }
 }));

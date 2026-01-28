@@ -75,7 +75,7 @@ export interface GameView {
   lives: number;
   wins: number;
   phase: string; // Changed from enum to string to match Rust core/src/view.rs
-  bag: CardView[];
+  // Note: bag is removed from hot path - use fetchBag() for full bag data
   bag_count: number;
   can_afford: boolean[];
 }

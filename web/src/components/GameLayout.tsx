@@ -8,7 +8,7 @@ import { GameOverScreen } from './GameOverScreen';
 import { useGameStore } from '../store/gameStore';
 
 export function GameLayout() {
-  const { view, selection, isLoading, error, showBag } = useGameStore();
+  const { view, bag, selection, isLoading, error, showBag } = useGameStore();
 
   if (isLoading) {
     return (
@@ -44,8 +44,8 @@ export function GameLayout() {
   const selectedCard =
     (view?.phase === 'shop' && selection?.type === 'hand' && view?.hand[selection!.index])
       ? view.hand[selection!.index]!
-      : (selection?.type === 'bag' && view?.bag[selection!.index])
-        ? view.bag[selection!.index]
+      : (selection?.type === 'bag' && bag?.[selection!.index])
+        ? bag[selection!.index]
         : null;
 
   // For board selections, create a card-like object from the unit data

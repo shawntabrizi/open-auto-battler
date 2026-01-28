@@ -13,9 +13,9 @@ use manalimit_core::log;
 use manalimit_core::opponents::get_opponent_for_round;
 use manalimit_core::rng::XorShiftRng;
 use manalimit_core::state::*;
-use manalimit_core::types::{BoardUnit, UnitCard};
+use manalimit_core::types::{BoardUnit, CommitTurnAction, UnitCard};
 use manalimit_core::units::get_starter_templates;
-use manalimit_core::view::GameView;
+use manalimit_core::view::{CardView, GameView};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -337,6 +337,142 @@ impl GameEngine {
         self.state = state;
         self.start_planning_phase();
         Ok(())
+    }
+
+    // ========================================================================
+    // Universal JSON String Bridge Methods
+    // These methods bypass wasm-bindgen's JsValue recursion limits by using
+    // plain JSON strings for all complex data transfer.
+    // ========================================================================
+
+    /// Initialize the game engine from a JSON string (Universal JSON Bridge)
+    /// Use this instead of set_state to avoid Stack Overflow and Recursive Aliasing crashes.
+    #[wasm_bindgen]
+    pub fn init_from_json(&mut self, json: String, seed: u64) -> Result<(), String> {
+        log::action("init_from_json", &format!("Initializing engine from JSON string (len={})", json.len()));
+
+        // Log a preview of the JSON for debugging
+        let preview: String = json.chars().take(500).collect();
+        log::debug("init_from_json", &format!("JSON preview: {}", preview));
+
+        let mut state: GameState = serde_json::from_str(&json).map_err(|e| {
+            let error_msg = format!(
+                "Failed to parse JSON state: {:?}. Line: {}, Column: {}",
+                e,
+                e.line(),
+                e.column()
+            );
+            log::error(&error_msg);
+            error_msg
+        })?;
+
+        state.game_seed = seed;
+        self.state = state;
+        self.start_planning_phase();
+        log::info("Engine initialized from JSON successfully");
+        Ok(())
+    }
+
+    /// Get the current game view as a JSON string (Hot Path)
+    /// Returns lightweight GameView with bag_count instead of full bag.
+    #[wasm_bindgen]
+    pub fn get_view_json(&self) -> String {
+        log::debug("get_view_json", "Serializing game view to JSON string");
+        let view = GameView::from_state(&self.state, self.current_mana, &self.hand_used);
+        serde_json::to_string(&view).unwrap_or_else(|e| {
+            log::error(&format!("get_view_json serialization failed: {:?}", e));
+            "{}".to_string()
+        })
+    }
+
+    /// Get the full bag as a JSON string (Cold Path - on demand only)
+    /// Use sparingly as this includes all card data.
+    #[wasm_bindgen]
+    pub fn get_full_bag_json(&self) -> String {
+        log::debug("get_full_bag_json", "Serializing full bag to JSON string");
+        let bag: Vec<CardView> = self.state.bag.iter().map(CardView::from).collect();
+        serde_json::to_string(&bag).unwrap_or_else(|e| {
+            log::error(&format!("get_full_bag_json serialization failed: {:?}", e));
+            "[]".to_string()
+        })
+    }
+
+    /// Execute an action from a JSON string and return updated view (Universal JSON Bridge)
+    /// Accepts actions like: {"PlayCard": {"hand_index": 0, "board_slot": 2}}
+    #[wasm_bindgen]
+    pub fn execute_action_json(&mut self, action_json: String) -> Result<String, String> {
+        log::action("execute_action_json", &format!("Executing: {}", action_json));
+
+        #[derive(Deserialize)]
+        #[serde(tag = "type")]
+        enum GameAction {
+            PitchHandCard { hand_index: usize },
+            PlayHandCard { hand_index: usize, board_slot: usize },
+            SwapBoardPositions { slot_a: usize, slot_b: usize },
+            PitchBoardUnit { board_slot: usize },
+            EndTurn,
+            ContinueAfterBattle,
+            NewRun,
+        }
+
+        let action: GameAction = serde_json::from_str(&action_json)
+            .map_err(|e| format!("Failed to parse action JSON: {:?}", e))?;
+
+        match action {
+            GameAction::PitchHandCard { hand_index } => self.pitch_hand_card(hand_index)?,
+            GameAction::PlayHandCard { hand_index, board_slot } => {
+                self.play_hand_card(hand_index, board_slot)?
+            }
+            GameAction::SwapBoardPositions { slot_a, slot_b } => {
+                self.swap_board_positions(slot_a, slot_b)?
+            }
+            GameAction::PitchBoardUnit { board_slot } => self.pitch_board_unit(board_slot)?,
+            GameAction::EndTurn => self.end_turn()?,
+            GameAction::ContinueAfterBattle => self.continue_after_battle()?,
+            GameAction::NewRun => self.new_run(),
+        }
+
+        Ok(self.get_view_json())
+    }
+
+    /// Get the battle output as a JSON string
+    #[wasm_bindgen]
+    pub fn get_battle_output_json(&self) -> String {
+        log::debug("get_battle_output_json", "Serializing battle output to JSON string");
+        match &self.last_battle_output {
+            Some(output) => serde_json::to_string(output).unwrap_or_else(|e| {
+                log::error(&format!("get_battle_output_json serialization failed: {:?}", e));
+                "null".to_string()
+            }),
+            None => "null".to_string(),
+        }
+    }
+
+    /// Get the commit action as a JSON string
+    #[wasm_bindgen]
+    pub fn get_commit_action_json(&self) -> String {
+        let action = CommitTurnAction {
+            new_board: self.state.board.clone(),
+            pitched_from_hand: self
+                .hand_pitched
+                .iter()
+                .enumerate()
+                .filter(|(_, &p)| p)
+                .map(|(i, _)| i as u32)
+                .collect(),
+            played_from_hand: self
+                .hand_played
+                .iter()
+                .enumerate()
+                .filter(|(_, &p)| p)
+                .map(|(i, _)| i as u32)
+                .collect(),
+            pitched_from_board: self.board_pitched.iter().map(|&i| i as u32).collect(),
+        };
+        serde_json::to_string(&action).unwrap_or_else(|e| {
+            log::error(&format!("get_commit_action_json serialization failed: {:?}", e));
+            "{}".to_string()
+        })
     }
 
     /// Get the current board state (for P2P sync)

@@ -25,10 +25,11 @@ export const BlockchainPage: React.FC = () => {
     submitTurnOnChain
   } = useBlockchainStore();
 
-  const { 
-    init, 
+  const {
+    init,
     engine,
-    view, 
+    view,
+    bag,
     showBattleOverlay,
     endTurn,
     battleOutput,
@@ -76,8 +77,8 @@ export const BlockchainPage: React.FC = () => {
   const selectedCard =
     (view?.phase === 'shop' && selection?.type === 'hand' && view?.hand[selection!.index])
       ? view.hand[selection!.index]!
-      : (selection?.type === 'bag' && view?.bag[selection!.index])
-        ? view.bag[selection!.index]
+      : (selection?.type === 'bag' && bag?.[selection!.index])
+        ? bag[selection!.index]
         : null;
 
   const selectedBoardUnit = selection?.type === 'board' && view?.board[selection!.index]

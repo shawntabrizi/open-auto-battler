@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import type { GameView, BattleOutput, Selection } from '../types';
 
 interface GameEngine {
+  // Legacy JsValue methods (kept for backward compatibility)
   get_view: () => any;
   get_battle_output: () => any;
   pitch_hand_card: (index: number) => void;
@@ -19,6 +20,15 @@ interface GameEngine {
   resolve_battle_p2p: (player_board: any, enemy_board: any, seed: bigint) => any;
   apply_battle_result: (result: any) => void;
   get_commit_action: () => any;
+
+  // Universal JSON String Bridge methods (preferred for chain sync)
+  // Note: seed is bigint because wasm-bindgen binds Rust u64 to JS BigInt
+  init_from_json: (json: string, seed: bigint) => void;
+  get_view_json: () => string;
+  get_full_bag_json: () => string;
+  execute_action_json: (actionJson: string) => string;
+  get_battle_output_json: () => string;
+  get_commit_action_json: () => string;
 }
 
 interface WasmModule {
@@ -31,6 +41,7 @@ interface GameStore {
   engine: GameEngine | null;
   view: GameView | null;
   battleOutput: BattleOutput | null;
+  bag: any[] | null; // Full bag data (fetched on demand - Cold Path)
   isLoading: boolean;
   error: string | null;
   selection: Selection | null;
@@ -50,6 +61,7 @@ interface GameStore {
   closeBattleOverlay: () => void;
   toggleShowRawJson: () => void;
   setShowBag: (show: boolean) => void;
+  fetchBag: () => void; // Fetch full bag on demand (Cold Path)
   getCommitAction: () => any;
 
   startMultiplayerGame: (seed: number) => void;
@@ -62,6 +74,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   engine: null,
   view: null,
   battleOutput: null,
+  bag: null, // Fetched on demand via fetchBag()
   isLoading: true,
   error: null,
   selection: null,
@@ -183,7 +196,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setSelection: (selection: Selection | null) => { set({ selection }); },
   closeBattleOverlay: () => { set({ showBattleOverlay: false }); },
-  setShowBag: (show: boolean) => { set({ showBag: show }); },
+  setShowBag: (show: boolean) => {
+    set({ showBag: show });
+    // Fetch bag when opening the overlay
+    if (show) {
+      get().fetchBag();
+    }
+  },
+  fetchBag: () => {
+    const { engine } = get();
+    if (!engine) return;
+    try {
+      const bagJson = engine.get_full_bag_json();
+      const bag = JSON.parse(bagJson);
+      set({ bag });
+    } catch (err) {
+      console.error('Failed to fetch bag:', err);
+    }
+  },
   getCommitAction: () => {
     const { engine } = get();
     if (!engine) return null;
