@@ -27,8 +27,8 @@ pub mod pallet {
         BoundedGameState as CoreBoundedGameState,
     };
     use manalimit_core::{
-        get_starter_templates, verify_and_apply_turn, BattleResult, CommitTurnAction, GamePhase,
-        GameState, UnitCard,
+        create_genesis_bag, verify_and_apply_turn, BattleResult, CommitTurnAction, GamePhase,
+        GameState,
     };
 
     #[pallet::pallet]
@@ -134,7 +134,7 @@ pub mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Start a new game session.
-        /// Generates a random seed and initializes the game state with a mock deck.
+        /// Generates a random seed and initializes the game state with a deterministic bag.
         #[pallet::call_index(0)]
         #[pallet::weight(Weight::default())]
         pub fn start_game(origin: OriginFor<T>) -> DispatchResult {
@@ -151,9 +151,11 @@ pub mod pallet {
             // Create initial state
             let mut state = GameState::new(seed);
 
-            // Initialize with mock bag (Rat cards)
-            // In the future this would come from a "Set" or "Deck" selection
-            state.bag = Self::get_mock_genesis_bag();
+            // Generate the Bag deterministically
+            state.bag = create_genesis_bag();
+
+            // Set lives to 3 as requested
+            state.lives = 3;
 
             let session = GameSession {
                 state: state.into(),
@@ -311,36 +313,6 @@ pub mod pallet {
             let mut bytes = [0u8; 8];
             bytes.copy_from_slice(&hash[0..8]);
             u64::from_le_bytes(bytes)
-        }
-
-        /// Create a mock genesis bag of 100 cards from starter templates
-        fn get_mock_genesis_bag() -> Vec<UnitCard> {
-            let templates = get_starter_templates();
-            // Filter out tokens
-            let deck_templates: Vec<_> = templates.into_iter().filter(|t| !t.is_token).collect();
-
-            let mut bag = Vec::new();
-            if deck_templates.is_empty() {
-                return bag;
-            }
-
-            for i in 0..100 {
-                let template = &deck_templates[i % deck_templates.len()];
-                bag.push(
-                    UnitCard::new(
-                        (i + 1) as u32,
-                        template.template_id,
-                        template.name,
-                        template.attack,
-                        template.health,
-                        template.play_cost,
-                        template.pitch_value,
-                        template.is_token,
-                    )
-                    .with_abilities(template.abilities.clone()),
-                );
-            }
-            bag
         }
     }
 }

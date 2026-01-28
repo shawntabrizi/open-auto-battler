@@ -7,8 +7,8 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::types::{
-    Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, CompareOp, SortOrder,
-    StatType, TargetScope,
+    Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, CompareOp,
+    EconomyStats, SortOrder, StatType, TargetScope, UnitCard, UnitStats,
 };
 
 /// Card template for creating starter deck cards
@@ -1042,4 +1042,38 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             is_token: true,
         },
     ]
+}
+
+/// Create a standard starting bag of cards for a new game.
+pub fn create_genesis_bag() -> Vec<UnitCard> {
+    let templates = get_starter_templates();
+    let mut bag = Vec::with_capacity(100);
+
+    let non_token_templates: Vec<_> = templates.into_iter().filter(|t| !t.is_token).collect();
+
+    if non_token_templates.is_empty() {
+        return bag;
+    }
+
+    for i in 0..100 {
+        let template = &non_token_templates[i % non_token_templates.len()];
+        let card = UnitCard {
+            id: (i as u32) + 1,
+            template_id: String::from(template.template_id),
+            name: String::from(template.name),
+            stats: UnitStats {
+                attack: template.attack,
+                health: template.health,
+            },
+            economy: EconomyStats {
+                play_cost: template.play_cost,
+                pitch_value: template.pitch_value,
+            },
+            abilities: template.abilities.clone(),
+            is_token: template.is_token,
+        };
+        bag.push(card);
+    }
+
+    bag
 }

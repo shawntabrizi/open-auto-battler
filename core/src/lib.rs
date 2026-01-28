@@ -36,5 +36,5 @@ pub use opponents::get_opponent_for_round;
 pub use rng::{BattleRng, XorShiftRng};
 pub use state::*;
 pub use types::*;
-pub use units::get_starter_templates;
+pub use units::{create_genesis_bag, get_starter_templates};
 pub use view::*;
