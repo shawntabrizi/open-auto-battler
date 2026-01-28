@@ -130,6 +130,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     try {
+      console.log(`Refreshing game state for ${selectedAccount.address}...`);
       const game = await api.query.AutoBattle.ActiveGame.getValue(selectedAccount.address);
       set({ chainState: game });
 
@@ -137,10 +138,24 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         // Sync local WASM engine with chain state
         const { engine } = useGameStore.getState();
         if (engine) {
-          // Convert bounded state back to core state (this might need helper)
-          // For now, we assume the engine can handle it if we pass it correctly
-          // engine.set_state(game.state);
+          console.log("On-chain game found. Syncing WASM engine...", game.state);
+          try {
+            // Ensure we are passing a plain object
+            const stateObj = JSON.parse(JSON.stringify(game.state));
+            engine.set_state(stateObj);
+            
+            // Immediately update the view from the synchronized engine
+            const newView = engine.get_view();
+            console.log("WASM engine synced. New bag count:", newView.bag_count);
+            useGameStore.setState({ view: newView });
+          } catch (e) {
+            console.error("Failed to sync engine with chain state:", e);
+          }
+        } else {
+          console.warn("WASM engine not ready yet, skipping sync.");
         }
+      } else {
+        console.log("No active game found on-chain for this account.");
       }
     } catch (err) {
       console.error("Failed to fetch game state:", err);

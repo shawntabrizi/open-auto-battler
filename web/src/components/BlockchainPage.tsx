@@ -21,11 +21,13 @@ export const BlockchainPage: React.FC = () => {
     chainState,
     blockNumber,
     startGame,
+    refreshGameState,
     submitTurnOnChain
   } = useBlockchainStore();
 
   const { 
     init, 
+    engine,
     view, 
     showBattleOverlay,
     endTurn,
@@ -39,6 +41,13 @@ export const BlockchainPage: React.FC = () => {
   useEffect(() => {
     init();
   }, [init]);
+
+  // Sync chain state whenever engine or account changes
+  useEffect(() => {
+    if (engine && isConnected && selectedAccount) {
+      refreshGameState();
+    }
+  }, [engine, isConnected, selectedAccount, refreshGameState]);
 
   const handleStartGame = async () => {
     setTxLoading(true);
