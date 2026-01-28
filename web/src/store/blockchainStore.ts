@@ -13,6 +13,7 @@ import {
 } from "@polkadot-labs/hdkd-helpers"
 import { getPolkadotSigner } from "polkadot-api/signer"
 import { AccountId } from "@polkadot-api/substrate-bindings";
+import { chainStateToWasm, wasmActionToChain } from '../utils/chainConvert';
 
 interface BlockchainStore {
   client: any;
@@ -140,8 +141,8 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         if (engine) {
           console.log("On-chain game found. Syncing WASM engine...", game.state);
           try {
-            // Ensure we are passing a plain object
-            const stateObj = JSON.parse(JSON.stringify(game.state));
+            // Convert PAPI types to WASM-friendly format
+            const stateObj = chainStateToWasm(game.state);
             engine.set_state(stateObj);
             
             // Immediately update the view from the synchronized engine
@@ -185,7 +186,9 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
 
     try {
       const action = engine.get_commit_action();
-      const tx = api.tx.AutoBattle.submit_shop_phase({ action });
+      // Convert WASM format to PAPI format (e.g. strings to Binary)
+      const chainAction = wasmActionToChain(action);
+      const tx = api.tx.AutoBattle.submit_shop_phase({ action: chainAction });
 
       await tx.signAndSubmit(selectedAccount.polkadotSigner);
       await get().refreshGameState();
