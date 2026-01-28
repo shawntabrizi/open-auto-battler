@@ -15,8 +15,26 @@ use manalimit_core::rng::XorShiftRng;
 use manalimit_core::state::*;
 use manalimit_core::types::{BoardUnit, CardId, CommitTurnAction, UnitCard};
 use manalimit_core::view::{CardView, GameView};
+use manalimit_core::bounded::{BoundedLocalGameState, BoundedCardSet};
+use bounded_collections::ConstU32;
+use parity_scale_codec::Decode;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
+
+// These must match the blockchain runtime constants
+type WasmMaxBagSize = ConstU32<100>;
+type WasmMaxBoardSize = ConstU32<5>;
+type WasmMaxHandActions = ConstU32<10>;
+type WasmMaxAbilities = ConstU32<5>;
+type WasmMaxStringLen = ConstU32<32>;
+
+#[derive(Decode)]
+struct WasmGameSession {
+    state: BoundedLocalGameState<WasmMaxBagSize, WasmMaxBoardSize, WasmMaxHandActions>,
+    set_id: u32,
+    current_seed: u64,
+    owner: [u8; 32],
+}
 
 /// Result of starting a battle (events for playback)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -373,6 +391,38 @@ impl GameEngine {
         state.local_state.game_seed = seed;
         self.set_id = state.set_id;
         self.state = state;
+        self.start_planning_phase();
+        Ok(())
+    }
+
+    /// Initialize the game engine from SCALE bytes (Universal SCALE Bridge)
+    #[wasm_bindgen]
+    pub fn init_from_scale(&mut self, session_scale: Vec<u8>, card_set_scale: Vec<u8>) -> Result<(), String> {
+        log::action(
+            "init_from_scale",
+            &format!(
+                "Initializing engine from SCALE bytes (session={}, card_set={})",
+                session_scale.len(),
+                card_set_scale.len()
+            ),
+        );
+
+        let session = WasmGameSession::decode(&mut &session_scale[..])
+            .map_err(|e| format!("Failed to decode WasmGameSession: {:?}", e))?;
+
+        let card_set_bounded = BoundedCardSet::<WasmMaxBagSize, WasmMaxAbilities, WasmMaxStringLen>::decode(&mut &card_set_scale[..])
+            .map_err(|e| format!("Failed to decode BoundedCardSet: {:?}", e))?;
+
+        let card_set: manalimit_core::state::CardSet = card_set_bounded.into();
+        let local_state: manalimit_core::state::LocalGameState = session.state.into();
+
+        let mut state = GameState::reconstruct(card_set.card_pool, session.set_id, local_state);
+        
+        // Ensure the current_seed from session is applied to local_state
+        state.local_state.game_seed = session.current_seed;
+
+        self.state = state;
+        self.set_id = self.state.set_id;
         self.start_planning_phase();
         Ok(())
     }

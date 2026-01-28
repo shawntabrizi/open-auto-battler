@@ -11,7 +11,9 @@ repository.workspace = true
 crate-type = ["cdylib"]
 
 [dependencies]
-manalimit-core = { workspace = true, default-features = true }
+manalimit-core = { workspace = true, features = ["std", "bounded"] }
+parity-scale-codec = { workspace = true, features = ["derive"] }
+bounded-collections = { workspace = true }
 wasm-bindgen = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["alloc"] }

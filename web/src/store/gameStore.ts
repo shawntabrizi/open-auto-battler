@@ -24,6 +24,7 @@ interface GameEngine {
   // Universal JSON String Bridge methods (preferred for chain sync)
   // Note: seed is bigint because wasm-bindgen binds Rust u64 to JS BigInt
   init_from_json: (json: string, seed: bigint) => void;
+  init_from_scale: (session: Uint8Array, cardSet: Uint8Array) => void;
   get_view_json: () => string;
   get_full_bag_json: () => string;
   execute_action_json: (actionJson: string) => string;

@@ -13,7 +13,7 @@ import {
 } from "@polkadot-labs/hdkd-helpers"
 import { getPolkadotSigner } from "polkadot-api/signer"
 import { AccountId } from "@polkadot-api/substrate-bindings";
-import { prepareForJsonBridge, extractSeedBigInt, wasmActionToChain, ensureRecord } from '../utils/chainConvert';
+import { wasmActionToChain } from '../utils/chainConvert';
 
 interface BlockchainStore {
   client: any;
@@ -147,68 +147,32 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       set({ chainState: game });
 
       if (game) {
-        // Fetch the corresponding card set
-        const cardSet = await api.query.AutoBattle.CardSets.getValue(game.set_id);
-        
-        // Sync local WASM engine with chain state using Universal JSON String Bridge
+        // Sync local WASM engine with chain state using Raw SCALE Bytes
         const { engine } = useGameStore.getState();
-        if (engine && cardSet) {
-          console.log("On-chain game found. Syncing WASM engine via JSON bridge...", game.state);
+        if (engine) {
+          console.log("On-chain game found. Syncing WASM engine via SCALE bytes...");
           try {
-            // === UNIVERSAL JSON STRING BRIDGE ===
-            
-            // 1. Sanitize: Convert PAPI types and deep flatten to plain objects
-            const cleanState = prepareForJsonBridge(game.state);
-            // The cardSet might be returned as the map itself if it's a single-field struct
-            const cleanCardPool = ensureRecord(cardSet);
+            // 1. Fetch raw SCALE bytes from the blockchain
+            const gameRaw = await api.query.AutoBattle.ActiveGame.getRawValue(selectedAccount.address);
+            const cardSetRaw = await api.query.AutoBattle.CardSets.getRawValue(game.set_id);
 
-            if (!cleanCardPool || Object.keys(cleanCardPool).length === 0) {
-              console.error("Clean card pool is empty or invalid!", { 
-                rawCardSet: cardSet, 
-                clean: cleanCardPool 
-              });
-              throw new Error("Failed to prepare card pool for WASM");
+            if (!gameRaw || !cardSetRaw) {
+              throw new Error("Failed to fetch raw SCALE bytes from chain");
             }
 
-            // 2. Reconstruct full GameState for WASM
-            const fullState = {
-              card_pool: cleanCardPool,
-              set_id: game.set_id, // Explicitly include set_id from the session
-              ...cleanState
-            };
+            // 2. Send to WASM via SCALE bridge
+            // Binary.asBytes() returns a Uint8Array which wasm-bindgen accepts as Vec<u8>
+            engine.init_from_scale(gameRaw.asBytes(), cardSetRaw.asBytes());
 
-            // Debug: Log key fields after conversion
-            console.log("Full state after conversion:", {
-              phase: fullState.phase,
-              set_id: fullState.set_id,
-              game_seed: fullState.game_seed,
-              next_card_id: fullState.next_card_id,
-              board: fullState.board,
-              card_pool_size: fullState.card_pool ? Object.keys(fullState.card_pool).length : 0,
-            });
-
-            // 3. Extract seed safely (handles BigInt) - must pass as BigInt for u64
-            const seed = extractSeedBigInt(game.state);
-
-            // 4. Serialize to JSON string
-            const json = JSON.stringify(fullState);
-            console.log("Prepared JSON for WASM (length):", json.length);
-            console.log("Seed for WASM:", seed);
-
-            // 5. Send to WASM via JSON string
-            engine.init_from_json(json, seed);
-
-            // 6. Receive view as JSON string and parse
+            // 3. Receive view as JSON string and parse
             const viewJson = engine.get_view_json();
             const view = JSON.parse(viewJson);
 
-            console.log("WASM engine synced successfully via JSON bridge. View:", view);
+            console.log("WASM engine synced successfully via SCALE bytes. View:", view);
             useGameStore.setState({ view });
           } catch (e) {
-            console.error("Failed to sync engine with chain state:", e);
+            console.error("Failed to sync engine with chain state via SCALE:", e);
           }
-        } else if (!cardSet) {
-          console.error("Card set not found on-chain:", game.set_id);
         } else {
           console.warn("WASM engine not ready yet, skipping sync.");
         }

@@ -7381,9 +7381,11 @@ dependencies = [
 name = "manalimit-client"
 version = "0.1.0"
 dependencies = [
+ "bounded-collections",
  "console_error_panic_hook",
  "getrandom 0.2.17",
  "manalimit-core",
+ "parity-scale-codec",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
