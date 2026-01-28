@@ -147,55 +147,47 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       set({ chainState: game });
 
       if (game) {
+        // Fetch the corresponding card set
+        const cardSet = await api.query.AutoBattle.CardSets.getValue(game.set_id);
+        
         // Sync local WASM engine with chain state using Universal JSON String Bridge
         const { engine } = useGameStore.getState();
-        if (engine) {
+        if (engine && cardSet) {
           console.log("On-chain game found. Syncing WASM engine via JSON bridge...", game.state);
           try {
             // === UNIVERSAL JSON STRING BRIDGE ===
-            // Debug: Log key fields before conversion
-            console.log("Raw state from chain:", {
-              phase: game.state.phase,
-              game_seed: game.state.game_seed,
-              next_card_id: game.state.next_card_id,
-              board: game.state.board,
-            });
-
+            
             // 1. Sanitize: Convert PAPI types and deep flatten to plain objects
-            const clean = prepareForJsonBridge(game.state);
+            const cleanState = prepareForJsonBridge(game.state);
+            const cleanCardPool = prepareForJsonBridge(cardSet.card_pool);
+
+            // 2. Reconstruct full GameState for WASM
+            const fullState = {
+              card_pool: cleanCardPool,
+              ...cleanState
+            };
 
             // Debug: Log key fields after conversion
-            console.log("Clean state after conversion:", {
-              phase: clean.phase,
-              game_seed: clean.game_seed,
-              next_card_id: clean.next_card_id,
-              board: clean.board,
+            console.log("Full state after conversion:", {
+              phase: fullState.phase,
+              game_seed: fullState.game_seed,
+              next_card_id: fullState.next_card_id,
+              board: fullState.board,
+              card_pool_size: Object.keys(fullState.card_pool).length,
             });
 
-            // 2. Extract seed safely (handles BigInt) - must pass as BigInt for u64
+            // 3. Extract seed safely (handles BigInt) - must pass as BigInt for u64
             const seed = extractSeedBigInt(game.state);
 
-            // 3. Serialize to JSON string
-            const json = JSON.stringify(clean);
+            // 4. Serialize to JSON string
+            const json = JSON.stringify(fullState);
             console.log("Prepared JSON for WASM (length):", json.length);
             console.log("Seed for WASM:", seed);
 
-            // Debug: Log board JSON specifically
-            const boardJson = JSON.stringify(clean.board);
-            console.log("Board JSON:", boardJson);
-
-            // Debug: Log a sample of the JSON to help diagnose issues
-            if (json.length < 5000) {
-              console.log("Full JSON:", json);
-            } else {
-              console.log("JSON preview (first 2000 chars):", json.substring(0, 2000));
-            }
-
-            // 4. Send to WASM via JSON string (bypasses JsValue recursion limits)
-            // Note: seed must be BigInt for wasm-bindgen u64 binding
+            // 5. Send to WASM via JSON string
             engine.init_from_json(json, seed);
 
-            // 5. Receive view as JSON string and parse
+            // 6. Receive view as JSON string and parse
             const viewJson = engine.get_view_json();
             const view = JSON.parse(viewJson);
 
@@ -203,9 +195,9 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
             useGameStore.setState({ view });
           } catch (e) {
             console.error("Failed to sync engine with chain state:", e);
-            // Log the clean state for debugging
-            console.error("Clean state that caused the error:", prepareForJsonBridge(game.state));
           }
+        } else if (!cardSet) {
+          console.error("Card set not found on-chain:", game.set_id);
         } else {
           console.warn("WASM engine not ready yet, skipping sync.");
         }
@@ -224,9 +216,8 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     try {
-      // Use current time as seed or something similar
-      const seed = BigInt(Math.floor(Date.now() / 1000));
-      const tx = api.tx.AutoBattle.start_game({ seed });
+      // Start game with set_id 0 (Starter Set)
+      const tx = api.tx.AutoBattle.start_game({ set_id: 0 });
 
       await tx.signAndSubmit(selectedAccount.polkadotSigner);
       await get().refreshGameState();

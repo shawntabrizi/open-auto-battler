@@ -8,7 +8,7 @@ fn test_start_game() {
         let account_id = 1;
 
         // Assert game starts successfully
-        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id)));
+        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id), 0));
 
         // Verify game exists in storage
         let session = ActiveGame::<Test>::get(account_id).unwrap();
@@ -20,7 +20,7 @@ fn test_start_game() {
 
         // Assert cannot start another game
         assert_noop!(
-            AutoBattle::start_game(RuntimeOrigin::signed(account_id)),
+            AutoBattle::start_game(RuntimeOrigin::signed(account_id), 0),
             Error::<Test>::GameAlreadyActive
         );
     });
@@ -30,7 +30,7 @@ fn test_start_game() {
 fn test_submit_shop_phase_empty() {
     new_test_ext().execute_with(|| {
         let account_id = 1;
-        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id)));
+        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id), 0));
 
         // Create an empty turn action
         let action = manalimit_core::CommitTurnAction {
@@ -56,7 +56,7 @@ fn test_submit_shop_phase_empty() {
 fn test_report_battle_outcome_victory() {
     new_test_ext().execute_with(|| {
         let account_id = 1;
-        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id)));
+        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id), 0));
 
         // Must submit shop phase first to get into Battle phase
         let action = manalimit_core::CommitTurnAction {
@@ -87,7 +87,7 @@ fn test_report_battle_outcome_victory() {
 fn test_report_battle_outcome_defeat() {
     new_test_ext().execute_with(|| {
         let account_id = 1;
-        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id)));
+        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id), 0));
 
         // Initial lives is 3 (from core)
         let initial_lives = ActiveGame::<Test>::get(account_id).unwrap().state.lives;
@@ -121,7 +121,7 @@ fn test_report_battle_outcome_defeat() {
 fn test_game_over_defeat() {
     new_test_ext().execute_with(|| {
         let account_id = 1;
-        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id)));
+        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id), 0));
 
         // Force lives to 1
         ActiveGame::<Test>::mutate(account_id, |session| {
@@ -155,7 +155,7 @@ fn test_game_over_defeat() {
 fn test_phase_enforcement() {
     new_test_ext().execute_with(|| {
         let account_id = 1;
-        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id)));
+        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id), 0));
 
         // 1. Try to report battle outcome during Shop phase
         assert_noop!(

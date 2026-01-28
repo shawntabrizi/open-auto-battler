@@ -477,6 +477,258 @@ impl From<BoundedBoardUnit> for BoardUnit {
     }
 }
 
+// --- Bounded Card Set ---
+
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[scale_info(skip_type_params(MaxBagSize, MaxAbilities, MaxStringLen))]
+pub struct BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+where
+    MaxBagSize: Get<u32>,
+    MaxAbilities: Get<u32>,
+    MaxStringLen: Get<u32>,
+{
+    pub card_pool: BoundedBTreeMap<CardId, BoundedUnitCard<MaxAbilities, MaxStringLen>, MaxBagSize>,
+}
+
+impl<MaxBagSize, MaxAbilities, MaxStringLen> Clone
+    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+where
+    MaxBagSize: Get<u32>,
+    MaxAbilities: Get<u32>,
+    MaxStringLen: Get<u32>,
+{
+    fn clone(&self) -> Self {
+        Self {
+            card_pool: self.card_pool.clone(),
+        }
+    }
+}
+
+impl<MaxBagSize, MaxAbilities, MaxStringLen> PartialEq
+    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+where
+    MaxBagSize: Get<u32>,
+    MaxAbilities: Get<u32>,
+    MaxStringLen: Get<u32>,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.card_pool == other.card_pool
+    }
+}
+
+impl<MaxBagSize, MaxAbilities, MaxStringLen> Eq for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+where
+    MaxBagSize: Get<u32>,
+    MaxAbilities: Get<u32>,
+    MaxStringLen: Get<u32>,
+{
+}
+
+impl<MaxBagSize, MaxAbilities, MaxStringLen> Debug
+    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+where
+    MaxBagSize: Get<u32>,
+    MaxAbilities: Get<u32>,
+    MaxStringLen: Get<u32>,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("BoundedCardSet")
+            .field("card_pool", &self.card_pool)
+            .finish()
+    }
+}
+
+impl<MaxBagSize, MaxAbilities, MaxStringLen> From<crate::state::CardSet>
+    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+where
+    MaxBagSize: Get<u32>,
+    MaxAbilities: Get<u32>,
+    MaxStringLen: Get<u32>,
+{
+    fn from(cs: crate::state::CardSet) -> Self {
+        let mut card_pool = BoundedBTreeMap::new();
+        for (id, card) in cs.card_pool {
+            let _ = card_pool.try_insert(id, card.into());
+        }
+        Self { card_pool }
+    }
+}
+
+impl<MaxBagSize, MaxAbilities, MaxStringLen>
+    From<BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>>
+    for crate::state::CardSet
+where
+    MaxBagSize: Get<u32>,
+    MaxAbilities: Get<u32>,
+    MaxStringLen: Get<u32>,
+{
+    fn from(bounded: BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>) -> Self {
+        Self {
+            card_pool: bounded
+                .card_pool
+                .into_iter()
+                .map(|(id, card)| (id, card.into()))
+                .collect(),
+        }
+    }
+}
+
+// --- Bounded Local Game State ---
+
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[scale_info(skip_type_params(MaxBagSize, MaxBoardSize, MaxHandActions))]
+pub struct BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    pub bag: BoundedVec<CardId, MaxBagSize>,
+    pub hand: BoundedVec<CardId, MaxHandActions>,
+    pub board: BoundedVec<Option<BoundedBoardUnit>, MaxBoardSize>,
+    pub mana_limit: i32,
+    pub round: i32,
+    pub lives: i32,
+    pub wins: i32,
+    pub phase: GamePhase,
+    pub next_card_id: u32,
+    pub game_seed: u64,
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions> Clone
+    for BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    fn clone(&self) -> Self {
+        Self {
+            bag: self.bag.clone(),
+            hand: self.hand.clone(),
+            board: self.board.clone(),
+            mana_limit: self.mana_limit,
+            round: self.round,
+            lives: self.lives,
+            wins: self.wins,
+            phase: self.phase.clone(),
+            next_card_id: self.next_card_id,
+            game_seed: self.game_seed,
+        }
+    }
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions> PartialEq
+    for BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.bag == other.bag
+            && self.hand == other.hand
+            && self.board == other.board
+            && self.mana_limit == other.mana_limit
+            && self.round == other.round
+            && self.lives == other.lives
+            && self.wins == other.wins
+            && self.phase == other.phase
+            && self.next_card_id == other.next_card_id
+            && self.game_seed == other.game_seed
+    }
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions> Eq
+    for BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions> Debug
+    for BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("BoundedLocalGameState")
+            .field("bag", &self.bag)
+            .field("hand", &self.hand)
+            .field("board", &self.board)
+            .field("mana_limit", &self.mana_limit)
+            .field("round", &self.round)
+            .field("lives", &self.lives)
+            .field("wins", &self.wins)
+            .field("phase", &self.phase)
+            .field("next_card_id", &self.next_card_id)
+            .field("game_seed", &self.game_seed)
+            .finish()
+    }
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions> From<crate::state::LocalGameState>
+    for BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    fn from(state: crate::state::LocalGameState) -> Self {
+        Self {
+            bag: BoundedVec::truncate_from(state.bag),
+            hand: BoundedVec::truncate_from(state.hand),
+            board: BoundedVec::truncate_from(
+                state
+                    .board
+                    .into_iter()
+                    .map(|opt| opt.map(Into::into))
+                    .collect(),
+            ),
+            mana_limit: state.mana_limit,
+            round: state.round,
+            lives: state.lives,
+            wins: state.wins,
+            phase: state.phase,
+            next_card_id: state.next_card_id,
+            game_seed: state.game_seed,
+        }
+    }
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions>
+    From<BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>>
+    for crate::state::LocalGameState
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    fn from(bounded: BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>) -> Self {
+        Self {
+            bag: bounded.bag.into_inner(),
+            hand: bounded.hand.into_inner(),
+            board: bounded
+                .board
+                .into_inner()
+                .into_iter()
+                .map(|opt| opt.map(Into::into))
+                .collect(),
+            mana_limit: bounded.mana_limit,
+            round: bounded.round,
+            lives: bounded.lives,
+            wins: bounded.wins,
+            phase: bounded.phase,
+            next_card_id: bounded.next_card_id,
+            game_seed: bounded.game_seed,
+        }
+    }
+}
+
 // --- Bounded Game State ---
 
 #[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
@@ -496,16 +748,7 @@ where
     MaxHandActions: Get<u32>,
 {
     pub card_pool: BoundedBTreeMap<CardId, BoundedUnitCard<MaxAbilities, MaxStringLen>, MaxBagSize>,
-    pub bag: BoundedVec<CardId, MaxBagSize>,
-    pub hand: BoundedVec<CardId, MaxHandActions>,
-    pub board: BoundedVec<Option<BoundedBoardUnit>, MaxBoardSize>,
-    pub mana_limit: i32,
-    pub round: i32,
-    pub lives: i32,
-    pub wins: i32,
-    pub phase: GamePhase,
-    pub next_card_id: u32,
-    pub game_seed: u64,
+    pub local_state: BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>,
 }
 
 impl<
@@ -520,16 +763,7 @@ impl<
     fn clone(&self) -> Self {
         Self {
             card_pool: self.card_pool.clone(),
-            bag: self.bag.clone(),
-            hand: self.hand.clone(),
-            board: self.board.clone(),
-            mana_limit: self.mana_limit,
-            round: self.round,
-            lives: self.lives,
-            wins: self.wins,
-            phase: self.phase.clone(),
-            next_card_id: self.next_card_id,
-            game_seed: self.game_seed,
+            local_state: self.local_state.clone(),
         }
     }
 }
@@ -544,17 +778,7 @@ impl<
     for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 {
     fn eq(&self, other: &Self) -> bool {
-        self.card_pool == other.card_pool
-            && self.bag == other.bag
-            && self.hand == other.hand
-            && self.board == other.board
-            && self.mana_limit == other.mana_limit
-            && self.round == other.round
-            && self.lives == other.lives
-            && self.wins == other.wins
-            && self.phase == other.phase
-            && self.next_card_id == other.next_card_id
-            && self.game_seed == other.game_seed
+        self.card_pool == other.card_pool && self.local_state == other.local_state
     }
 }
 
@@ -581,16 +805,7 @@ impl<
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedGameState")
             .field("card_pool", &self.card_pool)
-            .field("bag", &self.bag)
-            .field("hand", &self.hand)
-            .field("board", &self.board)
-            .field("mana_limit", &self.mana_limit)
-            .field("round", &self.round)
-            .field("lives", &self.lives)
-            .field("wins", &self.wins)
-            .field("phase", &self.phase)
-            .field("next_card_id", &self.next_card_id)
-            .field("game_seed", &self.game_seed)
+            .field("local_state", &self.local_state)
             .finish()
     }
 }
@@ -605,29 +820,16 @@ where
     MaxHandActions: Get<u32>,
 {
     fn from(state: GameState) -> Self {
+        let (card_pool_raw, local_state_raw) = state.decompose();
+
         let mut card_pool = BoundedBTreeMap::new();
-        for (id, card) in state.card_pool {
+        for (id, card) in card_pool_raw {
             let _ = card_pool.try_insert(id, card.into());
         }
 
         Self {
             card_pool,
-            bag: BoundedVec::truncate_from(state.bag),
-            hand: BoundedVec::truncate_from(state.hand),
-            board: BoundedVec::truncate_from(
-                state
-                    .board
-                    .into_iter()
-                    .map(|opt| opt.map(Into::into))
-                    .collect(),
-            ),
-            mana_limit: state.mana_limit,
-            round: state.round,
-            lives: state.lives,
-            wins: state.wins,
-            phase: state.phase,
-            next_card_id: state.next_card_id,
-            game_seed: state.game_seed,
+            local_state: local_state_raw.into(),
         }
     }
 }
@@ -651,28 +853,45 @@ where
             MaxHandActions,
         >,
     ) -> Self {
-        Self {
-            card_pool: bounded
-                .card_pool
-                .into_iter()
-                .map(|(id, card)| (id, card.into()))
-                .collect(),
-            bag: bounded.bag.into_inner(),
-            hand: bounded.hand.into_inner(),
-            board: bounded
-                .board
-                .into_inner()
-                .into_iter()
-                .map(|opt| opt.map(Into::into))
-                .collect(),
-            mana_limit: bounded.mana_limit,
-            round: bounded.round,
-            lives: bounded.lives,
-            wins: bounded.wins,
-            phase: bounded.phase,
-            next_card_id: bounded.next_card_id,
-            game_seed: bounded.game_seed,
-        }
+        let card_pool = bounded
+            .card_pool
+            .into_iter()
+            .map(|(id, card)| (id, card.into()))
+            .collect();
+        let local_state = bounded.local_state.into();
+
+        Self::reconstruct(card_pool, local_state)
+    }
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    core::ops::Deref
+    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxAbilities: Get<u32>,
+    MaxStringLen: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    type Target = BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>;
+    fn deref(&self) -> &Self::Target {
+        &self.local_state
+    }
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    core::ops::DerefMut
+    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxAbilities: Get<u32>,
+    MaxStringLen: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.local_state
     }
 }
 

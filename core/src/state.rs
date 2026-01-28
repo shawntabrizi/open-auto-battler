@@ -37,12 +37,17 @@ pub enum GamePhase {
     Defeat,
 }
 
-/// The complete game state
+/// A set of cards available for a game
 #[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, PartialEq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct GameState {
-    /// Global pool of all card instances
+pub struct CardSet {
     pub card_pool: BTreeMap<CardId, UnitCard>,
+}
+
+/// The user-specific game state (without the card pool)
+#[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, PartialEq)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct LocalGameState {
     /// Cards remaining in the bag (unordered pool)
     pub bag: Vec<CardId>,
     /// Player's current hand for the shop phase
@@ -65,21 +70,60 @@ pub struct GameState {
     pub game_seed: u64,
 }
 
+/// The complete game state
+#[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, PartialEq)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct GameState {
+    /// Global pool of all card instances
+    pub card_pool: BTreeMap<CardId, UnitCard>,
+    /// Local game state
+    #[cfg_attr(feature = "std", serde(flatten))]
+    pub local_state: LocalGameState,
+}
+
+impl core::ops::Deref for GameState {
+    type Target = LocalGameState;
+    fn deref(&self) -> &Self::Target {
+        &self.local_state
+    }
+}
+
+impl core::ops::DerefMut for GameState {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.local_state
+    }
+}
+
 impl GameState {
     pub fn new(game_seed: u64) -> Self {
         Self {
             card_pool: BTreeMap::new(),
-            bag: Vec::new(),
-            hand: Vec::new(),
-            board: vec![None; BOARD_SIZE],
-            mana_limit: STARTING_MANA_LIMIT,
-            round: 1,
-            lives: STARTING_LIVES,
-            wins: 0,
-            phase: GamePhase::Shop,
-            next_card_id: 1,
-            game_seed,
+            local_state: LocalGameState {
+                bag: Vec::new(),
+                hand: Vec::new(),
+                board: vec![None; BOARD_SIZE],
+                mana_limit: STARTING_MANA_LIMIT,
+                round: 1,
+                lives: STARTING_LIVES,
+                wins: 0,
+                phase: GamePhase::Shop,
+                next_card_id: 1,
+                game_seed,
+            },
         }
+    }
+
+    /// Construct a full GameState from card_pool and local_state
+    pub fn reconstruct(card_pool: BTreeMap<CardId, UnitCard>, local_state: LocalGameState) -> Self {
+        Self {
+            card_pool,
+            local_state,
+        }
+    }
+
+    /// Decompose GameState into card_pool and local_state
+    pub fn decompose(self) -> (BTreeMap<CardId, UnitCard>, LocalGameState) {
+        (self.card_pool, self.local_state)
     }
 
     /// Populate the hand by drawing from the bag.
@@ -96,40 +140,51 @@ impl GameState {
 
         let mut drawn_hand = Vec::with_capacity(sorted_indices.len());
         for idx in sorted_indices {
-            drawn_hand.push(self.bag.remove(idx));
+            drawn_hand.push(self.local_state.bag.remove(idx));
         }
 
         // reverse to maintain original derived order (aesthetic)
         drawn_hand.reverse();
-        self.hand = drawn_hand;
+        self.local_state.hand = drawn_hand;
     }
 
     /// Generate a unique card ID
     pub fn generate_card_id(&mut self) -> CardId {
-        let id = self.next_card_id;
-        self.next_card_id += 1;
+        let id = self.local_state.next_card_id;
+        self.local_state.next_card_id += 1;
         CardId(id)
     }
 
     /// Calculate mana limit for the current round
     pub fn calculate_mana_limit(&self) -> i32 {
-        calculate_mana_limit(self.round)
+        calculate_mana_limit(self.local_state.round)
     }
 
     /// Derive hand indices from bag using deterministic RNG
     /// Uses game_seed XOR round to produce repeatable hand selection
     pub fn derive_hand_indices(&self) -> Vec<usize> {
-        derive_hand_indices_logic(self.bag.len(), self.game_seed, self.round)
+        derive_hand_indices_logic(
+            self.local_state.bag.len(),
+            self.local_state.game_seed,
+            self.local_state.round,
+        )
     }
 
     /// Find an empty board slot
     pub fn find_empty_board_slot(&self) -> Option<usize> {
-        self.board.iter().position(|slot| slot.is_none())
+        self.local_state
+            .board
+            .iter()
+            .position(|slot| slot.is_none())
     }
 
     /// Count units on the board
     pub fn board_unit_count(&self) -> usize {
-        self.board.iter().filter(|slot| slot.is_some()).count()
+        self.local_state
+            .board
+            .iter()
+            .filter(|slot| slot.is_some())
+            .count()
     }
 }
 

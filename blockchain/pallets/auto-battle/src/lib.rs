@@ -23,12 +23,14 @@ pub mod pallet {
 
     // Import types from core engine
     use manalimit_core::bounded::{
+        BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
         BoundedGameState as CoreBoundedGameState,
+        BoundedLocalGameState as CoreBoundedLocalGameState,
     };
     use manalimit_core::{
-        create_genesis_bag, verify_and_apply_turn, BattleResult, CommitTurnAction, GamePhase,
-        GameState,
+        create_genesis_bag, verify_and_apply_turn, BattleResult, CardSet, CommitTurnAction,
+        GamePhase, GameState,
     };
 
     #[pallet::pallet]
@@ -77,6 +79,20 @@ pub mod pallet {
         <T as Config>::MaxHandActions,
     >;
 
+    /// Type alias for the bounded local game state using pallet config.
+    pub type BoundedLocalGameState<T> = CoreBoundedLocalGameState<
+        <T as Config>::MaxBagSize,
+        <T as Config>::MaxBoardSize,
+        <T as Config>::MaxHandActions,
+    >;
+
+    /// Type alias for the bounded card set using pallet config.
+    pub type BoundedCardSet<T> = CoreBoundedCardSet<
+        <T as Config>::MaxBagSize,
+        <T as Config>::MaxAbilities,
+        <T as Config>::MaxStringLen,
+    >;
+
     /// Type alias for the bounded turn action using pallet config.
     pub type BoundedCommitTurnAction<T> =
         CoreBoundedCommitTurnAction<<T as Config>::MaxBoardSize, <T as Config>::MaxHandActions>;
@@ -85,7 +101,8 @@ pub mod pallet {
     #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound)]
     #[scale_info(skip_type_params(T))]
     pub struct GameSession<T: Config> {
-        pub state: BoundedGameState<T>,
+        pub state: BoundedLocalGameState<T>,
+        pub set_id: u32,
         pub current_seed: u64,
         pub owner: T::AccountId,
     }
@@ -95,6 +112,12 @@ pub mod pallet {
     #[pallet::getter(fn active_game)]
     pub type ActiveGame<T: Config> =
         StorageMap<_, Blake2_128Concat, T::AccountId, GameSession<T>, OptionQuery>;
+
+    /// Map of Card Sets: u32 -> CardSet
+    #[pallet::storage]
+    #[pallet::getter(fn card_set)]
+    pub type CardSets<T: Config> =
+        StorageMap<_, Blake2_128Concat, u32, BoundedCardSet<T>, OptionQuery>;
 
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -126,6 +149,8 @@ pub mod pallet {
         GameAlreadyActive,
         /// Tried to perform an action in the wrong phase
         WrongPhase,
+        /// The specified card set does not exist.
+        CardSetNotFound,
     }
 
     #[pallet::call]
@@ -134,7 +159,7 @@ pub mod pallet {
         /// Generates a random seed and initializes the game state with a deterministic bag.
         #[pallet::call_index(0)]
         #[pallet::weight(Weight::default())]
-        pub fn start_game(origin: OriginFor<T>) -> DispatchResult {
+        pub fn start_game(origin: OriginFor<T>, set_id: u32) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
             ensure!(
@@ -142,24 +167,49 @@ pub mod pallet {
                 Error::<T>::GameAlreadyActive
             );
 
+            // Check if card set exists, if not, create it (MVP: auto-create if missing)
+            if !CardSets::<T>::contains_key(set_id) {
+                let mut card_pool = alloc::collections::BTreeMap::new();
+                for card in create_genesis_bag() {
+                    card_pool.insert(card.id, card);
+                }
+                let card_set = CardSet { card_pool };
+                CardSets::<T>::insert(set_id, BoundedCardSet::<T>::from(card_set));
+            }
+
+            let card_set_bounded = CardSets::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
+            let card_set: CardSet = card_set_bounded.into();
+
             // Generate initial seed
             let seed = Self::generate_next_seed(&who, b"start_game");
 
             // Create initial state
-            let mut state = GameState::new(seed);
+            let mut state = GameState::reconstruct(card_set.card_pool, manalimit_core::state::LocalGameState {
+                bag: Vec::new(),
+                hand: Vec::new(),
+                board: vec![None; 5], // BOARD_SIZE is 5
+                mana_limit: 3, // STARTING_MANA_LIMIT is 3
+                round: 1,
+                lives: 3, // STARTING_LIVES is 3
+                wins: 0,
+                phase: GamePhase::Shop,
+                next_card_id: 1,
+                game_seed: seed,
+            });
 
-            // Generate and insert initial cards
-            for card in create_genesis_bag() {
-                let id = card.id;
-                state.card_pool.insert(id, card);
-                state.bag.push(id);
+            // Populate bag from card pool
+            for &id in state.card_pool.keys() {
+                state.local_state.bag.push(id);
             }
 
             // Draw initial hand from bag
             state.draw_hand();
 
+            let (_, local_state) = state.decompose();
+
             let session = GameSession {
-                state: state.into(),
+                state: local_state.into(),
+                set_id,
                 current_seed: seed,
                 owner: who.clone(),
             };
@@ -189,8 +239,11 @@ pub mod pallet {
                 Error::<T>::WrongPhase
             );
 
-            // Convert to core state
-            let mut core_state: GameState = session.state.clone().into();
+            // Reconstruct full core state
+            let card_set_bounded = CardSets::<T>::get(session.set_id).ok_or(Error::<T>::CardSetNotFound)?;
+            let card_set: CardSet = card_set_bounded.into();
+            let mut core_state = GameState::reconstruct(card_set.card_pool, session.state.clone().into());
+            
             let core_action: CommitTurnAction = action.into();
 
             // Verify and apply logic
@@ -198,15 +251,15 @@ pub mod pallet {
                 .map_err(|_| Error::<T>::InvalidTurn)?;
 
             // Set phase to battle
-            core_state.phase = GamePhase::Battle;
+            core_state.local_state.phase = GamePhase::Battle;
 
             // If success, generate new seed for the battle phase
             let new_seed = Self::generate_next_seed(&who, b"battle");
             session.current_seed = new_seed;
-            core_state.game_seed = new_seed;
+            core_state.local_state.game_seed = new_seed;
 
             // Update session state
-            session.state = core_state.into();
+            session.state = core_state.local_state.into();
 
             ActiveGame::<T>::insert(&who, &session);
 
@@ -275,20 +328,29 @@ pub mod pallet {
             // Generate new seed for next Shop phase
             let new_seed = Self::generate_next_seed(&who, b"shop");
             session.current_seed = new_seed;
-            session.state.game_seed = new_seed;
+            
+            // Reconstruct core state to use its methods (draw_hand, calculate_mana_limit)
+            let card_set_bounded = CardSets::<T>::get(session.set_id).ok_or(Error::<T>::CardSetNotFound)?;
+            let card_set: CardSet = card_set_bounded.into();
+            let mut core_state = GameState::reconstruct(card_set.card_pool, session.state.clone().into());
+
+            core_state.local_state.game_seed = new_seed;
 
             // Capture completed round for event
-            let completed_round = session.state.round;
+            let completed_round = core_state.local_state.round;
 
             // Increment round for next phase
-            session.state.round += 1;
-            session.state.phase = GamePhase::Shop;
+            core_state.local_state.round += 1;
+            core_state.local_state.phase = GamePhase::Shop;
 
             // Update mana limit for new round
-            session.state.mana_limit = session.state.calculate_mana_limit();
+            core_state.local_state.mana_limit = core_state.calculate_mana_limit();
 
             // Draw hand for the next shop phase
-            session.state.draw_hand();
+            core_state.draw_hand();
+
+            // Update session state
+            session.state = core_state.local_state.into();
 
             ActiveGame::<T>::insert(&who, session);
 
