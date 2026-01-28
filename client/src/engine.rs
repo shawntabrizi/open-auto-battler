@@ -7,7 +7,7 @@ use std::string::{String, ToString};
 use std::vec;
 use std::vec::Vec;
 
-use manalimit_core::battle::{resolve_battle, CombatEvent, CombatUnit, UnitId, UnitView};
+use manalimit_core::battle::{resolve_battle, CombatEvent, CombatUnit, UnitView};
 use manalimit_core::commit::verify_and_apply_turn;
 use manalimit_core::log;
 use manalimit_core::opponents::get_opponent_for_round;
