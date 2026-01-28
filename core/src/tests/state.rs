@@ -54,7 +54,7 @@ fn test_hand_derivation_deterministic() {
 fn test_hand_derivation_unique_indices() {
     let mut state = GameState::new(42);
     // Add enough cards
-    for i in 0..20 {
+    for _ in 0..20 {
         let id = state.generate_card_id();
         let card = UnitCard::new(id, "test", "Test", 1, 1, 1, 1, false);
         state.card_pool.insert(id, card);

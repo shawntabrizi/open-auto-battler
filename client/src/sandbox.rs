@@ -6,10 +6,10 @@ use std::string::String;
 use std::vec::Vec;
 
 use crate::engine::BattleOutput;
-use manalimit_core::battle::{resolve_battle, UnitId, UnitView, CombatUnit};
+use manalimit_core::battle::{resolve_battle, CombatUnit, UnitId, UnitView};
 use manalimit_core::log;
 use manalimit_core::rng::XorShiftRng;
-use manalimit_core::types::{UnitCard, CardId};
+use manalimit_core::types::{CardId, UnitCard};
 use manalimit_core::units::get_starter_templates;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
@@ -96,39 +96,35 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
         .collect();
 
     let mut rng = XorShiftRng::seed_from_u64(seed);
-    
+
     // We need to clone them because resolve_battle takes ownership
     let events = resolve_battle(player_board.clone(), enemy_board.clone(), &mut rng);
 
     let mut limits = manalimit_core::limits::BattleLimits::new();
     let initial_player_units: Vec<UnitView> = player_board
         .iter()
-        .map(|u| {
-            UnitView {
-                instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Player),
-                template_id: u.template_id.clone(),
-                name: u.name.clone(),
-                attack: u.attack,
-                health: u.health,
-                abilities: u.abilities.clone(),
-                is_token: u.is_token,
-            }
+        .map(|u| UnitView {
+            instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Player),
+            template_id: u.template_id.clone(),
+            name: u.name.clone(),
+            attack: u.attack,
+            health: u.health,
+            abilities: u.abilities.clone(),
+            is_token: u.is_token,
         })
         .collect();
 
     limits.reset_phase_counters();
     let initial_enemy_units: Vec<UnitView> = enemy_board
         .iter()
-        .map(|u| {
-            UnitView {
-                instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Enemy),
-                template_id: u.template_id.clone(),
-                name: u.name.clone(),
-                attack: u.attack,
-                health: u.health,
-                abilities: u.abilities.clone(),
-                is_token: u.is_token,
-            }
+        .map(|u| UnitView {
+            instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Enemy),
+            template_id: u.template_id.clone(),
+            name: u.name.clone(),
+            attack: u.attack,
+            health: u.health,
+            abilities: u.abilities.clone(),
+            is_token: u.is_token,
         })
         .collect();
 

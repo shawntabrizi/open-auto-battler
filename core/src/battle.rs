@@ -13,8 +13,8 @@ use crate::limits::{BattleLimits, LimitReason};
 use crate::rng::BattleRng;
 use crate::state::BOARD_SIZE;
 use crate::types::{
-    Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CompareOp,
-    SortOrder, StatType, TargetScope,
+    Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, CompareOp, SortOrder,
+    StatType, TargetScope,
 };
 
 #[cfg(feature = "std")]
@@ -95,18 +95,22 @@ pub enum BattleResult {
 /// Events generated during combat for UI playback.
 #[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "std",
-    serde(tag = "type", content = "payload")
-)]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "payload"))]
 pub enum CombatEvent {
-    PhaseStart { phase: BattlePhase },
-    PhaseEnd { phase: BattlePhase },
+    PhaseStart {
+        phase: BattlePhase,
+    },
+    PhaseEnd {
+        phase: BattlePhase,
+    },
     AbilityTrigger {
         source_instance_id: UnitInstanceId,
         ability_name: String,
     },
-    Clash { p_dmg: i32, e_dmg: i32 },
+    Clash {
+        p_dmg: i32,
+        e_dmg: i32,
+    },
     DamageTaken {
         target_instance_id: UnitInstanceId,
         team: Team,
@@ -116,7 +120,9 @@ pub enum CombatEvent {
         team: Team,
         new_board_state: Vec<UnitView>,
     },
-    BattleEnd { result: BattleResult },
+    BattleEnd {
+        result: BattleResult,
+    },
     AbilityDamage {
         source_instance_id: UnitInstanceId,
         target_instance_id: UnitInstanceId,

@@ -81,10 +81,7 @@ pub enum CompareOp {
 /// Conditions that must be met for an ability to activate
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "std",
-    serde(tag = "type", content = "data")
-)]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "data"))]
 pub enum AbilityCondition {
     /// No condition, always triggers (default)
     None,
@@ -174,10 +171,7 @@ pub enum AbilityEffect {
 /// Ability target specifications
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "std",
-    serde(tag = "type", content = "data")
-)]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "data"))]
 pub enum AbilityTarget {
     /// Specific position (0=front, -1=back). scope=SelfUnit means relative.
     Position { scope: TargetScope, index: i32 },

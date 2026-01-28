@@ -1,5 +1,5 @@
 use super::*;
-use crate::battle::{CombatEvent, UnitId, CombatUnit};
+use crate::battle::{CombatEvent, CombatUnit, UnitId};
 use crate::types::*;
 
 #[test]
@@ -124,7 +124,8 @@ fn test_priority_tiebreaker_team() {
         condition: crate::types::AbilityCondition::default(),
         max_triggers: None,
     };
-    let e_card = UnitCard::new(CardId(2), "Enemy", "Enemy", 5, 5, 0, 0, false).with_ability(ability);
+    let e_card =
+        UnitCard::new(CardId(2), "Enemy", "Enemy", 5, 5, 0, 0, false).with_ability(ability);
     let e_unit = CombatUnit::from_card(e_card);
 
     let p_board = vec![p_unit];
@@ -630,7 +631,10 @@ fn test_recursive_interrupt_timing() {
     let sniper2 = create_dummy_card(2, "Sniper2", 1, 2).with_ability(snipe_ability);
     let spawner = create_dummy_card(3, "Spawner", 1, 1).with_ability(spawn_ability); // 1 HP, dies to snipe
 
-    let p_board = vec![CombatUnit::from_card(sniper1), CombatUnit::from_card(sniper2)];
+    let p_board = vec![
+        CombatUnit::from_card(sniper1),
+        CombatUnit::from_card(sniper2),
+    ];
     let e_board = vec![CombatUnit::from_card(spawner)];
 
     let events = run_battle(&p_board, &e_board, 42);
@@ -665,7 +669,8 @@ fn test_recursive_interrupt_timing() {
     let second_dmg_event = damage_events.last().unwrap();
     if let CombatEvent::AbilityDamage {
         target_instance_id, ..
-    } = second_dmg_event {
+    } = second_dmg_event
+    {
         // The instance ID of a spawned unit should be the next enemy ID (e-2)
         assert!(
             *target_instance_id == UnitId::enemy(2),

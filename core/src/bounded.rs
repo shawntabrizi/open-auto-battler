@@ -7,7 +7,7 @@
 
 use alloc::string::String;
 use alloc::vec::Vec;
-use bounded_collections::{BoundedVec, BoundedBTreeMap, Get};
+use bounded_collections::{BoundedBTreeMap, BoundedVec, Get};
 use core::fmt::Debug;
 use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode};
 use scale_info::TypeInfo;
@@ -52,7 +52,7 @@ where
 
         // reverse to maintain original derived order
         drawn_card_ids.reverse();
-        
+
         for id in drawn_card_ids {
             let _ = self.hand.try_push(id);
         }
@@ -480,7 +480,13 @@ impl From<BoundedBoardUnit> for BoardUnit {
 // --- Bounded Game State ---
 
 #[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
-#[scale_info(skip_type_params(MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions))]
+#[scale_info(skip_type_params(
+    MaxBagSize,
+    MaxBoardSize,
+    MaxAbilities,
+    MaxStringLen,
+    MaxHandActions
+))]
 pub struct BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 where
     MaxBagSize: Get<u32>,
@@ -508,7 +514,8 @@ impl<
         MaxAbilities: Get<u32>,
         MaxStringLen: Get<u32>,
         MaxHandActions: Get<u32>,
-    > Clone for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    > Clone
+    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 {
     fn clone(&self) -> Self {
         Self {
@@ -557,7 +564,8 @@ impl<
         MaxAbilities: Get<u32>,
         MaxStringLen: Get<u32>,
         MaxHandActions: Get<u32>,
-    > Eq for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    > Eq
+    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 {
 }
 
@@ -567,7 +575,8 @@ impl<
         MaxAbilities: Get<u32>,
         MaxStringLen: Get<u32>,
         MaxHandActions: Get<u32>,
-    > Debug for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    > Debug
+    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedGameState")
@@ -634,7 +643,13 @@ where
     MaxHandActions: Get<u32>,
 {
     fn from(
-        bounded: BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>,
+        bounded: BoundedGameState<
+            MaxBagSize,
+            MaxBoardSize,
+            MaxAbilities,
+            MaxStringLen,
+            MaxHandActions,
+        >,
     ) -> Self {
         Self {
             card_pool: bounded
@@ -676,10 +691,8 @@ where
     pub pitched_from_board: BoundedVec<u32, MaxBoardSize>,
 }
 
-impl<
-        MaxBoardSize: Get<u32>,
-        MaxHandActions: Get<u32>,
-    > Clone for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
+impl<MaxBoardSize: Get<u32>, MaxHandActions: Get<u32>> Clone
+    for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
 {
     fn clone(&self) -> Self {
         Self {
@@ -691,10 +704,7 @@ impl<
     }
 }
 
-impl<
-        MaxBoardSize: Get<u32>,
-        MaxHandActions: Get<u32>,
-    > PartialEq
+impl<MaxBoardSize: Get<u32>, MaxHandActions: Get<u32>> PartialEq
     for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
 {
     fn eq(&self, other: &Self) -> bool {
@@ -705,17 +715,13 @@ impl<
     }
 }
 
-impl<
-        MaxBoardSize: Get<u32>,
-        MaxHandActions: Get<u32>,
-    > Eq for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
+impl<MaxBoardSize: Get<u32>, MaxHandActions: Get<u32>> Eq
+    for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
 {
 }
 
-impl<
-        MaxBoardSize: Get<u32>,
-        MaxHandActions: Get<u32>,
-    > Debug for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
+impl<MaxBoardSize: Get<u32>, MaxHandActions: Get<u32>> Debug
+    for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedCommitTurnAction")
@@ -749,16 +755,13 @@ where
     }
 }
 
-impl<MaxBoardSize, MaxHandActions>
-    From<BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>>
+impl<MaxBoardSize, MaxHandActions> From<BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>>
     for CommitTurnAction
 where
     MaxBoardSize: Get<u32>,
     MaxHandActions: Get<u32>,
 {
-    fn from(
-        bounded: BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>,
-    ) -> Self {
+    fn from(bounded: BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>) -> Self {
         Self {
             new_board: bounded
                 .new_board

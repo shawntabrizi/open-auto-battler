@@ -38,10 +38,7 @@ pub enum Team {
     Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "std",
-    serde(tag = "type", content = "payload")
-)]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "payload"))]
 pub enum LimitReason {
     RoundLimit { current: u32, max: u32 },
     RecursionLimit { current: u32, max: u32 },

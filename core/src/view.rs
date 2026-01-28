@@ -87,11 +87,7 @@ pub struct GameView {
 
 impl GameView {
     /// Construct a GameView from state plus transient per-turn data
-    pub fn from_state(
-        state: &GameState,
-        current_mana: i32,
-        hand_used: &[bool],
-    ) -> Self {
+    pub fn from_state(state: &GameState, current_mana: i32, hand_used: &[bool]) -> Self {
         let hand: Vec<Option<CardView>> = state
             .hand
             .iter()
@@ -122,8 +118,10 @@ impl GameView {
                 .iter()
                 .map(|slot| {
                     slot.as_ref().and_then(|unit| {
-                        state.card_pool.get(&unit.card_id).map(|card| {
-                            BoardUnitView {
+                        state
+                            .card_pool
+                            .get(&unit.card_id)
+                            .map(|card| BoardUnitView {
                                 id: card.id,
                                 template_id: card.template_id.clone(),
                                 name: card.name.clone(),
@@ -133,8 +131,7 @@ impl GameView {
                                 pitch_value: card.economy.pitch_value,
                                 abilities: card.abilities.clone(),
                                 is_token: card.is_token,
-                            }
-                        })
+                            })
                     })
                 })
                 .collect(),

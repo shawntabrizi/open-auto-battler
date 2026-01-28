@@ -9,7 +9,7 @@ fn test_verify_and_apply_turn() {
     let mut state = GameState::new(42);
     state.mana_limit = 5;
     // Add cards with known costs
-    for i in 0..10 {
+    for _ in 0..10 {
         let id = state.generate_card_id();
         let card = UnitCard::new(id, "test", "Test", 2, 2, 1, 2, false);
         state.card_pool.insert(id, card);
@@ -54,7 +54,7 @@ fn test_verify_and_apply_turn_with_refill() {
     state.mana_limit = 4; // Capacity is 4
 
     // Add cards with cost 4 and pitch 4
-    for i in 0..10 {
+    for _ in 0..10 {
         let id = state.generate_card_id();
         let card = UnitCard::new(id, "test", "Test", 2, 2, 4, 4, false);
         state.card_pool.insert(id, card);

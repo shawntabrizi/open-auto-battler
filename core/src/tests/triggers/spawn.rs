@@ -269,7 +269,10 @@ fn test_damage_taken_no_slide_trigger() {
     let breeder = create_dummy_card(2, "Breeder", 2, 4).with_ability(spawn_ability);
     let killer = create_dummy_card(3, "Killer", 0, 10);
 
-    let p_board = vec![CombatUnit::from_card(fodder), CombatUnit::from_card(breeder)];
+    let p_board = vec![
+        CombatUnit::from_card(fodder),
+        CombatUnit::from_card(breeder),
+    ];
     let e_board = vec![CombatUnit::from_card(killer)];
 
     let events = run_battle(&p_board, &e_board, 42);
@@ -313,7 +316,10 @@ fn test_spawn_id_uniqueness_and_buffs() {
     );
     let buffer = create_dummy_card(2, "Buffer", 5, 10).with_ability(buff_ability);
 
-    let p_board = vec![CombatUnit::from_card(spawner), CombatUnit::from_card(buffer)];
+    let p_board = vec![
+        CombatUnit::from_card(spawner),
+        CombatUnit::from_card(buffer),
+    ];
     let e_board = vec![create_dummy_enemy()];
 
     let events = run_battle(&p_board, &e_board, 42);

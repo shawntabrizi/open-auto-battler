@@ -2,9 +2,9 @@
 //!
 //! This module defines the game state and phase tracking.
 
+use alloc::collections::BTreeMap;
 use alloc::vec;
 use alloc::vec::Vec;
-use alloc::collections::BTreeMap;
 use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode};
 use scale_info::TypeInfo;
 
