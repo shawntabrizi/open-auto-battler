@@ -7,7 +7,7 @@ mod state;
 mod triggers;
 mod turns;
 
-use crate::battle::{resolve_battle, CombatEvent};
+use crate::battle::{resolve_battle, CombatEvent, CombatUnit};
 use crate::rng::XorShiftRng;
 use crate::types::*;
 
@@ -16,11 +16,11 @@ use crate::types::*;
 // ==========================================
 
 fn create_dummy_card(id: u32, name: &str, atk: i32, hp: i32) -> UnitCard {
-    UnitCard::new(id, name, name, atk, hp, 1, 1, false)
+    UnitCard::new(CardId(id), name, name, atk, hp, 1, 1, false)
 }
 
-fn create_board_unit(id: u32, name: &str, atk: i32, hp: i32) -> BoardUnit {
-    BoardUnit::from_card(create_dummy_card(id, name, atk, hp))
+fn create_board_unit(id: u32, name: &str, atk: i32, hp: i32) -> CombatUnit {
+    CombatUnit::from_card(create_dummy_card(id, name, atk, hp))
 }
 
 fn create_ability(trigger: AbilityTrigger, effect: AbilityEffect, name: &str) -> Ability {
@@ -40,7 +40,7 @@ fn create_tester_unit(
     attack: i32,
     health: i32,
     ability_name: &str,
-) -> BoardUnit {
+) -> CombatUnit {
     let ability = Ability {
         trigger: AbilityTrigger::OnStart,
         // Simple effect that won't kill anyone to keep the log clean
@@ -58,7 +58,7 @@ fn create_tester_unit(
     };
 
     let card = UnitCard {
-        id,
+        id: CardId(id),
         template_id: "test_dummy".to_string(),
         name: name.to_string(),
         stats: UnitStats { attack, health },
@@ -70,15 +70,12 @@ fn create_tester_unit(
         is_token: false,
     };
 
-    BoardUnit {
-        card: card.clone(),
-        current_health: health,
-    }
+    CombatUnit::from_card(card)
 }
 
-fn create_dummy_enemy() -> BoardUnit {
+fn create_dummy_enemy() -> CombatUnit {
     let card = UnitCard {
-        id: 999,
+        id: CardId(999),
         template_id: "sandbag".to_string(),
         name: "Sandbag".to_string(),
         stats: UnitStats {
@@ -92,17 +89,14 @@ fn create_dummy_enemy() -> BoardUnit {
         abilities: vec![],
         is_token: false,
     };
-    BoardUnit {
-        card,
-        current_health: 50,
-    }
+    CombatUnit::from_card(card)
 }
 
 fn run_battle(
-    player_board: &[BoardUnit],
-    enemy_board: &[BoardUnit],
+    player_board: &[CombatUnit],
+    enemy_board: &[CombatUnit],
     seed: u64,
 ) -> Vec<CombatEvent> {
     let mut rng = XorShiftRng::seed_from_u64(seed);
-    resolve_battle(player_board, enemy_board, &mut rng)
+    resolve_battle(player_board.to_vec(), enemy_board.to_vec(), &mut rng)
 }

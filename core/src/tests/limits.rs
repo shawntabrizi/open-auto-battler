@@ -26,8 +26,8 @@ fn test_max_triggers_unlimited() {
     let unlimited = create_unlimited_rager();
     let enemy = create_dummy_card(2, "Enemy", 1, 20);
 
-    let p_board = vec![BoardUnit::from_card(unlimited)];
-    let e_board = vec![BoardUnit::from_card(enemy)];
+    let p_board = vec![CombatUnit::from_card(unlimited)];
+    let e_board = vec![CombatUnit::from_card(enemy)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -73,8 +73,8 @@ fn test_max_triggers_not_exceeded_on_death() {
     let limited = create_limited_unit();
     let enemy = create_dummy_card(2, "Enemy", 1, 20);
 
-    let p_board = vec![BoardUnit::from_card(limited)];
-    let e_board = vec![BoardUnit::from_card(enemy)];
+    let p_board = vec![CombatUnit::from_card(limited)];
+    let e_board = vec![CombatUnit::from_card(enemy)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -120,8 +120,8 @@ fn test_max_triggers_limit() {
     let limited = create_limited_spawner();
     let enemy = create_dummy_card(2, "Enemy", 1, 20);
 
-    let p_board = vec![BoardUnit::from_card(limited)];
-    let e_board = vec![BoardUnit::from_card(enemy)];
+    let p_board = vec![CombatUnit::from_card(limited)];
+    let e_board = vec![CombatUnit::from_card(enemy)];
 
     let events = run_battle(&p_board, &e_board, 42);
 

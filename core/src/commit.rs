@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 
 use crate::error::{GameError, GameResult};
 use crate::state::{GameState, BOARD_SIZE};
-use crate::types::CommitTurnAction;
+use crate::types::{CommitTurnAction, CardId};
 
 /// Verify and apply a committed turn action to the game state.
 ///
@@ -70,7 +70,8 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
         .pitched_from_hand
         .iter()
         .map(|&hi_u32| {
-            state.hand[hi_u32 as usize].economy.pitch_value
+            let card_id = state.hand[hi_u32 as usize];
+            state.card_pool.get(&card_id).map(|c| c.economy.pitch_value).unwrap_or(0)
         })
         .sum::<i32>()
         + action
@@ -79,7 +80,7 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
             .map(|&bi_u32| {
                 state.board[bi_u32 as usize]
                     .as_ref()
-                    .map(|u| u.card.economy.pitch_value)
+                    .and_then(|u| state.card_pool.get(&u.card_id).map(|c| c.economy.pitch_value))
                     .unwrap_or(0)
             })
             .sum::<i32>();
@@ -88,7 +89,8 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
         .played_from_hand
         .iter()
         .map(|&hi_u32| {
-            state.hand[hi_u32 as usize].economy.play_cost
+            let card_id = state.hand[hi_u32 as usize];
+            state.card_pool.get(&card_id).map(|c| c.economy.play_cost).unwrap_or(0)
         })
         .sum();
 
@@ -103,7 +105,8 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
 
     // 2. Each individual card must be affordable (cost <= mana_limit)
     for &hi_u32 in &action.played_from_hand {
-        let cost = state.hand[hi_u32 as usize].economy.play_cost;
+        let card_id = state.hand[hi_u32 as usize];
+        let cost = state.card_pool.get(&card_id).map(|c| c.economy.play_cost).unwrap_or(0);
         if cost > state.mana_limit {
             return Err(GameError::NotEnoughMana {
                 have: state.mana_limit,
@@ -119,7 +122,7 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
         .map(|&b| b as usize)
         .collect();
 
-    let mut available_from_board: Vec<Option<u32>> = state
+    let mut available_from_board: Vec<Option<CardId>> = state
         .board
         .iter()
         .enumerate()
@@ -127,22 +130,22 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
             if pitched_board_set.contains(&i) {
                 None // pitched, not available
             } else {
-                slot.as_ref().map(|u| u.card.id)
+                slot.as_ref().map(|u| u.card_id)
             }
         })
         .collect();
 
-    let mut available_from_hand: Vec<Option<u32>> = action
+    let mut available_from_hand: Vec<Option<CardId>> = action
         .played_from_hand
         .iter()
         .map(|&hi_u32| {
-            Some(state.hand[hi_u32 as usize].id)
+            Some(state.hand[hi_u32 as usize])
         })
         .collect();
 
     for slot in &action.new_board {
         if let Some(unit) = slot {
-            let card_id = unit.card.id;
+            let card_id = unit.card_id;
 
             // Try to find in old board first
             let found_board = available_from_board

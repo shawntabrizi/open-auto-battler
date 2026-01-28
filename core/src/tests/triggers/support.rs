@@ -20,7 +20,7 @@ fn test_shield_squire_support() {
     let fodder = create_dummy_card(1, "Fodder", 1, 10);
     let squire = create_dummy_card(2, "Squire", 2, 3).with_ability(squire_ability);
 
-    let p_board = vec![BoardUnit::from_card(fodder), BoardUnit::from_card(squire)];
+    let p_board = vec![CombatUnit::from_card(fodder), CombatUnit::from_card(squire)];
     let e_board = vec![create_dummy_enemy()];
 
     let events = run_battle(&p_board, &e_board, 42);

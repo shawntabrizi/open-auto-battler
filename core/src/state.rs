@@ -4,6 +4,7 @@
 
 use alloc::vec;
 use alloc::vec::Vec;
+use alloc::collections::BTreeMap;
 use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode};
 use scale_info::TypeInfo;
 
@@ -40,10 +41,12 @@ pub enum GamePhase {
 #[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, PartialEq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GameState {
+    /// Global pool of all card instances
+    pub card_pool: BTreeMap<CardId, UnitCard>,
     /// Cards remaining in the bag (unordered pool)
-    pub bag: Vec<UnitCard>,
+    pub bag: Vec<CardId>,
     /// Player's current hand for the shop phase
-    pub hand: Vec<UnitCard>,
+    pub hand: Vec<CardId>,
     /// Units on the player's board (5 slots, index 0 is front)
     pub board: Vec<Option<BoardUnit>>,
     /// Maximum mana that can be held (increases each round)
@@ -57,7 +60,7 @@ pub struct GameState {
     /// Current game phase
     pub phase: GamePhase,
     /// Counter for generating unique card IDs
-    pub next_card_id: CardId,
+    pub next_card_id: u32,
     /// Seed for deterministic hand derivation
     pub game_seed: u64,
 }
@@ -65,6 +68,7 @@ pub struct GameState {
 impl GameState {
     pub fn new(game_seed: u64) -> Self {
         Self {
+            card_pool: BTreeMap::new(),
             bag: Vec::new(),
             hand: Vec::new(),
             board: vec![None; BOARD_SIZE],
@@ -104,7 +108,7 @@ impl GameState {
     pub fn generate_card_id(&mut self) -> CardId {
         let id = self.next_card_id;
         self.next_card_id += 1;
-        id
+        CardId(id)
     }
 
     /// Calculate mana limit for the current round
@@ -116,14 +120,6 @@ impl GameState {
     /// Uses game_seed XOR round to produce repeatable hand selection
     pub fn derive_hand_indices(&self) -> Vec<usize> {
         derive_hand_indices_logic(self.bag.len(), self.game_seed, self.round)
-    }
-
-    /// Derive the hand as (bag_index, card_ref) pairs
-    pub fn derive_hand(&self) -> Vec<(usize, &UnitCard)> {
-        self.derive_hand_indices()
-            .into_iter()
-            .map(|idx| (idx, &self.bag[idx]))
-            .collect()
     }
 
     /// Find an empty board slot

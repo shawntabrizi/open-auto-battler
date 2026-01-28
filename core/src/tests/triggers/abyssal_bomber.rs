@@ -21,8 +21,8 @@ fn test_abyssal_bomber_death_nova() {
     let enemy1 = create_dummy_card(3, "Enemy1", 2, 5);
     let enemy2 = create_dummy_card(4, "Enemy2", 1, 2);
 
-    let p_board = vec![BoardUnit::from_card(bomber), BoardUnit::from_card(ally)];
-    let e_board = vec![BoardUnit::from_card(enemy1), BoardUnit::from_card(enemy2)];
+    let p_board = vec![CombatUnit::from_card(bomber), CombatUnit::from_card(ally)];
+    let e_board = vec![CombatUnit::from_card(enemy1), CombatUnit::from_card(enemy2)];
 
     let events = run_battle(&p_board, &e_board, 42);
 

@@ -42,8 +42,8 @@ fn test_berserker_combo() {
     let raging_orc = create_dummy_card(2, "Orc", 2, 8).with_ability(orc_rage);
 
     let p_board = vec![
-        BoardUnit::from_card(pain_smith),
-        BoardUnit::from_card(raging_orc),
+        CombatUnit::from_card(pain_smith),
+        CombatUnit::from_card(raging_orc),
     ];
     let e_board = vec![create_dummy_enemy()];
 

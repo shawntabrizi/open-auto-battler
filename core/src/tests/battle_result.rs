@@ -44,8 +44,8 @@ fn test_mutual_destruction_chain() {
     let p1 = create_dummy_card(1, "P1", 1, 5).with_ability(start_nuke);
     let e1 = create_dummy_card(2, "E1", 1, 5).with_ability(faint_nuke);
 
-    let p_board = vec![BoardUnit::from_card(p1)];
-    let e_board = vec![BoardUnit::from_card(e1)];
+    let p_board = vec![CombatUnit::from_card(p1)];
+    let e_board = vec![CombatUnit::from_card(e1)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -83,10 +83,10 @@ fn test_infinite_battle_draw() {
     ));
 
     let p_board = vec![
-        BoardUnit::from_card(grunt.clone()),
-        BoardUnit::from_card(squire.clone()),
+        CombatUnit::from_card(grunt.clone()),
+        CombatUnit::from_card(squire.clone()),
     ];
-    let e_board = vec![BoardUnit::from_card(grunt), BoardUnit::from_card(squire)];
+    let e_board = vec![CombatUnit::from_card(grunt), CombatUnit::from_card(squire)];
 
     let events = run_battle(&p_board, &e_board, 42);
 

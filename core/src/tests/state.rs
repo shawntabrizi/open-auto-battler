@@ -24,7 +24,8 @@ fn test_hand_derivation_deterministic() {
                 template.pitch_value,
                 template.is_token,
             );
-            state.bag.push(card);
+            state.card_pool.insert(id, card);
+            state.bag.push(id);
         }
     }
 
@@ -54,8 +55,10 @@ fn test_hand_derivation_unique_indices() {
     let mut state = GameState::new(42);
     // Add enough cards
     for i in 0..20 {
-        let card = UnitCard::new(i + 1, "test", "Test", 1, 1, 1, 1, false);
-        state.bag.push(card);
+        let id = state.generate_card_id();
+        let card = UnitCard::new(id, "test", "Test", 1, 1, 1, 1, false);
+        state.card_pool.insert(id, card);
+        state.bag.push(id);
     }
 
     let hand = state.derive_hand_indices();

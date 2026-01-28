@@ -7,7 +7,7 @@
 
 use alloc::string::String;
 use alloc::vec::Vec;
-use bounded_collections::{BoundedVec, Get};
+use bounded_collections::{BoundedVec, BoundedBTreeMap, Get};
 use core::fmt::Debug;
 use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode};
 use scale_info::TypeInfo;
@@ -44,17 +44,17 @@ where
         sorted_indices.sort_unstable_by(|a, b| b.cmp(a));
 
         self.hand.clear();
-        let mut drawn_cards = Vec::with_capacity(sorted_indices.len());
+        let mut drawn_card_ids = Vec::with_capacity(sorted_indices.len());
         for idx in sorted_indices {
             // Safety: indices are derived from bag.len()
-            drawn_cards.push(self.bag.remove(idx));
+            drawn_card_ids.push(self.bag.remove(idx));
         }
 
         // reverse to maintain original derived order
-        drawn_cards.reverse();
+        drawn_card_ids.reverse();
         
-        for card in drawn_cards {
-            let _ = self.hand.try_push(card);
+        for id in drawn_card_ids {
+            let _ = self.hand.try_push(id);
         }
     }
 
@@ -428,72 +428,50 @@ where
 // --- Bounded Board Unit ---
 
 #[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
-#[scale_info(skip_type_params(MaxAbilities, MaxStringLen))]
-pub struct BoundedBoardUnit<MaxAbilities, MaxStringLen>
-where
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
-{
-    pub card: BoundedUnitCard<MaxAbilities, MaxStringLen>,
+pub struct BoundedBoardUnit {
+    pub card_id: CardId,
     pub current_health: i32,
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Clone
-    for BoundedBoardUnit<MaxAbilities, MaxStringLen>
-{
+impl Clone for BoundedBoardUnit {
     fn clone(&self) -> Self {
         Self {
-            card: self.card.clone(),
+            card_id: self.card_id,
             current_health: self.current_health,
         }
     }
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> PartialEq
-    for BoundedBoardUnit<MaxAbilities, MaxStringLen>
-{
+impl PartialEq for BoundedBoardUnit {
     fn eq(&self, other: &Self) -> bool {
-        self.card == other.card && self.current_health == other.current_health
+        self.card_id == other.card_id && self.current_health == other.current_health
     }
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Eq
-    for BoundedBoardUnit<MaxAbilities, MaxStringLen>
-{
-}
+impl Eq for BoundedBoardUnit {}
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Debug
-    for BoundedBoardUnit<MaxAbilities, MaxStringLen>
-{
+impl Debug for BoundedBoardUnit {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedBoardUnit")
-            .field("card", &self.card)
+            .field("card_id", &self.card_id)
             .field("current_health", &self.current_health)
             .finish()
     }
 }
 
-impl<MaxAbilities, MaxStringLen> From<BoardUnit> for BoundedBoardUnit<MaxAbilities, MaxStringLen>
-where
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
-{
+impl From<BoardUnit> for BoundedBoardUnit {
     fn from(bu: BoardUnit) -> Self {
         Self {
-            card: bu.card.into(),
+            card_id: bu.card_id,
             current_health: bu.current_health,
         }
     }
 }
 
-impl<MaxAbilities, MaxStringLen> From<BoundedBoardUnit<MaxAbilities, MaxStringLen>> for BoardUnit
-where
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
-{
-    fn from(bounded: BoundedBoardUnit<MaxAbilities, MaxStringLen>) -> Self {
+impl From<BoundedBoardUnit> for BoardUnit {
+    fn from(bounded: BoundedBoardUnit) -> Self {
         Self {
-            card: bounded.card.into(),
+            card_id: bounded.card_id,
             current_health: bounded.current_health,
         }
     }
@@ -511,9 +489,10 @@ where
     MaxStringLen: Get<u32>,
     MaxHandActions: Get<u32>,
 {
-    pub bag: BoundedVec<BoundedUnitCard<MaxAbilities, MaxStringLen>, MaxBagSize>,
-    pub hand: BoundedVec<BoundedUnitCard<MaxAbilities, MaxStringLen>, MaxHandActions>,
-    pub board: BoundedVec<Option<BoundedBoardUnit<MaxAbilities, MaxStringLen>>, MaxBoardSize>,
+    pub card_pool: BoundedBTreeMap<CardId, BoundedUnitCard<MaxAbilities, MaxStringLen>, MaxBagSize>,
+    pub bag: BoundedVec<CardId, MaxBagSize>,
+    pub hand: BoundedVec<CardId, MaxHandActions>,
+    pub board: BoundedVec<Option<BoundedBoardUnit>, MaxBoardSize>,
     pub mana_limit: i32,
     pub round: i32,
     pub lives: i32,
@@ -533,6 +512,7 @@ impl<
 {
     fn clone(&self) -> Self {
         Self {
+            card_pool: self.card_pool.clone(),
             bag: self.bag.clone(),
             hand: self.hand.clone(),
             board: self.board.clone(),
@@ -557,7 +537,8 @@ impl<
     for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
 {
     fn eq(&self, other: &Self) -> bool {
-        self.bag == other.bag
+        self.card_pool == other.card_pool
+            && self.bag == other.bag
             && self.hand == other.hand
             && self.board == other.board
             && self.mana_limit == other.mana_limit
@@ -590,6 +571,7 @@ impl<
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedGameState")
+            .field("card_pool", &self.card_pool)
             .field("bag", &self.bag)
             .field("hand", &self.hand)
             .field("board", &self.board)
@@ -614,9 +596,15 @@ where
     MaxHandActions: Get<u32>,
 {
     fn from(state: GameState) -> Self {
+        let mut card_pool = BoundedBTreeMap::new();
+        for (id, card) in state.card_pool {
+            let _ = card_pool.try_insert(id, card.into());
+        }
+
         Self {
-            bag: BoundedVec::truncate_from(state.bag.into_iter().map(Into::into).collect()),
-            hand: BoundedVec::truncate_from(state.hand.into_iter().map(Into::into).collect()),
+            card_pool,
+            bag: BoundedVec::truncate_from(state.bag),
+            hand: BoundedVec::truncate_from(state.hand),
             board: BoundedVec::truncate_from(
                 state
                     .board
@@ -649,18 +637,13 @@ where
         bounded: BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>,
     ) -> Self {
         Self {
-            bag: bounded
-                .bag
-                .into_inner()
+            card_pool: bounded
+                .card_pool
                 .into_iter()
-                .map(Into::into)
+                .map(|(id, card)| (id, card.into()))
                 .collect(),
-            hand: bounded
-                .hand
-                .into_inner()
-                .into_iter()
-                .map(Into::into)
-                .collect(),
+            bag: bounded.bag.into_inner(),
+            hand: bounded.hand.into_inner(),
             board: bounded
                 .board
                 .into_inner()
@@ -681,15 +664,13 @@ where
 // --- Bounded Commit Turn Action ---
 
 #[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
-#[scale_info(skip_type_params(MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions))]
-pub struct BoundedCommitTurnAction<MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+#[scale_info(skip_type_params(MaxBoardSize, MaxHandActions))]
+pub struct BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
 where
     MaxBoardSize: Get<u32>,
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
     MaxHandActions: Get<u32>,
 {
-    pub new_board: BoundedVec<Option<BoundedBoardUnit<MaxAbilities, MaxStringLen>>, MaxBoardSize>,
+    pub new_board: BoundedVec<Option<BoundedBoardUnit>, MaxBoardSize>,
     pub pitched_from_hand: BoundedVec<u32, MaxHandActions>,
     pub played_from_hand: BoundedVec<u32, MaxHandActions>,
     pub pitched_from_board: BoundedVec<u32, MaxBoardSize>,
@@ -697,10 +678,8 @@ where
 
 impl<
         MaxBoardSize: Get<u32>,
-        MaxAbilities: Get<u32>,
-        MaxStringLen: Get<u32>,
         MaxHandActions: Get<u32>,
-    > Clone for BoundedCommitTurnAction<MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    > Clone for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
 {
     fn clone(&self) -> Self {
         Self {
@@ -714,11 +693,9 @@ impl<
 
 impl<
         MaxBoardSize: Get<u32>,
-        MaxAbilities: Get<u32>,
-        MaxStringLen: Get<u32>,
         MaxHandActions: Get<u32>,
     > PartialEq
-    for BoundedCommitTurnAction<MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
 {
     fn eq(&self, other: &Self) -> bool {
         self.new_board == other.new_board
@@ -730,19 +707,15 @@ impl<
 
 impl<
         MaxBoardSize: Get<u32>,
-        MaxAbilities: Get<u32>,
-        MaxStringLen: Get<u32>,
         MaxHandActions: Get<u32>,
-    > Eq for BoundedCommitTurnAction<MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    > Eq for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
 {
 }
 
 impl<
         MaxBoardSize: Get<u32>,
-        MaxAbilities: Get<u32>,
-        MaxStringLen: Get<u32>,
         MaxHandActions: Get<u32>,
-    > Debug for BoundedCommitTurnAction<MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    > Debug for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedCommitTurnAction")
@@ -754,12 +727,10 @@ impl<
     }
 }
 
-impl<MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions> From<CommitTurnAction>
-    for BoundedCommitTurnAction<MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+impl<MaxBoardSize, MaxHandActions> From<CommitTurnAction>
+    for BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>
 where
     MaxBoardSize: Get<u32>,
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
     MaxHandActions: Get<u32>,
 {
     fn from(action: CommitTurnAction) -> Self {
@@ -778,17 +749,15 @@ where
     }
 }
 
-impl<MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
-    From<BoundedCommitTurnAction<MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>>
+impl<MaxBoardSize, MaxHandActions>
+    From<BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>>
     for CommitTurnAction
 where
     MaxBoardSize: Get<u32>,
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
     MaxHandActions: Get<u32>,
 {
     fn from(
-        bounded: BoundedCommitTurnAction<MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>,
+        bounded: BoundedCommitTurnAction<MaxBoardSize, MaxHandActions>,
     ) -> Self {
         Self {
             new_board: bounded

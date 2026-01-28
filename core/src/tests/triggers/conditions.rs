@@ -32,8 +32,8 @@ fn test_condition_target_health_threshold() {
         let nurse = create_nurse();
         let enemy = create_dummy_card(3, "Enemy", 1, 10);
 
-        let p_board = vec![BoardUnit::from_card(tank), BoardUnit::from_card(nurse)];
-        let e_board = vec![BoardUnit::from_card(enemy)];
+        let p_board = vec![CombatUnit::from_card(tank), CombatUnit::from_card(nurse)];
+        let e_board = vec![CombatUnit::from_card(enemy)];
 
         let events = run_battle(&p_board, &e_board, 123);
 
@@ -53,8 +53,8 @@ fn test_condition_target_health_threshold() {
         let nurse = create_nurse();
         let enemy = create_dummy_card(3, "Enemy", 1, 5);
 
-        let p_board = vec![BoardUnit::from_card(tank), BoardUnit::from_card(nurse)];
-        let e_board = vec![BoardUnit::from_card(enemy)];
+        let p_board = vec![CombatUnit::from_card(tank), CombatUnit::from_card(nurse)];
+        let e_board = vec![CombatUnit::from_card(enemy)];
 
         let events = run_battle(&p_board, &e_board, 456);
 
@@ -100,11 +100,11 @@ fn test_condition_ally_count() {
         let enemy = create_dummy_card(4, "Enemy", 1, 1);
 
         let p_board = vec![
-            BoardUnit::from_card(leader),
-            BoardUnit::from_card(ally1),
-            BoardUnit::from_card(ally2),
+            CombatUnit::from_card(leader),
+            CombatUnit::from_card(ally1),
+            CombatUnit::from_card(ally2),
         ];
-        let e_board = vec![BoardUnit::from_card(enemy)];
+        let e_board = vec![CombatUnit::from_card(enemy)];
 
         let events = run_battle(&p_board, &e_board, 789);
 
@@ -124,8 +124,8 @@ fn test_condition_ally_count() {
         let ally1 = create_dummy_card(2, "Ally1", 1, 1);
         let enemy = create_dummy_card(4, "Enemy", 1, 5);
 
-        let p_board = vec![BoardUnit::from_card(leader), BoardUnit::from_card(ally1)];
-        let e_board = vec![BoardUnit::from_card(enemy)];
+        let p_board = vec![CombatUnit::from_card(leader), CombatUnit::from_card(ally1)];
+        let e_board = vec![CombatUnit::from_card(enemy)];
 
         let events = run_battle(&p_board, &e_board, 101112);
 
@@ -171,8 +171,8 @@ fn test_condition_last_stand() {
         let wolf = create_lone_wolf();
         let enemy = create_dummy_card(2, "Enemy", 3, 5);
 
-        let p_board = vec![BoardUnit::from_card(wolf)];
-        let e_board = vec![BoardUnit::from_card(enemy)];
+        let p_board = vec![CombatUnit::from_card(wolf)];
+        let e_board = vec![CombatUnit::from_card(enemy)];
 
         let events = run_battle(&p_board, &e_board, 1313);
 
@@ -195,8 +195,8 @@ fn test_condition_last_stand() {
         let ally = create_dummy_card(2, "Ally", 1, 1);
         let enemy = create_dummy_card(3, "Enemy", 3, 5);
 
-        let p_board = vec![BoardUnit::from_card(wolf), BoardUnit::from_card(ally)];
-        let e_board = vec![BoardUnit::from_card(enemy)];
+        let p_board = vec![CombatUnit::from_card(wolf), CombatUnit::from_card(ally)];
+        let e_board = vec![CombatUnit::from_card(enemy)];
 
         let events = run_battle(&p_board, &e_board, 1414);
 
@@ -251,8 +251,8 @@ fn test_condition_logic_gates() {
         let ally = create_dummy_card(2, "Ally", 1, 1);
         let enemy = create_dummy_card(3, "Enemy", 1, 5);
 
-        let p_board = vec![BoardUnit::from_card(unit), BoardUnit::from_card(ally)];
-        let e_board = vec![BoardUnit::from_card(enemy)];
+        let p_board = vec![CombatUnit::from_card(unit), CombatUnit::from_card(ally)];
+        let e_board = vec![CombatUnit::from_card(enemy)];
 
         let events = run_battle(&p_board, &e_board, 1515);
 
@@ -271,8 +271,8 @@ fn test_condition_logic_gates() {
         let unit = create_conditional_unit();
         let enemy = create_dummy_card(3, "Enemy", 1, 5);
 
-        let p_board = vec![BoardUnit::from_card(unit)];
-        let e_board = vec![BoardUnit::from_card(enemy)];
+        let p_board = vec![CombatUnit::from_card(unit)];
+        let e_board = vec![CombatUnit::from_card(enemy)];
 
         let events = run_battle(&p_board, &e_board, 1616);
 

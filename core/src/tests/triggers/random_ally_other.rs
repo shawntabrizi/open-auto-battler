@@ -22,10 +22,10 @@ fn test_random_ally_other_targeting() {
     let enemy = create_dummy_card(3, "Enemy", 1, 10);
 
     let p_board = vec![
-        BoardUnit::from_card(commander),
-        BoardUnit::from_card(soldier),
+        CombatUnit::from_card(commander),
+        CombatUnit::from_card(soldier),
     ];
-    let e_board = vec![BoardUnit::from_card(enemy)];
+    let e_board = vec![CombatUnit::from_card(enemy)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -67,8 +67,8 @@ fn test_random_ally_other_fizzle() {
     let commander = create_dummy_card(1, "Commander", 2, 3).with_ability(commander_ability);
     let enemy = create_dummy_card(2, "Enemy", 1, 10);
 
-    let p_board = vec![BoardUnit::from_card(commander)];
-    let e_board = vec![BoardUnit::from_card(enemy)];
+    let p_board = vec![CombatUnit::from_card(commander)];
+    let e_board = vec![CombatUnit::from_card(enemy)];
 
     let events = run_battle(&p_board, &e_board, 42);
 

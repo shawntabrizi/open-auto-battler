@@ -29,8 +29,8 @@ fn test_warder_seal_fate() {
         max_triggers: None,
     });
 
-    let p_board = vec![BoardUnit::from_card(warder)];
-    let e_board = vec![BoardUnit::from_card(rat_swarm)];
+    let p_board = vec![CombatUnit::from_card(warder)];
+    let e_board = vec![CombatUnit::from_card(rat_swarm)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -89,12 +89,12 @@ fn test_necromancer_spawn_boost() {
     });
 
     let p_board = vec![
-        BoardUnit::from_card(rat_swarm),
-        BoardUnit::from_card(necromancer),
+        CombatUnit::from_card(rat_swarm),
+        CombatUnit::from_card(necromancer),
     ];
 
     let killer = create_dummy_card(3, "Killer", 10, 10);
-    let e_board = vec![BoardUnit::from_card(killer)];
+    let e_board = vec![CombatUnit::from_card(killer)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -145,9 +145,9 @@ fn test_spawn_index_preservation() {
     let backline = create_dummy_card(3, "Backline", 5, 10);
 
     let p_board = vec![
-        BoardUnit::from_card(tank),
-        BoardUnit::from_card(spawner),
-        BoardUnit::from_card(backline),
+        CombatUnit::from_card(tank),
+        CombatUnit::from_card(spawner),
+        CombatUnit::from_card(backline),
     ];
 
     let aoe_killer = create_dummy_card(4, "AoE", 5, 10).with_ability(create_ability(
@@ -160,7 +160,7 @@ fn test_spawn_index_preservation() {
         },
         "Bomb",
     ));
-    let e_board = vec![BoardUnit::from_card(aoe_killer)];
+    let e_board = vec![CombatUnit::from_card(aoe_killer)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -217,9 +217,9 @@ fn test_sacrifice_combo() {
     let corpse_cart = create_dummy_card(3, "Cart", 0, 4).with_ability(cart_ability);
 
     let p_board = vec![
-        BoardUnit::from_card(fodder),
-        BoardUnit::from_card(lich),
-        BoardUnit::from_card(corpse_cart),
+        CombatUnit::from_card(fodder),
+        CombatUnit::from_card(lich),
+        CombatUnit::from_card(corpse_cart),
     ];
     let e_board = vec![create_dummy_enemy()];
 
@@ -269,8 +269,8 @@ fn test_damage_taken_no_slide_trigger() {
     let breeder = create_dummy_card(2, "Breeder", 2, 4).with_ability(spawn_ability);
     let killer = create_dummy_card(3, "Killer", 0, 10);
 
-    let p_board = vec![BoardUnit::from_card(fodder), BoardUnit::from_card(breeder)];
-    let e_board = vec![BoardUnit::from_card(killer)];
+    let p_board = vec![CombatUnit::from_card(fodder), CombatUnit::from_card(breeder)];
+    let e_board = vec![CombatUnit::from_card(killer)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -313,7 +313,7 @@ fn test_spawn_id_uniqueness_and_buffs() {
     );
     let buffer = create_dummy_card(2, "Buffer", 5, 10).with_ability(buff_ability);
 
-    let p_board = vec![BoardUnit::from_card(spawner), BoardUnit::from_card(buffer)];
+    let p_board = vec![CombatUnit::from_card(spawner), CombatUnit::from_card(buffer)];
     let e_board = vec![create_dummy_enemy()];
 
     let events = run_battle(&p_board, &e_board, 42);
@@ -361,15 +361,15 @@ fn test_spawn_limit_logic() {
     let filler = create_dummy_card(2, "Filler", 1, 10);
 
     let p_board = vec![
-        BoardUnit::from_card(captain),
-        BoardUnit::from_card(filler.clone()),
-        BoardUnit::from_card(filler.clone()),
-        BoardUnit::from_card(filler.clone()),
-        BoardUnit::from_card(filler),
+        CombatUnit::from_card(captain),
+        CombatUnit::from_card(filler.clone()),
+        CombatUnit::from_card(filler.clone()),
+        CombatUnit::from_card(filler.clone()),
+        CombatUnit::from_card(filler),
     ];
 
     let killer = create_dummy_card(10, "Killer", 10, 10);
-    let e_board = vec![BoardUnit::from_card(killer)];
+    let e_board = vec![CombatUnit::from_card(killer)];
 
     let events = run_battle(&p_board, &e_board, 42);
 

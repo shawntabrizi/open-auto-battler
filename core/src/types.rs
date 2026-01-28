@@ -13,7 +13,29 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 
 /// Unique identifier for cards
-pub type CardId = u32;
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    Encode,
+    Decode,
+    DecodeWithMemTracking,
+    TypeInfo,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(transparent))]
+pub struct CardId(pub u32);
+
+impl From<u32> for CardId {
+    fn from(id: u32) -> Self {
+        Self(id)
+    }
+}
 
 /// Scope for targeting and condition evaluation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
@@ -260,15 +282,14 @@ impl UnitCard {
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BoardUnit {
-    pub card: UnitCard,
+    pub card_id: CardId,
     pub current_health: i32,
 }
 
 impl BoardUnit {
-    pub fn from_card(card: UnitCard) -> Self {
-        let current_health = card.stats.health;
+    pub fn new(card_id: CardId, current_health: i32) -> Self {
         Self {
-            card,
+            card_id,
             current_health,
         }
     }

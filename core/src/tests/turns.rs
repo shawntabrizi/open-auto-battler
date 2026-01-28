@@ -10,8 +10,10 @@ fn test_verify_and_apply_turn() {
     state.mana_limit = 5;
     // Add cards with known costs
     for i in 0..10 {
-        let card = UnitCard::new(i + 1, "test", "Test", 2, 2, 1, 2, false);
-        state.bag.push(card);
+        let id = state.generate_card_id();
+        let card = UnitCard::new(id, "test", "Test", 2, 2, 1, 2, false);
+        state.card_pool.insert(id, card);
+        state.bag.push(id);
     }
     state.draw_hand();
 
@@ -19,9 +21,10 @@ fn test_verify_and_apply_turn() {
     let bag_len_before = state.bag.len();
 
     // Pitch hand card 0 for mana, play hand card 1 to board slot 0
-    let card_to_play = state.hand[1].clone();
+    let card_id_to_play = state.hand[1];
+    let card_to_play = state.card_pool.get(&card_id_to_play).unwrap();
     let mut new_board: Vec<Option<BoardUnit>> = vec![None; BOARD_SIZE];
-    new_board[0] = Some(BoardUnit::from_card(card_to_play));
+    new_board[0] = Some(BoardUnit::new(card_id_to_play, card_to_play.stats.health));
 
     let action = CommitTurnAction {
         new_board,
@@ -52,8 +55,10 @@ fn test_verify_and_apply_turn_with_refill() {
 
     // Add cards with cost 4 and pitch 4
     for i in 0..10 {
-        let card = UnitCard::new(i + 1, "test", "Test", 2, 2, 4, 4, false);
-        state.bag.push(card);
+        let id = state.generate_card_id();
+        let card = UnitCard::new(id, "test", "Test", 2, 2, 4, 4, false);
+        state.card_pool.insert(id, card);
+        state.bag.push(id);
     }
     state.draw_hand();
 
@@ -65,12 +70,14 @@ fn test_verify_and_apply_turn_with_refill() {
     // Total spent = 8. Total earned = 8. Limit = 4.
     // This should be LEGAL because each card is <= limit and total spend <= total earned.
 
-    let card_1 = state.hand[1].clone();
-    let card_3 = state.hand[3].clone();
+    let card_id_1 = state.hand[1];
+    let card_id_3 = state.hand[3];
+    let card_1 = state.card_pool.get(&card_id_1).unwrap();
+    let card_3 = state.card_pool.get(&card_id_3).unwrap();
 
     let mut new_board: Vec<Option<BoardUnit>> = vec![None; BOARD_SIZE];
-    new_board[0] = Some(BoardUnit::from_card(card_1));
-    new_board[1] = Some(BoardUnit::from_card(card_3));
+    new_board[0] = Some(BoardUnit::new(card_id_1, card_1.stats.health));
+    new_board[1] = Some(BoardUnit::new(card_id_3, card_3.stats.health));
 
     let action = CommitTurnAction {
         new_board,

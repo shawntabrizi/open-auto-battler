@@ -22,11 +22,11 @@ fn test_enemy_position_targeting() {
     let t1 = create_dummy_card(3, "T1", 1, 10);
     let t2 = create_dummy_card(4, "T2", 1, 5);
 
-    let p_board = vec![BoardUnit::from_card(mage)];
+    let p_board = vec![CombatUnit::from_card(mage)];
     let e_board = vec![
-        BoardUnit::from_card(t0),
-        BoardUnit::from_card(t1),
-        BoardUnit::from_card(t2),
+        CombatUnit::from_card(t0),
+        CombatUnit::from_card(t1),
+        CombatUnit::from_card(t2),
     ];
 
     let events = run_battle(&p_board, &e_board, 42);
@@ -58,8 +58,8 @@ fn test_enemy_position_fizzle() {
     let t0 = create_dummy_card(2, "T0", 1, 10);
     let t1 = create_dummy_card(3, "T1", 1, 10);
 
-    let p_board = vec![BoardUnit::from_card(mage)];
-    let e_board = vec![BoardUnit::from_card(t0), BoardUnit::from_card(t1)];
+    let p_board = vec![CombatUnit::from_card(mage)];
+    let e_board = vec![CombatUnit::from_card(t0), CombatUnit::from_card(t1)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -97,13 +97,13 @@ fn test_ally_position_targeting() {
     let enemy = create_dummy_card(6, "Enemy", 1, 10);
 
     let p_board = vec![
-        BoardUnit::from_card(guard),
-        BoardUnit::from_card(a1),
-        BoardUnit::from_card(a2),
-        BoardUnit::from_card(a3),
-        BoardUnit::from_card(a4),
+        CombatUnit::from_card(guard),
+        CombatUnit::from_card(a1),
+        CombatUnit::from_card(a2),
+        CombatUnit::from_card(a3),
+        CombatUnit::from_card(a4),
     ];
-    let e_board = vec![BoardUnit::from_card(enemy)];
+    let e_board = vec![CombatUnit::from_card(enemy)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -133,8 +133,8 @@ fn test_ally_position_fizzle() {
     let guard = create_dummy_card(1, "Rear Guard", 2, 5).with_ability(guard_ability);
     let enemy = create_dummy_card(6, "Enemy", 1, 10);
 
-    let p_board = vec![BoardUnit::from_card(guard)];
-    let e_board = vec![BoardUnit::from_card(enemy)];
+    let p_board = vec![CombatUnit::from_card(guard)];
+    let e_board = vec![CombatUnit::from_card(enemy)];
 
     let events = run_battle(&p_board, &e_board, 42);
 

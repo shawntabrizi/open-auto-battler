@@ -1058,7 +1058,7 @@ pub fn create_genesis_bag() -> Vec<UnitCard> {
     for i in 0..100 {
         let template = &non_token_templates[i % non_token_templates.len()];
         let card = UnitCard {
-            id: (i as u32) + 1,
+            id: crate::types::CardId((i as u32) + 1),
             template_id: String::from(template.template_id),
             name: String::from(template.name),
             stats: UnitStats {

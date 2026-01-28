@@ -59,22 +59,6 @@ pub struct BoardUnitView {
     pub is_token: bool,
 }
 
-impl From<&BoardUnit> for BoardUnitView {
-    fn from(unit: &BoardUnit) -> Self {
-        Self {
-            id: unit.card.id,
-            template_id: unit.card.template_id.clone(),
-            name: unit.card.name.clone(),
-            attack: unit.card.stats.attack,
-            health: unit.effective_health(),
-            play_cost: unit.card.economy.play_cost,
-            pitch_value: unit.card.economy.pitch_value,
-            abilities: unit.card.abilities.clone(),
-            is_token: unit.card.is_token,
-        }
-    }
-}
-
 /// The complete game view sent to React (Hot Path - lightweight)
 #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -112,11 +96,11 @@ impl GameView {
             .hand
             .iter()
             .enumerate()
-            .map(|(i, card)| {
+            .map(|(i, card_id)| {
                 if hand_used.get(i).copied().unwrap_or(false) {
                     None // Card already used (pitched or played)
                 } else {
-                    Some(CardView::from(card))
+                    state.card_pool.get(card_id).map(CardView::from)
                 }
             })
             .collect();
@@ -136,7 +120,23 @@ impl GameView {
             board: state
                 .board
                 .iter()
-                .map(|slot| slot.as_ref().map(BoardUnitView::from))
+                .map(|slot| {
+                    slot.as_ref().and_then(|unit| {
+                        state.card_pool.get(&unit.card_id).map(|card| {
+                            BoardUnitView {
+                                id: card.id,
+                                template_id: card.template_id.clone(),
+                                name: card.name.clone(),
+                                attack: card.stats.attack,
+                                health: unit.effective_health(),
+                                play_cost: card.economy.play_cost,
+                                pitch_value: card.economy.pitch_value,
+                                abilities: card.abilities.clone(),
+                                is_token: card.is_token,
+                            }
+                        })
+                    })
+                })
                 .collect(),
             mana: current_mana,
             mana_limit: state.mana_limit,

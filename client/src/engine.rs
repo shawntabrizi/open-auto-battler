@@ -7,13 +7,13 @@ use std::string::{String, ToString};
 use std::vec;
 use std::vec::Vec;
 
-use manalimit_core::battle::{resolve_battle, CombatEvent, UnitId, UnitView};
+use manalimit_core::battle::{resolve_battle, CombatEvent, UnitId, UnitView, CombatUnit};
 use manalimit_core::commit::verify_and_apply_turn;
 use manalimit_core::log;
 use manalimit_core::opponents::get_opponent_for_round;
 use manalimit_core::rng::XorShiftRng;
 use manalimit_core::state::*;
-use manalimit_core::types::{BoardUnit, CommitTurnAction, UnitCard};
+use manalimit_core::types::{BoardUnit, CommitTurnAction, UnitCard, CardId};
 use manalimit_core::units::get_starter_templates;
 use manalimit_core::view::{CardView, GameView};
 use serde::{Deserialize, Serialize};
@@ -62,6 +62,19 @@ impl GameEngine {
         engine.start_planning_phase();
         engine.log_state();
         engine
+    }
+
+    /// Helper to mint a new card and add it to the pool
+    fn mint_card(&mut self, mut card: UnitCard) -> CardId {
+        let id = self.state.generate_card_id();
+        card.id = id;
+        self.state.card_pool.insert(id, card);
+        id
+    }
+
+    /// Helper to get a card from the pool
+    fn get_card(&self, id: CardId) -> &UnitCard {
+        self.state.card_pool.get(&id).expect("Card not found in pool")
     }
 
     /// Submit a turn action from JavaScript
@@ -122,15 +135,13 @@ impl GameEngine {
             return Err("Can only pitch during shop phase".to_string());
         }
 
-        if hand_index >= self.state.hand.len() {
-            return Err("Invalid hand index".to_string());
-        }
-
+        let card_id = self.state.hand.get(hand_index).ok_or("Invalid hand index")?;
+        
         if self.hand_used[hand_index] {
             return Err("Card already used this turn".to_string());
         }
 
-        let pitch_value = self.state.hand[hand_index].economy.pitch_value;
+        let pitch_value = self.get_card(*card_id).economy.pitch_value;
 
         self.current_mana = (self.current_mana + pitch_value).min(self.state.mana_limit);
         self.hand_used[hand_index] = true;
@@ -151,9 +162,7 @@ impl GameEngine {
             return Err("Can only play during shop phase".to_string());
         }
 
-        if hand_index >= self.state.hand.len() {
-            return Err("Invalid hand index".to_string());
-        }
+        let card_id = *self.state.hand.get(hand_index).ok_or("Invalid hand index")?;
 
         if self.hand_used[hand_index] {
             return Err("Card already used this turn".to_string());
@@ -167,7 +176,10 @@ impl GameEngine {
             return Err("Board slot is occupied".to_string());
         }
 
-        let play_cost = self.state.hand[hand_index].economy.play_cost;
+        let (play_cost, health) = {
+            let card = self.get_card(card_id);
+            (card.economy.play_cost, card.stats.health)
+        };
 
         if self.current_mana < play_cost {
             return Err(format!(
@@ -181,8 +193,7 @@ impl GameEngine {
         self.hand_played[hand_index] = true;
 
         // Place the card on the board
-        let card = self.state.hand[hand_index].clone();
-        self.state.board[board_slot] = Some(BoardUnit::from_card(card));
+        self.state.board[board_slot] = Some(BoardUnit::new(card_id, health));
 
         self.log_state();
         Ok(())
@@ -228,7 +239,8 @@ impl GameEngine {
             .and_then(|s| s.take())
             .ok_or("Board slot is empty")?;
 
-        let pitch_value = unit.card.economy.pitch_value;
+        let card_id = unit.card_id;
+        let pitch_value = self.get_card(card_id).economy.pitch_value;
         self.current_mana = (self.current_mana + pitch_value).min(self.state.mana_limit);
         self.board_pitched.push(board_slot);
 
@@ -351,58 +363,35 @@ impl GameEngine {
     pub fn init_from_json(&mut self, json: String, seed: u64) -> Result<(), String> {
         log::action("init_from_json", &format!("Initializing engine from JSON string (len={})", json.len()));
 
-        // Log a preview of the JSON for debugging
-        let preview: String = json.chars().take(500).collect();
-        log::debug("init_from_json", &format!("JSON preview: {}", preview));
-
         let mut state: GameState = serde_json::from_str(&json).map_err(|e| {
-            let error_msg = format!(
-                "Failed to parse JSON state: {:?}. Line: {}, Column: {}",
-                e,
-                e.line(),
-                e.column()
-            );
-            log::error(&error_msg);
-            error_msg
+            format!("Failed to parse JSON state: {:?}", e)
         })?;
 
         state.game_seed = seed;
         self.state = state;
         self.start_planning_phase();
-        log::info("Engine initialized from JSON successfully");
         Ok(())
     }
 
     /// Get the current game view as a JSON string (Hot Path)
-    /// Returns lightweight GameView with bag_count instead of full bag.
     #[wasm_bindgen]
     pub fn get_view_json(&self) -> String {
-        log::debug("get_view_json", "Serializing game view to JSON string");
         let view = GameView::from_state(&self.state, self.current_mana, &self.hand_used);
-        serde_json::to_string(&view).unwrap_or_else(|e| {
-            log::error(&format!("get_view_json serialization failed: {:?}", e));
-            "{}".to_string()
-        })
+        serde_json::to_string(&view).unwrap_or_else(|_| "{}".to_string())
     }
 
     /// Get the full bag as a JSON string (Cold Path - on demand only)
-    /// Use sparingly as this includes all card data.
     #[wasm_bindgen]
     pub fn get_full_bag_json(&self) -> String {
-        log::debug("get_full_bag_json", "Serializing full bag to JSON string");
-        let bag: Vec<CardView> = self.state.bag.iter().map(CardView::from).collect();
-        serde_json::to_string(&bag).unwrap_or_else(|e| {
-            log::error(&format!("get_full_bag_json serialization failed: {:?}", e));
-            "[]".to_string()
-        })
+        let bag_views: Vec<CardView> = self.state.bag.iter()
+            .map(|id| CardView::from(self.get_card(*id)))
+            .collect();
+        serde_json::to_string(&bag_views).unwrap_or_else(|_| "[]".to_string())
     }
 
     /// Execute an action from a JSON string and return updated view (Universal JSON Bridge)
-    /// Accepts actions like: {"PlayCard": {"hand_index": 0, "board_slot": 2}}
     #[wasm_bindgen]
     pub fn execute_action_json(&mut self, action_json: String) -> Result<String, String> {
-        log::action("execute_action_json", &format!("Executing: {}", action_json));
-
         #[derive(Deserialize)]
         #[serde(tag = "type")]
         enum GameAction {
@@ -438,12 +427,8 @@ impl GameEngine {
     /// Get the battle output as a JSON string
     #[wasm_bindgen]
     pub fn get_battle_output_json(&self) -> String {
-        log::debug("get_battle_output_json", "Serializing battle output to JSON string");
         match &self.last_battle_output {
-            Some(output) => serde_json::to_string(output).unwrap_or_else(|e| {
-                log::error(&format!("get_battle_output_json serialization failed: {:?}", e));
-                "null".to_string()
-            }),
+            Some(output) => serde_json::to_string(output).unwrap_or_else(|_| "null".to_string()),
             None => "null".to_string(),
         }
     }
@@ -469,127 +454,7 @@ impl GameEngine {
                 .collect(),
             pitched_from_board: self.board_pitched.iter().map(|&i| i as u32).collect(),
         };
-        serde_json::to_string(&action).unwrap_or_else(|e| {
-            log::error(&format!("get_commit_action_json serialization failed: {:?}", e));
-            "{}".to_string()
-        })
-    }
-
-    /// Get the current board state (for P2P sync)
-    #[wasm_bindgen]
-    pub fn get_board(&self) -> JsValue {
-        serde_wasm_bindgen::to_value(&self.state.board).unwrap_or(JsValue::NULL)
-    }
-
-    /// Resolve a battle between two arbitrary boards (for P2P)
-    /// Returns BattleOutput JSON
-    #[wasm_bindgen]
-    pub fn resolve_battle_p2p(
-        &self,
-        player_board_val: JsValue,
-        enemy_board_val: JsValue,
-        seed: u64,
-    ) -> Result<JsValue, String> {
-        let player_board_raw: Vec<Option<BoardUnit>> =
-            serde_wasm_bindgen::from_value(player_board_val)
-                .map_err(|e| format!("Failed to parse player board: {:?}", e))?;
-        let enemy_board_raw: Vec<Option<BoardUnit>> =
-            serde_wasm_bindgen::from_value(enemy_board_val)
-                .map_err(|e| format!("Failed to parse enemy board: {:?}", e))?;
-
-        let player_board: Vec<BoardUnit> = player_board_raw.into_iter().flatten().collect();
-        let enemy_board: Vec<BoardUnit> = enemy_board_raw.into_iter().flatten().collect();
-
-        let mut rng = XorShiftRng::seed_from_u64(seed);
-        let events = resolve_battle(&player_board, &enemy_board, &mut rng);
-
-        // Generate initial views for UI
-        let mut instance_counter: u32 = 0;
-        let initial_player_units: Vec<UnitView> = player_board
-            .iter()
-            .map(|u| {
-                instance_counter += 1;
-                UnitView {
-                    instance_id: UnitId::player(instance_counter),
-                    template_id: u.card.template_id.clone(),
-                    name: u.card.name.clone(),
-                    attack: u.card.stats.attack,
-                    health: u.current_health,
-                    abilities: u.card.abilities.clone(),
-                    is_token: u.card.is_token,
-                }
-            })
-            .collect();
-
-        instance_counter = 0;
-        let initial_enemy_units: Vec<UnitView> = enemy_board
-            .iter()
-            .map(|u| {
-                instance_counter += 1;
-                UnitView {
-                    instance_id: UnitId::enemy(instance_counter),
-                    template_id: u.card.template_id.clone(),
-                    name: u.card.name.clone(),
-                    attack: u.card.stats.attack,
-                    health: u.current_health,
-                    abilities: u.card.abilities.clone(),
-                    is_token: u.card.is_token,
-                }
-            })
-            .collect();
-
-        let output = BattleOutput {
-            events,
-            initial_player_units,
-            initial_enemy_units,
-        };
-
-        serde_wasm_bindgen::to_value(&output).map_err(|e| format!("Serialization failed: {:?}", e))
-    }
-
-    /// Apply a battle result to the game state (for P2P)
-    #[wasm_bindgen]
-    pub fn apply_battle_result(&mut self, result_val: JsValue) -> Result<(), String> {
-        let result: manalimit_core::battle::BattleResult =
-            serde_wasm_bindgen::from_value(result_val)
-                .map_err(|e| format!("Failed to parse result: {:?}", e))?;
-
-        match result {
-            manalimit_core::battle::BattleResult::Victory => self.state.wins += 1,
-            manalimit_core::battle::BattleResult::Defeat => self.state.lives -= 1,
-            _ => {}
-        }
-        Ok(())
-    }
-
-    /// Set the game phase to Battle (for P2P)
-    #[wasm_bindgen]
-    pub fn set_phase_battle(&mut self) {
-        self.state.phase = GamePhase::Battle;
-    }
-
-    /// Get the current CommitTurnAction for the current turn
-    #[wasm_bindgen]
-    pub fn get_commit_action(&self) -> JsValue {
-        let action = manalimit_core::types::CommitTurnAction {
-            new_board: self.state.board.clone(),
-            pitched_from_hand: self
-                .hand_pitched
-                .iter()
-                .enumerate()
-                .filter(|(_, &p)| p)
-                .map(|(i, _)| i as u32)
-                .collect(),
-            played_from_hand: self
-                .hand_played
-                .iter()
-                .enumerate()
-                .filter(|(_, &p)| p)
-                .map(|(i, _)| i as u32)
-                .collect(),
-            pitched_from_board: self.board_pitched.iter().map(|&i| i as u32).collect(),
-        };
-        serde_wasm_bindgen::to_value(&action).unwrap_or(JsValue::NULL)
+        serde_json::to_string(&action).unwrap_or_else(|_| "{}".to_string())
     }
 }
 
@@ -601,15 +466,15 @@ impl GameEngine {
 
     fn initialize_bag(&mut self) {
         self.state.bag.clear();
+        self.state.card_pool.clear();
         let templates = get_starter_templates();
         for template in &templates {
             if template.is_token {
                 continue;
             }
             for _ in 0..3 {
-                let id = self.state.generate_card_id();
                 let card = UnitCard::new(
-                    id,
+                    CardId(0), // Placeholder, will be set by mint_card
                     template.template_id,
                     template.name,
                     template.attack,
@@ -619,7 +484,8 @@ impl GameEngine {
                     template.is_token,
                 )
                 .with_abilities(template.abilities.clone());
-                self.state.bag.push(card);
+                let id = self.mint_card(card);
+                self.state.bag.push(id);
             }
         }
         // Draw initial hand once bag is ready
@@ -644,11 +510,18 @@ impl GameEngine {
     fn run_battle(&mut self) {
         log::info("=== BATTLE START ===");
 
-        let player_board: Vec<BoardUnit> =
-            self.state.board.iter().filter_map(|s| s.clone()).collect();
+        let player_units: Vec<CombatUnit> = self.state.board.iter()
+            .flatten()
+            .map(|u| {
+                let card = self.get_card(u.card_id);
+                let mut cu = CombatUnit::from_card(card.clone());
+                cu.health = u.current_health.max(0);
+                cu
+            })
+            .collect();
 
         let battle_seed = self.state.round as u64;
-        let enemy_board = get_opponent_for_round(
+        let enemy_units = get_opponent_for_round(
             self.state.round,
             &mut self.state.next_card_id,
             battle_seed + 999,
@@ -656,7 +529,7 @@ impl GameEngine {
         .expect("Failed to generate opponent for round");
 
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-        let events = resolve_battle(&player_board, &enemy_board, &mut rng);
+        let events = resolve_battle(player_units, enemy_units, &mut rng);
 
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {
@@ -667,38 +540,45 @@ impl GameEngine {
             log::info(&format!("Battle Result: {:?}", result));
         }
 
-        let mut instance_counter: u32 = 0;
-        let initial_player_units: Vec<UnitView> = player_board
-            .iter()
+        // Generate initial views for UI
+        let mut limits = manalimit_core::limits::BattleLimits::new();
+        let initial_player_units: Vec<UnitView> = self.state.board.iter()
+            .flatten()
             .map(|u| {
-                instance_counter += 1;
+                let card = self.get_card(u.card_id);
                 UnitView {
-                    instance_id: UnitId::player(instance_counter),
-                    template_id: u.card.template_id.clone(),
-                    name: u.card.name.clone(),
-                    attack: u.card.stats.attack,
+                    instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Player),
+                    template_id: card.template_id.clone(),
+                    name: card.name.clone(),
+                    attack: card.stats.attack,
                     health: u.current_health,
-                    abilities: u.card.abilities.clone(),
-                    is_token: u.card.is_token,
+                    abilities: card.abilities.clone(),
+                    is_token: card.is_token,
                 }
             })
             .collect();
-        instance_counter = 0;
-        let initial_enemy_units: Vec<UnitView> = enemy_board
-            .iter()
-            .map(|u| {
-                instance_counter += 1;
-                UnitView {
-                    instance_id: UnitId::enemy(instance_counter),
-                    template_id: u.card.template_id.clone(),
-                    name: u.card.name.clone(),
-                    attack: u.card.stats.attack,
-                    health: u.current_health,
-                    abilities: u.card.abilities.clone(),
-                    is_token: u.card.is_token,
-                }
-            })
-            .collect();
+
+        limits.reset_phase_counters(); // Reset for enemy
+        let mut enemy_instance_counter = 0;
+        let initial_enemy_units: Vec<UnitView> = get_opponent_for_round(
+            self.state.round,
+            &mut enemy_instance_counter, // Dummy counter to get same results
+            battle_seed + 999,
+        )
+        .unwrap()
+        .into_iter()
+        .map(|cu| {
+            UnitView {
+                instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Enemy),
+                template_id: cu.template_id,
+                name: cu.name,
+                attack: cu.attack,
+                health: cu.health,
+                abilities: cu.abilities,
+                is_token: cu.is_token,
+            }
+        })
+        .collect();
 
         self.last_battle_output = Some(BattleOutput {
             events,

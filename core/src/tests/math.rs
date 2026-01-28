@@ -13,7 +13,7 @@ fn test_saturating_health_underflow() {
 #[test]
 fn test_unit_initialization_math_safety() {
     let card = create_dummy_card(1, "Zombie", 1, -10);
-    let unit = BoardUnit::from_card(card);
+    let unit = CombatUnit::from_card(card);
 
     assert_eq!(unit.effective_health(), 0);
     assert!(!unit.is_alive());
@@ -34,7 +34,7 @@ fn test_saturating_stat_buffs() {
     );
 
     let unit_card = create_dummy_card(1, "Hero", 10, 10).with_ability(buff_ability);
-    let p_board = vec![BoardUnit::from_card(unit_card)];
+    let p_board = vec![CombatUnit::from_card(unit_card)];
     let e_board = vec![create_dummy_enemy()];
 
     let events = run_battle(&p_board, &e_board, 42);
@@ -85,8 +85,8 @@ fn test_negative_attack_prevention() {
     let weak_unit = create_dummy_card(1, "Weakling", 5, 10).with_ability(debuff_ability);
     let enemy = create_dummy_card(2, "Enemy", 0, 10);
 
-    let p_board = vec![BoardUnit::from_card(weak_unit)];
-    let e_board = vec![BoardUnit::from_card(enemy)];
+    let p_board = vec![CombatUnit::from_card(weak_unit)];
+    let e_board = vec![CombatUnit::from_card(enemy)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -122,7 +122,7 @@ fn test_board_unit_health() {
     assert!(unit.is_alive());
 
     unit.take_damage(5);
-    assert_eq!(unit.current_health, 5);
+    assert_eq!(unit.health, 5);
 
     unit.take_damage(5);
     assert!(!unit.is_alive());

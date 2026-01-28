@@ -197,7 +197,7 @@ pub struct CombatUnit {
 }
 
 impl CombatUnit {
-    fn from_card(card: crate::types::UnitCard) -> Self {
+    pub fn from_card(card: crate::types::UnitCard) -> Self {
         let ability_count = card.abilities.len();
         Self {
             instance_id: UnitId::player(0), // Placeholder
@@ -231,8 +231,17 @@ impl CombatUnit {
         self.attack.saturating_add(self.attack_buff).max(0)
     }
 
-    fn effective_health(&self) -> i32 {
+    pub fn effective_health(&self) -> i32 {
         self.health.max(0)
+    }
+
+    pub fn is_alive(&self) -> bool {
+        self.health > 0
+    }
+
+    pub fn take_damage(&mut self, amount: i32) {
+        let actual_damage = amount.max(0);
+        self.health = self.health.saturating_sub(actual_damage);
     }
 }
 
@@ -241,35 +250,23 @@ impl CombatUnit {
 // ==========================================
 
 pub fn resolve_battle<R: BattleRng>(
-    player_board: &[BoardUnit],
-    enemy_board: &[BoardUnit],
+    mut player_units: Vec<CombatUnit>,
+    mut enemy_units: Vec<CombatUnit>,
     rng: &mut R,
 ) -> Vec<CombatEvent> {
     let mut events = Vec::new();
     let mut limits = BattleLimits::new();
 
-    // Initialize Units
-    let mut player_units: Vec<CombatUnit> = player_board
-        .iter()
-        .map(|u| {
-            let mut cu = CombatUnit::from_card(u.card.clone());
-            cu.instance_id = limits.generate_instance_id(Team::Player);
-            cu.team = Team::Player;
-            cu.health = u.current_health.max(0);
-            cu
-        })
-        .collect();
-
-    let mut enemy_units: Vec<CombatUnit> = enemy_board
-        .iter()
-        .map(|u| {
-            let mut cu = CombatUnit::from_card(u.card.clone());
-            cu.instance_id = limits.generate_instance_id(Team::Enemy);
-            cu.team = Team::Enemy;
-            cu.health = u.current_health.max(0);
-            cu
-        })
-        .collect();
+    // Assign stable instance IDs and teams if not already set
+    // Note: This assumes the input units might have placeholder IDs/teams.
+    for unit in &mut player_units {
+        unit.instance_id = limits.generate_instance_id(Team::Player);
+        unit.team = Team::Player;
+    }
+    for unit in &mut enemy_units {
+        unit.instance_id = limits.generate_instance_id(Team::Enemy);
+        unit.team = Team::Enemy;
+    }
 
     // 1. Start of Battle Phase
     limits.reset_phase_counters();
@@ -813,7 +810,7 @@ fn apply_ability_effect<R: BattleRng>(
                 let instance_id = next_id;
 
                 let mut card = crate::types::UnitCard::new(
-                    instance_id.0.wrapping_mul(5000),
+                    crate::types::CardId(instance_id.0.wrapping_mul(5000)),
                     template.template_id,
                     template.name,
                     template.attack,

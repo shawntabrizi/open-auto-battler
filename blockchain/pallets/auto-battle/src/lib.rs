@@ -80,8 +80,6 @@ pub mod pallet {
     /// Type alias for the bounded turn action using pallet config.
     pub type BoundedCommitTurnAction<T> = CoreBoundedCommitTurnAction<
         <T as Config>::MaxBoardSize,
-        <T as Config>::MaxAbilities,
-        <T as Config>::MaxStringLen,
         <T as Config>::MaxHandActions,
     >;
 
@@ -152,8 +150,12 @@ pub mod pallet {
             // Create initial state
             let mut state = GameState::new(seed);
 
-            // Generate the Bag deterministically
-            state.bag = create_genesis_bag();
+            // Generate and insert initial cards
+            for card in create_genesis_bag() {
+                let id = card.id;
+                state.card_pool.insert(id, card);
+                state.bag.push(id);
+            }
 
             // Draw initial hand from bag
             state.draw_hand();

@@ -20,7 +20,7 @@ fn test_targeting_logic_front_ally() {
     let front = create_dummy_card(1, "Front", 1, 10);
     let back = create_dummy_card(2, "Back", 1, 10).with_ability(buff);
 
-    let p_board = vec![BoardUnit::from_card(front), BoardUnit::from_card(back)];
+    let p_board = vec![CombatUnit::from_card(front), CombatUnit::from_card(back)];
     let e_board = vec![create_board_unit(3, "Dummy", 1, 50)];
 
     let events = run_battle(&p_board, &e_board, 42);

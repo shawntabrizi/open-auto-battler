@@ -19,8 +19,8 @@ fn test_fatal_damage_trigger() {
     let martyr = create_dummy_card(1, "Martyr", 1, 1).with_ability(revenge_shot);
     let killer = create_dummy_card(2, "Killer", 10, 10);
 
-    let p_board = vec![BoardUnit::from_card(martyr)];
-    let e_board = vec![BoardUnit::from_card(killer)];
+    let p_board = vec![CombatUnit::from_card(martyr)];
+    let e_board = vec![CombatUnit::from_card(killer)];
 
     let events = run_battle(&p_board, &e_board, 42);
 
@@ -72,8 +72,8 @@ fn test_destroy_exact_health() {
     let reaper = create_dummy_card(1, "Reaper", 1, 1).with_ability(reaper_ability);
     let victim = create_dummy_card(2, "Victim", 1, 42);
 
-    let p_board = vec![BoardUnit::from_card(reaper)];
-    let e_board = vec![BoardUnit::from_card(victim)];
+    let p_board = vec![CombatUnit::from_card(reaper)];
+    let e_board = vec![CombatUnit::from_card(victim)];
 
     let events = run_battle(&p_board, &e_board, 42);
 

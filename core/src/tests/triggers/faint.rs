@@ -23,8 +23,8 @@ fn test_ally_behind_on_faint_buffs_correctly() {
     let ally_behind = create_dummy_card(2, "Ally", 5, 5);
 
     let p_board = vec![
-        BoardUnit::from_card(martyr),
-        BoardUnit::from_card(ally_behind),
+        CombatUnit::from_card(martyr),
+        CombatUnit::from_card(ally_behind),
     ];
     let e_board = vec![create_board_unit(3, "Enemy", 10, 10)];
 
@@ -134,16 +134,16 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
     ]);
 
     let p_board = vec![
-        BoardUnit::from_card(mk1),
-        BoardUnit::from_card(mk2),
-        BoardUnit::from_card(mk3),
-        BoardUnit::from_card(lich),
-        BoardUnit::from_card(mk5),
+        CombatUnit::from_card(mk1),
+        CombatUnit::from_card(mk2),
+        CombatUnit::from_card(mk3),
+        CombatUnit::from_card(lich),
+        CombatUnit::from_card(mk5),
     ];
     let e_board = vec![
-        BoardUnit::from_card(e_mk1),
-        BoardUnit::from_card(e_mk2),
-        BoardUnit::from_card(e_lich),
+        CombatUnit::from_card(e_mk1),
+        CombatUnit::from_card(e_mk2),
+        CombatUnit::from_card(e_lich),
     ];
 
     let events = run_battle(&p_board, &e_board, 42);

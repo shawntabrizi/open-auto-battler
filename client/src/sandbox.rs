@@ -6,10 +6,10 @@ use std::string::String;
 use std::vec::Vec;
 
 use crate::engine::BattleOutput;
-use manalimit_core::battle::{resolve_battle, UnitId, UnitView};
+use manalimit_core::battle::{resolve_battle, UnitId, UnitView, CombatUnit};
 use manalimit_core::log;
 use manalimit_core::rng::XorShiftRng;
-use manalimit_core::types::{BoardUnit, UnitCard};
+use manalimit_core::types::{UnitCard, CardId};
 use manalimit_core::units::get_starter_templates;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
@@ -65,15 +65,15 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
 
     let templates = get_starter_templates();
 
-    let mut card_id = 1u32;
-    let mut make_board_unit = |sandbox: &SandboxUnit| -> Option<BoardUnit> {
+    let mut card_id_counter = 1u32;
+    let mut make_combat_unit = |sandbox: &SandboxUnit| -> Option<CombatUnit> {
         let template = templates
             .iter()
             .find(|t| t.template_id == sandbox.template_id)?;
-        let id = card_id;
-        card_id += 1;
+        let id = card_id_counter;
+        card_id_counter += 1;
         let card = UnitCard::new(
-            id,
+            CardId(id),
             template.template_id,
             template.name,
             template.attack,
@@ -83,51 +83,51 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
             template.is_token,
         )
         .with_abilities(template.abilities.clone());
-        Some(BoardUnit::from_card(card))
+        Some(CombatUnit::from_card(card))
     };
 
-    let player_board: Vec<BoardUnit> = player_sandbox
+    let player_board: Vec<CombatUnit> = player_sandbox
         .iter()
-        .filter_map(|s| make_board_unit(s))
+        .filter_map(|s| make_combat_unit(s))
         .collect();
-    let enemy_board: Vec<BoardUnit> = enemy_sandbox
+    let enemy_board: Vec<CombatUnit> = enemy_sandbox
         .iter()
-        .filter_map(|s| make_board_unit(s))
+        .filter_map(|s| make_combat_unit(s))
         .collect();
 
     let mut rng = XorShiftRng::seed_from_u64(seed);
-    let events = resolve_battle(&player_board, &enemy_board, &mut rng);
+    
+    // We need to clone them because resolve_battle takes ownership
+    let events = resolve_battle(player_board.clone(), enemy_board.clone(), &mut rng);
 
-    let mut instance_counter = 0;
+    let mut limits = manalimit_core::limits::BattleLimits::new();
     let initial_player_units: Vec<UnitView> = player_board
         .iter()
         .map(|u| {
-            instance_counter += 1;
             UnitView {
-                instance_id: UnitId::player(instance_counter),
-                template_id: u.card.template_id.clone(),
-                name: u.card.name.clone(),
-                attack: u.card.stats.attack,
-                health: u.current_health,
-                abilities: u.card.abilities.clone(),
-                is_token: u.card.is_token,
+                instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Player),
+                template_id: u.template_id.clone(),
+                name: u.name.clone(),
+                attack: u.attack,
+                health: u.health,
+                abilities: u.abilities.clone(),
+                is_token: u.is_token,
             }
         })
         .collect();
 
-    instance_counter = 0;
+    limits.reset_phase_counters();
     let initial_enemy_units: Vec<UnitView> = enemy_board
         .iter()
         .map(|u| {
-            instance_counter += 1;
             UnitView {
-                instance_id: UnitId::enemy(instance_counter),
-                template_id: u.card.template_id.clone(),
-                name: u.card.name.clone(),
-                attack: u.card.stats.attack,
-                health: u.current_health,
-                abilities: u.card.abilities.clone(),
-                is_token: u.card.is_token,
+                instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Enemy),
+                template_id: u.template_id.clone(),
+                name: u.name.clone(),
+                attack: u.attack,
+                health: u.health,
+                abilities: u.abilities.clone(),
+                is_token: u.is_token,
             }
         })
         .collect();

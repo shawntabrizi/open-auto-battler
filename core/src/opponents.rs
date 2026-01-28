@@ -5,16 +5,17 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
+use crate::battle::CombatUnit;
 use crate::error::{GameError, GameResult};
 use crate::rng::{BattleRng, XorShiftRng};
-use crate::types::{BoardUnit, UnitCard};
+use crate::types::UnitCard;
 use crate::units::get_starter_templates;
 
 /// Create a unit from a template
 fn create_unit_from_template(
     card_id_counter: &mut u32,
     template_id: &str,
-) -> GameResult<BoardUnit> {
+) -> GameResult<CombatUnit> {
     *card_id_counter += 1;
 
     // Get all starter templates
@@ -28,7 +29,7 @@ fn create_unit_from_template(
 
     // Create the unit card with the template data
     let mut card = UnitCard::new(
-        *card_id_counter,
+        crate::types::CardId(*card_id_counter),
         template.template_id,
         template.name,
         template.attack,
@@ -43,7 +44,7 @@ fn create_unit_from_template(
         card = card.with_ability(ability);
     }
 
-    Ok(BoardUnit::from_card(card))
+    Ok(CombatUnit::from_card(card))
 }
 
 /// The Swarm Strategy: Focuses on many small units and undead spawning.
@@ -179,7 +180,7 @@ pub fn get_opponent_for_round(
     round: i32,
     card_id_counter: &mut u32,
     seed: u64,
-) -> GameResult<Vec<BoardUnit>> {
+) -> GameResult<Vec<CombatUnit>> {
     let mut rng = XorShiftRng::seed_from_u64(seed);
     let strategy_roll = rng.gen_range(3); // 0, 1, or 2
 
