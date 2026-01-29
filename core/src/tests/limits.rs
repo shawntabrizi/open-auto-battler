@@ -17,7 +17,7 @@ fn test_max_triggers_unlimited() {
             },
             name: "Unlimited Rage".to_string(),
             description: "Gain +1 attack when hurt (unlimited)".to_string(),
-            condition: AbilityCondition::default(),
+            conditions: vec![],
             max_triggers: None,
         }];
         card
@@ -64,7 +64,7 @@ fn test_max_triggers_not_exceeded_on_death() {
             },
             name: "Limited Buff".to_string(),
             description: "Gain +1 attack when hurt (max 2 times)".to_string(),
-            condition: AbilityCondition::default(),
+            conditions: vec![],
             max_triggers: Some(2),
         }];
         card
@@ -111,7 +111,7 @@ fn test_max_triggers_limit() {
             },
             name: "Limited Rage".to_string(),
             description: "Gain +1 attack when hurt (max 2 times)".to_string(),
-            condition: AbilityCondition::default(),
+            conditions: vec![],
             max_triggers: Some(2),
         }];
         card

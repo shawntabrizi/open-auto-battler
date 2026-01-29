@@ -29,8 +29,7 @@ fn create_ability(trigger: AbilityTrigger, effect: AbilityEffect, name: &str) ->
         effect,
         name: name.to_string(),
         description: "Test Ability".to_string(),
-        condition: crate::types::AbilityCondition::default(),
-        max_triggers: None,
+                    conditions: vec![],        max_triggers: None,
     }
 }
 
@@ -53,8 +52,7 @@ fn create_tester_unit(
         },
         name: ability_name.to_string(),
         description: "Priority Test Ability".to_string(),
-        condition: crate::types::AbilityCondition::default(),
-        max_triggers: None,
+                    conditions: vec![],        max_triggers: None,
     };
 
     let card = UnitCard {

@@ -86,9 +86,11 @@ pub struct Ability {
     pub trigger: AbilityTrigger,
     pub effect: AbilityEffect,
     
-    // Optional Logic
+    /// The list of conditions implies "AND".
+    /// If empty, it always triggers.
     #[serde(default)]
-    pub condition: AbilityCondition, // Default: None (Always runs)
+    pub conditions: Vec<Condition>,
+    
     #[serde(default)]
     pub max_triggers: Option<u32>,   // Default: None (Unlimited)
 }
@@ -139,27 +141,25 @@ pub enum AbilityTarget {
 }
 ```
 
-### E. Conditions (`AbilityCondition`)
+### E. Conditions (`Matcher` and `Condition`)
 
-Composable logic gates.
+A two-tier architecture to prevent stack overflows while allowing logical "OR" operations.
 
 ```rust
-#[serde(tag = "type", content = "data")]
-pub enum AbilityCondition {
-    None,
-    /// Compare a unit's stat to a constant value
+/// Pure logic variants (Leaf nodes). Strictly NO recursion and NO containers.
+pub enum Matcher {
     StatValueCompare { scope: TargetScope, stat: StatType, op: CompareOp, value: i32 },
-    /// Compare source stat vs target unit's stat
     StatStatCompare { source_stat: StatType, op: CompareOp, target_scope: TargetScope, target_stat: StatType },
-    /// Count units in a scope
     UnitCount { scope: TargetScope, op: CompareOp, value: u32 },
-    /// Check if source is at specific index
     IsPosition { scope: TargetScope, index: i32 },
-    
-    // Logic Gates
-    And { left: Box<AbilityCondition>, right: Box<AbilityCondition> },
-    Or { left: Box<AbilityCondition>, right: Box<AbilityCondition> },
-    Not { inner: Box<AbilityCondition> },
+}
+
+/// Structural variants. Controls flow. Can hold Matchers, but CANNOT hold itself.
+pub enum Condition {
+    /// A single mandatory requirement.
+    Is(Matcher),
+    /// A "Shallow OR" list. Returns true if ANY of the internal Matchers are true.
+    AnyOf(Vec<Matcher>),
 }
 ```
 
@@ -187,7 +187,8 @@ pub enum AbilityCondition {
             "count": 1
           }
         }
-      }
+      },
+      "conditions": []
     }
   ]
 }
@@ -212,15 +213,20 @@ pub enum AbilityCondition {
           "data": { "scope": "Allies", "index": 0 }
         }
       },
-      "condition": {
-        "type": "StatValueCompare",
-        "data": {
-          "scope": "Allies",
-          "stat": "Health",
-          "op": "LessThanOrEqual",
-          "value": 6
+      "conditions": [
+        {
+          "type": "Is",
+          "data": {
+            "type": "StatValueCompare",
+            "data": {
+              "scope": "Allies",
+              "stat": "Health",
+              "op": "LessThanOrEqual",
+              "value": 6
+            }
+          }
         }
-      }
+      ]
     }
   ]
 }

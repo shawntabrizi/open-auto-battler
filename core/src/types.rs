@@ -2,7 +2,6 @@
 //!
 //! This module defines the fundamental types used throughout the game engine.
 
-use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -82,10 +81,7 @@ pub enum CompareOp {
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(tag = "type", content = "data"))]
-pub enum AbilityCondition {
-    /// No condition, always triggers (default)
-    None,
-
+pub enum Matcher {
     /// Compare a unit's stat to a constant value
     StatValueCompare {
         scope: TargetScope,
@@ -111,25 +107,20 @@ pub enum AbilityCondition {
 
     /// Check if unit is at a specific position
     IsPosition { scope: TargetScope, index: i32 },
-
-    /// Both conditions must be true
-    And {
-        left: Box<AbilityCondition>,
-        right: Box<AbilityCondition>,
-    },
-    /// At least one condition must be true
-    Or {
-        left: Box<AbilityCondition>,
-        right: Box<AbilityCondition>,
-    },
-    /// Inverts the condition result
-    Not { inner: Box<AbilityCondition> },
 }
 
-impl Default for AbilityCondition {
-    fn default() -> Self {
-        AbilityCondition::None
-    }
+/// Structural conditions that control the flow of evaluation
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "data"))]
+pub enum Condition {
+    /// A single mandatory requirement.
+    Is(Matcher),
+
+    /// A "Shallow OR" list.
+    /// Returns true if ANY of the internal Matchers are true.
+    /// Stack Safe: Cannot contain nested AnyOfs.
+    AnyOf(Vec<Matcher>),
 }
 
 /// Ability trigger conditions
@@ -198,10 +189,10 @@ pub struct Ability {
     pub effect: AbilityEffect,
     pub name: String,
     pub description: String,
-    /// Optional condition that must be met for this ability to activate.
-    /// If None or AbilityCondition::None, the ability always triggers.
+    /// The list of conditions implies "AND".
+    /// If empty, it always triggers.
     #[cfg_attr(feature = "std", serde(default))]
-    pub condition: AbilityCondition,
+    pub conditions: Vec<Condition>,
     /// Optional limit on how many times this ability can trigger per battle.
     /// If None, the ability can trigger unlimited times.
     #[cfg_attr(feature = "std", serde(default))]

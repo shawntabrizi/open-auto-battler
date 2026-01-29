@@ -5,15 +5,15 @@ export type SortOrder = 'Ascending' | 'Descending';
 export type CompareOp = 'GreaterThan' | 'LessThan' | 'Equal' | 'GreaterThanOrEqual' | 'LessThanOrEqual';
 
 // Ability condition types
-export type AbilityCondition =
-  | { type: 'None' }
+export type Matcher =
   | { type: 'StatValueCompare'; data: { scope: TargetScope; stat: StatType; op: CompareOp; value: number } }
   | { type: 'StatStatCompare'; data: { source_stat: StatType; op: CompareOp; target_scope: TargetScope; target_stat: StatType } }
   | { type: 'UnitCount'; data: { scope: TargetScope; op: CompareOp; value: number } }
-  | { type: 'IsPosition'; data: { scope: TargetScope; index: number } }
-  | { type: 'And'; data: { left: AbilityCondition; right: AbilityCondition } }
-  | { type: 'Or'; data: { left: AbilityCondition; right: AbilityCondition } }
-  | { type: 'Not'; data: { inner: AbilityCondition } };
+  | { type: 'IsPosition'; data: { scope: TargetScope; index: number } };
+
+export type Condition =
+  | { type: 'Is'; data: Matcher }
+  | { type: 'AnyOf'; data: Matcher[] };
 
 // Ability types
 export interface Ability {
@@ -21,7 +21,7 @@ export interface Ability {
   effect: AbilityEffect;
   name: string;
   description: string;
-  condition?: AbilityCondition;
+  conditions: Condition[];
   max_triggers?: number;
 }
 

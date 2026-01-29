@@ -16,8 +16,8 @@ use crate::battle::{BattlePhase, BattleResult, UnitId};
 use crate::limits::{LimitReason, Team};
 use crate::state::{calculate_mana_limit, derive_hand_indices_logic};
 use crate::types::{
-    Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CardId,
-    CommitTurnAction, EconomyStats, TurnAction, UnitCard, UnitStats,
+    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CardId,
+    CommitTurnAction, Condition, EconomyStats, Matcher, TurnAction, UnitCard, UnitStats,
 };
 use crate::{GamePhase, GameState};
 
@@ -244,7 +244,7 @@ where
     pub effect: BoundedAbilityEffect<MaxStringLen>,
     pub name: BoundedVec<u8, MaxStringLen>,
     pub description: BoundedVec<u8, MaxStringLen>,
-    pub condition: AbilityCondition,
+    pub conditions: Vec<Condition>,
     pub max_triggers: Option<u32>,
 }
 
@@ -255,7 +255,7 @@ impl<MaxStringLen: Get<u32>> Clone for BoundedAbility<MaxStringLen> {
             effect: self.effect.clone(),
             name: self.name.clone(),
             description: self.description.clone(),
-            condition: self.condition.clone(),
+            conditions: self.conditions.clone(),
             max_triggers: self.max_triggers,
         }
     }
@@ -267,7 +267,7 @@ impl<MaxStringLen: Get<u32>> PartialEq for BoundedAbility<MaxStringLen> {
             && self.effect == other.effect
             && self.name == other.name
             && self.description == other.description
-            && self.condition == other.condition
+            && self.conditions == other.conditions
             && self.max_triggers == other.max_triggers
     }
 }
@@ -281,7 +281,7 @@ impl<MaxStringLen: Get<u32>> Debug for BoundedAbility<MaxStringLen> {
             .field("effect", &self.effect)
             .field("name", &self.name)
             .field("description", &self.description)
-            .field("condition", &self.condition)
+            .field("conditions", &self.conditions)
             .field("max_triggers", &self.max_triggers)
             .finish()
     }
@@ -294,7 +294,7 @@ impl<MaxStringLen: Get<u32>> From<Ability> for BoundedAbility<MaxStringLen> {
             effect: a.effect.into(),
             name: string_to_bounded(a.name),
             description: string_to_bounded(a.description),
-            condition: a.condition,
+            conditions: a.conditions,
             max_triggers: a.max_triggers,
         }
     }
@@ -307,7 +307,7 @@ impl<MaxStringLen: Get<u32>> From<BoundedAbility<MaxStringLen>> for Ability {
             effect: bounded.effect.into(),
             name: bounded_to_string(bounded.name),
             description: bounded_to_string(bounded.description),
-            condition: bounded.condition,
+            conditions: bounded.conditions,
             max_triggers: bounded.max_triggers,
         }
     }

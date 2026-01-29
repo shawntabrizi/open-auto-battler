@@ -121,8 +121,7 @@ fn test_priority_tiebreaker_team() {
         },
         name: "EnemyTrigger".to_string(),
         description: "Test".to_string(),
-        condition: crate::types::AbilityCondition::default(),
-        max_triggers: None,
+                    conditions: vec![],        max_triggers: None,
     };
     let e_card =
         UnitCard::new(CardId(2), "Enemy", "Enemy", 5, 5, 0, 0, false).with_ability(ability);
@@ -481,8 +480,7 @@ fn test_priority_interruption_kill() {
         },
         name: "KillShot".to_string(),
         description: "Deals 5 damage".to_string(),
-        condition: crate::types::AbilityCondition::default(),
-        max_triggers: None,
+                    conditions: vec![],        max_triggers: None,
     };
 
     let slow_ability = Ability {
@@ -496,8 +494,7 @@ fn test_priority_interruption_kill() {
         },
         name: "LateShot".to_string(),
         description: "Deals 5 damage".to_string(),
-        condition: crate::types::AbilityCondition::default(),
-        max_triggers: None,
+                    conditions: vec![],        max_triggers: None,
     };
 
     // Construct Card A (Fast)

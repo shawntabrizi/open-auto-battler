@@ -14,8 +14,7 @@ fn test_warder_seal_fate() {
         },
         name: "Seal Fate".to_string(),
         description: "Damage enemies on spawn".to_string(),
-        condition: AbilityCondition::None,
-        max_triggers: None,
+                    conditions: vec![],        max_triggers: None,
     });
 
     let rat_swarm = create_dummy_card(2, "Rat Swarm", 1, 1).with_ability(Ability {
@@ -25,8 +24,7 @@ fn test_warder_seal_fate() {
         },
         name: "Infestation".to_string(),
         description: "Spawn token on death".to_string(),
-        condition: AbilityCondition::None,
-        max_triggers: None,
+                    conditions: vec![],        max_triggers: None,
     });
 
     let p_board = vec![CombatUnit::from_card(warder)];
@@ -69,8 +67,7 @@ fn test_necromancer_spawn_boost() {
         },
         name: "Infestation".to_string(),
         description: "Spawn token on death".to_string(),
-        condition: AbilityCondition::None,
-        max_triggers: None,
+                    conditions: vec![],        max_triggers: None,
     });
 
     let necromancer = create_dummy_card(2, "Necromancer", 2, 3).with_ability(Ability {
@@ -84,8 +81,7 @@ fn test_necromancer_spawn_boost() {
         },
         name: "Spawn Boost".to_string(),
         description: "Buff spawned units".to_string(),
-        condition: AbilityCondition::None,
-        max_triggers: None,
+                    conditions: vec![],        max_triggers: None,
     });
 
     let p_board = vec![

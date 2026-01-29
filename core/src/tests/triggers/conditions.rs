@@ -17,12 +17,12 @@ fn test_condition_target_health_threshold() {
             },
             name: "Emergency Heal".to_string(),
             description: "Heal ally ahead if HP <= 6".to_string(),
-            condition: AbilityCondition::StatValueCompare {
+            conditions: vec![Condition::Is(Matcher::StatValueCompare {
                 scope: TargetScope::Allies,
                 stat: StatType::Health,
                 op: CompareOp::LessThanOrEqual,
                 value: 6,
-            },
+            })],
             max_triggers: None,
         })
     };
@@ -84,11 +84,11 @@ fn test_condition_ally_count() {
             },
             name: "Pack Tactics".to_string(),
             description: "Buff all allies if 3+ allies".to_string(),
-            condition: AbilityCondition::UnitCount {
+            conditions: vec![Condition::Is(Matcher::UnitCount {
                 scope: TargetScope::Allies,
                 op: CompareOp::GreaterThanOrEqual,
                 value: 3,
-            },
+            })],
             max_triggers: None,
         })
     };
@@ -158,11 +158,11 @@ fn test_condition_last_stand() {
             },
             name: "Last Stand".to_string(),
             description: "Gain +5 attack if alone".to_string(),
-            condition: AbilityCondition::UnitCount {
+            conditions: vec![Condition::Is(Matcher::UnitCount {
                 scope: TargetScope::Allies,
                 op: CompareOp::LessThanOrEqual,
                 value: 1,
-            },
+            })],
             max_triggers: None,
         })
     };
@@ -229,19 +229,19 @@ fn test_condition_logic_gates() {
             },
             name: "Complex Condition".to_string(),
             description: "Buff if HP <= 5 AND 2+ allies".to_string(),
-            condition: AbilityCondition::And {
-                left: Box::new(AbilityCondition::StatValueCompare {
+            conditions: vec![
+                Condition::Is(Matcher::StatValueCompare {
                     scope: TargetScope::SelfUnit,
                     stat: StatType::Health,
                     op: CompareOp::LessThanOrEqual,
                     value: 5,
                 }),
-                right: Box::new(AbilityCondition::UnitCount {
+                Condition::Is(Matcher::UnitCount {
                     scope: TargetScope::Allies,
                     op: CompareOp::GreaterThanOrEqual,
                     value: 2,
                 }),
-            },
+            ],
             max_triggers: None,
         })
     };

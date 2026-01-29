@@ -13,8 +13,8 @@ use crate::limits::{BattleLimits, LimitReason};
 use crate::rng::BattleRng;
 use crate::state::BOARD_SIZE;
 use crate::types::{
-    Ability, AbilityCondition, AbilityEffect, AbilityTarget, AbilityTrigger, CompareOp, SortOrder,
-    StatType, TargetScope,
+    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CompareOp, Condition, Matcher,
+    SortOrder, StatType, TargetScope,
 };
 
 #[cfg(feature = "std")]
@@ -178,7 +178,7 @@ struct PendingTrigger {
     is_from_dead: bool,
     spawn_index_override: Option<usize>,
     trigger_target_id: Option<UnitInstanceId>,
-    condition: AbilityCondition,
+    conditions: Vec<Condition>,
     /// Index of this ability in the source unit's abilities vec (for tracking trigger counts)
     ability_index: usize,
     /// Max triggers allowed for this ability (None = unlimited)
@@ -444,7 +444,7 @@ fn resolve_trigger_queue<R: BattleRng>(
         }
 
         // C. Condition Check: Does the condition pass?
-        if !matches!(trigger.condition, AbilityCondition::None) {
+        if !trigger.conditions.is_empty() {
             // Get source unit info for condition evaluation
             let source_opt = find_unit(trigger.source_id, player_units, enemy_units).cloned();
 
@@ -490,7 +490,7 @@ fn resolve_trigger_queue<R: BattleRng>(
             let effect_target = get_effect_target(&trigger.effect);
 
             if !evaluate_condition(
-                &trigger.condition,
+                &trigger.conditions,
                 &ctx,
                 &effect_target,
                 player_units,
@@ -579,7 +579,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             is_from_dead: is_fatal, // ALLOW execution if it died from this damage
                             spawn_index_override: if is_fatal { Some(idx_in_team) } else { None },
                             trigger_target_id: Some(trigger.source_id),
-                            condition: ability.condition.clone(),
+                                                        conditions: ability.conditions.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
                         });
@@ -623,7 +623,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             is_from_dead: true,
                             spawn_index_override: Some(index), // Remember where it died!
                             trigger_target_id: Some(dead_unit.instance_id),
-                            condition: ability.condition.clone(),
+                                                        conditions: ability.conditions.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
                         });
@@ -653,7 +653,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             is_from_dead: false,
                             spawn_index_override: None,
                             trigger_target_id: Some(dead_id),
-                            condition: ability.condition.clone(),
+                                                        conditions: ability.conditions.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
                         });
@@ -683,7 +683,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             is_from_dead: false,
                             spawn_index_override: None,
                             trigger_target_id: Some(dead_id),
-                            condition: ability.condition.clone(),
+                                                        conditions: ability.conditions.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
                         });
@@ -877,7 +877,7 @@ fn apply_ability_effect<R: BattleRng>(
                             is_from_dead: false,
                             spawn_index_override: None,
                             trigger_target_id: Some(spawned_id),
-                            condition: ability.condition.clone(),
+                                                        conditions: ability.conditions.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
                         });
@@ -905,7 +905,7 @@ fn apply_ability_effect<R: BattleRng>(
                                 is_from_dead: false,
                                 spawn_index_override: None,
                                 trigger_target_id: Some(spawned_id),
-                                condition: ability.condition.clone(),
+                                                            conditions: ability.conditions.clone(),
                                 ability_index: sub_idx,
                                 max_triggers: ability.max_triggers,
                             });
@@ -940,7 +940,7 @@ fn apply_ability_effect<R: BattleRng>(
                                 is_from_dead: false,
                                 spawn_index_override: None,
                                 trigger_target_id: Some(spawned_id),
-                                condition: ability.condition.clone(),
+                                                            conditions: ability.conditions.clone(),
                                 ability_index: sub_idx,
                                 max_triggers: ability.max_triggers,
                             });
@@ -1107,7 +1107,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
                         is_from_dead: false,
                         spawn_index_override: None,
                         trigger_target_id: None,
-                        condition: ability.condition.clone(),
+                                                    conditions: ability.conditions.clone(),
                         ability_index: sub_idx,
                         max_triggers: ability.max_triggers,
                     });
@@ -1266,7 +1266,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                             is_from_dead: is_dead,
                             spawn_index_override: if is_dead { Some(current_idx) } else { None },
                             trigger_target_id: dealer_id,
-                            condition: a.condition.clone(),
+                            conditions: a.conditions.clone(),
                             ability_index: sub_idx,
                             max_triggers: a.max_triggers,
                         });
@@ -1318,7 +1318,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                     is_from_dead: true,
                     spawn_index_override: Some(idx),
                     trigger_target_id: Some(u.instance_id),
-                    condition: a.condition.clone(),
+                    conditions: a.conditions.clone(),
                     ability_index: sub_idx,
                     max_triggers: a.max_triggers,
                 });
@@ -1342,7 +1342,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                         is_from_dead: false,
                         spawn_index_override: None,
                         trigger_target_id: Some(u.instance_id), // u is the dead ally
-                        condition: ability.condition.clone(),
+                                                    conditions: ability.conditions.clone(),
                         ability_index: sub_idx,
                         max_triggers: ability.max_triggers,
                     });
@@ -1373,7 +1373,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                     is_from_dead: true,
                     spawn_index_override: Some(idx),
                     trigger_target_id: Some(u.instance_id),
-                    condition: a.condition.clone(),
+                    conditions: a.conditions.clone(),
                     ability_index: sub_idx,
                     max_triggers: a.max_triggers,
                 });
@@ -1397,7 +1397,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                         is_from_dead: false,
                         spawn_index_override: None,
                         trigger_target_id: Some(u.instance_id), // u is the dead ally
-                        condition: ability.condition.clone(),
+                                                    conditions: ability.conditions.clone(),
                         ability_index: sub_idx,
                         max_triggers: ability.max_triggers,
                     });
@@ -1722,9 +1722,9 @@ struct ConditionContext<'a> {
     enemies: &'a [CombatUnit],
 }
 
-/// Evaluates a condition given the context.
+/// Evaluates a list of conditions given the context (implicit AND).
 fn evaluate_condition<R: BattleRng>(
-    condition: &AbilityCondition,
+    conditions: &[Condition],
     ctx: &ConditionContext,
     target: &AbilityTarget,
     player_units: &[CombatUnit],
@@ -1733,9 +1733,61 @@ fn evaluate_condition<R: BattleRng>(
     trigger_target_id: Option<UnitInstanceId>,
     source_position_override: Option<usize>,
 ) -> bool {
-    match condition {
-        AbilityCondition::None => true,
-        AbilityCondition::StatValueCompare {
+    for condition in conditions {
+        match condition {
+            Condition::Is(matcher) => {
+                if !evaluate_matcher(
+                    matcher,
+                    ctx,
+                    target,
+                    player_units,
+                    enemy_units,
+                    rng,
+                    trigger_target_id,
+                    source_position_override,
+                ) {
+                    return false;
+                }
+            }
+            Condition::AnyOf(matchers) => {
+                let mut any_passed = false;
+                for matcher in matchers {
+                    if evaluate_matcher(
+                        matcher,
+                        ctx,
+                        target,
+                        player_units,
+                        enemy_units,
+                        rng,
+                        trigger_target_id,
+                        source_position_override,
+                    ) {
+                        any_passed = true;
+                        break;
+                    }
+                }
+                if !any_passed {
+                    return false;
+                }
+            }
+        }
+    }
+    true
+}
+
+/// Evaluates a single matcher.
+fn evaluate_matcher<R: BattleRng>(
+    matcher: &Matcher,
+    ctx: &ConditionContext,
+    target: &AbilityTarget,
+    player_units: &[CombatUnit],
+    enemy_units: &[CombatUnit],
+    rng: &mut R,
+    trigger_target_id: Option<UnitInstanceId>,
+    source_position_override: Option<usize>,
+) -> bool {
+    match matcher {
+        Matcher::StatValueCompare {
             scope,
             stat,
             op,
@@ -1766,7 +1818,7 @@ fn evaluate_condition<R: BattleRng>(
                 })
             }
         }
-        AbilityCondition::StatStatCompare {
+        Matcher::StatStatCompare {
             source_stat,
             op,
             target_scope: _,
@@ -1796,7 +1848,7 @@ fn evaluate_condition<R: BattleRng>(
                 false
             }
         }
-        AbilityCondition::UnitCount { scope, op, value } => {
+        Matcher::UnitCount { scope, op, value } => {
             let count = resolve_scope_ids(
                 *scope,
                 ctx.source.instance_id,
@@ -1808,7 +1860,7 @@ fn evaluate_condition<R: BattleRng>(
             .len() as u32;
             compare_u32(count, *op, *value)
         }
-        AbilityCondition::IsPosition { scope: _, index } => {
+        Matcher::IsPosition { scope: _, index } => {
             let allies = if ctx.source.team == Team::Player {
                 ctx.allies
             } else {
@@ -1821,58 +1873,6 @@ fn evaluate_condition<R: BattleRng>(
             };
             ctx.source_position == actual_idx
         }
-        AbilityCondition::And { left, right } => {
-            evaluate_condition(
-                left,
-                ctx,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                source_position_override,
-            ) && evaluate_condition(
-                right,
-                ctx,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                source_position_override,
-            )
-        }
-        AbilityCondition::Or { left, right } => {
-            evaluate_condition(
-                left,
-                ctx,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                source_position_override,
-            ) || evaluate_condition(
-                right,
-                ctx,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                source_position_override,
-            )
-        }
-        AbilityCondition::Not { inner } => !evaluate_condition(
-            inner,
-            ctx,
-            target,
-            player_units,
-            enemy_units,
-            rng,
-            trigger_target_id,
-            source_position_override,
-        ),
     }
 }
 
