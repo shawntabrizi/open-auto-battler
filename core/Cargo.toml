@@ -19,6 +19,7 @@ std = [
     "bounded-collections?/std",
 ]
 bounded = ["dep:bounded-collections"]
+browser_log = []
 
 [dependencies]
 # Core (always included, no_std compatible)

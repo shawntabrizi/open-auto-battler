@@ -116,6 +116,26 @@ impl GameState {
         }
     }
 
+    /// Create a completely empty GameState placeholder
+    pub fn empty() -> Self {
+        Self {
+            card_pool: BTreeMap::new(),
+            set_id: 0,
+            local_state: LocalGameState {
+                bag: Vec::new(),
+                hand: Vec::new(),
+                board: vec![None; BOARD_SIZE],
+                mana_limit: 0,
+                round: 0,
+                lives: 0,
+                wins: 0,
+                phase: GamePhase::Shop,
+                next_card_id: 0,
+                game_seed: 0,
+            },
+        }
+    }
+
     /// Construct a full GameState from card_pool and local_state
     pub fn reconstruct(
         card_pool: BTreeMap<CardId, UnitCard>,

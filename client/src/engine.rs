@@ -29,14 +29,6 @@ type WasmMaxHandActions = ConstU32<10>;
 type WasmMaxAbilities = ConstU32<5>;
 type WasmMaxStringLen = ConstU32<32>;
 
-#[derive(Decode)]
-struct WasmGameSession {
-    state: BoundedLocalGameState<WasmMaxBagSize, WasmMaxBoardSize, WasmMaxHandActions>,
-    set_id: u32,
-    current_seed: u64,
-    owner: [u8; 32],
-}
-
 /// Result of starting a battle (events for playback)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BattleOutput {
@@ -64,10 +56,13 @@ impl GameEngine {
     #[wasm_bindgen(constructor)]
     pub fn new(seed: Option<u64>) -> Self {
         log::info("=== MANALIMIT ENGINE INITIALIZED ===");
-        let seed_val = seed.unwrap_or(42);
-        let state = GameState::new(seed_val);
+        
+        // If we are about to be initialized via SCALE, we don't want to waste
+        // memory/cycles setting up a full game state that will be dropped.
+        let state = GameState::empty();
+        
         let mut engine = Self {
-            set_id: state.set_id,
+            set_id: 0,
             state,
             last_battle_output: None,
             current_mana: 0,
@@ -75,9 +70,16 @@ impl GameEngine {
             action_log: Vec::new(),
             start_board: vec![None; BOARD_SIZE],
         };
-        engine.initialize_bag();
-        engine.start_planning_phase();
-        engine.log_state();
+
+        // Only initialize fully if a seed was actually provided (manual local start)
+        // Otherwise, we wait for init_from_scale
+        if let Some(seed_val) = seed {
+            log::debug("new", "Seed provided, performing full initialization");
+            engine.state.game_seed = seed_val;
+            engine.initialize_bag();
+            engine.start_planning_phase();
+        }
+
         engine
     }
 
@@ -475,6 +477,9 @@ impl GameEngine {
 
         log::debug("init_from_scale", "current seed assigned...");
 
+        // Safety: Replace state and let old one drop.
+        // If drop crashes, it means the old state (placeholder) was corrupted
+        // or the allocator is in a bad state.
         self.state = state;
         log::debug("init_from_scale", "state assigned...");
 
@@ -499,7 +504,7 @@ impl GameEngine {
 // Private implementation methods
 impl GameEngine {
     fn log_state(&self) {
-        log::debug("STATE", &format!("{:?}", self.state));
+        // log::debug("STATE", &format!("{:?}", self.state));
     }
 
     fn initialize_bag(&mut self) {
