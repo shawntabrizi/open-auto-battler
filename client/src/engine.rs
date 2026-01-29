@@ -371,29 +371,8 @@ impl GameEngine {
     }
 
     // ========================================================================
-    // Universal JSON String Bridge Methods
-    // These methods bypass wasm-bindgen's JsValue recursion limits by using
-    // plain JSON strings for all complex data transfer.
+    // Universal Bridge Methods
     // ========================================================================
-
-    /// Initialize the game engine from a JSON string (Universal JSON Bridge)
-    /// Use this instead of set_state to avoid Stack Overflow and Recursive Aliasing crashes.
-    #[wasm_bindgen]
-    pub fn init_from_json(&mut self, json: String, seed: u64) -> Result<(), String> {
-        log::action(
-            "init_from_json",
-            &format!("Initializing engine from JSON string (len={})", json.len()),
-        );
-
-        let mut state: GameState = serde_json::from_str(&json)
-            .map_err(|e| format!("Failed to parse JSON state: {:?}", e))?;
-
-        state.local_state.game_seed = seed;
-        self.set_id = state.set_id;
-        self.state = state;
-        self.start_planning_phase();
-        Ok(())
-    }
 
     /// Initialize the game engine from SCALE bytes (Universal SCALE Bridge)
     #[wasm_bindgen]
@@ -425,104 +404,6 @@ impl GameEngine {
         self.set_id = self.state.set_id;
         self.start_planning_phase();
         Ok(())
-    }
-
-    /// Get the current game view as a JSON string (Hot Path)
-    #[wasm_bindgen]
-    pub fn get_view_json(&self) -> String {
-        let view = GameView::from_state(&self.state, self.current_mana, &self.hand_used);
-        serde_json::to_string(&view).unwrap_or_else(|_| "{}".to_string())
-    }
-
-    /// Get the full bag as a JSON string (Cold Path - on demand only)
-    #[wasm_bindgen]
-    pub fn get_full_bag_json(&self) -> String {
-        let bag_views: Vec<CardView> = self
-            .state
-            .bag
-            .iter()
-            .map(|id| CardView::from(self.get_card(*id)))
-            .collect();
-        serde_json::to_string(&bag_views).unwrap_or_else(|_| "[]".to_string())
-    }
-
-    /// Execute an action from a JSON string and return updated view (Universal JSON Bridge)
-    #[wasm_bindgen]
-    pub fn execute_action_json(&mut self, action_json: String) -> Result<String, String> {
-        #[derive(Deserialize)]
-        #[serde(tag = "type")]
-        enum GameAction {
-            PitchHandCard {
-                hand_index: usize,
-            },
-            PlayHandCard {
-                hand_index: usize,
-                board_slot: usize,
-            },
-            SwapBoardPositions {
-                slot_a: usize,
-                slot_b: usize,
-            },
-            PitchBoardUnit {
-                board_slot: usize,
-            },
-            EndTurn,
-            ContinueAfterBattle,
-            NewRun,
-        }
-
-        let action: GameAction = serde_json::from_str(&action_json)
-            .map_err(|e| format!("Failed to parse action JSON: {:?}", e))?;
-
-        match action {
-            GameAction::PitchHandCard { hand_index } => self.pitch_hand_card(hand_index)?,
-            GameAction::PlayHandCard {
-                hand_index,
-                board_slot,
-            } => self.play_hand_card(hand_index, board_slot)?,
-            GameAction::SwapBoardPositions { slot_a, slot_b } => {
-                self.swap_board_positions(slot_a, slot_b)?
-            }
-            GameAction::PitchBoardUnit { board_slot } => self.pitch_board_unit(board_slot)?,
-            GameAction::EndTurn => self.end_turn()?,
-            GameAction::ContinueAfterBattle => self.continue_after_battle()?,
-            GameAction::NewRun => self.new_run(),
-        }
-
-        Ok(self.get_view_json())
-    }
-
-    /// Get the battle output as a JSON string
-    #[wasm_bindgen]
-    pub fn get_battle_output_json(&self) -> String {
-        match &self.last_battle_output {
-            Some(output) => serde_json::to_string(output).unwrap_or_else(|_| "null".to_string()),
-            None => "null".to_string(),
-        }
-    }
-
-    /// Get the commit action as a JSON string
-    #[wasm_bindgen]
-    pub fn get_commit_action_json(&self) -> String {
-        let action = CommitTurnAction {
-            new_board: self.state.board.clone(),
-            pitched_from_hand: self
-                .hand_pitched
-                .iter()
-                .enumerate()
-                .filter(|(_, &p)| p)
-                .map(|(i, _)| i as u32)
-                .collect(),
-            played_from_hand: self
-                .hand_played
-                .iter()
-                .enumerate()
-                .filter(|(_, &p)| p)
-                .map(|(i, _)| i as u32)
-                .collect(),
-            pitched_from_board: self.board_pitched.iter().map(|&i| i as u32).collect(),
-        };
-        serde_json::to_string(&action).unwrap_or_else(|_| "{}".to_string())
     }
 }
 

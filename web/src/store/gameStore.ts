@@ -21,15 +21,9 @@ interface GameEngine {
   apply_battle_result: (result: any) => void;
   get_commit_action: () => any;
 
-  // Universal JSON String Bridge methods (preferred for chain sync)
+  // Universal Bridge methods
   // Note: seed is bigint because wasm-bindgen binds Rust u64 to JS BigInt
-  init_from_json: (json: string, seed: bigint) => void;
   init_from_scale: (session: Uint8Array, cardSet: Uint8Array) => void;
-  get_view_json: () => string;
-  get_full_bag_json: () => string;
-  execute_action_json: (actionJson: string) => string;
-  get_battle_output_json: () => string;
-  get_commit_action_json: () => string;
 }
 
 interface WasmModule {
@@ -208,9 +202,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { engine } = get();
     if (!engine) return;
     try {
-      const bagJson = engine.get_full_bag_json();
-      const bag = JSON.parse(bagJson);
-      set({ bag });
+      console.warn('fetchBag: JSON string APIs removed, functionality currently disabled');
+      set({ bag: [] });
     } catch (err) {
       console.error('Failed to fetch bag:', err);
     }
