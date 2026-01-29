@@ -30,6 +30,7 @@ export const BlockchainPage: React.FC = () => {
     engine,
     view,
     bag,
+    cardSet,
     showBattleOverlay,
     endTurn,
     battleOutput,
@@ -78,7 +79,7 @@ export const BlockchainPage: React.FC = () => {
     (view?.phase === 'shop' && selection?.type === 'hand' && view?.hand[selection!.index])
       ? view.hand[selection!.index]!
       : (selection?.type === 'bag' && bag?.[selection!.index])
-        ? bag[selection!.index]
+        ? cardSet?.find(c => c.id === bag[selection!.index])
         : null;
 
   const selectedBoardUnit = selection?.type === 'board' && view?.board[selection!.index]

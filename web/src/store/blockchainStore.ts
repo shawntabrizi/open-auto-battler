@@ -173,9 +173,10 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
 
             // 3. Receive view and update store
             const view = engine.get_view();
+            const cardSet = engine.get_card_set();
 
             console.log("WASM engine synced successfully via SCALE bytes. View:", view);
-            useGameStore.setState({ view });
+            useGameStore.setState({ view, cardSet });
           } catch (e) {
             console.error("Failed to sync engine with chain state via SCALE:", e);
           }
@@ -243,8 +244,8 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     }
 
     try {
-      const bag = engine.get_full_bag();
-      console.log("Fetched full deck from WASM:", bag.length, "cards");
+      const bag = engine.get_bag();
+      console.log("Fetched full deck IDs from WASM:", bag.length, "cards");
       return bag;
     } catch (e) {
       console.error("Failed to fetch deck:", e);

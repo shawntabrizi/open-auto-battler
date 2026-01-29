@@ -2,12 +2,12 @@ import { useGameStore } from '../store/gameStore';
 import { UnitCard } from './UnitCard';
 
 export function BagOverlay() {
-  const { view, bag, showBag, setShowBag, selection, setSelection } = useGameStore();
+  const { view, bag, cardSet, showBag, setShowBag, selection, setSelection } = useGameStore();
 
   if (!showBag || !view) return null;
 
-  // Use the on-demand fetched bag, fall back to empty array if not loaded yet
-  const bagCards = bag ?? [];
+  // Map bag IDs to CardView objects using the cardSet lookup
+  const bagCards = (bag ?? []).map(id => cardSet?.find(c => c.id === id)).filter(Boolean);
 
   return (
     <div className="fixed left-80 right-0 top-16 bottom-48 z-40 bg-black/90 backdrop-blur-md flex flex-col p-8 overflow-hidden animate-in fade-in duration-300">

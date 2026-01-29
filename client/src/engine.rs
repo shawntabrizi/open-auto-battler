@@ -138,19 +138,31 @@ impl GameEngine {
         }
     }
 
-    /// Get the full bag as JsValue (Cold Path - on demand only)
+    /// Get the full bag as a list of Card IDs (Cold Path - on demand only)
     #[wasm_bindgen]
-    pub fn get_full_bag(&self) -> JsValue {
-        let bag_views: Vec<CardView> = self
-            .state
-            .bag
-            .iter()
-            .map(|id| CardView::from(self.get_card(*id)))
-            .collect();
-        match serde_wasm_bindgen::to_value(&bag_views) {
+    pub fn get_bag(&self) -> JsValue {
+        match serde_wasm_bindgen::to_value(&self.state.bag) {
             Ok(val) => val,
             Err(e) => {
-                log::error(&format!("get_full_bag serialization failed: {:?}", e));
+                log::error(&format!("get_bag serialization failed: {:?}", e));
+                JsValue::NULL
+            }
+        }
+    }
+
+    /// Get all unique cards in the current set/pool
+    #[wasm_bindgen]
+    pub fn get_card_set(&self) -> JsValue {
+        let card_views: Vec<CardView> = self
+            .state
+            .card_pool
+            .values()
+            .map(CardView::from)
+            .collect();
+        match serde_wasm_bindgen::to_value(&card_views) {
+            Ok(val) => val,
+            Err(e) => {
+                log::error(&format!("get_card_set serialization failed: {:?}", e));
                 JsValue::NULL
             }
         }

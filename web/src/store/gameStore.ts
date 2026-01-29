@@ -20,7 +20,8 @@ interface GameEngine {
   resolve_battle_p2p: (player_board: any, enemy_board: any, seed: bigint) => any;
   apply_battle_result: (result: any) => void;
   get_commit_action: () => any;
-  get_full_bag: () => any;
+  get_bag: () => number[];
+  get_card_set: () => CardView[];
 
   // Universal Bridge methods
   // Note: seed is bigint because wasm-bindgen binds Rust u64 to JS BigInt
@@ -37,7 +38,8 @@ interface GameStore {
   engine: GameEngine | null;
   view: GameView | null;
   battleOutput: BattleOutput | null;
-  bag: any[] | null; // Full bag data (fetched on demand - Cold Path)
+  cardSet: CardView[] | null; // Full set of unique cards (fetched once)
+  bag: number[] | null; // Bag as a list of Card IDs
   isLoading: boolean;
   error: string | null;
   selection: Selection | null;
@@ -57,7 +59,7 @@ interface GameStore {
   closeBattleOverlay: () => void;
   toggleShowRawJson: () => void;
   setShowBag: (show: boolean) => void;
-  fetchBag: () => void; // Fetch full bag on demand (Cold Path)
+  fetchBag: () => void; // Fetch bag IDs on demand
   getCommitAction: () => any;
 
   startMultiplayerGame: (seed: number) => void;
@@ -70,7 +72,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   engine: null,
   view: null,
   battleOutput: null,
-  bag: null, // Fetched on demand via fetchBag()
+  cardSet: null,
+  bag: null, 
   isLoading: true,
   error: null,
   selection: null,
@@ -88,7 +91,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         wasmInitialized = true;
       }
       const engine = new wasm.GameEngine();
-      set({ engine, view: engine.get_view(), isLoading: false });
+      set({ 
+        engine, 
+        view: engine.get_view(), 
+        cardSet: engine.get_card_set(), // Fetch card set once on init
+        isLoading: false 
+      });
     } catch (err) {
       console.error('Failed to initialize WASM:', err);
       set({ error: String(err), isLoading: false });
@@ -162,7 +170,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       engine.new_run();
-      set({ view: engine.get_view(), battleOutput: null, selection: null, showBattleOverlay: false });
+      set({ 
+        view: engine.get_view(), 
+        cardSet: engine.get_card_set(), // Refresh card set on new run
+        battleOutput: null, 
+        selection: null, 
+        showBattleOverlay: false 
+      });
     } catch (err) { console.error(err); }
   },
 
@@ -171,7 +185,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       engine.new_run();
-      set({ view: engine.get_view(), battleOutput: null, selection: null, showBattleOverlay: false });
+      set({ 
+        view: engine.get_view(), 
+        cardSet: engine.get_card_set(), // Refresh card set
+        battleOutput: null, 
+        selection: null, 
+        showBattleOverlay: false 
+      });
     } catch (err) { console.error(err); }
   },
 
@@ -203,7 +223,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { engine } = get();
     if (!engine) return;
     try {
-      const bag = engine.get_full_bag();
+      const bag = engine.get_bag();
       set({ bag });
     } catch (err) {
       console.error('Failed to fetch bag:', err);
