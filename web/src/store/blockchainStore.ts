@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { createClient } from 'polkadot-api';
+import { createClient, Binary } from 'polkadot-api';
 import { getWsProvider } from 'polkadot-api/ws-provider';
 import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
 import { getInjectedExtensions, connectInjectedExtension } from 'polkadot-api/pjs-signer';
@@ -137,7 +137,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   },
 
   refreshGameState: async () => {
-    const { api, selectedAccount, isRefreshing } = get();
+    const { api, client, selectedAccount, isRefreshing } = get();
     if (!api || !selectedAccount || isRefreshing) return;
 
     set({ isRefreshing: true });
@@ -152,21 +152,27 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         if (engine) {
           console.log("On-chain game found. Syncing WASM engine via SCALE bytes...");
           try {
-            // 1. Fetch raw SCALE bytes from the blockchain
-            const gameRaw = await api.query.AutoBattle.ActiveGame.getRawValue(selectedAccount.address);
-            const cardSetRaw = await api.query.AutoBattle.CardSets.getRawValue(game.set_id);
+            // 1. Fetch raw SCALE bytes from the blockchain using storage keys
+            const gameKey = await api.query.AutoBattle.ActiveGame.getKey(selectedAccount.address);
+            const cardSetKey = await api.query.AutoBattle.CardSets.getKey(game.set_id);
 
-            if (!gameRaw || !cardSetRaw) {
+            // Use low-level request to get raw storage values as hex strings
+            const gameRawHex = await client.rawQuery(gameKey);
+            const cardSetRawHex = await client.rawQuery(cardSetKey);
+
+            if (!gameRawHex || !cardSetRawHex) {
               throw new Error("Failed to fetch raw SCALE bytes from chain");
             }
 
+            // Convert hex strings to Uint8Array for WASM
+            const gameRaw = Binary.fromHex(gameRawHex).asBytes();
+            const cardSetRaw = Binary.fromHex(cardSetRawHex).asBytes();
+
             // 2. Send to WASM via SCALE bridge
-            // Binary.asBytes() returns a Uint8Array which wasm-bindgen accepts as Vec<u8>
-            engine.init_from_scale(gameRaw.asBytes(), cardSetRaw.asBytes());
+            engine.init_from_scale(gameRaw, cardSetRaw);
 
             // 3. Receive view as JSON string and parse
-            const viewJson = engine.get_view_json();
-            const view = JSON.parse(viewJson);
+            const view = engine.get_view();
 
             console.log("WASM engine synced successfully via SCALE bytes. View:", view);
             useGameStore.setState({ view });
