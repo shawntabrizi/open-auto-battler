@@ -141,15 +141,8 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   },
 
   selectAccount: async (account) => {
-    // Wait for any pending refresh to complete before switching
-    const { isRefreshing } = get();
-    if (isRefreshing) {
-      console.log("Waiting for current refresh to complete before switching accounts...");
-      // Simple wait - in production you'd want a more robust solution
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
     set({ selectedAccount: account });
-    await get().refreshGameState();
+    await get().refreshGameState(true);
   },
 
   refreshGameState: async (force = false) => {
@@ -169,15 +162,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     const waitForEngine = async (maxRetries = 10): Promise<any> => {
       for (let i = 0; i < maxRetries; i++) {
         const { engine } = useGameStore.getState();
-        if (engine) {
-          try {
-            // Heartbeat check
-            engine.is_ready();
-            return engine;
-          } catch (e) {
-            console.warn(`Engine instance exists but is not ready yet (attempt ${i + 1}/10)...`);
-          }
-        }
+        if (engine) return engine;
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       return null;
@@ -210,8 +195,6 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
             const cardSetRaw = Binary.fromHex(cardSetRawHex).asBytes();
 
             // 2. Send to WASM via SCALE bridge
-            // Double check readiness right before call
-            let ready = engine.is_ready();
             engine.init_from_scale(gameRaw, cardSetRaw);
 
             // 3. Receive view and update store

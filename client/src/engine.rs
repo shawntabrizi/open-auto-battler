@@ -485,12 +485,6 @@ impl GameEngine {
         log::info("init_from_scale completed successfully");
         Ok(())
     }
-
-    /// Check if the engine is ready (heartbeat)
-    #[wasm_bindgen]
-    pub fn is_ready(&self) -> bool {
-        true
-    }
 }
 
 // Private implementation methods

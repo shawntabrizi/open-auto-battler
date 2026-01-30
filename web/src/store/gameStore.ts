@@ -27,7 +27,6 @@ interface GameEngine {
   // Universal Bridge methods
   // Note: seed is bigint because wasm-bindgen binds Rust u64 to JS BigInt
   init_from_scale: (session: Uint8Array, cardSet: Uint8Array) => void;
-  is_ready: () => boolean;
 }
 
 interface WasmModule {
