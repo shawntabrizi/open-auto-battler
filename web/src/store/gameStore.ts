@@ -173,6 +173,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { engine } = get();
     if (!engine) return;
     try {
+      const view = engine.get_view();
+      // If already in shop phase (e.g., blockchain already processed the turn),
+      // just close the overlay without calling the WASM method
+      if (view?.phase === 'shop') {
+        set({ showBattleOverlay: false, battleOutput: null });
+        return;
+      }
       engine.continue_after_battle();
       set({ view: engine.get_view(), showBattleOverlay: false, battleOutput: null });
     } catch (err) { console.error(err); }
