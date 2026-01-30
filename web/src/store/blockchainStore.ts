@@ -15,17 +15,24 @@ import { getPolkadotSigner } from "polkadot-api/signer"
 import { AccountId } from "@polkadot-api/substrate-bindings";
 
 interface BlockchainStore {
+  // Connection state
   client: any;
   api: any;
-  accounts: any[];
-  selectedAccount: any | null;
+  codecs: any;
   isConnected: boolean;
   isConnecting: boolean;
-  isRefreshing: boolean;
+
+  // Account state
+  accounts: any[];
+  selectedAccount: any | null;
+
+  // Game state
   chainState: any | null;
   blockNumber: number | null;
+  isRefreshing: boolean;
   lastRefresh: number;
 
+  // Actions
   connect: () => Promise<void>;
   selectAccount: (account: any) => Promise<void>;
   startGame: () => Promise<void>;
@@ -60,15 +67,21 @@ const getDevAccounts = () => {
 };
 
 export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
+  // Connection state
   client: null,
   api: null,
-  accounts: [],
-  selectedAccount: null,
+  codecs: null,
   isConnected: false,
   isConnecting: false,
-  isRefreshing: false,
+
+  // Account state
+  accounts: [],
+  selectedAccount: null,
+
+  // Game state
   chainState: null,
   blockNumber: null,
+  isRefreshing: false,
   lastRefresh: 0,
 
   connect: async () => {
@@ -88,6 +101,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       });
 
       const api = client.getTypedApi(auto_battle);
+      const codecs = await getTypedCodecs(auto_battle);
 
       const devAccounts = getDevAccounts();
       let allAccounts: any[] = [...devAccounts];
@@ -95,6 +109,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       set({
         client,
         api,
+        codecs,
         isConnected: true,
         isConnecting: false,
         accounts: allAccounts,
@@ -250,16 +265,15 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   },
 
   submitTurnOnChain: async () => {
-    const { api, selectedAccount } = get();
+    const { api, codecs, selectedAccount } = get();
     const { engine } = useGameStore.getState();
-    if (!api || !selectedAccount || !engine) return;
+    if (!api || !codecs || !selectedAccount || !engine) return;
 
     try {
-      // Get commit action from engine (JSON format with the new action list structure)
+      // Get commit action from engine and decode via SCALE
       const actionRaw = engine.get_commit_action_scale();
-      const codecs = await getTypedCodecs(auto_battle);
       const action = codecs.tx.AutoBattle.submit_shop_phase.dec(actionRaw);
-      console.log("Submitting turn action (raw):", action);
+      console.log("Submitting turn action:", action);
 
       // Submit the action directly - PAPI handles the SCALE encoding
       // The action is now { actions: TurnAction[] }
