@@ -5,8 +5,8 @@
     "auto_battle": {
       "wsUrl": "ws://127.0.0.1:9944",
       "metadata": ".papi/metadata/auto_battle.scale",
-      "genesis": "0x4545454545454545454545454545454545454545454545454545454545454545",
-      "codeHash": "0x6062c633f2346ca44bfae2f7cf1c13b0e41f3ea9c119a39cbcdbf84b90a05147"
+      "genesis": "0x4d5d13725170d4edcfbcdab6a87d35dda103a01bfc57972d3de7b71d2ad21c2c",
+      "codeHash": "0x6bcaa795a11a74d4eaea08a430a2c7da7fceef68eaad7ec2cdfbf30d58d44806"
     }
   }
 }

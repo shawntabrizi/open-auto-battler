@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { createClient, Binary } from 'polkadot-api';
+import { createClient, Binary, getTypedCodecs } from 'polkadot-api';
 import { getWsProvider } from 'polkadot-api/ws-provider';
 import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
 import { getInjectedExtensions, connectInjectedExtension } from 'polkadot-api/pjs-signer';
@@ -256,12 +256,14 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
 
     try {
       // Get commit action from engine (JSON format with the new action list structure)
-      const action = engine.get_commit_action();
-      console.log("Submitting turn action:", action);
+      const actionRaw = engine.get_commit_action_scale();
+      const codecs = await getTypedCodecs(auto_battle);
+      const action = codecs.tx.AutoBattle.submit_shop_phase.dec(actionRaw);
+      console.log("Submitting turn action (raw):", action);
 
       // Submit the action directly - PAPI handles the SCALE encoding
       // The action is now { actions: TurnAction[] }
-      const tx = api.tx.AutoBattle.submit_shop_phase({ action });
+      const tx = api.tx.AutoBattle.submit_shop_phase(action);
 
       await tx.signAndSubmit(selectedAccount.polkadotSigner);
       await get().refreshGameState();

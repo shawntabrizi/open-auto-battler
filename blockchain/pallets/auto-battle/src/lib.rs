@@ -110,13 +110,11 @@ pub mod pallet {
 
     /// Map of Active Games: AccountId -> GameSession
     #[pallet::storage]
-    #[pallet::getter(fn active_game)]
     pub type ActiveGame<T: Config> =
         StorageMap<_, Blake2_128Concat, T::AccountId, GameSession<T>, OptionQuery>;
 
     /// Map of Card Sets: u32 -> CardSet
     #[pallet::storage]
-    #[pallet::getter(fn card_set)]
     pub type CardSets<T: Config> =
         StorageMap<_, Blake2_128Concat, u32, BoundedCardSet<T>, OptionQuery>;
 
@@ -235,7 +233,7 @@ pub mod pallet {
             let card_set_bounded = CardSets::<T>::get(session.set_id).ok_or(Error::<T>::CardSetNotFound)?;
             let card_set: CardSet = card_set_bounded.into();
             let mut core_state = GameState::reconstruct(card_set.card_pool, session.set_id, session.state.clone().into());
-            
+
             let core_action: CommitTurnAction = action.into();
 
             // Verify and apply logic
@@ -320,7 +318,7 @@ pub mod pallet {
             // Generate new seed for next Shop phase
             let new_seed = Self::generate_next_seed(&who, b"shop");
             session.current_seed = new_seed;
-            
+
             // Reconstruct core state to use its methods (draw_hand, calculate_mana_limit)
             let card_set_bounded = CardSets::<T>::get(session.set_id).ok_or(Error::<T>::CardSetNotFound)?;
             let card_set: CardSet = card_set_bounded.into();
