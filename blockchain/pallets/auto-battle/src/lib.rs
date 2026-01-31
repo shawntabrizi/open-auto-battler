@@ -26,8 +26,11 @@ pub mod pallet {
         BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
         BoundedGameState as CoreBoundedGameState,
+        BoundedGhostBoard as CoreBoundedGhostBoard,
         BoundedLocalGameState as CoreBoundedLocalGameState,
+        GhostBoardUnit, MatchmakingBracket,
     };
+    use manalimit_core::rng::BattleRng;
     use manalimit_core::{
         verify_and_apply_turn, BattleResult, CardSet, CommitTurnAction,
         GamePhase, GameState, CombatUnit, resolve_battle,
@@ -70,6 +73,10 @@ pub mod pallet {
         /// Maximum length of strings (names, descriptions, template IDs).
         #[pallet::constant]
         type MaxStringLen: Get<u32>;
+
+        /// Maximum number of ghost opponents stored per matchmaking bracket.
+        #[pallet::constant]
+        type MaxGhostsPerBracket: Get<u32>;
     }
 
     /// Type alias for the bounded game state using pallet config.
@@ -99,6 +106,9 @@ pub mod pallet {
     /// MaxHandActions is used as the max number of actions in a turn.
     pub type BoundedCommitTurnAction<T> = CoreBoundedCommitTurnAction<<T as Config>::MaxHandActions>;
 
+    /// Type alias for bounded ghost board using pallet config.
+    pub type BoundedGhostBoard<T> = CoreBoundedGhostBoard<<T as Config>::MaxBoardSize>;
+
     /// A game session stored on-chain.
     #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound)]
     #[scale_info(skip_type_params(T))]
@@ -106,6 +116,30 @@ pub mod pallet {
         pub state: BoundedLocalGameState<T>,
         pub set_id: u32,
         pub owner: T::AccountId,
+    }
+
+    /// A ghost entry that includes the owner who created the board.
+    /// Used for matchmaking storage.
+    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound)]
+    #[scale_info(skip_type_params(T))]
+    pub struct GhostEntry<T: Config> {
+        /// The player who created this ghost board
+        pub owner: T::AccountId,
+        /// The ghost board data
+        pub board: BoundedGhostBoard<T>,
+    }
+
+    /// An archived ghost entry with full context for off-chain analysis.
+    /// The bracket is implicit in the storage key.
+    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound)]
+    #[scale_info(skip_type_params(T))]
+    pub struct GhostArchiveEntry<T: Config> {
+        /// The player who created this ghost board
+        pub owner: T::AccountId,
+        /// The ghost board data
+        pub board: BoundedGhostBoard<T>,
+        /// Block number when the ghost was created
+        pub created_at: BlockNumberFor<T>,
     }
 
     /// Map of Active Games: AccountId -> GameSession
@@ -117,6 +151,43 @@ pub mod pallet {
     #[pallet::storage]
     pub type CardSets<T: Config> =
         StorageMap<_, Blake2_128Concat, u32, BoundedCardSet<T>, OptionQuery>;
+
+    /// Ghost opponents indexed by matchmaking bracket.
+    /// Key: (set_id, round, wins, lives)
+    /// Value: Vector of ghost entries (with owner) for that bracket
+    #[pallet::storage]
+    pub type GhostOpponents<T: Config> = StorageNMap<
+        _,
+        (
+            NMapKey<Blake2_128Concat, u32>, // set_id
+            NMapKey<Blake2_128Concat, i32>, // round
+            NMapKey<Blake2_128Concat, i32>, // wins
+            NMapKey<Blake2_128Concat, i32>, // lives
+        ),
+        BoundedVec<GhostEntry<T>, <T as Config>::MaxGhostsPerBracket>,
+        ValueQuery,
+    >;
+
+    /// Archive of all ghost boards ever created (for off-chain analytics).
+    /// Key: (set_id, round, wins, lives, archive_id)
+    /// Value: Individual ghost archive entry
+    #[pallet::storage]
+    pub type GhostArchive<T: Config> = StorageNMap<
+        _,
+        (
+            NMapKey<Blake2_128Concat, u32>, // set_id
+            NMapKey<Blake2_128Concat, i32>, // round
+            NMapKey<Blake2_128Concat, i32>, // wins
+            NMapKey<Blake2_128Concat, i32>, // lives
+            NMapKey<Blake2_128Concat, u64>, // archive_id
+        ),
+        GhostArchiveEntry<T>,
+        OptionQuery,
+    >;
+
+    /// Next available ghost archive ID (global counter).
+    #[pallet::storage]
+    pub type NextGhostArchiveId<T: Config> = StorageValue<_, u64, ValueQuery>;
 
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -257,13 +328,28 @@ pub mod pallet {
                 })
                 .collect();
 
-            // Generate enemy for this round
-            let enemy_units = get_opponent_for_round(
-                core_state.local_state.round,
-                &mut core_state.local_state.next_card_id,
-                battle_seed.wrapping_add(999),
-            )
-            .map_err(|_| Error::<T>::InvalidTurn)?;
+            // Build matchmaking bracket for ghost opponent lookup
+            let bracket = MatchmakingBracket {
+                set_id: session.set_id,
+                round: core_state.local_state.round,
+                wins: core_state.local_state.wins,
+                lives: core_state.local_state.lives,
+            };
+
+            // Select ghost opponent first, fallback to procedural if none available
+            let enemy_units = Self::select_ghost_opponent(&bracket, &card_set, battle_seed)
+                .unwrap_or_else(|| {
+                    get_opponent_for_round(
+                        core_state.local_state.round,
+                        &mut core_state.local_state.next_card_id,
+                        battle_seed.wrapping_add(999),
+                    )
+                    .unwrap_or_default()
+                });
+
+            // Store player's board as a ghost for future opponents (after selecting opponent)
+            let ghost = Self::create_ghost_board(&core_state);
+            Self::store_ghost(&who, &bracket, ghost);
 
             // Run the battle
             let mut rng = XorShiftRng::seed_from_u64(battle_seed);
@@ -450,6 +536,117 @@ pub mod pallet {
             let mut bytes = [0u8; 8];
             bytes.copy_from_slice(&hash[0..8]);
             u64::from_le_bytes(bytes)
+        }
+
+        /// Select a ghost opponent from the given bracket, if any exist.
+        /// Returns None if no ghosts are available for the bracket.
+        fn select_ghost_opponent(
+            bracket: &MatchmakingBracket,
+            card_set: &CardSet,
+            seed: u64,
+        ) -> Option<Vec<CombatUnit>> {
+            let ghosts = GhostOpponents::<T>::get((
+                bracket.set_id,
+                bracket.round,
+                bracket.wins,
+                bracket.lives,
+            ));
+
+            if ghosts.is_empty() {
+                return None;
+            }
+
+            // Deterministic selection based on seed
+            let mut rng = XorShiftRng::seed_from_u64(seed);
+            let index = rng.gen_range(ghosts.len());
+            let ghost_entry = &ghosts[index];
+
+            // Convert ghost board to combat units using the card set
+            Some(Self::ghost_to_combat_units(&ghost_entry.board, card_set))
+        }
+
+        /// Convert a ghost board to combat units using the provided card set.
+        fn ghost_to_combat_units(
+            ghost: &BoundedGhostBoard<T>,
+            card_set: &CardSet,
+        ) -> Vec<CombatUnit> {
+            ghost
+                .units
+                .iter()
+                .filter_map(|unit| {
+                    card_set.card_pool.get(&unit.card_id).map(|card| {
+                        let mut combat_unit = CombatUnit::from_card(card.clone());
+                        combat_unit.health = unit.current_health;
+                        combat_unit
+                    })
+                })
+                .collect()
+        }
+
+        /// Create a ghost board from the current game state.
+        fn create_ghost_board(core_state: &GameState) -> BoundedGhostBoard<T> {
+            let units: Vec<GhostBoardUnit> = core_state
+                .local_state
+                .board
+                .iter()
+                .flatten()
+                .map(|board_unit| GhostBoardUnit {
+                    card_id: board_unit.card_id,
+                    current_health: board_unit.current_health,
+                })
+                .collect();
+
+            let bounded_units: BoundedVec<GhostBoardUnit, T::MaxBoardSize> =
+                units.try_into().unwrap_or_default();
+
+            CoreBoundedGhostBoard {
+                units: bounded_units,
+            }
+        }
+
+        /// Store a ghost board for the given bracket.
+        /// Uses FIFO rotation when at capacity for matchmaking storage.
+        /// Also archives the ghost permanently for off-chain analysis.
+        fn store_ghost(
+            owner: &T::AccountId,
+            bracket: &MatchmakingBracket,
+            ghost: BoundedGhostBoard<T>,
+        ) {
+            // Only store non-empty ghost boards
+            if ghost.units.is_empty() {
+                return;
+            }
+
+            // Create ghost entry with owner
+            let ghost_entry = GhostEntry {
+                owner: owner.clone(),
+                board: ghost.clone(),
+            };
+
+            // Store in matchmaking bracket (with FIFO rotation)
+            GhostOpponents::<T>::mutate(
+                (bracket.set_id, bracket.round, bracket.wins, bracket.lives),
+                |ghosts| {
+                    // FIFO rotation when at capacity
+                    if ghosts.len() >= T::MaxGhostsPerBracket::get() as usize {
+                        ghosts.remove(0);
+                    }
+                    let _ = ghosts.try_push(ghost_entry);
+                },
+            );
+
+            // Archive permanently for off-chain analysis
+            let archive_id = NextGhostArchiveId::<T>::get();
+            let archive_entry = GhostArchiveEntry {
+                owner: owner.clone(),
+                board: ghost,
+                created_at: frame_system::Pallet::<T>::block_number(),
+            };
+            GhostArchive::<T>::insert(
+                (bracket.set_id, bracket.round, bracket.wins, bracket.lives, archive_id),
+                archive_entry,
+            );
+            NextGhostArchiveId::<T>::put(archive_id.saturating_add(1));
         }
     }
 }

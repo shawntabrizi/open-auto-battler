@@ -197,3 +197,109 @@ pub fn get_opponent_for_round(
 
     Ok(units)
 }
+
+/// A simple ghost board unit for genesis generation (non-bounded version).
+#[derive(Clone, Debug)]
+pub struct GhostBoard {
+    pub units: Vec<GhostBoardUnitSimple>,
+}
+
+/// A unit on a ghost board (simple version for genesis).
+#[derive(Clone, Debug)]
+pub struct GhostBoardUnitSimple {
+    pub card_id: crate::types::CardId,
+    pub current_health: i32,
+}
+
+/// Matchmaking bracket for ghost generation (simple version).
+#[derive(Clone, Debug)]
+pub struct GenesisMatchmakingBracket {
+    pub set_id: u32,
+    pub round: i32,
+    pub wins: i32,
+    pub lives: i32,
+}
+
+/// Generate genesis ghost boards for initial population.
+/// Returns a list of (bracket, ghost_boards) pairs covering typical game scenarios.
+///
+/// # Arguments
+/// * `set_id` - The card set ID to generate ghosts for
+/// * `max_round` - Maximum round to generate ghosts for (typically 10)
+/// * `ghosts_per_bracket` - Number of ghosts to generate per bracket
+/// * `base_seed` - Base seed for deterministic generation
+pub fn generate_genesis_ghosts(
+    set_id: u32,
+    max_round: i32,
+    ghosts_per_bracket: usize,
+    base_seed: u64,
+) -> Vec<(GenesisMatchmakingBracket, Vec<GhostBoard>)> {
+    let mut result = Vec::new();
+
+    // Generate ghosts for reasonable bracket combinations
+    // Lives: 1, 2, 3
+    // Wins: 0 to 9 (10 wins = victory)
+    // Round: 1 to max_round
+    for lives in 1..=3 {
+        for round in 1..=max_round {
+            // Wins can range from 0 to round-1 (you can't have more wins than rounds played minus one,
+            // accounting for possible losses). Also cap at 9 since 10 = victory.
+            let max_wins = (round - 1).min(9);
+            for wins in 0..=max_wins {
+                let bracket = GenesisMatchmakingBracket {
+                    set_id,
+                    round,
+                    wins,
+                    lives,
+                };
+
+                let mut ghosts = Vec::with_capacity(ghosts_per_bracket);
+
+                // Generate ghosts using different strategies
+                for i in 0..ghosts_per_bracket {
+                    let seed = base_seed
+                        .wrapping_add(lives as u64 * 1000000)
+                        .wrapping_add(round as u64 * 10000)
+                        .wrapping_add(wins as u64 * 100)
+                        .wrapping_add(i as u64);
+
+                    let strategy = i % 3; // Cycle through strategies
+
+                    let template_ids = match strategy {
+                        0 => get_swarm_strategy(round),
+                        1 => get_tank_strategy(round),
+                        _ => get_sniper_strategy(round),
+                    };
+
+                    let templates = get_starter_templates();
+                    let units: Vec<GhostBoardUnitSimple> = template_ids
+                        .iter()
+                        .enumerate()
+                        .filter_map(|(idx, template_id)| {
+                            templates.iter().find(|t| t.template_id == *template_id).map(
+                                |template| {
+                                    // Use a deterministic card ID based on the seed and index
+                                    let card_id = crate::types::CardId(
+                                        ((seed.wrapping_add(idx as u64)) % 1000 + 1) as u32,
+                                    );
+                                    GhostBoardUnitSimple {
+                                        card_id,
+                                        current_health: template.health,
+                                    }
+                                },
+                            )
+                        })
+                        .collect();
+
+                    ghosts.push(GhostBoard { units });
+                }
+
+                if !ghosts.is_empty() {
+                    result.push((bracket, ghosts));
+                }
+            }
+        }
+    }
+
+    result
+}

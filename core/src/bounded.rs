@@ -21,6 +21,75 @@ use crate::types::{
 };
 use crate::{GamePhase, GameState};
 
+// --- Ghost Opponent Types ---
+
+/// Matchmaking bracket for ghost opponent lookup.
+/// Ghosts are indexed by these fields to ensure fair matchups within the same card set.
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, Clone, PartialEq, Eq, Debug)]
+pub struct MatchmakingBracket {
+    /// Card set ID - ghosts only battle within the same set
+    pub set_id: u32,
+    /// Current round number (1-10+)
+    pub round: i32,
+    /// Wins accumulated (0-10)
+    pub wins: i32,
+    /// Lives remaining (1-3)
+    pub lives: i32,
+}
+
+/// A unit on a ghost board (CardId + current health).
+/// Stores minimal data since ghost opponents always battle within the same card set.
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, Clone, PartialEq, Eq, Debug)]
+pub struct GhostBoardUnit {
+    pub card_id: CardId,
+    pub current_health: i32,
+}
+
+/// A stored ghost board representing a player's board state.
+/// Contains only card references and health since the full card data
+/// can be looked up from the card set at battle time.
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[scale_info(skip_type_params(MaxBoardSize))]
+pub struct BoundedGhostBoard<MaxBoardSize>
+where
+    MaxBoardSize: Get<u32>,
+{
+    /// Units on the board (card references + health)
+    pub units: BoundedVec<GhostBoardUnit, MaxBoardSize>,
+}
+
+impl<MaxBoardSize: Get<u32>> Clone for BoundedGhostBoard<MaxBoardSize> {
+    fn clone(&self) -> Self {
+        Self {
+            units: self.units.clone(),
+        }
+    }
+}
+
+impl<MaxBoardSize: Get<u32>> PartialEq for BoundedGhostBoard<MaxBoardSize> {
+    fn eq(&self, other: &Self) -> bool {
+        self.units == other.units
+    }
+}
+
+impl<MaxBoardSize: Get<u32>> Eq for BoundedGhostBoard<MaxBoardSize> {}
+
+impl<MaxBoardSize: Get<u32>> Debug for BoundedGhostBoard<MaxBoardSize> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("BoundedGhostBoard")
+            .field("units", &self.units)
+            .finish()
+    }
+}
+
+impl<MaxBoardSize: Get<u32>> Default for BoundedGhostBoard<MaxBoardSize> {
+    fn default() -> Self {
+        Self {
+            units: BoundedVec::default(),
+        }
+    }
+}
+
 // --- Bounded Game State Implementation ---
 
 impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>

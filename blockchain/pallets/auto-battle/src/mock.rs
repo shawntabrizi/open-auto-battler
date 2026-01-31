@@ -57,6 +57,7 @@ impl crate::Config for Test {
     type MaxHandActions = ConstU32<10>;
     type MaxAbilities = ConstU32<5>;
     type MaxStringLen = ConstU32<32>;
+    type MaxGhostsPerBracket = ConstU32<10>;
 }
 
 // Build genesis storage according to the mock runtime.
