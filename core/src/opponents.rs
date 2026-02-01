@@ -276,8 +276,10 @@ pub fn generate_genesis_ghosts(
                         .iter()
                         .enumerate()
                         .filter_map(|(idx, template_id)| {
-                            templates.iter().find(|t| t.template_id == *template_id).map(
-                                |template| {
+                            templates
+                                .iter()
+                                .find(|t| t.template_id == *template_id)
+                                .map(|template| {
                                     // Use a deterministic card ID based on the seed and index
                                     let card_id = crate::types::CardId(
                                         ((seed.wrapping_add(idx as u64)) % 1000 + 1) as u32,
@@ -286,8 +288,7 @@ pub fn generate_genesis_ghosts(
                                         card_id,
                                         current_health: template.health,
                                     }
-                                },
-                            )
+                                })
                         })
                         .collect();
 

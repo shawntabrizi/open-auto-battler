@@ -54,7 +54,10 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
                 hand_used[hi] = true;
             }
 
-            TurnAction::PlayFromHand { hand_index, board_slot } => {
+            TurnAction::PlayFromHand {
+                hand_index,
+                board_slot,
+            } => {
                 let hi = *hand_index as usize;
                 let bs = *board_slot as usize;
 

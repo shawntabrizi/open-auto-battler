@@ -148,7 +148,18 @@ pub enum CombatEvent {
     },
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Encode,
+    Decode,
+    DecodeWithMemTracking,
+    TypeInfo,
+    MaxEncodedLen,
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum BattlePhase {
     Start,
@@ -579,7 +590,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             is_from_dead: is_fatal, // ALLOW execution if it died from this damage
                             spawn_index_override: if is_fatal { Some(idx_in_team) } else { None },
                             trigger_target_id: Some(trigger.source_id),
-                                                        conditions: ability.conditions.clone(),
+                            conditions: ability.conditions.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
                         });
@@ -623,7 +634,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             is_from_dead: true,
                             spawn_index_override: Some(index), // Remember where it died!
                             trigger_target_id: Some(dead_unit.instance_id),
-                                                        conditions: ability.conditions.clone(),
+                            conditions: ability.conditions.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
                         });
@@ -653,7 +664,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             is_from_dead: false,
                             spawn_index_override: None,
                             trigger_target_id: Some(dead_id),
-                                                        conditions: ability.conditions.clone(),
+                            conditions: ability.conditions.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
                         });
@@ -683,7 +694,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                             is_from_dead: false,
                             spawn_index_override: None,
                             trigger_target_id: Some(dead_id),
-                                                        conditions: ability.conditions.clone(),
+                            conditions: ability.conditions.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
                         });
@@ -877,7 +888,7 @@ fn apply_ability_effect<R: BattleRng>(
                             is_from_dead: false,
                             spawn_index_override: None,
                             trigger_target_id: Some(spawned_id),
-                                                        conditions: ability.conditions.clone(),
+                            conditions: ability.conditions.clone(),
                             ability_index: sub_idx,
                             max_triggers: ability.max_triggers,
                         });
@@ -905,7 +916,7 @@ fn apply_ability_effect<R: BattleRng>(
                                 is_from_dead: false,
                                 spawn_index_override: None,
                                 trigger_target_id: Some(spawned_id),
-                                                            conditions: ability.conditions.clone(),
+                                conditions: ability.conditions.clone(),
                                 ability_index: sub_idx,
                                 max_triggers: ability.max_triggers,
                             });
@@ -940,7 +951,7 @@ fn apply_ability_effect<R: BattleRng>(
                                 is_from_dead: false,
                                 spawn_index_override: None,
                                 trigger_target_id: Some(spawned_id),
-                                                            conditions: ability.conditions.clone(),
+                                conditions: ability.conditions.clone(),
                                 ability_index: sub_idx,
                                 max_triggers: ability.max_triggers,
                             });
@@ -1107,7 +1118,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
                         is_from_dead: false,
                         spawn_index_override: None,
                         trigger_target_id: None,
-                                                    conditions: ability.conditions.clone(),
+                        conditions: ability.conditions.clone(),
                         ability_index: sub_idx,
                         max_triggers: ability.max_triggers,
                     });
@@ -1342,7 +1353,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                         is_from_dead: false,
                         spawn_index_override: None,
                         trigger_target_id: Some(u.instance_id), // u is the dead ally
-                                                    conditions: ability.conditions.clone(),
+                        conditions: ability.conditions.clone(),
                         ability_index: sub_idx,
                         max_triggers: ability.max_triggers,
                     });
@@ -1397,7 +1408,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                         is_from_dead: false,
                         spawn_index_override: None,
                         trigger_target_id: Some(u.instance_id), // u is the dead ally
-                                                    conditions: ability.conditions.clone(),
+                        conditions: ability.conditions.clone(),
                         ability_index: sub_idx,
                         max_triggers: ability.max_triggers,
                     });

@@ -1,6 +1,6 @@
 use crate::{mock::*, ActiveGame, Error};
 use frame::testing_prelude::*;
-use manalimit_core::{GamePhase, CommitTurnAction};
+use manalimit_core::{CommitTurnAction, GamePhase};
 
 #[test]
 fn test_start_game() {
@@ -33,9 +33,7 @@ fn test_submit_turn_empty_actions() {
         assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id), 0));
 
         // Create an empty turn action (no actions taken)
-        let action = CommitTurnAction {
-            actions: vec![],
-        };
+        let action = CommitTurnAction { actions: vec![] };
 
         let bounded_action = action.into();
 

@@ -48,7 +48,14 @@ pub fn state_summary(
     #[cfg(feature = "browser_log")]
     log::info!(
         "STATE [{}]: Round {}, Mana {}/{}, Lives {}, Wins {}, Bag {}, Board {}",
-        phase, round, mana, mana_limit, lives, wins, bag_count, board_count
+        phase,
+        round,
+        mana,
+        mana_limit,
+        lives,
+        wins,
+        bag_count,
+        board_count
     );
 }
 

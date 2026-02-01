@@ -7,18 +7,18 @@ use std::string::{String, ToString};
 use std::vec;
 use std::vec::Vec;
 
+use bounded_collections::ConstU32;
 use manalimit_core::battle::{resolve_battle, CombatEvent, CombatUnit, UnitView};
+use manalimit_core::bounded::{BoundedCardSet, BoundedLocalGameState};
 use manalimit_core::commit::verify_and_apply_turn;
 use manalimit_core::log;
 use manalimit_core::opponents::get_opponent_for_round;
 use manalimit_core::rng::XorShiftRng;
 use manalimit_core::state::*;
 use manalimit_core::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
-use parity_scale_codec::Encode;
 use manalimit_core::view::{CardView, GameView};
-use manalimit_core::bounded::{BoundedLocalGameState, BoundedCardSet};
-use bounded_collections::ConstU32;
 use parity_scale_codec::Decode;
+use parity_scale_codec::Encode;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -28,6 +28,7 @@ type WasmMaxBoardSize = ConstU32<5>;
 type WasmMaxHandActions = ConstU32<10>;
 type WasmMaxAbilities = ConstU32<5>;
 type WasmMaxStringLen = ConstU32<32>;
+type WasmMaxConditionsLen = ConstU32<5>;
 
 /// Result of starting a battle (events for playback)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -172,12 +173,7 @@ impl GameEngine {
     /// Get all unique cards in the current set/pool
     #[wasm_bindgen]
     pub fn get_card_set(&self) -> JsValue {
-        let card_views: Vec<CardView> = self
-            .state
-            .card_pool
-            .values()
-            .map(CardView::from)
-            .collect();
+        let card_views: Vec<CardView> = self.state.card_pool.values().map(CardView::from).collect();
         match serde_wasm_bindgen::to_value(&card_views) {
             Ok(val) => val,
             Err(e) => {
@@ -190,7 +186,14 @@ impl GameEngine {
     /// Pitch a card from the hand to generate mana
     #[wasm_bindgen]
     pub fn pitch_hand_card(&mut self, hand_index: usize) -> Result<(), String> {
-        log::action("pitch_hand_card", &format!("hand_index={}, hand_used_len={}", hand_index, self.hand_used.len()));
+        log::action(
+            "pitch_hand_card",
+            &format!(
+                "hand_index={}, hand_used_len={}",
+                hand_index,
+                self.hand_used.len()
+            ),
+        );
         if self.state.phase != GamePhase::Shop {
             return Err("Can only pitch during shop phase".to_string());
         }
@@ -421,7 +424,11 @@ impl GameEngine {
 
     /// Initialize the game engine from SCALE bytes (Universal SCALE Bridge)
     #[wasm_bindgen]
-    pub fn init_from_scale(&mut self, session_scale: Vec<u8>, card_set_scale: Vec<u8>) -> Result<(), String> {
+    pub fn init_from_scale(
+        &mut self,
+        session_scale: Vec<u8>,
+        card_set_scale: Vec<u8>,
+    ) -> Result<(), String> {
         log::action(
             "init_from_scale",
             &format!(
@@ -443,7 +450,10 @@ impl GameEngine {
         let mut session_slice = &session_scale[..];
 
         log::debug("init_from_scale", "Decoding BoundedLocalGameState...");
-        let state_bounded = BoundedLocalGameState::<WasmMaxBagSize, WasmMaxBoardSize, WasmMaxHandActions>::decode(&mut session_slice)
+        let state_bounded =
+            BoundedLocalGameState::<WasmMaxBagSize, WasmMaxBoardSize, WasmMaxHandActions>::decode(
+                &mut session_slice,
+            )
             .map_err(|e| format!("Failed to decode BoundedLocalGameState: {:?}", e))?;
 
         log::debug("init_from_scale", "Decoding set_id...");
@@ -456,14 +466,28 @@ impl GameEngine {
 
         // Check for trailing bytes
         if !session_slice.is_empty() {
-            log::debug("init_from_scale", &format!("Warning: {} bytes remaining in session_scale after decode", session_slice.len()));
+            log::debug(
+                "init_from_scale",
+                &format!(
+                    "Warning: {} bytes remaining in session_scale after decode",
+                    session_slice.len()
+                ),
+            );
         }
 
         log::debug("init_from_scale", "Decoding BoundedCardSet...");
-        let card_set_bounded = BoundedCardSet::<WasmMaxBagSize, WasmMaxAbilities, WasmMaxStringLen>::decode(&mut &card_set_scale[..])
-            .map_err(|e| format!("Failed to decode BoundedCardSet: {:?}", e))?;
+        let card_set_bounded = BoundedCardSet::<
+            WasmMaxBagSize,
+            WasmMaxAbilities,
+            WasmMaxStringLen,
+            WasmMaxConditionsLen,
+        >::decode(&mut &card_set_scale[..])
+        .map_err(|e| format!("Failed to decode BoundedCardSet: {:?}", e))?;
 
-        log::debug("init_from_scale", "Converting bounded types to core types...");
+        log::debug(
+            "init_from_scale",
+            "Converting bounded types to core types...",
+        );
         let card_set: manalimit_core::state::CardSet = card_set_bounded.into();
         let local_state: manalimit_core::state::LocalGameState = state_bounded.into();
 
@@ -480,7 +504,6 @@ impl GameEngine {
 
         self.set_id = self.state.set_id;
         log::debug("init_from_scale", "set_id assigned...");
-
 
         log::debug("init_from_scale", "starting planning phase...");
         self.start_planning_phase();
@@ -501,7 +524,7 @@ impl GameEngine {
         self.state.card_pool.clear();
 
         // Use get_card_set to populate pool
-        use manalimit_core::units::{get_card_set, create_genesis_bag};
+        use manalimit_core::units::{create_genesis_bag, get_card_set};
         if let Some(card_set) = get_card_set(self.set_id) {
             self.state.card_pool = card_set.card_pool;
         }

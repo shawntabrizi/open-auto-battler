@@ -5,7 +5,7 @@
 use alloc::collections::BTreeMap;
 use alloc::vec;
 use alloc::vec::Vec;
-use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode};
+use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
 use crate::rng::{BattleRng, XorShiftRng};
@@ -28,7 +28,9 @@ pub const MAX_MANA_LIMIT: i32 = 10;
 pub const WINS_TO_VICTORY: i32 = 10;
 
 /// Current phase of the game
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum GamePhase {
     Shop,

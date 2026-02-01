@@ -16,7 +16,7 @@ fn test_ally_behind_on_faint_buffs_correctly() {
         },
         name: "Last Stand".to_string(),
         description: "Give the ally behind +2/+2 on death".to_string(),
-                    conditions: vec![],
+        conditions: vec![],
         max_triggers: Some(1),
     });
 
@@ -71,7 +71,7 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
         },
         name: "Last Stand".to_string(),
         description: "Give the ally behind +2/+2 on death".to_string(),
-                    conditions: vec![],
+        conditions: vec![],
         max_triggers: Some(1),
     };
 
@@ -89,7 +89,7 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
             },
             name: "Ritual".to_string(),
             description: "Sacrifice the ally in front".to_string(),
-                        conditions: vec![],
+            conditions: vec![],
             max_triggers: None,
         },
         Ability {
@@ -99,7 +99,7 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
             },
             name: "Raise Golem".to_string(),
             description: "Spawn a 5/5 Golem".to_string(),
-                        conditions: vec![],
+            conditions: vec![],
             max_triggers: None,
         },
     ]);
@@ -118,7 +118,7 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
             },
             name: "Ritual".to_string(),
             description: "Sacrifice the ally in front".to_string(),
-                        conditions: vec![],
+            conditions: vec![],
             max_triggers: None,
         },
         Ability {
@@ -128,7 +128,7 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
             },
             name: "Raise Golem".to_string(),
             description: "Spawn a 5/5 Golem".to_string(),
-                        conditions: vec![],
+            conditions: vec![],
             max_triggers: None,
         },
     ]);

@@ -9,15 +9,15 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use bounded_collections::{BoundedBTreeMap, BoundedVec, Get};
 use core::fmt::Debug;
-use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode};
+use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
 use crate::battle::{BattlePhase, BattleResult, UnitId};
 use crate::limits::{LimitReason, Team};
 use crate::state::{calculate_mana_limit, derive_hand_indices_logic};
 use crate::types::{
-    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CardId,
-    CommitTurnAction, Condition, EconomyStats, TurnAction, UnitCard, UnitStats,
+    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CardId, CommitTurnAction,
+    Condition, EconomyStats, Matcher, TurnAction, UnitCard, UnitStats,
 };
 use crate::{GamePhase, GameState};
 
@@ -25,7 +25,9 @@ use crate::{GamePhase, GameState};
 
 /// Matchmaking bracket for ghost opponent lookup.
 /// Ghosts are indexed by these fields to ensure fair matchups within the same card set.
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, Clone, PartialEq, Eq, Debug)]
+#[derive(
+    Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen, Clone, PartialEq, Eq, Debug,
+)]
 pub struct MatchmakingBracket {
     /// Card set ID - ghosts only battle within the same set
     pub set_id: u32,
@@ -39,7 +41,9 @@ pub struct MatchmakingBracket {
 
 /// A unit on a ghost board (CardId + current health).
 /// Stores minimal data since ghost opponents always battle within the same card set.
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, Clone, PartialEq, Eq, Debug)]
+#[derive(
+    Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen, Clone, PartialEq, Eq, Debug,
+)]
 pub struct GhostBoardUnit {
     pub card_id: CardId,
     pub current_health: i32,
@@ -48,7 +52,7 @@ pub struct GhostBoardUnit {
 /// A stored ghost board representing a player's board state.
 /// Contains only card references and health since the full card data
 /// can be looked up from the card set at battle time.
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(MaxBoardSize))]
 pub struct BoundedGhostBoard<MaxBoardSize>
 where
@@ -92,14 +96,22 @@ impl<MaxBoardSize: Get<u32>> Default for BoundedGhostBoard<MaxBoardSize> {
 
 // --- Bounded Game State Implementation ---
 
-impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
-    BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions, MaxConditions>
+    BoundedGameState<
+        MaxBagSize,
+        MaxBoardSize,
+        MaxAbilities,
+        MaxStringLen,
+        MaxHandActions,
+        MaxConditions,
+    >
 where
     MaxBagSize: Get<u32>,
     MaxBoardSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
     MaxHandActions: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     /// Populate the hand by drawing from the bag.
     pub fn draw_hand(&mut self) {
@@ -143,9 +155,73 @@ fn bounded_to_string<S: Get<u32>>(b: BoundedVec<u8, S>) -> String {
     String::from_utf8_lossy(&b).into_owned()
 }
 
+// --- Bounded Condition ---
+
+/// Bounded version of Condition for on-chain storage.
+/// The AnyOf variant uses a BoundedVec instead of Vec.
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxConditions))]
+pub enum BoundedCondition<MaxConditions>
+where
+    MaxConditions: Get<u32>,
+{
+    /// A single mandatory requirement.
+    Is(Matcher),
+    /// A "Shallow OR" list (bounded).
+    AnyOf(BoundedVec<Matcher, MaxConditions>),
+}
+
+impl<MaxConditions: Get<u32>> Clone for BoundedCondition<MaxConditions> {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Is(m) => Self::Is(m.clone()),
+            Self::AnyOf(v) => Self::AnyOf(v.clone()),
+        }
+    }
+}
+
+impl<MaxConditions: Get<u32>> PartialEq for BoundedCondition<MaxConditions> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Is(m1), Self::Is(m2)) => m1 == m2,
+            (Self::AnyOf(v1), Self::AnyOf(v2)) => v1 == v2,
+            _ => false,
+        }
+    }
+}
+
+impl<MaxConditions: Get<u32>> Eq for BoundedCondition<MaxConditions> {}
+
+impl<MaxConditions: Get<u32>> Debug for BoundedCondition<MaxConditions> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Is(m) => f.debug_tuple("Is").field(m).finish(),
+            Self::AnyOf(v) => f.debug_tuple("AnyOf").field(v).finish(),
+        }
+    }
+}
+
+impl<MaxConditions: Get<u32>> From<Condition> for BoundedCondition<MaxConditions> {
+    fn from(c: Condition) -> Self {
+        match c {
+            Condition::Is(m) => Self::Is(m),
+            Condition::AnyOf(v) => Self::AnyOf(BoundedVec::truncate_from(v)),
+        }
+    }
+}
+
+impl<MaxConditions: Get<u32>> From<BoundedCondition<MaxConditions>> for Condition {
+    fn from(bounded: BoundedCondition<MaxConditions>) -> Self {
+        match bounded {
+            BoundedCondition::Is(m) => Condition::Is(m),
+            BoundedCondition::AnyOf(v) => Condition::AnyOf(v.into_inner()),
+        }
+    }
+}
+
 // --- Bounded Ability Effect ---
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(MaxStringLen))]
 pub enum BoundedAbilityEffect<MaxStringLen>
 where
@@ -303,21 +379,24 @@ impl<MaxStringLen: Get<u32>> From<BoundedAbilityEffect<MaxStringLen>> for Abilit
 
 // --- Bounded Ability ---
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
-#[scale_info(skip_type_params(MaxStringLen))]
-pub struct BoundedAbility<MaxStringLen>
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxStringLen, MaxConditions))]
+pub struct BoundedAbility<MaxStringLen, MaxConditions>
 where
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     pub trigger: AbilityTrigger,
     pub effect: BoundedAbilityEffect<MaxStringLen>,
     pub name: BoundedVec<u8, MaxStringLen>,
     pub description: BoundedVec<u8, MaxStringLen>,
-    pub conditions: Vec<Condition>,
+    pub conditions: BoundedVec<BoundedCondition<MaxConditions>, MaxConditions>,
     pub max_triggers: Option<u32>,
 }
 
-impl<MaxStringLen: Get<u32>> Clone for BoundedAbility<MaxStringLen> {
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Clone
+    for BoundedAbility<MaxStringLen, MaxConditions>
+{
     fn clone(&self) -> Self {
         Self {
             trigger: self.trigger.clone(),
@@ -330,7 +409,9 @@ impl<MaxStringLen: Get<u32>> Clone for BoundedAbility<MaxStringLen> {
     }
 }
 
-impl<MaxStringLen: Get<u32>> PartialEq for BoundedAbility<MaxStringLen> {
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> PartialEq
+    for BoundedAbility<MaxStringLen, MaxConditions>
+{
     fn eq(&self, other: &Self) -> bool {
         self.trigger == other.trigger
             && self.effect == other.effect
@@ -341,9 +422,14 @@ impl<MaxStringLen: Get<u32>> PartialEq for BoundedAbility<MaxStringLen> {
     }
 }
 
-impl<MaxStringLen: Get<u32>> Eq for BoundedAbility<MaxStringLen> {}
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Eq
+    for BoundedAbility<MaxStringLen, MaxConditions>
+{
+}
 
-impl<MaxStringLen: Get<u32>> Debug for BoundedAbility<MaxStringLen> {
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Debug
+    for BoundedAbility<MaxStringLen, MaxConditions>
+{
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedAbility")
             .field("trigger", &self.trigger)
@@ -356,27 +442,38 @@ impl<MaxStringLen: Get<u32>> Debug for BoundedAbility<MaxStringLen> {
     }
 }
 
-impl<MaxStringLen: Get<u32>> From<Ability> for BoundedAbility<MaxStringLen> {
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> From<Ability>
+    for BoundedAbility<MaxStringLen, MaxConditions>
+{
     fn from(a: Ability) -> Self {
         Self {
             trigger: a.trigger,
             effect: a.effect.into(),
             name: string_to_bounded(a.name),
             description: string_to_bounded(a.description),
-            conditions: a.conditions,
+            conditions: BoundedVec::truncate_from(
+                a.conditions.into_iter().map(Into::into).collect(),
+            ),
             max_triggers: a.max_triggers,
         }
     }
 }
 
-impl<MaxStringLen: Get<u32>> From<BoundedAbility<MaxStringLen>> for Ability {
-    fn from(bounded: BoundedAbility<MaxStringLen>) -> Self {
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>>
+    From<BoundedAbility<MaxStringLen, MaxConditions>> for Ability
+{
+    fn from(bounded: BoundedAbility<MaxStringLen, MaxConditions>) -> Self {
         Self {
             trigger: bounded.trigger,
             effect: bounded.effect.into(),
             name: bounded_to_string(bounded.name),
             description: bounded_to_string(bounded.description),
-            conditions: bounded.conditions,
+            conditions: bounded
+                .conditions
+                .into_inner()
+                .into_iter()
+                .map(Into::into)
+                .collect(),
             max_triggers: bounded.max_triggers,
         }
     }
@@ -384,24 +481,25 @@ impl<MaxStringLen: Get<u32>> From<BoundedAbility<MaxStringLen>> for Ability {
 
 // --- Bounded Unit Card ---
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
-#[scale_info(skip_type_params(MaxAbilities, MaxStringLen))]
-pub struct BoundedUnitCard<MaxAbilities, MaxStringLen>
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxAbilities, MaxStringLen, MaxConditions))]
+pub struct BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>
 where
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     pub id: CardId,
     pub template_id: BoundedVec<u8, MaxStringLen>,
     pub name: BoundedVec<u8, MaxStringLen>,
     pub stats: UnitStats,
     pub economy: EconomyStats,
-    pub abilities: BoundedVec<BoundedAbility<MaxStringLen>, MaxAbilities>,
+    pub abilities: BoundedVec<BoundedAbility<MaxStringLen, MaxConditions>, MaxAbilities>,
     pub is_token: bool,
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Clone
-    for BoundedUnitCard<MaxAbilities, MaxStringLen>
+impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Clone
+    for BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>
 {
     fn clone(&self) -> Self {
         Self {
@@ -416,8 +514,8 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Clone
     }
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> PartialEq
-    for BoundedUnitCard<MaxAbilities, MaxStringLen>
+impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> PartialEq
+    for BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>
 {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
@@ -430,13 +528,13 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> PartialEq
     }
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Eq
-    for BoundedUnitCard<MaxAbilities, MaxStringLen>
+impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Eq
+    for BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>
 {
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Debug
-    for BoundedUnitCard<MaxAbilities, MaxStringLen>
+impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Debug
+    for BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedUnitCard")
@@ -451,10 +549,12 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Debug
     }
 }
 
-impl<MaxAbilities, MaxStringLen> From<UnitCard> for BoundedUnitCard<MaxAbilities, MaxStringLen>
+impl<MaxAbilities, MaxStringLen, MaxConditions> From<UnitCard>
+    for BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>
 where
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     fn from(card: UnitCard) -> Self {
         Self {
@@ -471,12 +571,14 @@ where
     }
 }
 
-impl<MaxAbilities, MaxStringLen> From<BoundedUnitCard<MaxAbilities, MaxStringLen>> for UnitCard
+impl<MaxAbilities, MaxStringLen, MaxConditions>
+    From<BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>> for UnitCard
 where
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
-    fn from(bounded: BoundedUnitCard<MaxAbilities, MaxStringLen>) -> Self {
+    fn from(bounded: BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>) -> Self {
         Self {
             id: bounded.id,
             template_id: bounded_to_string(bounded.template_id),
@@ -496,7 +598,7 @@ where
 
 // --- Bounded Board Unit ---
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
 pub struct BoundedBoardUnit {
     pub card_id: CardId,
     pub current_health: i32,
@@ -548,23 +650,29 @@ impl From<BoundedBoardUnit> for BoardUnit {
 
 // --- Bounded Card Set ---
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
-#[scale_info(skip_type_params(MaxBagSize, MaxAbilities, MaxStringLen))]
-pub struct BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions))]
+pub struct BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
 where
     MaxBagSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
-    pub card_pool: BoundedBTreeMap<CardId, BoundedUnitCard<MaxAbilities, MaxStringLen>, MaxBagSize>,
+    pub card_pool: BoundedBTreeMap<
+        CardId,
+        BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>,
+        MaxBagSize,
+    >,
 }
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen> Clone
-    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions> Clone
+    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
 where
     MaxBagSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     fn clone(&self) -> Self {
         Self {
@@ -573,32 +681,36 @@ where
     }
 }
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen> PartialEq
-    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions> PartialEq
+    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
 where
     MaxBagSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     fn eq(&self, other: &Self) -> bool {
         self.card_pool == other.card_pool
     }
 }
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen> Eq for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions> Eq
+    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
 where
     MaxBagSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
 }
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen> Debug
-    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions> Debug
+    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
 where
     MaxBagSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedCardSet")
@@ -607,12 +719,13 @@ where
     }
 }
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen> From<crate::state::CardSet>
-    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>
+impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions> From<crate::state::CardSet>
+    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
 where
     MaxBagSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     fn from(cs: crate::state::CardSet) -> Self {
         let mut card_pool = BoundedBTreeMap::new();
@@ -623,15 +736,18 @@ where
     }
 }
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen>
-    From<BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>>
+impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
+    From<BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>>
     for crate::state::CardSet
 where
     MaxBagSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
-    fn from(bounded: BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen>) -> Self {
+    fn from(
+        bounded: BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>,
+    ) -> Self {
         Self {
             card_pool: bounded
                 .card_pool
@@ -644,7 +760,7 @@ where
 
 // --- Bounded Local Game State ---
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(MaxBagSize, MaxBoardSize, MaxHandActions))]
 pub struct BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>
 where
@@ -800,23 +916,35 @@ where
 
 // --- Bounded Game State ---
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(
     MaxBagSize,
     MaxBoardSize,
     MaxAbilities,
     MaxStringLen,
-    MaxHandActions
+    MaxHandActions,
+    MaxConditions
 ))]
-pub struct BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
-where
+pub struct BoundedGameState<
+    MaxBagSize,
+    MaxBoardSize,
+    MaxAbilities,
+    MaxStringLen,
+    MaxHandActions,
+    MaxConditions,
+> where
     MaxBagSize: Get<u32>,
     MaxBoardSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
     MaxHandActions: Get<u32>,
+    MaxConditions: Get<u32>,
 {
-    pub card_pool: BoundedBTreeMap<CardId, BoundedUnitCard<MaxAbilities, MaxStringLen>, MaxBagSize>,
+    pub card_pool: BoundedBTreeMap<
+        CardId,
+        BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>,
+        MaxBagSize,
+    >,
     pub set_id: u32,
     pub local_state: BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>,
 }
@@ -827,8 +955,16 @@ impl<
         MaxAbilities: Get<u32>,
         MaxStringLen: Get<u32>,
         MaxHandActions: Get<u32>,
+        MaxConditions: Get<u32>,
     > Clone
-    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    for BoundedGameState<
+        MaxBagSize,
+        MaxBoardSize,
+        MaxAbilities,
+        MaxStringLen,
+        MaxHandActions,
+        MaxConditions,
+    >
 {
     fn clone(&self) -> Self {
         Self {
@@ -845,11 +981,21 @@ impl<
         MaxAbilities: Get<u32>,
         MaxStringLen: Get<u32>,
         MaxHandActions: Get<u32>,
+        MaxConditions: Get<u32>,
     > PartialEq
-    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    for BoundedGameState<
+        MaxBagSize,
+        MaxBoardSize,
+        MaxAbilities,
+        MaxStringLen,
+        MaxHandActions,
+        MaxConditions,
+    >
 {
     fn eq(&self, other: &Self) -> bool {
-        self.card_pool == other.card_pool && self.set_id == other.set_id && self.local_state == other.local_state
+        self.card_pool == other.card_pool
+            && self.set_id == other.set_id
+            && self.local_state == other.local_state
     }
 }
 
@@ -859,8 +1005,16 @@ impl<
         MaxAbilities: Get<u32>,
         MaxStringLen: Get<u32>,
         MaxHandActions: Get<u32>,
+        MaxConditions: Get<u32>,
     > Eq
-    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    for BoundedGameState<
+        MaxBagSize,
+        MaxBoardSize,
+        MaxAbilities,
+        MaxStringLen,
+        MaxHandActions,
+        MaxConditions,
+    >
 {
 }
 
@@ -870,8 +1024,16 @@ impl<
         MaxAbilities: Get<u32>,
         MaxStringLen: Get<u32>,
         MaxHandActions: Get<u32>,
+        MaxConditions: Get<u32>,
     > Debug
-    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    for BoundedGameState<
+        MaxBagSize,
+        MaxBoardSize,
+        MaxAbilities,
+        MaxStringLen,
+        MaxHandActions,
+        MaxConditions,
+    >
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedGameState")
@@ -882,14 +1044,23 @@ impl<
     }
 }
 
-impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions> From<GameState>
-    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions, MaxConditions>
+    From<GameState>
+    for BoundedGameState<
+        MaxBagSize,
+        MaxBoardSize,
+        MaxAbilities,
+        MaxStringLen,
+        MaxHandActions,
+        MaxConditions,
+    >
 where
     MaxBagSize: Get<u32>,
     MaxBoardSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
     MaxHandActions: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     fn from(state: GameState) -> Self {
         let (card_pool_raw, set_id, local_state_raw) = state.decompose();
@@ -907,15 +1078,24 @@ where
     }
 }
 
-impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
-    From<BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>>
-    for GameState
+impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions, MaxConditions>
+    From<
+        BoundedGameState<
+            MaxBagSize,
+            MaxBoardSize,
+            MaxAbilities,
+            MaxStringLen,
+            MaxHandActions,
+            MaxConditions,
+        >,
+    > for GameState
 where
     MaxBagSize: Get<u32>,
     MaxBoardSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
     MaxHandActions: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     fn from(
         bounded: BoundedGameState<
@@ -924,6 +1104,7 @@ where
             MaxAbilities,
             MaxStringLen,
             MaxHandActions,
+            MaxConditions,
         >,
     ) -> Self {
         let card_pool = bounded
@@ -937,15 +1118,23 @@ where
     }
 }
 
-impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions, MaxConditions>
     core::ops::Deref
-    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    for BoundedGameState<
+        MaxBagSize,
+        MaxBoardSize,
+        MaxAbilities,
+        MaxStringLen,
+        MaxHandActions,
+        MaxConditions,
+    >
 where
     MaxBagSize: Get<u32>,
     MaxBoardSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
     MaxHandActions: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     type Target = BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>;
     fn deref(&self) -> &Self::Target {
@@ -953,15 +1142,23 @@ where
     }
 }
 
-impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+impl<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions, MaxConditions>
     core::ops::DerefMut
-    for BoundedGameState<MaxBagSize, MaxBoardSize, MaxAbilities, MaxStringLen, MaxHandActions>
+    for BoundedGameState<
+        MaxBagSize,
+        MaxBoardSize,
+        MaxAbilities,
+        MaxStringLen,
+        MaxHandActions,
+        MaxConditions,
+    >
 where
     MaxBagSize: Get<u32>,
     MaxBoardSize: Get<u32>,
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
     MaxHandActions: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.local_state
@@ -973,7 +1170,7 @@ where
 /// TurnAction has no unbounded fields, so we can use it directly
 pub type BoundedTurnAction = TurnAction;
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(MaxActions))]
 pub struct BoundedCommitTurnAction<MaxActions>
 where
@@ -1030,24 +1227,25 @@ where
 
 // --- Bounded Unit View ---
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
-#[scale_info(skip_type_params(MaxAbilities, MaxStringLen))]
-pub struct BoundedUnitView<MaxAbilities, MaxStringLen>
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxAbilities, MaxStringLen, MaxConditions))]
+pub struct BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>
 where
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     pub instance_id: UnitId,
     pub template_id: BoundedVec<u8, MaxStringLen>,
     pub name: BoundedVec<u8, MaxStringLen>,
     pub attack: i32,
     pub health: i32,
-    pub abilities: BoundedVec<BoundedAbility<MaxStringLen>, MaxAbilities>,
+    pub abilities: BoundedVec<BoundedAbility<MaxStringLen, MaxConditions>, MaxAbilities>,
     pub is_token: bool,
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Clone
-    for BoundedUnitView<MaxAbilities, MaxStringLen>
+impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Clone
+    for BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>
 {
     fn clone(&self) -> Self {
         Self {
@@ -1062,8 +1260,8 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Clone
     }
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> PartialEq
-    for BoundedUnitView<MaxAbilities, MaxStringLen>
+impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> PartialEq
+    for BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>
 {
     fn eq(&self, other: &Self) -> bool {
         self.instance_id == other.instance_id
@@ -1076,13 +1274,13 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> PartialEq
     }
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Eq
-    for BoundedUnitView<MaxAbilities, MaxStringLen>
+impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Eq
+    for BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>
 {
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Debug
-    for BoundedUnitView<MaxAbilities, MaxStringLen>
+impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Debug
+    for BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedUnitView")
@@ -1097,11 +1295,12 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>> Debug
     }
 }
 
-impl<MaxAbilities, MaxStringLen> From<crate::battle::UnitView>
-    for BoundedUnitView<MaxAbilities, MaxStringLen>
+impl<MaxAbilities, MaxStringLen, MaxConditions> From<crate::battle::UnitView>
+    for BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>
 where
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     fn from(uv: crate::battle::UnitView) -> Self {
         Self {
@@ -1118,13 +1317,14 @@ where
     }
 }
 
-impl<MaxAbilities, MaxStringLen> From<BoundedUnitView<MaxAbilities, MaxStringLen>>
-    for crate::battle::UnitView
+impl<MaxAbilities, MaxStringLen, MaxConditions>
+    From<BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>> for crate::battle::UnitView
 where
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
 {
-    fn from(bounded: BoundedUnitView<MaxAbilities, MaxStringLen>) -> Self {
+    fn from(bounded: BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>) -> Self {
         Self {
             instance_id: bounded.instance_id,
             template_id: bounded_to_string(bounded.template_id),
@@ -1144,13 +1344,14 @@ where
 
 // --- Bounded Combat Event ---
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo)]
-#[scale_info(skip_type_params(MaxAbilities, MaxStringLen, MaxBoardSize))]
-pub enum BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize>
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxAbilities, MaxStringLen, MaxBoardSize, MaxConditions))]
+pub enum BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize, MaxConditions>
 where
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
     MaxBoardSize: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     PhaseStart {
         phase: BattlePhase,
@@ -1173,7 +1374,8 @@ where
     },
     UnitDeath {
         team: Team,
-        new_board_state: BoundedVec<BoundedUnitView<MaxAbilities, MaxStringLen>, MaxBoardSize>,
+        new_board_state:
+            BoundedVec<BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>, MaxBoardSize>,
     },
     BattleEnd {
         result: BattleResult,
@@ -1194,8 +1396,9 @@ where
     },
     UnitSpawn {
         team: Team,
-        spawned_unit: BoundedUnitView<MaxAbilities, MaxStringLen>,
-        new_board_state: BoundedVec<BoundedUnitView<MaxAbilities, MaxStringLen>, MaxBoardSize>,
+        spawned_unit: BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>,
+        new_board_state:
+            BoundedVec<BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>, MaxBoardSize>,
     },
     LimitExceeded {
         losing_team: Option<Team>,
@@ -1203,8 +1406,12 @@ where
     },
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxBoardSize: Get<u32>> Clone
-    for BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize>
+impl<
+        MaxAbilities: Get<u32>,
+        MaxStringLen: Get<u32>,
+        MaxBoardSize: Get<u32>,
+        MaxConditions: Get<u32>,
+    > Clone for BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize, MaxConditions>
 {
     fn clone(&self) -> Self {
         match self {
@@ -1286,8 +1493,12 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxBoardSize: Get<u32>> Clo
     }
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxBoardSize: Get<u32>> PartialEq
-    for BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize>
+impl<
+        MaxAbilities: Get<u32>,
+        MaxStringLen: Get<u32>,
+        MaxBoardSize: Get<u32>,
+        MaxConditions: Get<u32>,
+    > PartialEq for BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize, MaxConditions>
 {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -1395,13 +1606,21 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxBoardSize: Get<u32>> Par
     }
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxBoardSize: Get<u32>> Eq
-    for BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize>
+impl<
+        MaxAbilities: Get<u32>,
+        MaxStringLen: Get<u32>,
+        MaxBoardSize: Get<u32>,
+        MaxConditions: Get<u32>,
+    > Eq for BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize, MaxConditions>
 {
 }
 
-impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxBoardSize: Get<u32>> Debug
-    for BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize>
+impl<
+        MaxAbilities: Get<u32>,
+        MaxStringLen: Get<u32>,
+        MaxBoardSize: Get<u32>,
+        MaxConditions: Get<u32>,
+    > Debug for BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize, MaxConditions>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -1493,12 +1712,13 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxBoardSize: Get<u32>> Deb
     }
 }
 
-impl<MaxAbilities, MaxStringLen, MaxBoardSize> From<crate::battle::CombatEvent>
-    for BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize>
+impl<MaxAbilities, MaxStringLen, MaxBoardSize, MaxConditions> From<crate::battle::CombatEvent>
+    for BoundedCombatEvent<MaxAbilities, MaxStringLen, MaxBoardSize, MaxConditions>
 where
     MaxAbilities: Get<u32>,
     MaxStringLen: Get<u32>,
     MaxBoardSize: Get<u32>,
+    MaxConditions: Get<u32>,
 {
     fn from(event: crate::battle::CombatEvent) -> Self {
         match event {

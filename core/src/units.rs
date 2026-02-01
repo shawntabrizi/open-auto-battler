@@ -2,16 +2,16 @@
 //!
 //! This module contains all unit card templates used in the game.
 
+use crate::rng::BattleRng;
+use crate::state::CardSet;
+use crate::types::{
+    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CompareOp, Condition, EconomyStats,
+    Matcher, SortOrder, StatType, TargetScope, UnitCard, UnitStats,
+};
 use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
-use crate::rng::BattleRng;
-use crate::state::CardSet;
-use crate::types::{
-    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CompareOp, Condition,
-    EconomyStats, Matcher, SortOrder, StatType, TargetScope, UnitCard, UnitStats,
-};
 
 /// Card template for creating starter deck cards
 pub struct CardTemplate {

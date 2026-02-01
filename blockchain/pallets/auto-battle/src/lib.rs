@@ -23,25 +23,21 @@ pub mod pallet {
 
     // Import types from core engine
     use manalimit_core::bounded::{
-        BoundedAbility as CoreBoundedAbility,
-        BoundedCardSet as CoreBoundedCardSet,
+        BoundedAbility as CoreBoundedAbility, BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
-        BoundedGameState as CoreBoundedGameState,
-        BoundedGhostBoard as CoreBoundedGhostBoard,
-        BoundedLocalGameState as CoreBoundedLocalGameState,
-        GhostBoardUnit, MatchmakingBracket,
+        BoundedGameState as CoreBoundedGameState, BoundedGhostBoard as CoreBoundedGhostBoard,
+        BoundedLocalGameState as CoreBoundedLocalGameState, GhostBoardUnit, MatchmakingBracket,
     };
     use manalimit_core::rng::BattleRng;
     use manalimit_core::types::{EconomyStats, UnitStats};
     use manalimit_core::{
-        verify_and_apply_turn, BattleResult, CardSet, CommitTurnAction,
-        GamePhase, GameState, CombatUnit, resolve_battle,
-        get_opponent_for_round, XorShiftRng,
-        units::{get_card_set, create_genesis_bag},
+        get_opponent_for_round, resolve_battle,
+        units::{create_genesis_bag, get_card_set},
+        verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, GamePhase,
+        GameState, XorShiftRng,
     };
 
     #[pallet::pallet]
-    #[pallet::without_storage_info]
     pub struct Pallet<T>(_);
 
     /// Configure the pallet by specifying the parameters and types on which it depends.
@@ -79,6 +75,10 @@ pub mod pallet {
         /// Maximum number of ghost opponents stored per matchmaking bracket.
         #[pallet::constant]
         type MaxGhostsPerBracket: Get<u32>;
+
+        /// Maximum number of conditions per ability.
+        #[pallet::constant]
+        type MaxConditions: Get<u32>;
     }
 
     /// Type alias for the bounded game state using pallet config.
@@ -88,6 +88,7 @@ pub mod pallet {
         <T as Config>::MaxAbilities,
         <T as Config>::MaxStringLen,
         <T as Config>::MaxHandActions,
+        <T as Config>::MaxConditions,
     >;
 
     /// Type alias for the bounded local game state using pallet config.
@@ -102,23 +103,32 @@ pub mod pallet {
         <T as Config>::MaxBagSize,
         <T as Config>::MaxAbilities,
         <T as Config>::MaxStringLen,
+        <T as Config>::MaxConditions,
     >;
 
     /// Type alias for the bounded turn action using pallet config.
     /// MaxHandActions is used as the max number of actions in a turn.
-    pub type BoundedCommitTurnAction<T> = CoreBoundedCommitTurnAction<<T as Config>::MaxHandActions>;
+    pub type BoundedCommitTurnAction<T> =
+        CoreBoundedCommitTurnAction<<T as Config>::MaxHandActions>;
 
     /// Type alias for bounded ghost board using pallet config.
     pub type BoundedGhostBoard<T> = CoreBoundedGhostBoard<<T as Config>::MaxBoardSize>;
 
     /// Type alias for bounded ability using pallet config.
-    pub type BoundedAbility<T> = CoreBoundedAbility<<T as Config>::MaxStringLen>;
+    pub type BoundedAbility<T> =
+        CoreBoundedAbility<<T as Config>::MaxStringLen, <T as Config>::MaxConditions>;
 
     /// The core game data of a user-submitted card (used for hashing).
     /// Does not include metadata like name or emoji - those are stored separately.
     #[derive(
-        Encode, Decode, DecodeWithMemTracking, TypeInfo,
-        CloneNoBound, PartialEqNoBound, RuntimeDebugNoBound
+        Encode,
+        Decode,
+        DecodeWithMemTracking,
+        TypeInfo,
+        CloneNoBound,
+        PartialEqNoBound,
+        RuntimeDebugNoBound,
+        MaxEncodedLen,
     )]
     #[scale_info(skip_type_params(T))]
     pub struct UserCardData<T: Config> {
@@ -134,8 +144,14 @@ pub mod pallet {
 
     /// A user-submitted card entry stored on-chain.
     #[derive(
-        Encode, Decode, DecodeWithMemTracking, TypeInfo,
-        CloneNoBound, PartialEqNoBound, RuntimeDebugNoBound
+        Encode,
+        Decode,
+        DecodeWithMemTracking,
+        TypeInfo,
+        CloneNoBound,
+        PartialEqNoBound,
+        RuntimeDebugNoBound,
+        MaxEncodedLen,
     )]
     #[scale_info(skip_type_params(T))]
     pub struct UserCardEntry<T: Config> {
@@ -149,8 +165,14 @@ pub mod pallet {
 
     /// Metadata for a card (name, emoji, etc. - not used in game logic).
     #[derive(
-        Encode, Decode, DecodeWithMemTracking, TypeInfo,
-        CloneNoBound, PartialEqNoBound, RuntimeDebugNoBound
+        Encode,
+        Decode,
+        DecodeWithMemTracking,
+        TypeInfo,
+        CloneNoBound,
+        PartialEqNoBound,
+        RuntimeDebugNoBound,
+        MaxEncodedLen,
     )]
     #[scale_info(skip_type_params(T))]
     pub struct CardMetadata<T: Config> {
@@ -164,8 +186,14 @@ pub mod pallet {
 
     /// A card metadata entry stored on-chain.
     #[derive(
-        Encode, Decode, DecodeWithMemTracking, TypeInfo,
-        CloneNoBound, PartialEqNoBound, RuntimeDebugNoBound
+        Encode,
+        Decode,
+        DecodeWithMemTracking,
+        TypeInfo,
+        CloneNoBound,
+        PartialEqNoBound,
+        RuntimeDebugNoBound,
+        MaxEncodedLen,
     )]
     #[scale_info(skip_type_params(T))]
     pub struct CardMetadataEntry<T: Config> {
@@ -178,7 +206,7 @@ pub mod pallet {
     }
 
     /// A game session stored on-chain.
-    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound)]
+    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
     #[scale_info(skip_type_params(T))]
     pub struct GameSession<T: Config> {
         pub state: BoundedLocalGameState<T>,
@@ -188,7 +216,7 @@ pub mod pallet {
 
     /// A ghost entry that includes the owner who created the board.
     /// Used for matchmaking storage.
-    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound)]
+    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
     #[scale_info(skip_type_params(T))]
     pub struct GhostEntry<T: Config> {
         /// The player who created this ghost board
@@ -199,7 +227,7 @@ pub mod pallet {
 
     /// An archived ghost entry with full context for off-chain analysis.
     /// The bracket is implicit in the storage key.
-    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound)]
+    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
     #[scale_info(skip_type_params(T))]
     pub struct GhostArchiveEntry<T: Config> {
         /// The player who created this ghost board
@@ -346,18 +374,22 @@ pub mod pallet {
             let seed = Self::generate_next_seed(&who, b"start_game");
 
             // Create initial state
-            let mut state = GameState::reconstruct(card_set.card_pool, set_id, manalimit_core::state::LocalGameState {
-                bag: create_genesis_bag(set_id, seed),
-                hand: Vec::new(),
-                board: vec![None; 5], // BOARD_SIZE is 5
-                mana_limit: 3, // STARTING_MANA_LIMIT is 3
-                round: 1,
-                lives: 3, // STARTING_LIVES is 3
-                wins: 0,
-                phase: GamePhase::Shop,
-                next_card_id: 1000, // Reserve 1-999 for templates
-                game_seed: seed,
-            });
+            let mut state = GameState::reconstruct(
+                card_set.card_pool,
+                set_id,
+                manalimit_core::state::LocalGameState {
+                    bag: create_genesis_bag(set_id, seed),
+                    hand: Vec::new(),
+                    board: vec![None; 5], // BOARD_SIZE is 5
+                    mana_limit: 3,        // STARTING_MANA_LIMIT is 3
+                    round: 1,
+                    lives: 3, // STARTING_LIVES is 3
+                    wins: 0,
+                    phase: GamePhase::Shop,
+                    next_card_id: 1000, // Reserve 1-999 for templates
+                    game_seed: seed,
+                },
+            );
 
             // Draw initial hand from bag
             state.draw_hand();
@@ -396,9 +428,14 @@ pub mod pallet {
             );
 
             // Reconstruct full core state
-            let card_set_bounded = CardSets::<T>::get(session.set_id).ok_or(Error::<T>::CardSetNotFound)?;
+            let card_set_bounded =
+                CardSets::<T>::get(session.set_id).ok_or(Error::<T>::CardSetNotFound)?;
             let card_set: CardSet = card_set_bounded.into();
-            let mut core_state = GameState::reconstruct(card_set.card_pool.clone(), session.set_id, session.state.clone().into());
+            let mut core_state = GameState::reconstruct(
+                card_set.card_pool.clone(),
+                session.set_id,
+                session.state.clone().into(),
+            );
 
             let core_action: CommitTurnAction = action.into();
 
@@ -584,9 +621,14 @@ pub mod pallet {
             let new_seed = Self::generate_next_seed(&who, b"shop");
 
             // Reconstruct core state to use its methods (draw_hand, calculate_mana_limit)
-            let card_set_bounded = CardSets::<T>::get(session.set_id).ok_or(Error::<T>::CardSetNotFound)?;
+            let card_set_bounded =
+                CardSets::<T>::get(session.set_id).ok_or(Error::<T>::CardSetNotFound)?;
             let card_set: CardSet = card_set_bounded.into();
-            let mut core_state = GameState::reconstruct(card_set.card_pool, session.set_id, session.state.clone().into());
+            let mut core_state = GameState::reconstruct(
+                card_set.card_pool,
+                session.set_id,
+                session.state.clone().into(),
+            );
 
             core_state.local_state.game_seed = new_seed;
 
@@ -623,10 +665,7 @@ pub mod pallet {
         /// Metadata (name, emoji, description) should be set separately via `set_card_metadata`.
         #[pallet::call_index(3)]
         #[pallet::weight(Weight::default())]
-        pub fn submit_card(
-            origin: OriginFor<T>,
-            card_data: UserCardData<T>,
-        ) -> DispatchResult {
+        pub fn submit_card(origin: OriginFor<T>, card_data: UserCardData<T>) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
             // Generate unique hash from the card data
@@ -667,8 +706,7 @@ pub mod pallet {
             let who = ensure_signed(origin)?;
 
             // Ensure the card exists
-            let card_entry = UserCards::<T>::get(&card_hash)
-                .ok_or(Error::<T>::CardNotFound)?;
+            let card_entry = UserCards::<T>::get(&card_hash).ok_or(Error::<T>::CardNotFound)?;
 
             // Ensure the caller is the card creator
             ensure!(card_entry.creator == who, Error::<T>::NotCardCreator);
@@ -811,7 +849,13 @@ pub mod pallet {
                 created_at: frame_system::Pallet::<T>::block_number(),
             };
             GhostArchive::<T>::insert(
-                (bracket.set_id, bracket.round, bracket.wins, bracket.lives, archive_id),
+                (
+                    bracket.set_id,
+                    bracket.round,
+                    bracket.wins,
+                    bracket.lives,
+                    archive_id,
+                ),
                 archive_entry,
             );
             NextGhostArchiveId::<T>::put(archive_id.saturating_add(1));

@@ -24,7 +24,10 @@ fn test_verify_and_apply_turn() {
     let action = CommitTurnAction {
         actions: vec![
             TurnAction::PitchFromHand { hand_index: 0 },
-            TurnAction::PlayFromHand { hand_index: 1, board_slot: 0 },
+            TurnAction::PlayFromHand {
+                hand_index: 1,
+                board_slot: 0,
+            },
         ],
     };
 
@@ -68,9 +71,15 @@ fn test_verify_and_apply_turn_with_refill() {
     let action = CommitTurnAction {
         actions: vec![
             TurnAction::PitchFromHand { hand_index: 0 },
-            TurnAction::PlayFromHand { hand_index: 1, board_slot: 0 },
+            TurnAction::PlayFromHand {
+                hand_index: 1,
+                board_slot: 0,
+            },
             TurnAction::PitchFromHand { hand_index: 2 },
-            TurnAction::PlayFromHand { hand_index: 3, board_slot: 1 },
+            TurnAction::PlayFromHand {
+                hand_index: 3,
+                board_slot: 1,
+            },
         ],
     };
 
@@ -104,9 +113,10 @@ fn test_sequential_order_matters() {
 
     // Try to play before pitching - should fail because no mana
     let action = CommitTurnAction {
-        actions: vec![
-            TurnAction::PlayFromHand { hand_index: 0, board_slot: 0 },
-        ],
+        actions: vec![TurnAction::PlayFromHand {
+            hand_index: 0,
+            board_slot: 0,
+        }],
     };
 
     let result = verify_and_apply_turn(&mut state, &action);
@@ -161,10 +171,19 @@ fn test_swap_board_positions() {
     let action = CommitTurnAction {
         actions: vec![
             TurnAction::PitchFromHand { hand_index: 0 },
-            TurnAction::PlayFromHand { hand_index: 1, board_slot: 0 },
+            TurnAction::PlayFromHand {
+                hand_index: 1,
+                board_slot: 0,
+            },
             TurnAction::PitchFromHand { hand_index: 2 },
-            TurnAction::PlayFromHand { hand_index: 3, board_slot: 1 },
-            TurnAction::SwapBoard { slot_a: 0, slot_b: 1 },
+            TurnAction::PlayFromHand {
+                hand_index: 3,
+                board_slot: 1,
+            },
+            TurnAction::SwapBoard {
+                slot_a: 0,
+                slot_b: 1,
+            },
         ],
     };
 
@@ -175,8 +194,14 @@ fn test_swap_board_positions() {
     assert!(result.is_ok(), "Swapping should succeed: {:?}", result);
 
     // After swap, cards should be in opposite positions
-    assert_eq!(state.board[0].as_ref().unwrap().card_id, card_id_at_slot_1_before);
-    assert_eq!(state.board[1].as_ref().unwrap().card_id, card_id_at_slot_0_before);
+    assert_eq!(
+        state.board[0].as_ref().unwrap().card_id,
+        card_id_at_slot_1_before
+    );
+    assert_eq!(
+        state.board[1].as_ref().unwrap().card_id,
+        card_id_at_slot_0_before
+    );
 }
 
 #[test]
@@ -198,19 +223,28 @@ fn test_pitch_from_board() {
     // Pre-place a card on the board
     let pre_placed_id = state.generate_card_id();
     let pre_placed_card = UnitCard::new(pre_placed_id, "pre", "Pre", 1, 1, 1, 3, false);
-    state.card_pool.insert(pre_placed_id, pre_placed_card.clone());
+    state
+        .card_pool
+        .insert(pre_placed_id, pre_placed_card.clone());
     state.board[0] = Some(BoardUnit::new(pre_placed_id, pre_placed_card.stats.health));
 
     // Pitch from board, then play a card to that slot
     let action = CommitTurnAction {
         actions: vec![
             TurnAction::PitchFromBoard { board_slot: 0 },
-            TurnAction::PlayFromHand { hand_index: 0, board_slot: 0 },
+            TurnAction::PlayFromHand {
+                hand_index: 0,
+                board_slot: 0,
+            },
         ],
     };
 
     let result = verify_and_apply_turn(&mut state, &action);
-    assert!(result.is_ok(), "Pitching from board and playing should succeed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Pitching from board and playing should succeed: {:?}",
+        result
+    );
 
     // Board slot 0 should have a new card
     assert!(state.board[0].is_some());
