@@ -59,12 +59,19 @@ impl crate::Config for Test {
     type MaxStringLen = ConstU32<32>;
     type MaxConditions = ConstU32<5>;
     type MaxGhostsPerBracket = ConstU32<10>;
+    type MaxSetSize = ConstU32<100>;
 }
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> TestState {
-    GenesisConfig::<Test>::default()
+    let mut t = GenesisConfig::<Test>::default()
         .build_storage()
-        .unwrap()
-        .into()
+        .unwrap();
+
+    // Initialize AutoBattle genesis
+    crate::GenesisConfig::<Test> {
+        _phantom: Default::default(),
+    }.assimilate_storage(&mut t).unwrap();
+
+    t.into()
 }

@@ -14,7 +14,7 @@ use scale_info::TypeInfo;
 
 use crate::battle::{BattlePhase, BattleResult, UnitId};
 use crate::limits::{LimitReason, Team};
-use crate::state::{calculate_mana_limit, derive_hand_indices_logic};
+use crate::state::{calculate_mana_limit, derive_hand_indices_logic, CardSetEntry};
 use crate::types::{
     Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CardId, CommitTurnAction,
     Condition, EconomyStats, Matcher, TurnAction, UnitCard, UnitStats,
@@ -596,164 +596,68 @@ where
     }
 }
 
-// --- Bounded Board Unit ---
-
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
-pub struct BoundedBoardUnit {
-    pub card_id: CardId,
-    pub current_health: i32,
-}
-
-impl Clone for BoundedBoardUnit {
-    fn clone(&self) -> Self {
-        Self {
-            card_id: self.card_id,
-            current_health: self.current_health,
-        }
-    }
-}
-
-impl PartialEq for BoundedBoardUnit {
-    fn eq(&self, other: &Self) -> bool {
-        self.card_id == other.card_id && self.current_health == other.current_health
-    }
-}
-
-impl Eq for BoundedBoardUnit {}
-
-impl Debug for BoundedBoardUnit {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("BoundedBoardUnit")
-            .field("card_id", &self.card_id)
-            .field("current_health", &self.current_health)
-            .finish()
-    }
-}
-
-impl From<BoardUnit> for BoundedBoardUnit {
-    fn from(bu: BoardUnit) -> Self {
-        Self {
-            card_id: bu.card_id,
-            current_health: bu.current_health,
-        }
-    }
-}
-
-impl From<BoundedBoardUnit> for BoardUnit {
-    fn from(bounded: BoundedBoardUnit) -> Self {
-        Self {
-            card_id: bounded.card_id,
-            current_health: bounded.current_health,
-        }
-    }
-}
-
 // --- Bounded Card Set ---
 
 #[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
-#[scale_info(skip_type_params(MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions))]
-pub struct BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
+#[scale_info(skip_type_params(MaxSetSize))]
+pub struct BoundedCardSet<MaxSetSize>
 where
-    MaxBagSize: Get<u32>,
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
-    MaxConditions: Get<u32>,
+    MaxSetSize: Get<u32>,
 {
-    pub card_pool: BoundedBTreeMap<
-        CardId,
-        BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>,
-        MaxBagSize,
-    >,
+    pub cards: BoundedVec<CardSetEntry, MaxSetSize>,
 }
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions> Clone
-    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
+impl<MaxSetSize> Clone for BoundedCardSet<MaxSetSize>
 where
-    MaxBagSize: Get<u32>,
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
-    MaxConditions: Get<u32>,
+    MaxSetSize: Get<u32>,
 {
     fn clone(&self) -> Self {
         Self {
-            card_pool: self.card_pool.clone(),
+            cards: self.cards.clone(),
         }
     }
 }
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions> PartialEq
-    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
+impl<MaxSetSize> PartialEq for BoundedCardSet<MaxSetSize>
 where
-    MaxBagSize: Get<u32>,
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
-    MaxConditions: Get<u32>,
+    MaxSetSize: Get<u32>,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.card_pool == other.card_pool
+        self.cards == other.cards
     }
 }
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions> Eq
-    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
-where
-    MaxBagSize: Get<u32>,
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
-    MaxConditions: Get<u32>,
-{
-}
+impl<MaxSetSize> Eq for BoundedCardSet<MaxSetSize> where MaxSetSize: Get<u32> {}
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions> Debug
-    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
+impl<MaxSetSize> Debug for BoundedCardSet<MaxSetSize>
 where
-    MaxBagSize: Get<u32>,
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
-    MaxConditions: Get<u32>,
+    MaxSetSize: Get<u32>,
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedCardSet")
-            .field("card_pool", &self.card_pool)
+            .field("cards", &self.cards)
             .finish()
     }
 }
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions> From<crate::state::CardSet>
-    for BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
+impl<MaxSetSize> From<crate::state::CardSet> for BoundedCardSet<MaxSetSize>
 where
-    MaxBagSize: Get<u32>,
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
-    MaxConditions: Get<u32>,
+    MaxSetSize: Get<u32>,
 {
     fn from(cs: crate::state::CardSet) -> Self {
-        let mut card_pool = BoundedBTreeMap::new();
-        for (id, card) in cs.card_pool {
-            let _ = card_pool.try_insert(id, card.into());
+        Self {
+            cards: BoundedVec::truncate_from(cs.cards),
         }
-        Self { card_pool }
     }
 }
 
-impl<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>
-    From<BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>>
-    for crate::state::CardSet
+impl<MaxSetSize> From<BoundedCardSet<MaxSetSize>> for crate::state::CardSet
 where
-    MaxBagSize: Get<u32>,
-    MaxAbilities: Get<u32>,
-    MaxStringLen: Get<u32>,
-    MaxConditions: Get<u32>,
+    MaxSetSize: Get<u32>,
 {
-    fn from(
-        bounded: BoundedCardSet<MaxBagSize, MaxAbilities, MaxStringLen, MaxConditions>,
-    ) -> Self {
+    fn from(bounded: BoundedCardSet<MaxSetSize>) -> Self {
         Self {
-            card_pool: bounded
-                .card_pool
-                .into_iter()
-                .map(|(id, card)| (id, card.into()))
-                .collect(),
+            cards: bounded.cards.into_inner(),
         }
     }
 }
@@ -770,7 +674,7 @@ where
 {
     pub bag: BoundedVec<CardId, MaxBagSize>,
     pub hand: BoundedVec<CardId, MaxHandActions>,
-    pub board: BoundedVec<Option<BoundedBoardUnit>, MaxBoardSize>,
+    pub board: BoundedVec<Option<BoardUnit>, MaxBoardSize>,
     pub mana_limit: i32,
     pub round: i32,
     pub lives: i32,
@@ -867,13 +771,7 @@ where
         Self {
             bag: BoundedVec::truncate_from(state.bag),
             hand: BoundedVec::truncate_from(state.hand),
-            board: BoundedVec::truncate_from(
-                state
-                    .board
-                    .into_iter()
-                    .map(|opt| opt.map(Into::into))
-                    .collect(),
-            ),
+            board: BoundedVec::truncate_from(state.board),
             mana_limit: state.mana_limit,
             round: state.round,
             lives: state.lives,
@@ -897,12 +795,7 @@ where
         Self {
             bag: bounded.bag.into_inner(),
             hand: bounded.hand.into_inner(),
-            board: bounded
-                .board
-                .into_inner()
-                .into_iter()
-                .map(|opt| opt.map(Into::into))
-                .collect(),
+            board: bounded.board.into_inner(),
             mana_limit: bounded.mana_limit,
             round: bounded.round,
             lives: bounded.lives,
@@ -1770,12 +1663,12 @@ where
                 new_attack,
                 new_health,
             } => Self::AbilityModifyStats {
-                source_instance_id,
-                target_instance_id,
-                health_change,
-                attack_change,
-                new_attack,
-                new_health,
+                source_instance_id: source_instance_id,
+                target_instance_id: target_instance_id,
+                health_change: health_change,
+                attack_change: attack_change,
+                new_attack: new_attack,
+                new_health: new_health,
             },
             crate::battle::CombatEvent::UnitSpawn {
                 team,

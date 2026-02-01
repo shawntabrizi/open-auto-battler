@@ -26,9 +26,7 @@ use wasm_bindgen::prelude::*;
 type WasmMaxBagSize = ConstU32<100>;
 type WasmMaxBoardSize = ConstU32<5>;
 type WasmMaxHandActions = ConstU32<10>;
-type WasmMaxAbilities = ConstU32<5>;
-type WasmMaxStringLen = ConstU32<32>;
-type WasmMaxConditionsLen = ConstU32<5>;
+type WasmMaxSetSize = ConstU32<100>;
 
 /// Result of starting a battle (events for playback)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -476,23 +474,26 @@ impl GameEngine {
         }
 
         log::debug("init_from_scale", "Decoding BoundedCardSet...");
-        let card_set_bounded = BoundedCardSet::<
-            WasmMaxBagSize,
-            WasmMaxAbilities,
-            WasmMaxStringLen,
-            WasmMaxConditionsLen,
-        >::decode(&mut &card_set_scale[..])
-        .map_err(|e| format!("Failed to decode BoundedCardSet: {:?}", e))?;
+        let card_set_bounded = BoundedCardSet::<WasmMaxSetSize>::decode(&mut &card_set_scale[..])
+            .map_err(|e| format!("Failed to decode BoundedCardSet: {:?}", e))?;
 
         log::debug(
             "init_from_scale",
             "Converting bounded types to core types...",
         );
-        let card_set: manalimit_core::state::CardSet = card_set_bounded.into();
+        let _card_set: manalimit_core::state::CardSet = card_set_bounded.into();
         let local_state: manalimit_core::state::LocalGameState = state_bounded.into();
 
         log::debug("init_from_scale", "Reconstructing GameState...");
-        let state = GameState::reconstruct(card_set.card_pool, set_id, local_state);
+        // For now, we populate the card pool from all templates.
+        // In the future, we may need to pass definitions from the chain.
+        use manalimit_core::units::get_all_templates;
+        let mut card_pool = std::collections::BTreeMap::new();
+        for card in get_all_templates() {
+            card_pool.insert(card.id, card);
+        }
+
+        let state = GameState::reconstruct(card_pool, set_id, local_state);
 
         log::debug("init_from_scale", "Reconstructing done...");
 
@@ -524,13 +525,16 @@ impl GameEngine {
         self.state.card_pool.clear();
 
         // Use get_card_set to populate pool
-        use manalimit_core::units::{create_genesis_bag, get_card_set};
+        use manalimit_core::units::{create_genesis_bag, get_all_templates, get_card_set};
         if let Some(card_set) = get_card_set(self.set_id) {
-            self.state.card_pool = card_set.card_pool;
-        }
+            // Populate card pool from templates
+            for card in get_all_templates() {
+                self.state.card_pool.insert(card.id, card);
+            }
 
-        // Generate random bag of 100 cards from the set
-        self.state.local_state.bag = create_genesis_bag(self.set_id, self.state.game_seed);
+            // Generate random bag of 100 cards from the set
+            self.state.local_state.bag = create_genesis_bag(&card_set, self.state.game_seed);
+        }
 
         // Set next_card_id to be after templates
         self.state.local_state.next_card_id = 1000;

@@ -189,7 +189,7 @@ fn test_submit_card_and_metadata() {
         // Verify storage
         let card_hash = <Test as frame_system::Config>::Hashing::hash_of(&card_data);
         let card_id = crate::UserCardHashes::<Test>::get(card_hash).unwrap();
-        assert_eq!(card_id, 0);
+        assert!(card_id >= 45); // 46 cards registered in genesis (0-45)
         let entry = crate::UserCards::<Test>::get(card_id).unwrap();
         assert_eq!(entry.creator, account_id);
 
@@ -236,7 +236,39 @@ fn test_submit_card_and_metadata() {
 
         let card_hash_2 = <Test as frame_system::Config>::Hashing::hash_of(&card_data_2);
         let card_id_2 = crate::UserCardHashes::<Test>::get(card_hash_2).unwrap();
-        assert_eq!(card_id_2, 1);
+        assert!(card_id_2 > card_id);
         assert!(crate::UserCards::<Test>::contains_key(card_id_2));
+    });
+}
+
+#[test]
+fn test_create_card_set() {
+    new_test_ext().execute_with(|| {
+        let account_id = 1;
+        
+        // Cards 1-5 already exist from genesis
+        let entries = vec![
+            crate::CardSetEntryInput { card_id: 1, rarity: 10 },
+            crate::CardSetEntryInput { card_id: 2, rarity: 5 },
+            crate::CardSetEntryInput { card_id: 3, rarity: 0 }, // Token
+        ];
+
+        assert_ok!(AutoBattle::create_card_set(
+            RuntimeOrigin::signed(account_id),
+            entries
+        ));
+
+        // Verify set was created
+        let set_id = 1; // Next set ID after genesis (0)
+        let set = crate::CardSets::<Test>::get(set_id).unwrap();
+        assert_eq!(set.cards.len(), 3);
+        assert_eq!(set.cards[0].card_id.0, 1);
+        assert_eq!(set.cards[0].rarity, 10);
+        assert_eq!(set.cards[2].rarity, 0);
+
+        // Try to start game with new set
+        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(account_id), set_id));
+        let session = ActiveGame::<Test>::get(account_id).unwrap();
+        assert_eq!(session.set_id, set_id);
     });
 }

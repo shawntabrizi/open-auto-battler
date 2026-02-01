@@ -39,11 +39,21 @@ pub enum GamePhase {
     Defeat,
 }
 
+/// An entry in a card set, mapping a card to its rarity.
+#[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, PartialEq, MaxEncodedLen)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct CardSetEntry {
+    pub card_id: CardId,
+    pub rarity: u32,
+}
+
 /// A set of cards available for a game
 #[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, PartialEq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct CardSet {
-    pub card_pool: BTreeMap<CardId, UnitCard>,
+    /// List of cards in the set and their relative rarity (weight).
+    /// Rarity 0 means the card is a token and cannot be drafted into a bag.
+    pub cards: Vec<CardSetEntry>,
 }
 
 /// The user-specific game state (without the card pool)

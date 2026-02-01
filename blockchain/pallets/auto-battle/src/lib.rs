@@ -20,6 +20,7 @@ pub mod pallet {
     use alloc::{vec, vec::Vec};
     use frame::prelude::*;
     use frame::traits::{Get, Randomness};
+    use alloc::collections::BTreeMap;
 
     // Import types from core engine
     use manalimit_core::bounded::{
@@ -32,9 +33,9 @@ pub mod pallet {
     use manalimit_core::types::{EconomyStats, UnitStats};
     use manalimit_core::{
         get_opponent_for_round, resolve_battle,
-        units::{create_genesis_bag, get_card_set},
+        units::{create_genesis_bag, get_all_templates},
         verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, GamePhase,
-        GameState, XorShiftRng,
+        GameState, UnitCard, XorShiftRng,
     };
 
     #[pallet::pallet]
@@ -79,6 +80,10 @@ pub mod pallet {
         /// Maximum number of conditions per ability.
         #[pallet::constant]
         type MaxConditions: Get<u32>;
+
+        /// Maximum number of cards in a set.
+        #[pallet::constant]
+        type MaxSetSize: Get<u32>;
     }
 
     /// Type alias for the bounded game state using pallet config.
@@ -99,12 +104,7 @@ pub mod pallet {
     >;
 
     /// Type alias for the bounded card set using pallet config.
-    pub type BoundedCardSet<T> = CoreBoundedCardSet<
-        <T as Config>::MaxBagSize,
-        <T as Config>::MaxAbilities,
-        <T as Config>::MaxStringLen,
-        <T as Config>::MaxConditions,
-    >;
+    pub type BoundedCardSet<T> = CoreBoundedCardSet<<T as Config>::MaxSetSize>;
 
     /// Type alias for the bounded turn action using pallet config.
     /// MaxHandActions is used as the max number of actions in a turn.
@@ -248,6 +248,10 @@ pub mod pallet {
     pub type CardSets<T: Config> =
         StorageMap<_, Blake2_128Concat, u32, BoundedCardSet<T>, OptionQuery>;
 
+    /// Next available ID for card sets.
+    #[pallet::storage]
+    pub type NextSetId<T: Config> = StorageValue<_, u32, ValueQuery>;
+
     /// Ghost opponents indexed by matchmaking bracket.
     /// Key: (set_id, round, wins, lives)
     /// Value: Vector of ghost entries (with owner) for that bracket
@@ -335,6 +339,8 @@ pub mod pallet {
             author: T::AccountId,
             card_id: u32,
         },
+        /// A new card set has been created.
+        SetCreated { creator: T::AccountId, set_id: u32 },
     }
 
     #[pallet::error]
@@ -357,6 +363,68 @@ pub mod pallet {
         NotCardCreator,
     }
 
+    /// Input for creating a card set.
+    #[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen, Clone, RuntimeDebug, PartialEq, Eq)]
+    pub struct CardSetEntryInput {
+        pub card_id: u32,
+        pub rarity: u32,
+    }
+
+    #[pallet::genesis_config]
+    #[derive(frame::prelude::DefaultNoBound)]
+    pub struct GenesisConfig<T: Config> {
+        #[expect(clippy::type_complexity)]
+        pub _phantom: core::marker::PhantomData<T>,
+    }
+
+    #[pallet::genesis_build]
+    impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
+        fn build(&self) {
+            let templates = get_all_templates();
+            let mut cards = Vec::new();
+
+            for card in templates {
+                let card_id = card.id.0;
+                let data = UserCardData::<T> {
+                    stats: card.stats,
+                    economy: card.economy,
+                    abilities: BoundedVec::truncate_from(
+                        card.abilities
+                            .into_iter()
+                            .map(|a| BoundedAbility::<T>::from(a))
+                            .collect(),
+                    ),
+                    is_token: card.is_token,
+                };
+
+                let entry = UserCardEntry {
+                    creator: T::AccountId::decode(&mut frame::traits::TrailingZeroInput::zeroes()).unwrap(),
+                    data,
+                    created_at: Zero::zero(),
+                };
+
+                UserCards::<T>::insert(card_id, entry);
+
+                let rarity = if card.is_token { 0u32 } else { 10u32 };
+                cards.push(manalimit_core::state::CardSetEntry {
+                    card_id: card.id,
+                    rarity,
+                });
+
+                if card_id >= NextUserCardId::<T>::get() {
+                    NextUserCardId::<T>::put(card_id + 1);
+                }
+            }
+
+            let card_set = CardSet {
+                cards,
+            };
+
+            CardSets::<T>::insert(0, BoundedCardSet::<T>::from(card_set));
+            NextSetId::<T>::put(1);
+        }
+    }
+
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Start a new game session.
@@ -371,24 +439,21 @@ pub mod pallet {
                 Error::<T>::GameAlreadyActive
             );
 
-            // Check if card set exists, if not, create it from core templates
-            if !CardSets::<T>::contains_key(set_id) {
-                let card_set = get_card_set(set_id).ok_or(Error::<T>::CardSetNotFound)?;
-                CardSets::<T>::insert(set_id, BoundedCardSet::<T>::from(card_set));
-            }
-
             let card_set_bounded = CardSets::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
             let card_set: CardSet = card_set_bounded.into();
+
+            // Reconstruct card pool from storage for this set
+            let card_pool = Self::get_card_pool(&card_set);
 
             // Generate initial seed
             let seed = Self::generate_next_seed(&who, b"start_game");
 
             // Create initial state
             let mut state = GameState::reconstruct(
-                card_set.card_pool,
+                card_pool,
                 set_id,
                 manalimit_core::state::LocalGameState {
-                    bag: create_genesis_bag(set_id, seed),
+                    bag: create_genesis_bag(&card_set, seed),
                     hand: Vec::new(),
                     board: vec![None; 5], // BOARD_SIZE is 5
                     mana_limit: 3,        // STARTING_MANA_LIMIT is 3
@@ -441,8 +506,10 @@ pub mod pallet {
             let card_set_bounded =
                 CardSets::<T>::get(session.set_id).ok_or(Error::<T>::CardSetNotFound)?;
             let card_set: CardSet = card_set_bounded.into();
+            let card_pool = Self::get_card_pool(&card_set);
+
             let mut core_state = GameState::reconstruct(
-                card_set.card_pool.clone(),
+                card_pool,
                 session.set_id,
                 session.state.clone().into(),
             );
@@ -634,8 +701,10 @@ pub mod pallet {
             let card_set_bounded =
                 CardSets::<T>::get(session.set_id).ok_or(Error::<T>::CardSetNotFound)?;
             let card_set: CardSet = card_set_bounded.into();
+            let card_pool = Self::get_card_pool(&card_set);
+
             let mut core_state = GameState::reconstruct(
-                card_set.card_pool,
+                card_pool,
                 session.set_id,
                 session.state.clone().into(),
             );
@@ -743,9 +812,73 @@ pub mod pallet {
 
             Ok(())
         }
+
+        /// Create a new card set.
+        #[pallet::call_index(5)]
+        #[pallet::weight(Weight::default())]
+        pub fn create_card_set(
+            origin: OriginFor<T>,
+            cards: Vec<CardSetEntryInput>,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Verify all cards exist
+            for entry in &cards {
+                ensure!(UserCards::<T>::contains_key(entry.card_id), Error::<T>::CardNotFound);
+            }
+
+            let set_id = NextSetId::<T>::get();
+
+            let card_set = CardSet {
+                cards: cards
+                    .into_iter()
+                    .map(|entry| manalimit_core::state::CardSetEntry {
+                        card_id: manalimit_core::types::CardId(entry.card_id),
+                        rarity: entry.rarity,
+                    })
+                    .collect(),
+            };
+
+            CardSets::<T>::insert(set_id, BoundedCardSet::<T>::from(card_set));
+            NextSetId::<T>::put(set_id.saturating_add(1));
+
+            Self::deposit_event(Event::SetCreated { creator: who, set_id });
+
+            Ok(())
+        }
     }
 
     impl<T: Config> Pallet<T> {
+        /// Helper to reconstruct a card pool from storage based on a card set.
+        fn get_card_pool(card_set: &CardSet) -> BTreeMap<manalimit_core::types::CardId, UnitCard> {
+            let mut card_pool = BTreeMap::new();
+
+            for entry in &card_set.cards {
+                if let Some(user_entry) = UserCards::<T>::get(entry.card_id.0) {
+                    card_pool.insert(entry.card_id, Self::entry_to_unit_card(entry.card_id, user_entry));
+                }
+            }
+
+            card_pool
+        }
+
+        /// Helper to convert UserCardEntry to UnitCard.
+        fn entry_to_unit_card(id: manalimit_core::types::CardId, entry: UserCardEntry<T>) -> UnitCard {
+            UnitCard {
+                id,
+                template_id: alloc::string::String::new(), // Not used in game logic
+                name: alloc::string::String::new(),        // Not used in game logic
+                stats: entry.data.stats,
+                economy: entry.data.economy,
+                abilities: entry
+                    .data
+                    .abilities
+                    .into_iter()
+                    .map(|a| a.into())
+                    .collect(),
+                is_token: entry.data.is_token,
+            }
+        }
         /// Helper to generate a unique seed per user/block/context
         fn generate_next_seed(who: &T::AccountId, context: &[u8]) -> u64 {
             let random = T::Randomness::random(context);
@@ -783,20 +916,23 @@ pub mod pallet {
             let index = rng.gen_range(ghosts.len());
             let ghost_entry = &ghosts[index];
 
-            // Convert ghost board to combat units using the card set
-            Some(Self::ghost_to_combat_units(&ghost_entry.board, card_set))
+            // Reconstruct card pool for this set
+            let card_pool = Self::get_card_pool(card_set);
+
+            // Convert ghost board to combat units using the card pool
+            Some(Self::ghost_to_combat_units(&ghost_entry.board, &card_pool))
         }
 
-        /// Convert a ghost board to combat units using the provided card set.
+        /// Convert a ghost board to combat units using the provided card pool.
         fn ghost_to_combat_units(
             ghost: &BoundedGhostBoard<T>,
-            card_set: &CardSet,
+            card_pool: &BTreeMap<manalimit_core::types::CardId, UnitCard>,
         ) -> Vec<CombatUnit> {
             ghost
                 .units
                 .iter()
                 .filter_map(|unit| {
-                    card_set.card_pool.get(&unit.card_id).map(|card| {
+                    card_pool.get(&unit.card_id).map(|card| {
                         let mut combat_unit = CombatUnit::from_card(card.clone());
                         combat_unit.health = unit.current_health;
                         combat_unit

@@ -1,5 +1,5 @@
 use crate::{
-    AccountId, BalancesConfig, CollatorSelectionConfig, ParachainInfoConfig, PolkadotXcmConfig,
+    AccountId, AutoBattleConfig, BalancesConfig, CollatorSelectionConfig, ParachainInfoConfig, PolkadotXcmConfig,
     RuntimeGenesisConfig, SessionConfig, SessionKeys, SudoConfig, EXISTENTIAL_DEPOSIT,
 };
 
@@ -66,6 +66,7 @@ fn testnet_genesis(
             safe_xcm_version: Some(SAFE_XCM_VERSION)
         },
         sudo: SudoConfig { key: Some(root) },
+        auto_battle: AutoBattleConfig::default(),
     })
 }
 

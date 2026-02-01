@@ -8,7 +8,6 @@ use crate::types::{
     Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CompareOp, Condition, EconomyStats,
     Matcher, SortOrder, StatType, TargetScope, UnitCard, UnitStats,
 };
-use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -1089,41 +1088,54 @@ pub fn get_set_template_ids(set_id: u32) -> Vec<crate::types::CardId> {
 
 /// Get a complete CardSet for a given set_id (contains definitions for all cards in the set)
 pub fn get_card_set(set_id: u32) -> Option<CardSet> {
-    let template_ids = get_set_template_ids(set_id);
-    if template_ids.is_empty() && set_id != 0 {
-        return None;
-    }
+    match set_id {
+        0 => {
+            // Set 0 includes all cards from the starter templates
+            // Non-tokens have default rarity 10, tokens have rarity 0
+            let cards = get_all_templates()
+                .into_iter()
+                .map(|c| {
+                    let rarity = if c.is_token { 0u32 } else { 10u32 };
+                    crate::state::CardSetEntry {
+                        card_id: c.id,
+                        rarity,
+                    }
+                })
+                .collect();
 
-    let all_templates = get_all_templates();
-    let mut card_pool = BTreeMap::new();
-
-    for id in template_ids {
-        if let Some(template) = all_templates.iter().find(|t| t.id == id) {
-            card_pool.insert(id, template.clone());
+            Some(CardSet { cards })
         }
+        _ => None,
     }
-
-    // Also include tokens in the pool so they are available for battle resolution/view
-    for template in all_templates.iter().filter(|t| t.is_token) {
-        card_pool.insert(template.id, template.clone());
-    }
-
-    Some(CardSet { card_pool })
 }
 
 /// Create a bag of 100 random CardIds from a specific set
-pub fn create_genesis_bag(set_id: u32, seed: u64) -> Vec<crate::types::CardId> {
-    let template_ids = get_set_template_ids(set_id);
-    if template_ids.is_empty() {
+pub fn create_genesis_bag(set: &CardSet, seed: u64) -> Vec<crate::types::CardId> {
+    if set.cards.is_empty() {
         return Vec::new();
     }
 
     let mut bag = Vec::with_capacity(100);
     let mut rng = crate::rng::XorShiftRng::seed_from_u64(seed);
 
+    // Calculate total weight for weighted selection
+    let total_weight: u32 = set.cards.iter().map(|entry| entry.rarity).sum();
+    if total_weight == 0 {
+        return Vec::new();
+    }
+
     for _ in 0..100 {
-        let idx = rng.gen_range(template_ids.len());
-        bag.push(template_ids[idx]);
+        let mut target = rng.gen_range(total_weight as usize) as u32;
+        for entry in &set.cards {
+            if entry.rarity == 0 {
+                continue;
+            }
+            if target < entry.rarity {
+                bag.push(entry.card_id);
+                break;
+            }
+            target -= entry.rarity;
+        }
     }
 
     bag
