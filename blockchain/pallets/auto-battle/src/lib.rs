@@ -285,17 +285,26 @@ pub mod pallet {
     #[pallet::storage]
     pub type NextGhostArchiveId<T: Config> = StorageValue<_, u64, ValueQuery>;
 
-    /// User-submitted cards indexed by their unique hash.
-    /// The hash is derived from the card's game logic data (stats, economy, abilities, is_token).
+    /// Next available ID for user-submitted cards.
+    #[pallet::storage]
+    pub type NextUserCardId<T: Config> = StorageValue<_, u32, ValueQuery>;
+
+    /// Map of card hashes to their unique CardId.
+    /// Used to prevent duplicate cards from being stored.
+    #[pallet::storage]
+    pub type UserCardHashes<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::Hash, u32, OptionQuery>;
+
+    /// User-submitted cards indexed by their unique CardId.
     #[pallet::storage]
     pub type UserCards<T: Config> =
-        StorageMap<_, Blake2_128Concat, T::Hash, UserCardEntry<T>, OptionQuery>;
+        StorageMap<_, Blake2_128Concat, u32, UserCardEntry<T>, OptionQuery>;
 
-    /// Card metadata indexed by card hash.
+    /// Card metadata indexed by CardId.
     /// Metadata is separate from game logic data and can be updated by the creator.
     #[pallet::storage]
     pub type CardMetadataStore<T: Config> =
-        StorageMap<_, Blake2_128Concat, T::Hash, CardMetadataEntry<T>, OptionQuery>;
+        StorageMap<_, Blake2_128Concat, u32, CardMetadataEntry<T>, OptionQuery>;
 
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -318,12 +327,13 @@ pub mod pallet {
         /// A new user card has been submitted.
         CardSubmitted {
             creator: T::AccountId,
+            card_id: u32,
             card_hash: T::Hash,
         },
         /// Card metadata has been set or updated.
         CardMetadataUpdated {
             author: T::AccountId,
-            card_hash: T::Hash,
+            card_id: u32,
         },
     }
 
@@ -671,11 +681,14 @@ pub mod pallet {
             // Generate unique hash from the card data
             let card_hash = T::Hashing::hash_of(&card_data);
 
-            // Ensure card doesn't already exist
+            // Ensure card doesn't already exist (de-duplication)
             ensure!(
-                !UserCards::<T>::contains_key(&card_hash),
+                !UserCardHashes::<T>::contains_key(&card_hash),
                 Error::<T>::CardAlreadyExists
             );
+
+            // Get next ID and increment
+            let card_id = NextUserCardId::<T>::get();
 
             // Create and store the card entry
             let card_entry = UserCardEntry {
@@ -684,10 +697,13 @@ pub mod pallet {
                 created_at: frame_system::Pallet::<T>::block_number(),
             };
 
-            UserCards::<T>::insert(&card_hash, card_entry);
+            UserCardHashes::<T>::insert(&card_hash, card_id);
+            UserCards::<T>::insert(card_id, card_entry);
+            NextUserCardId::<T>::put(card_id.saturating_add(1));
 
             Self::deposit_event(Event::CardSubmitted {
                 creator: who,
+                card_id,
                 card_hash,
             });
 
@@ -700,13 +716,13 @@ pub mod pallet {
         #[pallet::weight(Weight::default())]
         pub fn set_card_metadata(
             origin: OriginFor<T>,
-            card_hash: T::Hash,
+            card_id: u32,
             metadata: CardMetadata<T>,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
             // Ensure the card exists
-            let card_entry = UserCards::<T>::get(&card_hash).ok_or(Error::<T>::CardNotFound)?;
+            let card_entry = UserCards::<T>::get(card_id).ok_or(Error::<T>::CardNotFound)?;
 
             // Ensure the caller is the card creator
             ensure!(card_entry.creator == who, Error::<T>::NotCardCreator);
@@ -718,11 +734,11 @@ pub mod pallet {
                 updated_at: frame_system::Pallet::<T>::block_number(),
             };
 
-            CardMetadataStore::<T>::insert(&card_hash, metadata_entry);
+            CardMetadataStore::<T>::insert(card_id, metadata_entry);
 
             Self::deposit_event(Event::CardMetadataUpdated {
                 author: who,
-                card_hash,
+                card_id,
             });
 
             Ok(())

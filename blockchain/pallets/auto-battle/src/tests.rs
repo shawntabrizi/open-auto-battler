@@ -162,3 +162,81 @@ fn test_no_active_game_error() {
         );
     });
 }
+
+#[test]
+fn test_submit_card_and_metadata() {
+    new_test_ext().execute_with(|| {
+        let account_id = 1;
+        let card_data = crate::UserCardData::<Test> {
+            stats: manalimit_core::types::UnitStats {
+                attack: 1,
+                health: 1,
+            },
+            economy: manalimit_core::types::EconomyStats {
+                play_cost: 1,
+                pitch_value: 1,
+            },
+            abilities: BoundedVec::try_from(vec![]).unwrap(),
+            is_token: false,
+        };
+
+        // Submit first card
+        assert_ok!(AutoBattle::submit_card(
+            RuntimeOrigin::signed(account_id),
+            card_data.clone()
+        ));
+
+        // Verify storage
+        let card_hash = <Test as frame_system::Config>::Hashing::hash_of(&card_data);
+        let card_id = crate::UserCardHashes::<Test>::get(card_hash).unwrap();
+        assert_eq!(card_id, 0);
+        let entry = crate::UserCards::<Test>::get(card_id).unwrap();
+        assert_eq!(entry.creator, account_id);
+
+        // Submit same card again (should fail)
+        assert_noop!(
+            AutoBattle::submit_card(RuntimeOrigin::signed(account_id), card_data),
+            Error::<Test>::CardAlreadyExists
+        );
+
+        // Submit metadata
+        let metadata = crate::CardMetadata::<Test> {
+            name: BoundedVec::try_from(b"Test Card".to_vec()).unwrap(),
+            emoji: BoundedVec::try_from("🍎".as_bytes().to_vec()).unwrap(),
+            description: BoundedVec::try_from(b"A test card".to_vec()).unwrap(),
+        };
+        assert_ok!(AutoBattle::set_card_metadata(
+            RuntimeOrigin::signed(account_id),
+            card_id,
+            metadata.clone()
+        ));
+
+        // Verify metadata
+        let meta_entry = crate::CardMetadataStore::<Test>::get(card_id).unwrap();
+        assert_eq!(meta_entry.author, account_id);
+        assert_eq!(meta_entry.metadata.name, metadata.name);
+
+        // Submit different card
+        let card_data_2 = crate::UserCardData::<Test> {
+            stats: manalimit_core::types::UnitStats {
+                attack: 2,
+                health: 2,
+            },
+            economy: manalimit_core::types::EconomyStats {
+                play_cost: 2,
+                pitch_value: 2,
+            },
+            abilities: BoundedVec::try_from(vec![]).unwrap(),
+            is_token: false,
+        };
+        assert_ok!(AutoBattle::submit_card(
+            RuntimeOrigin::signed(account_id),
+            card_data_2.clone()
+        ));
+
+        let card_hash_2 = <Test as frame_system::Config>::Hashing::hash_of(&card_data_2);
+        let card_id_2 = crate::UserCardHashes::<Test>::get(card_hash_2).unwrap();
+        assert_eq!(card_id_2, 1);
+        assert!(crate::UserCards::<Test>::contains_key(card_id_2));
+    });
+}
