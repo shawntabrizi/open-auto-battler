@@ -280,7 +280,6 @@ pub struct UnitCard {
     pub stats: UnitStats,
     pub economy: EconomyStats,
     pub abilities: Vec<Ability>,
-    pub is_token: bool,
 }
 
 impl UnitCard {
@@ -292,7 +291,6 @@ impl UnitCard {
         health: i32,
         play_cost: i32,
         pitch_value: i32,
-        is_token: bool,
     ) -> Self {
         Self {
             id,
@@ -304,7 +302,6 @@ impl UnitCard {
                 pitch_value,
             },
             abilities: vec![],
-            is_token,
         }
     }
 

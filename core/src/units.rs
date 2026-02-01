@@ -21,7 +21,7 @@ pub struct CardTemplate {
     pub play_cost: i32,
     pub pitch_value: i32,
     pub abilities: Vec<Ability>,
-    pub is_token: bool,
+    pub rarity: u32,
 }
 
 /// The comprehensive "First Pack" of units
@@ -47,7 +47,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: Some(1),
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "goblin_scout",
@@ -57,7 +57,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             play_cost: 1,
             pitch_value: 2,
             abilities: vec![],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "goblin_grunt",
@@ -67,7 +67,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             play_cost: 2,
             pitch_value: 1,
             abilities: vec![],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "scaredy_cat",
@@ -91,7 +91,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "brave_commander",
@@ -115,7 +115,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "militia",
@@ -125,7 +125,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             play_cost: 2,
             pitch_value: 2,
             abilities: vec![],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "shield_bearer",
@@ -149,7 +149,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "nurse_goblin",
@@ -178,7 +178,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 })],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         // ==========================================
         // TIER 2 (COST 3-4): Mid Game Synergies
@@ -204,7 +204,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "martyr_knight",
@@ -228,7 +228,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: Some(1),
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "abyssal_bomber",
@@ -250,7 +250,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "archer",
@@ -273,7 +273,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "sniper",
@@ -296,7 +296,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "skeleton_archer",
@@ -319,7 +319,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "battle_hardened",
@@ -358,7 +358,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     max_triggers: None,
                 },
             ],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "lone_wolf",
@@ -385,7 +385,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 })],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "pack_leader",
@@ -412,7 +412,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 })],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "spined_urchin",
@@ -434,7 +434,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "vampire",
@@ -457,7 +457,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "raging_orc",
@@ -480,7 +480,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "zombie_captain",
@@ -499,7 +499,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "necromancer",
@@ -522,7 +522,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "headhunter",
@@ -547,7 +547,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "giant_slayer",
@@ -572,7 +572,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "shield_squire",
@@ -596,7 +596,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "warder",
@@ -618,7 +618,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         // ==========================================
         // TIER 3 (COST 5-7): High Impact
@@ -644,7 +644,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "rear_guard",
@@ -668,7 +668,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "troll_brute",
@@ -690,7 +690,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "lich",
@@ -724,7 +724,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     max_triggers: None,
                 },
             ],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "assassin",
@@ -751,7 +751,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 })],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "fire_elemental",
@@ -774,7 +774,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "ogre_mauler",
@@ -797,7 +797,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "phoenix",
@@ -816,7 +816,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "shield_master",
@@ -839,7 +839,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "void_walker",
@@ -879,7 +879,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     max_triggers: None,
                 },
             ],
-            is_token: false,
+            rarity: 10,
         },
         // ==========================================
         // TIER 4 (COST 8-10): Legendary
@@ -923,7 +923,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                     max_triggers: None,
                 },
             ],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "giant_crusher",
@@ -946,7 +946,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "behemoth",
@@ -956,7 +956,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             play_cost: 10,
             pitch_value: 2,
             abilities: vec![],
-            is_token: false,
+            rarity: 10,
         },
         CardTemplate {
             template_id: "dragon_tyrant",
@@ -978,7 +978,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: false,
+            rarity: 10,
         },
         // ==========================================
         // TOKENS (Non-deck cards)
@@ -991,7 +991,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             play_cost: 0,
             pitch_value: 0,
             abilities: vec![],
-            is_token: true,
+            rarity: 0,
         },
         CardTemplate {
             template_id: "zombie_soldier",
@@ -1001,7 +1001,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             play_cost: 1,
             pitch_value: 1,
             abilities: vec![],
-            is_token: true,
+            rarity: 0,
         },
         CardTemplate {
             template_id: "zombie_spawn",
@@ -1011,7 +1011,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             play_cost: 0,
             pitch_value: 0,
             abilities: vec![],
-            is_token: true,
+            rarity: 0,
         },
         CardTemplate {
             template_id: "golem",
@@ -1021,7 +1021,7 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
             play_cost: 0,
             pitch_value: 0,
             abilities: vec![],
-            is_token: true,
+            rarity: 0,
         },
         CardTemplate {
             template_id: "phoenix_egg",
@@ -1040,13 +1040,14 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
                 conditions: vec![],
                 max_triggers: None,
             }],
-            is_token: true,
+            rarity: 0,
         },
     ]
 }
 
 /// Get all card templates with unique, stable CardIds
-pub fn get_all_templates() -> Vec<UnitCard> {
+/// Returns a tuple of (UnitCard, rarity)
+pub fn get_all_templates() -> Vec<(UnitCard, u32)> {
     let mut cards = Vec::new();
     let templates = get_starter_templates();
 
@@ -1064,9 +1065,8 @@ pub fn get_all_templates() -> Vec<UnitCard> {
                 pitch_value: t.pitch_value,
             },
             abilities: t.abilities,
-            is_token: t.is_token,
         };
-        cards.push(card);
+        cards.push((card, t.rarity));
     }
     cards
 }
@@ -1078,8 +1078,8 @@ pub fn get_set_template_ids(set_id: u32) -> Vec<crate::types::CardId> {
             // Set 0 includes all non-token cards from the starter templates
             get_all_templates()
                 .into_iter()
-                .filter(|c| !c.is_token)
-                .map(|c| c.id)
+                .filter(|(_, rarity)| *rarity > 0)
+                .map(|(c, _)| c.id)
                 .collect()
         }
         _ => Vec::new(),
@@ -1091,11 +1091,10 @@ pub fn get_card_set(set_id: u32) -> Option<CardSet> {
     match set_id {
         0 => {
             // Set 0 includes all cards from the starter templates
-            // Non-tokens have default rarity 10, tokens have rarity 0
+            // Rarity is now explicitly defined in the template
             let cards = get_all_templates()
                 .into_iter()
-                .map(|c| {
-                    let rarity = if c.is_token { 0u32 } else { 10u32 };
+                .map(|(c, rarity)| {
                     crate::state::CardSetEntry {
                         card_id: c.id,
                         rarity,

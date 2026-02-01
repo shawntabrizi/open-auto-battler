@@ -125,7 +125,7 @@ fn test_priority_tiebreaker_team() {
         max_triggers: None,
     };
     let e_card =
-        UnitCard::new(CardId(2), "Enemy", "Enemy", 5, 5, 0, 0, false).with_ability(ability);
+        UnitCard::new(CardId(2), "Enemy", "Enemy", 5, 5, 0, 0).with_ability(ability);
     let e_unit = CombatUnit::from_card(e_card);
 
     let p_board = vec![p_unit];
@@ -233,7 +233,7 @@ fn test_priority_tiebreaker_ability_order() {
     );
 
     let unit = CombatUnit::from_card(
-        UnitCard::new(CardId(1), "Unit", "Unit", 5, 5, 0, 0, false)
+        UnitCard::new(CardId(1), "Unit", "Unit", 5, 5, 0, 0)
             .with_abilities(vec![ability_a, ability_b]),
     );
 
@@ -280,7 +280,7 @@ fn test_priority_full_hierarchy_with_ability_order() {
 
     // U1: 10 Atk (Priority 1)
     let u1 = CombatUnit::from_card(
-        UnitCard::new(CardId(1), "U1", "U1", 10, 1, 0, 0, false).with_ability(create_ability(
+        UnitCard::new(CardId(1), "U1", "U1", 10, 1, 0, 0).with_ability(create_ability(
             AbilityTrigger::OnStart,
             AbilityEffect::ModifyStats {
                 health: 0,
@@ -301,7 +301,7 @@ fn test_priority_full_hierarchy_with_ability_order() {
 
     // U4: 5 Atk, 5 HP, Enemy Team (Priority 4)
     let u4 = CombatUnit::from_card(
-        UnitCard::new(CardId(4), "U4", "U4", 5, 5, 0, 0, false).with_ability(create_ability(
+        UnitCard::new(CardId(4), "U4", "U4", 5, 5, 0, 0).with_ability(create_ability(
             AbilityTrigger::OnStart,
             AbilityEffect::ModifyStats {
                 health: 0,
@@ -340,7 +340,7 @@ fn test_priority_full_hierarchy_with_ability_order() {
     );
 
     let u5 = CombatUnit::from_card(
-        UnitCard::new(CardId(5), "U5", "U5", 1, 1, 0, 0, false)
+        UnitCard::new(CardId(5), "U5", "U5", 1, 1, 0, 0)
             .with_abilities(vec![ability_u5_a, ability_u5_b]),
     );
 
@@ -399,7 +399,7 @@ fn test_priority_full_hierarchy() {
         "U1",
     );
     let u1 = CombatUnit::from_card(
-        UnitCard::new(CardId(1), "U1", "U1", 10, 1, 0, 0, false).with_ability(ability_u1),
+        UnitCard::new(CardId(1), "U1", "U1", 10, 1, 0, 0).with_ability(ability_u1),
     );
 
     // --- 2. Health Winner (Player) ---
@@ -424,7 +424,7 @@ fn test_priority_full_hierarchy() {
         "U4",
     );
     let u4 = CombatUnit::from_card(
-        UnitCard::new(CardId(4), "U4", "U4", 5, 5, 0, 0, false).with_ability(ability_u4),
+        UnitCard::new(CardId(4), "U4", "U4", 5, 5, 0, 0).with_ability(ability_u4),
     );
 
     // --- 5 & 6. Index Tiebreaker (Player) ---
@@ -514,7 +514,6 @@ fn test_priority_interruption_kill() {
             pitch_value: 0,
         },
         abilities: vec![killer_ability],
-        is_token: false,
     };
     // Construct Card B (Slow)
     let card_b = UnitCard {
@@ -530,7 +529,6 @@ fn test_priority_interruption_kill() {
             pitch_value: 0,
         },
         abilities: vec![slow_ability],
-        is_token: false,
     };
 
     // Enemy (Weak)
@@ -547,7 +545,6 @@ fn test_priority_interruption_kill() {
             pitch_value: 0,
         },
         abilities: vec![],
-        is_token: false,
     };
 
     let p_board = vec![CombatUnit::from_card(card_a), CombatUnit::from_card(card_b)];
@@ -687,7 +684,7 @@ fn test_unified_priority_cross_triggers() {
     // LowAtkBack: BeforeAnyAttack
 
     let high_atk_front = CombatUnit::from_card(
-        UnitCard::new(CardId(1), "High", "High", 10, 10, 0, 0, false).with_ability(create_ability(
+        UnitCard::new(CardId(1), "High", "High", 10, 10, 0, 0).with_ability(create_ability(
             AbilityTrigger::BeforeUnitAttack,
             AbilityEffect::ModifyStats {
                 health: 0,
@@ -701,7 +698,7 @@ fn test_unified_priority_cross_triggers() {
     );
 
     let low_atk_back = CombatUnit::from_card(
-        UnitCard::new(CardId(2), "Low", "Low", 1, 10, 0, 0, false).with_ability(create_ability(
+        UnitCard::new(CardId(2), "Low", "Low", 1, 10, 0, 0).with_ability(create_ability(
             AbilityTrigger::BeforeAnyAttack,
             AbilityEffect::ModifyStats {
                 health: 0,

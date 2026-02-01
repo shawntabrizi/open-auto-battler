@@ -187,9 +187,9 @@ fn test_snipe_highest_mana() {
 
     let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
 
-    let cheap = UnitCard::new(CardId(2), "Cheap", "Cheap", 1, 10, 1, 0, false);
-    let expensive = UnitCard::new(CardId(3), "Expensive", "Expensive", 1, 10, 10, 0, false);
-    let medium = UnitCard::new(CardId(4), "Medium", "Medium", 1, 10, 5, 0, false);
+    let cheap = UnitCard::new(CardId(2), "Cheap", "Cheap", 1, 10, 1, 0);
+    let expensive = UnitCard::new(CardId(3), "Expensive", "Expensive", 1, 10, 10, 0);
+    let medium = UnitCard::new(CardId(4), "Medium", "Medium", 1, 10, 5, 0);
 
     let p_board = vec![CombatUnit::from_card(sniper)];
     let e_board = vec![
@@ -226,9 +226,9 @@ fn test_snipe_lowest_mana() {
 
     let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
 
-    let expensive = UnitCard::new(CardId(2), "Expensive", "Expensive", 1, 10, 10, 0, false);
-    let cheap = UnitCard::new(CardId(3), "Cheap", "Cheap", 1, 10, 1, 0, false);
-    let medium = UnitCard::new(CardId(4), "Medium", "Medium", 1, 10, 5, 0, false);
+    let expensive = UnitCard::new(CardId(2), "Expensive", "Expensive", 1, 10, 10, 0);
+    let cheap = UnitCard::new(CardId(3), "Cheap", "Cheap", 1, 10, 1, 0);
+    let medium = UnitCard::new(CardId(4), "Medium", "Medium", 1, 10, 5, 0);
 
     let p_board = vec![CombatUnit::from_card(sniper)];
     let e_board = vec![
@@ -277,9 +277,9 @@ fn test_mana_reaper_dual_kill() {
     let reaper = create_dummy_card(1, "ManaReaper", 2, 2)
         .with_abilities(vec![reaper_ability_high, reaper_ability_low]);
 
-    let cheap = UnitCard::new(CardId(2), "Cheap", "Cheap", 1, 10, 1, 0, false);
-    let medium = UnitCard::new(CardId(3), "Medium", "Medium", 1, 10, 5, 0, false);
-    let expensive = UnitCard::new(CardId(4), "Expensive", "Expensive", 1, 10, 10, 0, false);
+    let cheap = UnitCard::new(CardId(2), "Cheap", "Cheap", 1, 10, 1, 0);
+    let medium = UnitCard::new(CardId(3), "Medium", "Medium", 1, 10, 5, 0);
+    let expensive = UnitCard::new(CardId(4), "Expensive", "Expensive", 1, 10, 10, 0);
 
     let p_board = vec![CombatUnit::from_card(reaper)];
     let e_board = vec![

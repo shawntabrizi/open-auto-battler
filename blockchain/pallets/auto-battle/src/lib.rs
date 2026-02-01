@@ -138,8 +138,6 @@ pub mod pallet {
         pub economy: EconomyStats,
         /// Card abilities
         pub abilities: BoundedVec<BoundedAbility<T>, T::MaxAbilities>,
-        /// Whether this card is a token (spawned, not played from hand)
-        pub is_token: bool,
     }
 
     /// A user-submitted card entry stored on-chain.
@@ -383,7 +381,7 @@ pub mod pallet {
             let templates = get_all_templates();
             let mut cards = Vec::new();
 
-            for card in templates {
+            for (card, rarity) in templates {
                 let card_id = card.id.0;
                 let data = UserCardData::<T> {
                     stats: card.stats,
@@ -394,7 +392,6 @@ pub mod pallet {
                             .map(|a| BoundedAbility::<T>::from(a))
                             .collect(),
                     ),
-                    is_token: card.is_token,
                 };
 
                 let entry = UserCardEntry {
@@ -405,7 +402,6 @@ pub mod pallet {
 
                 UserCards::<T>::insert(card_id, entry);
 
-                let rarity = if card.is_token { 0u32 } else { 10u32 };
                 cards.push(manalimit_core::state::CardSetEntry {
                     card_id: card.id,
                     rarity,
@@ -876,7 +872,6 @@ pub mod pallet {
                     .into_iter()
                     .map(|a| a.into())
                     .collect(),
-                is_token: entry.data.is_token,
             }
         }
         /// Helper to generate a unique seed per user/block/context

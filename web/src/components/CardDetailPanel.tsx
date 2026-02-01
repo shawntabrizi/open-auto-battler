@@ -250,7 +250,6 @@ export function CardDetailPanel({
         <div className="text-[10px] text-gray-500 font-mono flex flex-col gap-1 border-t border-gray-800 pt-4">
           <div>TEMPLATE_ID: {card.template_id}</div>
           <div>INSTANCE_ID: {card.id}</div>
-          {card.is_token && <div className="text-yellow-600 font-bold">TOKEN UNIT</div>}
         </div>
 
         {/* Card Raw JSON */}

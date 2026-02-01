@@ -177,7 +177,6 @@ fn test_submit_card_and_metadata() {
                 pitch_value: 1,
             },
             abilities: BoundedVec::try_from(vec![]).unwrap(),
-            is_token: false,
         };
 
         // Submit first card
@@ -227,7 +226,6 @@ fn test_submit_card_and_metadata() {
                 pitch_value: 2,
             },
             abilities: BoundedVec::try_from(vec![]).unwrap(),
-            is_token: false,
         };
         assert_ok!(AutoBattle::submit_card(
             RuntimeOrigin::signed(account_id),

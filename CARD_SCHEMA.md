@@ -19,7 +19,6 @@ pub struct UnitCard {
     pub stats: UnitStats,       // Attack/Health
     pub economy: EconomyStats,  // Cost/Pitch
     pub abilities: Vec<Ability>,// Logic
-    pub is_token: bool,         // True if generated during battle
 }
 ```
 

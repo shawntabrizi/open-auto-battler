@@ -29,7 +29,6 @@ export function SandboxPage() {
     play_cost: selectedTemplate.play_cost,
     pitch_value: selectedTemplate.pitch_value,
     abilities: selectedTemplate.abilities,
-    is_token: selectedTemplate.is_token,
   } : null;
 
   if (isLoading) {
@@ -172,7 +171,6 @@ function SandboxArena() {
               play_cost: unit.play_cost,
               pitch_value: unit.pitch_value,
               abilities: unit.abilities,
-              is_token: unit.is_token,
             }}
             showCost={false}
             showPitch={false}
@@ -281,7 +279,6 @@ function UnitGallery() {
               play_cost: template.play_cost,
               pitch_value: template.pitch_value,
               abilities: template.abilities,
-              is_token: template.is_token,
             }}
             isSelected={selectedTemplate?.template_id === template.template_id}
             onClick={() =>

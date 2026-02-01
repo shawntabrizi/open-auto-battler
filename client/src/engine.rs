@@ -489,7 +489,7 @@ impl GameEngine {
         // In the future, we may need to pass definitions from the chain.
         use manalimit_core::units::get_all_templates;
         let mut card_pool = std::collections::BTreeMap::new();
-        for card in get_all_templates() {
+        for (card, _rarity) in get_all_templates() {
             card_pool.insert(card.id, card);
         }
 
@@ -528,7 +528,7 @@ impl GameEngine {
         use manalimit_core::units::{create_genesis_bag, get_all_templates, get_card_set};
         if let Some(card_set) = get_card_set(self.set_id) {
             // Populate card pool from templates
-            for card in get_all_templates() {
+            for (card, _rarity) in get_all_templates() {
                 self.state.card_pool.insert(card.id, card);
             }
 
@@ -608,7 +608,6 @@ impl GameEngine {
                     attack: card.stats.attack,
                     health: u.current_health,
                     abilities: card.abilities.clone(),
-                    is_token: card.is_token,
                 }
             })
             .collect();
@@ -629,7 +628,6 @@ impl GameEngine {
             attack: cu.attack,
             health: cu.health,
             abilities: cu.abilities,
-            is_token: cu.is_token,
         })
         .collect();
 

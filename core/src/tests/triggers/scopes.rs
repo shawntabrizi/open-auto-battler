@@ -5,7 +5,7 @@ use crate::types::*;
 #[test]
 fn test_attack_trigger_scopes() {
     let front_unit = CombatUnit::from_card(
-        UnitCard::new(CardId(1), "Front", "Front", 1, 10, 0, 0, false).with_ability(
+        UnitCard::new(CardId(1), "Front", "Front", 1, 10, 0, 0).with_ability(
             create_ability(
                 AbilityTrigger::BeforeUnitAttack,
                 AbilityEffect::ModifyStats {
@@ -21,7 +21,7 @@ fn test_attack_trigger_scopes() {
     );
 
     let support_unit = CombatUnit::from_card(
-        UnitCard::new(CardId(2), "Support", "Support", 1, 10, 0, 0, false).with_abilities(vec![
+        UnitCard::new(CardId(2), "Support", "Support", 1, 10, 0, 0).with_abilities(vec![
             create_ability(
                 AbilityTrigger::BeforeUnitAttack,
                 AbilityEffect::ModifyStats {
@@ -74,7 +74,7 @@ fn test_attack_trigger_scopes() {
 #[test]
 fn test_after_attack_trigger_scopes() {
     let front_unit = CombatUnit::from_card(
-        UnitCard::new(CardId(1), "Front", "Front", 1, 10, 0, 0, false).with_ability(
+        UnitCard::new(CardId(1), "Front", "Front", 1, 10, 0, 0).with_ability(
             create_ability(
                 AbilityTrigger::AfterUnitAttack,
                 AbilityEffect::ModifyStats {
@@ -90,7 +90,7 @@ fn test_after_attack_trigger_scopes() {
     );
 
     let support_unit = CombatUnit::from_card(
-        UnitCard::new(CardId(2), "Support", "Support", 1, 10, 0, 0, false).with_abilities(vec![
+        UnitCard::new(CardId(2), "Support", "Support", 1, 10, 0, 0).with_abilities(vec![
             create_ability(
                 AbilityTrigger::AfterUnitAttack,
                 AbilityEffect::ModifyStats {

@@ -312,7 +312,6 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
               play_cost: 0,
               pitch_value: 0,
               abilities: unit.abilities,
-              is_token: unit.is_token,
             }}
             showCost={false}
             showPitch={false}

@@ -16,7 +16,7 @@ use crate::types::*;
 // ==========================================
 
 fn create_dummy_card(id: u32, name: &str, atk: i32, hp: i32) -> UnitCard {
-    UnitCard::new(CardId(id), name, name, atk, hp, 1, 1, false)
+    UnitCard::new(CardId(id), name, name, atk, hp, 1, 1)
 }
 
 fn create_board_unit(id: u32, name: &str, atk: i32, hp: i32) -> CombatUnit {
@@ -67,7 +67,6 @@ fn create_tester_unit(
             pitch_value: 1,
         },
         abilities: vec![ability],
-        is_token: false,
     };
 
     CombatUnit::from_card(card)
@@ -87,7 +86,6 @@ fn create_dummy_enemy() -> CombatUnit {
             pitch_value: 0,
         },
         abilities: vec![],
-        is_token: false,
     };
     CombatUnit::from_card(card)
 }

@@ -495,7 +495,6 @@ where
     pub stats: UnitStats,
     pub economy: EconomyStats,
     pub abilities: BoundedVec<BoundedAbility<MaxStringLen, MaxConditions>, MaxAbilities>,
-    pub is_token: bool,
 }
 
 impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Clone
@@ -509,7 +508,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Cl
             stats: self.stats.clone(),
             economy: self.economy.clone(),
             abilities: self.abilities.clone(),
-            is_token: self.is_token,
         }
     }
 }
@@ -524,7 +522,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Pa
             && self.stats == other.stats
             && self.economy == other.economy
             && self.abilities == other.abilities
-            && self.is_token == other.is_token
     }
 }
 
@@ -544,7 +541,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> De
             .field("stats", &self.stats)
             .field("economy", &self.economy)
             .field("abilities", &self.abilities)
-            .field("is_token", &self.is_token)
             .finish()
     }
 }
@@ -566,7 +562,6 @@ where
             abilities: BoundedVec::truncate_from(
                 card.abilities.into_iter().map(Into::into).collect(),
             ),
-            is_token: card.is_token,
         }
     }
 }
@@ -591,7 +586,6 @@ where
                 .into_iter()
                 .map(Into::into)
                 .collect(),
-            is_token: bounded.is_token,
         }
     }
 }
@@ -1134,7 +1128,6 @@ where
     pub attack: i32,
     pub health: i32,
     pub abilities: BoundedVec<BoundedAbility<MaxStringLen, MaxConditions>, MaxAbilities>,
-    pub is_token: bool,
 }
 
 impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Clone
@@ -1148,7 +1141,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Cl
             attack: self.attack,
             health: self.health,
             abilities: self.abilities.clone(),
-            is_token: self.is_token,
         }
     }
 }
@@ -1163,7 +1155,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Pa
             && self.attack == other.attack
             && self.health == other.health
             && self.abilities == other.abilities
-            && self.is_token == other.is_token
     }
 }
 
@@ -1183,7 +1174,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> De
             .field("attack", &self.attack)
             .field("health", &self.health)
             .field("abilities", &self.abilities)
-            .field("is_token", &self.is_token)
             .finish()
     }
 }
@@ -1205,7 +1195,6 @@ where
             abilities: BoundedVec::truncate_from(
                 uv.abilities.into_iter().map(Into::into).collect(),
             ),
-            is_token: uv.is_token,
         }
     }
 }
@@ -1230,7 +1219,6 @@ where
                 .into_iter()
                 .map(Into::into)
                 .collect(),
-            is_token: bounded.is_token,
         }
     }
 }

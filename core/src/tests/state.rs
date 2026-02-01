@@ -9,7 +9,7 @@ fn test_hand_derivation_deterministic() {
     let mut state = GameState::new(12345);
     let templates = get_starter_templates();
     for template in &templates {
-        if template.is_token {
+        if template.rarity == 0 {
             continue;
         }
         for _ in 0..3 {
@@ -22,7 +22,6 @@ fn test_hand_derivation_deterministic() {
                 template.health,
                 template.play_cost,
                 template.pitch_value,
-                template.is_token,
             );
             state.card_pool.insert(id, card);
             state.bag.push(id);
@@ -56,7 +55,7 @@ fn test_hand_derivation_unique_indices() {
     // Add enough cards
     for _ in 0..20 {
         let id = state.generate_card_id();
-        let card = UnitCard::new(id, "test", "Test", 1, 1, 1, 1, false);
+        let card = UnitCard::new(id, "test", "Test", 1, 1, 1, 1);
         state.card_pool.insert(id, card);
         state.bag.push(id);
     }
