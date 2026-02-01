@@ -4,12 +4,12 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
 export const CreateSetPage: React.FC = () => {
-  const { 
-    isConnected, 
-    connect, 
-    allCards, 
-    fetchCards, 
-    submitCard, 
+  const {
+    isConnected,
+    connect,
+    allCards,
+    fetchCards,
+    submitCard,
     createCardSet
   } = useBlockchainStore();
 
@@ -23,7 +23,7 @@ export const CreateSetPage: React.FC = () => {
     description: ''
   });
 
-  const [selectedCards, setSelectedCards] = useState<{card_id: number, rarity: number}[]>([]);
+  const [selectedCards, setSelectedCards] = useState<{ card_id: number, rarity: number }[]>([]);
   const [isSubmittingCard, setIsSubmittingCard] = useState(false);
   const [isCreatingSet, setIsCreatingSet] = useState(false);
 
@@ -83,6 +83,7 @@ export const CreateSetPage: React.FC = () => {
       toast.error('Select at least one card');
       return;
     }
+
     setIsCreatingSet(true);
     try {
       await createCardSet(selectedCards);
@@ -133,7 +134,7 @@ export const CreateSetPage: React.FC = () => {
             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
               <span className="text-yellow-500">01</span> Create New Card
             </h2>
-            
+
             <form onSubmit={handleCardSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-1">
@@ -141,7 +142,7 @@ export const CreateSetPage: React.FC = () => {
                   <input
                     type="text"
                     value={cardForm.name}
-                    onChange={e => setCardForm({...cardForm, name: e.target.value})}
+                    onChange={e => setCardForm({ ...cardForm, name: e.target.value })}
                     placeholder="Super Goblin"
                     className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                     required
@@ -152,7 +153,7 @@ export const CreateSetPage: React.FC = () => {
                   <input
                     type="text"
                     value={cardForm.emoji}
-                    onChange={e => setCardForm({...cardForm, emoji: e.target.value})}
+                    onChange={e => setCardForm({ ...cardForm, emoji: e.target.value })}
                     className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50 text-center"
                     required
                   />
@@ -165,7 +166,7 @@ export const CreateSetPage: React.FC = () => {
                   <input
                     type="number"
                     value={cardForm.attack}
-                    onChange={e => setCardForm({...cardForm, attack: parseInt(e.target.value)})}
+                    onChange={e => setCardForm({ ...cardForm, attack: parseInt(e.target.value) })}
                     className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                     min="0"
                   />
@@ -175,7 +176,7 @@ export const CreateSetPage: React.FC = () => {
                   <input
                     type="number"
                     value={cardForm.health}
-                    onChange={e => setCardForm({...cardForm, health: parseInt(e.target.value)})}
+                    onChange={e => setCardForm({ ...cardForm, health: parseInt(e.target.value) })}
                     className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                     min="1"
                   />
@@ -188,7 +189,7 @@ export const CreateSetPage: React.FC = () => {
                   <input
                     type="number"
                     value={cardForm.play_cost}
-                    onChange={e => setCardForm({...cardForm, play_cost: parseInt(e.target.value)})}
+                    onChange={e => setCardForm({ ...cardForm, play_cost: parseInt(e.target.value) })}
                     className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                     min="0"
                   />
@@ -198,7 +199,7 @@ export const CreateSetPage: React.FC = () => {
                   <input
                     type="number"
                     value={cardForm.pitch_value}
-                    onChange={e => setCardForm({...cardForm, pitch_value: parseInt(e.target.value)})}
+                    onChange={e => setCardForm({ ...cardForm, pitch_value: parseInt(e.target.value) })}
                     className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                     min="0"
                   />
@@ -209,7 +210,7 @@ export const CreateSetPage: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label>
                 <textarea
                   value={cardForm.description}
-                  onChange={e => setCardForm({...cardForm, description: e.target.value})}
+                  onChange={e => setCardForm({ ...cardForm, description: e.target.value })}
                   className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50 h-20 resize-none"
                   placeholder="What does this card do?"
                 />
@@ -242,7 +243,7 @@ export const CreateSetPage: React.FC = () => {
                   {allCards.map(card => {
                     const isSelected = selectedCards.some(c => c.card_id === card.id);
                     return (
-                      <div 
+                      <div
                         key={card.id}
                         onClick={() => toggleCardSelection(card.id)}
                         className={`
@@ -256,7 +257,7 @@ export const CreateSetPage: React.FC = () => {
                           <span>{card.data.stats.attack}⚔️</span>
                           <span>{card.data.stats.health}❤️</span>
                         </div>
-                        
+
                         {isSelected && (
                           <div className="absolute -top-2 -right-2 bg-yellow-500 text-slate-950 rounded-full p-1">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -284,8 +285,8 @@ export const CreateSetPage: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2">
                               <label className="text-[10px] text-slate-500 uppercase font-bold">Rarity</label>
-                              <input 
-                                type="number" 
+                              <input
+                                type="number"
                                 value={sc.rarity}
                                 onChange={(e) => {
                                   const val = parseInt(e.target.value) || 0;

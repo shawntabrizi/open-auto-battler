@@ -308,7 +308,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       });
 
       const cards = cardEntries.map((entry: any) => {
-        const id = entry.keyArgs[0];
+        const id = Number(entry.keyArgs[0]);
         const metadata = metadataMap.get(id);
         return {
           id,
@@ -332,7 +332,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       const setEntries = await api.query.AutoBattle.CardSets.getEntries();
       const sets = setEntries.map((entry: any) => ({
         id: Number(entry.keyArgs[0]),
-        cards: entry.value.cards
+        cards: entry.value
       }));
       set({ availableSets: sets });
     } catch (err) {
@@ -377,13 +377,9 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     try {
-
-      console.log({ cards })
-
-      const tx = api.tx.AutoBattle.create_card_set(cards);
-
-      console.log("Hi shawn")
+      const tx = api.tx.AutoBattle.create_card_set({ cards });
       await tx.signAndSubmit(selectedAccount.polkadotSigner);
+      await get().fetchSets();
     } catch (err) {
       console.error("Create card set failed:", err);
       throw err;
