@@ -16,4 +16,13 @@ This document is derived from the test layout in the codebase.
 - Trigger logic changes should add tests in `core/src/tests/triggers/`.
 
 ## Running Tests
-- Run `cargo test` at the repository root unless a smaller scope is requested.
+- Prefer crate-scoped tests for the crates you touched.
+- Use the following commands as needed:
+- `cargo test -p manalimit-core`
+- `cargo test -p manalimit-client`
+- `cargo test -p pallet-auto-battle`
+- `cargo test -p auto-battle-runtime`
+
+## Pallet Changes
+- If you change the pallet, also ensure the runtime compiles by running:
+- `cargo test -p auto-battle-runtime`
