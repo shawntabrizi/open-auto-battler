@@ -12,7 +12,19 @@ import {
   mnemonicToEntropy,
 } from "@polkadot-labs/hdkd-helpers"
 import { getPolkadotSigner } from "polkadot-api/signer"
-import { AccountId } from "@polkadot-api/substrate-bindings";
+import { AccountId, Enum } from "@polkadot-api/substrate-bindings";
+import type {
+  Ability,
+  AbilityEffect,
+  AbilityTarget,
+  AbilityTrigger,
+  CompareOp,
+  Condition,
+  Matcher,
+  SortOrder,
+  StatType,
+  TargetScope,
+} from "../types";
 
 interface BlockchainStore {
   // Connection state
@@ -71,6 +83,123 @@ const getDevAccounts = () => {
     };
   });
 };
+
+const toChainTargetScope = (scope: TargetScope) => Enum(scope);
+const toChainStatType = (stat: StatType) => Enum(stat);
+const toChainSortOrder = (order: SortOrder) => Enum(order);
+const toChainCompareOp = (op: CompareOp) => Enum(op);
+
+const toChainMatcher = (matcher: Matcher): any => {
+  switch (matcher.type) {
+    case "StatValueCompare":
+      return Enum("StatValueCompare", {
+        scope: toChainTargetScope(matcher.data.scope),
+        stat: toChainStatType(matcher.data.stat),
+        op: toChainCompareOp(matcher.data.op),
+        value: matcher.data.value,
+      });
+    case "StatStatCompare":
+      return Enum("StatStatCompare", {
+        source_stat: toChainStatType(matcher.data.source_stat),
+        op: toChainCompareOp(matcher.data.op),
+        target_scope: toChainTargetScope(matcher.data.target_scope),
+        target_stat: toChainStatType(matcher.data.target_stat),
+      });
+    case "UnitCount":
+      return Enum("UnitCount", {
+        scope: toChainTargetScope(matcher.data.scope),
+        op: toChainCompareOp(matcher.data.op),
+        value: matcher.data.value,
+      });
+    case "IsPosition":
+      return Enum("IsPosition", {
+        scope: toChainTargetScope(matcher.data.scope),
+        index: matcher.data.index,
+      });
+    default:
+      return matcher as never;
+  }
+};
+
+const toChainCondition = (condition: Condition): any => {
+  switch (condition.type) {
+    case "Is":
+      return Enum("Is", toChainMatcher(condition.data));
+    case "AnyOf":
+      return Enum("AnyOf", condition.data.map(toChainMatcher));
+    default:
+      return condition as never;
+  }
+};
+
+const toChainAbilityTarget = (target: AbilityTarget): any => {
+  switch (target.type) {
+    case "Position":
+      return Enum("Position", {
+        scope: toChainTargetScope(target.data.scope),
+        index: target.data.index,
+      });
+    case "Adjacent":
+      return Enum("Adjacent", {
+        scope: toChainTargetScope(target.data.scope),
+      });
+    case "Random":
+      return Enum("Random", {
+        scope: toChainTargetScope(target.data.scope),
+        count: target.data.count,
+      });
+    case "Standard":
+      return Enum("Standard", {
+        scope: toChainTargetScope(target.data.scope),
+        stat: toChainStatType(target.data.stat),
+        order: toChainSortOrder(target.data.order),
+        count: target.data.count,
+      });
+    case "All":
+      return Enum("All", {
+        scope: toChainTargetScope(target.data.scope),
+      });
+    default:
+      return target as never;
+  }
+};
+
+const toChainAbilityEffect = (effect: AbilityEffect): any => {
+  switch (effect.type) {
+    case "Damage":
+      return Enum("Damage", {
+        amount: effect.amount,
+        target: toChainAbilityTarget(effect.target),
+      });
+    case "ModifyStats":
+      return Enum("ModifyStats", {
+        health: effect.health,
+        attack: effect.attack,
+        target: toChainAbilityTarget(effect.target),
+      });
+    case "SpawnUnit":
+      return Enum("SpawnUnit", {
+        template_id: Binary.fromText(effect.template_id),
+      });
+    case "Destroy":
+      return Enum("Destroy", {
+        target: toChainAbilityTarget(effect.target),
+      });
+    default:
+      return effect as never;
+  }
+};
+
+const toChainAbilityTrigger = (trigger: AbilityTrigger) => Enum(trigger);
+
+const toChainAbility = (ability: Ability): any => ({
+  trigger: toChainAbilityTrigger(ability.trigger),
+  effect: toChainAbilityEffect(ability.effect),
+  name: Binary.fromText(ability.name),
+  description: Binary.fromText(ability.description),
+  conditions: ability.conditions.map(toChainCondition),
+  max_triggers: ability.max_triggers,
+});
 
 export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   // Connection state
@@ -352,8 +481,14 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     try {
+      const cardDataForChain = {
+        stats: cardData.stats,
+        economy: cardData.economy,
+        abilities: cardData.abilities.map(toChainAbility),
+      };
+
       // 1. Submit the card data
-      const submitTx = api.tx.AutoBattle.submit_card({ card_data: cardData });
+      const submitTx = api.tx.AutoBattle.submit_card({ card_data: cardDataForChain });
       await submitTx.signAndSubmit(selectedAccount.polkadotSigner);
 
       // We need to wait for the card to be indexed to get the ID,
