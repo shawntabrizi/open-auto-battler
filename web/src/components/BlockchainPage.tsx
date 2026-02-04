@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { DndContext, DragEndEvent, TouchSensor, MouseSensor, useSensor, useSensors, DragOverlay, Modifier } from '@dnd-kit/core';
 import { useBlockchainStore } from '../store/blockchainStore';
 import { useGameStore } from '../store/gameStore';
 import { Arena } from './Arena';
@@ -8,6 +9,7 @@ import { BattleOverlay } from './BattleOverlay';
 import { CardDetailPanel } from './CardDetailPanel';
 import { BagOverlay } from './BagOverlay';
 import { GameOverScreen } from './GameOverScreen';
+import { UnitCard } from './UnitCard';
 import { Link } from 'react-router-dom';
 
 export const BlockchainPage: React.FC = () => {
@@ -37,11 +39,127 @@ export const BlockchainPage: React.FC = () => {
     endTurn,
     battleOutput,
     selection,
-    showBag
+    showBag,
+    playHandCard,
+    swapBoardPositions,
+    pitchHandCard,
+    pitchBoardUnit,
+    setSelection
   } = useGameStore();
 
   const [txLoading, setTxLoading] = useState(false);
   const [selectedSetId, setSelectedSetId] = useState(0);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const gameLayoutRef = useRef<HTMLDivElement>(null);
+
+  // Custom modifier to restrict dragging to the game layout container
+  const restrictToGameLayout: Modifier = useCallback(({ transform, draggingNodeRect }) => {
+    if (!gameLayoutRef.current || !draggingNodeRect) {
+      return transform;
+    }
+
+    const layoutRect = gameLayoutRef.current.getBoundingClientRect();
+
+    const minX = layoutRect.left - draggingNodeRect.left;
+    const maxX = layoutRect.right - draggingNodeRect.right;
+    const minY = layoutRect.top - draggingNodeRect.top;
+    const maxY = layoutRect.bottom - draggingNodeRect.bottom;
+
+    return {
+      ...transform,
+      x: Math.min(Math.max(transform.x, minX), maxX),
+      y: Math.min(Math.max(transform.y, minY), maxY),
+    };
+  }, []);
+
+  // Configure sensors for both mouse and touch
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 5,
+    },
+  });
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 100,
+      tolerance: 5,
+    },
+  });
+  const sensors = useSensors(mouseSensor, touchSensor);
+
+  // Handle drag end
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over) return;
+
+    const activeData = active.data.current;
+    const overData = over.data.current;
+
+    if (!activeData || !overData) return;
+
+    const sourceType = activeData.type as string;
+    const sourceIndex = activeData.index as number;
+    const destType = overData.type as string;
+
+    if (destType === 'ash-pile') {
+      if (sourceType === 'hand') {
+        pitchHandCard(sourceIndex);
+      } else if (sourceType === 'board') {
+        pitchBoardUnit(sourceIndex);
+      }
+      setSelection(null);
+      return;
+    }
+
+    if (destType === 'board-slot') {
+      const destIndex = overData.index as number;
+
+      if (sourceType === 'hand') {
+        playHandCard(sourceIndex, destIndex);
+      } else if (sourceType === 'board' && sourceIndex !== destIndex) {
+        swapBoardPositions(sourceIndex, destIndex);
+      }
+      setSelection(null);
+    }
+  };
+
+  const handleDragStart = (event: { active: { id: string | number } }) => {
+    setActiveId(String(event.active.id));
+    const [type, indexStr] = String(event.active.id).split('-');
+    const index = parseInt(indexStr);
+    if (type === 'hand' || type === 'board') {
+      setSelection({ type: type as 'hand' | 'board', index });
+    }
+  };
+
+  // Prevent body scroll during drag
+  useEffect(() => {
+    if (activeId) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [activeId]);
+
+  // Get the card being dragged for the overlay
+  const getActiveCard = () => {
+    if (!activeId || !view) return null;
+    const [type, indexStr] = activeId.split('-');
+    const index = parseInt(indexStr);
+    if (type === 'hand') {
+      return view.hand[index];
+    } else if (type === 'board') {
+      return view.board[index];
+    }
+    return null;
+  };
 
   // Guards to prevent double-execution in React StrictMode
   const initCalled = useRef(false);
@@ -226,29 +344,41 @@ export const BlockchainPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="flex-1 relative flex flex-col min-h-0">
-          <HUD
-            hideEndTurn={true}
-            customAction={{
-              label: txLoading ? 'Submitting...' : 'Commit',
-              onClick: handleSubmitTurn,
-              disabled: txLoading,
-              variant: 'chain',
-            }}
-          />
+        <DndContext sensors={sensors} modifiers={[restrictToGameLayout]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div ref={gameLayoutRef} className="flex-1 relative flex flex-col min-h-0">
+            <HUD
+              hideEndTurn={true}
+              customAction={{
+                label: txLoading ? 'Submitting...' : 'Commit',
+                onClick: handleSubmitTurn,
+                disabled: txLoading,
+                variant: 'chain',
+              }}
+            />
 
-          <div className={`flex-1 flex flex-col overflow-hidden relative ${showCardPanel ? 'ml-44 lg:ml-80' : ''}`}>
-            <div className="flex-1 overflow-hidden relative">
-              <Arena />
+            <div className={`flex-1 flex flex-col overflow-hidden relative ${showCardPanel ? 'ml-44 lg:ml-80' : ''}`}>
+              <div className="flex-1 overflow-hidden relative">
+                <Arena />
+              </div>
+              <div className="flex-shrink-0">
+                <Shop />
+              </div>
             </div>
-            <div className="flex-shrink-0">
-              <Shop />
-            </div>
+
+            <CardDetailPanel card={cardToShow} isVisible={showCardPanel} topOffset="7rem" />
+            <BagOverlay />
           </div>
 
-          <CardDetailPanel card={cardToShow} isVisible={showCardPanel} topOffset="7rem" />
-          <BagOverlay />
-        </div>
+          <DragOverlay>
+            {getActiveCard() ? (
+              <UnitCard
+                card={getActiveCard()!}
+                showCost={activeId?.startsWith('hand')}
+                showPitch={true}
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       )}
 
       {showBattleOverlay && battleOutput && (
