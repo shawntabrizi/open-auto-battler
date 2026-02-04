@@ -103,7 +103,10 @@ export function Shop() {
             />
             {/* Level text */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="mana-text text-xl font-bold text-white drop-shadow-lg">{view.mana}</span>
+              {/* Mobile: show mana/limit */}
+              <span className="mana-text text-sm font-bold text-white drop-shadow-lg lg:hidden">{view.mana}/{view.mana_limit}</span>
+              {/* Desktop: show just mana */}
+              <span className="mana-text text-xl font-bold text-white drop-shadow-lg hidden lg:block">{view.mana}</span>
             </div>
           </div>
           <div className="mana-limit text-xs text-gray-400 mt-1">Limit: {view.mana_limit}</div>
