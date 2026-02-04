@@ -60,7 +60,15 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
     }
 
     return new Promise((resolve, reject) => {
-      const peer = new Peer();
+      const peer = new Peer({
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+          ]
+        }
+      });
 
       peer.on('open', (id) => {
         set({ peer, myPeerId: id, logs: [...get().logs, { timestamp: Date.now(), message: `Peer initialized with ID: ${id}` }] });

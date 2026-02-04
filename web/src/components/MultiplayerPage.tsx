@@ -22,6 +22,7 @@ export function MultiplayerPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
   const [autoJoining, setAutoJoining] = useState(false);
+  const [initializing, setInitializing] = useState(false);
 
   // Check if we have a join parameter
   const joinIdFromUrl = searchParams.get('join');
@@ -44,7 +45,12 @@ export function MultiplayerPage() {
   }, [joinIdFromUrl, peer, autoJoining, initializePeer, connectToPeer]);
 
   const handleHost = async () => {
-    await initializePeer();
+    setInitializing(true);
+    try {
+      await initializePeer();
+    } finally {
+      setInitializing(false);
+    }
   };
 
   const handleJoin = async () => {
@@ -125,9 +131,17 @@ export function MultiplayerPage() {
                 <div className="text-center py-4 lg:py-8">
                   <button
                     onClick={handleHost}
-                    className="w-full max-w-xs mx-auto bg-blue-600 hover:bg-blue-500 py-3 lg:py-4 rounded-xl font-bold text-sm lg:text-lg transition-all active:scale-95"
+                    disabled={initializing}
+                    className="w-full max-w-xs mx-auto bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 py-3 lg:py-4 rounded-xl font-bold text-sm lg:text-lg transition-all active:scale-95 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Initialize Network
+                    {initializing ? (
+                      <>
+                        <div className="w-4 h-4 lg:w-5 lg:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Initializing...</span>
+                      </>
+                    ) : (
+                      'Initialize Network'
+                    )}
                   </button>
                   <p className="text-[10px] lg:text-sm text-gray-400 mt-2 lg:mt-4">
                     Generate your ID to host or join a game.
