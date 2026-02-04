@@ -4,9 +4,15 @@ import { useMultiplayerStore } from '../store/multiplayerStore';
 
 interface HUDProps {
   hideEndTurn?: boolean;
+  customAction?: {
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+    variant?: 'primary' | 'chain';
+  };
 }
 
-export function HUD({ hideEndTurn }: HUDProps) {
+export function HUD({ hideEndTurn, customAction }: HUDProps) {
   const { view, endTurn, engine, setShowBag, showBag, selection } = useGameStore();
   const { status, setIsReady, sendMessage, isReady, opponentReady } = useMultiplayerStore();
   // Keyboard shortcut for Bag view
@@ -86,6 +92,21 @@ export function HUD({ hideEndTurn }: HUDProps) {
                 className={`btn btn-primary text-sm lg:text-lg px-3 lg:px-6 py-2 lg:py-3 transition-all ${isWaiting ? 'bg-gray-600 scale-95 opacity-80 cursor-not-allowed' : ''}`}
               >
                 {isWaiting ? 'Waiting...' : 'Battle!'}
+              </button>
+            )}
+            {customAction && (
+              <button
+                onClick={customAction.onClick}
+                disabled={customAction.disabled}
+                className={`btn text-sm lg:text-lg px-3 lg:px-6 py-2 lg:py-3 transition-all font-bold ${
+                  customAction.disabled
+                    ? 'bg-gray-600 scale-95 opacity-80 cursor-not-allowed'
+                    : customAction.variant === 'chain'
+                      ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-slate-900'
+                      : 'btn-primary'
+                }`}
+              >
+                {customAction.label}
               </button>
             )}
           </div>
