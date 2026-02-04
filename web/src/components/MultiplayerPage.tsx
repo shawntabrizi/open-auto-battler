@@ -21,6 +21,10 @@ export function MultiplayerPage() {
   const [showLogs, setShowLogs] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
+  const [autoJoining, setAutoJoining] = useState(false);
+
+  // Check if we have a join parameter
+  const joinIdFromUrl = searchParams.get('join');
 
   // Get the join URL for QR code
   const joinUrl = myPeerId
@@ -29,15 +33,15 @@ export function MultiplayerPage() {
 
   // Check for join parameter in URL and auto-connect
   useEffect(() => {
-    const joinId = searchParams.get('join');
-    if (joinId && !peer) {
-      setTargetId(joinId);
+    if (joinIdFromUrl && !peer && !autoJoining) {
+      setAutoJoining(true);
+      setTargetId(joinIdFromUrl);
       // Auto-initialize and connect
       initializePeer().then(() => {
-        connectToPeer(joinId);
+        connectToPeer(joinIdFromUrl);
       }).catch(console.error);
     }
-  }, [searchParams, peer, initializePeer, connectToPeer]);
+  }, [joinIdFromUrl, peer, autoJoining, initializePeer, connectToPeer]);
 
   const handleHost = async () => {
     await initializePeer();
@@ -107,17 +111,29 @@ export function MultiplayerPage() {
         ) : (
           <>
             {!peer ? (
-              <div className="text-center py-4 lg:py-8">
-                <button
-                  onClick={handleHost}
-                  className="w-full max-w-xs mx-auto bg-blue-600 hover:bg-blue-500 py-3 lg:py-4 rounded-xl font-bold text-sm lg:text-lg transition-all active:scale-95"
-                >
-                  Initialize Network
-                </button>
-                <p className="text-[10px] lg:text-sm text-gray-400 mt-2 lg:mt-4">
-                  Generate your ID to host or join a game.
-                </p>
-              </div>
+              joinIdFromUrl ? (
+                // Auto-joining from QR code scan
+                <div className="text-center py-6 lg:py-8">
+                  <div className="w-12 h-12 lg:w-16 lg:h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3 lg:mb-4"></div>
+                  <h3 className="text-base lg:text-xl font-bold text-white mb-2">Connecting...</h3>
+                  <p className="text-[10px] lg:text-sm text-gray-400">
+                    Joining game: <span className="font-mono text-yellow-400">{joinIdFromUrl.slice(0, 12)}...</span>
+                  </p>
+                </div>
+              ) : (
+                // Manual initialization
+                <div className="text-center py-4 lg:py-8">
+                  <button
+                    onClick={handleHost}
+                    className="w-full max-w-xs mx-auto bg-blue-600 hover:bg-blue-500 py-3 lg:py-4 rounded-xl font-bold text-sm lg:text-lg transition-all active:scale-95"
+                  >
+                    Initialize Network
+                  </button>
+                  <p className="text-[10px] lg:text-sm text-gray-400 mt-2 lg:mt-4">
+                    Generate your ID to host or join a game.
+                  </p>
+                </div>
+              )
             ) : (
               <div className="flex flex-row lg:flex-col gap-3 lg:gap-6">
                 {/* Left side on mobile: QR Code + Your ID */}
