@@ -74,7 +74,7 @@ export function Shop() {
   };
 
   return (
-    <div className="shop h-48 bg-shop-bg border-t-2 border-gray-600">
+    <div className="shop h-48 bg-shop-bg border-t-2 border-gray-600 flex-shrink-0">
       <div className="flex h-full">
         {/* Left: Ash Pile */}
         <div
@@ -87,9 +87,9 @@ export function Shop() {
           onMouseLeave={handleAshMouseLeave}
           onDrop={handleAshDrop}
         >
-          <div className="text-sm text-gray-400 mb-2">Ash Pile</div>
+          <div className="ash-label text-sm text-gray-400 mb-2">Ash Pile</div>
           <div
-            className={`w-16 h-16 rounded-full bg-gradient-to-br from-red-900 to-orange-800 flex items-center justify-center text-2xl shadow-lg transition-all cursor-pointer border-2 border-orange-500/50 ${
+            className={`ash-circle w-16 h-16 rounded-full bg-gradient-to-br from-red-900 to-orange-800 flex items-center justify-center text-2xl shadow-lg transition-all cursor-pointer border-2 border-orange-500/50 ${
               isAshHovered
                 ? 'shadow-red-400/80 scale-110 ring-4 ring-red-400/30'
                 : 'shadow-red-900/50 hover:shadow-red-700/70'
@@ -107,7 +107,7 @@ export function Shop() {
           >
             🔥
           </div>
-          <div className="text-[10px] text-gray-500 mt-2 text-center px-2">
+          <div className="ash-hint text-[10px] text-gray-500 mt-2 text-center px-2">
             {isAshHovered ? 'BURN IT!' : 'Drop to Pitch'}
           </div>
         </div>
@@ -142,8 +142,8 @@ export function Shop() {
 
         {/* Right: Mana Tank */}
         <div className="shop-side w-32 flex flex-col items-center justify-center border-l border-gray-700">
-          <div className="text-sm text-gray-400 mb-2">Mana</div>
-          <div className="relative w-16 h-24 bg-gray-900 rounded-lg border-2 border-mana-blue mana-tank overflow-hidden">
+          <div className="mana-label text-sm text-gray-400 mb-2">Mana</div>
+          <div className="mana-container relative w-16 h-24 bg-gray-900 rounded-lg border-2 border-mana-blue mana-tank overflow-hidden">
             {/* Mana level */}
             <div
               className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-mana-blue to-blue-400 transition-all duration-300"
@@ -153,10 +153,10 @@ export function Shop() {
             />
             {/* Level text */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xl font-bold text-white drop-shadow-lg">{view.mana}</span>
+              <span className="mana-text text-xl font-bold text-white drop-shadow-lg">{view.mana}</span>
             </div>
           </div>
-          <div className="text-xs text-gray-400 mt-1">Limit: {view.mana_limit}</div>
+          <div className="mana-limit text-xs text-gray-400 mt-1">Limit: {view.mana_limit}</div>
         </div>
       </div>
     </div>

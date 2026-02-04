@@ -230,12 +230,12 @@ export function CardDetailPanel({
         )}
 
         {/* Card Basic Info */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-20 h-20 bg-gray-800 rounded-xl border-2 border-gray-700 flex items-center justify-center text-4xl shadow-inner">
+        <div className="card-info flex items-center gap-4 mb-6">
+          <div className="card-emoji w-20 h-20 bg-gray-800 rounded-xl border-2 border-gray-700 flex items-center justify-center text-4xl shadow-inner">
             {getCardEmoji(card.template_id)}
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white leading-tight">{card.name}</h2>
+          <div className="card-stats">
+            <h2 className="card-name text-2xl font-bold text-white leading-tight">{card.name}</h2>
             <div className="flex gap-2 mt-1">
               <span className="px-2 py-0.5 bg-red-900/50 text-red-400 border border-red-800 rounded text-xs font-bold">
                 ATK: {card.attack}
@@ -528,8 +528,8 @@ export function CardDetailPanel({
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-800 bg-black/20 text-[10px] text-gray-600 text-center uppercase tracking-tighter">
-        Manalimit Engine v0.2.0 • Build 2026.01
+      <div className="p-1 md:p-4 border-t border-gray-800 bg-black/20 text-[6px] md:text-[10px] text-gray-600 text-center uppercase tracking-tighter">
+        Manalimit Engine v0.2.0
       </div>
     </div>
   );

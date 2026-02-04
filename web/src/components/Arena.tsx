@@ -63,20 +63,9 @@ export function Arena() {
   };
 
   return (
-    <div className="arena flex-1 flex flex-col items-center justify-center gap-8 py-4">
-      <div className="flex gap-2 opacity-50">
-        <div className="text-sm text-gray-500 mr-4 self-center">Enemy</div>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="slot w-20 h-28 slot-empty">
-            <span className="text-gray-600 text-xs">?</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="text-2xl text-gray-500 font-bold">VS</div>
-
+    <div className="arena flex-1 flex flex-col items-center justify-center gap-4 py-4">
       <div className="flex gap-2">
-        <div className="text-sm text-gray-400 mr-4 self-center">Board</div>
+        <div className="board-label text-sm text-gray-400 mr-4 self-center">Board</div>
         {Array.from({ length: 5 }).map((_, displayIndex) => {
           const arrayIndex = 4 - displayIndex;
           const unit = view.board[arrayIndex];

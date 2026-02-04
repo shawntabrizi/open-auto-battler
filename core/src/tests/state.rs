@@ -61,7 +61,7 @@ fn test_hand_derivation_unique_indices() {
     }
 
     let hand = state.derive_hand_indices();
-    assert_eq!(hand.len(), 7, "Hand should have HAND_SIZE cards");
+    assert_eq!(hand.len(), 5, "Hand should have HAND_SIZE cards");
 
     // All indices should be unique
     let mut sorted = hand.clone();

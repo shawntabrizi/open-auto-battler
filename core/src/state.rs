@@ -15,7 +15,7 @@ use crate::types::*;
 use serde::{Deserialize, Serialize};
 
 /// Number of cards drawn per round as the player's hand
-pub const HAND_SIZE: usize = 7;
+pub const HAND_SIZE: usize = 5;
 /// Number of board slots
 pub const BOARD_SIZE: usize = 5;
 /// Starting lives

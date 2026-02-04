@@ -57,19 +57,19 @@ export function GameLayout() {
   const cardToShow = selectedCard || selectedBoardUnit;
 
   return (
-    <div className="game-layout h-full flex flex-col bg-board-bg">
+    <div className="game-layout h-screen flex flex-col bg-board-bg">
       {/* Zone 1: Top HUD */}
       <HUD />
 
       {/* Zone 2: Arena (Board) with left panel */}
       <div
-        className={`game-main flex-1 flex flex-col overflow-hidden ${showCardPanel ? 'ml-80 show-card-panel' : ''}`}
+        className={`game-main flex-1 flex flex-col overflow-hidden min-h-0 ${showCardPanel ? 'ml-80 show-card-panel' : ''}`}
       >
         <Arena />
       </div>
 
       {/* Zone 3: Command Deck (Shop) */}
-      <div className={`game-shop ${showCardPanel ? 'ml-80 show-card-panel' : ''}`}>
+      <div className={`game-shop flex-shrink-0 mt-auto ${showCardPanel ? 'ml-80 show-card-panel' : ''}`}>
         <Shop />
       </div>
 
@@ -80,7 +80,7 @@ export function GameLayout() {
       <BattleOverlay />
       <BagOverlay />
 
-      <div className="rotate-prompt" aria-hidden="true">
+      <div className="rotate-prompt hidden" aria-hidden="true">
         <div className="rotate-prompt__card">
           <div className="rotate-prompt__icon">⟳</div>
           <div className="rotate-prompt__title">Rotate your device</div>

@@ -62,38 +62,38 @@ export function UnitCard({
       `}
     >
       {/* Card name */}
-      <div className="text-xs font-bold text-center truncate mb-1">{card.name}</div>
+      <div className="card-title text-[0.45rem] md:text-xs font-bold text-center truncate mb-0.5 md:mb-1">{card.name}</div>
 
       {/* Card art placeholder */}
-      <div className="w-full h-14 bg-gray-700 rounded flex items-center justify-center text-2xl">
+      <div className="card-art w-full h-10 md:h-14 bg-gray-700 rounded flex items-center justify-center text-xl md:text-2xl">
         {getCardEmoji(card.template_id)}
       </div>
 
       {/* Stats row */}
-      <div className="flex justify-between items-center mt-1">
+      <div className="card-stats-row flex justify-between items-center mt-0.5 md:mt-1">
         {/* Attack */}
-        <div className="flex items-center text-sm">
-          <span className="text-red-400 mr-1">⚔</span>
+        <div className="flex items-center text-[0.5rem] md:text-sm">
+          <span className="text-red-400 mr-0.5 md:mr-1">⚔</span>
           <span className="font-bold">{card.attack}</span>
         </div>
 
         {/* Health */}
-        <div className="flex items-center text-sm">
+        <div className="flex items-center text-[0.5rem] md:text-sm">
           <span className="text-green-400">❤</span>
-          <span className="font-bold ml-1">{displayHealth}</span>
+          <span className="font-bold ml-0.5 md:ml-1">{displayHealth}</span>
         </div>
       </div>
 
       {/* Cost badge (top left) */}
       {showCost && (
-        <div className="absolute -top-2 -left-2 w-6 h-6 bg-mana-blue rounded-full flex items-center justify-center text-xs font-bold border-2 border-blue-300">
+        <div className="card-cost-badge absolute -top-1 -left-1 md:-top-2 md:-left-2 w-4 h-4 md:w-6 md:h-6 bg-mana-blue rounded-full flex items-center justify-center text-[0.5rem] md:text-xs font-bold border md:border-2 border-blue-300">
           {card.play_cost}
         </div>
       )}
 
       {/* Pitch value badge (top right) */}
       {showPitch && (
-        <div className="absolute -top-2 -right-2 w-6 h-6 bg-pitch-red rounded-full flex items-center justify-center text-xs font-bold border-2 border-red-300">
+        <div className="card-pitch-badge absolute -top-1 -right-1 md:-top-2 md:-right-2 w-4 h-4 md:w-6 md:h-6 bg-pitch-red rounded-full flex items-center justify-center text-[0.5rem] md:text-xs font-bold border md:border-2 border-red-300">
           {card.pitch_value}
         </div>
       )}
