@@ -164,7 +164,7 @@ body {
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   body {
     overflow: hidden;
   }
@@ -377,7 +377,7 @@ body {
   }
 }
 
-@media (max-width: 767px) and (orientation: portrait) {
+@media (max-width: 1023px) and (orientation: portrait) {
   .rotate-prompt {
     display: flex !important;
     position: fixed;
