@@ -201,16 +201,6 @@ body {
     display: none;
   }
 
-  .unit-card,
-  .empty-slot {
-    width: 4.5rem;
-    height: 6rem;
-  }
-
-  .unit-card {
-    padding: 0.2rem;
-  }
-
   .shop {
     height: 8.5rem;
     flex-shrink: 0;

@@ -17,7 +17,7 @@ const DamageNumber = ({
       className="absolute inset-0 flex items-center justify-center animate-float-up"
       onAnimationEnd={onAnimationEnd}
     >
-      <span className="text-4xl font-bold text-red-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+      <span className="text-2xl md:text-4xl font-bold text-red-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
         -{amount}
       </span>
     </div>
@@ -55,7 +55,7 @@ const StatChangeNumber = ({
       className="absolute inset-0 flex items-center justify-center animate-float-up"
       onAnimationEnd={onAnimationEnd}
     >
-      <span className="text-4xl font-bold text-green-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+      <span className="text-2xl md:text-4xl font-bold text-green-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
         {displayText}
       </span>
     </div>
@@ -66,7 +66,7 @@ const StatChangeNumber = ({
 const AbilityToast = ({ name, onAnimationEnd }: { name: string; onAnimationEnd: () => void }) => {
   return (
     <div
-      className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1 bg-yellow-500 text-black text-sm font-bold rounded-lg shadow-lg animate-fade-in-out"
+      className="absolute -top-6 md:-top-10 left-1/2 -translate-x-1/2 px-1.5 md:px-3 py-0.5 md:py-1 bg-yellow-500 text-black text-[10px] md:text-sm font-bold rounded md:rounded-lg shadow-lg animate-fade-in-out whitespace-nowrap z-20"
       onAnimationEnd={onAnimationEnd}
     >
       {name}
@@ -288,7 +288,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       return (
         <div
           key={`${team}-empty-${displayIndex}`}
-          className="w-24 h-32 rounded border border-gray-600 bg-gray-800/50 flex items-center justify-center"
+          className="w-[4.5rem] h-24 md:w-24 md:h-32 rounded border border-gray-600 bg-gray-800/50 flex items-center justify-center"
         >
           <span className="text-gray-600 text-xs">-</span>
         </div>
@@ -368,15 +368,15 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
   ];
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4 bg-gray-800 rounded-lg">
+    <div className="battle-arena flex flex-col items-center gap-2 md:gap-4 p-2 md:p-4 bg-gray-800 rounded-lg">
       {/* Speed Control */}
       <div className="flex items-center gap-1 flex-wrap justify-center">
-        <span className="text-white text-sm font-medium mr-2">Speed:</span>
+        <span className="text-white text-xs md:text-sm font-medium mr-1 md:mr-2">Speed:</span>
         {speedOptions.map((option) => (
           <button
             key={option.value}
             onClick={() => setPlaybackSpeed(option.value)}
-            className={`px-2 py-1 text-xs font-medium rounded ${playbackSpeed === option.value
+            className={`px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium rounded ${playbackSpeed === option.value
               ? 'bg-blue-600 text-white'
               : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
               }`}
@@ -387,18 +387,18 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       </div>
 
       {/* Battle Arena */}
-      <div className="flex items-center justify-center gap-8">
+      <div className="flex items-center justify-center gap-2 md:gap-8">
         {/* Player side (left) */}
-        <div className="flex gap-2">
+        <div className="flex gap-1 md:gap-2">
           {Array.from({ length: 5 }).map((_, i) =>
             renderUnit((playerBoard || [])[4 - i], 'player', 4 - i)
           )}
         </div>
 
-        <div className="text-4xl font-bold text-gray-500">VS</div>
+        <div className="text-xl md:text-4xl font-bold text-gray-500">VS</div>
 
         {/* Enemy side (right) */}
-        <div className="flex gap-2">
+        <div className="flex gap-1 md:gap-2">
           {Array.from({ length: 5 }).map((_, i) => renderUnit((enemyBoard || [])[i], 'enemy', i))}
         </div>
       </div>

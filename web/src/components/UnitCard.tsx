@@ -54,9 +54,9 @@ export function UnitCard({
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={`
-        unit-card card relative w-24 h-32 ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none bg-card-bg rounded-lg border-2 border-gray-600 p-2 transition-all duration-200
+        unit-card card relative w-[4.5rem] h-24 md:w-24 md:h-32 ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none bg-card-bg rounded-lg border-2 border-gray-600 p-1 md:p-2 transition-all duration-200
         ${isSelected ? 'card-selected ring-2 ring-yellow-400' : ''}
-        
+
         ${!can_afford && showCost ? 'opacity-60' : ''}
         ${isDragging ? 'opacity-50 scale-105' : ''}
       `}
@@ -123,7 +123,7 @@ export function EmptySlot({
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={`
-        empty-slot slot w-24 h-32 cursor-pointer bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-600 flex items-center justify-center transition-all duration-200
+        empty-slot slot w-[4.5rem] h-24 md:w-24 md:h-32 cursor-pointer bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-600 flex items-center justify-center transition-all duration-200
         ${isTarget ? 'border-yellow-400 bg-yellow-400/10' : ''}
       `}
     >
