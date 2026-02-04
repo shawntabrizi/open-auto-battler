@@ -38,7 +38,7 @@ export function BagOverlay() {
             Loading bag...
           </div>
         ) : (
-          <div className="grid grid-cols-3 lg:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 lg:gap-6 pb-4 lg:pb-12">
+          <div className="grid grid-cols-3 lg:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 lg:gap-6 pt-2 pb-4 lg:pb-12">
             {bagCards.map((card, i) => {
               return (
                 <div key={`${card.id}-${i}`} className="flex justify-center">

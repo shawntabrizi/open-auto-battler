@@ -192,9 +192,13 @@ body {
 
   .arena {
     gap: 0.5rem;
-    padding: 0.25rem 0;
+    padding: 0.5rem 0;
     flex: 1;
     min-height: 0;
+  }
+
+  .board-row {
+    padding-top: 0.25rem;
   }
 
   .board-label {
@@ -222,7 +226,7 @@ body {
   .hand-row {
     max-width: 100%;
     overflow-x: auto;
-    padding: 0 0.25rem;
+    padding: 0.35rem 0.25rem 0;
     scroll-snap-type: x mandatory;
     gap: 0.5rem;
   }

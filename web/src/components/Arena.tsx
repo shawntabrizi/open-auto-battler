@@ -64,7 +64,7 @@ export function Arena() {
 
   return (
     <div className="arena flex-1 flex flex-col items-center justify-center gap-4 py-4">
-      <div className="flex gap-2">
+      <div className="board-row flex gap-2">
         <div className="board-label text-sm text-gray-400 mr-4 self-center">Board</div>
         {Array.from({ length: 5 }).map((_, displayIndex) => {
           const arrayIndex = 4 - displayIndex;
