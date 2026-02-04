@@ -112,7 +112,7 @@ export function MultiplayerPage() {
               onClick={handleGoToGame}
               className="w-full max-w-xs mx-auto bg-blue-600 px-4 lg:px-6 py-2 lg:py-3 rounded font-bold hover:bg-blue-500 transition-colors text-sm lg:text-base"
             >
-              Return to Board
+              {status === 'in-game' ? 'Return to Board' : 'Start Game'}
             </button>
           </div>
         ) : (
