@@ -67,26 +67,32 @@ export function Shop() {
         {/* Center: Hand */}
         <div className="shop-hand flex-1 flex flex-col items-center justify-center">
           <div className="flex items-center gap-1 mb-2">
-            <span className="text-sm text-gray-400">Hand</span>
-            <span className="text-xs text-gray-500">({view.bag_count} in draw pool)</span>
+            <span className="text-sm text-gray-400 hidden lg:inline">Hand</span>
+            <span className="text-xs text-gray-500 hidden lg:inline">({view.bag_count} in draw pool)</span>
           </div>
 
           <div className="hand-row flex gap-3 lg:gap-4">
-            {view.hand
-              .map((card, i) => ({ card, index: i }))
-              .filter(({ card }) => card) // Only show non-null cards (not yet used)
-              .map(({ card, index: i }) => (
+            {view.hand.map((card, i) =>
+              card ? (
                 <DraggableCard
-                  key={`hand-${card!.id}-${i}`}
+                  key={`hand-${card.id}-${i}`}
                   id={`hand-${i}`}
-                  card={card!}
+                  card={card}
                   showCost={true}
                   showPitch={true}
                   can_afford={view.can_afford[i]}
                   isSelected={selection?.type === 'hand' && selection.index === i}
                   onClick={() => handleHandSlotClick(i)}
                 />
-              ))}
+              ) : (
+                <div
+                  key={`hand-empty-${i}`}
+                  className="card-slot-placeholder w-[4.5rem] h-24 lg:w-32 lg:h-44 rounded-lg border-2 border-dashed border-gray-600 bg-gray-800/30 flex items-center justify-center"
+                >
+                  <span className="text-gray-500 text-xs">H{i + 1}</span>
+                </div>
+              )
+            )}
           </div>
         </div>
 

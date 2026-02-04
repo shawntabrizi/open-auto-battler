@@ -249,11 +249,6 @@ body {
     padding: 0.25rem 0;
   }
 
-  .shop-hand .text-sm,
-  .shop-hand .text-xs {
-    display: none;
-  }
-
   .hand-row {
     max-width: 100%;
     overflow-x: auto;
