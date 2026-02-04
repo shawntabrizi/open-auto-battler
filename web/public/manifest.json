@@ -1,0 +1,17 @@
+{
+  "name": "Manalimit",
+  "short_name": "Manalimit",
+  "description": "Auto-battler card game",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0a0a14",
+  "theme_color": "#0a0a14",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -14,11 +14,14 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100svh; /* Small viewport height - accounts for mobile URL bar */
+  overscroll-behavior: none; /* Prevent pull-to-refresh */
 }
 
 #root {
   width: 100%;
   height: 100vh;
+  height: 100svh; /* Small viewport height - accounts for mobile URL bar */
 }
 
 /* Prevent unwanted touch behaviors during drag */

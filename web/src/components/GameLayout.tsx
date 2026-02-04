@@ -1,6 +1,5 @@
-import { DndContext, DragEndEvent, TouchSensor, MouseSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
-import { restrictToWindowEdges } from '@dnd-kit/modifiers';
-import { useState, useEffect } from 'react';
+import { DndContext, DragEndEvent, TouchSensor, MouseSensor, useSensor, useSensors, DragOverlay, Modifier } from '@dnd-kit/core';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { HUD } from './HUD';
 import { Arena } from './Arena';
 import { Shop } from './Shop';
@@ -14,6 +13,28 @@ import { useGameStore } from '../store/gameStore';
 export function GameLayout() {
   const { view, bag, cardSet, selection, isLoading, error, showBag, playHandCard, swapBoardPositions, pitchHandCard, pitchBoardUnit, setSelection } = useGameStore();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const gameLayoutRef = useRef<HTMLDivElement>(null);
+
+  // Custom modifier to restrict dragging to the game layout container
+  const restrictToGameLayout: Modifier = useCallback(({ transform, draggingNodeRect }) => {
+    if (!gameLayoutRef.current || !draggingNodeRect) {
+      return transform;
+    }
+
+    const layoutRect = gameLayoutRef.current.getBoundingClientRect();
+
+    // Calculate the bounds
+    const minX = layoutRect.left - draggingNodeRect.left;
+    const maxX = layoutRect.right - draggingNodeRect.right;
+    const minY = layoutRect.top - draggingNodeRect.top;
+    const maxY = layoutRect.bottom - draggingNodeRect.bottom;
+
+    return {
+      ...transform,
+      x: Math.min(Math.max(transform.x, minX), maxX),
+      y: Math.min(Math.max(transform.y, minY), maxY),
+    };
+  }, []);
 
   // Configure sensors for both mouse and touch
   const mouseSensor = useSensor(MouseSensor, {
@@ -158,8 +179,8 @@ export function GameLayout() {
   const activeCard = getActiveCard();
 
   return (
-    <DndContext sensors={sensors} modifiers={[restrictToWindowEdges]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="game-layout h-screen flex flex-col bg-board-bg">
+    <DndContext sensors={sensors} modifiers={[restrictToGameLayout]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div ref={gameLayoutRef} className="game-layout h-screen flex flex-col bg-board-bg">
         {/* Zone 1: Top HUD */}
         <HUD />
 
