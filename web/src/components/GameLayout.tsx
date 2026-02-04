@@ -1,5 +1,6 @@
 import { DndContext, DragEndEvent, TouchSensor, MouseSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
-import { useState } from 'react';
+import { restrictToWindowEdges } from '@dnd-kit/modifiers';
+import { useState, useEffect } from 'react';
 import { HUD } from './HUD';
 import { Arena } from './Arena';
 import { Shop } from './Shop';
@@ -80,6 +81,21 @@ export function GameLayout() {
     }
   };
 
+  // Prevent body scroll during drag
+  useEffect(() => {
+    if (activeId) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [activeId]);
+
   // Get the card being dragged for the overlay
   const getActiveCard = () => {
     if (!activeId || !view) return null;
@@ -142,7 +158,7 @@ export function GameLayout() {
   const activeCard = getActiveCard();
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} modifiers={[restrictToWindowEdges]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="game-layout h-screen flex flex-col bg-board-bg">
         {/* Zone 1: Top HUD */}
         <HUD />

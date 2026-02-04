@@ -21,6 +21,12 @@ body {
   height: 100vh;
 }
 
+/* Prevent unwanted touch behaviors during drag */
+.game-layout {
+  touch-action: pan-x pan-y;
+  overscroll-behavior: contain;
+}
+
 /* Card styles */
 .card {
   @apply bg-card-bg rounded-lg border-2 border-gray-600 p-2 transition-all duration-200;
