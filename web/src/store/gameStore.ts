@@ -13,8 +13,7 @@ interface GameEngine {
   undo: () => void;
   end_turn: () => void;
   continue_after_battle: () => void;
-  new_run: () => void;
-  new_run_with_seed: (seed: bigint) => void;
+  new_run: (seed: bigint) => void;
   get_state: () => any;
   get_board: () => any;
   resolve_battle_p2p: (player_board: any, enemy_board: any, seed: bigint) => any;
@@ -192,13 +191,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { engine } = get();
     if (!engine) return;
     try {
-      engine.new_run();
-      set({ 
-        view: engine.get_view(), 
+      // Use current timestamp as seed for single-player games
+      const seed = BigInt(Date.now());
+      engine.new_run(seed);
+      set({
+        view: engine.get_view(),
         cardSet: engine.get_card_set(), // Refresh card set on new run
-        battleOutput: null, 
-        selection: null, 
-        showBattleOverlay: false 
+        battleOutput: null,
+        selection: null,
+        showBattleOverlay: false
       });
     } catch (err) { console.error(err); }
   },
@@ -208,7 +209,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       // Use the player-specific seed for bag/hand generation
-      engine.new_run_with_seed(BigInt(playerSeed));
+      engine.new_run(BigInt(playerSeed));
       set({
         view: engine.get_view(),
         cardSet: engine.get_card_set(), // Refresh card set

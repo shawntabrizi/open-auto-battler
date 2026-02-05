@@ -288,12 +288,6 @@ impl GameEngine {
         Ok(())
     }
 
-    /// Buy a hand card and place it at a specific board slot (convenience for drag-and-drop)
-    #[wasm_bindgen]
-    pub fn buy_and_place(&mut self, hand_index: usize, board_slot: usize) -> Result<(), String> {
-        self.play_hand_card(hand_index, board_slot)
-    }
-
     /// Swap two board positions
     #[wasm_bindgen]
     pub fn swap_board_positions(&mut self, slot_a: usize, slot_b: usize) -> Result<(), String> {
@@ -428,21 +422,10 @@ impl GameEngine {
         Ok(())
     }
 
-    /// Start a new run (reset everything)
+    /// Start a new run with a seed (required for deterministic gameplay)
     #[wasm_bindgen]
-    pub fn new_run(&mut self) {
-        log::action("new_run", "Starting fresh run");
-        self.state = GameState::new(42);
-        self.last_battle_output = None;
-        self.initialize_bag();
-        self.start_planning_phase();
-        self.log_state();
-    }
-
-    /// Start a new run with a specific seed (for multiplayer)
-    #[wasm_bindgen]
-    pub fn new_run_with_seed(&mut self, seed: u64) {
-        log::action("new_run_with_seed", &format!("Starting run with seed {}", seed));
+    pub fn new_run(&mut self, seed: u64) {
+        log::action("new_run", &format!("Starting run with seed {}", seed));
         self.state = GameState::new(seed);
         self.last_battle_output = None;
         self.initialize_bag();
