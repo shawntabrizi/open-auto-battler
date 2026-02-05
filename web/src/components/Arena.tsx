@@ -2,7 +2,7 @@ import { useGameStore } from '../store/gameStore';
 import { DraggableCard, DroppableBoardSlot, DroppableEmptySlot } from './DndComponents';
 
 export function Arena() {
-  const { view, selection, setSelection } = useGameStore();
+  const { view, selection, setSelection, playHandCard } = useGameStore();
 
   if (!view) return null;
 
@@ -22,7 +22,12 @@ export function Arena() {
       }
     } else {
       // Clicked an empty slot
-      setSelection(null);
+      if (selection?.type === 'hand') {
+        // Place the selected hand card on this slot
+        playHandCard(selection.index, index);
+      } else {
+        setSelection(null);
+      }
     }
   };
 
