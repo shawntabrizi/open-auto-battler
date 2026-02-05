@@ -34,7 +34,7 @@ pub struct BattleOutput {
     pub events: Vec<CombatEvent>,
     pub initial_player_units: Vec<UnitView>,
     pub initial_enemy_units: Vec<UnitView>,
-    pub round: u32,  // The round this battle was for (for display during animation)
+    pub round: u32, // The round this battle was for (for display during animation)
 }
 
 /// Snapshot of turn state for undo functionality
@@ -321,7 +321,13 @@ impl GameEngine {
         }
 
         // Check slot is occupied before saving snapshot
-        if self.state.board.get(board_slot).map(|s| s.is_none()).unwrap_or(true) {
+        if self
+            .state
+            .board
+            .get(board_slot)
+            .map(|s| s.is_none())
+            .unwrap_or(true)
+        {
             return Err("Board slot is empty".to_string());
         }
 
@@ -353,10 +359,7 @@ impl GameEngine {
             return Err("Can only undo during shop phase".to_string());
         }
 
-        let snapshot = self
-            .undo_history
-            .pop()
-            .ok_or("Nothing to undo")?;
+        let snapshot = self.undo_history.pop().ok_or("Nothing to undo")?;
 
         self.current_mana = snapshot.mana;
         self.hand_used = snapshot.hand_used;
@@ -396,9 +399,21 @@ impl GameEngine {
     }
 
     /// Continue after battle (go to next shop phase or end game)
+    /// Idempotent: if already in Shop phase (e.g., after blockchain sync), this is a no-op.
     #[wasm_bindgen]
     pub fn continue_after_battle(&mut self) -> Result<(), String> {
         log::action("continue_after_battle", "Processing battle result");
+
+        // If already in Shop phase (e.g., after blockchain sync where battle was resolved on-chain),
+        // this is a no-op. The hand should already be drawn and planning phase started.
+        if self.state.phase == GamePhase::Shop {
+            log::debug(
+                "continue_after_battle",
+                "Already in Shop phase, skipping (idempotent)",
+            );
+            return Ok(());
+        }
+
         if self.state.phase != GamePhase::Battle {
             return Err("Not in battle phase".to_string());
         }

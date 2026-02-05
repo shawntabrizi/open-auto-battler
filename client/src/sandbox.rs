@@ -129,7 +129,7 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
         events,
         initial_player_units,
         initial_enemy_units,
-        round: 0,  // Sandbox doesn't have rounds
+        round: 0, // Sandbox doesn't have rounds
     };
 
     serde_wasm_bindgen::to_value(&output).unwrap_or(JsValue::NULL)
