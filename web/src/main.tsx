@@ -30,6 +30,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/blockchain/create-set" element={<CreateSetPage />} />
         <Route path="/presentations" element={<Suspense fallback={<div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading...</div>}><PresentationsPage /></Suspense>} />
         <Route path="/presentations/:id" element={<Suspense fallback={<div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading...</div>}><PresentationViewer /></Suspense>} />
+        <Route path="/presentations/:id/:slideNum" element={<Suspense fallback={<div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading...</div>}><PresentationViewer /></Suspense>} />
       </Routes>
     </HashRouter>
   </StrictMode>

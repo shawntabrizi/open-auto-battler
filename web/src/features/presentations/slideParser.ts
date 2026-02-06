@@ -75,16 +75,11 @@ function parseSlideContent(content: string): { html: string; components: Compone
   // Render markdown first
   let html = renderMarkdown(htmlContent);
 
-  console.log('[SlideParser] Before marker replacement:', html.includes('%%%'));
-  console.log('[SlideParser] htmlContent before markdown:', htmlContent.substring(0, 500));
-
   // Then replace layout markers with actual HTML
   html = html
     .replace(/%%%TWO_COL_START%%%/g, '<div class="slide-two-column"><div class="slide-column">')
     .replace(/%%%COL_BREAK%%%/g, '</div><div class="slide-column">')
     .replace(/%%%TWO_COL_END%%%/g, '</div></div>');
-
-  console.log('[SlideParser] After marker replacement, has two-column:', html.includes('slide-two-column'));
 
   return {
     html,

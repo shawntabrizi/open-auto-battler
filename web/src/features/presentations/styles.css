@@ -114,9 +114,9 @@
 /* Two-column layout */
 .slide-content .slide-two-column {
   display: flex;
-  gap: 3rem;
+  gap: 2rem;
   align-items: center;
-  margin: 1.5rem 0;
+  margin: 2rem 0;
 }
 
 .slide-content .slide-two-column > .slide-column {
@@ -128,6 +128,8 @@
   flex: 0 0 auto;
   display: flex;
   justify-content: center;
+  align-items: center;
+  padding: 1rem;
 }
 
 .slide-content .slide-two-column .component-placeholder {
