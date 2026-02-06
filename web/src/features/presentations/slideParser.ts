@@ -41,14 +41,27 @@ function parseSlideContent(content: string): { html: string; components: Compone
   const components: ComponentData[] = [];
 
   // Extract component declarations: <!-- component:type {"prop": "value"} -->
-  const componentPattern = /<!--\s*component:(\w+)\s+(\{[^}]+\})\s*-->/g;
+  // Note: [\w-]+ allows hyphens in component names like "unit-card"
+  // Note: [^}]* allows empty props like {}
+  const componentPattern = /<!--\s*component:([\w-]+)\s+(\{[^}]*\})\s*-->/g;
 
-  // Replace component declarations with placeholders and extract component data in one pass
-  console.log('[SlideParser] Parsing content, looking for components...');
+  // Replace component declarations with placeholders
+  // Use special markers for layout that won't be affected by markdown processing
   const htmlContent = content.replace(
     componentPattern,
     (_, type, propsStr) => {
-      console.log('[SlideParser] Found component:', type, propsStr);
+      // Layout components use special markers (will be replaced after markdown processing)
+      if (type === 'two-column-start') {
+        return '%%%TWO_COL_START%%%';
+      }
+      if (type === 'column-break') {
+        return '%%%COL_BREAK%%%';
+      }
+      if (type === 'two-column-end') {
+        return '%%%TWO_COL_END%%%';
+      }
+
+      // React components get placeholders
       try {
         const props = JSON.parse(propsStr);
         components.push({ type, props });
@@ -58,10 +71,23 @@ function parseSlideContent(content: string): { html: string; components: Compone
       return `<div class="component-placeholder" data-component="${type}" data-props='${propsStr}'></div>`;
     }
   );
-  console.log('[SlideParser] Components found:', components.length);
+
+  // Render markdown first
+  let html = renderMarkdown(htmlContent);
+
+  console.log('[SlideParser] Before marker replacement:', html.includes('%%%'));
+  console.log('[SlideParser] htmlContent before markdown:', htmlContent.substring(0, 500));
+
+  // Then replace layout markers with actual HTML
+  html = html
+    .replace(/%%%TWO_COL_START%%%/g, '<div class="slide-two-column"><div class="slide-column">')
+    .replace(/%%%COL_BREAK%%%/g, '</div><div class="slide-column">')
+    .replace(/%%%TWO_COL_END%%%/g, '</div></div>');
+
+  console.log('[SlideParser] After marker replacement, has two-column:', html.includes('slide-two-column'));
 
   return {
-    html: renderMarkdown(htmlContent),
+    html,
     components,
   };
 }

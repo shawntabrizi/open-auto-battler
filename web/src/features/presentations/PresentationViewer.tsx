@@ -53,25 +53,25 @@ export default function PresentationViewer() {
 
   // Render React components into placeholder divs
   useEffect(() => {
-    // Cleanup previous roots
-    componentRootsRef.current.forEach(root => root.unmount());
-    componentRootsRef.current = [];
-
     if (!slideContentRef.current) return;
 
+    // Store roots created in this effect run
+    const roots: ReturnType<typeof createRoot>[] = [];
+
     const placeholders = slideContentRef.current.querySelectorAll('.component-placeholder');
-    console.log('[Presentation] Slide HTML:', slideContentRef.current.innerHTML);
-    console.log('[Presentation] Found placeholders:', placeholders.length);
     placeholders.forEach(placeholder => {
       const componentType = placeholder.getAttribute('data-component');
       const propsStr = placeholder.getAttribute('data-props');
 
       if (!componentType || !propsStr) return;
 
+      // Skip if already has children (already rendered)
+      if (placeholder.children.length > 0) return;
+
       try {
         const props = JSON.parse(propsStr);
         const root = createRoot(placeholder);
-        componentRootsRef.current.push(root);
+        roots.push(root);
 
         if (componentType === 'unit-card') {
           const cardData: CardView = {
@@ -95,9 +95,21 @@ export default function PresentationViewer() {
       }
     });
 
+    // Update ref for cleanup
+    componentRootsRef.current = roots;
+
     return () => {
-      componentRootsRef.current.forEach(root => root.unmount());
-      componentRootsRef.current = [];
+      // Use setTimeout to defer unmount and avoid race condition
+      const rootsToUnmount = [...roots];
+      setTimeout(() => {
+        rootsToUnmount.forEach(root => {
+          try {
+            root.unmount();
+          } catch {
+            // Ignore errors if already unmounted
+          }
+        });
+      }, 0);
     };
   }, [currentSlide, slides]);
 

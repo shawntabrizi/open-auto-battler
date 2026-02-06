@@ -49,14 +49,20 @@ A **deck-building auto-battler** that combines the best elements of:
 
 # Anatomy of a Unit Card
 
-<!-- component:unit-card {"name": "Fire Elemental", "attack": 4, "health": 3, "play_cost": 3, "pitch_value": 2, "template_id": 5} -->
+<!-- component:two-column-start {} -->
+
+<!-- component:unit-card {"name": "Fire Elemental", "attack": 4, "health": 3, "play_cost": 3, "pitch_value": 2, "template_id": "fire_elemental"} -->
+
+<!-- component:column-break {} -->
 
 | Stat | Location | Meaning |
 |------|----------|---------|
-| **Mana Cost** | Top Left (Blue) | Mana required to play this card |
-| **Pitch Value** | Top Right (Red) | Mana gained when pitching this card |
+| **Mana Cost** | Top Left (Blue) | Mana required to play |
+| **Pitch Value** | Top Right (Red) | Mana gained when pitched |
 | **Attack** | Bottom Left (⚔) | Damage dealt when attacking |
-| **Health** | Bottom Right (❤) | Damage this unit can take before dying |
+| **Health** | Bottom Right (❤) | Damage before dying |
+
+<!-- component:two-column-end {} -->
 
 ---
 
@@ -64,12 +70,18 @@ A **deck-building auto-battler** that combines the best elements of:
 
 Every card can be **played** or **pitched**:
 
-<!-- component:unit-card {"name": "Dragon", "attack": 6, "health": 5, "play_cost": 5, "pitch_value": 3, "template_id": 8} -->
+<!-- component:two-column-start {} -->
+
+<!-- component:unit-card {"name": "Dragon Tyrant", "attack": 6, "health": 5, "play_cost": 5, "pitch_value": 3, "template_id": "dragon_tyrant"} -->
+
+<!-- component:column-break {} -->
 
 - **Play it**: Spend mana to put it on the board
 - **Pitch it**: Discard it to gain mana for other cards
 
 High-cost cards are powerful but require pitching other cards to afford them!
+
+<!-- component:two-column-end {} -->
 
 ---
 
