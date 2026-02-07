@@ -29,9 +29,9 @@ A **deck-building auto-battler** that combines the best elements of:
 # Core Game Loop
 
 ```
-┌─────────────┐     ┌─────────────┐
-│  Shop Phase │ ──► │Battle Phase │ ──► Repeat
-└─────────────┘     └─────────────┘
+  Shop Phase  ───►  Battle Phase
+      ▲                  │
+      └─── Repeat ───────┘
 ```
 
 - **Shop**: Build your board, manage resources
@@ -64,8 +64,27 @@ A **deck-building auto-battler** that combines the best elements of:
 | **Pitch Value** | Top Right (Red) | Mana gained when pitched |
 | **Attack** | Bottom Left (⚔) | Damage dealt when attacking |
 | **Health** | Bottom Right (❤) | Damage before dying |
+| **Abilities** | Center | Special effects triggered during battle |
 
 <!-- component:two-column-end {} -->
+
+---
+
+# Card Abilities
+
+<!-- component:two-column-start {} -->
+
+<!-- component:unit-card {"name": "Mana Reaper", "attack": 2, "health": 2, "play_cost": 8, "pitch_value": 2, "template_id": "mana_reaper", "abilities": [{"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Harvest the Rich", "description": "Destroy the highest mana cost enemy", "conditions": []}, {"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Cull the Weak", "description": "Destroy the lowest mana cost enemy", "conditions": []}]} -->
+
+<!-- component:column-break {} -->
+
+<!-- component:card-breakdown {"name": "Mana Reaper", "attack": 2, "health": 2, "play_cost": 8, "pitch_value": 2, "template_id": "mana_reaper", "abilities": [{"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Harvest the Rich", "description": "Destroy the highest mana cost enemy", "conditions": []}, {"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Cull the Weak", "description": "Destroy the lowest mana cost enemy", "conditions": []}]} -->
+
+<!-- component:two-column-end {} -->
+
+- **Trigger**: When does it activate? (e.g. OnStart, OnFaint, BeforeAttack)
+- **Effect**: What does it do? (e.g. Damage, Buff, Spawn, Destroy)
+- **Target**: Who does it affect? (e.g. Allies, Enemies, Self)
 
 ---
 
@@ -81,6 +100,7 @@ Every card can be **played** or **pitched**:
 
 - **Play it**: Spend mana to put it on the board
 - **Pitch it**: Discard it to gain mana for other cards
+     - You can also pitch cards from your existing board as an additional access to mana
 
 High-cost cards are powerful but require pitching other cards to afford them!
 

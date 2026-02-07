@@ -5,6 +5,7 @@ import { parseSlides, type Slide } from './slideParser';
 import { UnitCard } from '../../components/UnitCard';
 import { BattleSlideComponent } from './BattleSlideComponent';
 import { ShopSlideComponent } from './ShopSlideComponent';
+import { CardBreakdownComponent } from './CardBreakdownComponent';
 import type { CardView } from '../../types';
 import './styles.css';
 
@@ -117,6 +118,18 @@ export default function PresentationViewer() {
               <UnitCard card={cardData} showCost={props.showCost !== false} showPitch={props.showPitch !== false} />
             </div>
           );
+        } else if (componentType === 'card-breakdown') {
+          const cardData: CardView = {
+            id: props.id ?? 0,
+            template_id: String(props.template_id ?? '0'),
+            name: props.name || 'Unit',
+            attack: props.attack ?? 2,
+            health: props.health ?? 3,
+            play_cost: props.play_cost ?? 2,
+            pitch_value: props.pitch_value ?? 1,
+            abilities: props.abilities || [],
+          };
+          root.render(<CardBreakdownComponent card={cardData} />);
         } else if (componentType === 'shop-demo') {
           root.render(<ShopSlideComponent />);
         } else if (componentType === 'battle-arena') {

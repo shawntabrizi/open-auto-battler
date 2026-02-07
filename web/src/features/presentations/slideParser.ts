@@ -129,9 +129,24 @@ function renderMarkdown(md: string): string {
   html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
   html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
 
-  // Lists
-  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  // Lists (supports one level of nesting via indented sub-items)
+  html = html.replace(/(^[ \t]*- .+\n?)+/gm, (block) => {
+    let result = '<ul>';
+    for (const line of block.split('\n')) {
+      if (!line.trim()) continue;
+      const match = line.match(/^([ \t]+)?- (.+)$/);
+      if (!match) continue;
+      const indent = match[1];
+      const text = match[2];
+      if (indent && indent.length > 0) {
+        result += `<ul><li>${text}</li></ul>`;
+      } else {
+        result += `<li>${text}</li>`;
+      }
+    }
+    result += '</ul>';
+    return result;
+  });
 
   // Inline code (after code blocks)
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
