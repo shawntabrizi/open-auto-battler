@@ -34,18 +34,19 @@ A **deck-building auto-battler** that combines the best elements of:
 └─────────────┘     └─────────────┘
 ```
 
-**Shop**: Build your board, manage resources
-**Battle**: Watch your units fight automatically
-**Goal**: Win 10 battles before losing 3 lives
+- **Shop**: Build your board, manage resources
+- **Battle**: Watch your units fight automatically
+- **Goal**: Win 10 battles ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ before losing 3 lives ❤️❤️❤️
 
 ---
 
 # Key Mechanics
 
-- **Mana Limit**: Starts at 3, grows each round (up to 10)
-- **Pitching**: Sacrifice cards to generate mana
-- **Board Positioning**: 5 slots, order matters
-- **Priority System**: Determines attack and ability order
+<!-- component:shop-demo {} -->
+
+- **Pitch** cards to the ash pile → gain mana (red value)
+- **Play** cards to the board → spend mana (blue cost)
+- Remaining cards are shuffled back into the deck.
 
 ---
 

@@ -46,7 +46,7 @@ interface GameStore {
   showRawJson: boolean;
   showBag: boolean;
 
-  init: () => Promise<void>;
+  init: (seed?: bigint) => Promise<void>;
   pitchHandCard: (index: number) => void;
   playHandCard: (handIndex: number, boardSlot: number) => void;
   swapBoardPositions: (slotA: number, slotB: number) => void;
@@ -82,7 +82,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showRawJson: JSON.parse(localStorage.getItem('showRawJson') || 'false'),
   showBag: false,
 
-  init: async () => {
+  init: async (seed?: bigint) => {
     // If engine already exists, nothing to do
     if (get().engine) return;
     // If init is already in progress, return the existing promise to avoid race
@@ -96,7 +96,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           await wasm.default();
           wasmInitialized = true;
         }
-        const engine = new wasm.GameEngine(BigInt(Date.now()));
+        const engine = new wasm.GameEngine(seed ?? BigInt(Date.now()));
         set({
           engine,
           view: engine.get_view(),

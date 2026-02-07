@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { parseSlides, type Slide } from './slideParser';
 import { UnitCard } from '../../components/UnitCard';
 import { BattleSlideComponent } from './BattleSlideComponent';
+import { ShopSlideComponent } from './ShopSlideComponent';
 import type { CardView } from '../../types';
 import './styles.css';
 
@@ -116,6 +117,8 @@ export default function PresentationViewer() {
               <UnitCard card={cardData} showCost={props.showCost !== false} showPitch={props.showPitch !== false} />
             </div>
           );
+        } else if (componentType === 'shop-demo') {
+          root.render(<ShopSlideComponent />);
         } else if (componentType === 'battle-arena') {
           root.render(
             <BattleSlideComponent
