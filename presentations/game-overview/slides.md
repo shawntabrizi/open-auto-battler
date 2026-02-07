@@ -16,11 +16,13 @@ paginate: true
 
 # What is ManaLimit?
 
+<!-- component:battle-arena {"playerUnits": ["shield_bearer", "wolf_rider", "fire_elemental", "martyr_knight", "archer"], "enemyUnits": ["raging_orc", "spined_urchin", "zombie_captain", "necromancer", "sniper"], "seed": 42} -->
+
 A **deck-building auto-battler** that combines the best elements of:
 
-- **Magic: The Gathering** - Resource management, card pitching
-- **Super Auto Pets** - Auto-battling, board positioning
-- **Flesh and Blood** - Pitch system, tactical decisions
+- **Magic: The Gathering** - Resource management, deck building, card abilities
+- **Super Auto Pets** - Auto-battling, ghost opponents, board positioning
+- **Flesh and Blood** - Pitch system, deck control
 
 ---
 
@@ -133,6 +135,36 @@ Byte-perfect execution in both environments
 **Deterministic Randomness**
 - Player seeds + round number = predictable but unpredictable outcomes
 - Fair for both players, verifiable by anyone
+
+---
+
+# Engine Safety Limits
+
+The battle engine enforces **hard limits** to prevent abuse:
+
+| Limit | Value | Purpose |
+|-------|-------|---------|
+| Max Battle Rounds | 100 | Prevents infinite stalemates |
+| Max Triggers per Phase | 200 | Stops trigger loops |
+| Max Trigger Depth | 10 | Limits chain reactions |
+| Max Spawns per Battle | 100 | Prevents spawn floods |
+| Max Recursion Depth | 50 | Protects against stack overflow |
+
+---
+
+# Why Limits Matter
+
+**On-chain execution must be bounded**
+
+- Every computation costs gas/fees
+- Unbounded loops could halt the blockchain
+- Malicious cards could exploit infinite combos
+
+**Limits create fair play**
+
+- No "infinite combo" victories
+- Predictable battle duration
+- Equal resource usage for all players
 
 ---
 
@@ -380,6 +412,52 @@ Players can engage at their comfort level
 - **Spectator Mode**: Watch live tournaments
 - **Replay System**: Study and share great games
 - **AI Training**: Create smarter ghost opponents
+
+---
+
+# ZK-Powered Verification
+
+**Current approach**: Re-execute battles on-chain when disputed
+
+**Future approach**: Zero-knowledge proof verification
+
+```
+┌─────────────────┐     ┌─────────────┐     ┌────────────┐
+│  Battle Engine  │ ──► │   ZK VM     │ ──► │   Proof    │
+│     (Rust)      │     │   (SP1)     │     │            │
+└─────────────────┘     └─────────────┘     └─────┬──────┘
+                                                  │
+                                            ┌─────▼──────┐
+                                            │ On-chain   │
+                                            │ Verifier   │
+                                            └────────────┘
+```
+
+---
+
+# Why ZK Proofs?
+
+**Constant verification cost**
+
+- Proof verification is O(1) regardless of battle complexity
+- No need to re-execute entire battles on-chain
+- Dramatically reduced gas costs for disputes
+
+**Privacy options**
+
+- Prove battle outcome without revealing strategy
+- Hidden information mechanics become possible
+- Fog of war, hidden hands, secret abilities
+
+---
+
+# The Path to ZK
+
+1. **Today**: Deterministic WASM engine
+2. **Next**: Compile to ZK VM (SP1, RISC Zero)
+3. **Future**: On-chain proof verification only
+
+The same Rust code, compiled to a new target - minimal changes required
 
 ---
 

@@ -87,6 +87,8 @@ export function HomePage() {
           <Link to="/sandbox" className="hover:text-slate-400 active:text-slate-300 transition-colors">Sandbox</Link>
           <span>•</span>
           <Link to="/multiplayer" className="hover:text-slate-400 active:text-slate-300 transition-colors">P2P Multiplayer</Link>
+          <span>•</span>
+          <Link to="/presentations" className="hover:text-slate-400 active:text-slate-300 transition-colors">Presentations</Link>
         </div>
       </div>
 

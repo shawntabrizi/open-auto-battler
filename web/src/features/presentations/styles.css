@@ -132,6 +132,13 @@
   padding: 1rem;
 }
 
+/* Battle arena in slides */
+.battle-slide-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
 .slide-content .slide-two-column .component-placeholder {
   margin: 0;
 }

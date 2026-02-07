@@ -42,8 +42,8 @@ function parseSlideContent(content: string): { html: string; components: Compone
 
   // Extract component declarations: <!-- component:type {"prop": "value"} -->
   // Note: [\w-]+ allows hyphens in component names like "unit-card"
-  // Note: [^}]* allows empty props like {}
-  const componentPattern = /<!--\s*component:([\w-]+)\s+(\{[^}]*\})\s*-->/g;
+  // Note: \{[\s\S]*?\} lazily matches JSON props (supports nested arrays/objects)
+  const componentPattern = /<!--\s*component:([\w-]+)\s+(\{[\s\S]*?\})\s*-->/g;
 
   // Replace component declarations with placeholders
   // Use special markers for layout that won't be affected by markdown processing
@@ -99,7 +99,10 @@ function renderMarkdown(md: string): string {
     return `<pre><code class="language-${lang}">${escapeHtml(code.trim())}</code></pre>`;
   });
 
-  // Tables
+  // Ensure content ends with newline for consistent parsing
+  html = html + '\n';
+
+  // Tables - match rows that start and end with |, handle last row without trailing newline
   html = html.replace(/\n(\|.+\|\n)+/g, (match) => {
     const rows = match.trim().split('\n');
     let table = '<table class="slide-table">';

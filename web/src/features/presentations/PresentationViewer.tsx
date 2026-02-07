@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { createRoot } from 'react-dom/client';
 import { parseSlides, type Slide } from './slideParser';
 import { UnitCard } from '../../components/UnitCard';
+import { BattleSlideComponent } from './BattleSlideComponent';
 import type { CardView } from '../../types';
 import './styles.css';
 
@@ -14,7 +15,7 @@ export default function PresentationViewer() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const slideContentRef = useRef<HTMLDivElement>(null);
-  const componentRootsRef = useRef<ReturnType<typeof createRoot>[]>([]);
+  const componentRootsRef = useRef<Map<Element, ReturnType<typeof createRoot>>>(new Map());
 
   // Initialize slide from URL parameter or redirect to slide 1
   useEffect(() => {
@@ -77,8 +78,8 @@ export default function PresentationViewer() {
   useEffect(() => {
     if (!slideContentRef.current) return;
 
-    // Store roots created in this effect run
-    const roots: ReturnType<typeof createRoot>[] = [];
+    const rootMap = componentRootsRef.current;
+    const activePlaceholders = new Set<Element>();
 
     const placeholders = slideContentRef.current.querySelectorAll('.component-placeholder');
     placeholders.forEach(placeholder => {
@@ -87,13 +88,17 @@ export default function PresentationViewer() {
 
       if (!componentType || !propsStr) return;
 
-      // Skip if already has children (already rendered)
-      if (placeholder.children.length > 0) return;
+      activePlaceholders.add(placeholder);
 
       try {
         const props = JSON.parse(propsStr);
-        const root = createRoot(placeholder);
-        roots.push(root);
+
+        // Reuse existing root or create a new one
+        let root = rootMap.get(placeholder);
+        if (!root) {
+          root = createRoot(placeholder);
+          rootMap.set(placeholder, root);
+        }
 
         if (componentType === 'unit-card') {
           const cardData: CardView = {
@@ -111,28 +116,40 @@ export default function PresentationViewer() {
               <UnitCard card={cardData} showCost={props.showCost !== false} showPitch={props.showPitch !== false} />
             </div>
           );
+        } else if (componentType === 'battle-arena') {
+          root.render(
+            <BattleSlideComponent
+              playerUnits={props.playerUnits || []}
+              enemyUnits={props.enemyUnits || []}
+              seed={props.seed}
+            />
+          );
         }
       } catch (e) {
         console.error('Failed to render component:', e);
       }
     });
 
-    // Update ref for cleanup
-    componentRootsRef.current = roots;
-
-    return () => {
-      // Use setTimeout to defer unmount and avoid race condition
-      const rootsToUnmount = [...roots];
+    // Clean up roots for placeholders no longer in the DOM (slide changed)
+    // Defer unmount to avoid "synchronously unmount while rendering" warning
+    const staleRoots: ReturnType<typeof createRoot>[] = [];
+    for (const [element, root] of rootMap) {
+      if (!activePlaceholders.has(element)) {
+        staleRoots.push(root);
+        rootMap.delete(element);
+      }
+    }
+    if (staleRoots.length > 0) {
       setTimeout(() => {
-        rootsToUnmount.forEach(root => {
+        staleRoots.forEach(root => {
           try {
             root.unmount();
           } catch {
-            // Ignore errors if already unmounted
+            // Ignore if already unmounted
           }
         });
       }, 0);
-    };
+    }
   }, [currentSlide, slides]);
 
   if (loading) {
