@@ -6,6 +6,7 @@ import { UnitCard } from '../../components/UnitCard';
 import { BattleSlideComponent } from './BattleSlideComponent';
 import { ShopSlideComponent } from './ShopSlideComponent';
 import { CardCreatorSlideComponent } from './CardCreatorSlideComponent';
+import { SetCreatorSlideComponent } from './SetCreatorSlideComponent';
 import { CardBreakdownComponent } from './CardBreakdownComponent';
 import type { CardView } from '../../types';
 import './styles.css';
@@ -135,6 +136,8 @@ export default function PresentationViewer() {
           root.render(<ShopSlideComponent />);
         } else if (componentType === 'card-creator') {
           root.render(<CardCreatorSlideComponent />);
+        } else if (componentType === 'set-creator') {
+          root.render(<SetCreatorSlideComponent />);
         } else if (componentType === 'battle-arena') {
           root.render(
             <BattleSlideComponent

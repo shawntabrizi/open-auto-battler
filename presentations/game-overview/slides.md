@@ -277,13 +277,23 @@ Players ──► Tournaments ──► Rewards
 
 # Set Curation
 
-**Sets** are curated collections of cards
+<!-- component:set-creator {} -->
 
-- Curators select cards that create interesting metas
-- Sets can be themed, balanced, or experimental
-- Different sets = different game experiences
+- **Sets** are curated collections of cards.
+     - **Any** card can be fun... when put in the right set.
+- Curators select cards that create interesting strategies and metas.
+     - Likely many set curators will also be card creators for their set.
+- Players themselves curate sets based on how much fun they have playing.
 
-The meta is what **you** make it
+---
+
+# Tournaments
+
+Tournaments can be organized by the community!
+
+- Select a set for players to play.
+- Select an entry cost and prize pool.
+- Select a time period for the tournament.
 
 ---
 
@@ -297,51 +307,13 @@ Entry fees distributed to:
 | **Set Curators** | Creating fun metas |
 | **Card Creators** | Designing used cards |
 
-Everyone who contributes value captures value
+Players pay to play a game they enjoy.
+
+Everyone who contributes value captures value.
 
 ---
 
-# Creator Incentives
-
-**Card Creators**
-- Earn when their cards see play
-- Incentive to design fun, balanced cards
-
-**Set Curators**
-- Earn when their sets are used
-- Incentive to create engaging metas
-
-**A game that rewards its builders**
-
----
-
-# Verifiable Battles
-
-Anyone can verify any battle result:
-
-1. Take the two boards + seed
-2. Run through deterministic engine
-3. Get the exact same outcome
-
-**Trust minimized** - the code is the arbiter
-
----
-
-# What Makes It Different?
-
-**Infinite Customizability**
-
-The game is designed for the **community** to build it
-
-- Create your own cards
-- Curate your own sets
-- Design your own metas
-
-No fixed card pool - the possibilities are endless
-
----
-
-# Infinite Customizability
+# (Nearly) Infinite Design Space
 
 ---
 
