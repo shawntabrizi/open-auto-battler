@@ -16,8 +16,6 @@ paginate: true
 
 # What is ManaLimit?
 
-<!-- component:battle-arena {"playerUnits": ["shield_bearer", "wolf_rider", "fire_elemental", "martyr_knight", "archer"], "enemyUnits": ["raging_orc", "spined_urchin", "zombie_captain", "necromancer", "sniper"], "seed": 42} -->
-
 A **deck-building auto-battler** that combines the best elements of:
 
 - **Magic: The Gathering** - Resource management, deck building, card abilities
@@ -40,13 +38,28 @@ A **deck-building auto-battler** that combines the best elements of:
 
 ---
 
-# Key Mechanics
+# Shop Phase
 
 <!-- component:shop-demo {} -->
 
 - **Pitch** cards to the ash pile → gain mana (red value)
+     - Your total mana is limited, but grows with each turn.
 - **Play** cards to the board → spend mana (blue cost)
 - Remaining cards are shuffled back into the deck.
+     - Choose carefully what cards you pitch and what cards you keep!
+
+---
+
+# Battle Phase
+
+<!-- component:battle-arena {"playerUnits": ["shield_bearer", "wolf_rider", "fire_elemental", "martyr_knight", "archer"], "enemyUnits": ["raging_orc", "spined_urchin", "zombie_captain", "necromancer", "sniper"], "seed": 42} -->
+
+- Battles happen automatically against the opponent board.
+     - All combat and abilities resolve automatically and deterministically.
+- Strategy happens inside the shop phase where users chose:
+     - What cards they want to pitch.
+     - What cards they want to play.
+     - What order they want their board.
 
 ---
 
@@ -88,9 +101,9 @@ A **deck-building auto-battler** that combines the best elements of:
 
 ---
 
-# The Mana Trade-Off
+# Card Selection
 
-Every card can be **played** or **pitched**:
+Every card can be **played** and/or **pitched**:
 
 <!-- component:two-column-start {} -->
 
@@ -98,31 +111,32 @@ Every card can be **played** or **pitched**:
 
 <!-- component:column-break {} -->
 
-- **Play it**: Spend mana to put it on the board
-- **Pitch it**: Discard it to gain mana for other cards
-     - You can also pitch cards from your existing board as an additional access to mana
-
-High-cost cards are powerful but require pitching other cards to afford them!
+- **Play it**: Spend mana to put it on the board.
+- **Pitch it**: Discard it to gain mana for other cards.
+     - You can also pitch cards from your existing board as an additional access to mana.
+- High-cost cards are powerful but require pitching other cards to afford them!
+- Some cards may not provide a lot of mana to play other cards, but may be powerful on their own.
+- Cards may synergize with one another using different strategies.
 
 <!-- component:two-column-end {} -->
 
 ---
 
-# What Makes It Different?
-
-**Infinite Customizability**
-
-The game is designed for the **community** to build it
-
-- Create your own cards
-- Curate your own sets
-- Design your own metas
-
-No fixed card pool - the possibilities are endless
+# Built for Blockchain
 
 ---
 
-# Built for Blockchain
+# A Game Truly Enhanced by Blockchain
+
+Manalimit is designed end-to-end for the blockchain:
+
+- Technology of the Game
+- Mechanics of the Game
+- Ecosystem of the Game
+
+---
+
+# Technology of the Game
 
 ---
 
@@ -145,17 +159,14 @@ Byte-perfect execution in both environments
 
 ---
 
-# Full Determinism
+# On-Chain Randomness
 
-**No hidden randomness**
+Randomness is an important part of making games fun.
 
-- Every battle is reproducible given the same inputs
 - Seed-based RNG for "random" effects
-- Any dispute can be verified by re-running
-
-**Deterministic Randomness**
-- Player seeds + round number = predictable but unpredictable outcomes
-- Fair for both players, verifiable by anyone
+- Seed provided by the blockchain, and stored in the game state of the user
+     - Randomness cannot be controlled or manipulated by the player
+- Every battle is reproducible given the same inputs
 
 ---
 
@@ -163,7 +174,7 @@ Byte-perfect execution in both environments
 
 The battle engine enforces **hard limits** to prevent abuse:
 
-| Limit | Value | Purpose |
+| Limit | Value [1] | Purpose |
 |-------|-------|---------|
 | Max Battle Rounds | 100 | Prevents infinite stalemates |
 | Max Triggers per Phase | 200 | Stops trigger loops |
@@ -171,36 +182,54 @@ The battle engine enforces **hard limits** to prevent abuse:
 | Max Spawns per Battle | 100 | Prevents spawn floods |
 | Max Recursion Depth | 50 | Protects against stack overflow |
 
----
+**If a user's board reaches an engine limit, they forfeit that round.**
 
-# Why Limits Matter
-
-**On-chain execution must be bounded**
-
-- Every computation costs gas/fees
-- Unbounded loops could halt the blockchain
-- Malicious cards could exploit infinite combos
-
-**Limits create fair play**
-
-- No "infinite combo" victories
-- Predictable battle duration
-- Equal resource usage for all players
+- [1] Values here are just for example purposes, and should be adjusted based on benchmarks.
 
 ---
 
-# Asynchronous Design
+# Mechanics of the Game
 
-**Ghost Opponents**
+---
+
+# Ghost Opponents
 
 - You don't play against live opponents
 - You play against snapshots of other players' boards
+     - You are paired with other players which have the same **Rounds**, **Lives** (❤️), and **Wins** (⭐) as you.
 - No waiting, no coordination needed
+- The game is always populated with opponents!
+- Great for bootstrapping a community
 
-**Lightweight Messages**
+---
 
-- Only your actions go to the blockchain
-- Battles computed locally, verified on-chain if disputed
+# Automatic Game Balancing
+
+Every game you play will feel balanced because:
+
+- Pairing users with the same **Rounds** means they have had equal access to resources.
+- Pairing users with the same **Lives** (❤️) and **Wins** (⭐) means they are performing at an equal rate to you.
+
+If you are playing badly, you will be paired against those playing badly, and vice versa.
+
+The game is always challenging, but also always fun.
+
+---
+
+# Asynchronous Turns
+
+As you know, battles are entirely automatic, so no actions are needed here.
+The shop phase is designed to be fully asynchronous, and require only **one** transaction with the blockchain.
+
+- A single randomness seed is generated by the blockchain and stored in a user's game state.
+- This determines the user's hand, which cannot change (no card draw or reshuffling).
+- All actions in the shop are recorded and executed by the browser Wasm engine.
+     - With effects displayed to the user in real time.
+- When the user is done, they press "submit"!
+- The browser engine creates a compact summary of the user actions and sends it to the blockchain.
+- This is used to replicate the final state of the user, and is immediately used for battle!
+
+Users can literally put down and pick up the game at any time, without worry.
 
 ---
 
@@ -213,6 +242,20 @@ Anyone can verify any battle result:
 3. Get the exact same outcome
 
 **Trust minimized** - the code is the arbiter
+
+---
+
+# What Makes It Different?
+
+**Infinite Customizability**
+
+The game is designed for the **community** to build it
+
+- Create your own cards
+- Curate your own sets
+- Design your own metas
+
+No fixed card pool - the possibilities are endless
 
 ---
 
