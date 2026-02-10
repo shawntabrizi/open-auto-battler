@@ -3,6 +3,7 @@ import { useBlockchainStore } from '../store/blockchainStore';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { CardDetailPanel } from './CardDetailPanel';
+import { UnitCard } from './UnitCard';
 import { CardView } from '../types';
 
 export const CreateSetPage: React.FC = () => {
@@ -17,6 +18,7 @@ export const CreateSetPage: React.FC = () => {
   const [selectedCards, setSelectedCards] = useState<{ card_id: number, rarity: number }[]>([]);
   const [isCreatingSet, setIsCreatingSet] = useState(false);
   const [detailCard, setDetailCard] = useState<CardView | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (isConnected) {
@@ -129,51 +131,44 @@ export const CreateSetPage: React.FC = () => {
                   </span>
                 </h2>
 
+                <input
+                  type="text"
+                  placeholder="Search cards..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-3 py-2 mb-4 bg-slate-800 border border-white/10 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:border-yellow-500/50"
+                />
+
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {allCards.map(card => {
+                    {allCards.filter(card => {
+                      if (!searchQuery) return true;
+                      const json = JSON.stringify(card).toLowerCase();
+                      return json.includes(searchQuery.toLowerCase());
+                    }).map(card => {
                       const isSelected = selectedCards.some(c => c.card_id === card.id);
                       const isDetailing = detailCard?.id === card.id;
+                      const cardView = mapToCardView(card);
                       return (
                         <div
                           key={card.id}
                           className={`
-                            relative group p-4 rounded-xl border-2 transition-all flex flex-col
-                            ${isSelected ? 'bg-yellow-500/10 border-yellow-500 scale-[1.02]' : 'bg-slate-800 border-white/5 hover:border-white/20'}
-                            ${isDetailing ? 'ring-2 ring-blue-500' : ''}
+                            relative group flex flex-col items-center transition-all rounded-xl p-2
+                            ${isSelected ? 'bg-yellow-500/10 scale-[1.02]' : ''}
+                            ${isDetailing ? 'ring-2 ring-blue-500 rounded-xl' : ''}
                           `}
                         >
-                          <div 
-                            className="cursor-pointer flex-1"
-                            onClick={() => toggleCardSelection(card.id)}
-                          >
-                            <div className="text-3xl mb-2 text-center">{card.metadata.emoji}</div>
-                            <div className="text-xs font-bold text-center truncate uppercase opacity-90">{card.metadata.name}</div>
-                            <div className="flex justify-between mt-3 text-xs font-mono opacity-60">
-                              <span>{card.data.stats.attack}⚔️</span>
-                              <span>{card.data.stats.health}❤️</span>
-                            </div>
-                          </div>
-
-                          {/* Info Button - Toggle Detail Panel */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (isDetailing) {
-                                setDetailCard(null);
-                              } else {
-                                setDetailCard(mapToCardView(card));
-                              }
+                          <UnitCard
+                            card={cardView}
+                            isSelected={isSelected}
+                            onClick={() => {
+                              toggleCardSelection(card.id);
+                              setDetailCard(cardView);
                             }}
-                            className={`absolute top-2 left-2 transition-all p-1 rounded-md ${isDetailing ? 'bg-blue-600 text-white opacity-100' : 'opacity-0 group-hover:opacity-100 bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </button>
+                          />
 
                           {isSelected && (
-                            <div className="absolute -top-2 -right-2 bg-yellow-500 text-slate-950 rounded-full p-1 shadow-lg">
+                            <div className="absolute -top-2 -right-2 z-10 bg-yellow-500 text-slate-950 rounded-full p-1 shadow-lg">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
