@@ -367,13 +367,13 @@ Cards abilities are built from composable primitives:
 | OnFaint | ModifyStats | Adjacent | Allies |
 | OnAllyFaint | SpawnUnit | Random | Enemies |
 | OnHurt | Destroy | Standard | All |
-| OnSpawn | | All | AlliesOther |
-| OnAllySpawn | | | TriggerSource |
-| OnEnemySpawn | | | Aggressor |
-| BeforeUnitAttack | | | |
-| AfterUnitAttack | | | |
-| BeforeAnyAttack | | | |
-| AfterAnyAttack | | | |
+| OnSpawn | &nbsp; | All | AlliesOther |
+| OnAllySpawn | &nbsp; | &nbsp; | TriggerSource |
+| OnEnemySpawn | &nbsp; | &nbsp; | Aggressor |
+| BeforeUnitAttack | &nbsp; | &nbsp; | &nbsp; |
+| AfterUnitAttack | &nbsp; | &nbsp; | &nbsp; |
+| BeforeAnyAttack | &nbsp; | &nbsp; | &nbsp; |
+| AfterAnyAttack | &nbsp; | &nbsp; | &nbsp; |
 
 <!-- component:small-end {} -->
 
@@ -383,11 +383,48 @@ There is plenty of design space for more abilities!
 
 # Combining Primitives
 
+<!-- component:two-column-start {} -->
+
+<!-- component:small-start {} -->
+
+"Complex" Example:
+
+```json
+[{
+  "trigger": "BeforeUnitAttack",
+  "conditions": [{
+    "Is": { "StatValueCompare": {
+      "scope": "SelfUnit",
+      "stat": "Health",
+      "op": "LessThan",
+      "value": 3
+    }}
+  }],
+  "effect": {"ModifyStats": {
+    "attack": 2, "health": 0,
+    "target": { "All": "SelfUnit" }
+  }}
+}, {
+  "trigger": "BeforeUnitAttack",
+  "conditions": ["...same"],
+  "effect": { "SpawnUnit": {
+    "template_id": "1_1_token"
+  }}
+}]
+```
+
+<!-- component:small-end {} -->
+
+
+<!-- component:column-break {} -->
+
 - **Simple**: "OnFaint: Deal 2 damage to a random enemy"
 - **Complex**: "BeforeAttack: If this unit has less than 3 health, gain +2 attack and spawn a 1/1 token"
 - **Synergistic**: "OnAllyFaint: All allies gain +1/+1"
 
 The system enables emergent complexity from simple rules.
+
+<!-- component:two-column-end {} -->
 
 ---
 
@@ -481,61 +518,23 @@ Even without transactions, users benefit from the blockchain:
 
 ---
 
-# Treasury Subsidized Tournaments
+# Treasury Subsidies
+
+The treasury (or other incentivized entity) can bootstrap the game.
+
+## Tournaments
 
 To bootstrap initial tournaments, treasury can provide minimum prize support, ensuring that players and creators are rewarded early in the lifetime of the game.
 
----
+## Achievements
 
-# Treasury Subsidized Achievements
+Players can be incentivized to early adopt the game via rewards (limited play-to-earn):
 
 - Leaderboards.
 - Card usage goals.
 - Set usage goals.
 - Win streaks.
 - Etc.
-
----
-
-# Deeper Blockchain Integration
-
----
-
-# NFT Integration
-
-NFTs can enhance the experience:
-
-- **Card Art**: Custom images for cards.
-- **Themes**: Player backgrounds and UI skins.
-     - Could introduce modifiers to the battle board.
-- **Trophies**: Tournament wins and achievements.
-- **Cosmetics**: Board effects, animations.
-
-Your collection, your identity.
-
----
-
-# Governance Systems
-
-Community-driven curation:
-
-- "Standard" sets.
-
-- **Card Approval**: Vote on new cards entering sets.
-- **Set Standards**: Define rules for competitive play.
-- **Tournament Rules**: Community-decided formats.
-
-Decentralized game design.
-
----
-
-# Cross-Chain Possibilities
-
-- Cards as cross-chain assets.
-- Tournaments across multiple chains.
-- Shared card pools, separate economies.
-
-The game goes where the players are.
 
 ---
 
@@ -550,19 +549,23 @@ The game goes where the players are.
 - More complex interactions.
 - Deeper strategic possibilities.
 
-**Enhanced NFT Integration**
-- Animated cards.
-- Interactive boards.
-- Achievement systems.
+For example:
+
+- Shop effects.
+- Long term battle effects.
+- Long term modifications (stats, abilities, etc...)
 
 ---
 
-# Platform Evolution
+# NFT Integration
 
-- **Mobile Apps**: Native iOS/Android
-- **Spectator Mode**: Watch live tournaments
-- **Replay System**: Study and share great games
-- **AI Training**: Create smarter ghost opponents
+NFTs can enhance the experience:
+
+- **Card Art**: Custom images for cards.
+- **Themes**: Player backgrounds and UI skins.
+     - Could introduce modifiers to the battle board.
+- **Trophies**: Tournament wins and achievements.
+- **Cosmetics**: Board effects, animations.
 
 ---
 
@@ -584,31 +587,7 @@ The game goes where the players are.
                                             └────────────┘
 ```
 
----
-
-# Why ZK Proofs?
-
-**Constant verification cost**
-
 - Proof verification is O(1) regardless of battle complexity.
-- No need to re-execute entire battles on-chain.
-- Dramatically reduced gas costs for disputes.
-
-**Privacy options**
-
-- Prove battle outcome without revealing strategy.
-- Hidden information mechanics become possible.
-- Fog of war, hidden hands, secret abilities.
-
----
-
-# The Path to ZK
-
-1. **Today**: Deterministic WASM engine
-2. **Next**: Compile to ZK VM (SP1, RISC Zero)
-3. **Future**: On-chain proof verification only
-
-The same Rust code, compiled to a new target - minimal changes required.
 
 ---
 
@@ -616,8 +595,8 @@ The same Rust code, compiled to a new target - minimal changes required.
 
 A game that is:
 
-- **Owned** by its community
-- **Built** by its players
+- **Built** by its community
+- **Owned** by its players
 - **Sustained** by its economy
 
 Not just playing a game - **building** one together.
