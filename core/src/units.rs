@@ -1045,6 +1045,71 @@ pub fn get_starter_templates() -> Vec<CardTemplate> {
     ]
 }
 
+/// Returns the emoji for a given template_id.
+/// This is the single source of truth for card emojis across all environments.
+pub fn get_template_emoji(template_id: &str) -> &'static str {
+    match template_id {
+        // Goblins
+        "goblin_scout" => "👺",
+        "goblin_looter" => "💰",
+        "goblin_grunt" => "👹",
+        "nurse_goblin" => "🩺",
+        // Humans / Soldiers
+        "militia" => "🛡️",
+        "brave_commander" => "🫡",
+        "shield_bearer" => "🏰",
+        "shield_squire" => "🛡️",
+        "battle_hardened" => "💪",
+        "sniper" => "🎯",
+        "archer" => "🏹",
+        "pack_leader" => "👑",
+        "assassin" => "🥷",
+        "headhunter" => "🕵️",
+        "giant_slayer" => "🗡️",
+        "warder" => "💂",
+        "martyr_knight" => "🕯️",
+        // Orcs
+        "orc_warrior" => "⚔️",
+        "orc_shaman" => "🔮",
+        "raging_orc" => "🤬",
+        // Undead
+        "zombie_soldier" => "🧟",
+        "zombie_captain" => "🧟‍♂️",
+        "zombie_spawn" => "👶",
+        "zombie_breeder" => "🧟‍♀️",
+        "necromancer" => "🧙",
+        "corpse_cart" => "⚰️",
+        "lich" => "💀",
+        "golem" => "🗿",
+        // Beasts / Monsters
+        "abyssal_bomber" => "💣",
+        "artillery_mage" => "☄️",
+        "rear_guard" => "🧱",
+        "wolf_rider" => "🐺",
+        "troll_brute" => "🧌",
+        "troll_warrior" => "🪓",
+        "ogre_mauler" => "👊",
+        "ogre_warrior" => "🔨",
+        "giant_crusher" => "🦣",
+        "dragon_tyrant" => "🐉",
+        "behemoth" => "🐘",
+        "mana_reaper" => "⚖️",
+        "lone_wolf" => "🐕",
+        "rat_swarm" => "🐀",
+        "rat_token" => "🐀",
+        "scaredy_cat" => "🙀",
+        "spined_urchin" => "🦔",
+        "skeleton_archer" => "💀",
+        "vampire" => "🧛",
+        "fire_elemental" => "🔥",
+        "phoenix" => "🐦‍🔥",
+        "phoenix_egg" => "🥚",
+        "shield_master" => "👑",
+        "void_walker" => "🌑",
+        _ => "❓",
+    }
+}
+
 /// Get all card templates with unique, stable CardIds
 /// Returns a tuple of (UnitCard, rarity)
 pub fn get_all_templates() -> Vec<(UnitCard, u32)> {

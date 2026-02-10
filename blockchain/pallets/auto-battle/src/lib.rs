@@ -33,7 +33,7 @@ pub mod pallet {
     use manalimit_core::types::{EconomyStats, UnitStats};
     use manalimit_core::{
         get_opponent_for_round, resolve_battle,
-        units::{create_genesis_bag, get_all_templates},
+        units::{create_genesis_bag, get_all_templates, get_template_emoji},
         verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, GamePhase,
         GameState, UnitCard, XorShiftRng,
     };
@@ -385,12 +385,13 @@ pub mod pallet {
 
                 UserCards::<T>::insert(card_id, data);
 
+                let emoji = get_template_emoji(&card.template_id);
                 let metadata_entry = CardMetadataEntry {
                     creator: T::AccountId::decode(&mut frame::traits::TrailingZeroInput::zeroes())
                         .unwrap(),
                     metadata: CardMetadata {
                         name: BoundedVec::truncate_from(card.name.as_bytes().to_vec()),
-                        emoji: BoundedVec::default(),
+                        emoji: BoundedVec::truncate_from(emoji.as_bytes().to_vec()),
                         description: BoundedVec::default(),
                     },
                     created_at: Zero::zero(),
