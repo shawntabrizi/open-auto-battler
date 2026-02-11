@@ -15,7 +15,7 @@ interface HUDProps {
 }
 
 export function HUD({ hideEndTurn, customAction }: HUDProps) {
-  const { view, endTurn, engine, setShowBag, showBag, selection } = useGameStore();
+  const { view, endTurn, engine, setShowBag, showBag, selection, startingLives, winsToVictory } = useGameStore();
   const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } = useMultiplayerStore();
 
   // Local timer for the waiting player (who already submitted)
@@ -92,11 +92,11 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
         {/* Mobile: compact numeric */}
         <div className="flex lg:hidden items-center gap-1">
           <span className="text-red-500 text-lg">♥</span>
-          <span className="font-bold text-sm">{view.lives}/3</span>
+          <span className="font-bold text-sm">{view.lives}/{startingLives}</span>
         </div>
         {/* Desktop: full hearts */}
         <div className="hidden lg:flex gap-1">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: startingLives }).map((_, i) => (
             <span
               key={i}
               className={`text-2xl ${i < view.lives ? 'text-red-500' : 'text-gray-600'}`}
@@ -181,11 +181,11 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
         {/* Mobile: compact numeric */}
         <div className="flex lg:hidden items-center gap-1">
           <span className="text-gold text-lg">★</span>
-          <span className="font-bold text-sm">{view.wins}/10</span>
+          <span className="font-bold text-sm">{view.wins}/{winsToVictory}</span>
         </div>
         {/* Desktop: full stars */}
         <div className="hidden lg:flex gap-1">
-          {Array.from({ length: 10 }).map((_, i) => (
+          {Array.from({ length: winsToVictory }).map((_, i) => (
             <span key={i} className={`text-lg ${i < view.wins ? 'text-gold' : 'text-gray-600'}`}>
               ★
             </span>

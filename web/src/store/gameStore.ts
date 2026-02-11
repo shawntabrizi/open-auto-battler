@@ -21,6 +21,9 @@ interface GameEngine {
   get_commit_action_scale: () => Uint8Array;
   get_bag: () => number[];
   get_card_set: () => CardView[];
+  new_run_p2p: (seed: bigint, lives: number) => void;
+  get_starting_lives: () => number;
+  get_wins_to_victory: () => number;
 
   // Universal Bridge methods
   // Note: seed is bigint because wasm-bindgen binds Rust u64 to JS BigInt
@@ -45,6 +48,8 @@ interface GameStore {
   showBattleOverlay: boolean;
   showRawJson: boolean;
   showBag: boolean;
+  startingLives: number;
+  winsToVictory: number;
 
   init: (seed?: bigint) => Promise<void>;
   pitchHandCard: (index: number) => void;
@@ -62,7 +67,7 @@ interface GameStore {
   fetchBag: () => void; // Fetch bag IDs on demand
   getCommitAction: () => any;
 
-  startMultiplayerGame: (seed: number) => void;
+  startMultiplayerGame: (seed: number, lives?: number) => void;
   resolveMultiplayerBattle: (opponentBoard: any, seed: number) => void;
 }
 
@@ -81,6 +86,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showBattleOverlay: false,
   showRawJson: JSON.parse(localStorage.getItem('showRawJson') || 'false'),
   showBag: false,
+  startingLives: 3,
+  winsToVictory: 10,
 
   init: async (seed?: bigint) => {
     // If engine already exists, nothing to do
@@ -199,23 +206,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
         cardSet: engine.get_card_set(), // Refresh card set on new run
         battleOutput: null,
         selection: null,
-        showBattleOverlay: false
+        showBattleOverlay: false,
+        startingLives: 3,
+        winsToVictory: 10,
       });
     } catch (err) { console.error(err); }
   },
 
-  startMultiplayerGame: (playerSeed: number) => {
+  startMultiplayerGame: (playerSeed: number, lives?: number) => {
     const { engine } = get();
     if (!engine) return;
     try {
-      // Use the player-specific seed for bag/hand generation
-      engine.new_run(BigInt(playerSeed));
+      if (lives !== undefined) {
+        engine.new_run_p2p(BigInt(playerSeed), lives);
+      } else {
+        engine.new_run(BigInt(playerSeed));
+      }
       set({
         view: engine.get_view(),
-        cardSet: engine.get_card_set(), // Refresh card set
+        cardSet: engine.get_card_set(),
         battleOutput: null,
         selection: null,
-        showBattleOverlay: false
+        showBattleOverlay: false,
+        startingLives: engine.get_starting_lives(),
+        winsToVictory: engine.get_wins_to_victory(),
       });
     } catch (err) { console.error(err); }
   },

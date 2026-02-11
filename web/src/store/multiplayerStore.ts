@@ -24,7 +24,8 @@ interface MultiplayerState {
   gameSeed: number | null;        // Player's own seed for bag/hand generation
   battleSeed: number | null;      // Shared seed for battle resolution
   battleTimer: number | null;     // Countdown seconds when opponent is waiting
-  
+  lives: number;                  // Number of lives for P2P game
+
   // Actions
   initializePeer: () => Promise<string>;
   connectToPeer: (peerId: string) => void;
@@ -33,7 +34,7 @@ interface MultiplayerState {
   reset: () => void;
   setConnection: (conn: DataConnection) => void;
   setIsHost: (isHost: boolean) => void;
-  
+
   setOpponentReady: (ready: boolean) => void;
   setOpponentBoard: (board: any) => void;
   setIsReady: (ready: boolean) => void;
@@ -41,6 +42,7 @@ interface MultiplayerState {
   setBattleSeed: (seed: number) => void;
   setStatus: (status: ConnectionStatus) => void;
   setBattleTimer: (seconds: number | null) => void;
+  setLives: (lives: number) => void;
 }
 
 export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
@@ -58,6 +60,7 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
   gameSeed: null,
   battleSeed: null,
   battleTimer: null,
+  lives: 3,
 
   initializePeer: async () => {
     const existingPeer = get().peer;
@@ -119,8 +122,8 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
       conn.on('data', (data: any) => {
            // Handle START_GAME here to capture seeds even if MultiplayerManager hasn't mounted
            if (data && typeof data === 'object' && data.type === 'START_GAME') {
-               get().addLog(`Received START_GAME with playerSeed ${data.playerSeed}, battleSeed ${data.battleSeed}`);
-               set({ gameSeed: data.playerSeed, battleSeed: data.battleSeed, status: 'in-game' });
+               get().addLog(`Received START_GAME with playerSeed ${data.playerSeed}, battleSeed ${data.battleSeed}, lives ${data.lives ?? 3}`);
+               set({ gameSeed: data.playerSeed, battleSeed: data.battleSeed, lives: data.lives ?? 3, status: 'in-game' });
            }
            // Other messages are handled by MultiplayerManager
       });
@@ -165,6 +168,7 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
   setBattleSeed: (seed: number) => set({ battleSeed: seed }),
   setStatus: (status: ConnectionStatus) => set({ status }),
   setBattleTimer: (seconds: number | null) => set({ battleTimer: seconds }),
+  setLives: (lives: number) => set({ lives }),
 
   reset: () => {
       const { peer } = get();
@@ -182,7 +186,8 @@ export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
           opponentReady: false,
           gameSeed: null,
           battleSeed: null,
-          battleTimer: null
+          battleTimer: null,
+          lives: 3
       });
   }
 }));

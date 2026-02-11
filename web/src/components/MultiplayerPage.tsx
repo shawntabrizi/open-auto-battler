@@ -14,7 +14,10 @@ export function MultiplayerPage() {
     opponentPeerId,
     status,
     connectToPeer,
-    logs
+    logs,
+    isHost,
+    lives,
+    setLives,
   } = useMultiplayerStore();
 
   const [targetId, setTargetId] = useState('');
@@ -108,6 +111,26 @@ export function MultiplayerPage() {
             <p className="mb-3 lg:mb-6 text-gray-300 text-xs lg:text-base">
               Opponent: <span className="font-mono text-yellow-300 break-all">{opponentPeerId}</span>
             </p>
+            {isHost && status === 'connected' && (
+              <div className="mb-3 lg:mb-6">
+                <label className="block text-xs lg:text-sm text-gray-400 mb-1 lg:mb-2">Lives</label>
+                <div className="flex justify-center gap-2">
+                  {[1, 3, 5, 7].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setLives(n)}
+                      className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded font-bold text-sm lg:text-base transition-colors ${
+                        lives === n
+                          ? 'bg-red-500 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <button
               onClick={handleGoToGame}
               className="w-full max-w-xs mx-auto bg-blue-600 px-4 lg:px-6 py-2 lg:py-3 rounded font-bold hover:bg-blue-500 transition-colors text-sm lg:text-base"

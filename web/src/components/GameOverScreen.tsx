@@ -1,7 +1,7 @@
 import { useGameStore } from '../store/gameStore';
 
 export function GameOverScreen() {
-  const { view, newRun } = useGameStore();
+  const { view, newRun, winsToVictory } = useGameStore();
 
   if (!view) return null;
 
@@ -28,7 +28,7 @@ export function GameOverScreen() {
         {/* Message */}
         <p className="text-sm lg:text-xl text-gray-300 mb-4 lg:mb-8">
           {isVictory
-            ? 'Congratulations! You have conquered all 10 rounds!'
+            ? `Congratulations! You won ${winsToVictory === 10 ? 'all 10 rounds' : 'the match'}!`
             : 'Your forces have been overwhelmed. Try again!'}
         </p>
 

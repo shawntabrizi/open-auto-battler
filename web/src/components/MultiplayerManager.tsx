@@ -82,10 +82,11 @@ export function MultiplayerManager() {
           const guestPlayerSeed = Math.floor(Math.random() * 1000000);
           const sharedBattleSeed = Math.floor(Math.random() * 1000000);
 
+          const { lives } = useMultiplayerStore.getState();
           setGameSeed(hostPlayerSeed);
           setBattleSeed(sharedBattleSeed);
-          startMultiplayerGame(hostPlayerSeed);
-          sendMessage({ type: 'START_GAME', playerSeed: guestPlayerSeed, battleSeed: sharedBattleSeed });
+          startMultiplayerGame(hostPlayerSeed, lives);
+          sendMessage({ type: 'START_GAME', playerSeed: guestPlayerSeed, battleSeed: sharedBattleSeed, lives });
           setStatus('in-game');
       }
   }, [isHost, status, gameSeed, engine]);
@@ -95,8 +96,9 @@ export function MultiplayerManager() {
       if (guestGameStarted.current) return;
       if (!isHost && gameSeed !== null && engine && status === 'in-game') {
           guestGameStarted.current = true;
+          const { lives } = useMultiplayerStore.getState();
           addLog("Guest: Starting game with received seed...");
-          startMultiplayerGame(gameSeed);
+          startMultiplayerGame(gameSeed, lives);
       }
   }, [isHost, gameSeed, engine, status]);
 

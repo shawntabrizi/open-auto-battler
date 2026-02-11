@@ -52,6 +52,8 @@ pub struct GameEngine {
     state: GameState,
     set_id: u32,
     last_battle_output: Option<BattleOutput>,
+    starting_lives: i32,
+    wins_to_victory: i32,
     // Per-turn local tracking (transient, not persisted)
     current_mana: i32,
     hand_used: Vec<bool>,                // true = pitched or played
@@ -75,6 +77,8 @@ impl GameEngine {
             set_id: 0,
             state,
             last_battle_output: None,
+            starting_lives: STARTING_LIVES,
+            wins_to_victory: WINS_TO_VICTORY,
             current_mana: 0,
             hand_used: Vec::new(),
             action_log: Vec::new(),
@@ -418,7 +422,7 @@ impl GameEngine {
             return Err("Not in battle phase".to_string());
         }
 
-        if self.state.wins >= WINS_TO_VICTORY {
+        if self.state.wins >= self.wins_to_victory {
             self.state.phase = GamePhase::Victory;
             return Ok(());
         }
@@ -443,9 +447,32 @@ impl GameEngine {
         log::action("new_run", &format!("Starting run with seed {}", seed));
         self.state = GameState::new(seed);
         self.last_battle_output = None;
+        self.starting_lives = STARTING_LIVES;
+        self.wins_to_victory = WINS_TO_VICTORY;
         self.initialize_bag();
         self.start_planning_phase();
         self.log_state();
+    }
+
+    /// Start a new P2P run with a custom number of lives.
+    /// Victory condition becomes wins >= lives (symmetric resolution).
+    #[wasm_bindgen]
+    pub fn new_run_p2p(&mut self, seed: u64, lives: i32) {
+        let lives = lives.max(1).min(10);
+        self.new_run(seed);
+        self.state.lives = lives;
+        self.starting_lives = lives;
+        self.wins_to_victory = lives;
+    }
+
+    #[wasm_bindgen]
+    pub fn get_starting_lives(&self) -> i32 {
+        self.starting_lives
+    }
+
+    #[wasm_bindgen]
+    pub fn get_wins_to_victory(&self) -> i32 {
+        self.wins_to_victory
     }
 
     /// Get the full game state as JSON (for P2P sync)
