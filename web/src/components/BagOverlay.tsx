@@ -7,10 +7,11 @@ export function BagOverlay() {
 
   if (!showBag || !view) return null;
 
-  // Map bag IDs to CardView objects using the cardSet lookup
+  // Map bag IDs to CardView objects using the cardSet lookup, sorted by mana cost
   const bagCards = (bag ?? [])
     .map(id => cardSet?.find(c => c.id === id))
-    .filter((c): c is CardView => !!c);
+    .filter((c): c is CardView => !!c)
+    .sort((a, b) => a.play_cost - b.play_cost || a.name.localeCompare(b.name));
 
   return (
     <div className="fixed left-[11rem] lg:left-80 right-0 top-0 lg:top-16 bottom-0 lg:bottom-48 z-[60] bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300">
