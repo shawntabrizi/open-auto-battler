@@ -418,8 +418,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
         >
           <UnitCard
             card={{
-              id: 0, // Not used
-              template_id: unit.template_id,
+              id: unit.card_id,
               name: unit.name,
               attack: unit.attack,
               health: unit.health,

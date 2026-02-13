@@ -21,7 +21,7 @@ fn test_warder_seal_fate() {
     let rat_swarm = create_dummy_card(2, "Rat Swarm", 1, 1).with_ability(Ability {
         trigger: AbilityTrigger::OnFaint,
         effect: AbilityEffect::SpawnUnit {
-            template_id: "rat_token".to_string(),
+            card_id: CardId(40), // rat_token
         },
         name: "Infestation".to_string(),
         description: "Spawn token on death".to_string(),
@@ -32,7 +32,8 @@ fn test_warder_seal_fate() {
     let p_board = vec![CombatUnit::from_card(warder)];
     let e_board = vec![CombatUnit::from_card(rat_swarm)];
 
-    let events = run_battle(&p_board, &e_board, 42);
+    let card_pool = spawn_test_card_pool();
+    let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
     let trigger_event = events.iter().find(|e| {
         matches!(e, CombatEvent::AbilityTrigger { source_instance_id, ability_name }
@@ -65,7 +66,7 @@ fn test_necromancer_spawn_boost() {
     let rat_swarm = create_dummy_card(1, "Rat Swarm", 1, 1).with_ability(Ability {
         trigger: AbilityTrigger::OnFaint,
         effect: AbilityEffect::SpawnUnit {
-            template_id: "rat_token".to_string(),
+            card_id: CardId(40), // rat_token
         },
         name: "Infestation".to_string(),
         description: "Spawn token on death".to_string(),
@@ -96,7 +97,8 @@ fn test_necromancer_spawn_boost() {
     let killer = create_dummy_card(3, "Killer", 10, 10);
     let e_board = vec![CombatUnit::from_card(killer)];
 
-    let events = run_battle(&p_board, &e_board, 42);
+    let card_pool = spawn_test_card_pool();
+    let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
     let buff_event = events.iter().find(|e| {
         if let CombatEvent::AbilityModifyStats {
@@ -135,7 +137,7 @@ fn test_spawn_index_preservation() {
     let spawn_ability = create_ability(
         AbilityTrigger::OnFaint,
         AbilityEffect::SpawnUnit {
-            template_id: "zombie_spawn".to_string(),
+            card_id: CardId(42), // zombie_spawn
         },
         "Spawn",
     );
@@ -162,7 +164,8 @@ fn test_spawn_index_preservation() {
     ));
     let e_board = vec![CombatUnit::from_card(aoe_killer)];
 
-    let events = run_battle(&p_board, &e_board, 42);
+    let card_pool = spawn_test_card_pool();
+    let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
     let spawn_event = events
         .iter()
@@ -197,7 +200,7 @@ fn test_sacrifice_combo() {
     let lich_spawn = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::SpawnUnit {
-            template_id: "golem".to_string(),
+            card_id: CardId(43), // golem
         },
         "Raise",
     );
@@ -223,7 +226,8 @@ fn test_sacrifice_combo() {
     ];
     let e_board = vec![create_dummy_enemy()];
 
-    let events = run_battle(&p_board, &e_board, 42);
+    let card_pool = spawn_test_card_pool();
+    let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
     let triggers: Vec<&String> = events
         .iter()
@@ -260,7 +264,7 @@ fn test_damage_taken_no_slide_trigger() {
     let spawn_ability = create_ability(
         AbilityTrigger::OnHurt,
         AbilityEffect::SpawnUnit {
-            template_id: "zombie_spawn".to_string(),
+            card_id: CardId(42), // zombie_spawn
         },
         "Breed",
     );
@@ -275,7 +279,8 @@ fn test_damage_taken_no_slide_trigger() {
     ];
     let e_board = vec![CombatUnit::from_card(killer)];
 
-    let events = run_battle(&p_board, &e_board, 42);
+    let card_pool = spawn_test_card_pool();
+    let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
     let breed_triggers: Vec<_> = events
             .iter()
@@ -296,7 +301,7 @@ fn test_spawn_id_uniqueness_and_buffs() {
     let spawn_ability = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::SpawnUnit {
-            template_id: "zombie_spawn".to_string(),
+            card_id: CardId(42), // zombie_spawn
         },
         "Spawn",
     );
@@ -322,7 +327,8 @@ fn test_spawn_id_uniqueness_and_buffs() {
     ];
     let e_board = vec![create_dummy_enemy()];
 
-    let events = run_battle(&p_board, &e_board, 42);
+    let card_pool = spawn_test_card_pool();
+    let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
     let spawn_final_atk = events.iter().rev().find_map(|e| {
         if let CombatEvent::UnitSpawn { spawned_unit, .. } = e {
@@ -356,7 +362,7 @@ fn test_spawn_limit_logic() {
     let multi_spawn = create_ability(
         AbilityTrigger::OnFaint,
         AbilityEffect::SpawnUnit {
-            template_id: "zombie_spawn".to_string(),
+            card_id: CardId(42), // zombie_spawn
         },
         "MultiSpawn",
     );
@@ -377,7 +383,8 @@ fn test_spawn_limit_logic() {
     let killer = create_dummy_card(10, "Killer", 10, 10);
     let e_board = vec![CombatUnit::from_card(killer)];
 
-    let events = run_battle(&p_board, &e_board, 42);
+    let card_pool = spawn_test_card_pool();
+    let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
     let spawns = events
         .iter()

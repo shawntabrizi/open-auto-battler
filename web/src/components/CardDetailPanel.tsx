@@ -154,11 +154,7 @@ export function CardDetailPanel({
           const a = data.attack || 0;
           return `Give ${a >= 0 ? '+' : ''}${a}/${h >= 0 ? '+' : ''}${h} to ${getTargetDescription(data.target)}`;
         case 'SpawnUnit':
-          const templateId =
-            typeof data.template_id === 'string'
-              ? data.template_id
-              : data.template_id?.asText?.() || 'unit';
-          return `Spawn a ${templateId.replace('_', ' ')}`;
+          return `Spawn unit (card #${data.card_id ?? '?'})`;
         case 'Destroy':
           return `Destroy ${getTargetDescription(data.target)}`;
         default:
@@ -286,7 +282,7 @@ export function CardDetailPanel({
         {/* Card Basic Info */}
         <div className="card-info flex items-center gap-2 lg:gap-4 mb-3 lg:mb-6">
           <div className="card-emoji w-12 h-12 lg:w-20 lg:h-20 bg-gray-800 rounded-lg lg:rounded-xl border-2 border-gray-700 flex items-center justify-center text-2xl lg:text-4xl shadow-inner flex-shrink-0">
-            {getCardEmoji(card.template_id)}
+            {getCardEmoji(card.id)}
           </div>
           <div className="card-stats min-w-0">
             <h2 className="card-name text-base lg:text-2xl font-bold text-white leading-tight truncate">{card.name}</h2>
@@ -347,8 +343,7 @@ export function CardDetailPanel({
 
         {/* Metadata */}
         <div className="text-[10px] text-gray-500 font-mono flex flex-col gap-1 border-t border-gray-800 pt-4">
-          <div>TEMPLATE_ID: {card.template_id}</div>
-          <div>INSTANCE_ID: {card.id}</div>
+          <div>CARD_ID: {card.id}</div>
         </div>
 
         {/* Card Raw JSON */}

@@ -51,6 +51,7 @@ struct TurnSnapshot {
 pub struct GameEngine {
     state: GameState,
     set_id: u32,
+    card_set: Option<CardSet>,           // Loaded card set for bag generation
     last_battle_output: Option<BattleOutput>,
     starting_lives: i32,
     wins_to_victory: i32,
@@ -76,6 +77,7 @@ impl GameEngine {
         let mut engine = Self {
             set_id: 0,
             state,
+            card_set: None,
             last_battle_output: None,
             starting_lives: STARTING_LIVES,
             wins_to_victory: WINS_TO_VICTORY,
@@ -99,6 +101,38 @@ impl GameEngine {
         }
 
         engine
+    }
+
+    /// Load cards and sets from statically compiled card data.
+    /// Must be called before new_run() or init_from_scale().
+    #[wasm_bindgen]
+    pub fn load_card_set(&mut self, set_id: u32) -> Result<(), String> {
+        use manalimit_core::cards::{build_card_pool, get_all_sets};
+
+        log::action("load_card_set", &format!("Loading cards for set_id={}", set_id));
+
+        let card_pool = build_card_pool();
+        let sets = get_all_sets();
+        let card_set = sets
+            .into_iter()
+            .nth(set_id as usize)
+            .ok_or_else(|| format!("Set {} not found", set_id))?;
+
+        let num_cards = card_pool.len();
+        self.state.card_pool = card_pool;
+        self.card_set = Some(card_set);
+        self.set_id = set_id;
+
+        log::info(&format!("Loaded {} cards, set_id={}", num_cards, set_id));
+        Ok(())
+    }
+
+    /// Get card metadata (id, name, emoji) for all cards.
+    /// Used by the frontend to build the emoji display map.
+    #[wasm_bindgen]
+    pub fn get_card_metas(&self) -> JsValue {
+        let metas = manalimit_core::cards::get_all_card_metas();
+        serde_wasm_bindgen::to_value(&metas).unwrap_or(JsValue::NULL)
     }
 
     /// Helper to get a card from the pool
@@ -445,7 +479,10 @@ impl GameEngine {
     #[wasm_bindgen]
     pub fn new_run(&mut self, seed: u64) {
         log::action("new_run", &format!("Starting run with seed {}", seed));
+        // Preserve card_pool when resetting state
+        let card_pool = std::mem::take(&mut self.state.card_pool);
         self.state = GameState::new(seed);
+        self.state.card_pool = card_pool;
         self.last_battle_output = None;
         self.starting_lives = STARTING_LIVES;
         self.wins_to_victory = WINS_TO_VICTORY;
@@ -550,7 +587,7 @@ impl GameEngine {
 
         // Run the battle with deterministic RNG
         let mut rng = XorShiftRng::seed_from_u64(seed);
-        let events = resolve_battle(player_units.clone(), enemy_units.clone(), &mut rng);
+        let events = resolve_battle(player_units.clone(), enemy_units.clone(), &mut rng, &self.state.card_pool);
 
         // Generate initial views for UI animation
         let mut limits = manalimit_core::limits::BattleLimits::new();
@@ -561,7 +598,7 @@ impl GameEngine {
                 let card = self.get_card(u.card_id);
                 UnitView {
                     instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Player),
-                    template_id: card.template_id.clone(),
+                    card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack,
                     health: u.current_health,
@@ -578,7 +615,7 @@ impl GameEngine {
                 let card = self.get_card(u.card_id);
                 UnitView {
                     instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Enemy),
-                    template_id: card.template_id.clone(),
+                    card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack,
                     health: u.current_health,
@@ -689,13 +726,8 @@ impl GameEngine {
         let local_state: manalimit_core::state::LocalGameState = state_bounded.into();
 
         log::debug("init_from_scale", "Reconstructing GameState...");
-        // For now, we populate the card pool from all templates.
-        // In the future, we may need to pass definitions from the chain.
-        use manalimit_core::units::get_all_templates;
-        let mut card_pool = std::collections::BTreeMap::new();
-        for (card, _rarity) in get_all_templates() {
-            card_pool.insert(card.id, card);
-        }
+        // Use the card pool already loaded via load_card_set()
+        let card_pool = std::mem::take(&mut self.state.card_pool);
 
         let state = GameState::reconstruct(card_pool, set_id, local_state);
 
@@ -735,22 +767,16 @@ impl GameEngine {
     }
 
     fn initialize_bag(&mut self) {
+        use manalimit_core::units::create_genesis_bag;
+
         self.state.local_state.bag.clear();
-        self.state.card_pool.clear();
 
-        // Use get_card_set to populate pool
-        use manalimit_core::units::{create_genesis_bag, get_all_templates, get_card_set};
-        if let Some(card_set) = get_card_set(self.set_id) {
-            // Populate card pool from templates
-            for (card, _rarity) in get_all_templates() {
-                self.state.card_pool.insert(card.id, card);
-            }
-
-            // Generate random bag of 100 cards from the set
-            self.state.local_state.bag = create_genesis_bag(&card_set, self.state.game_seed);
+        if let Some(card_set) = &self.card_set {
+            // Generate random bag of 100 cards from the already-loaded set
+            self.state.local_state.bag = create_genesis_bag(card_set, self.state.game_seed);
         }
 
-        // Set next_card_id to be after templates
+        // Set next_card_id to be after card definitions
         self.state.local_state.next_card_id = 1000;
 
         // Draw initial hand once bag is ready
@@ -790,13 +816,13 @@ impl GameEngine {
         let battle_seed = self.state.round as u64;
         let enemy_units = get_opponent_for_round(
             self.state.round,
-            &mut self.state.next_card_id,
             battle_seed + 999,
+            &self.state.card_pool,
         )
         .expect("Failed to generate opponent for round");
 
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-        let events = resolve_battle(player_units, enemy_units, &mut rng);
+        let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool);
 
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {
@@ -818,7 +844,7 @@ impl GameEngine {
                 let card = self.get_card(u.card_id);
                 UnitView {
                     instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Player),
-                    template_id: card.template_id.clone(),
+                    card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack,
                     health: u.current_health,
@@ -828,17 +854,16 @@ impl GameEngine {
             .collect();
 
         limits.reset_phase_counters(); // Reset for enemy
-        let mut enemy_instance_counter = 0;
         let initial_enemy_units: Vec<UnitView> = get_opponent_for_round(
             self.state.round,
-            &mut enemy_instance_counter, // Dummy counter to get same results
             battle_seed + 999,
+            &self.state.card_pool,
         )
         .unwrap()
         .into_iter()
         .map(|cu| UnitView {
             instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Enemy),
-            template_id: cu.template_id,
+            card_id: cu.card_id,
             name: cu.name,
             attack: cu.attack,
             health: cu.health,

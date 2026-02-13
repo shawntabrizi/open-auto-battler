@@ -107,7 +107,6 @@ export default function PresentationViewer() {
         if (componentType === 'unit-card') {
           const cardData: CardView = {
             id: props.id ?? 0,
-            template_id: String(props.template_id ?? '0'),
             name: props.name || 'Unit',
             attack: props.attack ?? 2,
             health: props.health ?? 3,
@@ -123,7 +122,6 @@ export default function PresentationViewer() {
         } else if (componentType === 'card-breakdown') {
           const cardData: CardView = {
             id: props.id ?? 0,
-            template_id: String(props.template_id ?? '0'),
             name: props.name || 'Unit',
             attack: props.attack ?? 2,
             health: props.health ?? 3,

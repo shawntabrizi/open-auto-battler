@@ -221,12 +221,8 @@ impl<MaxConditions: Get<u32>> From<BoundedCondition<MaxConditions>> for Conditio
 
 // --- Bounded Ability Effect ---
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
-#[scale_info(skip_type_params(MaxStringLen))]
-pub enum BoundedAbilityEffect<MaxStringLen>
-where
-    MaxStringLen: Get<u32>,
-{
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen, Clone, PartialEq, Eq, Debug)]
+pub enum BoundedAbilityEffect {
     Damage {
         amount: i32,
         target: AbilityTarget,
@@ -237,103 +233,14 @@ where
         target: AbilityTarget,
     },
     SpawnUnit {
-        template_id: BoundedVec<u8, MaxStringLen>,
+        card_id: CardId,
     },
     Destroy {
         target: AbilityTarget,
     },
 }
 
-impl<MaxStringLen: Get<u32>> Clone for BoundedAbilityEffect<MaxStringLen> {
-    fn clone(&self) -> Self {
-        match self {
-            Self::Damage { amount, target } => Self::Damage {
-                amount: *amount,
-                target: target.clone(),
-            },
-            Self::ModifyStats {
-                health,
-                attack,
-                target,
-            } => Self::ModifyStats {
-                health: *health,
-                attack: *attack,
-                target: target.clone(),
-            },
-            Self::SpawnUnit { template_id } => Self::SpawnUnit {
-                template_id: template_id.clone(),
-            },
-            Self::Destroy { target } => Self::Destroy {
-                target: target.clone(),
-            },
-        }
-    }
-}
-
-impl<MaxStringLen: Get<u32>> PartialEq for BoundedAbilityEffect<MaxStringLen> {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (
-                Self::Damage {
-                    amount: a1,
-                    target: t1,
-                },
-                Self::Damage {
-                    amount: a2,
-                    target: t2,
-                },
-            ) => a1 == a2 && t1 == t2,
-            (
-                Self::ModifyStats {
-                    health: h1,
-                    attack: at1,
-                    target: t1,
-                },
-                Self::ModifyStats {
-                    health: h2,
-                    attack: at2,
-                    target: t2,
-                },
-            ) => h1 == h2 && at1 == at2 && t1 == t2,
-            (Self::SpawnUnit { template_id: id1 }, Self::SpawnUnit { template_id: id2 }) => {
-                id1 == id2
-            }
-            (Self::Destroy { target: t1 }, Self::Destroy { target: t2 }) => t1 == t2,
-            _ => false,
-        }
-    }
-}
-
-impl<MaxStringLen: Get<u32>> Eq for BoundedAbilityEffect<MaxStringLen> {}
-
-impl<MaxStringLen: Get<u32>> Debug for BoundedAbilityEffect<MaxStringLen> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::Damage { amount, target } => f
-                .debug_struct("Damage")
-                .field("amount", amount)
-                .field("target", target)
-                .finish(),
-            Self::ModifyStats {
-                health,
-                attack,
-                target,
-            } => f
-                .debug_struct("ModifyStats")
-                .field("health", health)
-                .field("attack", attack)
-                .field("target", target)
-                .finish(),
-            Self::SpawnUnit { template_id } => f
-                .debug_struct("SpawnUnit")
-                .field("template_id", template_id)
-                .finish(),
-            Self::Destroy { target } => f.debug_struct("Destroy").field("target", target).finish(),
-        }
-    }
-}
-
-impl<MaxStringLen: Get<u32>> From<AbilityEffect> for BoundedAbilityEffect<MaxStringLen> {
+impl From<AbilityEffect> for BoundedAbilityEffect {
     fn from(effect: AbilityEffect) -> Self {
         match effect {
             AbilityEffect::Damage { amount, target } => Self::Damage { amount, target },
@@ -346,16 +253,16 @@ impl<MaxStringLen: Get<u32>> From<AbilityEffect> for BoundedAbilityEffect<MaxStr
                 attack,
                 target,
             },
-            AbilityEffect::SpawnUnit { template_id } => Self::SpawnUnit {
-                template_id: string_to_bounded(template_id),
+            AbilityEffect::SpawnUnit { card_id } => Self::SpawnUnit {
+                card_id,
             },
             AbilityEffect::Destroy { target } => Self::Destroy { target },
         }
     }
 }
 
-impl<MaxStringLen: Get<u32>> From<BoundedAbilityEffect<MaxStringLen>> for AbilityEffect {
-    fn from(bounded: BoundedAbilityEffect<MaxStringLen>) -> Self {
+impl From<BoundedAbilityEffect> for AbilityEffect {
+    fn from(bounded: BoundedAbilityEffect) -> Self {
         match bounded {
             BoundedAbilityEffect::Damage { amount, target } => {
                 AbilityEffect::Damage { amount, target }
@@ -369,8 +276,8 @@ impl<MaxStringLen: Get<u32>> From<BoundedAbilityEffect<MaxStringLen>> for Abilit
                 attack,
                 target,
             },
-            BoundedAbilityEffect::SpawnUnit { template_id } => AbilityEffect::SpawnUnit {
-                template_id: bounded_to_string(template_id),
+            BoundedAbilityEffect::SpawnUnit { card_id } => AbilityEffect::SpawnUnit {
+                card_id,
             },
             BoundedAbilityEffect::Destroy { target } => AbilityEffect::Destroy { target },
         }
@@ -387,7 +294,7 @@ where
     MaxConditions: Get<u32>,
 {
     pub trigger: AbilityTrigger,
-    pub effect: BoundedAbilityEffect<MaxStringLen>,
+    pub effect: BoundedAbilityEffect,
     pub name: BoundedVec<u8, MaxStringLen>,
     pub description: BoundedVec<u8, MaxStringLen>,
     pub conditions: BoundedVec<BoundedCondition<MaxConditions>, MaxConditions>,
@@ -490,7 +397,6 @@ where
     MaxConditions: Get<u32>,
 {
     pub id: CardId,
-    pub template_id: BoundedVec<u8, MaxStringLen>,
     pub name: BoundedVec<u8, MaxStringLen>,
     pub stats: UnitStats,
     pub economy: EconomyStats,
@@ -503,7 +409,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Cl
     fn clone(&self) -> Self {
         Self {
             id: self.id,
-            template_id: self.template_id.clone(),
             name: self.name.clone(),
             stats: self.stats.clone(),
             economy: self.economy.clone(),
@@ -517,7 +422,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Pa
 {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
-            && self.template_id == other.template_id
             && self.name == other.name
             && self.stats == other.stats
             && self.economy == other.economy
@@ -536,7 +440,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> De
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedUnitCard")
             .field("id", &self.id)
-            .field("template_id", &self.template_id)
             .field("name", &self.name)
             .field("stats", &self.stats)
             .field("economy", &self.economy)
@@ -555,7 +458,6 @@ where
     fn from(card: UnitCard) -> Self {
         Self {
             id: card.id,
-            template_id: string_to_bounded(card.template_id),
             name: string_to_bounded(card.name),
             stats: card.stats,
             economy: card.economy,
@@ -576,7 +478,6 @@ where
     fn from(bounded: BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>) -> Self {
         Self {
             id: bounded.id,
-            template_id: bounded_to_string(bounded.template_id),
             name: bounded_to_string(bounded.name),
             stats: bounded.stats,
             economy: bounded.economy,
@@ -1123,7 +1024,7 @@ where
     MaxConditions: Get<u32>,
 {
     pub instance_id: UnitId,
-    pub template_id: BoundedVec<u8, MaxStringLen>,
+    pub card_id: CardId,
     pub name: BoundedVec<u8, MaxStringLen>,
     pub attack: i32,
     pub health: i32,
@@ -1136,7 +1037,7 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Cl
     fn clone(&self) -> Self {
         Self {
             instance_id: self.instance_id,
-            template_id: self.template_id.clone(),
+            card_id: self.card_id,
             name: self.name.clone(),
             attack: self.attack,
             health: self.health,
@@ -1150,7 +1051,7 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Pa
 {
     fn eq(&self, other: &Self) -> bool {
         self.instance_id == other.instance_id
-            && self.template_id == other.template_id
+            && self.card_id == other.card_id
             && self.name == other.name
             && self.attack == other.attack
             && self.health == other.health
@@ -1169,7 +1070,7 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> De
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("BoundedUnitView")
             .field("instance_id", &self.instance_id)
-            .field("template_id", &self.template_id)
+            .field("card_id", &self.card_id)
             .field("name", &self.name)
             .field("attack", &self.attack)
             .field("health", &self.health)
@@ -1188,7 +1089,7 @@ where
     fn from(uv: crate::battle::UnitView) -> Self {
         Self {
             instance_id: uv.instance_id,
-            template_id: string_to_bounded(uv.template_id),
+            card_id: uv.card_id,
             name: string_to_bounded(uv.name),
             attack: uv.attack,
             health: uv.health,
@@ -1209,7 +1110,7 @@ where
     fn from(bounded: BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>) -> Self {
         Self {
             instance_id: bounded.instance_id,
-            template_id: bounded_to_string(bounded.template_id),
+            card_id: bounded.card_id,
             name: bounded_to_string(bounded.name),
             attack: bounded.attack,
             health: bounded.health,

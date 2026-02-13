@@ -5,7 +5,7 @@ import { CardDetailPanel } from './CardDetailPanel';
 import { BattleOverlay } from './BattleOverlay';
 import { RotatePrompt } from './RotatePrompt';
 import { useInitGuard } from '../hooks';
-import type { UnitTemplateView } from '../types';
+import type { CardView } from '../types';
 
 export function SandboxPage() {
   const init = useSandboxStore((state) => state.init);
@@ -16,17 +16,8 @@ export function SandboxPage() {
     init();
   }, [init]);
 
-  // Convert selectedTemplate to CardView format for CardDetailPanel
-  const selectedCard = selectedTemplate ? {
-    id: 0,
-    template_id: selectedTemplate.template_id,
-    name: selectedTemplate.name,
-    attack: selectedTemplate.attack,
-    health: selectedTemplate.health,
-    play_cost: selectedTemplate.play_cost,
-    pitch_value: selectedTemplate.pitch_value,
-    abilities: selectedTemplate.abilities,
-  } : null;
+  // selectedTemplate is already a CardView from the store
+  const selectedCard = selectedTemplate;
 
   if (isLoading) {
     return (
@@ -153,7 +144,7 @@ function SandboxArena() {
   };
 
   const renderSlot = (
-    unit: UnitTemplateView | null,
+    unit: CardView | null,
     index: number,
     team: 'player' | 'enemy',
     onClick: () => void
@@ -166,16 +157,7 @@ function SandboxArena() {
       return (
         <div key={`${team}-${index}`} className="relative group cursor-pointer sandbox-slot" onClick={onClick}>
           <UnitCard
-            card={{
-              id: 0,
-              template_id: unit.template_id,
-              name: unit.name,
-              attack: unit.attack,
-              health: unit.health,
-              play_cost: unit.play_cost,
-              pitch_value: unit.pitch_value,
-              abilities: unit.abilities,
-            }}
+            card={unit}
             showCost={false}
             showPitch={false}
             compact={true}
@@ -272,21 +254,12 @@ function UnitGallery() {
     <div className="sandbox-gallery grid grid-cols-8 lg:grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-1 lg:gap-2">
       {filteredTemplates.map((template) => (
         <UnitCard
-          key={template.template_id}
-          card={{
-            id: 0,
-            template_id: template.template_id,
-            name: template.name,
-            attack: template.attack,
-            health: template.health,
-            play_cost: template.play_cost,
-            pitch_value: template.pitch_value,
-            abilities: template.abilities,
-          }}
-          isSelected={selectedTemplate?.template_id === template.template_id}
+          key={template.id}
+          card={template}
+          isSelected={selectedTemplate?.id === template.id}
           onClick={() =>
             selectTemplate(
-              selectedTemplate?.template_id === template.template_id ? null : template
+              selectedTemplate?.id === template.id ? null : template
             )
           }
           compact={true}

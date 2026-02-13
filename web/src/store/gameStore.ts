@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
 import type { GameView, BattleOutput, Selection, CardView } from '../types';
+import { initEmojiMap } from '../utils/emoji';
 
 interface GameEngine {
   // Core methods
@@ -21,9 +22,11 @@ interface GameEngine {
   get_commit_action_scale: () => Uint8Array;
   get_bag: () => number[];
   get_card_set: () => CardView[];
+  get_card_metas: () => Array<{ id: number; name: string; emoji: string }>;
   new_run_p2p: (seed: bigint, lives: number) => void;
   get_starting_lives: () => number;
   get_wins_to_victory: () => number;
+  load_card_set: (setId: number) => void;
 
   // Universal Bridge methods
   // Note: seed is bigint because wasm-bindgen binds Rust u64 to JS BigInt
@@ -98,12 +101,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
     initPromise = (async () => {
       try {
         set({ isLoading: true, error: null });
-        const wasm = (await import('manalimit-client')) as unknown as WasmModule;
+
+        const wasm = await import('manalimit-client') as unknown as WasmModule;
+
         if (!wasmInitialized) {
           await wasm.default();
           wasmInitialized = true;
         }
-        const engine = new wasm.GameEngine(seed ?? BigInt(Date.now()));
+        const engine = new wasm.GameEngine(undefined); // Don't auto-init
+        engine.load_card_set(0);
+
+        // Initialize emoji map from card metadata baked into the WASM binary
+        const metas = engine.get_card_metas();
+        initEmojiMap(metas);
+
+        if (seed !== undefined) {
+          engine.new_run(seed);
+        } else {
+          engine.new_run(BigInt(Date.now()));
+        }
         set({
           engine,
           view: engine.get_view(),

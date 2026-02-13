@@ -37,14 +37,13 @@ export type AbilityTarget =
 export type AbilityEffect =
   | { type: 'Damage'; amount: number; target: AbilityTarget }
   | { type: 'ModifyStats'; health: number; attack: number; target: AbilityTarget }
-  | { type: 'SpawnUnit'; template_id: string }
+  | { type: 'SpawnUnit'; card_id: number }
   | { type: 'Destroy'; target: AbilityTarget };
 
 // Types matching the Rust view structs
 
 export interface CardView {
   id: number;
-  template_id: string;
   name: string;
   attack: number;
   health: number;
@@ -55,7 +54,6 @@ export interface CardView {
 
 export interface BoardUnitView {
   id: number;
-  template_id: string;
   name: string;
   attack: number;
   health: number;
@@ -83,7 +81,7 @@ export interface GameView {
 
 export interface UnitView {
   instance_id: number;
-  template_id: string;
+  card_id: number;
   name: string;
   attack: number;
   health: number;
@@ -158,19 +156,7 @@ export interface Selection {
   index: number;
 }
 
-// Unit template for sandbox mode
-export interface UnitTemplateView {
-  template_id: string;
-  name: string;
-  attack: number;
-  health: number;
-  play_cost: number;
-  pitch_value: number;
-  abilities: Ability[];
-  rarity: number;
-}
-
 // Sandbox unit for custom battles
 export interface SandboxUnit {
-  template_id: string;
+  card_id: number;
 }

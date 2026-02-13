@@ -8,6 +8,7 @@
 extern crate alloc;
 
 pub mod battle;
+pub mod cards;
 pub mod commit;
 pub mod error;
 pub mod limits;
@@ -39,5 +40,5 @@ pub use opponents::{
 pub use rng::{BattleRng, XorShiftRng};
 pub use state::*;
 pub use types::*;
-pub use units::{create_genesis_bag, get_starter_templates};
+pub use units::create_genesis_bag;
 pub use view::*;

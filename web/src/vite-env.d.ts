@@ -24,6 +24,8 @@ declare module 'manalimit-client' {
     submit_turn(action: any): void;
     resolve_battle_p2p(playerBoard: any, enemyBoard: any, seed: bigint): any;
     init_from_scale(session: Uint8Array, cardSet: Uint8Array): void;
+    load_card_set(setId: number): void;
+    get_card_metas(): Array<{ id: number; name: string; emoji: string }>;
   }
 
   export function greet(): string;

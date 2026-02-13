@@ -203,7 +203,7 @@ pub enum AbilityEffect {
         target: AbilityTarget,
     },
     /// Spawn a new unit on the board
-    SpawnUnit { template_id: String },
+    SpawnUnit { card_id: CardId },
     /// Destroy a target directly
     Destroy { target: AbilityTarget },
 }
@@ -275,7 +275,6 @@ pub struct EconomyStats {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct UnitCard {
     pub id: CardId,
-    pub template_id: String,
     pub name: String,
     pub stats: UnitStats,
     pub economy: EconomyStats,
@@ -285,7 +284,6 @@ pub struct UnitCard {
 impl UnitCard {
     pub fn new(
         id: CardId,
-        template_id: &str,
         name: &str,
         attack: i32,
         health: i32,
@@ -294,7 +292,6 @@ impl UnitCard {
     ) -> Self {
         Self {
             id,
-            template_id: String::from(template_id),
             name: String::from(name),
             stats: UnitStats { attack, health },
             economy: EconomyStats {

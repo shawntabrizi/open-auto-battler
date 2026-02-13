@@ -1,76 +1,27 @@
 /**
  * Centralized utility for card emojis.
  * This is the single source of truth for all unit card representations in the UI.
+ * Emoji data is loaded from cards.json and indexed by card ID.
  */
 
-const EMOJI_MAP: Record<string, string> = {
-  // Goblins
-  goblin_scout: '👺',
-  goblin_looter: '💰',
-  goblin_grunt: '👹',
-  nurse_goblin: '🩺',
-
-  // Humans / Soldiers
-  militia: '🛡️',
-  brave_commander: '🫡',
-  shield_bearer: '🏰',
-  shield_squire: '🛡️',
-  battle_hardened: '💪',
-  sniper: '🎯',
-  archer: '🏹',
-  pack_leader: '👑',
-  assassin: '🥷',
-  headhunter: '🕵️',
-  giant_slayer: '🗡️',
-  warder: '💂',
-  martyr_knight: '🕯️',
-
-  // Orcs
-  orc_warrior: '⚔️',
-  orc_shaman: '🔮',
-  raging_orc: '🤬',
-
-  // Undead
-  zombie_soldier: '🧟',
-  zombie_captain: '🧟‍♂️',
-  zombie_spawn: '👶',
-  zombie_breeder: '🧟‍♀️',
-  necromancer: '🧙',
-  corpse_cart: '⚰️',
-  lich: '💀',
-  golem: '🗿',
-
-  // Beasts / Monsters
-  abyssal_bomber: '💣',
-  artillery_mage: '☄️',
-  rear_guard: '🧱',
-  wolf_rider: '🐺',
-  troll_brute: '🧌',
-  troll_warrior: '🪓',
-  ogre_mauler: '👊',
-  ogre_warrior: '🔨',
-  giant_crusher: '🦣',
-  dragon_tyrant: '🐉',
-  behemoth: '🐘',
-  mana_reaper: '⚖️',
-  lone_wolf: '🐕',
-  rat_swarm: '🐀',
-  rat_token: '🐀',
-  scaredy_cat: '🙀',
-  spined_urchin: '🦔',
-  skeleton_archer: '💀',
-  vampire: '🧛',
-  fire_elemental: '🔥',
-  phoenix: '🐦‍🔥',
-  phoenix_egg: '🥚',
-  shield_master: '👑',
-  void_walker: '🌑',
-};
+// Dynamic emoji map built from card data, indexed by card ID
+let emojiMap: Record<number, string> = {};
 
 /**
- * Returns the emoji associated with a card template ID.
+ * Initialize the emoji map from card data.
+ * Call this once when cards are loaded (from blockchain or JSON fallback).
+ */
+export function initEmojiMap(cards: Array<{ id: number; emoji: string }>) {
+  emojiMap = {};
+  for (const card of cards) {
+    emojiMap[card.id] = card.emoji;
+  }
+}
+
+/**
+ * Returns the emoji associated with a card ID.
  * Returns a question mark emoji if no mapping is found.
  */
-export function getCardEmoji(template_id: string): string {
-  return EMOJI_MAP[template_id] || template_id || '❓';
+export function getCardEmoji(cardId: number): string {
+  return emojiMap[cardId] || '❓';
 }

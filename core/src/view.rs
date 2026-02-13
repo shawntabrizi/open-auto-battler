@@ -18,7 +18,6 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct CardView {
     pub id: CardId,
-    pub template_id: String,
     pub name: String,
     pub attack: i32,
     pub health: i32,
@@ -31,7 +30,6 @@ impl From<&UnitCard> for CardView {
     fn from(card: &UnitCard) -> Self {
         Self {
             id: card.id,
-            template_id: card.template_id.clone(),
             name: card.name.clone(),
             attack: card.stats.attack,
             health: card.stats.health,
@@ -47,7 +45,6 @@ impl From<&UnitCard> for CardView {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BoardUnitView {
     pub id: CardId,
-    pub template_id: String,
     pub name: String,
     pub attack: i32,
     pub health: i32,
@@ -122,7 +119,6 @@ impl GameView {
                             .get(&unit.card_id)
                             .map(|card| BoardUnitView {
                                 id: card.id,
-                                template_id: card.template_id.clone(),
                                 name: card.name.clone(),
                                 attack: card.stats.attack,
                                 health: unit.effective_health(),

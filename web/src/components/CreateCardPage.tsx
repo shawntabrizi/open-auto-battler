@@ -135,7 +135,7 @@ export const CreateCardPage: React.FC = () => {
     } else if (type === 'ModifyStats') {
       setNewAbility({ ...newAbility, effect: { type: 'ModifyStats', health: 1, attack: 1, target } });
     } else if (type === 'SpawnUnit') {
-      setNewAbility({ ...newAbility, effect: { type: 'SpawnUnit', template_id: 'goblin_grunt' } });
+      setNewAbility({ ...newAbility, effect: { type: 'SpawnUnit', card_id: 2 } });
     } else if (type === 'Destroy') {
       setNewAbility({ ...newAbility, effect: { type: 'Destroy', target } });
     }
@@ -478,13 +478,13 @@ export const CreateCardPage: React.FC = () => {
                   )}
                   {newAbility.effect.type === 'SpawnUnit' && (
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Template ID</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Card ID</label>
                       <input
-                        type="text"
-                        value={newAbility.effect.template_id}
-                        onChange={e => setNewAbility({ ...newAbility, effect: { ...newAbility.effect, template_id: e.target.value } as any })}
+                        type="number"
+                        value={newAbility.effect.card_id}
+                        onChange={e => setNewAbility({ ...newAbility, effect: { ...newAbility.effect, card_id: parseInt(e.target.value) || 0 } as any })}
                         className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
-                        placeholder="goblin_grunt"
+                        placeholder="2"
                       />
                     </div>
                   )}

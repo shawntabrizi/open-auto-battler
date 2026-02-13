@@ -1,0 +1,661 @@
+[
+  {
+    "id": 0,
+    "name": "Rat Swarm",
+    "emoji": "🐀",
+    "stats": { "attack": 1, "health": 1 },
+    "economy": { "play_cost": 1, "pitch_value": 1 },
+    "abilities": [{
+      "trigger": "OnFaint",
+      "effect": { "type": "SpawnUnit", "card_id": 40 },
+      "name": "Infestation",
+      "description": "Spawn a Rat Token when killed",
+      "conditions": [],
+      "max_triggers": 1
+    }]
+  },
+  {
+    "id": 1,
+    "name": "Goblin Scout",
+    "emoji": "👺",
+    "stats": { "attack": 1, "health": 2 },
+    "economy": { "play_cost": 1, "pitch_value": 2 },
+    "abilities": []
+  },
+  {
+    "id": 2,
+    "name": "Goblin Grunt",
+    "emoji": "👹",
+    "stats": { "attack": 2, "health": 2 },
+    "economy": { "play_cost": 2, "pitch_value": 1 },
+    "abilities": []
+  },
+  {
+    "id": 3,
+    "name": "Scaredy Cat",
+    "emoji": "🙀",
+    "stats": { "attack": 1, "health": 3 },
+    "economy": { "play_cost": 1, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "ModifyStats", "health": 2, "attack": 0, "target": { "type": "Position", "data": { "scope": "SelfUnit", "index": 1 } } },
+      "name": "Hiss",
+      "description": "Give the ally behind +2 Health at start",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 4,
+    "name": "Brave Commander",
+    "emoji": "🫡",
+    "stats": { "attack": 2, "health": 3 },
+    "economy": { "play_cost": 4, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "ModifyStats", "health": 2, "attack": 2, "target": { "type": "Random", "data": { "scope": "AlliesOther", "count": 1 } } },
+      "name": "Command",
+      "description": "Give a random other ally +2/+2 at start",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 5,
+    "name": "Militia",
+    "emoji": "🛡️",
+    "stats": { "attack": 2, "health": 2 },
+    "economy": { "play_cost": 2, "pitch_value": 2 },
+    "abilities": []
+  },
+  {
+    "id": 6,
+    "name": "Shield Bearer",
+    "emoji": "🏰",
+    "stats": { "attack": 1, "health": 4 },
+    "economy": { "play_cost": 2, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "ModifyStats", "health": 2, "attack": 0, "target": { "type": "Position", "data": { "scope": "Allies", "index": 0 } } },
+      "name": "Shield Wall",
+      "description": "Heal front ally for 2 at start",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 7,
+    "name": "Nurse Goblin",
+    "emoji": "🩺",
+    "stats": { "attack": 1, "health": 3 },
+    "economy": { "play_cost": 2, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "BeforeAnyAttack",
+      "effect": { "type": "ModifyStats", "health": 2, "attack": 0, "target": { "type": "Position", "data": { "scope": "Allies", "index": 0 } } },
+      "name": "Emergency Heal",
+      "description": "Heal front ally for 2 if its health is <= 6",
+      "conditions": [{ "type": "Is", "data": { "type": "StatValueCompare", "data": { "scope": "Allies", "stat": "Health", "op": "LessThanOrEqual", "value": 6 } } }],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 8,
+    "name": "Wolf Rider",
+    "emoji": "🐺",
+    "stats": { "attack": 3, "health": 2 },
+    "economy": { "play_cost": 3, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnFaint",
+      "effect": { "type": "Damage", "amount": 2, "target": { "type": "Position", "data": { "scope": "Enemies", "index": 0 } } },
+      "name": "Dying Bite",
+      "description": "Deal 2 damage to front enemy on death",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 9,
+    "name": "Martyr Knight",
+    "emoji": "🕯️",
+    "stats": { "attack": 2, "health": 3 },
+    "economy": { "play_cost": 3, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnFaint",
+      "effect": { "type": "ModifyStats", "health": 2, "attack": 2, "target": { "type": "Position", "data": { "scope": "SelfUnit", "index": 1 } } },
+      "name": "Last Stand",
+      "description": "Give the ally behind +2/+2 on death",
+      "conditions": [],
+      "max_triggers": 1
+    }]
+  },
+  {
+    "id": 10,
+    "name": "Abyssal Bomber",
+    "emoji": "💣",
+    "stats": { "attack": 2, "health": 2 },
+    "economy": { "play_cost": 4, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnFaint",
+      "effect": { "type": "Damage", "amount": 3, "target": { "type": "All", "data": { "scope": "All" } } },
+      "name": "Abyssal Blast",
+      "description": "Deal 3 damage to ALL units on death",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 11,
+    "name": "Archer",
+    "emoji": "🏹",
+    "stats": { "attack": 1, "health": 3 },
+    "economy": { "play_cost": 3, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "Damage", "amount": 1, "target": { "type": "Position", "data": { "scope": "Enemies", "index": -1 } } },
+      "name": "Long Shot",
+      "description": "Deal 1 damage to the back enemy at start",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 12,
+    "name": "Sniper",
+    "emoji": "🎯",
+    "stats": { "attack": 2, "health": 2 },
+    "economy": { "play_cost": 3, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "Damage", "amount": 2, "target": { "type": "Position", "data": { "scope": "Enemies", "index": -1 } } },
+      "name": "Assassinate",
+      "description": "Deal 2 damage to the back enemy at start",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 13,
+    "name": "Skeleton Archer",
+    "emoji": "💀",
+    "stats": { "attack": 2, "health": 2 },
+    "economy": { "play_cost": 3, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "Damage", "amount": 2, "target": { "type": "Random", "data": { "scope": "Enemies", "count": 1 } } },
+      "name": "Bone Arrow",
+      "description": "Deal 2 damage to a random enemy at start",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 14,
+    "name": "Battle Hardened",
+    "emoji": "💪",
+    "stats": { "attack": 2, "health": 3 },
+    "economy": { "play_cost": 3, "pitch_value": 2 },
+    "abilities": [
+      {
+        "trigger": "BeforeUnitAttack",
+        "effect": { "type": "ModifyStats", "health": 2, "attack": 0, "target": { "type": "All", "data": { "scope": "SelfUnit" } } },
+        "name": "Brace",
+        "description": "Gain +2 health before attacking",
+        "conditions": [],
+        "max_triggers": null
+      },
+      {
+        "trigger": "AfterUnitAttack",
+        "effect": { "type": "ModifyStats", "health": 0, "attack": 2, "target": { "type": "All", "data": { "scope": "SelfUnit" } } },
+        "name": "Adrenaline",
+        "description": "Gain +2 attack after attacking",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "name": "Lone Wolf",
+    "emoji": "🐕",
+    "stats": { "attack": 2, "health": 4 },
+    "economy": { "play_cost": 3, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "BeforeUnitAttack",
+      "effect": { "type": "ModifyStats", "health": 0, "attack": 5, "target": { "type": "All", "data": { "scope": "SelfUnit" } } },
+      "name": "Last Stand",
+      "description": "Gain +5 attack if you are the only ally",
+      "conditions": [{ "type": "Is", "data": { "type": "UnitCount", "data": { "scope": "Allies", "op": "Equal", "value": 1 } } }],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 16,
+    "name": "Pack Leader",
+    "emoji": "👑",
+    "stats": { "attack": 2, "health": 3 },
+    "economy": { "play_cost": 3, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "ModifyStats", "health": 1, "attack": 1, "target": { "type": "All", "data": { "scope": "Allies" } } },
+      "name": "Strength in Numbers",
+      "description": "Give all allies +1/+1 if you have 3+ allies",
+      "conditions": [{ "type": "Is", "data": { "type": "UnitCount", "data": { "scope": "Allies", "op": "GreaterThanOrEqual", "value": 3 } } }],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 17,
+    "name": "Spined Urchin",
+    "emoji": "🦔",
+    "stats": { "attack": 1, "health": 4 },
+    "economy": { "play_cost": 2, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnHurt",
+      "effect": { "type": "Damage", "amount": 1, "target": { "type": "All", "data": { "scope": "TriggerSource" } } },
+      "name": "Spines",
+      "description": "Deal 1 damage to the attacker when hurt",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 18,
+    "name": "Vampire",
+    "emoji": "🧛",
+    "stats": { "attack": 3, "health": 3 },
+    "economy": { "play_cost": 4, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "AfterUnitAttack",
+      "effect": { "type": "ModifyStats", "health": 2, "attack": 0, "target": { "type": "All", "data": { "scope": "SelfUnit" } } },
+      "name": "Lifesteal",
+      "description": "Heal 2 health after attacking",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 19,
+    "name": "Raging Orc",
+    "emoji": "🤬",
+    "stats": { "attack": 2, "health": 8 },
+    "economy": { "play_cost": 4, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnHurt",
+      "effect": { "type": "ModifyStats", "health": 0, "attack": 2, "target": { "type": "All", "data": { "scope": "SelfUnit" } } },
+      "name": "Berserk",
+      "description": "Gain +2 attack when hurt",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 20,
+    "name": "Zombie Captain",
+    "emoji": "🧟‍♂️",
+    "stats": { "attack": 3, "health": 4 },
+    "economy": { "play_cost": 4, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnFaint",
+      "effect": { "type": "SpawnUnit", "card_id": 41 },
+      "name": "Undead Call",
+      "description": "Spawn a Zombie Soldier on death",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 21,
+    "name": "Necromancer",
+    "emoji": "🧙",
+    "stats": { "attack": 2, "health": 3 },
+    "economy": { "play_cost": 3, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnAllySpawn",
+      "effect": { "type": "ModifyStats", "health": 0, "attack": 2, "target": { "type": "All", "data": { "scope": "TriggerSource" } } },
+      "name": "Spawn Boost",
+      "description": "Give +2 attack to any spawned unit",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 22,
+    "name": "Headhunter",
+    "emoji": "🕵️",
+    "stats": { "attack": 4, "health": 2 },
+    "economy": { "play_cost": 4, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "Damage", "amount": 5, "target": { "type": "Standard", "data": { "scope": "Enemies", "stat": "Health", "order": "Ascending", "count": 1 } } },
+      "name": "Assassinate",
+      "description": "Deal 5 damage to the enemy with the lowest health",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 23,
+    "name": "Giant Slayer",
+    "emoji": "🗡️",
+    "stats": { "attack": 2, "health": 2 },
+    "economy": { "play_cost": 4, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "Damage", "amount": 3, "target": { "type": "Standard", "data": { "scope": "Enemies", "stat": "Attack", "order": "Descending", "count": 1 } } },
+      "name": "Weak Point",
+      "description": "Deal 3 damage to the enemy with the highest attack",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 24,
+    "name": "Shield Squire",
+    "emoji": "🛡️",
+    "stats": { "attack": 2, "health": 3 },
+    "economy": { "play_cost": 4, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "BeforeAnyAttack",
+      "effect": { "type": "ModifyStats", "health": 2, "attack": 0, "target": { "type": "Position", "data": { "scope": "SelfUnit", "index": -1 } } },
+      "name": "Squire's Aegis",
+      "description": "Give unit in front +2 health before every clash",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 25,
+    "name": "Warder",
+    "emoji": "💂",
+    "stats": { "attack": 2, "health": 4 },
+    "economy": { "play_cost": 3, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnEnemySpawn",
+      "effect": { "type": "Damage", "amount": 1, "target": { "type": "All", "data": { "scope": "TriggerSource" } } },
+      "name": "Seal Fate",
+      "description": "Deal 1 damage to any enemy that spawns",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 26,
+    "name": "Artillery Mage",
+    "emoji": "☄️",
+    "stats": { "attack": 3, "health": 3 },
+    "economy": { "play_cost": 5, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "Damage", "amount": 5, "target": { "type": "Position", "data": { "scope": "Enemies", "index": 2 } } },
+      "name": "Artillery Strike",
+      "description": "Deal 5 damage to enemy in 3rd slot (pos 2) at start",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 27,
+    "name": "Rear Guard",
+    "emoji": "🧱",
+    "stats": { "attack": 2, "health": 5 },
+    "economy": { "play_cost": 4, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "ModifyStats", "health": 3, "attack": 3, "target": { "type": "Position", "data": { "scope": "Allies", "index": 4 } } },
+      "name": "Supply Line",
+      "description": "Give unit in 5th slot (pos 4) +3/+3 at start",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 28,
+    "name": "Troll Brute",
+    "emoji": "🧌",
+    "stats": { "attack": 4, "health": 5 },
+    "economy": { "play_cost": 5, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnFaint",
+      "effect": { "type": "Damage", "amount": 3, "target": { "type": "All", "data": { "scope": "Enemies" } } },
+      "name": "Death Nova",
+      "description": "Deal 3 damage to all enemies on death",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 29,
+    "name": "Lich",
+    "emoji": "💀",
+    "stats": { "attack": 3, "health": 3 },
+    "economy": { "play_cost": 5, "pitch_value": 2 },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": { "type": "Destroy", "target": { "type": "Position", "data": { "scope": "SelfUnit", "index": -1 } } },
+        "name": "Ritual",
+        "description": "Sacrifice the ally in front...",
+        "conditions": [],
+        "max_triggers": null
+      },
+      {
+        "trigger": "OnStart",
+        "effect": { "type": "SpawnUnit", "card_id": 43 },
+        "name": "...Raise Golem",
+        "description": "...to spawn a 5/5 Golem",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 30,
+    "name": "Assassin",
+    "emoji": "🥷",
+    "stats": { "attack": 5, "health": 1 },
+    "economy": { "play_cost": 5, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "Destroy", "target": { "type": "Position", "data": { "scope": "Enemies", "index": 0 } } },
+      "name": "Execute",
+      "description": "Destroy front enemy if its health is <= 10",
+      "conditions": [{ "type": "Is", "data": { "type": "StatValueCompare", "data": { "scope": "Enemies", "stat": "Health", "op": "LessThanOrEqual", "value": 10 } } }],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 31,
+    "name": "Fire Elemental",
+    "emoji": "🔥",
+    "stats": { "attack": 4, "health": 4 },
+    "economy": { "play_cost": 5, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "AfterUnitAttack",
+      "effect": { "type": "Damage", "amount": 2, "target": { "type": "Random", "data": { "scope": "Enemies", "count": 1 } } },
+      "name": "Spark",
+      "description": "Deal 2 damage to a random enemy after attacking",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 32,
+    "name": "Ogre Mauler",
+    "emoji": "👊",
+    "stats": { "attack": 5, "health": 6 },
+    "economy": { "play_cost": 6, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "ModifyStats", "health": 0, "attack": 3, "target": { "type": "All", "data": { "scope": "SelfUnit" } } },
+      "name": "Crushing Blow",
+      "description": "Gain +3 attack at battle start",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 33,
+    "name": "Phoenix",
+    "emoji": "🐦‍🔥",
+    "stats": { "attack": 3, "health": 3 },
+    "economy": { "play_cost": 6, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnFaint",
+      "effect": { "type": "SpawnUnit", "card_id": 44 },
+      "name": "Rebirth",
+      "description": "Spawn a Phoenix Egg on death",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 34,
+    "name": "Shield Master",
+    "emoji": "👑",
+    "stats": { "attack": 3, "health": 10 },
+    "economy": { "play_cost": 7, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "BeforeAnyAttack",
+      "effect": { "type": "ModifyStats", "health": 3, "attack": 0, "target": { "type": "All", "data": { "scope": "Allies" } } },
+      "name": "Guardian's Aura",
+      "description": "Give ALL allies +3 health before every clash",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 35,
+    "name": "Void Walker",
+    "emoji": "🌑",
+    "stats": { "attack": 4, "health": 4 },
+    "economy": { "play_cost": 7, "pitch_value": 2 },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": { "type": "ModifyStats", "health": 0, "attack": 2, "target": { "type": "All", "data": { "scope": "SelfUnit" } } },
+        "name": "Leech",
+        "description": "Steal 2 attack from the front enemy at start",
+        "conditions": [],
+        "max_triggers": null
+      },
+      {
+        "trigger": "OnStart",
+        "effect": { "type": "ModifyStats", "health": 0, "attack": -2, "target": { "type": "Position", "data": { "scope": "Enemies", "index": 0 } } },
+        "name": "Void Touch",
+        "description": " (Steal Effect Continued)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 36,
+    "name": "Mana Reaper",
+    "emoji": "⚖️",
+    "stats": { "attack": 2, "health": 2 },
+    "economy": { "play_cost": 8, "pitch_value": 2 },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": { "type": "Destroy", "target": { "type": "Standard", "data": { "scope": "Enemies", "stat": "Mana", "order": "Descending", "count": 1 } } },
+        "name": "Harvest the Rich",
+        "description": "Destroy the highest mana cost enemy",
+        "conditions": [],
+        "max_triggers": null
+      },
+      {
+        "trigger": "OnStart",
+        "effect": { "type": "Destroy", "target": { "type": "Standard", "data": { "scope": "Enemies", "stat": "Mana", "order": "Ascending", "count": 1 } } },
+        "name": "Cull the Weak",
+        "description": "Destroy the lowest mana cost enemy",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 37,
+    "name": "Giant Crusher",
+    "emoji": "🦣",
+    "stats": { "attack": 6, "health": 8 },
+    "economy": { "play_cost": 8, "pitch_value": 2 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "Damage", "amount": 4, "target": { "type": "Position", "data": { "scope": "Enemies", "index": 0 } } },
+      "name": "Earthshaker",
+      "description": "Deal 4 damage to front enemy at start",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 38,
+    "name": "Behemoth",
+    "emoji": "🐘",
+    "stats": { "attack": 10, "health": 10 },
+    "economy": { "play_cost": 10, "pitch_value": 2 },
+    "abilities": []
+  },
+  {
+    "id": 39,
+    "name": "Dragon Tyrant",
+    "emoji": "🐉",
+    "stats": { "attack": 8, "health": 12 },
+    "economy": { "play_cost": 10, "pitch_value": 3 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "Damage", "amount": 3, "target": { "type": "All", "data": { "scope": "Enemies" } } },
+      "name": "Dragon Breath",
+      "description": "Deal 3 damage to all enemies at start",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  },
+  {
+    "id": 40,
+    "name": "Rat Token",
+    "emoji": "🐀",
+    "stats": { "attack": 1, "health": 1 },
+    "economy": { "play_cost": 0, "pitch_value": 0 },
+    "abilities": []
+  },
+  {
+    "id": 41,
+    "name": "Zombie Soldier",
+    "emoji": "🧟",
+    "stats": { "attack": 1, "health": 1 },
+    "economy": { "play_cost": 1, "pitch_value": 1 },
+    "abilities": []
+  },
+  {
+    "id": 42,
+    "name": "Zombie Spawn",
+    "emoji": "👶",
+    "stats": { "attack": 1, "health": 1 },
+    "economy": { "play_cost": 0, "pitch_value": 0 },
+    "abilities": []
+  },
+  {
+    "id": 43,
+    "name": "Golem",
+    "emoji": "🗿",
+    "stats": { "attack": 5, "health": 5 },
+    "economy": { "play_cost": 0, "pitch_value": 0 },
+    "abilities": []
+  },
+  {
+    "id": 44,
+    "name": "Phoenix Egg",
+    "emoji": "🥚",
+    "stats": { "attack": 0, "health": 5 },
+    "economy": { "play_cost": 0, "pitch_value": 0 },
+    "abilities": [{
+      "trigger": "OnStart",
+      "effect": { "type": "SpawnUnit", "card_id": 33 },
+      "name": "Hatch",
+      "description": "Respawn the Phoenix at start of battle",
+      "conditions": [],
+      "max_triggers": null
+    }]
+  }
+]

@@ -95,7 +95,7 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
         Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::SpawnUnit {
-                template_id: "golem".to_string(),
+                card_id: CardId(43), // golem
             },
             name: "Raise Golem".to_string(),
             description: "Spawn a 5/5 Golem".to_string(),
@@ -124,7 +124,7 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
         Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::SpawnUnit {
-                template_id: "golem".to_string(),
+                card_id: CardId(43), // golem
             },
             name: "Raise Golem".to_string(),
             description: "Spawn a 5/5 Golem".to_string(),
@@ -146,7 +146,8 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
         CombatUnit::from_card(e_lich),
     ];
 
-    let events = run_battle(&p_board, &e_board, 42);
+    let card_pool = spawn_test_card_pool();
+    let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
     let mk3_trigger = events.iter().find(|e| {
         if let CombatEvent::AbilityTrigger {

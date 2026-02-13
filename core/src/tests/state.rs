@@ -3,29 +3,13 @@ use crate::types::*;
 
 #[test]
 fn test_hand_derivation_deterministic() {
-    use crate::units::get_starter_templates;
-
-    // Create a state with a known bag
+    // Create a state with a known bag using simple test cards
     let mut state = GameState::new(12345);
-    let templates = get_starter_templates();
-    for template in &templates {
-        if template.rarity == 0 {
-            continue;
-        }
-        for _ in 0..3 {
-            let id = state.generate_card_id();
-            let card = UnitCard::new(
-                id,
-                template.template_id,
-                template.name,
-                template.attack,
-                template.health,
-                template.play_cost,
-                template.pitch_value,
-            );
-            state.card_pool.insert(id, card);
-            state.bag.push(id);
-        }
+    for i in 0..15 {
+        let id = state.generate_card_id();
+        let card = UnitCard::new(id, "TestCard", 1, 1, 1, 1);
+        state.card_pool.insert(id, card);
+        state.bag.push(id);
     }
 
     // Same seed + round should always produce same hand
@@ -55,7 +39,7 @@ fn test_hand_derivation_unique_indices() {
     // Add enough cards
     for _ in 0..20 {
         let id = state.generate_card_id();
-        let card = UnitCard::new(id, "test", "Test", 1, 1, 1, 1);
+        let card = UnitCard::new(id, "Test", 1, 1, 1, 1);
         state.card_pool.insert(id, card);
         state.bag.push(id);
     }

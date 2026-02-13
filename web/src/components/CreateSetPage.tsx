@@ -40,7 +40,6 @@ export const CreateSetPage: React.FC = () => {
   const mapToCardView = (card: any): CardView => {
     return {
       id: card.id,
-      template_id: card.metadata.emoji, // Using emoji as template_id for the visual art
       name: card.metadata.name,
       attack: card.data.stats.attack,
       health: card.data.stats.health,

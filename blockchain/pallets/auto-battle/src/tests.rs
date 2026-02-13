@@ -15,8 +15,8 @@ fn test_start_game() {
         assert_eq!(session.owner, account_id);
         assert_eq!(session.state.round, 1);
         assert_eq!(session.state.phase, GamePhase::Shop);
-        assert_eq!(session.state.hand.len(), 7); // 7 cards drawn from bag
-        assert_eq!(session.state.bag.len(), 93); // 100 - 7 = 93 remaining in bag
+        assert_eq!(session.state.hand.len(), 5); // HAND_SIZE cards drawn from bag
+        assert_eq!(session.state.bag.len(), 95); // 100 - 5 = 95 remaining in bag
 
         // Assert cannot start another game
         assert_noop!(

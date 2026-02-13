@@ -11,9 +11,11 @@ use scale_info::TypeInfo;
 use crate::limits::{BattleLimits, LimitReason};
 use crate::rng::BattleRng;
 use crate::state::BOARD_SIZE;
+use alloc::collections::BTreeMap;
+
 use crate::types::{
-    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CompareOp, Condition, Matcher,
-    SortOrder, StatType, TargetScope,
+    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CardId, CompareOp, Condition, Matcher,
+    SortOrder, StatType, TargetScope, UnitCard,
 };
 
 #[cfg(feature = "std")]
@@ -73,7 +75,7 @@ pub type UnitInstanceId = UnitId;
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct UnitView {
     pub instance_id: UnitInstanceId,
-    pub template_id: String,
+    pub card_id: crate::types::CardId,
     pub name: String,
     pub attack: i32,
     pub health: i32,
@@ -203,7 +205,7 @@ pub struct CombatUnit {
     pub attack: i32,
     pub health: i32,
     pub abilities: Vec<Ability>,
-    pub template_id: String,
+    pub card_id: crate::types::CardId,
     pub name: String,
     pub attack_buff: i32,
     pub health_buff: i32,
@@ -221,7 +223,7 @@ impl CombatUnit {
             attack: card.stats.attack,
             health: card.stats.health,
             abilities: card.abilities,
-            template_id: card.template_id,
+            card_id: card.id,
             name: card.name,
             attack_buff: 0,
             health_buff: 0,
@@ -233,7 +235,7 @@ impl CombatUnit {
     fn to_view(&self) -> UnitView {
         UnitView {
             instance_id: self.instance_id,
-            template_id: self.template_id.clone(),
+            card_id: self.card_id,
             name: self.name.clone(),
             attack: self.effective_attack(),
             health: self.effective_health(),
@@ -267,6 +269,7 @@ pub fn resolve_battle<R: BattleRng>(
     mut player_units: Vec<CombatUnit>,
     mut enemy_units: Vec<CombatUnit>,
     rng: &mut R,
+    card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> Vec<CombatEvent> {
     let mut events = Vec::new();
     let mut limits = BattleLimits::new();
@@ -291,6 +294,7 @@ pub fn resolve_battle<R: BattleRng>(
         &mut events,
         rng,
         &mut limits,
+        card_pool,
     )
     .is_err()
         || limits.is_exceeded()
@@ -313,6 +317,7 @@ pub fn resolve_battle<R: BattleRng>(
             &mut events,
             rng,
             &mut limits,
+            card_pool,
         )
         .is_err()
             || limits.is_exceeded()
@@ -329,6 +334,7 @@ pub fn resolve_battle<R: BattleRng>(
             &mut events,
             rng,
             &mut limits,
+            card_pool,
         )
         .is_err()
             || limits.is_exceeded()
@@ -345,6 +351,7 @@ pub fn resolve_battle<R: BattleRng>(
             &mut events,
             rng,
             &mut limits,
+            card_pool,
         )
         .is_err()
             || limits.is_exceeded()
@@ -361,6 +368,7 @@ pub fn resolve_battle<R: BattleRng>(
         &mut events,
         rng,
         &mut limits,
+        card_pool,
     );
     events
 }
@@ -401,6 +409,7 @@ fn resolve_trigger_queue<R: BattleRng>(
     events: &mut Vec<CombatEvent>,
     rng: &mut R,
     limits: &mut BattleLimits,
+    card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> Result<(), ()> {
     // Trigger Priority:
     // 1. Attack (Highest First) -> Ascending Sort
@@ -485,7 +494,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                     attack: trigger.priority.attack,
                     health: trigger.priority.health,
                     abilities: vec![],
-                    template_id: String::new(),
+                    card_id: crate::types::CardId(0),
                     name: String::new(),
                     attack_buff: 0,
                     health_buff: 0,
@@ -546,6 +555,7 @@ fn resolve_trigger_queue<R: BattleRng>(
             limits,
             trigger.spawn_index_override, // Pass the index where the parent died
             trigger.trigger_target_id,
+            card_pool,
         )?;
 
         let mut reaction_queue = Vec::new();
@@ -724,6 +734,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                 events,
                 rng,
                 limits,
+                card_pool,
             )?;
             limits.exit_trigger_depth();
         }
@@ -747,6 +758,7 @@ fn apply_ability_effect<R: BattleRng>(
     limits: &mut BattleLimits,
     spawn_index_override: Option<usize>,
     trigger_target_id: Option<UnitInstanceId>,
+    card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> Result<Vec<UnitInstanceId>, ()> {
     limits.enter_recursion(source_team)?;
     let mut damaged_units = Vec::new();
@@ -812,7 +824,7 @@ fn apply_ability_effect<R: BattleRng>(
             }
             Ok(damaged_units)
         }
-        AbilityEffect::SpawnUnit { template_id } => {
+        AbilityEffect::SpawnUnit { card_id: spawn_card_id } => {
             limits.record_spawn(source_team)?;
 
             // 1. Create the unit and determine its insertion point
@@ -826,30 +838,15 @@ fn apply_ability_effect<R: BattleRng>(
                     return Ok(damaged_units);
                 }
 
-                // Create Unit Logic
-                let templates = crate::units::get_starter_templates();
-                let template = templates
-                    .into_iter()
-                    .find(|t| t.template_id == *template_id)
-                    .expect("Spawn template not found");
+                // Create Unit Logic from card pool
+                let spawn_card = card_pool
+                    .get(spawn_card_id)
+                    .expect("Spawn card not found in card pool");
 
                 let next_id = limits.generate_instance_id(source_team);
                 let instance_id = next_id;
 
-                let mut card = crate::types::UnitCard::new(
-                    crate::types::CardId(instance_id.0.wrapping_mul(5000)),
-                    template.template_id,
-                    template.name,
-                    template.attack,
-                    template.health,
-                    template.play_cost,
-                    template.pitch_value,
-                );
-                for ability in &template.abilities {
-                    card = card.with_ability(ability.clone());
-                }
-
-                let mut new_unit = CombatUnit::from_card(card);
+                let mut new_unit = CombatUnit::from_card(spawn_card.clone());
                 new_unit.instance_id = instance_id;
                 new_unit.team = source_team;
 
@@ -981,6 +978,7 @@ fn apply_ability_effect<R: BattleRng>(
                     events,
                     rng,
                     limits,
+                    card_pool,
                 )?;
                 limits.exit_trigger_depth();
             }
@@ -1029,6 +1027,7 @@ fn execute_phase<R: BattleRng>(
     events: &mut Vec<CombatEvent>,
     rng: &mut R,
     limits: &mut BattleLimits,
+    card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> Result<(), ()> {
     if phase != BattlePhase::End {
         events.push(CombatEvent::PhaseStart { phase });
@@ -1043,6 +1042,7 @@ fn execute_phase<R: BattleRng>(
                 events,
                 rng,
                 limits,
+                card_pool,
             )?;
         }
         BattlePhase::BeforeAttack => {
@@ -1056,12 +1056,13 @@ fn execute_phase<R: BattleRng>(
                 events,
                 rng,
                 limits,
+                card_pool,
             )?;
         }
         BattlePhase::Attack => {
             execute_attack_clash(player_units, enemy_units, events);
             // After clash, people might be dead or hurt. Resolve loop.
-            resolve_hurt_and_faint_loop(player_units, enemy_units, events, rng, limits)?;
+            resolve_hurt_and_faint_loop(player_units, enemy_units, events, rng, limits, card_pool)?;
         }
         BattlePhase::AfterAttack => {
             collect_and_resolve_triggers(
@@ -1074,6 +1075,7 @@ fn execute_phase<R: BattleRng>(
                 events,
                 rng,
                 limits,
+                card_pool,
             )?;
         }
         BattlePhase::End => {
@@ -1099,6 +1101,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
     events: &mut Vec<CombatEvent>,
     rng: &mut R,
     limits: &mut BattleLimits,
+    card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> Result<(), ()> {
     let mut queue = Vec::new();
     // Helper to scan board
@@ -1143,7 +1146,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
     scan_board(player_units, Team::Player);
     scan_board(enemy_units, Team::Enemy);
 
-    resolve_trigger_queue(&mut queue, player_units, enemy_units, events, rng, limits)
+    resolve_trigger_queue(&mut queue, player_units, enemy_units, events, rng, limits, card_pool)
 }
 
 fn execute_attack_clash(
@@ -1233,6 +1236,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
     events: &mut Vec<CombatEvent>,
     rng: &mut R,
     limits: &mut BattleLimits,
+    card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> Result<(), ()> {
     // CAPTURE clashing unit IDs before they potentially die or board slides
     let clashing_p_id = player_units.first().map(|u| u.instance_id);
@@ -1435,7 +1439,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
         }
     }
 
-    resolve_trigger_queue(&mut queue, player_units, enemy_units, events, rng, limits)
+    resolve_trigger_queue(&mut queue, player_units, enemy_units, events, rng, limits, card_pool)
 }
 
 fn get_targets<R: BattleRng>(

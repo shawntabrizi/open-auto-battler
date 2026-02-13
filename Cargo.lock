@@ -7394,7 +7394,6 @@ dependencies = [
  "parity-scale-codec",
  "serde",
  "serde-wasm-bindgen",
- "serde_json",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -7408,6 +7407,7 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
+ "serde_json",
  "wasm-bindgen-test",
 ]
 

@@ -85,7 +85,7 @@ export function UnitCard({
 
       {/* Card art placeholder */}
       <div className={`card-art w-full ${artClasses} bg-gray-700 rounded flex items-center justify-center relative`}>
-        {getCardEmoji(card.template_id)}
+        {getCardEmoji(card.id)}
         {card.abilities.length > 0 && (
           <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 bg-yellow-500 rounded-full w-3 h-3 lg:w-4 lg:h-4 flex items-center justify-center text-[0.4rem] lg:text-[0.55rem] font-bold border border-yellow-300 shadow">
             {card.abilities.length > 1 ? card.abilities.length : '✶'}

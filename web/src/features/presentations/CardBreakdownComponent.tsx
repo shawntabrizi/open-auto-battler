@@ -12,7 +12,7 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
       {/* Card Basic Info */}
       <div className="flex items-center gap-4 mb-4">
         <div className="w-16 h-16 bg-gray-800 rounded-xl border-2 border-gray-700 flex items-center justify-center text-3xl shadow-inner flex-shrink-0">
-          {getCardEmoji(card.template_id)}
+          {getCardEmoji(card.id)}
         </div>
         <div>
           <h2 className="text-xl font-bold text-white leading-tight">{card.name}</h2>

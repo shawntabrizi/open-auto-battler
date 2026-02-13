@@ -123,7 +123,7 @@ fn test_priority_tiebreaker_team() {
         conditions: vec![],
         max_triggers: None,
     };
-    let e_card = UnitCard::new(CardId(2), "Enemy", "Enemy", 5, 5, 0, 0).with_ability(ability);
+    let e_card = UnitCard::new(CardId(2), "Enemy", 5, 5, 0, 0).with_ability(ability);
     let e_unit = CombatUnit::from_card(e_card);
 
     // Run the same battle with two different seeds and verify they can produce different orders
@@ -248,7 +248,7 @@ fn test_priority_tiebreaker_ability_order() {
     );
 
     let unit = CombatUnit::from_card(
-        UnitCard::new(CardId(1), "Unit", "Unit", 5, 5, 0, 0)
+        UnitCard::new(CardId(1), "Unit", 5, 5, 0, 0)
             .with_abilities(vec![ability_a, ability_b]),
     );
 
@@ -295,7 +295,7 @@ fn test_priority_full_hierarchy_with_ability_order() {
 
     // U1: 10 Atk (Priority 1)
     let u1 = CombatUnit::from_card(
-        UnitCard::new(CardId(1), "U1", "U1", 10, 1, 0, 0).with_ability(create_ability(
+        UnitCard::new(CardId(1), "U1", 10, 1, 0, 0).with_ability(create_ability(
             AbilityTrigger::OnStart,
             AbilityEffect::ModifyStats {
                 health: 0,
@@ -316,7 +316,7 @@ fn test_priority_full_hierarchy_with_ability_order() {
 
     // U4: 5 Atk, 5 HP, Enemy Team, Position 0 (Priority 3 - front position wins)
     let u4 = CombatUnit::from_card(
-        UnitCard::new(CardId(4), "U4", "U4", 5, 5, 0, 0).with_ability(create_ability(
+        UnitCard::new(CardId(4), "U4", 5, 5, 0, 0).with_ability(create_ability(
             AbilityTrigger::OnStart,
             AbilityEffect::ModifyStats {
                 health: 0,
@@ -355,7 +355,7 @@ fn test_priority_full_hierarchy_with_ability_order() {
     );
 
     let u5 = CombatUnit::from_card(
-        UnitCard::new(CardId(5), "U5", "U5", 1, 1, 0, 0)
+        UnitCard::new(CardId(5), "U5", 1, 1, 0, 0)
             .with_abilities(vec![ability_u5_a, ability_u5_b]),
     );
 
@@ -415,7 +415,7 @@ fn test_priority_full_hierarchy() {
         "U1",
     );
     let u1 = CombatUnit::from_card(
-        UnitCard::new(CardId(1), "U1", "U1", 10, 1, 0, 0).with_ability(ability_u1),
+        UnitCard::new(CardId(1), "U1", 10, 1, 0, 0).with_ability(ability_u1),
     );
 
     // --- 2. Health Winner (Player) ---
@@ -436,7 +436,7 @@ fn test_priority_full_hierarchy() {
         "U4",
     );
     let u4 = CombatUnit::from_card(
-        UnitCard::new(CardId(4), "U4", "U4", 5, 5, 0, 0).with_ability(ability_u4),
+        UnitCard::new(CardId(4), "U4", 5, 5, 0, 0).with_ability(ability_u4),
     );
 
     // --- 4. Position Loser (Player at back) ---
@@ -519,7 +519,6 @@ fn test_priority_interruption_kill() {
     // Construct Card A (Fast)
     let card_a = UnitCard {
         id: CardId(1),
-        template_id: "a".to_string(),
         name: "Killer".to_string(),
         stats: UnitStats {
             attack: 10,
@@ -534,7 +533,6 @@ fn test_priority_interruption_kill() {
     // Construct Card B (Slow)
     let card_b = UnitCard {
         id: CardId(2),
-        template_id: "b".to_string(),
         name: "Looter".to_string(),
         stats: UnitStats {
             attack: 1,
@@ -550,7 +548,6 @@ fn test_priority_interruption_kill() {
     // Enemy (Weak)
     let card_e = UnitCard {
         id: CardId(3),
-        template_id: "e".to_string(),
         name: "Victim".to_string(),
         stats: UnitStats {
             attack: 0,
@@ -635,7 +632,7 @@ fn test_recursive_interrupt_timing() {
     let spawn_ability = create_ability(
         AbilityTrigger::OnFaint,
         AbilityEffect::SpawnUnit {
-            template_id: "zombie_spawn".to_string(),
+            card_id: CardId(42), // zombie_spawn
         },
         "Spawn",
     );
@@ -650,7 +647,8 @@ fn test_recursive_interrupt_timing() {
     ];
     let e_board = vec![CombatUnit::from_card(spawner)];
 
-    let events = run_battle(&p_board, &e_board, 42);
+    let card_pool = spawn_test_card_pool();
+    let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
     // Analyze Event Stream
     let triggers: Vec<&String> = events
@@ -700,7 +698,7 @@ fn test_unified_priority_cross_triggers() {
     // LowAtkBack: BeforeAnyAttack
 
     let high_atk_front = CombatUnit::from_card(
-        UnitCard::new(CardId(1), "High", "High", 10, 10, 0, 0).with_ability(create_ability(
+        UnitCard::new(CardId(1), "High", 10, 10, 0, 0).with_ability(create_ability(
             AbilityTrigger::BeforeUnitAttack,
             AbilityEffect::ModifyStats {
                 health: 0,
@@ -714,7 +712,7 @@ fn test_unified_priority_cross_triggers() {
     );
 
     let low_atk_back = CombatUnit::from_card(
-        UnitCard::new(CardId(2), "Low", "Low", 1, 10, 0, 0).with_ability(create_ability(
+        UnitCard::new(CardId(2), "Low", 1, 10, 0, 0).with_ability(create_ability(
             AbilityTrigger::BeforeAnyAttack,
             AbilityEffect::ModifyStats {
                 health: 0,
@@ -808,9 +806,9 @@ fn test_multi_ability_no_interleaving() {
         max_triggers: None,
     };
 
-    let p_card = UnitCard::new(CardId(1), "Player", "Player", 5, 5, 0, 0)
+    let p_card = UnitCard::new(CardId(1), "Player", 5, 5, 0, 0)
         .with_abilities(vec![ability_a, ability_b]);
-    let e_card = UnitCard::new(CardId(2), "Enemy", "Enemy", 5, 5, 0, 0).with_ability(ability_c);
+    let e_card = UnitCard::new(CardId(2), "Enemy", 5, 5, 0, 0).with_ability(ability_c);
 
     // Test across multiple seeds to verify no interleaving ever occurs
     for seed in [1u64, 42, 123, 456, 789, 1000, 9999, 123456] {

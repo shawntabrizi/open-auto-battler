@@ -33,7 +33,7 @@ pub mod pallet {
     use manalimit_core::types::{EconomyStats, UnitStats};
     use manalimit_core::{
         get_opponent_for_round, resolve_battle,
-        units::{create_genesis_bag, get_all_templates, get_template_emoji},
+        units::create_genesis_bag,
         verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, GamePhase,
         GameState, UnitCard, XorShiftRng,
     };
@@ -367,17 +367,22 @@ pub mod pallet {
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
-            let templates = get_all_templates();
-            let mut cards = Vec::new();
+            use manalimit_core::cards::{get_all_cards, get_all_card_metas, get_all_sets};
 
-            for (card, rarity) in templates {
+            let cards = get_all_cards();
+            let metas = get_all_card_metas();
+            let sets = get_all_sets();
+
+            // Store all cards
+            for (card, meta) in cards.iter().zip(metas.iter()) {
                 let card_id = card.id.0;
                 let data = UserCardData::<T> {
-                    stats: card.stats,
-                    economy: card.economy,
+                    stats: card.stats.clone(),
+                    economy: card.economy.clone(),
                     abilities: BoundedVec::truncate_from(
                         card.abilities
-                            .into_iter()
+                            .iter()
+                            .cloned()
                             .map(|a| BoundedAbility::<T>::from(a))
                             .collect(),
                     ),
@@ -385,33 +390,31 @@ pub mod pallet {
 
                 UserCards::<T>::insert(card_id, data);
 
-                let emoji = get_template_emoji(&card.template_id);
                 let metadata_entry = CardMetadataEntry {
-                    creator: T::AccountId::decode(&mut frame::traits::TrailingZeroInput::zeroes())
-                        .unwrap(),
+                    creator: T::AccountId::decode(
+                        &mut frame::traits::TrailingZeroInput::zeroes(),
+                    )
+                    .unwrap(),
                     metadata: CardMetadata {
-                        name: BoundedVec::truncate_from(card.name.as_bytes().to_vec()),
-                        emoji: BoundedVec::truncate_from(emoji.as_bytes().to_vec()),
+                        name: BoundedVec::truncate_from(meta.name.as_bytes().to_vec()),
+                        emoji: BoundedVec::truncate_from(meta.emoji.as_bytes().to_vec()),
                         description: BoundedVec::default(),
                     },
                     created_at: Zero::zero(),
                 };
                 CardMetadataStore::<T>::insert(card_id, metadata_entry);
 
-                cards.push(manalimit_core::state::CardSetEntry {
-                    card_id: card.id,
-                    rarity,
-                });
-
                 if card_id >= NextUserCardId::<T>::get() {
                     NextUserCardId::<T>::put(card_id + 1);
                 }
             }
 
-            let card_set = CardSet { cards };
-
-            CardSets::<T>::insert(0, BoundedCardSet::<T>::from(card_set));
-            NextSetId::<T>::put(1);
+            // Store all sets
+            let num_sets = sets.len();
+            for (i, card_set) in sets.into_iter().enumerate() {
+                CardSets::<T>::insert(i as u32, BoundedCardSet::<T>::from(card_set));
+            }
+            NextSetId::<T>::put(num_sets as u32);
         }
     }
 
@@ -538,8 +541,8 @@ pub mod pallet {
                 .unwrap_or_else(|| {
                     get_opponent_for_round(
                         core_state.local_state.round,
-                        &mut core_state.local_state.next_card_id,
                         battle_seed.wrapping_add(999),
+                        &core_state.card_pool,
                     )
                     .unwrap_or_default()
                 });
@@ -550,7 +553,7 @@ pub mod pallet {
 
             // Run the battle
             let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-            let events = resolve_battle(player_units, enemy_units, &mut rng);
+            let events = resolve_battle(player_units, enemy_units, &mut rng, &core_state.card_pool);
 
             // Extract battle result from the last event
             let result = events
@@ -874,8 +877,7 @@ pub mod pallet {
         ) -> UnitCard {
             UnitCard {
                 id,
-                template_id: alloc::string::String::new(), // Not used in game logic
-                name: alloc::string::String::new(),        // Not used in game logic
+                name: alloc::string::String::new(), // Name is metadata, not used in game logic
                 stats: data.stats,
                 economy: data.economy,
                 abilities: data.abilities.into_iter().map(|a| a.into()).collect(),

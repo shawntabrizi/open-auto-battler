@@ -60,10 +60,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         const a = data.attack || 0;
         return `Give ${a >= 0 ? '+' : ''}${a}/${h >= 0 ? '+' : ''}${h} to ${getTargetDescription(data.target)}`;
       case 'SpawnUnit':
-        const templateId = typeof data.template_id === 'string' 
-          ? data.template_id 
-          : data.template_id?.asText?.() || 'unit';
-        return `Spawn a ${templateId.replace('_', ' ')}`;
+        return `Spawn unit (card #${data.card_id ?? '?'})`;
       case 'Destroy':
         return `Destroy ${getTargetDescription(data.target)}`;
       default:
@@ -153,7 +150,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         <div className="flex flex-col items-center mb-6">
           {/* Card Art */}
           <div className="w-32 h-32 bg-gray-700 rounded-lg flex items-center justify-center text-6xl mb-4">
-            {getCardEmoji(card.template_id)}
+            {getCardEmoji(card.id)}
           </div>
 
           {/* Stats */}

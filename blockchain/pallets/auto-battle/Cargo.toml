@@ -21,5 +21,5 @@ manalimit-core = { workspace = true, features = ["bounded"] }
 [features]
 default = ["std"]
 runtime-benchmarks = ["frame/runtime-benchmarks"]
-std = ["codec/std", "frame/std", "scale-info/std"]
+std = ["codec/std", "frame/std", "scale-info/std", "manalimit-core/std"]
 try-runtime = ["frame/try-runtime"]

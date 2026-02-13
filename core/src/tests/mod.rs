@@ -7,6 +7,7 @@ mod state;
 mod triggers;
 mod turns;
 
+use alloc::collections::BTreeMap;
 use crate::battle::{resolve_battle, CombatEvent, CombatUnit};
 use crate::rng::XorShiftRng;
 use crate::types::*;
@@ -16,7 +17,7 @@ use crate::types::*;
 // ==========================================
 
 fn create_dummy_card(id: u32, name: &str, atk: i32, hp: i32) -> UnitCard {
-    UnitCard::new(CardId(id), name, name, atk, hp, 1, 1)
+    UnitCard::new(CardId(id), name, atk, hp, 1, 1)
 }
 
 fn create_board_unit(id: u32, name: &str, atk: i32, hp: i32) -> CombatUnit {
@@ -59,7 +60,6 @@ fn create_tester_unit(
 
     let card = UnitCard {
         id: CardId(id),
-        template_id: "test_dummy".to_string(),
         name: name.to_string(),
         stats: UnitStats { attack, health },
         economy: EconomyStats {
@@ -75,7 +75,6 @@ fn create_tester_unit(
 fn create_dummy_enemy() -> CombatUnit {
     let card = UnitCard {
         id: CardId(999),
-        template_id: "sandbag".to_string(),
         name: "Sandbag".to_string(),
         stats: UnitStats {
             attack: 0,
@@ -90,11 +89,43 @@ fn create_dummy_enemy() -> CombatUnit {
     CombatUnit::from_card(card)
 }
 
+/// Empty card pool for tests that don't use SpawnUnit
+fn empty_card_pool() -> BTreeMap<CardId, UnitCard> {
+    BTreeMap::new()
+}
+
+/// Card pool with common token cards for spawn tests
+fn spawn_test_card_pool() -> BTreeMap<CardId, UnitCard> {
+    let mut pool = BTreeMap::new();
+    // rat_token (ID 40)
+    pool.insert(CardId(40), UnitCard::new(CardId(40), "Rat Token", 1, 1, 0, 0));
+    // zombie_soldier (ID 41)
+    pool.insert(CardId(41), UnitCard::new(CardId(41), "Zombie Soldier", 1, 1, 1, 1));
+    // zombie_spawn (ID 42)
+    pool.insert(CardId(42), UnitCard::new(CardId(42), "Zombie Spawn", 1, 1, 0, 0));
+    // golem (ID 43)
+    pool.insert(CardId(43), UnitCard::new(CardId(43), "Golem", 5, 5, 0, 0));
+    // phoenix_egg (ID 44)
+    pool.insert(CardId(44), UnitCard::new(CardId(44), "Phoenix Egg", 0, 5, 0, 0));
+    pool
+}
+
 fn run_battle(
     player_board: &[CombatUnit],
     enemy_board: &[CombatUnit],
     seed: u64,
 ) -> Vec<CombatEvent> {
     let mut rng = XorShiftRng::seed_from_u64(seed);
-    resolve_battle(player_board.to_vec(), enemy_board.to_vec(), &mut rng)
+    let card_pool = empty_card_pool();
+    resolve_battle(player_board.to_vec(), enemy_board.to_vec(), &mut rng, &card_pool)
+}
+
+fn run_battle_with_pool(
+    player_board: &[CombatUnit],
+    enemy_board: &[CombatUnit],
+    seed: u64,
+    card_pool: &BTreeMap<CardId, UnitCard>,
+) -> Vec<CombatEvent> {
+    let mut rng = XorShiftRng::seed_from_u64(seed);
+    resolve_battle(player_board.to_vec(), enemy_board.to_vec(), &mut rng, card_pool)
 }

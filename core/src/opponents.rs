@@ -2,174 +2,138 @@
 //!
 //! This module handles generating enemy boards for battles with different "personalities" and scaling.
 
+use alloc::collections::BTreeMap;
 use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::battle::CombatUnit;
 use crate::error::{GameError, GameResult};
 use crate::rng::{BattleRng, XorShiftRng};
-use crate::types::UnitCard;
-use crate::units::get_starter_templates;
+use crate::types::{CardId, UnitCard};
 
-/// Create a unit from a template
-fn create_unit_from_template(
-    card_id_counter: &mut u32,
-    template_id: &str,
+/// Create a combat unit from the card pool by card ID
+fn create_unit_from_pool(
+    card_pool: &BTreeMap<CardId, UnitCard>,
+    card_id: CardId,
 ) -> GameResult<CombatUnit> {
-    *card_id_counter += 1;
-
-    // Get all starter templates
-    let templates = get_starter_templates();
-
-    // Find the template
-    let template = templates
-        .into_iter()
-        .find(|t| t.template_id == template_id)
+    let card = card_pool
+        .get(&card_id)
         .ok_or(GameError::TemplateNotFound)?;
-
-    // Create the unit card with the template data
-    let mut card = UnitCard::new(
-        crate::types::CardId(*card_id_counter),
-        template.template_id,
-        template.name,
-        template.attack,
-        template.health,
-        template.play_cost,
-        template.pitch_value,
-    );
-
-    // Add abilities if any
-    for ability in template.abilities {
-        card = card.with_ability(ability);
-    }
-
-    Ok(CombatUnit::from_card(card))
+    Ok(CombatUnit::from_card(card.clone()))
 }
 
+// Card ID constants for readability
+const RAT_SWARM: u32 = 0;
+const GOBLIN_SCOUT: u32 = 1;
+const GOBLIN_GRUNT: u32 = 2;
+const MILITIA: u32 = 5;
+const SHIELD_BEARER: u32 = 6;
+const ARCHER: u32 = 11;
+const SNIPER: u32 = 12;
+const BATTLE_HARDENED: u32 = 14;
+const PACK_LEADER: u32 = 16;
+const ZOMBIE_CAPTAIN: u32 = 20;
+const NECROMANCER: u32 = 21;
+const HEADHUNTER: u32 = 22;
+const LICH: u32 = 29;
+const ASSASSIN: u32 = 30;
+const OGRE_MAULER: u32 = 32;
+const SHIELD_MASTER: u32 = 34;
+const MANA_REAPER: u32 = 36;
+const GIANT_CRUSHER: u32 = 37;
+const BEHEMOTH: u32 = 38;
+const DRAGON_TYRANT: u32 = 39;
+
 /// The Swarm Strategy: Focuses on many small units and undead spawning.
-fn get_swarm_strategy(round: i32) -> Vec<&'static str> {
+fn get_swarm_strategy(round: i32) -> Vec<u32> {
     match round {
-        1 => vec!["rat_swarm", "goblin_scout"],
-        2 => vec!["rat_swarm", "goblin_scout", "goblin_grunt"],
-        3 => vec!["zombie_captain", "goblin_scout", "rat_swarm"],
-        4 => vec!["zombie_captain", "zombie_captain", "rat_swarm"],
-        5 => vec![
-            "necromancer",
-            "zombie_captain",
-            "zombie_captain",
-            "rat_swarm",
-        ],
+        1 => vec![RAT_SWARM, GOBLIN_SCOUT],
+        2 => vec![RAT_SWARM, GOBLIN_SCOUT, GOBLIN_GRUNT],
+        3 => vec![ZOMBIE_CAPTAIN, GOBLIN_SCOUT, RAT_SWARM],
+        4 => vec![ZOMBIE_CAPTAIN, ZOMBIE_CAPTAIN, RAT_SWARM],
+        5 => vec![NECROMANCER, ZOMBIE_CAPTAIN, ZOMBIE_CAPTAIN, RAT_SWARM],
         6 => vec![
-            "necromancer",
-            "pack_leader",
-            "zombie_captain",
-            "zombie_captain",
-            "rat_swarm",
+            NECROMANCER,
+            PACK_LEADER,
+            ZOMBIE_CAPTAIN,
+            ZOMBIE_CAPTAIN,
+            RAT_SWARM,
         ],
         7 => vec![
-            "lich",
-            "necromancer",
-            "zombie_captain",
-            "zombie_captain",
-            "rat_swarm",
+            LICH,
+            NECROMANCER,
+            ZOMBIE_CAPTAIN,
+            ZOMBIE_CAPTAIN,
+            RAT_SWARM,
         ],
-        8 => vec![
-            "lich",
-            "lich",
-            "zombie_captain",
-            "zombie_captain",
-            "rat_swarm",
-        ],
+        8 => vec![LICH, LICH, ZOMBIE_CAPTAIN, ZOMBIE_CAPTAIN, RAT_SWARM],
         9 => vec![
-            "lich",
-            "lich",
-            "necromancer",
-            "zombie_captain",
-            "zombie_captain",
+            LICH,
+            LICH,
+            NECROMANCER,
+            ZOMBIE_CAPTAIN,
+            ZOMBIE_CAPTAIN,
         ],
         _ => vec![
-            "dragon_tyrant",
-            "lich",
-            "lich",
-            "zombie_captain",
-            "zombie_captain",
+            DRAGON_TYRANT,
+            LICH,
+            LICH,
+            ZOMBIE_CAPTAIN,
+            ZOMBIE_CAPTAIN,
         ],
     }
 }
 
 /// The Tank Strategy: Focuses on high health units and front-line buffs.
-fn get_tank_strategy(round: i32) -> Vec<&'static str> {
+fn get_tank_strategy(round: i32) -> Vec<u32> {
     match round {
-        1 => vec!["shield_bearer", "militia"],
-        2 => vec!["shield_bearer", "shield_bearer"],
-        3 => vec!["shield_bearer", "battle_hardened", "militia"],
-        4 => vec!["shield_master", "shield_bearer", "battle_hardened"],
+        1 => vec![SHIELD_BEARER, MILITIA],
+        2 => vec![SHIELD_BEARER, SHIELD_BEARER],
+        3 => vec![SHIELD_BEARER, BATTLE_HARDENED, MILITIA],
+        4 => vec![SHIELD_MASTER, SHIELD_BEARER, BATTLE_HARDENED],
         5 => vec![
-            "shield_master",
-            "shield_bearer",
-            "shield_bearer",
-            "battle_hardened",
+            SHIELD_MASTER,
+            SHIELD_BEARER,
+            SHIELD_BEARER,
+            BATTLE_HARDENED,
         ],
         6 => vec![
-            "shield_master",
-            "ogre_mauler",
-            "shield_bearer",
-            "battle_hardened",
+            SHIELD_MASTER,
+            OGRE_MAULER,
+            SHIELD_BEARER,
+            BATTLE_HARDENED,
         ],
-        7 => vec![
-            "behemoth",
-            "shield_master",
-            "ogre_mauler",
-            "battle_hardened",
-        ],
-        8 => vec!["behemoth", "behemoth", "shield_master", "battle_hardened"],
+        7 => vec![BEHEMOTH, SHIELD_MASTER, OGRE_MAULER, BATTLE_HARDENED],
+        8 => vec![BEHEMOTH, BEHEMOTH, SHIELD_MASTER, BATTLE_HARDENED],
         9 => vec![
-            "behemoth",
-            "behemoth",
-            "shield_master",
-            "shield_master",
-            "shield_master",
+            BEHEMOTH,
+            BEHEMOTH,
+            SHIELD_MASTER,
+            SHIELD_MASTER,
+            SHIELD_MASTER,
         ],
-        _ => vec!["behemoth", "behemoth", "behemoth", "behemoth", "behemoth"],
+        _ => vec![BEHEMOTH, BEHEMOTH, BEHEMOTH, BEHEMOTH, BEHEMOTH],
     }
 }
 
 /// The Sniper Strategy: Focuses on back-line damage and specialized execution.
-fn get_sniper_strategy(round: i32) -> Vec<&'static str> {
+fn get_sniper_strategy(round: i32) -> Vec<u32> {
     match round {
-        1 => vec!["militia", "archer"],
-        2 => vec!["shield_bearer", "sniper"],
-        3 => vec!["militia", "archer", "sniper"],
-        4 => vec!["shield_bearer", "headhunter", "sniper"],
-        5 => vec!["shield_bearer", "assassin", "headhunter", "sniper"],
-        6 => vec!["ogre_mauler", "assassin", "headhunter", "sniper", "archer"],
-        7 => vec![
-            "ogre_mauler",
-            "assassin",
-            "assassin",
-            "headhunter",
-            "sniper",
-        ],
-        8 => vec![
-            "giant_crusher",
-            "assassin",
-            "assassin",
-            "headhunter",
-            "sniper",
-        ],
-        9 => vec![
-            "mana_reaper",
-            "giant_crusher",
-            "assassin",
-            "headhunter",
-            "sniper",
-        ],
+        1 => vec![MILITIA, ARCHER],
+        2 => vec![SHIELD_BEARER, SNIPER],
+        3 => vec![MILITIA, ARCHER, SNIPER],
+        4 => vec![SHIELD_BEARER, HEADHUNTER, SNIPER],
+        5 => vec![SHIELD_BEARER, ASSASSIN, HEADHUNTER, SNIPER],
+        6 => vec![OGRE_MAULER, ASSASSIN, HEADHUNTER, SNIPER, ARCHER],
+        7 => vec![OGRE_MAULER, ASSASSIN, ASSASSIN, HEADHUNTER, SNIPER],
+        8 => vec![GIANT_CRUSHER, ASSASSIN, ASSASSIN, HEADHUNTER, SNIPER],
+        9 => vec![MANA_REAPER, GIANT_CRUSHER, ASSASSIN, HEADHUNTER, SNIPER],
         _ => vec![
-            "mana_reaper",
-            "mana_reaper",
-            "dragon_tyrant",
-            "giant_crusher",
-            "headhunter",
+            MANA_REAPER,
+            MANA_REAPER,
+            DRAGON_TYRANT,
+            GIANT_CRUSHER,
+            HEADHUNTER,
         ],
     }
 }
@@ -177,21 +141,21 @@ fn get_sniper_strategy(round: i32) -> Vec<&'static str> {
 /// Get the opponent board for a given round (1-10)
 pub fn get_opponent_for_round(
     round: i32,
-    card_id_counter: &mut u32,
     seed: u64,
+    card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> GameResult<Vec<CombatUnit>> {
     let mut rng = XorShiftRng::seed_from_u64(seed);
     let strategy_roll = rng.gen_range(3); // 0, 1, or 2
 
-    let template_ids = match strategy_roll {
+    let card_ids = match strategy_roll {
         0 => get_swarm_strategy(round),
         1 => get_tank_strategy(round),
         _ => get_sniper_strategy(round),
     };
 
     let mut units = Vec::new();
-    for template_id in template_ids {
-        units.push(create_unit_from_template(card_id_counter, template_id)?);
+    for id in card_ids {
+        units.push(create_unit_from_pool(card_pool, CardId(id))?);
     }
 
     Ok(units)
@@ -206,7 +170,7 @@ pub struct GhostBoard {
 /// A unit on a ghost board (simple version for genesis).
 #[derive(Clone, Debug)]
 pub struct GhostBoardUnitSimple {
-    pub card_id: crate::types::CardId,
+    pub card_id: CardId,
     pub current_health: i32,
 }
 
@@ -227,11 +191,13 @@ pub struct GenesisMatchmakingBracket {
 /// * `max_round` - Maximum round to generate ghosts for (typically 10)
 /// * `ghosts_per_bracket` - Number of ghosts to generate per bracket
 /// * `base_seed` - Base seed for deterministic generation
+/// * `card_pool` - The card pool to look up card data from
 pub fn generate_genesis_ghosts(
     set_id: u32,
     max_round: i32,
     ghosts_per_bracket: usize,
     base_seed: u64,
+    card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> Vec<(GenesisMatchmakingBracket, Vec<GhostBoard>)> {
     let mut result = Vec::new();
 
@@ -264,30 +230,27 @@ pub fn generate_genesis_ghosts(
 
                     let strategy = i % 3; // Cycle through strategies
 
-                    let template_ids = match strategy {
+                    let card_ids = match strategy {
                         0 => get_swarm_strategy(round),
                         1 => get_tank_strategy(round),
                         _ => get_sniper_strategy(round),
                     };
 
-                    let templates = get_starter_templates();
-                    let units: Vec<GhostBoardUnitSimple> = template_ids
+                    let units: Vec<GhostBoardUnitSimple> = card_ids
                         .iter()
                         .enumerate()
-                        .filter_map(|(idx, template_id)| {
-                            templates
-                                .iter()
-                                .find(|t| t.template_id == *template_id)
-                                .map(|template| {
-                                    // Use a deterministic card ID based on the seed and index
-                                    let card_id = crate::types::CardId(
-                                        ((seed.wrapping_add(idx as u64)) % 1000 + 1) as u32,
-                                    );
-                                    GhostBoardUnitSimple {
-                                        card_id,
-                                        current_health: template.health,
-                                    }
-                                })
+                        .filter_map(|(idx, &id)| {
+                            let cid = CardId(id);
+                            card_pool.get(&cid).map(|card| {
+                                // Use a deterministic card ID based on the seed and index
+                                let ghost_card_id = CardId(
+                                    ((seed.wrapping_add(idx as u64)) % 1000 + 1) as u32,
+                                );
+                                GhostBoardUnitSimple {
+                                    card_id: ghost_card_id,
+                                    current_health: card.stats.health,
+                                }
+                            })
                         })
                         .collect();
 

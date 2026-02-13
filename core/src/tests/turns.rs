@@ -10,7 +10,7 @@ fn test_verify_and_apply_turn() {
     // Add cards with known costs
     for _ in 0..10 {
         let id = state.generate_card_id();
-        let card = UnitCard::new(id, "test", "Test", 2, 2, 1, 2);
+        let card = UnitCard::new(id, "Test", 2, 2, 1, 2);
         state.card_pool.insert(id, card);
         state.bag.push(id);
     }
@@ -53,7 +53,7 @@ fn test_verify_and_apply_turn_with_refill() {
     // Add cards with cost 4 and pitch 4
     for _ in 0..10 {
         let id = state.generate_card_id();
-        let card = UnitCard::new(id, "test", "Test", 2, 2, 4, 4);
+        let card = UnitCard::new(id, "Test", 2, 2, 4, 4);
         state.card_pool.insert(id, card);
         state.bag.push(id);
     }
@@ -105,7 +105,7 @@ fn test_sequential_order_matters() {
     // Add cards with cost 4 and pitch 4
     for _ in 0..10 {
         let id = state.generate_card_id();
-        let card = UnitCard::new(id, "test", "Test", 2, 2, 4, 4);
+        let card = UnitCard::new(id, "Test", 2, 2, 4, 4);
         state.card_pool.insert(id, card);
         state.bag.push(id);
     }
@@ -133,7 +133,7 @@ fn test_pitch_then_pitch_same_card_fails() {
     // Add cards
     for _ in 0..10 {
         let id = state.generate_card_id();
-        let card = UnitCard::new(id, "test", "Test", 2, 2, 1, 2);
+        let card = UnitCard::new(id, "Test", 2, 2, 1, 2);
         state.card_pool.insert(id, card);
         state.bag.push(id);
     }
@@ -161,7 +161,7 @@ fn test_swap_board_positions() {
     // Add cards
     for _ in 0..10 {
         let id = state.generate_card_id();
-        let card = UnitCard::new(id, "test", "Test", 2, 2, 1, 2);
+        let card = UnitCard::new(id, "Test", 2, 2, 1, 2);
         state.card_pool.insert(id, card);
         state.bag.push(id);
     }
@@ -214,7 +214,7 @@ fn test_pitch_from_board() {
     // Add cards
     for _ in 0..10 {
         let id = state.generate_card_id();
-        let card = UnitCard::new(id, "test", "Test", 2, 2, 1, 2);
+        let card = UnitCard::new(id, "Test", 2, 2, 1, 2);
         state.card_pool.insert(id, card);
         state.bag.push(id);
     }
@@ -222,7 +222,7 @@ fn test_pitch_from_board() {
 
     // Pre-place a card on the board
     let pre_placed_id = state.generate_card_id();
-    let pre_placed_card = UnitCard::new(pre_placed_id, "pre", "Pre", 1, 1, 1, 3);
+    let pre_placed_card = UnitCard::new(pre_placed_id, "Pre", 1, 1, 1, 3);
     state
         .card_pool
         .insert(pre_placed_id, pre_placed_card.clone());

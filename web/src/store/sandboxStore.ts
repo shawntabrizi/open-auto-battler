@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import type { UnitTemplateView, BattleOutput, SandboxUnit } from '../types';
+import type { BattleOutput, SandboxUnit, CardView } from '../types';
 
 interface WasmModule {
   default: () => Promise<void>;
-  get_unit_templates: () => UnitTemplateView[];
+  get_unit_templates: () => CardView[];
   run_sandbox_battle: (
     playerUnits: SandboxUnit[],
     enemyUnits: SandboxUnit[],
@@ -15,10 +15,10 @@ let wasmModule: WasmModule | null = null;
 
 interface SandboxStore {
   // State
-  templates: UnitTemplateView[];
-  playerBoard: (UnitTemplateView | null)[];
-  enemyBoard: (UnitTemplateView | null)[];
-  selectedTemplate: UnitTemplateView | null;
+  templates: CardView[];
+  playerBoard: (CardView | null)[];
+  enemyBoard: (CardView | null)[];
+  selectedTemplate: CardView | null;
   battleOutput: BattleOutput | null;
   isLoading: boolean;
   isBattling: boolean;
@@ -27,9 +27,9 @@ interface SandboxStore {
 
   // Actions
   init: () => Promise<void>;
-  selectTemplate: (template: UnitTemplateView | null) => void;
-  addToPlayerBoard: (slotIndex: number, template: UnitTemplateView) => void;
-  addToEnemyBoard: (slotIndex: number, template: UnitTemplateView) => void;
+  selectTemplate: (template: CardView | null) => void;
+  addToPlayerBoard: (slotIndex: number, template: CardView) => void;
+  addToEnemyBoard: (slotIndex: number, template: CardView) => void;
   removeFromPlayerBoard: (slotIndex: number) => void;
   removeFromEnemyBoard: (slotIndex: number) => void;
   clearPlayerBoard: () => void;
@@ -61,7 +61,8 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
     try {
       set({ isLoading: true });
 
-      const wasm = (await import('manalimit-client')) as unknown as WasmModule;
+      const wasm = await import('manalimit-client') as unknown as WasmModule;
+
       if (!wasmInitialized) {
         await wasm.default();
         wasmInitialized = true;
@@ -136,12 +137,12 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
 
     // Convert boards to SandboxUnit arrays (only non-null entries)
     const playerUnits: SandboxUnit[] = playerBoard
-      .filter((t): t is UnitTemplateView => t !== null)
-      .map((t) => ({ template_id: t.template_id }));
+      .filter((t): t is CardView => t !== null)
+      .map((t) => ({ card_id: t.id }));
 
     const enemyUnits: SandboxUnit[] = enemyBoard
-      .filter((t): t is UnitTemplateView => t !== null)
-      .map((t) => ({ template_id: t.template_id }));
+      .filter((t): t is CardView => t !== null)
+      .map((t) => ({ card_id: t.id }));
 
     if (playerUnits.length === 0 && enemyUnits.length === 0) {
       console.warn('Both boards are empty, cannot run battle');
