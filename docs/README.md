@@ -1,4 +1,4 @@
-# ManaLimit Documentation
+# Open Auto Battler Documentation
 
 ## For New Contributors
 
@@ -23,7 +23,7 @@ Located in the project root:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    manalimit-core                       │
+│                    oab-core                       │
 │              (Rust - runs everywhere)                   │
 └────────────────────────┬────────────────────────────────┘
                          │

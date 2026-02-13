@@ -25,7 +25,7 @@ export function HomePage() {
         {/* Logo/Title */}
         <div className="mb-4 lg:mb-12 text-center">
           <h1 className="text-3xl lg:text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 mb-1 lg:mb-2">
-            MANALIMIT
+            OPEN AUTO BATTLER
           </h1>
           <p className="text-slate-500 text-xs lg:text-base">Auto-Battler Card Game</p>
         </div>

@@ -16,10 +16,10 @@ targets = ["x86_64-unknown-linux-gnu"]
 codec = { features = ["derive"], workspace = true }
 frame = { workspace = true, features = ["experimental", "runtime"], default-features = false }
 scale-info = { features = ["derive"], workspace = true }
-manalimit-core = { workspace = true, features = ["bounded"] }
+oab-core = { workspace = true, features = ["bounded"] }
 
 [features]
 default = ["std"]
 runtime-benchmarks = ["frame/runtime-benchmarks"]
-std = ["codec/std", "frame/std", "scale-info/std", "manalimit-core/std"]
+std = ["codec/std", "frame/std", "scale-info/std", "oab-core/std"]
 try-runtime = ["frame/try-runtime"]

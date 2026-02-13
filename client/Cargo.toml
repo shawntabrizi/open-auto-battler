@@ -1,5 +1,5 @@
 [package]
-name = "manalimit-client"
+name = "oab-client"
 version = "0.1.0"
 authors.workspace = true
 edition.workspace = true
@@ -11,7 +11,7 @@ repository.workspace = true
 crate-type = ["cdylib"]
 
 [dependencies]
-manalimit-core = { workspace = true, features = ["std", "bounded"] }
+oab-core = { workspace = true, features = ["std", "bounded"] }
 parity-scale-codec = { workspace = true, features = ["derive"] }
 bounded-collections = { workspace = true }
 wasm-bindgen = { workspace = true }
@@ -25,4 +25,4 @@ getrandom = { workspace = true, features = ["js"] }
 
 [features]
 default = []
-browser_log = ["manalimit-core/browser_log"]
+browser_log = ["oab-core/browser_log"]

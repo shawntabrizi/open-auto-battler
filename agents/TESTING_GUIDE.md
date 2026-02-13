@@ -18,8 +18,8 @@ This document is derived from the test layout in the codebase.
 ## Running Tests
 - Prefer crate-scoped tests for the crates you touched.
 - Use the following commands as needed:
-- `cargo test -p manalimit-core`
-- `cargo test -p manalimit-client`
+- `cargo test -p oab-core`
+- `cargo test -p oab-client`
 - `cargo test -p pallet-auto-battle`
 - `cargo test -p auto-battle-runtime`
 

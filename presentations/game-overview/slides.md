@@ -4,7 +4,7 @@ theme: default
 paginate: true
 ---
 
-# ManaLimit
+# Open Auto Battler
 
 ## A Blockchain-Native Auto-Battler
 
@@ -14,7 +14,7 @@ paginate: true
 
 ---
 
-# What is ManaLimit?
+# What is Open Auto Battler?
 
 A **deck-building auto-battler** that combines the best elements of:
 
@@ -128,7 +128,7 @@ Every card can be **played** and/or **pitched**:
 
 # A Game Truly Enhanced by Blockchain
 
-Manalimit is designed end-to-end for the blockchain:
+Open Auto Battler is designed end-to-end for the blockchain:
 
 - Technology of the Game
 - Mechanics of the Game
@@ -147,7 +147,7 @@ The **same Rust code** runs everywhere:
 
 ```
 ┌────────────────────────────────────┐
-│        manalimit-core (Rust)       │
+│          oab-core (Rust)           │
 └──────────┬───────────┬─────────────┘
            │           │
      ┌─────▼─────┐ ┌───▼───────────┐
@@ -258,7 +258,7 @@ Players ──► Tournaments ──► Rewards
 - Failed blockchain games focus on "play-to-earn" mechanics, which are just ponzinomics.
 - Real games should extract value from those who enjoy the game, and return value to those who make the game enjoyable.
 - The most expensive part of strategy card games is **game design**.
-- Manalimit allows the community to take on the role of game design, and be rewarded for doing so!
+- Open Auto Battler allows the community to take on the role of game design, and be rewarded for doing so!
 
 ---
 

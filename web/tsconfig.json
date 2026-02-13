@@ -24,7 +24,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "manalimit-core": ["../core/pkg"]
+      "oab-core": ["../core/pkg"]
     }
   },
   "include": ["src"]

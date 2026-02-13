@@ -14,5 +14,5 @@ pub fn init() {
 
 #[wasm_bindgen]
 pub fn greet() -> String {
-    "Hello from Manalimit Client WASM!".into()
+    "Hello from Open Auto Battler Client WASM!".into()
 }

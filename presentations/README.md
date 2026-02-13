@@ -1,6 +1,6 @@
 # Presentations
 
-This folder contains markdown-based slide presentations for ManaLimit.
+This folder contains markdown-based slide presentations for Open Auto Battler.
 
 ## Tools
 
@@ -14,7 +14,7 @@ These presentations are designed for lightweight markdown slide tools such as:
 
 | Folder | Description |
 |--------|-------------|
-| `game-overview/` | Introduction to ManaLimit for team members |
+| `game-overview/` | Introduction to Open Auto Battler for team members |
 
 ## Creating a New Presentation
 

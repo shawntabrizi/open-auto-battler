@@ -10,8 +10,8 @@ interface PresentationMeta {
 const presentations: PresentationMeta[] = [
   {
     id: 'game-overview',
-    title: 'ManaLimit Overview',
-    description: 'Introduction to ManaLimit for team members',
+    title: 'Open Auto Battler Overview',
+    description: 'Introduction to Open Auto Battler for team members',
   },
 ];
 
@@ -20,7 +20,7 @@ export default function PresentationsPage() {
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-2">Presentations</h1>
-        <p className="text-gray-400 mb-8">Slide decks for ManaLimit</p>
+        <p className="text-gray-400 mb-8">Slide decks for Open Auto Battler</p>
 
         <div className="grid gap-4">
           {presentations.map((p) => (

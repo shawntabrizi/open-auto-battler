@@ -5,12 +5,12 @@
 use std::vec::Vec;
 
 use crate::engine::BattleOutput;
-use manalimit_core::battle::{resolve_battle, CombatUnit, UnitView};
-use manalimit_core::cards::build_card_pool;
-use manalimit_core::log;
-use manalimit_core::rng::XorShiftRng;
-use manalimit_core::types::CardId;
-use manalimit_core::view::CardView;
+use oab_core::battle::{resolve_battle, CombatUnit, UnitView};
+use oab_core::cards::build_card_pool;
+use oab_core::log;
+use oab_core::rng::XorShiftRng;
+use oab_core::types::CardId;
+use oab_core::view::CardView;
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
@@ -69,11 +69,11 @@ pub fn run_sandbox_battle(
         &card_pool,
     );
 
-    let mut limits = manalimit_core::limits::BattleLimits::new();
+    let mut limits = oab_core::limits::BattleLimits::new();
     let initial_player_units: Vec<UnitView> = player_board
         .iter()
         .map(|u| UnitView {
-            instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Player),
+            instance_id: limits.generate_instance_id(oab_core::limits::Team::Player),
             card_id: u.card_id,
             name: u.name.clone(),
             attack: u.attack,
@@ -86,7 +86,7 @@ pub fn run_sandbox_battle(
     let initial_enemy_units: Vec<UnitView> = enemy_board
         .iter()
         .map(|u| UnitView {
-            instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Enemy),
+            instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
             card_id: u.card_id,
             name: u.name.clone(),
             attack: u.attack,

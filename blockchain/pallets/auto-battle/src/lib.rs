@@ -23,15 +23,15 @@ pub mod pallet {
     use frame::traits::{Get, Randomness};
 
     // Import types from core engine
-    use manalimit_core::bounded::{
+    use oab_core::bounded::{
         BoundedAbility as CoreBoundedAbility, BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
         BoundedGameState as CoreBoundedGameState, BoundedGhostBoard as CoreBoundedGhostBoard,
         BoundedLocalGameState as CoreBoundedLocalGameState, GhostBoardUnit, MatchmakingBracket,
     };
-    use manalimit_core::rng::BattleRng;
-    use manalimit_core::types::{EconomyStats, UnitStats};
-    use manalimit_core::{
+    use oab_core::rng::BattleRng;
+    use oab_core::types::{EconomyStats, UnitStats};
+    use oab_core::{
         get_opponent_for_round, resolve_battle,
         units::create_genesis_bag,
         verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, GamePhase,
@@ -369,7 +369,7 @@ pub mod pallet {
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
-            use manalimit_core::cards::{get_all_cards, get_all_card_metas, get_all_sets};
+            use oab_core::cards::{get_all_cards, get_all_card_metas, get_all_sets};
 
             let cards = get_all_cards();
             let metas = get_all_card_metas();
@@ -447,7 +447,7 @@ pub mod pallet {
             let mut state = GameState::reconstruct(
                 card_pool,
                 set_id,
-                manalimit_core::state::LocalGameState {
+                oab_core::state::LocalGameState {
                     bag: create_genesis_bag(&card_set, seed),
                     hand: Vec::new(),
                     board: vec![None; 5], // BOARD_SIZE is 5
@@ -576,7 +576,7 @@ pub mod pallet {
                 .iter()
                 .rev()
                 .find_map(|e| {
-                    if let manalimit_core::battle::CombatEvent::BattleEnd { result } = e {
+                    if let oab_core::battle::CombatEvent::BattleEnd { result } = e {
                         Some(result.clone())
                     } else {
                         None
@@ -866,8 +866,8 @@ pub mod pallet {
             let card_set = CardSet {
                 cards: cards
                     .into_iter()
-                    .map(|entry| manalimit_core::state::CardSetEntry {
-                        card_id: manalimit_core::types::CardId(entry.card_id),
+                    .map(|entry| oab_core::state::CardSetEntry {
+                        card_id: oab_core::types::CardId(entry.card_id),
                         rarity: entry.rarity,
                     })
                     .collect(),
@@ -887,7 +887,7 @@ pub mod pallet {
 
     impl<T: Config> Pallet<T> {
         /// Helper to reconstruct a card pool from storage based on a card set.
-        fn get_card_pool(card_set: &CardSet) -> BTreeMap<manalimit_core::types::CardId, UnitCard> {
+        fn get_card_pool(card_set: &CardSet) -> BTreeMap<oab_core::types::CardId, UnitCard> {
             let mut card_pool = BTreeMap::new();
 
             for entry in &card_set.cards {
@@ -904,7 +904,7 @@ pub mod pallet {
 
         /// Helper to convert UserCardData to UnitCard.
         fn entry_to_unit_card(
-            id: manalimit_core::types::CardId,
+            id: oab_core::types::CardId,
             data: UserCardData<T>,
         ) -> UnitCard {
             UnitCard {
@@ -962,7 +962,7 @@ pub mod pallet {
         /// Convert a ghost board to combat units using the provided card pool.
         fn ghost_to_combat_units(
             ghost: &BoundedGhostBoard<T>,
-            card_pool: &BTreeMap<manalimit_core::types::CardId, UnitCard>,
+            card_pool: &BTreeMap<oab_core::types::CardId, UnitCard>,
         ) -> Vec<CombatUnit> {
             ghost
                 .units

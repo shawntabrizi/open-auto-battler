@@ -1,6 +1,6 @@
-//! Manalimit Core - Auto-battler game engine
+//! Open Auto Battler Core - Auto-battler game engine
 //!
-//! This crate provides the core game logic for the Manalimit auto-battler.
+//! This crate provides the core game logic for the Open Auto Battler.
 //! It is designed to be no_std compatible for Substrate SDK pallet integration.
 
 #![cfg_attr(not(feature = "std"), no_std)]

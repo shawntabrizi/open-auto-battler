@@ -5,7 +5,7 @@ The blockchain layer is built using Substrate (Polkadot-SDK).
 ## Pallet Development
 - **Bounded Types**: Every storage item must be bounded. Use `BoundedVec` instead of `Vec`.
 - **TypeInfo & MaxEncodedLen**: Ensure all custom structs derive these traits for compatibility with SCALE and weights.
-- **Game Logic Decoupling**: The pallet acts as a thin wrapper around the `manalimit-core` engine. Avoid duplicating logic; instead, use `GameState::reconstruct` to run calculations.
+- **Game Logic Decoupling**: The pallet acts as a thin wrapper around the `oab-core` engine. Avoid duplicating logic; instead, use `GameState::reconstruct` to run calculations.
 - **NextId Pattern**: Use `StorageValue<_, u32, ValueQuery>` to track IDs for cards, sets, and ghosts.
 
 ## Storage Layout

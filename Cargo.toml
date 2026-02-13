@@ -16,7 +16,7 @@ repository = "https://github.com/paritytech/polkadot-sdk-auto-battle.git"
 edition = "2021"
 
 [workspace.dependencies]
-manalimit-core = { path = "./core", default-features = false }
+oab-core = { path = "./core", default-features = false }
 auto-battle-runtime = { path = "./blockchain/runtime", default-features = false }
 pallet-auto-battle = { path = "./blockchain/pallets/auto-battle", default-features = false }
 clap = { version = "4.5.13" }

@@ -8,15 +8,15 @@ use std::vec;
 use std::vec::Vec;
 
 use bounded_collections::ConstU32;
-use manalimit_core::battle::{resolve_battle, CombatEvent, CombatUnit, UnitView};
-use manalimit_core::bounded::{BoundedCardSet, BoundedLocalGameState};
-use manalimit_core::commit::verify_and_apply_turn;
-use manalimit_core::log;
-use manalimit_core::opponents::get_opponent_for_round;
-use manalimit_core::rng::XorShiftRng;
-use manalimit_core::state::*;
-use manalimit_core::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
-use manalimit_core::view::{CardView, GameView};
+use oab_core::battle::{resolve_battle, CombatEvent, CombatUnit, UnitView};
+use oab_core::bounded::{BoundedCardSet, BoundedLocalGameState};
+use oab_core::commit::verify_and_apply_turn;
+use oab_core::log;
+use oab_core::opponents::get_opponent_for_round;
+use oab_core::rng::XorShiftRng;
+use oab_core::state::*;
+use oab_core::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
+use oab_core::view::{CardView, GameView};
 use parity_scale_codec::Decode;
 use parity_scale_codec::Encode;
 use serde::{Deserialize, Serialize};
@@ -68,7 +68,7 @@ impl GameEngine {
     /// Create a new game engine with an optional seed
     #[wasm_bindgen(constructor)]
     pub fn new(seed: Option<u64>) -> Self {
-        log::info("=== MANALIMIT ENGINE INITIALIZED ===");
+        log::info("=== OAB ENGINE INITIALIZED ===");
 
         // If we are about to be initialized via SCALE, we don't want to waste
         // memory/cycles setting up a full game state that will be dropped.
@@ -107,7 +107,7 @@ impl GameEngine {
     /// Must be called before new_run() or init_from_scale().
     #[wasm_bindgen]
     pub fn load_card_set(&mut self, set_id: u32) -> Result<(), String> {
-        use manalimit_core::cards::{build_card_pool, get_all_sets};
+        use oab_core::cards::{build_card_pool, get_all_sets};
 
         log::action("load_card_set", &format!("Loading cards for set_id={}", set_id));
 
@@ -131,7 +131,7 @@ impl GameEngine {
     /// Used by the frontend to build the emoji display map.
     #[wasm_bindgen]
     pub fn get_card_metas(&self) -> JsValue {
-        let metas = manalimit_core::cards::get_all_card_metas();
+        let metas = oab_core::cards::get_all_card_metas();
         serde_wasm_bindgen::to_value(&metas).unwrap_or(JsValue::NULL)
     }
 
@@ -602,14 +602,14 @@ impl GameEngine {
         let events = resolve_battle(player_units.clone(), enemy_units.clone(), &mut rng, &self.state.card_pool);
 
         // Generate initial views for UI animation
-        let mut limits = manalimit_core::limits::BattleLimits::new();
+        let mut limits = oab_core::limits::BattleLimits::new();
         let initial_player_units: Vec<UnitView> = player_board
             .iter()
             .flatten()
             .map(|u| {
                 let card = self.get_card(u.card_id);
                 UnitView {
-                    instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Player),
+                    instance_id: limits.generate_instance_id(oab_core::limits::Team::Player),
                     card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack,
@@ -626,7 +626,7 @@ impl GameEngine {
             .map(|u| {
                 let card = self.get_card(u.card_id);
                 UnitView {
-                    instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Enemy),
+                    instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
                     card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack,
@@ -639,8 +639,8 @@ impl GameEngine {
         // Apply the battle result (wins/lives)
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {
-                manalimit_core::battle::BattleResult::Victory => self.state.wins += 1,
-                manalimit_core::battle::BattleResult::Defeat => self.state.lives -= 1,
+                oab_core::battle::BattleResult::Victory => self.state.wins += 1,
+                oab_core::battle::BattleResult::Defeat => self.state.lives -= 1,
                 _ => {} // Draw
             }
             log::info(&format!("P2P Battle Result: {:?}", result));
@@ -734,8 +734,8 @@ impl GameEngine {
             "init_from_scale",
             "Converting bounded types to core types...",
         );
-        let _card_set: manalimit_core::state::CardSet = card_set_bounded.into();
-        let local_state: manalimit_core::state::LocalGameState = state_bounded.into();
+        let _card_set: oab_core::state::CardSet = card_set_bounded.into();
+        let local_state: oab_core::state::LocalGameState = state_bounded.into();
 
         log::debug("init_from_scale", "Reconstructing GameState...");
         // Use the card pool already loaded via load_card_set()
@@ -779,7 +779,7 @@ impl GameEngine {
     }
 
     fn initialize_bag(&mut self) {
-        use manalimit_core::units::create_genesis_bag;
+        use oab_core::units::create_genesis_bag;
 
         self.state.local_state.bag.clear();
 
@@ -838,15 +838,15 @@ impl GameEngine {
 
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {
-                manalimit_core::battle::BattleResult::Victory => self.state.wins += 1,
-                manalimit_core::battle::BattleResult::Defeat => self.state.lives -= 1,
+                oab_core::battle::BattleResult::Victory => self.state.wins += 1,
+                oab_core::battle::BattleResult::Defeat => self.state.lives -= 1,
                 _ => {} // DRAW
             }
             log::info(&format!("Battle Result: {:?}", result));
         }
 
         // Generate initial views for UI
-        let mut limits = manalimit_core::limits::BattleLimits::new();
+        let mut limits = oab_core::limits::BattleLimits::new();
         let initial_player_units: Vec<UnitView> = self
             .state
             .board
@@ -855,7 +855,7 @@ impl GameEngine {
             .map(|u| {
                 let card = self.get_card(u.card_id);
                 UnitView {
-                    instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Player),
+                    instance_id: limits.generate_instance_id(oab_core::limits::Team::Player),
                     card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack,
@@ -874,7 +874,7 @@ impl GameEngine {
         .unwrap()
         .into_iter()
         .map(|cu| UnitView {
-            instance_id: limits.generate_instance_id(manalimit_core::limits::Team::Enemy),
+            instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
             card_id: cu.card_id,
             name: cu.name,
             attack: cu.attack,

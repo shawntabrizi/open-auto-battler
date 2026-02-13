@@ -6,7 +6,7 @@ This document is derived from `blockchain/pallets/auto-battle/src/lib.rs` and ru
 - Main pallet is defined in `blockchain/pallets/auto-battle/src/lib.rs`.
 
 ## Bounded Types and Limits
-- Bounded types mirror core types using `manalimit_core::bounded::*`.
+- Bounded types mirror core types using `oab_core::bounded::*`.
 - Config constants in `Config` define limits such as `MaxBagSize`, `MaxBoardSize`, and `MaxSetSize`.
 
 ## Storage

@@ -1,6 +1,6 @@
 use crate::{mock::*, ActiveGame, Error};
 use frame::testing_prelude::*;
-use manalimit_core::{CommitTurnAction, GamePhase};
+use oab_core::{CommitTurnAction, GamePhase};
 
 #[test]
 fn test_start_game() {
@@ -168,11 +168,11 @@ fn test_submit_card_and_metadata() {
     new_test_ext().execute_with(|| {
         let account_id = 1;
         let card_data = crate::UserCardData::<Test> {
-            stats: manalimit_core::types::UnitStats {
+            stats: oab_core::types::UnitStats {
                 attack: 1,
                 health: 1,
             },
-            economy: manalimit_core::types::EconomyStats {
+            economy: oab_core::types::EconomyStats {
                 play_cost: 1,
                 pitch_value: 1,
             },
@@ -220,11 +220,11 @@ fn test_submit_card_and_metadata() {
 
         // Submit different card
         let card_data_2 = crate::UserCardData::<Test> {
-            stats: manalimit_core::types::UnitStats {
+            stats: oab_core::types::UnitStats {
                 attack: 2,
                 health: 2,
             },
-            economy: manalimit_core::types::EconomyStats {
+            economy: oab_core::types::EconomyStats {
                 play_cost: 2,
                 pitch_value: 2,
             },

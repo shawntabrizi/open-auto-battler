@@ -34,7 +34,7 @@ export function BattleSlideComponent({ playerUnits, enemyUnits, seed = 42 }: Bat
       setBattleEnded(false);
 
       if (!wasmModule) {
-        const wasm = (await import('manalimit-client')) as unknown as WasmModule;
+        const wasm = (await import('oab-client')) as unknown as WasmModule;
         if (!wasmInitialized) {
           await wasm.default();
           wasmInitialized = true;

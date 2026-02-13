@@ -627,7 +627,7 @@ export function CardDetailPanel({
 
       {/* Footer */}
       <div className="p-1 lg:p-4 border-t border-gray-800 bg-black/20 text-[6px] lg:text-[10px] text-gray-600 text-center uppercase tracking-tighter">
-        Manalimit Engine v0.2.0
+        Open Auto Battler Engine v0.2.0
       </div>
     </div>
   );

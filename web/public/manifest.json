@@ -1,6 +1,6 @@
 {
-  "name": "Manalimit",
-  "short_name": "Manalimit",
+  "name": "Open Auto Battler",
+  "short_name": "OAB",
   "description": "Auto-battler card game",
   "start_url": "/",
   "display": "fullscreen",

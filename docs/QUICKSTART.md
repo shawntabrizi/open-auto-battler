@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get up and running with ManaLimit development in 5 minutes.
+Get up and running with Open Auto Battler development in 5 minutes.
 
 ## Prerequisites
 
@@ -114,7 +114,7 @@ Edit `core/src/commit.rs`:
 
 ```bash
 # Core engine tests (from project root)
-cargo test -p manalimit-core
+cargo test -p oab-core
 
 # Pallet tests (from project root)
 cargo test -p pallet-auto-battle

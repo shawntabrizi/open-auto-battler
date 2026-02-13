@@ -1,6 +1,6 @@
-# ManaLimit: Current Architecture (January 30, 2026)
+# Open Auto Battler: Current Architecture (January 30, 2026)
 
-This document describes the current architecture of ManaLimit, an auto-battler game where the battle engine runs identically in the browser (via WASM) and on a blockchain (via Substrate pallet).
+This document describes the current architecture of Open Auto Battler, an auto-battler game where the battle engine runs identically in the browser (via WASM) and on a blockchain (via Substrate pallet).
 
 ## High-Level Overview
 
@@ -25,7 +25,7 @@ This document describes the current architecture of ManaLimit, an auto-battler g
 │  │     (client crate)      │                                               │
 │  │                         │                                               │
 │  │  ┌───────────────────┐  │                                               │
-│  │  │   manalimit-core  │  │                                               │
+│  │  │   oab-core  │  │                                               │
 │  │  │  (shared logic)   │  │                                               │
 │  │  └───────────────────┘  │                                               │
 │  └─────────────────────────┘                                               │
@@ -40,7 +40,7 @@ This document describes the current architecture of ManaLimit, an auto-battler g
 │  │                      auto-battle pallet                              │   │
 │  │                                                                      │   │
 │  │  ┌───────────────────┐    ┌────────────────────────────────────┐   │   │
-│  │  │   manalimit-core  │    │  Storage:                          │   │   │
+│  │  │   oab-core  │    │  Storage:                          │   │   │
 │  │  │  (shared logic)   │    │  - ActiveGame<AccountId>           │   │   │
 │  │  │                   │    │  - CardSets<SetId>                 │   │   │
 │  │  └───────────────────┘    └────────────────────────────────────┘   │   │
@@ -50,11 +50,11 @@ This document describes the current architecture of ManaLimit, an auto-battler g
 
 ## Core Principle: Shared Battle Engine
 
-The key architectural decision is that **the same Rust code** (`manalimit-core`) executes in both environments:
+The key architectural decision is that **the same Rust code** (`oab-core`) executes in both environments:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      manalimit-core                             │
+│                      oab-core                             │
 │                      (core/ crate)                              │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐ │
@@ -196,7 +196,7 @@ Why SCALE for chain communication?
 
 ## Bounded vs Unbounded Types
 
-The `manalimit-core` engine uses **unbounded types** (standard `Vec`, `BTreeMap`, etc.) for maximum flexibility. This allows the engine to support any configuration without compile-time limits.
+The `oab-core` engine uses **unbounded types** (standard `Vec`, `BTreeMap`, etc.) for maximum flexibility. This allows the engine to support any configuration without compile-time limits.
 
 For **on-chain storage**, the pallet wraps these in **bounded types** with configurable limits:
 
@@ -225,7 +225,7 @@ This separation means:
 
 ## Battle Execution Limits
 
-The `manalimit-core` engine has **internal safeguards** to prevent infinite loops and stack overflows during battle resolution:
+The `oab-core` engine has **internal safeguards** to prevent infinite loops and stack overflows during battle resolution:
 
 ```rust
 // From core/src/limits.rs
@@ -431,7 +431,7 @@ CardTemplate {
 
 ```
 auto-battle/
-├── core/                    # Shared battle engine (manalimit-core)
+├── core/                    # Shared battle engine (oab-core)
 │   └── src/
 │       ├── battle.rs        # Combat resolution, abilities, events
 │       ├── bounded.rs       # Bounded types for on-chain storage
@@ -636,7 +636,7 @@ cd web && pnpm dev
 
 ```bash
 # Core engine tests (from project root)
-cargo test -p manalimit-core
+cargo test -p oab-core
 
 # Pallet tests (from project root)
 cargo test -p pallet-auto-battle

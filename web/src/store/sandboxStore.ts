@@ -61,7 +61,7 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
     try {
       set({ isLoading: true });
 
-      const wasm = await import('manalimit-client') as unknown as WasmModule;
+      const wasm = await import('oab-client') as unknown as WasmModule;
 
       if (!wasmInitialized) {
         await wasm.default();
