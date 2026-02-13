@@ -413,19 +413,69 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     if (!api || !codecs || !selectedAccount || !engine) return;
 
     try {
+      // Capture player board BEFORE submitting (chain will modify state)
+      const playerBoard = engine.get_board();
+
       // Get commit action from engine and decode via SCALE
       const actionRaw = engine.get_commit_action_scale();
       const action = codecs.tx.AutoBattle.submit_turn.dec(actionRaw);
-      console.log("Submitting turn action:", action);
 
       // Submit the turn - this runs shop actions + battle on-chain
       const tx = api.tx.AutoBattle.submit_turn(action);
+      const txResult = await tx.signAndSubmit(selectedAccount.polkadotSigner);
 
-      await tx.signAndSubmit(selectedAccount.polkadotSigner);
-      await get().refreshGameState();
+      // Extract BattleReported event from transaction result
+      // PAPI events: e.type is pallet name, e.value.type is event variant
+      const battleEvent = txResult.events.find(
+        (e: any) => e.type === 'AutoBattle' && e.value?.type === 'BattleReported'
+      );
 
-      // After submission, we might need to report battle outcome
-      // For now, assume it's done or triggered manually
+      if (battleEvent) {
+        const { battle_seed, opponent_board, result: chainResult } = battleEvent.value.value;
+
+        // Convert opponent ghost board units to the format resolve_battle_p2p expects
+        // PAPI decodes BoundedGhostBoard as a flat array (not {units: [...]})
+        const rawUnits = Array.isArray(opponent_board) ? opponent_board : (opponent_board?.units || []);
+        const opponentUnits = rawUnits.map((u: any) => ({
+          card_id: typeof u.card_id === 'number' ? u.card_id : Number(u.card_id),
+          current_health: typeof u.current_health === 'number' ? u.current_health : Number(u.current_health),
+        }));
+
+        // Replay battle locally with the chain's seed and opponent
+        const battleOutput = engine.resolve_battle_p2p(
+          playerBoard,
+          opponentUnits,
+          BigInt(battle_seed),
+        );
+
+        // Verify local result matches chain result
+        if (battleOutput?.events) {
+          const localEndEvent = battleOutput.events.find(
+            (e: any) => e.type === 'BattleEnd'
+          );
+          const localResult = localEndEvent?.payload?.result;
+          const chainResultStr = typeof chainResult === 'string'
+            ? chainResult
+            : chainResult?.type ?? String(chainResult);
+
+          if (localResult && localResult !== chainResultStr) {
+            console.warn(
+              `Battle result mismatch! Chain: ${chainResultStr}, Local: ${localResult}`
+            );
+          }
+        }
+
+        // Set up blockchain-aware continue: defer refreshGameState to "Continue" click
+        useGameStore.setState({
+          battleOutput,
+          showBattleOverlay: true,
+          afterBattleCallback: () => get().refreshGameState(true),
+        });
+      } else {
+        // No battle event found — fall back to refresh
+        console.warn("No BattleReported event found in tx result");
+        await get().refreshGameState(true);
+      }
     } catch (err) {
       console.error("Submit turn failed:", err);
     }

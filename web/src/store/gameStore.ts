@@ -73,6 +73,9 @@ interface GameStore {
 
   startMultiplayerGame: (seed: number, lives?: number) => void;
   resolveMultiplayerBattle: (opponentBoard: any, seed: number) => void;
+  // Blockchain mode: optional callback override for "Continue" after battle
+  afterBattleCallback: (() => void) | null;
+  setAfterBattleCallback: (cb: (() => void) | null) => void;
 }
 
 let wasmInitialized = false;
@@ -92,6 +95,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showBag: false,
   startingLives: 3,
   winsToVictory: 10,
+  afterBattleCallback: null,
 
   init: async (seed?: bigint) => {
     // If engine already exists, nothing to do
@@ -201,13 +205,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   continueAfterBattle: () => {
-    const { engine } = get();
+    const { engine, afterBattleCallback } = get();
     if (!engine) return;
     try {
-      // Both single-player and P2P use the same flow:
-      // resolve battle → show animation → continue_after_battle advances round
-      engine.continue_after_battle();
-      set({ view: engine.get_view(), showBattleOverlay: false, battleOutput: null });
+      if (afterBattleCallback) {
+        // Blockchain mode: use the override callback (refreshes from chain)
+        afterBattleCallback();
+        set({ showBattleOverlay: false, battleOutput: null, afterBattleCallback: null });
+      } else {
+        // Local/P2P mode: advance round locally
+        engine.continue_after_battle();
+        set({ view: engine.get_view(), showBattleOverlay: false, battleOutput: null });
+      }
     } catch (err) { console.error(err); }
   },
 
@@ -285,6 +294,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return null;
     return engine.get_commit_action();
   },
+  setAfterBattleCallback: (cb: (() => void) | null) => { set({ afterBattleCallback: cb }); },
+
   toggleShowRawJson: () => {
     set((state) => {
       const newValue = !state.showRawJson;

@@ -303,6 +303,8 @@ pub mod pallet {
             round: i32,
             result: BattleResult,
             new_seed: u64,
+            battle_seed: u64,
+            opponent_board: BoundedGhostBoard<T>,
         },
         /// A new user card has been submitted.
         CardSubmitted {
@@ -547,6 +549,20 @@ pub mod pallet {
                     .unwrap_or_default()
                 });
 
+            // Capture opponent board for event emission
+            let opponent_ghost: BoundedGhostBoard<T> = {
+                let units: Vec<GhostBoardUnit> = enemy_units
+                    .iter()
+                    .map(|cu| GhostBoardUnit {
+                        card_id: cu.card_id,
+                        current_health: cu.health,
+                    })
+                    .collect();
+                CoreBoundedGhostBoard {
+                    units: units.try_into().unwrap_or_default(),
+                }
+            };
+
             // Store player's board as a ghost for future opponents (after selecting opponent)
             let ghost = Self::create_ghost_board(&core_state);
             Self::store_ghost(&who, &bracket, ghost);
@@ -590,6 +606,8 @@ pub mod pallet {
                     round: completed_round,
                     result,
                     new_seed: 0,
+                    battle_seed,
+                    opponent_board: opponent_ghost,
                 });
                 return Ok(());
             }
@@ -602,6 +620,8 @@ pub mod pallet {
                     round: completed_round,
                     result,
                     new_seed: 0,
+                    battle_seed,
+                    opponent_board: opponent_ghost,
                 });
                 return Ok(());
             }
@@ -626,6 +646,8 @@ pub mod pallet {
                 round: completed_round,
                 result,
                 new_seed,
+                battle_seed,
+                opponent_board: opponent_ghost,
             });
 
             Ok(())
@@ -659,6 +681,10 @@ pub mod pallet {
                 }
             }
 
+            let empty_ghost: BoundedGhostBoard<T> = CoreBoundedGhostBoard {
+                units: Default::default(),
+            };
+
             // Check Game Over
             if session.state.lives <= 0 {
                 session.state.phase = GamePhase::Defeat;
@@ -669,6 +695,8 @@ pub mod pallet {
                     round: session.state.round,
                     result,
                     new_seed: 0, // Game over
+                    battle_seed: 0,
+                    opponent_board: empty_ghost,
                 });
                 return Ok(());
             } else if session.state.wins >= 10 {
@@ -680,6 +708,8 @@ pub mod pallet {
                     round: session.state.round,
                     result,
                     new_seed: 0, // Game over
+                    battle_seed: 0,
+                    opponent_board: empty_ghost,
                 });
                 return Ok(());
             }
@@ -721,6 +751,8 @@ pub mod pallet {
                 round: completed_round,
                 result,
                 new_seed,
+                battle_seed: 0,
+                opponent_board: empty_ghost,
             });
 
             Ok(())
