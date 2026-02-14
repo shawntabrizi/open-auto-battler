@@ -7,10 +7,10 @@ mod state;
 mod triggers;
 mod turns;
 
-use alloc::collections::BTreeMap;
 use crate::battle::{resolve_battle, CombatEvent, CombatUnit};
 use crate::rng::XorShiftRng;
 use crate::types::*;
+use alloc::collections::BTreeMap;
 
 // ==========================================
 // HELPER FUNCTIONS (Boilerplate Reduction)
@@ -98,15 +98,27 @@ fn empty_card_pool() -> BTreeMap<CardId, UnitCard> {
 fn spawn_test_card_pool() -> BTreeMap<CardId, UnitCard> {
     let mut pool = BTreeMap::new();
     // rat_token (ID 40)
-    pool.insert(CardId(40), UnitCard::new(CardId(40), "Rat Token", 1, 1, 0, 0));
+    pool.insert(
+        CardId(40),
+        UnitCard::new(CardId(40), "Rat Token", 1, 1, 0, 0),
+    );
     // zombie_soldier (ID 41)
-    pool.insert(CardId(41), UnitCard::new(CardId(41), "Zombie Soldier", 1, 1, 1, 1));
+    pool.insert(
+        CardId(41),
+        UnitCard::new(CardId(41), "Zombie Soldier", 1, 1, 1, 1),
+    );
     // zombie_spawn (ID 42)
-    pool.insert(CardId(42), UnitCard::new(CardId(42), "Zombie Spawn", 1, 1, 0, 0));
+    pool.insert(
+        CardId(42),
+        UnitCard::new(CardId(42), "Zombie Spawn", 1, 1, 0, 0),
+    );
     // golem (ID 43)
     pool.insert(CardId(43), UnitCard::new(CardId(43), "Golem", 5, 5, 0, 0));
     // phoenix_egg (ID 44)
-    pool.insert(CardId(44), UnitCard::new(CardId(44), "Phoenix Egg", 0, 5, 0, 0));
+    pool.insert(
+        CardId(44),
+        UnitCard::new(CardId(44), "Phoenix Egg", 0, 5, 0, 0),
+    );
     pool
 }
 
@@ -117,7 +129,12 @@ fn run_battle(
 ) -> Vec<CombatEvent> {
     let mut rng = XorShiftRng::seed_from_u64(seed);
     let card_pool = empty_card_pool();
-    resolve_battle(player_board.to_vec(), enemy_board.to_vec(), &mut rng, &card_pool)
+    resolve_battle(
+        player_board.to_vec(),
+        enemy_board.to_vec(),
+        &mut rng,
+        &card_pool,
+    )
 }
 
 fn run_battle_with_pool(
@@ -127,5 +144,10 @@ fn run_battle_with_pool(
     card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> Vec<CombatEvent> {
     let mut rng = XorShiftRng::seed_from_u64(seed);
-    resolve_battle(player_board.to_vec(), enemy_board.to_vec(), &mut rng, card_pool)
+    resolve_battle(
+        player_board.to_vec(),
+        enemy_board.to_vec(),
+        &mut rng,
+        card_pool,
+    )
 }

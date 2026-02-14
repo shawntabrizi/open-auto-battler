@@ -190,7 +190,7 @@ fn test_submit_card_and_metadata() {
         let card_id = crate::UserCardHashes::<Test>::get(card_hash).unwrap();
         assert!(card_id >= 45); // 46 cards registered in genesis (0-45)
         assert!(crate::UserCards::<Test>::contains_key(card_id));
-        
+
         // Verify creator info in metadata store
         let meta_entry = crate::CardMetadataStore::<Test>::get(card_id).unwrap();
         assert_eq!(meta_entry.creator, account_id);

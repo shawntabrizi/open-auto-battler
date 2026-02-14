@@ -243,7 +243,10 @@ fn gen_card(card: &JsonCard) -> String {
     let abilities_str = if abilities.is_empty() {
         "vec![]".to_string()
     } else {
-        format!("vec![\n                {}\n            ]", abilities.join(",\n                "))
+        format!(
+            "vec![\n                {}\n            ]",
+            abilities.join(",\n                ")
+        )
     };
 
     format!(
@@ -273,7 +276,8 @@ fn main() {
     let sets_json = fs::read_to_string(&sets_path)
         .unwrap_or_else(|e| panic!("Failed to read {}: {e}", sets_path.display()));
 
-    let cards: Vec<JsonCard> = serde_json::from_str(&cards_json).expect("Failed to parse cards.json");
+    let cards: Vec<JsonCard> =
+        serde_json::from_str(&cards_json).expect("Failed to parse cards.json");
     let sets: Vec<JsonSet> = serde_json::from_str(&sets_json).expect("Failed to parse sets.json");
 
     // ── Generate cards ───────────────────────────────────────────────────────

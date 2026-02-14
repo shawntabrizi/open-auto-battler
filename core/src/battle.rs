@@ -824,7 +824,9 @@ fn apply_ability_effect<R: BattleRng>(
             }
             Ok(damaged_units)
         }
-        AbilityEffect::SpawnUnit { card_id: spawn_card_id } => {
+        AbilityEffect::SpawnUnit {
+            card_id: spawn_card_id,
+        } => {
             limits.record_spawn(source_team)?;
 
             // 1. Create the unit and determine its insertion point
@@ -1146,7 +1148,15 @@ fn collect_and_resolve_triggers<R: BattleRng>(
     scan_board(player_units, Team::Player);
     scan_board(enemy_units, Team::Enemy);
 
-    resolve_trigger_queue(&mut queue, player_units, enemy_units, events, rng, limits, card_pool)
+    resolve_trigger_queue(
+        &mut queue,
+        player_units,
+        enemy_units,
+        events,
+        rng,
+        limits,
+        card_pool,
+    )
 }
 
 fn execute_attack_clash(
@@ -1439,7 +1449,15 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
         }
     }
 
-    resolve_trigger_queue(&mut queue, player_units, enemy_units, events, rng, limits, card_pool)
+    resolve_trigger_queue(
+        &mut queue,
+        player_units,
+        enemy_units,
+        events,
+        rng,
+        limits,
+        card_pool,
+    )
 }
 
 fn get_targets<R: BattleRng>(

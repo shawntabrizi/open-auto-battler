@@ -226,7 +226,9 @@ impl<MaxConditions: Get<u32>> From<BoundedCondition<MaxConditions>> for Conditio
 
 // --- Bounded Ability Effect ---
 
-#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen, Clone, PartialEq, Eq, Debug)]
+#[derive(
+    Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen, Clone, PartialEq, Eq, Debug,
+)]
 pub enum BoundedAbilityEffect {
     Damage {
         amount: i32,
@@ -258,9 +260,7 @@ impl From<AbilityEffect> for BoundedAbilityEffect {
                 attack,
                 target,
             },
-            AbilityEffect::SpawnUnit { card_id } => Self::SpawnUnit {
-                card_id,
-            },
+            AbilityEffect::SpawnUnit { card_id } => Self::SpawnUnit { card_id },
             AbilityEffect::Destroy { target } => Self::Destroy { target },
         }
     }
@@ -281,9 +281,7 @@ impl From<BoundedAbilityEffect> for AbilityEffect {
                 attack,
                 target,
             },
-            BoundedAbilityEffect::SpawnUnit { card_id } => AbilityEffect::SpawnUnit {
-                card_id,
-            },
+            BoundedAbilityEffect::SpawnUnit { card_id } => AbilityEffect::SpawnUnit { card_id },
             BoundedAbilityEffect::Destroy { target } => AbilityEffect::Destroy { target },
         }
     }

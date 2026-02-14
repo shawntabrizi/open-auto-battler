@@ -16,9 +16,7 @@ fn create_unit_from_pool(
     card_pool: &BTreeMap<CardId, UnitCard>,
     card_id: CardId,
 ) -> GameResult<CombatUnit> {
-    let card = card_pool
-        .get(&card_id)
-        .ok_or(GameError::TemplateNotFound)?;
+    let card = card_pool.get(&card_id).ok_or(GameError::TemplateNotFound)?;
     Ok(CombatUnit::from_card(card.clone()))
 }
 
@@ -59,28 +57,10 @@ fn get_swarm_strategy(round: i32) -> Vec<u32> {
             ZOMBIE_CAPTAIN,
             RAT_SWARM,
         ],
-        7 => vec![
-            LICH,
-            NECROMANCER,
-            ZOMBIE_CAPTAIN,
-            ZOMBIE_CAPTAIN,
-            RAT_SWARM,
-        ],
+        7 => vec![LICH, NECROMANCER, ZOMBIE_CAPTAIN, ZOMBIE_CAPTAIN, RAT_SWARM],
         8 => vec![LICH, LICH, ZOMBIE_CAPTAIN, ZOMBIE_CAPTAIN, RAT_SWARM],
-        9 => vec![
-            LICH,
-            LICH,
-            NECROMANCER,
-            ZOMBIE_CAPTAIN,
-            ZOMBIE_CAPTAIN,
-        ],
-        _ => vec![
-            DRAGON_TYRANT,
-            LICH,
-            LICH,
-            ZOMBIE_CAPTAIN,
-            ZOMBIE_CAPTAIN,
-        ],
+        9 => vec![LICH, LICH, NECROMANCER, ZOMBIE_CAPTAIN, ZOMBIE_CAPTAIN],
+        _ => vec![DRAGON_TYRANT, LICH, LICH, ZOMBIE_CAPTAIN, ZOMBIE_CAPTAIN],
     }
 }
 
@@ -91,18 +71,8 @@ fn get_tank_strategy(round: i32) -> Vec<u32> {
         2 => vec![SHIELD_BEARER, SHIELD_BEARER],
         3 => vec![SHIELD_BEARER, BATTLE_HARDENED, MILITIA],
         4 => vec![SHIELD_MASTER, SHIELD_BEARER, BATTLE_HARDENED],
-        5 => vec![
-            SHIELD_MASTER,
-            SHIELD_BEARER,
-            SHIELD_BEARER,
-            BATTLE_HARDENED,
-        ],
-        6 => vec![
-            SHIELD_MASTER,
-            OGRE_MAULER,
-            SHIELD_BEARER,
-            BATTLE_HARDENED,
-        ],
+        5 => vec![SHIELD_MASTER, SHIELD_BEARER, SHIELD_BEARER, BATTLE_HARDENED],
+        6 => vec![SHIELD_MASTER, OGRE_MAULER, SHIELD_BEARER, BATTLE_HARDENED],
         7 => vec![BEHEMOTH, SHIELD_MASTER, OGRE_MAULER, BATTLE_HARDENED],
         8 => vec![BEHEMOTH, BEHEMOTH, SHIELD_MASTER, BATTLE_HARDENED],
         9 => vec![
@@ -243,9 +213,8 @@ pub fn generate_genesis_ghosts(
                             let cid = CardId(id);
                             card_pool.get(&cid).map(|card| {
                                 // Use a deterministic card ID based on the seed and index
-                                let ghost_card_id = CardId(
-                                    ((seed.wrapping_add(idx as u64)) % 1000 + 1) as u32,
-                                );
+                                let ghost_card_id =
+                                    CardId(((seed.wrapping_add(idx as u64)) % 1000 + 1) as u32);
                                 GhostBoardUnitSimple {
                                     card_id: ghost_card_id,
                                     current_health: card.stats.health,

@@ -10,7 +10,9 @@ use std::vec::Vec;
 use bounded_collections::ConstU32;
 use oab_core::battle::{resolve_battle, CombatEvent, CombatUnit, UnitView};
 use oab_core::bounded::{BoundedCardSet, BoundedLocalGameState};
-use oab_core::commit::verify_and_apply_turn;
+use oab_core::commit::{
+    apply_on_buy_triggers, apply_on_sell_triggers, apply_shop_start_triggers, verify_and_apply_turn,
+};
 use oab_core::log;
 use oab_core::opponents::get_opponent_for_round;
 use oab_core::rng::XorShiftRng;
@@ -51,7 +53,7 @@ struct TurnSnapshot {
 pub struct GameEngine {
     state: GameState,
     set_id: u32,
-    card_set: Option<CardSet>,           // Loaded card set for bag generation
+    card_set: Option<CardSet>, // Loaded card set for bag generation
     last_battle_output: Option<BattleOutput>,
     starting_lives: i32,
     wins_to_victory: i32,
@@ -97,6 +99,7 @@ impl GameEngine {
             engine.state.round = 1;
             engine.state.lives = STARTING_LIVES;
             engine.initialize_bag();
+            apply_shop_start_triggers(&mut engine.state);
             engine.start_planning_phase();
         }
 
@@ -109,7 +112,10 @@ impl GameEngine {
     pub fn load_card_set(&mut self, set_id: u32) -> Result<(), String> {
         use oab_core::cards::{build_card_pool, get_all_sets};
 
-        log::action("load_card_set", &format!("Loading cards for set_id={}", set_id));
+        log::action(
+            "load_card_set",
+            &format!("Loading cards for set_id={}", set_id),
+        );
 
         let card_pool = build_card_pool();
         let sets = get_all_sets();
@@ -333,6 +339,8 @@ impl GameEngine {
 
         // Place the card on the board
         self.state.board[board_slot] = Some(BoardUnit::new(card_id, health));
+        let action_index = self.action_log.len().saturating_sub(1);
+        apply_on_buy_triggers(&mut self.state, action_index, board_slot);
 
         self.log_state();
         Ok(())
@@ -396,6 +404,8 @@ impl GameEngine {
         self.action_log.push(TurnAction::PitchFromBoard {
             board_slot: board_slot as u32,
         });
+        let action_index = self.action_log.len().saturating_sub(1);
+        apply_on_sell_triggers(&mut self.state, action_index, card_id, board_slot);
 
         self.log_state();
         Ok(())
@@ -481,6 +491,7 @@ impl GameEngine {
         self.state.mana_limit = self.state.calculate_mana_limit();
         self.state.phase = GamePhase::Shop;
         self.state.draw_hand();
+        apply_shop_start_triggers(&mut self.state);
         self.start_planning_phase();
 
         self.log_state();
@@ -499,6 +510,7 @@ impl GameEngine {
         self.starting_lives = STARTING_LIVES;
         self.wins_to_victory = WINS_TO_VICTORY;
         self.initialize_bag();
+        apply_shop_start_triggers(&mut self.state);
         self.start_planning_phase();
         self.log_state();
     }
@@ -599,7 +611,12 @@ impl GameEngine {
 
         // Run the battle with deterministic RNG
         let mut rng = XorShiftRng::seed_from_u64(seed);
-        let events = resolve_battle(player_units.clone(), enemy_units.clone(), &mut rng, &self.state.card_pool);
+        let events = resolve_battle(
+            player_units.clone(),
+            enemy_units.clone(),
+            &mut rng,
+            &self.state.card_pool,
+        );
 
         // Generate initial views for UI animation
         let mut limits = oab_core::limits::BattleLimits::new();
@@ -826,12 +843,9 @@ impl GameEngine {
             .collect();
 
         let battle_seed = self.state.round as u64;
-        let enemy_units = get_opponent_for_round(
-            self.state.round,
-            battle_seed + 999,
-            &self.state.card_pool,
-        )
-        .expect("Failed to generate opponent for round");
+        let enemy_units =
+            get_opponent_for_round(self.state.round, battle_seed + 999, &self.state.card_pool)
+                .expect("Failed to generate opponent for round");
 
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
         let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool);
@@ -866,22 +880,19 @@ impl GameEngine {
             .collect();
 
         limits.reset_phase_counters(); // Reset for enemy
-        let initial_enemy_units: Vec<UnitView> = get_opponent_for_round(
-            self.state.round,
-            battle_seed + 999,
-            &self.state.card_pool,
-        )
-        .unwrap()
-        .into_iter()
-        .map(|cu| UnitView {
-            instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
-            card_id: cu.card_id,
-            name: cu.name,
-            attack: cu.attack,
-            health: cu.health,
-            abilities: cu.abilities,
-        })
-        .collect();
+        let initial_enemy_units: Vec<UnitView> =
+            get_opponent_for_round(self.state.round, battle_seed + 999, &self.state.card_pool)
+                .unwrap()
+                .into_iter()
+                .map(|cu| UnitView {
+                    instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
+                    card_id: cu.card_id,
+                    name: cu.name,
+                    attack: cu.attack,
+                    health: cu.health,
+                    abilities: cu.abilities,
+                })
+                .collect();
 
         self.last_battle_output = Some(BattleOutput {
             events,

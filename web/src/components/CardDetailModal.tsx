@@ -25,6 +25,12 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         return 'When Ally Dies';
       case 'OnHurt':
         return 'When Hurt';
+      case 'OnBuy':
+        return 'On Buy';
+      case 'OnSell':
+        return 'On Sell';
+      case 'OnShopStart':
+        return 'Shop Start';
       case 'OnSpawn':
         return 'On Spawn';
       case 'OnAllySpawn':

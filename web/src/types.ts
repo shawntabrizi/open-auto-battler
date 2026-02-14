@@ -1,19 +1,40 @@
 // Composable ability building blocks
-export type TargetScope = 'SelfUnit' | 'Allies' | 'Enemies' | 'All' | 'AlliesOther' | 'TriggerSource' | 'Aggressor';
+export type TargetScope =
+  | 'SelfUnit'
+  | 'Allies'
+  | 'Enemies'
+  | 'All'
+  | 'AlliesOther'
+  | 'TriggerSource'
+  | 'Aggressor';
 export type StatType = 'Health' | 'Attack' | 'Mana';
 export type SortOrder = 'Ascending' | 'Descending';
-export type CompareOp = 'GreaterThan' | 'LessThan' | 'Equal' | 'GreaterThanOrEqual' | 'LessThanOrEqual';
+export type CompareOp =
+  | 'GreaterThan'
+  | 'LessThan'
+  | 'Equal'
+  | 'GreaterThanOrEqual'
+  | 'LessThanOrEqual';
 
 // Ability condition types
 export type Matcher =
-  | { type: 'StatValueCompare'; data: { scope: TargetScope; stat: StatType; op: CompareOp; value: number } }
-  | { type: 'StatStatCompare'; data: { source_stat: StatType; op: CompareOp; target_scope: TargetScope; target_stat: StatType } }
+  | {
+      type: 'StatValueCompare';
+      data: { scope: TargetScope; stat: StatType; op: CompareOp; value: number };
+    }
+  | {
+      type: 'StatStatCompare';
+      data: {
+        source_stat: StatType;
+        op: CompareOp;
+        target_scope: TargetScope;
+        target_stat: StatType;
+      };
+    }
   | { type: 'UnitCount'; data: { scope: TargetScope; op: CompareOp; value: number } }
   | { type: 'IsPosition'; data: { scope: TargetScope; index: number } };
 
-export type Condition =
-  | { type: 'Is'; data: Matcher }
-  | { type: 'AnyOf'; data: Matcher[] };
+export type Condition = { type: 'Is'; data: Matcher } | { type: 'AnyOf'; data: Matcher[] };
 
 // Ability types
 export interface Ability {
@@ -25,13 +46,30 @@ export interface Ability {
   max_triggers?: number;
 }
 
-export type AbilityTrigger = 'OnStart' | 'OnFaint' | 'OnAllyFaint' | 'OnHurt' | 'OnSpawn' | 'OnAllySpawn' | 'OnEnemySpawn' | 'BeforeUnitAttack' | 'AfterUnitAttack' | 'BeforeAnyAttack' | 'AfterAnyAttack';
+export type AbilityTrigger =
+  | 'OnStart'
+  | 'OnFaint'
+  | 'OnAllyFaint'
+  | 'OnHurt'
+  | 'OnBuy'
+  | 'OnSell'
+  | 'OnShopStart'
+  | 'OnSpawn'
+  | 'OnAllySpawn'
+  | 'OnEnemySpawn'
+  | 'BeforeUnitAttack'
+  | 'AfterUnitAttack'
+  | 'BeforeAnyAttack'
+  | 'AfterAnyAttack';
 
 export type AbilityTarget =
   | { type: 'Position'; data: { scope: TargetScope; index: number } }
   | { type: 'Adjacent'; data: { scope: TargetScope } }
   | { type: 'Random'; data: { scope: TargetScope; count: number } }
-  | { type: 'Standard'; data: { scope: TargetScope; stat: StatType; order: SortOrder; count: number } }
+  | {
+      type: 'Standard';
+      data: { scope: TargetScope; stat: StatType; order: SortOrder; count: number };
+    }
   | { type: 'All'; data: { scope: TargetScope } };
 
 export type AbilityEffect =
@@ -112,7 +150,12 @@ export type CombatEvent =
   | { type: 'BattleEnd'; payload: { result: BattleResult } }
   | {
       type: 'AbilityDamage';
-      payload: { source_instance_id: number; target_instance_id: number; damage: number; remaining_hp: number };
+      payload: {
+        source_instance_id: number;
+        target_instance_id: number;
+        damage: number;
+        remaining_hp: number;
+      };
     }
   | {
       type: 'AbilityModifyStats';
@@ -145,7 +188,7 @@ export interface BattleOutput {
   events: CombatEvent[];
   initial_player_units: UnitView[];
   initial_enemy_units: UnitView[];
-  round: number;  // The round this battle was for
+  round: number; // The round this battle was for
 }
 
 // Selection state for UI

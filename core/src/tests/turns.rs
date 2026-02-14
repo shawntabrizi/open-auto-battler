@@ -250,3 +250,167 @@ fn test_pitch_from_board() {
     assert!(state.board[0].is_some());
     assert_ne!(state.board[0].as_ref().unwrap().card_id, pre_placed_id);
 }
+
+#[test]
+fn test_on_buy_trigger_applies_in_shop() {
+    use crate::commit::verify_and_apply_turn;
+
+    let mut state = GameState::new(7);
+    state.mana_limit = 10;
+
+    let support_id = state.generate_card_id();
+    let buyer_id = state.generate_card_id();
+
+    let support_card = UnitCard::new(support_id, "Support", 1, 2, 1, 1).with_ability(Ability {
+        trigger: AbilityTrigger::OnBuy,
+        effect: AbilityEffect::ModifyStats {
+            health: 2,
+            attack: 0,
+            target: AbilityTarget::All {
+                scope: TargetScope::SelfUnit,
+            },
+        },
+        name: "Shop Cheer".to_string(),
+        description: "Gain +2 health when a unit is bought".to_string(),
+        conditions: vec![],
+        max_triggers: None,
+    });
+    let buyer_card = UnitCard::new(buyer_id, "Buyer", 1, 1, 0, 1);
+
+    state.card_pool.insert(support_id, support_card);
+    state.card_pool.insert(buyer_id, buyer_card);
+
+    state.board[0] = Some(BoardUnit::new(support_id, 2));
+    state.hand = vec![buyer_id];
+
+    let action = CommitTurnAction {
+        actions: vec![TurnAction::PlayFromHand {
+            hand_index: 0,
+            board_slot: 1,
+        }],
+    };
+
+    let result = verify_and_apply_turn(&mut state, &action);
+    assert!(result.is_ok(), "OnBuy action should succeed: {:?}", result);
+
+    assert_eq!(
+        state.board[0].as_ref().unwrap().current_health,
+        4,
+        "OnBuy should have granted +2 health"
+    );
+}
+
+#[test]
+fn test_on_sell_trigger_applies_in_shop() {
+    use crate::commit::verify_and_apply_turn;
+
+    let mut state = GameState::new(9);
+    state.mana_limit = 10;
+
+    let seller_id = state.generate_card_id();
+    let ally_id = state.generate_card_id();
+
+    let seller_card = UnitCard::new(seller_id, "Seller", 1, 2, 1, 1).with_ability(Ability {
+        trigger: AbilityTrigger::OnSell,
+        effect: AbilityEffect::ModifyStats {
+            health: 3,
+            attack: 0,
+            target: AbilityTarget::Position {
+                scope: TargetScope::SelfUnit,
+                index: 1,
+            },
+        },
+        name: "Parting Gift".to_string(),
+        description: "Give the ally behind +3 health when sold".to_string(),
+        conditions: vec![],
+        max_triggers: None,
+    });
+    let ally_card = UnitCard::new(ally_id, "Ally", 2, 4, 1, 1);
+
+    state.card_pool.insert(seller_id, seller_card);
+    state.card_pool.insert(ally_id, ally_card);
+
+    state.board[0] = Some(BoardUnit::new(seller_id, 2));
+    state.board[1] = Some(BoardUnit::new(ally_id, 4));
+
+    let action = CommitTurnAction {
+        actions: vec![TurnAction::PitchFromBoard { board_slot: 0 }],
+    };
+
+    let result = verify_and_apply_turn(&mut state, &action);
+    assert!(result.is_ok(), "OnSell action should succeed: {:?}", result);
+
+    assert!(state.board[0].is_none(), "Sold unit should be removed");
+    assert_eq!(
+        state.board[1].as_ref().unwrap().current_health,
+        7,
+        "OnSell should have granted +3 health to ally behind"
+    );
+}
+
+#[test]
+fn test_on_shop_start_random_is_deterministic_with_seed() {
+    use crate::commit::apply_shop_start_triggers;
+
+    fn build_state(seed: u64) -> GameState {
+        let mut state = GameState::new(seed);
+
+        let trigger_id = state.generate_card_id();
+        let ally_a_id = state.generate_card_id();
+        let ally_b_id = state.generate_card_id();
+
+        let trigger_card = UnitCard::new(trigger_id, "Starter", 1, 2, 1, 1).with_ability(Ability {
+            trigger: AbilityTrigger::OnShopStart,
+            effect: AbilityEffect::ModifyStats {
+                health: 1,
+                attack: 0,
+                target: AbilityTarget::Random {
+                    scope: TargetScope::AlliesOther,
+                    count: 1,
+                },
+            },
+            name: "Morning Buff".to_string(),
+            description: "Buff one random ally at shop start".to_string(),
+            conditions: vec![],
+            max_triggers: None,
+        });
+
+        let ally_a = UnitCard::new(ally_a_id, "AllyA", 2, 3, 1, 1);
+        let ally_b = UnitCard::new(ally_b_id, "AllyB", 2, 3, 1, 1);
+
+        state.card_pool.insert(trigger_id, trigger_card);
+        state.card_pool.insert(ally_a_id, ally_a);
+        state.card_pool.insert(ally_b_id, ally_b);
+
+        state.board[0] = Some(BoardUnit::new(trigger_id, 2));
+        state.board[1] = Some(BoardUnit::new(ally_a_id, 3));
+        state.board[2] = Some(BoardUnit::new(ally_b_id, 3));
+
+        state
+    }
+
+    let mut state_a = build_state(12345);
+    let mut state_b = build_state(12345);
+
+    apply_shop_start_triggers(&mut state_a);
+    apply_shop_start_triggers(&mut state_b);
+
+    let healths_a = (
+        state_a.board[1].as_ref().unwrap().current_health,
+        state_a.board[2].as_ref().unwrap().current_health,
+    );
+    let healths_b = (
+        state_b.board[1].as_ref().unwrap().current_health,
+        state_b.board[2].as_ref().unwrap().current_health,
+    );
+
+    assert_eq!(
+        healths_a, healths_b,
+        "Same seed should produce identical random shop trigger results"
+    );
+    assert_eq!(
+        healths_a.0 + healths_a.1,
+        7,
+        "Exactly one ally should receive +1 health"
+    );
+}

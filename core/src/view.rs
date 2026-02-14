@@ -83,7 +83,12 @@ pub struct GameView {
 
 impl GameView {
     /// Construct a GameView from state plus transient per-turn data
-    pub fn from_state(state: &GameState, current_mana: i32, hand_used: &[bool], can_undo: bool) -> Self {
+    pub fn from_state(
+        state: &GameState,
+        current_mana: i32,
+        hand_used: &[bool],
+        can_undo: bool,
+    ) -> Self {
         let hand: Vec<Option<CardView>> = state
             .hand
             .iter()

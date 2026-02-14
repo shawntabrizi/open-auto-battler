@@ -32,10 +32,9 @@ pub mod pallet {
     use oab_core::rng::BattleRng;
     use oab_core::types::{EconomyStats, UnitStats};
     use oab_core::{
-        get_opponent_for_round, resolve_battle,
-        units::create_starting_bag,
-        verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, GamePhase,
-        GameState, UnitCard, XorShiftRng,
+        apply_shop_start_triggers, get_opponent_for_round, resolve_battle,
+        units::create_starting_bag, verify_and_apply_turn, BattleResult, CardSet, CombatUnit,
+        CommitTurnAction, GamePhase, GameState, UnitCard, XorShiftRng,
     };
 
     #[pallet::pallet]
@@ -369,7 +368,7 @@ pub mod pallet {
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
-            use oab_core::cards::{get_all_cards, get_all_card_metas, get_all_sets};
+            use oab_core::cards::{get_all_card_metas, get_all_cards, get_all_sets};
 
             let cards = get_all_cards();
             let metas = get_all_card_metas();
@@ -393,10 +392,8 @@ pub mod pallet {
                 UserCards::<T>::insert(card_id, data);
 
                 let metadata_entry = CardMetadataEntry {
-                    creator: T::AccountId::decode(
-                        &mut frame::traits::TrailingZeroInput::zeroes(),
-                    )
-                    .unwrap(),
+                    creator: T::AccountId::decode(&mut frame::traits::TrailingZeroInput::zeroes())
+                        .unwrap(),
                     metadata: CardMetadata {
                         name: BoundedVec::truncate_from(meta.name.as_bytes().to_vec()),
                         emoji: BoundedVec::truncate_from(meta.emoji.as_bytes().to_vec()),
@@ -463,6 +460,7 @@ pub mod pallet {
 
             // Draw initial hand from bag
             state.draw_hand();
+            apply_shop_start_triggers(&mut state);
 
             let (_, _, local_state) = state.decompose();
 
@@ -635,6 +633,7 @@ pub mod pallet {
 
             // Draw new hand for the next shop phase
             core_state.draw_hand();
+            apply_shop_start_triggers(&mut core_state);
 
             // Update session state
             session.state = core_state.local_state.into();
@@ -740,6 +739,7 @@ pub mod pallet {
 
             // Draw hand for the next shop phase
             core_state.draw_hand();
+            apply_shop_start_triggers(&mut core_state);
 
             // Update session state
             session.state = core_state.local_state.into();
@@ -903,10 +903,7 @@ pub mod pallet {
         }
 
         /// Helper to convert UserCardData to UnitCard.
-        fn entry_to_unit_card(
-            id: oab_core::types::CardId,
-            data: UserCardData<T>,
-        ) -> UnitCard {
+        fn entry_to_unit_card(id: oab_core::types::CardId, data: UserCardData<T>) -> UnitCard {
             UnitCard {
                 id,
                 name: alloc::string::String::new(), // Name is metadata, not used in game logic

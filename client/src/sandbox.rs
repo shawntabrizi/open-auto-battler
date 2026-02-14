@@ -31,11 +31,7 @@ pub fn get_unit_templates() -> JsValue {
 
 /// Run a sandbox battle with custom player and enemy boards
 #[wasm_bindgen]
-pub fn run_sandbox_battle(
-    player_units_js: JsValue,
-    enemy_units_js: JsValue,
-    seed: u64,
-) -> JsValue {
+pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, seed: u64) -> JsValue {
     log::action("run_sandbox_battle", "Running custom battle");
 
     let player_sandbox: Vec<SandboxUnit> =
@@ -45,20 +41,14 @@ pub fn run_sandbox_battle(
 
     let card_pool = build_card_pool();
 
-    let make_combat_unit =
-        |sandbox: &SandboxUnit| -> Option<CombatUnit> {
-            let card = card_pool.get(&CardId(sandbox.card_id))?;
-            Some(CombatUnit::from_card(card.clone()))
-        };
+    let make_combat_unit = |sandbox: &SandboxUnit| -> Option<CombatUnit> {
+        let card = card_pool.get(&CardId(sandbox.card_id))?;
+        Some(CombatUnit::from_card(card.clone()))
+    };
 
-    let player_board: Vec<CombatUnit> = player_sandbox
-        .iter()
-        .filter_map(make_combat_unit)
-        .collect();
-    let enemy_board: Vec<CombatUnit> = enemy_sandbox
-        .iter()
-        .filter_map(make_combat_unit)
-        .collect();
+    let player_board: Vec<CombatUnit> =
+        player_sandbox.iter().filter_map(make_combat_unit).collect();
+    let enemy_board: Vec<CombatUnit> = enemy_sandbox.iter().filter_map(make_combat_unit).collect();
 
     let mut rng = XorShiftRng::seed_from_u64(seed);
 

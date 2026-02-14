@@ -29,10 +29,7 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
 
       {/* Abilities */}
       {card.abilities.map((ability, index) => (
-        <div
-          key={index}
-          className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700"
-        >
+        <div key={index} className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
           <h3 className="text-sm font-bold text-yellow-400 mb-1">{ability.name}</h3>
           <div className="text-xs text-gray-300 mb-1">
             <strong>Trigger:</strong> {formatTrigger(ability.trigger)}
@@ -64,15 +61,31 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
 
 function formatTrigger(trigger: string): string {
   switch (trigger) {
-    case 'OnStart': return 'Battle Start';
-    case 'OnFaint': return 'When Dies';
-    case 'OnAllyFaint': return 'When Ally Dies';
-    case 'OnHurt': return 'When Hurt';
-    case 'OnSpawn': return 'On Spawn';
-    case 'BeforeUnitAttack': return 'Before Attacking';
-    case 'AfterUnitAttack': return 'After Attacking';
-    case 'BeforeAnyAttack': return 'Before Any Attack';
-    case 'AfterAnyAttack': return 'After Any Attack';
-    default: return trigger;
+    case 'OnStart':
+      return 'Battle Start';
+    case 'OnFaint':
+      return 'When Dies';
+    case 'OnAllyFaint':
+      return 'When Ally Dies';
+    case 'OnHurt':
+      return 'When Hurt';
+    case 'OnBuy':
+      return 'On Buy';
+    case 'OnSell':
+      return 'On Sell';
+    case 'OnShopStart':
+      return 'Shop Start';
+    case 'OnSpawn':
+      return 'On Spawn';
+    case 'BeforeUnitAttack':
+      return 'Before Attacking';
+    case 'AfterUnitAttack':
+      return 'After Attacking';
+    case 'BeforeAnyAttack':
+      return 'Before Any Attack';
+    case 'AfterAnyAttack':
+      return 'After Any Attack';
+    default:
+      return trigger;
   }
 }
