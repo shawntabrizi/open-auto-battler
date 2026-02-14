@@ -556,43 +556,38 @@ auto-battle/
 
 ### Immediate TODOs
 
-1. **Optimistic Proving**
-   - Currently: Browser runs battle locally, then chain re-executes
-   - Future: Submit proof that battle was executed correctly, chain verifies
-   - Benefit: Reduced on-chain computation, faster finality
-
-2. **Save User Boards**
+1. **Save User Boards**
    - Currently: Players only fight AI opponents
    - Future: Store player boards on-chain after each turn
    - Storage: `SavedBoards<AccountId, Round> -> Board`
 
-3. **PvP Matchmaking**
+2. **PvP Matchmaking**
    - Currently: AI opponents generated from round number
    - Future: Battle against other players' saved boards
    - Could be async (fight ghost) or sync (real-time matching)
 
-4. **Card Creation & Set Management**
+3. **Card Creation & Set Management**
    - Currently: Card sets hardcoded in `units.rs`
    - Future: On-chain card set creation via governance
    - Custom sets, seasonal rotations, community cards
 
 ### Technical Debt
 
-5. **Error Recovery**
+4. **Error Recovery**
    - Currently: Some edge cases can leave UI in inconsistent state
    - Need: Better error boundaries, transaction retry logic
 
-6. **Weights & Benchmarks**
+5. **Weights & Benchmarks**
    - Currently: `Weight::default()` used everywhere
    - Need: Proper benchmarking for accurate fee estimation
 
 ### Infrastructure
 
-7. **Multiplayer Signaling**
+6. **Multiplayer Signaling**
    - For real-time PvP: WebRTC or similar for board exchange
    - Chain as fallback/verification layer
 
-8. **Indexer/History**
+7. **Indexer/History**
    - Currently: No game history persisted
    - Future: Index completed games, leaderboards, replays
 
