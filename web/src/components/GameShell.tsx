@@ -3,7 +3,7 @@ import { HUD } from './HUD';
 import { Arena } from './Arena';
 import { ManaBar } from './ManaBar';
 import { Shop } from './Shop';
-import { CardDetailPanel, BlockchainAccount } from './CardDetailPanel';
+import { CardDetailPanel, type BlockchainAccount } from './CardDetailPanel';
 import { BattleOverlay } from './BattleOverlay';
 import { BagOverlay } from './BagOverlay';
 import { UnitCard } from './UnitCard';
@@ -110,7 +110,9 @@ export function GameShell({
         </div>
 
         {/* Zone 4: Command Deck (Shop) */}
-        <div className={`game-shop flex-shrink-0 mt-auto ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}>
+        <div
+          className={`game-shop flex-shrink-0 mt-auto ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
+        >
           <Shop />
         </div>
 
@@ -136,11 +138,7 @@ export function GameShell({
       {/* Drag overlay - shows the card being dragged */}
       <DragOverlay>
         {activeCard ? (
-          <UnitCard
-            card={activeCard}
-            showCost={activeId?.startsWith('hand')}
-            showPitch={true}
-          />
+          <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showPitch={true} />
         ) : null}
       </DragOverlay>
     </DndContext>

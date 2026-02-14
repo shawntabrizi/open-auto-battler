@@ -1,6 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import { UnitCard } from './UnitCard';
-import { CardView } from '../types';
+import { type CardView } from '../types';
 
 export function BagOverlay() {
   const { view, bag, cardSet, showBag, setShowBag, selection, setSelection } = useGameStore();

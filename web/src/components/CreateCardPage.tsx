@@ -3,34 +3,44 @@ import { useBlockchainStore } from '../store/blockchainStore';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import {
-  Ability,
-  AbilityTrigger,
-  AbilityEffect,
-  AbilityTarget,
-  TargetScope,
-  StatType,
+  type Ability,
+  type AbilityTrigger,
+  type AbilityEffect,
+  type AbilityTarget,
+  type TargetScope,
+  type StatType,
 } from '../types';
 
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 
 const TRIGGERS: AbilityTrigger[] = [
-  'OnStart', 'OnFaint', 'OnAllyFaint', 'OnHurt', 'OnSpawn',
-  'OnAllySpawn', 'OnEnemySpawn', 'BeforeUnitAttack',
-  'AfterUnitAttack', 'BeforeAnyAttack', 'AfterAnyAttack'
+  'OnStart',
+  'OnFaint',
+  'OnAllyFaint',
+  'OnHurt',
+  'OnSpawn',
+  'OnAllySpawn',
+  'OnEnemySpawn',
+  'BeforeUnitAttack',
+  'AfterUnitAttack',
+  'BeforeAnyAttack',
+  'AfterAnyAttack',
 ];
 
 const SCOPES: TargetScope[] = [
-  'SelfUnit', 'Allies', 'Enemies', 'All', 'AlliesOther', 'TriggerSource', 'Aggressor'
+  'SelfUnit',
+  'Allies',
+  'Enemies',
+  'All',
+  'AlliesOther',
+  'TriggerSource',
+  'Aggressor',
 ];
 
 const STATS: StatType[] = ['Health', 'Attack', 'Mana'];
 
 export const CreateCardPage: React.FC = () => {
-  const {
-    isConnected,
-    connect,
-    submitCard
-  } = useBlockchainStore();
+  const { isConnected, connect, submitCard } = useBlockchainStore();
 
   const [cardForm, setCardForm] = useState({
     name: '',
@@ -40,7 +50,7 @@ export const CreateCardPage: React.FC = () => {
     play_cost: 1,
     pitch_value: 1,
     description: '',
-    abilities: [] as Ability[]
+    abilities: [] as Ability[],
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,7 +65,7 @@ export const CreateCardPage: React.FC = () => {
     trigger: 'OnStart',
     effect: { type: 'Damage', amount: 1, target: { type: 'All', data: { scope: 'Enemies' } } },
     conditions: [],
-    max_triggers: undefined
+    max_triggers: undefined,
   });
 
   const handleCardSubmit = async (e: React.FormEvent) => {
@@ -71,15 +81,18 @@ export const CreateCardPage: React.FC = () => {
     }
     setIsSubmitting(true);
     try {
-      await submitCard({
-        stats: { attack: cardForm.attack, health: cardForm.health },
-        economy: { play_cost: cardForm.play_cost, pitch_value: cardForm.pitch_value },
-        abilities: cardForm.abilities
-      }, {
-        name: cardForm.name,
-        emoji: cardForm.emoji,
-        description: cardForm.description
-      });
+      await submitCard(
+        {
+          stats: { attack: cardForm.attack, health: cardForm.health },
+          economy: { play_cost: cardForm.play_cost, pitch_value: cardForm.pitch_value },
+          abilities: cardForm.abilities,
+        },
+        {
+          name: cardForm.name,
+          emoji: cardForm.emoji,
+          description: cardForm.description,
+        }
+      );
       toast.success('Card submitted successfully!');
       setTriedSubmitCard(false);
       setCardForm({
@@ -90,7 +103,7 @@ export const CreateCardPage: React.FC = () => {
         play_cost: 1,
         pitch_value: 1,
         description: '',
-        abilities: []
+        abilities: [],
       });
     } catch (err) {
       toast.error('Failed to submit card');
@@ -105,9 +118,9 @@ export const CreateCardPage: React.FC = () => {
       toast.error('Ability name is required');
       return;
     }
-    setCardForm(prev => ({
+    setCardForm((prev) => ({
       ...prev,
-      abilities: [...prev.abilities, { ...newAbility }]
+      abilities: [...prev.abilities, { ...newAbility }],
     }));
     // Reset ability form partially
     setTriedAddAbility(false);
@@ -117,14 +130,14 @@ export const CreateCardPage: React.FC = () => {
       trigger: 'OnStart',
       effect: { type: 'Damage', amount: 1, target: { type: 'All', data: { scope: 'Enemies' } } },
       conditions: [],
-      max_triggers: undefined
+      max_triggers: undefined,
     });
   };
 
   const removeAbility = (index: number) => {
-    setCardForm(prev => ({
+    setCardForm((prev) => ({
       ...prev,
-      abilities: prev.abilities.filter((_, i) => i !== index)
+      abilities: prev.abilities.filter((_, i) => i !== index),
     }));
   };
 
@@ -133,7 +146,10 @@ export const CreateCardPage: React.FC = () => {
     if (type === 'Damage') {
       setNewAbility({ ...newAbility, effect: { type: 'Damage', amount: 1, target } });
     } else if (type === 'ModifyStats') {
-      setNewAbility({ ...newAbility, effect: { type: 'ModifyStats', health: 1, attack: 1, target } });
+      setNewAbility({
+        ...newAbility,
+        effect: { type: 'ModifyStats', health: 1, attack: 1, target },
+      });
     } else if (type === 'SpawnUnit') {
       setNewAbility({ ...newAbility, effect: { type: 'SpawnUnit', card_id: 2 } });
     } else if (type === 'Destroy') {
@@ -161,20 +177,24 @@ export const CreateCardPage: React.FC = () => {
 
     setNewAbility({
       ...newAbility,
-      effect: { ...newAbility.effect, target } as AbilityEffect
+      effect: { ...newAbility.effect, target } as AbilityEffect,
     });
   };
 
-  const rawJson = JSON.stringify({
-    stats: { attack: cardForm.attack, health: cardForm.health },
-    economy: { play_cost: cardForm.play_cost, pitch_value: cardForm.pitch_value },
-    abilities: cardForm.abilities,
-    metadata: {
-      name: cardForm.name,
-      emoji: cardForm.emoji,
-      description: cardForm.description
-    }
-  }, null, 2);
+  const rawJson = JSON.stringify(
+    {
+      stats: { attack: cardForm.attack, health: cardForm.health },
+      economy: { play_cost: cardForm.play_cost, pitch_value: cardForm.pitch_value },
+      abilities: cardForm.abilities,
+      metadata: {
+        name: cardForm.name,
+        emoji: cardForm.emoji,
+        description: cardForm.description,
+      },
+    },
+    null,
+    2
+  );
 
   if (!isConnected) {
     return (
@@ -188,7 +208,9 @@ export const CreateCardPage: React.FC = () => {
         >
           CONNECT WALLET TO START
         </button>
-        <Link to="/blockchain" className="mt-8 text-slate-400 hover:text-white underline">Back to Dashboard</Link>
+        <Link to="/blockchain" className="mt-8 text-slate-400 hover:text-white underline">
+          Back to Dashboard
+        </Link>
       </div>
     );
   }
@@ -204,10 +226,16 @@ export const CreateCardPage: React.FC = () => {
             <p className="text-slate-500 text-sm">Design custom units with complex abilities</p>
           </div>
           <div className="flex gap-4">
-            <Link to="/blockchain/create-set" className="text-slate-400 hover:text-white border border-slate-800 px-4 py-2 rounded-lg transition-colors">
+            <Link
+              to="/blockchain/create-set"
+              className="text-slate-400 hover:text-white border border-slate-800 px-4 py-2 rounded-lg transition-colors"
+            >
               Go to Set Creator
             </Link>
-            <Link to="/blockchain" className="text-slate-400 hover:text-white border border-slate-800 px-4 py-2 rounded-lg transition-colors">
+            <Link
+              to="/blockchain"
+              className="text-slate-400 hover:text-white border border-slate-800 px-4 py-2 rounded-lg transition-colors"
+            >
               Exit to Dashboard
             </Link>
           </div>
@@ -230,16 +258,20 @@ export const CreateCardPage: React.FC = () => {
                     <input
                       type="text"
                       value={cardForm.name}
-                      onChange={e => setCardForm({ ...cardForm, name: e.target.value })}
+                      onChange={(e) => setCardForm({ ...cardForm, name: e.target.value })}
                       placeholder="Super Goblin"
                       className={`w-full bg-slate-800 border rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50 ${triedSubmitCard && !cardForm.name ? 'border-red-500' : 'border-white/10'}`}
                     />
                     {triedSubmitCard && !cardForm.name && (
-                      <span className="text-[10px] text-red-500 mt-1 block font-bold uppercase">Card name is required</span>
+                      <span className="text-[10px] text-red-500 mt-1 block font-bold uppercase">
+                        Card name is required
+                      </span>
                     )}
                   </div>
                   <div className="col-span-1">
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Emoji</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                      Emoji
+                    </label>
                     <div className="relative">
                       <button
                         type="button"
@@ -251,7 +283,10 @@ export const CreateCardPage: React.FC = () => {
 
                       {showEmojiPicker && (
                         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-                          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowEmojiPicker(false)}></div>
+                          <div
+                            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+                            onClick={() => setShowEmojiPicker(false)}
+                          ></div>
                           <div className="relative shadow-2xl animate-in fade-in zoom-in duration-200">
                             <EmojiPicker
                               theme={Theme.DARK}
@@ -273,21 +308,29 @@ export const CreateCardPage: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Attack</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                      Attack
+                    </label>
                     <input
                       type="number"
                       value={cardForm.attack}
-                      onChange={e => setCardForm({ ...cardForm, attack: parseInt(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setCardForm({ ...cardForm, attack: parseInt(e.target.value) || 0 })
+                      }
                       className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                       min="0"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Health</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                      Health
+                    </label>
                     <input
                       type="number"
                       value={cardForm.health}
-                      onChange={e => setCardForm({ ...cardForm, health: parseInt(e.target.value) || 1 })}
+                      onChange={(e) =>
+                        setCardForm({ ...cardForm, health: parseInt(e.target.value) || 1 })
+                      }
                       className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                       min="1"
                     />
@@ -296,21 +339,29 @@ export const CreateCardPage: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Play Cost</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                      Play Cost
+                    </label>
                     <input
                       type="number"
                       value={cardForm.play_cost}
-                      onChange={e => setCardForm({ ...cardForm, play_cost: parseInt(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setCardForm({ ...cardForm, play_cost: parseInt(e.target.value) || 0 })
+                      }
                       className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                       min="0"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Pitch Value</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                      Pitch Value
+                    </label>
                     <input
                       type="number"
                       value={cardForm.pitch_value}
-                      onChange={e => setCardForm({ ...cardForm, pitch_value: parseInt(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setCardForm({ ...cardForm, pitch_value: parseInt(e.target.value) || 0 })
+                      }
                       className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                       min="0"
                     />
@@ -318,10 +369,12 @@ export const CreateCardPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Description</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                    Description
+                  </label>
                   <textarea
                     value={cardForm.description}
-                    onChange={e => setCardForm({ ...cardForm, description: e.target.value })}
+                    onChange={(e) => setCardForm({ ...cardForm, description: e.target.value })}
                     className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50 h-20 resize-none text-sm"
                     placeholder="General description of the card..."
                   />
@@ -333,7 +386,9 @@ export const CreateCardPage: React.FC = () => {
               <h2 className="text-xl font-bold mb-4">Preview</h2>
               <div className="flex justify-center p-4 bg-slate-800/50 rounded-xl border border-white/5">
                 <div className="relative w-32 h-44 bg-slate-800 rounded-xl border-2 border-yellow-500/50 p-3 shadow-2xl">
-                  <div className="text-[10px] font-bold text-center truncate mb-1 uppercase text-yellow-500">{cardForm.name || 'Unit Name'}</div>
+                  <div className="text-[10px] font-bold text-center truncate mb-1 uppercase text-yellow-500">
+                    {cardForm.name || 'Unit Name'}
+                  </div>
                   <div className="w-full h-20 bg-slate-700/50 rounded-lg flex items-center justify-center text-4xl mb-2">
                     {cardForm.emoji}
                   </div>
@@ -376,7 +431,10 @@ export const CreateCardPage: React.FC = () => {
               {/* Added Abilities List */}
               <div className="space-y-2 mb-6 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
                 {cardForm.abilities.map((ability, idx) => (
-                  <div key={idx} className="bg-slate-800/50 border border-white/5 p-3 rounded-lg flex justify-between items-start">
+                  <div
+                    key={idx}
+                    className="bg-slate-800/50 border border-white/5 p-3 rounded-lg flex justify-between items-start"
+                  >
                     <div>
                       <div className="text-sm font-bold text-yellow-500">{ability.name}</div>
                       <div className="text-xs text-slate-400 italic">{ability.trigger}</div>
@@ -385,14 +443,25 @@ export const CreateCardPage: React.FC = () => {
                       onClick={() => removeAbility(idx)}
                       className="text-slate-500 hover:text-red-500"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </button>
                   </div>
                 ))}
                 {cardForm.abilities.length === 0 && (
-                  <div className="text-center py-4 text-slate-600 text-sm italic">No abilities added yet</div>
+                  <div className="text-center py-4 text-slate-600 text-sm italic">
+                    No abilities added yet
+                  </div>
                 )}
               </div>
 
@@ -406,30 +475,42 @@ export const CreateCardPage: React.FC = () => {
                     <input
                       type="text"
                       value={newAbility.name}
-                      onChange={e => setNewAbility({ ...newAbility, name: e.target.value })}
+                      onChange={(e) => setNewAbility({ ...newAbility, name: e.target.value })}
                       className={`w-full bg-slate-900 border rounded px-2 py-1.5 text-sm outline-none focus:border-yellow-500/50 ${triedAddAbility && !newAbility.name ? 'border-red-500' : 'border-white/10'}`}
                       placeholder="Fireball"
                     />
                     {triedAddAbility && !newAbility.name && (
-                      <span className="text-[9px] text-red-500 mt-1 block font-bold uppercase">Name required</span>
+                      <span className="text-[9px] text-red-500 mt-1 block font-bold uppercase">
+                        Name required
+                      </span>
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Trigger</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Trigger
+                    </label>
                     <select
                       value={newAbility.trigger}
-                      onChange={e => setNewAbility({ ...newAbility, trigger: e.target.value as AbilityTrigger })}
+                      onChange={(e) =>
+                        setNewAbility({ ...newAbility, trigger: e.target.value as AbilityTrigger })
+                      }
                       className="w-full bg-slate-900 border border-white/10 rounded px-2 py-1.5 text-sm outline-none focus:border-yellow-500/50"
                     >
-                      {TRIGGERS.map(t => <option key={t} value={t}>{t}</option>)}
+                      {TRIGGERS.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Effect Type</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                    Effect Type
+                  </label>
                   <div className="grid grid-cols-4 gap-2">
-                    {['Damage', 'ModifyStats', 'SpawnUnit', 'Destroy'].map(type => (
+                    {['Damage', 'ModifyStats', 'SpawnUnit', 'Destroy'].map((type) => (
                       <button
                         key={type}
                         onClick={() => updateEffectType(type)}
@@ -445,11 +526,21 @@ export const CreateCardPage: React.FC = () => {
                 <div className="p-3 bg-slate-900/50 rounded-lg border border-white/5 space-y-3">
                   {newAbility.effect.type === 'Damage' && (
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Damage Amount</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                        Damage Amount
+                      </label>
                       <input
                         type="number"
                         value={newAbility.effect.amount}
-                        onChange={e => setNewAbility({ ...newAbility, effect: { ...newAbility.effect, amount: parseInt(e.target.value) || 0 } as any })}
+                        onChange={(e) =>
+                          setNewAbility({
+                            ...newAbility,
+                            effect: {
+                              ...newAbility.effect,
+                              amount: parseInt(e.target.value) || 0,
+                            } as any,
+                          })
+                        }
                         className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                       />
                     </div>
@@ -457,20 +548,40 @@ export const CreateCardPage: React.FC = () => {
                   {newAbility.effect.type === 'ModifyStats' && (
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Health Change</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          Health Change
+                        </label>
                         <input
                           type="number"
                           value={newAbility.effect.health}
-                          onChange={e => setNewAbility({ ...newAbility, effect: { ...newAbility.effect, health: parseInt(e.target.value) || 0 } as any })}
+                          onChange={(e) =>
+                            setNewAbility({
+                              ...newAbility,
+                              effect: {
+                                ...newAbility.effect,
+                                health: parseInt(e.target.value) || 0,
+                              } as any,
+                            })
+                          }
                           className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Attack Change</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          Attack Change
+                        </label>
                         <input
                           type="number"
                           value={newAbility.effect.attack}
-                          onChange={e => setNewAbility({ ...newAbility, effect: { ...newAbility.effect, attack: parseInt(e.target.value) || 0 } as any })}
+                          onChange={(e) =>
+                            setNewAbility({
+                              ...newAbility,
+                              effect: {
+                                ...newAbility.effect,
+                                attack: parseInt(e.target.value) || 0,
+                              } as any,
+                            })
+                          }
                           className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                         />
                       </div>
@@ -478,11 +589,21 @@ export const CreateCardPage: React.FC = () => {
                   )}
                   {newAbility.effect.type === 'SpawnUnit' && (
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Card ID</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                        Card ID
+                      </label>
                       <input
                         type="number"
                         value={newAbility.effect.card_id}
-                        onChange={e => setNewAbility({ ...newAbility, effect: { ...newAbility.effect, card_id: parseInt(e.target.value) || 0 } as any })}
+                        onChange={(e) =>
+                          setNewAbility({
+                            ...newAbility,
+                            effect: {
+                              ...newAbility.effect,
+                              card_id: parseInt(e.target.value) || 0,
+                            } as any,
+                          })
+                        }
                         className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                         placeholder="2"
                       />
@@ -494,10 +615,12 @@ export const CreateCardPage: React.FC = () => {
                     <div className="space-y-3 pt-2 border-t border-white/5">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Target Type</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                            Target Type
+                          </label>
                           <select
                             value={(newAbility.effect as any).target.type}
-                            onChange={e => updateTargetType(e.target.value)}
+                            onChange={(e) => updateTargetType(e.target.value)}
                             className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                           >
                             <option value="All">All</option>
@@ -508,17 +631,26 @@ export const CreateCardPage: React.FC = () => {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Scope</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                            Scope
+                          </label>
                           <select
                             value={(newAbility.effect as any).target.data.scope}
-                            onChange={e => {
+                            onChange={(e) => {
                               const target = { ...(newAbility.effect as any).target };
                               target.data.scope = e.target.value;
-                              setNewAbility({ ...newAbility, effect: { ...newAbility.effect, target } as any });
+                              setNewAbility({
+                                ...newAbility,
+                                effect: { ...newAbility.effect, target } as any,
+                              });
                             }}
                             className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                           >
-                            {SCOPES.map(s => <option key={s} value={s}>{s}</option>)}
+                            {SCOPES.map((s) => (
+                              <option key={s} value={s}>
+                                {s}
+                              </option>
+                            ))}
                           </select>
                         </div>
                       </div>
@@ -526,30 +658,41 @@ export const CreateCardPage: React.FC = () => {
                       {/* Target Data Fields */}
                       {(newAbility.effect as any).target.type === 'Position' && (
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Index (0-4)</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                            Index (0-4)
+                          </label>
                           <input
                             type="number"
                             value={(newAbility.effect as any).target.data.index}
-                            onChange={e => {
+                            onChange={(e) => {
                               const target = { ...(newAbility.effect as any).target };
                               target.data.index = parseInt(e.target.value) || 0;
-                              setNewAbility({ ...newAbility, effect: { ...newAbility.effect, target } as any });
+                              setNewAbility({
+                                ...newAbility,
+                                effect: { ...newAbility.effect, target } as any,
+                              });
                             }}
                             className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
-                            min="0" max="4"
+                            min="0"
+                            max="4"
                           />
                         </div>
                       )}
                       {(newAbility.effect as any).target.type === 'Random' && (
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Count</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                            Count
+                          </label>
                           <input
                             type="number"
                             value={(newAbility.effect as any).target.data.count}
-                            onChange={e => {
+                            onChange={(e) => {
                               const target = { ...(newAbility.effect as any).target };
                               target.data.count = parseInt(e.target.value) || 1;
-                              setNewAbility({ ...newAbility, effect: { ...newAbility.effect, target } as any });
+                              setNewAbility({
+                                ...newAbility,
+                                effect: { ...newAbility.effect, target } as any,
+                              });
                             }}
                             className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                             min="1"
@@ -559,27 +702,41 @@ export const CreateCardPage: React.FC = () => {
                       {(newAbility.effect as any).target.type === 'Standard' && (
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Stat</label>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                              Stat
+                            </label>
                             <select
                               value={(newAbility.effect as any).target.data.stat}
-                              onChange={e => {
+                              onChange={(e) => {
                                 const target = { ...(newAbility.effect as any).target };
                                 target.data.stat = e.target.value;
-                                setNewAbility({ ...newAbility, effect: { ...newAbility.effect, target } as any });
+                                setNewAbility({
+                                  ...newAbility,
+                                  effect: { ...newAbility.effect, target } as any,
+                                });
                               }}
                               className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                             >
-                              {STATS.map(s => <option key={s} value={s}>{s}</option>)}
+                              {STATS.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
                             </select>
                           </div>
                           <div>
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Order</label>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                              Order
+                            </label>
                             <select
                               value={(newAbility.effect as any).target.data.order}
-                              onChange={e => {
+                              onChange={(e) => {
                                 const target = { ...(newAbility.effect as any).target };
                                 target.data.order = e.target.value;
-                                setNewAbility({ ...newAbility, effect: { ...newAbility.effect, target } as any });
+                                setNewAbility({
+                                  ...newAbility,
+                                  effect: { ...newAbility.effect, target } as any,
+                                });
                               }}
                               className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                             >
@@ -594,10 +751,12 @@ export const CreateCardPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Ability Description</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                    Ability Description
+                  </label>
                   <textarea
                     value={newAbility.description}
-                    onChange={e => setNewAbility({ ...newAbility, description: e.target.value })}
+                    onChange={(e) => setNewAbility({ ...newAbility, description: e.target.value })}
                     className="w-full bg-slate-900 border border-white/10 rounded px-2 py-1.5 text-xs outline-none h-12 resize-none"
                     placeholder="Deals 1 damage to all enemies..."
                   />
@@ -627,7 +786,7 @@ export const CreateCardPage: React.FC = () => {
               <div className="mt-4">
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(rawJson);
+                    void navigator.clipboard.writeText(rawJson);
                     toast.success('JSON copied to clipboard');
                   }}
                   className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded-lg border border-white/5"

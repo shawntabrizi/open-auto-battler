@@ -30,11 +30,11 @@ export default function PresentationViewer() {
           setCurrentSlide(num - 1); // URL is 1-indexed, state is 0-indexed
         } else {
           // Invalid slide number, redirect to slide 1
-          navigate(`/presentations/${id}/1`, { replace: true });
+          void navigate(`/presentations/${id}/1`, { replace: true });
         }
       } else {
         // No slide number in URL, redirect to slide 1
-        navigate(`/presentations/${id}/1`, { replace: true });
+        void navigate(`/presentations/${id}/1`, { replace: true });
       }
     }
   }, [slideNum, slides.length, navigate, id]);
@@ -52,15 +52,18 @@ export default function PresentationViewer() {
         setLoading(false);
       }
     }
-    loadPresentation();
+    void loadPresentation();
   }, [id]);
 
-  const goTo = useCallback((index: number) => {
-    const newSlide = Math.max(0, Math.min(index, slides.length - 1));
-    setCurrentSlide(newSlide);
-    // Update URL with 1-indexed slide number
-    navigate(`/presentations/${id}/${newSlide + 1}`, { replace: true });
-  }, [slides.length, navigate, id]);
+  const goTo = useCallback(
+    (index: number) => {
+      const newSlide = Math.max(0, Math.min(index, slides.length - 1));
+      setCurrentSlide(newSlide);
+      // Update URL with 1-indexed slide number
+      void navigate(`/presentations/${id}/${newSlide + 1}`, { replace: true });
+    },
+    [slides.length, navigate, id]
+  );
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -86,7 +89,7 @@ export default function PresentationViewer() {
     const activePlaceholders = new Set<Element>();
 
     const placeholders = slideContentRef.current.querySelectorAll('.component-placeholder');
-    placeholders.forEach(placeholder => {
+    placeholders.forEach((placeholder) => {
       const componentType = placeholder.getAttribute('data-component');
       const propsStr = placeholder.getAttribute('data-props');
 
@@ -116,7 +119,11 @@ export default function PresentationViewer() {
           };
           root.render(
             <div className="inline-block transform scale-150 origin-center m-8">
-              <UnitCard card={cardData} showCost={props.showCost !== false} showPitch={props.showPitch !== false} />
+              <UnitCard
+                card={cardData}
+                showCost={props.showCost !== false}
+                showPitch={props.showPitch !== false}
+              />
             </div>
           );
         } else if (componentType === 'card-breakdown') {
@@ -161,7 +168,7 @@ export default function PresentationViewer() {
     }
     if (staleRoots.length > 0) {
       setTimeout(() => {
-        staleRoots.forEach(root => {
+        staleRoots.forEach((root) => {
           try {
             root.unmount();
           } catch {
@@ -206,10 +213,7 @@ export default function PresentationViewer() {
 
       {/* Navigation bar */}
       <div className="bg-gray-800 px-4 py-3 flex items-center justify-between">
-        <Link
-          to="/presentations"
-          className="text-gray-400 hover:text-white text-sm"
-        >
+        <Link to="/presentations" className="text-gray-400 hover:text-white text-sm">
           ← Back
         </Link>
 
@@ -235,9 +239,7 @@ export default function PresentationViewer() {
           </button>
         </div>
 
-        <span className="text-gray-500 text-xs">
-          ← → to navigate
-        </span>
+        <span className="text-gray-500 text-xs">← → to navigate</span>
       </div>
     </div>
   );

@@ -68,8 +68,9 @@ export function CardDetailPanel({
   } = useGameStore();
 
   // Normalize mode from legacy props if not provided
-  const resolvedMode: CardDetailPanelMode = mode ?? (
-    isSandbox
+  const resolvedMode: CardDetailPanelMode =
+    mode ??
+    (isSandbox
       ? { type: 'sandbox' }
       : isReadOnly
         ? { type: 'readOnly' }
@@ -81,8 +82,7 @@ export function CardDetailPanel({
               selectedAccount,
               onSelectAccount,
             }
-          : { type: 'standard' }
-  );
+          : { type: 'standard' });
 
   if (!isVisible) return null;
 
@@ -100,9 +100,7 @@ export function CardDetailPanel({
         <div className="flex flex-col items-center justify-center py-6 lg:py-12 text-center">
           <div className="text-2xl lg:text-4xl mb-2 lg:mb-4">👆</div>
           <h3 className="text-sm lg:text-lg font-bold text-gray-300 mb-1 lg:mb-2">Select a Card</h3>
-          <p className="text-[10px] lg:text-sm text-gray-400">
-            Tap any card to view details.
-          </p>
+          <p className="text-[10px] lg:text-sm text-gray-400">Tap any card to view details.</p>
         </div>
       );
     }
@@ -149,10 +147,11 @@ export function CardDetailPanel({
       switch (type) {
         case 'Damage':
           return `Deal ${data.amount || 0} damage to ${getTargetDescription(data.target)}`;
-        case 'ModifyStats':
+        case 'ModifyStats': {
           const h = data.health || 0;
           const a = data.attack || 0;
           return `Give ${a >= 0 ? '+' : ''}${a}/${h >= 0 ? '+' : ''}${h} to ${getTargetDescription(data.target)}`;
+        }
         case 'SpawnUnit':
           return `Spawn unit (card #${data.card_id ?? '?'})`;
         case 'Destroy':
@@ -215,7 +214,7 @@ export function CardDetailPanel({
       switch (type) {
         case 'All':
           return describeScope(data.scope);
-        case 'Position':
+        case 'Position': {
           const { scope, index } = data;
           const s = typeof scope === 'string' ? scope : scope?.type || 'unknown';
           if (s === 'SelfUnit') {
@@ -225,9 +224,10 @@ export function CardDetailPanel({
           }
           const posName = index === 0 ? 'front' : index === -1 ? 'back' : `slot ${index + 1}`;
           return `the ${posName} ${describeScopeSingular(scope)}`;
+        }
         case 'Random':
           return `a random ${describeScopeSingular(data.scope)}`;
-        case 'Standard':
+        case 'Standard': {
           const { stat, order, count } = data;
           const orderName =
             (typeof order === 'string' ? order : order?.type) === 'Ascending'
@@ -235,6 +235,7 @@ export function CardDetailPanel({
               : 'highest';
           const countStr = count === 1 ? 'the' : `the ${count}`;
           return `${countStr} ${orderName} ${typeof stat === 'string' ? stat : stat?.type} ${describeScopeSingular(data.scope)}`;
+        }
         case 'Adjacent':
           return `units adjacent to ${describeScope(data.scope)}`;
         default:
@@ -285,7 +286,9 @@ export function CardDetailPanel({
             {getCardEmoji(card.id)}
           </div>
           <div className="card-stats min-w-0">
-            <h2 className="card-name text-base lg:text-2xl font-bold text-white leading-tight truncate">{card.name}</h2>
+            <h2 className="card-name text-base lg:text-2xl font-bold text-white leading-tight truncate">
+              {card.name}
+            </h2>
             <div className="flex gap-1 lg:gap-2 mt-1">
               <span className="px-1.5 lg:px-2 py-0.5 bg-red-900/50 text-red-400 border border-red-800 rounded text-[10px] lg:text-xs font-bold">
                 ATK: {card.attack}
@@ -305,7 +308,9 @@ export function CardDetailPanel({
                 key={index}
                 className="mb-2 lg:mb-4 p-2 lg:p-3 bg-gray-800/50 rounded-lg border border-gray-700"
               >
-                <h3 className="text-xs lg:text-md font-bold text-yellow-400 mb-1 lg:mb-2">{ability.name}</h3>
+                <h3 className="text-xs lg:text-md font-bold text-yellow-400 mb-1 lg:mb-2">
+                  {ability.name}
+                </h3>
                 <div className="text-[10px] lg:text-xs text-gray-300 mb-1 lg:mb-2">
                   <strong>Trigger:</strong> {getTriggerDescription(ability.trigger)}
                 </div>
@@ -328,15 +333,20 @@ export function CardDetailPanel({
         {/* Economy Section */}
         <div className="grid grid-cols-2 gap-1.5 lg:gap-3 mb-3 lg:mb-6">
           <div className="p-1.5 lg:p-3 bg-blue-900/20 border border-blue-800/50 rounded-lg">
-            <div className="text-[8px] lg:text-[10px] text-blue-400 uppercase font-bold mb-0.5 lg:mb-1">Cost</div>
+            <div className="text-[8px] lg:text-[10px] text-blue-400 uppercase font-bold mb-0.5 lg:mb-1">
+              Cost
+            </div>
             <div className="text-sm lg:text-xl font-bold text-white flex items-center gap-0.5 lg:gap-1">
               {card.play_cost} <span className="text-blue-400 text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
           <div className="p-1.5 lg:p-3 bg-orange-900/20 border border-orange-800/50 rounded-lg">
-            <div className="text-[8px] lg:text-[10px] text-orange-400 uppercase font-bold mb-0.5 lg:mb-1">Pitch</div>
+            <div className="text-[8px] lg:text-[10px] text-orange-400 uppercase font-bold mb-0.5 lg:mb-1">
+              Pitch
+            </div>
             <div className="text-sm lg:text-xl font-bold text-white flex items-center gap-0.5 lg:gap-1">
-              +{card.pitch_value} <span className="text-orange-400 text-[10px] lg:text-sm">Mana</span>
+              +{card.pitch_value}{' '}
+              <span className="text-orange-400 text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
         </div>
@@ -483,9 +493,13 @@ export function CardDetailPanel({
 
             {/* Connection Status */}
             <div className="flex items-center gap-2 mb-3 p-2 bg-slate-900 rounded border border-white/5">
-              <div className={`w-2 h-2 rounded-full ${resolvedMode.blockNumber != null ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+              <div
+                className={`w-2 h-2 rounded-full ${resolvedMode.blockNumber != null ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
+              />
               <span className="text-xs font-mono text-slate-400">
-                {resolvedMode.blockNumber != null ? `Block #${resolvedMode.blockNumber.toLocaleString()}` : 'Offline'}
+                {resolvedMode.blockNumber != null
+                  ? `Block #${resolvedMode.blockNumber.toLocaleString()}`
+                  : 'Offline'}
               </span>
             </div>
 
@@ -496,14 +510,15 @@ export function CardDetailPanel({
                 <select
                   value={resolvedMode.selectedAccount?.address || ''}
                   onChange={(e) => {
-                    const account = resolvedMode.accounts.find(a => a.address === e.target.value);
+                    const account = resolvedMode.accounts.find((a) => a.address === e.target.value);
                     resolvedMode.onSelectAccount?.(account);
                   }}
                   className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50"
                 >
-                  {resolvedMode.accounts.map(acc => (
+                  {resolvedMode.accounts.map((acc) => (
                     <option key={acc.address} value={acc.address}>
-                      {acc.source === 'dev' ? '🛠️ ' : ''}{acc.name} ({acc.address.slice(0, 6)}...)
+                      {acc.source === 'dev' ? '🛠️ ' : ''}
+                      {acc.name} ({acc.address.slice(0, 6)}...)
                     </option>
                   ))}
                 </select>

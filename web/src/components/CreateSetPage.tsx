@@ -4,33 +4,27 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { CardDetailPanel } from './CardDetailPanel';
 import { UnitCard } from './UnitCard';
-import { CardView } from '../types';
+import { type CardView } from '../types';
 
 export const CreateSetPage: React.FC = () => {
-  const {
-    isConnected,
-    connect,
-    allCards,
-    fetchCards,
-    createCardSet
-  } = useBlockchainStore();
+  const { isConnected, connect, allCards, fetchCards, createCardSet } = useBlockchainStore();
 
-  const [selectedCards, setSelectedCards] = useState<{ card_id: number, rarity: number }[]>([]);
+  const [selectedCards, setSelectedCards] = useState<{ card_id: number; rarity: number }[]>([]);
   const [isCreatingSet, setIsCreatingSet] = useState(false);
   const [detailCard, setDetailCard] = useState<CardView | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (isConnected) {
-      fetchCards();
+      void fetchCards();
     }
   }, [isConnected, fetchCards]);
 
   const toggleCardSelection = (cardId: number) => {
-    setSelectedCards(prev => {
-      const exists = prev.find(c => c.card_id === cardId);
+    setSelectedCards((prev) => {
+      const exists = prev.find((c) => c.card_id === cardId);
       if (exists) {
-        return prev.filter(c => c.card_id !== cardId);
+        return prev.filter((c) => c.card_id !== cardId);
       } else {
         return [...prev, { card_id: cardId, rarity: 100 }]; // Default rarity 100
       }
@@ -49,7 +43,7 @@ export const CreateSetPage: React.FC = () => {
         ...a,
         name: a.name.asText ? a.name.asText() : a.name,
         description: a.description.asText ? a.description.asText() : a.description,
-      }))
+      })),
     };
   };
 
@@ -83,7 +77,9 @@ export const CreateSetPage: React.FC = () => {
         >
           CONNECT WALLET TO START
         </button>
-        <Link to="/blockchain" className="mt-8 text-slate-400 hover:text-white underline">Back to Blockchain</Link>
+        <Link to="/blockchain" className="mt-8 text-slate-400 hover:text-white underline">
+          Back to Blockchain
+        </Link>
       </div>
     );
   }
@@ -91,12 +87,7 @@ export const CreateSetPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200">
       {/* Side Panel Integration - Always Visible */}
-      <CardDetailPanel 
-        card={detailCard} 
-        isVisible={true} 
-        isReadOnly={true}
-        topOffset="0"
-      />
+      <CardDetailPanel card={detailCard} isVisible={true} isReadOnly={true} topOffset="0" />
 
       <div className="p-8 ml-80 transition-all duration-300">
         <div className="max-w-7xl mx-auto">
@@ -108,10 +99,16 @@ export const CreateSetPage: React.FC = () => {
               <p className="text-slate-500 text-sm">Bundle cards into playable sets</p>
             </div>
             <div className="flex gap-4">
-              <Link to="/blockchain/create-card" className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-4 py-2 rounded-lg transition-colors font-bold flex items-center gap-2">
+              <Link
+                to="/blockchain/create-card"
+                className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-4 py-2 rounded-lg transition-colors font-bold flex items-center gap-2"
+              >
                 <span className="text-xl">+</span> MINT NEW CARDS
               </Link>
-              <Link to="/blockchain" className="text-slate-400 hover:text-white border border-slate-800 px-4 py-2 rounded-lg transition-colors flex items-center">
+              <Link
+                to="/blockchain"
+                className="text-slate-400 hover:text-white border border-slate-800 px-4 py-2 rounded-lg transition-colors flex items-center"
+              >
                 Exit to Dashboard
               </Link>
             </div>
@@ -140,42 +137,53 @@ export const CreateSetPage: React.FC = () => {
 
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {allCards.filter(card => {
-                      if (!searchQuery) return true;
-                      const json = JSON.stringify(card).toLowerCase();
-                      return json.includes(searchQuery.toLowerCase());
-                    }).map(card => {
-                      const isSelected = selectedCards.some(c => c.card_id === card.id);
-                      const isDetailing = detailCard?.id === card.id;
-                      const cardView = mapToCardView(card);
-                      return (
-                        <div
-                          key={card.id}
-                          className={`
+                    {allCards
+                      .filter((card) => {
+                        if (!searchQuery) return true;
+                        const json = JSON.stringify(card).toLowerCase();
+                        return json.includes(searchQuery.toLowerCase());
+                      })
+                      .map((card) => {
+                        const isSelected = selectedCards.some((c) => c.card_id === card.id);
+                        const isDetailing = detailCard?.id === card.id;
+                        const cardView = mapToCardView(card);
+                        return (
+                          <div
+                            key={card.id}
+                            className={`
                             relative group flex flex-col items-center transition-all rounded-xl p-2
                             ${isSelected ? 'bg-yellow-500/10 scale-[1.02]' : ''}
                             ${isDetailing ? 'ring-2 ring-blue-500 rounded-xl' : ''}
                           `}
-                        >
-                          <UnitCard
-                            card={cardView}
-                            isSelected={isSelected}
-                            onClick={() => {
-                              toggleCardSelection(card.id);
-                              setDetailCard(cardView);
-                            }}
-                          />
+                          >
+                            <UnitCard
+                              card={cardView}
+                              isSelected={isSelected}
+                              onClick={() => {
+                                toggleCardSelection(card.id);
+                                setDetailCard(cardView);
+                              }}
+                            />
 
-                          {isSelected && (
-                            <div className="absolute -top-2 -right-2 z-10 bg-yellow-500 text-slate-950 rounded-full p-1 shadow-lg">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                            {isSelected && (
+                              <div className="absolute -top-2 -right-2 z-10 bg-yellow-500 text-slate-950 rounded-full p-1 shadow-lg">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-4 w-4"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     {allCards.length === 0 && (
                       <div className="col-span-full py-20 text-center text-slate-600 italic">
                         No cards found on-chain. Go create some first!
@@ -201,17 +209,26 @@ export const CreateSetPage: React.FC = () => {
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                   {selectedCards.length > 0 ? (
                     <div className="space-y-3">
-                      <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Selected Cards & Rarity Weights</h3>
-                      {selectedCards.map(sc => {
-                        const card = allCards.find(c => c.id === sc.card_id);
+                      <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">
+                        Selected Cards & Rarity Weights
+                      </h3>
+                      {selectedCards.map((sc) => {
+                        const card = allCards.find((c) => c.id === sc.card_id);
                         if (!card) return null;
                         return (
-                          <div key={sc.card_id} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+                          <div
+                            key={sc.card_id}
+                            className="flex items-center justify-between bg-slate-800/50 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
+                          >
                             <div className="flex items-center gap-3">
                               <span className="text-xl">{card.metadata.emoji}</span>
                               <div>
-                                <div className="text-xs font-bold truncate max-w-[100px]">{card.metadata.name}</div>
-                                <div className="text-[10px] text-slate-500 font-mono">{card.data.stats.attack}/{card.data.stats.health}</div>
+                                <div className="text-xs font-bold truncate max-w-[100px]">
+                                  {card.metadata.name}
+                                </div>
+                                <div className="text-[10px] text-slate-500 font-mono">
+                                  {card.data.stats.attack}/{card.data.stats.health}
+                                </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -220,16 +237,31 @@ export const CreateSetPage: React.FC = () => {
                                 value={sc.rarity}
                                 onChange={(e) => {
                                   const val = parseInt(e.target.value) || 0;
-                                  setSelectedCards(prev => prev.map(c => c.card_id === sc.card_id ? { ...c, rarity: val } : c));
+                                  setSelectedCards((prev) =>
+                                    prev.map((c) =>
+                                      c.card_id === sc.card_id ? { ...c, rarity: val } : c
+                                    )
+                                  );
                                 }}
                                 className="w-16 bg-slate-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50 text-center font-bold"
                               />
-                              <button 
+                              <button
                                 onClick={() => toggleCardSelection(card.id)}
                                 className="text-slate-600 hover:text-red-500 transition-colors"
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                  />
                                 </svg>
                               </button>
                             </div>

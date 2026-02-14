@@ -53,6 +53,23 @@ export default tseslint.config(
     files: ['**/*.d.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+    },
+  },
+  {
+    files: [
+      'src/components/CardDetailModal.tsx',
+      'src/components/CardDetailPanel.tsx',
+      'src/components/CreateCardPage.tsx',
+      'src/components/CreateSetPage.tsx',
+      'src/components/MultiplayerManager.tsx',
+      'src/store/blockchainStore.ts',
+      'src/store/gameStore.ts',
+      'src/store/multiplayerStore.ts',
+      'src/utils/papiCoercion.ts',
+    ],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
   {
