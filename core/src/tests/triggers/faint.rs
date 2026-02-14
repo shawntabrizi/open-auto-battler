@@ -1,4 +1,4 @@
-use crate::battle::{CombatEvent, UnitId};
+use crate::battle::{player_shop_mana_delta_from_events, CombatEvent, Team, UnitId};
 use crate::tests::*;
 use crate::types::*;
 
@@ -185,5 +185,43 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
     assert!(
         lich_buff.is_some(),
         "MK3's Last Stand should buff the Lich (+2/+2), which was directly behind it"
+    );
+}
+
+#[test]
+fn test_on_faint_gain_mana_carries_to_next_shop_pool() {
+    let martyr = create_dummy_card(1, "Martyr", 1, 1).with_ability(Ability {
+        trigger: AbilityTrigger::OnFaint,
+        effect: AbilityEffect::GainMana { amount: 1 },
+        name: "Last Coin".to_string(),
+        description: "Gain 1 mana next shop when this faints".to_string(),
+        conditions: vec![],
+        max_triggers: Some(1),
+    });
+
+    let p_board = vec![CombatUnit::from_card(martyr)];
+    let e_board = vec![create_board_unit(2, "Enemy", 3, 3)];
+
+    let events = run_battle(&p_board, &e_board, 99);
+
+    let mana_event = events.iter().find(|e| {
+        matches!(
+            e,
+            CombatEvent::AbilityGainMana {
+                source_instance_id,
+                team,
+                amount
+            } if *source_instance_id == UnitId::player(1) && *team == Team::Player && *amount == 1
+        )
+    });
+    assert!(
+        mana_event.is_some(),
+        "OnFaint GainMana should emit a player mana gain event"
+    );
+
+    assert_eq!(
+        player_shop_mana_delta_from_events(&events),
+        1,
+        "Player should gain +1 next-shop mana from this faint trigger"
     );
 }

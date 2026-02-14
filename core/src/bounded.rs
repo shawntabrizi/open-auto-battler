@@ -245,6 +245,9 @@ pub enum BoundedAbilityEffect {
     Destroy {
         target: AbilityTarget,
     },
+    GainMana {
+        amount: i32,
+    },
 }
 
 impl From<AbilityEffect> for BoundedAbilityEffect {
@@ -262,6 +265,7 @@ impl From<AbilityEffect> for BoundedAbilityEffect {
             },
             AbilityEffect::SpawnUnit { card_id } => Self::SpawnUnit { card_id },
             AbilityEffect::Destroy { target } => Self::Destroy { target },
+            AbilityEffect::GainMana { amount } => Self::GainMana { amount },
         }
     }
 }
@@ -283,6 +287,7 @@ impl From<BoundedAbilityEffect> for AbilityEffect {
             },
             BoundedAbilityEffect::SpawnUnit { card_id } => AbilityEffect::SpawnUnit { card_id },
             BoundedAbilityEffect::Destroy { target } => AbilityEffect::Destroy { target },
+            BoundedAbilityEffect::GainMana { amount } => AbilityEffect::GainMana { amount },
         }
     }
 }
@@ -574,6 +579,7 @@ where
     pub hand: BoundedVec<CardId, MaxHandActions>,
     pub board: BoundedVec<Option<BoardUnit>, MaxBoardSize>,
     pub mana_limit: i32,
+    pub shop_mana: i32,
     pub round: i32,
     pub lives: i32,
     pub wins: i32,
@@ -595,6 +601,7 @@ where
             hand: self.hand.clone(),
             board: self.board.clone(),
             mana_limit: self.mana_limit,
+            shop_mana: self.shop_mana,
             round: self.round,
             lives: self.lives,
             wins: self.wins,
@@ -617,6 +624,7 @@ where
             && self.hand == other.hand
             && self.board == other.board
             && self.mana_limit == other.mana_limit
+            && self.shop_mana == other.shop_mana
             && self.round == other.round
             && self.lives == other.lives
             && self.wins == other.wins
@@ -648,6 +656,7 @@ where
             .field("hand", &self.hand)
             .field("board", &self.board)
             .field("mana_limit", &self.mana_limit)
+            .field("shop_mana", &self.shop_mana)
             .field("round", &self.round)
             .field("lives", &self.lives)
             .field("wins", &self.wins)
@@ -671,6 +680,7 @@ where
             hand: BoundedVec::truncate_from(state.hand),
             board: BoundedVec::truncate_from(state.board),
             mana_limit: state.mana_limit,
+            shop_mana: state.shop_mana,
             round: state.round,
             lives: state.lives,
             wins: state.wins,
@@ -695,6 +705,7 @@ where
             hand: bounded.hand.into_inner(),
             board: bounded.board.into_inner(),
             mana_limit: bounded.mana_limit,
+            shop_mana: bounded.shop_mana,
             round: bounded.round,
             lives: bounded.lives,
             wins: bounded.wins,
@@ -1179,6 +1190,11 @@ where
         new_attack: i32,
         new_health: i32,
     },
+    AbilityGainMana {
+        source_instance_id: UnitId,
+        team: Team,
+        amount: i32,
+    },
     UnitSpawn {
         team: Team,
         spawned_unit: BoundedUnitView<MaxAbilities, MaxStringLen, MaxConditions>,
@@ -1257,6 +1273,15 @@ impl<
                 attack_change: *attack_change,
                 new_attack: *new_attack,
                 new_health: *new_health,
+            },
+            Self::AbilityGainMana {
+                source_instance_id,
+                team,
+                amount,
+            } => Self::AbilityGainMana {
+                source_instance_id: *source_instance_id,
+                team: *team,
+                amount: *amount,
             },
             Self::UnitSpawn {
                 team,
@@ -1364,6 +1389,18 @@ impl<
                     new_health: nh2,
                 },
             ) => s1 == s2 && t1 == t2 && h1 == h2 && a1 == a2 && na1 == na2 && nh1 == nh2,
+            (
+                Self::AbilityGainMana {
+                    source_instance_id: s1,
+                    team: tm1,
+                    amount: a1,
+                },
+                Self::AbilityGainMana {
+                    source_instance_id: s2,
+                    team: tm2,
+                    amount: a2,
+                },
+            ) => s1 == s2 && tm1 == tm2 && a1 == a2,
             (
                 Self::UnitSpawn {
                     team: tm1,
@@ -1475,6 +1512,16 @@ impl<
                 .field("new_attack", new_attack)
                 .field("new_health", new_health)
                 .finish(),
+            Self::AbilityGainMana {
+                source_instance_id,
+                team,
+                amount,
+            } => f
+                .debug_struct("AbilityGainMana")
+                .field("source_instance_id", source_instance_id)
+                .field("team", team)
+                .field("amount", amount)
+                .finish(),
             Self::UnitSpawn {
                 team,
                 spawned_unit,
@@ -1561,6 +1608,15 @@ where
                 attack_change: attack_change,
                 new_attack: new_attack,
                 new_health: new_health,
+            },
+            crate::battle::CombatEvent::AbilityGainMana {
+                source_instance_id,
+                team,
+                amount,
+            } => Self::AbilityGainMana {
+                source_instance_id,
+                team,
+                amount,
             },
             crate::battle::CombatEvent::UnitSpawn {
                 team,

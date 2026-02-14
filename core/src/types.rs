@@ -209,6 +209,8 @@ pub enum AbilityEffect {
     SpawnUnit { card_id: CardId },
     /// Destroy a target directly
     Destroy { target: AbilityTarget },
+    /// Modify current shop mana (used by shop-phase triggers like OnBuy/OnSell)
+    GainMana { amount: i32 },
 }
 
 /// Ability target specifications

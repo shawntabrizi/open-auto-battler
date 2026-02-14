@@ -70,6 +70,8 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         return `Spawn unit (card #${data.card_id ?? '?'})`;
       case 'Destroy':
         return `Destroy ${getTargetDescription(data.target)}`;
+      case 'GainMana':
+        return `Gain ${data.amount || 0} mana`;
       default:
         return `Effect: ${type}`;
     }

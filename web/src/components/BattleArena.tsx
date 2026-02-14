@@ -159,6 +159,8 @@ function getEventDelay(events: CombatEvent[], index: number, playbackSpeed: numb
       return 400 / playbackSpeed;
     case 'AbilityModifyStats':
       return 400 / playbackSpeed;
+    case 'AbilityGainMana':
+      return 300 / playbackSpeed;
     case 'UnitSpawn':
       return 600 / playbackSpeed;
     default:
@@ -338,6 +340,10 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
           }
           return updateBoard(prev);
         });
+        break;
+      }
+
+      case 'AbilityGainMana': {
         break;
       }
 

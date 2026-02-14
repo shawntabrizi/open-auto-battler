@@ -72,6 +72,8 @@ pub struct LocalGameState {
     pub board: Vec<Option<BoardUnit>>,
     /// Maximum mana that can be held (increases each round)
     pub mana_limit: i32,
+    /// Current mana available during the shop turn
+    pub shop_mana: i32,
     /// Current round number (1-indexed)
     pub round: i32,
     /// Lives remaining
@@ -122,6 +124,7 @@ impl GameState {
                 hand: Vec::new(),
                 board: vec![None; BOARD_SIZE],
                 mana_limit: STARTING_MANA_LIMIT,
+                shop_mana: 0,
                 round: 1,
                 lives: STARTING_LIVES,
                 wins: 0,
@@ -142,6 +145,7 @@ impl GameState {
                 hand: Vec::new(),
                 board: vec![None; BOARD_SIZE],
                 mana_limit: 0,
+                shop_mana: 0,
                 round: 0,
                 lives: 0,
                 wins: 0,

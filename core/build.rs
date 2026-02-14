@@ -124,6 +124,10 @@ fn gen_target(target: &JsonTarget) -> String {
 
 fn gen_effect(effect: &JsonEffect) -> String {
     match effect.effect_type.as_str() {
+        "GainMana" => {
+            let amount = effect.amount.unwrap();
+            format!("AbilityEffect::GainMana {{ amount: {amount} }}")
+        }
         "SpawnUnit" => {
             let card_id = effect.card_id.unwrap();
             format!("AbilityEffect::SpawnUnit {{ card_id: CardId({card_id}) }}")

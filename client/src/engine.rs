@@ -8,7 +8,9 @@ use std::vec;
 use std::vec::Vec;
 
 use bounded_collections::ConstU32;
-use oab_core::battle::{resolve_battle, CombatEvent, CombatUnit, UnitView};
+use oab_core::battle::{
+    player_shop_mana_delta_from_events, resolve_battle, CombatEvent, CombatUnit, UnitView,
+};
 use oab_core::bounded::{BoundedCardSet, BoundedLocalGameState};
 use oab_core::commit::{
     apply_on_buy_triggers, apply_on_sell_triggers, apply_shop_start_triggers, verify_and_apply_turn,
@@ -58,10 +60,10 @@ pub struct GameEngine {
     starting_lives: i32,
     wins_to_victory: i32,
     // Per-turn local tracking (transient, not persisted)
-    current_mana: i32,
     hand_used: Vec<bool>,                // true = pitched or played
     action_log: Vec<TurnAction>,         // Ordered list of actions taken this turn
     start_board: Vec<Option<BoardUnit>>, // board state at the start of the turn
+    start_shop_mana: i32,                // mana state at the start of the turn
     undo_history: Vec<TurnSnapshot>,     // Stack of snapshots for undo
 }
 
@@ -83,10 +85,10 @@ impl GameEngine {
             last_battle_output: None,
             starting_lives: STARTING_LIVES,
             wins_to_victory: WINS_TO_VICTORY,
-            current_mana: 0,
             hand_used: Vec::new(),
             action_log: Vec::new(),
             start_board: vec![None; BOARD_SIZE],
+            start_shop_mana: 0,
             undo_history: Vec::new(),
         };
 
@@ -171,11 +173,13 @@ impl GameEngine {
         // We must rollback board to start_board because verify_and_apply_turn expects
         // state as it was at the beginning of the turn.
         self.state.board = self.start_board.clone();
+        self.state.shop_mana = self.start_shop_mana;
 
         verify_and_apply_turn(&mut self.state, &action)
             .map_err(|e| format!("Turn verification failed: {:?}", e))?;
 
-        self.current_mana = 0;
+        // Leftover shop mana never carries naturally; only battle GainMana should.
+        self.state.shop_mana = 0;
         self.state.phase = GamePhase::Battle;
         self.run_battle();
         self.log_state();
@@ -205,7 +209,8 @@ impl GameEngine {
     pub fn get_view(&self) -> JsValue {
         log::debug("get_view", "Serializing game state to view");
         let can_undo = !self.undo_history.is_empty();
-        let view = GameView::from_state(&self.state, self.current_mana, &self.hand_used, can_undo);
+        let view =
+            GameView::from_state(&self.state, self.state.shop_mana, &self.hand_used, can_undo);
         match serde_wasm_bindgen::to_value(&view) {
             Ok(val) => val,
             Err(e) => {
@@ -278,7 +283,7 @@ impl GameEngine {
         let pitch_value = self.get_card(*card_id).economy.pitch_value;
 
         self.save_snapshot();
-        self.current_mana = (self.current_mana + pitch_value).min(self.state.mana_limit);
+        self.state.shop_mana = (self.state.shop_mana + pitch_value).min(self.state.mana_limit);
         self.hand_used[hand_index] = true;
         self.action_log.push(TurnAction::PitchFromHand {
             hand_index: hand_index as u32,
@@ -322,15 +327,15 @@ impl GameEngine {
             (card.economy.play_cost, card.stats.health)
         };
 
-        if self.current_mana < play_cost {
+        if self.state.shop_mana < play_cost {
             return Err(format!(
                 "Not enough mana: have {}, need {}",
-                self.current_mana, play_cost
+                self.state.shop_mana, play_cost
             ));
         }
 
         self.save_snapshot();
-        self.current_mana -= play_cost;
+        self.state.shop_mana -= play_cost;
         self.hand_used[hand_index] = true;
         self.action_log.push(TurnAction::PlayFromHand {
             hand_index: hand_index as u32,
@@ -400,7 +405,7 @@ impl GameEngine {
 
         let card_id = unit.card_id;
         let pitch_value = self.get_card(card_id).economy.pitch_value;
-        self.current_mana = (self.current_mana + pitch_value).min(self.state.mana_limit);
+        self.state.shop_mana = (self.state.shop_mana + pitch_value).min(self.state.mana_limit);
         self.action_log.push(TurnAction::PitchFromBoard {
             board_slot: board_slot as u32,
         });
@@ -421,7 +426,7 @@ impl GameEngine {
 
         let snapshot = self.undo_history.pop().ok_or("Nothing to undo")?;
 
-        self.current_mana = snapshot.mana;
+        self.state.shop_mana = snapshot.mana;
         self.hand_used = snapshot.hand_used;
         self.action_log = snapshot.action_log;
         self.state.board = snapshot.board;
@@ -446,12 +451,14 @@ impl GameEngine {
         // We must rollback board to start_board because verify_and_apply_turn expects
         // state as it was at the beginning of the turn.
         self.state.board = self.start_board.clone();
+        self.state.shop_mana = self.start_shop_mana;
 
         // Use the centralized verification logic to apply the turn
         verify_and_apply_turn(&mut self.state, &action)
             .map_err(|e| format!("Turn verification failed: {:?}", e))?;
 
-        self.current_mana = 0;
+        // Leftover shop mana never carries naturally; only battle GainMana should.
+        self.state.shop_mana = 0;
         self.state.phase = GamePhase::Battle;
         self.run_battle();
         self.log_state();
@@ -577,6 +584,7 @@ impl GameEngine {
         log::info("=== P2P BATTLE START ===");
 
         // Set phase to Battle
+        self.state.shop_mana = 0;
         self.state.phase = GamePhase::Battle;
 
         // Parse boards from JS
@@ -662,6 +670,7 @@ impl GameEngine {
             }
             log::info(&format!("P2P Battle Result: {:?}", result));
         }
+        self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
 
         // Note: Round advancement happens when continue_after_battle() is called
         // This keeps P2P flow consistent with single-player flow
@@ -788,7 +797,7 @@ impl GameEngine {
     /// Save current state to undo history before making a change
     fn save_snapshot(&mut self) {
         self.undo_history.push(TurnSnapshot {
-            mana: self.current_mana,
+            mana: self.state.shop_mana,
             hand_used: self.hand_used.clone(),
             action_log: self.action_log.clone(),
             board: self.state.board.clone(),
@@ -822,7 +831,8 @@ impl GameEngine {
         self.hand_used = vec![false; hand_size];
         self.action_log = Vec::new();
         self.start_board = self.state.board.clone();
-        self.current_mana = 0;
+        self.state.shop_mana = self.state.shop_mana.clamp(0, self.state.mana_limit);
+        self.start_shop_mana = self.state.shop_mana;
         self.undo_history.clear();
     }
 
@@ -849,6 +859,7 @@ impl GameEngine {
 
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
         let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool);
+        self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
 
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {

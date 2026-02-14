@@ -137,6 +137,11 @@ pub enum CombatEvent {
         new_attack: i32,
         new_health: i32,
     },
+    AbilityGainMana {
+        source_instance_id: UnitInstanceId,
+        team: Team,
+        amount: i32,
+    },
     UnitSpawn {
         team: Team,
         spawned_unit: UnitView,
@@ -371,6 +376,29 @@ pub fn resolve_battle<R: BattleRng>(
         card_pool,
     );
     events
+}
+
+/// Extract total next-shop mana delta for a team from battle events.
+pub fn shop_mana_delta_from_events(events: &[CombatEvent], team: Team) -> i32 {
+    let mut total = 0_i32;
+    for event in events {
+        if let CombatEvent::AbilityGainMana {
+            team: event_team,
+            amount,
+            ..
+        } = event
+        {
+            if *event_team == team {
+                total = total.saturating_add(*amount);
+            }
+        }
+    }
+    total
+}
+
+/// Convenience helper for the local player's next-shop mana delta.
+pub fn player_shop_mana_delta_from_events(events: &[CombatEvent]) -> i32 {
+    shop_mana_delta_from_events(events, Team::Player)
 }
 
 fn finalize_with_limit_exceeded(
@@ -1010,6 +1038,14 @@ fn apply_ability_effect<R: BattleRng>(
                     });
                 }
             }
+            Ok(damaged_units)
+        }
+        AbilityEffect::GainMana { amount } => {
+            events.push(CombatEvent::AbilityGainMana {
+                source_instance_id,
+                team: source_team,
+                amount: *amount,
+            });
             Ok(damaged_units)
         }
     };
@@ -1956,6 +1992,9 @@ fn get_effect_target(effect: &AbilityEffect) -> AbilityTarget {
             scope: TargetScope::SelfUnit,
         },
         AbilityEffect::Destroy { target } => target.clone(),
+        AbilityEffect::GainMana { .. } => AbilityTarget::All {
+            scope: TargetScope::SelfUnit,
+        },
     }
 }
 

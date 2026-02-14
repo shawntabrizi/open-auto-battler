@@ -1665,7 +1665,19 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": []
+    "abilities": [
+      {
+        "trigger": "OnSell",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "name": "Coin Pouch",
+        "description": "Gain 1 mana when sold",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
   },
   {
     "id": 53,
@@ -2400,5 +2412,31 @@
       "pitch_value": 0
     },
     "abilities": []
+  },
+  {
+    "id": 78,
+    "name": "Shopkeeper",
+    "emoji": "🛒",
+    "stats": {
+      "attack": 1,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 2,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnBuy",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "name": "Store Credit",
+        "description": "Gain 1 mana whenever you buy a unit",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
   }
 ]

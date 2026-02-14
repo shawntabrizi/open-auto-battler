@@ -320,6 +320,10 @@
       {
         "card_id": 77,
         "rarity": 0
+      },
+      {
+        "card_id": 78,
+        "rarity": 8
       }
     ]
   }

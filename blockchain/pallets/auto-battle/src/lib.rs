@@ -449,6 +449,7 @@ pub mod pallet {
                     hand: Vec::new(),
                     board: vec![None; 5], // BOARD_SIZE is 5
                     mana_limit: 3,        // STARTING_MANA_LIMIT is 3
+                    shop_mana: 0,
                     round: 1,
                     lives: 3, // STARTING_LIVES is 3
                     wins: 0,
@@ -510,6 +511,9 @@ pub mod pallet {
             verify_and_apply_turn(&mut core_state, &core_action)
                 .map_err(|_| Error::<T>::InvalidTurn)?;
 
+            // Leftover shop mana never carries naturally; only battle GainMana should.
+            core_state.local_state.shop_mana = 0;
+
             // Generate battle seed
             let battle_seed = Self::generate_next_seed(&who, b"battle");
 
@@ -568,6 +572,8 @@ pub mod pallet {
             // Run the battle
             let mut rng = XorShiftRng::seed_from_u64(battle_seed);
             let events = resolve_battle(player_units, enemy_units, &mut rng, &core_state.card_pool);
+            core_state.local_state.shop_mana =
+                oab_core::battle::player_shop_mana_delta_from_events(&events).max(0);
 
             // Extract battle result from the last event
             let result = events
@@ -739,6 +745,7 @@ pub mod pallet {
 
             // Draw hand for the next shop phase
             core_state.draw_hand();
+            core_state.local_state.shop_mana = 0;
             apply_shop_start_triggers(&mut core_state);
 
             // Update session state

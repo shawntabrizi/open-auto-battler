@@ -30,8 +30,10 @@ struct ShopPendingAbility {
 ///
 /// This should be called exactly once when entering a new shop phase.
 pub fn apply_shop_start_triggers(state: &mut GameState) {
+    state.shop_mana = state.shop_mana.clamp(0, state.mana_limit);
     let mut rng = shop_rng(state, SHOP_START_SALT);
     execute_shop_trigger(state, AbilityTrigger::OnShopStart, None, None, &mut rng);
+    state.shop_mana = state.shop_mana.clamp(0, state.mana_limit);
 }
 
 /// Apply `OnBuy` triggers for a successful shop buy action.
@@ -83,7 +85,7 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
     let hand_size = state.hand.len();
 
     // Track mana and used cards
-    let mut current_mana: i32 = 0;
+    let mut current_mana: i32 = state.shop_mana.clamp(0, state.mana_limit);
     let mut hand_used = vec![false; hand_size];
 
     // Process each action in order
@@ -162,7 +164,9 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
                 hand_used[hi] = true;
                 state.board[bs] = Some(crate::types::BoardUnit::new(card_id, health));
 
+                state.shop_mana = current_mana;
                 apply_on_buy_triggers(state, action_index, bs);
+                current_mana = state.shop_mana;
             }
 
             TurnAction::PitchFromBoard { board_slot } => {
@@ -187,7 +191,9 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
 
                 current_mana = (current_mana + pitch_value).min(state.mana_limit);
 
+                state.shop_mana = current_mana;
                 apply_on_sell_triggers(state, action_index, sold_unit.card_id, bs);
+                current_mana = state.shop_mana;
             }
 
             TurnAction::SwapBoard { slot_a, slot_b } => {
@@ -221,6 +227,8 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
     for idx in hand_indices_to_remove {
         state.hand.remove(idx);
     }
+
+    state.shop_mana = current_mana;
 
     Ok(())
 }
@@ -365,6 +373,12 @@ fn apply_shop_effect<R: BattleRng>(
             for slot in targets {
                 state.board[slot] = None;
             }
+        }
+        AbilityEffect::GainMana { amount } => {
+            state.shop_mana = state
+                .shop_mana
+                .saturating_add(*amount)
+                .clamp(0, state.mana_limit);
         }
     }
 }

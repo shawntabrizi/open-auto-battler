@@ -157,11 +157,13 @@ export const CreateCardPage: React.FC = () => {
       setNewAbility({ ...newAbility, effect: { type: 'SpawnUnit', card_id: 2 } });
     } else if (type === 'Destroy') {
       setNewAbility({ ...newAbility, effect: { type: 'Destroy', target } });
+    } else if (type === 'GainMana') {
+      setNewAbility({ ...newAbility, effect: { type: 'GainMana', amount: 1 } });
     }
   };
 
   const updateTargetType = (type: string) => {
-    if (newAbility.effect.type === 'SpawnUnit') return;
+    if (newAbility.effect.type === 'SpawnUnit' || newAbility.effect.type === 'GainMana') return;
 
     let target: AbilityTarget;
     const scope: TargetScope = 'Enemies';
@@ -513,7 +515,7 @@ export const CreateCardPage: React.FC = () => {
                     Effect Type
                   </label>
                   <div className="grid grid-cols-4 gap-2">
-                    {['Damage', 'ModifyStats', 'SpawnUnit', 'Destroy'].map((type) => (
+                    {['Damage', 'ModifyStats', 'SpawnUnit', 'Destroy', 'GainMana'].map((type) => (
                       <button
                         key={type}
                         onClick={() => updateEffectType(type)}
@@ -613,106 +615,58 @@ export const CreateCardPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Target Editor (if not SpawnUnit) */}
-                  {newAbility.effect.type !== 'SpawnUnit' && (
-                    <div className="space-y-3 pt-2 border-t border-white/5">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                            Target Type
-                          </label>
-                          <select
-                            value={(newAbility.effect as any).target.type}
-                            onChange={(e) => updateTargetType(e.target.value)}
-                            className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
-                          >
-                            <option value="All">All</option>
-                            <option value="Position">Position</option>
-                            <option value="Adjacent">Adjacent</option>
-                            <option value="Random">Random</option>
-                            <option value="Standard">Standard</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                            Scope
-                          </label>
-                          <select
-                            value={(newAbility.effect as any).target.data.scope}
-                            onChange={(e) => {
-                              const target = { ...(newAbility.effect as any).target };
-                              target.data.scope = e.target.value;
-                              setNewAbility({
-                                ...newAbility,
-                                effect: { ...newAbility.effect, target } as any,
-                              });
-                            }}
-                            className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
-                          >
-                            {SCOPES.map((s) => (
-                              <option key={s} value={s}>
-                                {s}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
+                  {newAbility.effect.type === 'GainMana' && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                        Mana Amount
+                      </label>
+                      <input
+                        type="number"
+                        value={newAbility.effect.amount}
+                        onChange={(e) =>
+                          setNewAbility({
+                            ...newAbility,
+                            effect: {
+                              ...newAbility.effect,
+                              amount: parseInt(e.target.value) || 0,
+                            } as any,
+                          })
+                        }
+                        className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                      />
+                    </div>
+                  )}
 
-                      {/* Target Data Fields */}
-                      {(newAbility.effect as any).target.type === 'Position' && (
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                            Index (0-4)
-                          </label>
-                          <input
-                            type="number"
-                            value={(newAbility.effect as any).target.data.index}
-                            onChange={(e) => {
-                              const target = { ...(newAbility.effect as any).target };
-                              target.data.index = parseInt(e.target.value) || 0;
-                              setNewAbility({
-                                ...newAbility,
-                                effect: { ...newAbility.effect, target } as any,
-                              });
-                            }}
-                            className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
-                            min="0"
-                            max="4"
-                          />
-                        </div>
-                      )}
-                      {(newAbility.effect as any).target.type === 'Random' && (
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                            Count
-                          </label>
-                          <input
-                            type="number"
-                            value={(newAbility.effect as any).target.data.count}
-                            onChange={(e) => {
-                              const target = { ...(newAbility.effect as any).target };
-                              target.data.count = parseInt(e.target.value) || 1;
-                              setNewAbility({
-                                ...newAbility,
-                                effect: { ...newAbility.effect, target } as any,
-                              });
-                            }}
-                            className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
-                            min="1"
-                          />
-                        </div>
-                      )}
-                      {(newAbility.effect as any).target.type === 'Standard' && (
-                        <div className="grid grid-cols-2 gap-2">
+                  {/* Target Editor (if not SpawnUnit) */}
+                  {newAbility.effect.type !== 'SpawnUnit' &&
+                    newAbility.effect.type !== 'GainMana' && (
+                      <div className="space-y-3 pt-2 border-t border-white/5">
+                        <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                              Stat
+                              Target Type
                             </label>
                             <select
-                              value={(newAbility.effect as any).target.data.stat}
+                              value={(newAbility.effect as any).target.type}
+                              onChange={(e) => updateTargetType(e.target.value)}
+                              className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
+                            >
+                              <option value="All">All</option>
+                              <option value="Position">Position</option>
+                              <option value="Adjacent">Adjacent</option>
+                              <option value="Random">Random</option>
+                              <option value="Standard">Standard</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                              Scope
+                            </label>
+                            <select
+                              value={(newAbility.effect as any).target.data.scope}
                               onChange={(e) => {
                                 const target = { ...(newAbility.effect as any).target };
-                                target.data.stat = e.target.value;
+                                target.data.scope = e.target.value;
                                 setNewAbility({
                                   ...newAbility,
                                   effect: { ...newAbility.effect, target } as any,
@@ -720,37 +674,108 @@ export const CreateCardPage: React.FC = () => {
                               }}
                               className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                             >
-                              {STATS.map((s) => (
+                              {SCOPES.map((s) => (
                                 <option key={s} value={s}>
                                   {s}
                                 </option>
                               ))}
                             </select>
                           </div>
+                        </div>
+
+                        {/* Target Data Fields */}
+                        {(newAbility.effect as any).target.type === 'Position' && (
                           <div>
                             <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                              Order
+                              Index (0-4)
                             </label>
-                            <select
-                              value={(newAbility.effect as any).target.data.order}
+                            <input
+                              type="number"
+                              value={(newAbility.effect as any).target.data.index}
                               onChange={(e) => {
                                 const target = { ...(newAbility.effect as any).target };
-                                target.data.order = e.target.value;
+                                target.data.index = parseInt(e.target.value) || 0;
                                 setNewAbility({
                                   ...newAbility,
                                   effect: { ...newAbility.effect, target } as any,
                                 });
                               }}
                               className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
-                            >
-                              <option value="Descending">Descending</option>
-                              <option value="Ascending">Ascending</option>
-                            </select>
+                              min="0"
+                              max="4"
+                            />
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        )}
+                        {(newAbility.effect as any).target.type === 'Random' && (
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                              Count
+                            </label>
+                            <input
+                              type="number"
+                              value={(newAbility.effect as any).target.data.count}
+                              onChange={(e) => {
+                                const target = { ...(newAbility.effect as any).target };
+                                target.data.count = parseInt(e.target.value) || 1;
+                                setNewAbility({
+                                  ...newAbility,
+                                  effect: { ...newAbility.effect, target } as any,
+                                });
+                              }}
+                              className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
+                              min="1"
+                            />
+                          </div>
+                        )}
+                        {(newAbility.effect as any).target.type === 'Standard' && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                                Stat
+                              </label>
+                              <select
+                                value={(newAbility.effect as any).target.data.stat}
+                                onChange={(e) => {
+                                  const target = { ...(newAbility.effect as any).target };
+                                  target.data.stat = e.target.value;
+                                  setNewAbility({
+                                    ...newAbility,
+                                    effect: { ...newAbility.effect, target } as any,
+                                  });
+                                }}
+                                className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
+                              >
+                                {STATS.map((s) => (
+                                  <option key={s} value={s}>
+                                    {s}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                                Order
+                              </label>
+                              <select
+                                value={(newAbility.effect as any).target.data.order}
+                                onChange={(e) => {
+                                  const target = { ...(newAbility.effect as any).target };
+                                  target.data.order = e.target.value;
+                                  setNewAbility({
+                                    ...newAbility,
+                                    effect: { ...newAbility.effect, target } as any,
+                                  });
+                                }}
+                                className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
+                              >
+                                <option value="Descending">Descending</option>
+                                <option value="Ascending">Ascending</option>
+                              </select>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                 </div>
 
                 <div>

@@ -76,7 +76,8 @@ export type AbilityEffect =
   | { type: 'Damage'; amount: number; target: AbilityTarget }
   | { type: 'ModifyStats'; health: number; attack: number; target: AbilityTarget }
   | { type: 'SpawnUnit'; card_id: number }
-  | { type: 'Destroy'; target: AbilityTarget };
+  | { type: 'Destroy'; target: AbilityTarget }
+  | { type: 'GainMana'; amount: number };
 
 // Types matching the Rust view structs
 
@@ -166,6 +167,14 @@ export type CombatEvent =
         attack_change: number;
         new_attack: number;
         new_health: number;
+      };
+    }
+  | {
+      type: 'AbilityGainMana';
+      payload: {
+        source_instance_id: number;
+        team: Team;
+        amount: number;
       };
     }
   | {
