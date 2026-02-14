@@ -107,14 +107,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       try {
         set({ isLoading: true, error: null });
 
-        const wasm = await import('oab-client') as unknown as WasmModule;
+        const wasm = (await import('oab-client')) as unknown as WasmModule;
 
         if (!wasmInitialized) {
           await wasm.default();
           wasmInitialized = true;
         }
         const engine = new wasm.GameEngine(undefined); // Don't auto-init
-        engine.load_card_set(0);
+        engine.load_card_set(1);
 
         // Initialize emoji map from card metadata baked into the WASM binary
         const metas = engine.get_card_metas();
@@ -129,7 +129,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           engine,
           view: engine.get_view(),
           cardSet: engine.get_card_set(), // Fetch card set once on init
-          isLoading: false
+          isLoading: false,
         });
       } catch (err) {
         console.error('Failed to initialize WASM:', err);
@@ -148,7 +148,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       engine.pitch_hand_card(index);
       set({ view: engine.get_view(), selection: null });
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   },
 
   playHandCard: (handIndex: number, boardSlot: number) => {
@@ -169,7 +171,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       engine.swap_board_positions(slotA, slotB);
       set({ view: engine.get_view(), selection: { type: 'board', index: slotB } });
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   },
 
   pitchBoardUnit: (boardSlot: number) => {
@@ -178,7 +182,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       engine.pitch_board_unit(boardSlot);
       set({ view: engine.get_view(), selection: null });
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   },
 
   undo: () => {
@@ -187,7 +193,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       engine.undo();
       set({ view: engine.get_view(), selection: null });
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   },
 
   endTurn: () => {
@@ -201,7 +209,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         selection: null,
         showBattleOverlay: true,
       });
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   },
 
   continueAfterBattle: () => {
@@ -217,7 +227,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         engine.continue_after_battle();
         set({ view: engine.get_view(), showBattleOverlay: false, battleOutput: null });
       }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   },
 
   newRun: () => {
@@ -236,7 +248,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         startingLives: 3,
         winsToVictory: 10,
       });
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   },
 
   startMultiplayerGame: (playerSeed: number, lives?: number) => {
@@ -257,7 +271,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         startingLives: engine.get_starting_lives(),
         winsToVictory: engine.get_wins_to_victory(),
       });
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   },
 
   resolveMultiplayerBattle: (opponentBoard: any, seed: number) => {
@@ -265,13 +281,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       // resolve_battle_p2p is self-contained: sets phase, runs battle, applies result
-      const battleOutput = engine.resolve_battle_p2p(engine.get_board(), opponentBoard, BigInt(seed));
-      set({ view: engine.get_view(), battleOutput: battleOutput as any, selection: null, showBattleOverlay: true });
-    } catch (err) { console.error(err); }
+      const battleOutput = engine.resolve_battle_p2p(
+        engine.get_board(),
+        opponentBoard,
+        BigInt(seed)
+      );
+      set({
+        view: engine.get_view(),
+        battleOutput: battleOutput as any,
+        selection: null,
+        showBattleOverlay: true,
+      });
+    } catch (err) {
+      console.error(err);
+    }
   },
 
-  setSelection: (selection: Selection | null) => { set({ selection }); },
-  closeBattleOverlay: () => { set({ showBattleOverlay: false }); },
+  setSelection: (selection: Selection | null) => {
+    set({ selection });
+  },
+  closeBattleOverlay: () => {
+    set({ showBattleOverlay: false });
+  },
   setShowBag: (show: boolean) => {
     set({ showBag: show });
     // Fetch bag when opening the overlay
@@ -294,7 +325,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return null;
     return engine.get_commit_action();
   },
-  setAfterBattleCallback: (cb: (() => void) | null) => { set({ afterBattleCallback: cb }); },
+  setAfterBattleCallback: (cb: (() => void) | null) => {
+    set({ afterBattleCallback: cb });
+  },
 
   toggleShowRawJson: () => {
     set((state) => {

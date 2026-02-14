@@ -5,16 +5,12 @@ import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
 import { getInjectedExtensions, connectInjectedExtension } from 'polkadot-api/pjs-signer';
 import { auto_battle } from '@polkadot-api/descriptors';
 import { useGameStore } from './gameStore';
-import { sr25519CreateDerive } from "@polkadot-labs/hdkd"
-import {
-  DEV_PHRASE,
-  entropyToMiniSecret,
-  mnemonicToEntropy,
-} from "@polkadot-labs/hdkd-helpers"
-import { getPolkadotSigner } from "polkadot-api/signer"
-import { AccountId } from "@polkadot-api/substrate-bindings";
-import { createCallArgCoercer } from "../utils/papiCoercion";
-import { initEmojiMap } from "../utils/emoji";
+import { sr25519CreateDerive } from '@polkadot-labs/hdkd';
+import { DEV_PHRASE, entropyToMiniSecret, mnemonicToEntropy } from '@polkadot-labs/hdkd-helpers';
+import { getPolkadotSigner } from 'polkadot-api/signer';
+import { AccountId } from '@polkadot-api/substrate-bindings';
+import { createCallArgCoercer } from '../utils/papiCoercion';
+import { initEmojiMap } from '../utils/emoji';
 
 // ============================================================================
 // PAPI-to-serde conversion helpers
@@ -78,7 +74,9 @@ function convertTarget(v: any): any {
     const converted: any = {};
     for (const [key, val] of Object.entries(data)) {
       // scope, stat, order, op are all simple enums
-      if (['scope', 'target_scope', 'stat', 'source_stat', 'target_stat', 'order', 'op'].includes(key)) {
+      if (
+        ['scope', 'target_scope', 'stat', 'source_stat', 'target_stat', 'order', 'op'].includes(key)
+      ) {
         converted[key] = papiEnumStr(val);
       } else {
         converted[key] = val;
@@ -100,7 +98,9 @@ function convertMatcher(v: any): any {
   if (data && typeof data === 'object') {
     const converted: any = {};
     for (const [key, val] of Object.entries(data)) {
-      if (['scope', 'target_scope', 'stat', 'source_stat', 'target_stat', 'order', 'op'].includes(key)) {
+      if (
+        ['scope', 'target_scope', 'stat', 'source_stat', 'target_stat', 'order', 'op'].includes(key)
+      ) {
         converted[key] = papiEnumStr(val);
       } else {
         converted[key] = val;
@@ -170,37 +170,32 @@ interface BlockchainStore {
   fetchCards: () => Promise<void>;
   fetchSets: () => Promise<void>;
   submitCard: (cardData: any, metadata: any) => Promise<void>;
-  createCardSet: (cards: { card_id: number, rarity: number }[]) => Promise<void>;
+  createCardSet: (cards: { card_id: number; rarity: number }[]) => Promise<void>;
 
   // Internal helpers
   cardDataCoercer?: ((value: unknown) => any) | null;
 }
 
-const DEV_ACCOUNTS = ["Alice", "Bob", "Charlie", "Dave", "Eve", "Ferdie"];
+const DEV_ACCOUNTS = ['Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Ferdie'];
 
 const getDevAccounts = () => {
   const miniSecret = entropyToMiniSecret(mnemonicToEntropy(DEV_PHRASE));
   const derive = sr25519CreateDerive(miniSecret);
   const accountId = AccountId(42);
 
-  return DEV_ACCOUNTS.map(name => {
+  return DEV_ACCOUNTS.map((name) => {
     const hdkdKeyPair = derive(`//${name}`);
     const address = accountId.dec(hdkdKeyPair.publicKey);
-    const polkadotSigner = getPolkadotSigner(
-      hdkdKeyPair.publicKey,
-      "Sr25519",
-      hdkdKeyPair.sign,
-    );
+    const polkadotSigner = getPolkadotSigner(hdkdKeyPair.publicKey, 'Sr25519', hdkdKeyPair.sign);
 
     return {
       address,
       name,
       polkadotSigner,
-      source: 'dev'
+      source: 'dev',
     };
   });
 };
-
 
 export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   // Connection state
@@ -223,11 +218,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   connect: async () => {
     set({ isConnecting: true });
     try {
-      const client = createClient(
-        withPolkadotSdkCompat(
-          getWsProvider('ws://127.0.0.1:9944')
-        )
-      );
+      const client = createClient(withPolkadotSdkCompat(getWsProvider('ws://127.0.0.1:9944')));
 
       // Subscribe to best blocks to show block number
       client.bestBlocks$.subscribe((blocks) => {
@@ -240,9 +231,9 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       const codecs = await getTypedCodecs(auto_battle);
       const cardDataCoercer = await createCallArgCoercer(
         auto_battle,
-        "AutoBattle",
-        "submit_card",
-        "card_data",
+        'AutoBattle',
+        'submit_card',
+        'card_data'
       );
 
       const devAccounts = getDevAccounts();
@@ -271,20 +262,17 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
           });
         }
       } catch (walletErr) {
-        console.warn("Wallet extension not available:", walletErr);
+        console.warn('Wallet extension not available:', walletErr);
       }
 
       // Fetch available sets and cards
-      await Promise.all([
-        get().fetchSets(),
-        get().fetchCards(),
-      ]);
+      await Promise.all([get().fetchSets(), get().fetchCards()]);
 
       if (get().selectedAccount) {
         await get().refreshGameState();
       }
     } catch (err) {
-      console.error("Blockchain connection failed:", err);
+      console.error('Blockchain connection failed:', err);
       set({ isConnecting: false });
     }
   },
@@ -301,7 +289,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     // Throttle refreshes unless forced (e.g. 500ms cooldown)
     const now = Date.now();
     if (!force && now - lastRefresh < 500) {
-      console.log("Refresh throttled...");
+      console.log('Refresh throttled...');
       return;
     }
 
@@ -312,7 +300,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       for (let i = 0; i < maxRetries; i++) {
         const { engine } = useGameStore.getState();
         if (engine) return engine;
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
       return null;
     };
@@ -327,7 +315,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         const engine = await waitForEngine();
 
         if (engine) {
-          console.log("On-chain game found. Syncing WASM engine via SCALE bytes...");
+          console.log('On-chain game found. Syncing WASM engine via SCALE bytes...');
           try {
             // 1. Inject ALL cards from blockchain into the engine's card pool.
             //    This replaces any static genesis cards with the authoritative
@@ -361,7 +349,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
             const cardSetRawHex = await client.rawQuery(cardSetKey);
 
             if (!gameRawHex || !cardSetRawHex) {
-              throw new Error("Failed to fetch raw SCALE bytes from chain");
+              throw new Error('Failed to fetch raw SCALE bytes from chain');
             }
 
             const gameRaw = Binary.fromHex(gameRawHex).asBytes();
@@ -374,25 +362,25 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
             const view = engine.get_view();
             const cardSet = engine.get_card_set();
 
-            console.log("WASM engine synced successfully via SCALE bytes. View:", view);
+            console.log('WASM engine synced successfully via SCALE bytes. View:', view);
             useGameStore.setState({ view, cardSet });
           } catch (e) {
-            console.error("Failed to sync engine with chain state via SCALE:", e);
+            console.error('Failed to sync engine with chain state via SCALE:', e);
           }
         } else {
-          console.warn("WASM engine timed out or is not ready, skipping sync.");
+          console.warn('WASM engine timed out or is not ready, skipping sync.');
         }
       } else {
-        console.log("No active game found on-chain for this account.");
+        console.log('No active game found on-chain for this account.');
       }
     } catch (err) {
-      console.error("Failed to fetch game state:", err);
+      console.error('Failed to fetch game state:', err);
     } finally {
       set({ isRefreshing: false });
     }
   },
 
-  startGame: async (set_id = 0) => {
+  startGame: async (set_id = 1) => {
     const { api, selectedAccount } = get();
     if (!api || !selectedAccount) return;
 
@@ -403,7 +391,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       await tx.signAndSubmit(selectedAccount.polkadotSigner);
       await get().refreshGameState();
     } catch (err) {
-      console.error("Start game failed:", err);
+      console.error('Start game failed:', err);
     }
   },
 
@@ -435,33 +423,33 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
 
         // Convert opponent ghost board units to the format resolve_battle_p2p expects
         // PAPI decodes BoundedGhostBoard as a flat array (not {units: [...]})
-        const rawUnits = Array.isArray(opponent_board) ? opponent_board : (opponent_board?.units || []);
+        const rawUnits = Array.isArray(opponent_board)
+          ? opponent_board
+          : opponent_board?.units || [];
         const opponentUnits = rawUnits.map((u: any) => ({
           card_id: typeof u.card_id === 'number' ? u.card_id : Number(u.card_id),
-          current_health: typeof u.current_health === 'number' ? u.current_health : Number(u.current_health),
+          current_health:
+            typeof u.current_health === 'number' ? u.current_health : Number(u.current_health),
         }));
 
         // Replay battle locally with the chain's seed and opponent
         const battleOutput = engine.resolve_battle_p2p(
           playerBoard,
           opponentUnits,
-          BigInt(battle_seed),
+          BigInt(battle_seed)
         );
 
         // Verify local result matches chain result
         if (battleOutput?.events) {
-          const localEndEvent = battleOutput.events.find(
-            (e: any) => e.type === 'BattleEnd'
-          );
+          const localEndEvent = battleOutput.events.find((e: any) => e.type === 'BattleEnd');
           const localResult = localEndEvent?.payload?.result;
-          const chainResultStr = typeof chainResult === 'string'
-            ? chainResult
-            : chainResult?.type ?? String(chainResult);
+          const chainResultStr =
+            typeof chainResult === 'string'
+              ? chainResult
+              : (chainResult?.type ?? String(chainResult));
 
           if (localResult && localResult !== chainResultStr) {
-            console.warn(
-              `Battle result mismatch! Chain: ${chainResultStr}, Local: ${localResult}`
-            );
+            console.warn(`Battle result mismatch! Chain: ${chainResultStr}, Local: ${localResult}`);
           }
         }
 
@@ -473,11 +461,11 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         });
       } else {
         // No battle event found — fall back to refresh
-        console.warn("No BattleReported event found in tx result");
+        console.warn('No BattleReported event found in tx result');
         await get().refreshGameState(true);
       }
     } catch (err) {
-      console.error("Submit turn failed:", err);
+      console.error('Submit turn failed:', err);
     }
   },
 
@@ -488,16 +476,16 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   fetchDeck: () => {
     const { engine } = useGameStore.getState();
     if (!engine) {
-      console.warn("WASM engine not ready, cannot fetch deck.");
+      console.warn('WASM engine not ready, cannot fetch deck.');
       return [];
     }
 
     try {
       const bag = engine.get_bag();
-      console.log("Fetched full deck IDs from WASM:", bag.length, "cards");
+      console.log('Fetched full deck IDs from WASM:', bag.length, 'cards');
       return bag;
     } catch (e) {
-      console.error("Failed to fetch deck:", e);
+      console.error('Failed to fetch deck:', e);
       return [];
     }
   },
@@ -522,7 +510,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
           name: meta.name.asText(),
           emoji: meta.emoji.asText(),
           description: meta.description.asText(),
-          creator: entry.value.creator
+          creator: entry.value.creator,
         });
       });
 
@@ -533,7 +521,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
           id,
           data: entry.value,
           metadata: metadata || { name: `Card #${id}`, emoji: '❓', description: '' },
-          creator: metadata?.creator
+          creator: metadata?.creator,
         };
       });
 
@@ -542,7 +530,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       // Update emoji map from blockchain metadata (source of truth)
       initEmojiMap(cards.map((c: any) => ({ id: c.id, emoji: c.metadata.emoji })));
     } catch (err) {
-      console.error("Failed to fetch cards:", err);
+      console.error('Failed to fetch cards:', err);
     }
   },
 
@@ -554,11 +542,11 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       const setEntries = await api.query.AutoBattle.CardSets.getEntries();
       const sets = setEntries.map((entry: any) => ({
         id: Number(entry.keyArgs[0]),
-        cards: entry.value
+        cards: entry.value,
       }));
       set({ availableSets: sets });
     } catch (err) {
-      console.error("Failed to fetch sets:", err);
+      console.error('Failed to fetch sets:', err);
     }
   },
 
@@ -567,9 +555,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     try {
-      const cardDataForChain = cardDataCoercer
-        ? cardDataCoercer(cardData)
-        : cardData;
+      const cardDataForChain = cardDataCoercer ? cardDataCoercer(cardData) : cardData;
 
       // 1. Submit the card data
       const submitTx = api.tx.AutoBattle.submit_card({ card_data: cardDataForChain });
@@ -586,14 +572,14 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         metadata: {
           name: Binary.fromText(metadata.name),
           emoji: Binary.fromText(metadata.emoji),
-          description: Binary.fromText(metadata.description)
-        }
+          description: Binary.fromText(metadata.description),
+        },
       });
       await metadataTx.signAndSubmit(selectedAccount.polkadotSigner);
 
       await get().fetchCards();
     } catch (err) {
-      console.error("Submit card failed:", err);
+      console.error('Submit card failed:', err);
       throw err;
     }
   },
@@ -607,8 +593,8 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       await tx.signAndSubmit(selectedAccount.polkadotSigner);
       await get().fetchSets();
     } catch (err) {
-      console.error("Create card set failed:", err);
+      console.error('Create card set failed:', err);
       throw err;
     }
-  }
+  },
 }));
