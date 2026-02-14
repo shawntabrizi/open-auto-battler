@@ -158,6 +158,11 @@ export function CardDetailPanel({
           const a = data.attack || 0;
           return `Give ${a >= 0 ? '+' : ''}${a}/${h >= 0 ? '+' : ''}${h} to ${getTargetDescription(data.target)}`;
         }
+        case 'ModifyStatsPermanent': {
+          const h = data.health || 0;
+          const a = data.attack || 0;
+          return `Give ${a >= 0 ? '+' : ''}${a}/${h >= 0 ? '+' : ''}${h} permanently to ${getTargetDescription(data.target)}`;
+        }
         case 'SpawnUnit':
           return `Spawn unit (card #${data.card_id ?? '?'})`;
         case 'Destroy':

@@ -125,8 +125,8 @@ impl GameView {
                             .map(|card| BoardUnitView {
                                 id: card.id,
                                 name: card.name.clone(),
-                                attack: card.stats.attack,
-                                health: unit.effective_health(),
+                                attack: card.stats.attack.saturating_add(unit.perm_attack),
+                                health: card.stats.health.saturating_add(unit.perm_health),
                                 play_cost: card.economy.play_cost,
                                 pitch_value: card.economy.pitch_value,
                                 abilities: card.abilities.clone(),

@@ -75,6 +75,7 @@ export type AbilityTarget =
 export type AbilityEffect =
   | { type: 'Damage'; amount: number; target: AbilityTarget }
   | { type: 'ModifyStats'; health: number; attack: number; target: AbilityTarget }
+  | { type: 'ModifyStatsPermanent'; health: number; attack: number; target: AbilityTarget }
   | { type: 'SpawnUnit'; card_id: number }
   | { type: 'Destroy'; target: AbilityTarget }
   | { type: 'GainMana'; amount: number };
@@ -160,6 +161,17 @@ export type CombatEvent =
     }
   | {
       type: 'AbilityModifyStats';
+      payload: {
+        source_instance_id: number;
+        target_instance_id: number;
+        health_change: number;
+        attack_change: number;
+        new_attack: number;
+        new_health: number;
+      };
+    }
+  | {
+      type: 'AbilityModifyStatsPermanent';
       payload: {
         source_instance_id: number;
         target_instance_id: number;

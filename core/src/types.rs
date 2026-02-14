@@ -205,6 +205,12 @@ pub enum AbilityEffect {
         attack: i32,
         target: AbilityTarget,
     },
+    /// Permanently modify health and/or attack stats on board units (until sold)
+    ModifyStatsPermanent {
+        health: i32,
+        attack: i32,
+        target: AbilityTarget,
+    },
     /// Spawn a new unit on the board
     SpawnUnit { card_id: CardId },
     /// Destroy a target directly
@@ -317,35 +323,26 @@ impl UnitCard {
     }
 }
 
-/// A unit instance on the board (tracks current health)
+/// A unit instance on the board (tracks permanent stat deltas)
 #[derive(
     Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct BoardUnit {
     pub card_id: CardId,
-    pub current_health: i32,
+    /// Permanent attack change applied to this unit while on board
+    pub perm_attack: i32,
+    /// Permanent health change applied to this unit while on board
+    pub perm_health: i32,
 }
 
 impl BoardUnit {
-    pub fn new(card_id: CardId, current_health: i32) -> Self {
+    pub fn new(card_id: CardId) -> Self {
         Self {
             card_id,
-            current_health,
+            perm_attack: 0,
+            perm_health: 0,
         }
-    }
-
-    pub fn is_alive(&self) -> bool {
-        self.current_health > 0
-    }
-
-    pub fn effective_health(&self) -> i32 {
-        self.current_health.max(0)
-    }
-
-    pub fn take_damage(&mut self, amount: i32) {
-        let actual_damage = amount.max(0);
-        self.current_health = self.current_health.saturating_sub(actual_damage);
     }
 }
 

@@ -127,6 +127,18 @@ function computeBoardState(
         enemy = update(enemy);
         break;
       }
+      case 'AbilityModifyStatsPermanent': {
+        const { target_instance_id, new_attack, new_health } = event.payload;
+        const update = (board: UnitView[]) =>
+          board.map((u) =>
+            u.instance_id === target_instance_id
+              ? { ...u, attack: new_attack, health: new_health }
+              : u
+          );
+        player = update(player);
+        enemy = update(enemy);
+        break;
+      }
       case 'UnitSpawn': {
         const { team, new_board_state } = event.payload;
         if (String(team).toUpperCase() === 'PLAYER') player = new_board_state;
@@ -158,6 +170,7 @@ function getEventDelay(events: CombatEvent[], index: number, playbackSpeed: numb
     case 'AbilityDamage':
       return 400 / playbackSpeed;
     case 'AbilityModifyStats':
+    case 'AbilityModifyStatsPermanent':
       return 400 / playbackSpeed;
     case 'AbilityGainMana':
       return 300 / playbackSpeed;
@@ -302,6 +315,48 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       }
 
       case 'AbilityModifyStats': {
+        const {
+          target_instance_id: statsTarget,
+          new_attack,
+          new_health,
+          health_change,
+          attack_change,
+        } = event.payload;
+
+        const updateBoard = (board: UnitView[]) =>
+          board.map((u) =>
+            u.instance_id === statsTarget ? { ...u, attack: new_attack, health: new_health } : u
+          );
+
+        setPlayerBoard((prev) => {
+          const pUnit = prev.find((u) => u.instance_id === statsTarget);
+          if (pUnit && (health_change !== 0 || attack_change !== 0)) {
+            setStatChanges((prevStats) =>
+              new Map(prevStats).set(statsTarget, {
+                health: health_change,
+                attack: attack_change,
+              })
+            );
+          }
+          return updateBoard(prev);
+        });
+
+        setEnemyBoard((prev) => {
+          const eUnit = prev.find((u) => u.instance_id === statsTarget);
+          if (eUnit && (health_change !== 0 || attack_change !== 0)) {
+            setStatChanges((prevStats) =>
+              new Map(prevStats).set(statsTarget, {
+                health: health_change,
+                attack: attack_change,
+              })
+            );
+          }
+          return updateBoard(prev);
+        });
+        break;
+      }
+
+      case 'AbilityModifyStatsPermanent': {
         const {
           target_instance_id: statsTarget,
           new_attack,

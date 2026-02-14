@@ -518,15 +518,20 @@ pub mod pallet {
             let battle_seed = Self::generate_next_seed(&who, b"battle");
 
             // Convert player board to CombatUnits
+            let mut player_slots = Vec::new();
             let player_units: Vec<CombatUnit> = core_state
                 .local_state
                 .board
                 .iter()
-                .flatten()
-                .filter_map(|board_unit| {
+                .enumerate()
+                .filter_map(|(slot, board_unit)| {
+                    let board_unit = board_unit.as_ref()?;
+                    player_slots.push(slot);
                     core_state.card_pool.get(&board_unit.card_id).map(|card| {
                         let mut cu = CombatUnit::from_card(card.clone());
-                        cu.health = board_unit.current_health.max(0);
+                        cu.attack_buff = board_unit.perm_attack;
+                        cu.health_buff = board_unit.perm_health;
+                        cu.health = cu.health.saturating_add(board_unit.perm_health).max(0);
                         cu
                     })
                 })
@@ -557,7 +562,8 @@ pub mod pallet {
                     .iter()
                     .map(|cu| GhostBoardUnit {
                         card_id: cu.card_id,
-                        current_health: cu.health,
+                        perm_attack: cu.attack_buff,
+                        perm_health: cu.health_buff,
                     })
                     .collect();
                 CoreBoundedGhostBoard {
@@ -574,6 +580,13 @@ pub mod pallet {
             let events = resolve_battle(player_units, enemy_units, &mut rng, &core_state.card_pool);
             core_state.local_state.shop_mana =
                 oab_core::battle::player_shop_mana_delta_from_events(&events).max(0);
+            let permanent_deltas =
+                oab_core::battle::player_permanent_stat_deltas_from_events(&events);
+            Self::apply_player_permanent_stat_deltas(
+                &mut core_state,
+                &player_slots,
+                &permanent_deltas,
+            );
 
             // Extract battle result from the last event
             let result = events
@@ -867,7 +880,9 @@ pub mod pallet {
                 .filter_map(|unit| {
                     card_pool.get(&unit.card_id).map(|card| {
                         let mut combat_unit = CombatUnit::from_card(card.clone());
-                        combat_unit.health = unit.current_health;
+                        combat_unit.attack_buff = unit.perm_attack;
+                        combat_unit.health_buff = unit.perm_health;
+                        combat_unit.health = combat_unit.health.saturating_add(unit.perm_health);
                         combat_unit
                     })
                 })
@@ -883,7 +898,8 @@ pub mod pallet {
                 .flatten()
                 .map(|board_unit| GhostBoardUnit {
                     card_id: board_unit.card_id,
-                    current_health: board_unit.current_health,
+                    perm_attack: board_unit.perm_attack,
+                    perm_health: board_unit.perm_health,
                 })
                 .collect();
 
@@ -892,6 +908,46 @@ pub mod pallet {
 
             CoreBoundedGhostBoard {
                 units: bounded_units,
+            }
+        }
+
+        fn apply_player_permanent_stat_deltas(
+            core_state: &mut GameState,
+            player_slots: &[usize],
+            deltas: &BTreeMap<oab_core::battle::UnitId, (i32, i32)>,
+        ) {
+            for (unit_id, (attack_delta, health_delta)) in deltas {
+                let unit_index = unit_id.raw() as usize;
+                if unit_index == 0 || unit_index > player_slots.len() {
+                    continue;
+                }
+                let slot = player_slots[unit_index - 1];
+
+                let unit_state = core_state
+                    .local_state
+                    .board
+                    .get_mut(slot)
+                    .and_then(|s| s.as_mut())
+                    .map(|board_unit| {
+                        board_unit.perm_attack =
+                            board_unit.perm_attack.saturating_add(*attack_delta);
+                        board_unit.perm_health =
+                            board_unit.perm_health.saturating_add(*health_delta);
+                        (board_unit.card_id, board_unit.perm_health)
+                    });
+
+                let should_remove = unit_state
+                    .and_then(|(card_id, perm_health)| {
+                        core_state
+                            .card_pool
+                            .get(&card_id)
+                            .map(|card| card.stats.health.saturating_add(perm_health) <= 0)
+                    })
+                    .unwrap_or(false);
+
+                if should_remove {
+                    core_state.local_state.board[slot] = None;
+                }
             }
         }
 

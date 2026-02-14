@@ -162,26 +162,6 @@
       {
         "card_id": 39,
         "rarity": 10
-      },
-      {
-        "card_id": 40,
-        "rarity": 0
-      },
-      {
-        "card_id": 41,
-        "rarity": 0
-      },
-      {
-        "card_id": 42,
-        "rarity": 0
-      },
-      {
-        "card_id": 43,
-        "rarity": 0
-      },
-      {
-        "card_id": 44,
-        "rarity": 0
       }
     ]
   },
@@ -308,22 +288,6 @@
       {
         "card_id": 74,
         "rarity": 6
-      },
-      {
-        "card_id": 75,
-        "rarity": 0
-      },
-      {
-        "card_id": 76,
-        "rarity": 0
-      },
-      {
-        "card_id": 77,
-        "rarity": 0
-      },
-      {
-        "card_id": 78,
-        "rarity": 8
       }
     ]
   }

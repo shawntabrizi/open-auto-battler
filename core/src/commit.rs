@@ -145,11 +145,11 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
 
                 // Get card info
                 let card_id = state.hand[hi];
-                let (play_cost, health) = state
+                let play_cost = state
                     .card_pool
                     .get(&card_id)
-                    .map(|c| (c.economy.play_cost, c.stats.health))
-                    .unwrap_or((0, 0));
+                    .map(|c| c.economy.play_cost)
+                    .unwrap_or(0);
 
                 // Check we have enough mana
                 if current_mana < play_cost {
@@ -162,7 +162,7 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
                 // Deduct mana and place unit
                 current_mana -= play_cost;
                 hand_used[hi] = true;
-                state.board[bs] = Some(crate::types::BoardUnit::new(card_id, health));
+                state.board[bs] = Some(crate::types::BoardUnit::new(card_id));
 
                 state.shop_mana = current_mana;
                 apply_on_buy_triggers(state, action_index, bs);
@@ -323,14 +323,15 @@ fn apply_shop_effect<R: BattleRng>(
             );
             for slot in targets {
                 if let Some(unit) = state.board.get_mut(slot).and_then(|s| s.as_mut()) {
-                    unit.take_damage(*amount);
+                    let damage = (*amount).max(0);
+                    unit.perm_health = unit.perm_health.saturating_sub(damage);
                 }
             }
             cleanup_dead_units(state);
         }
         AbilityEffect::ModifyStats {
             health,
-            attack: _,
+            attack,
             target,
         } => {
             let targets = resolve_shop_targets(
@@ -343,23 +344,42 @@ fn apply_shop_effect<R: BattleRng>(
             );
             for slot in targets {
                 if let Some(unit) = state.board.get_mut(slot).and_then(|s| s.as_mut()) {
-                    unit.current_health = unit.current_health.saturating_add(*health);
+                    unit.perm_health = unit.perm_health.saturating_add(*health);
+                    unit.perm_attack = unit.perm_attack.saturating_add(*attack);
+                }
+            }
+            cleanup_dead_units(state);
+        }
+        AbilityEffect::ModifyStatsPermanent {
+            health,
+            attack,
+            target,
+        } => {
+            let targets = resolve_shop_targets(
+                state,
+                target,
+                source_slot,
+                source_on_board,
+                trigger_source_slot,
+                rng,
+            );
+            for slot in targets {
+                if let Some(unit) = state.board.get_mut(slot).and_then(|s| s.as_mut()) {
+                    unit.perm_health = unit.perm_health.saturating_add(*health);
+                    unit.perm_attack = unit.perm_attack.saturating_add(*attack);
                 }
             }
             cleanup_dead_units(state);
         }
         AbilityEffect::SpawnUnit { card_id } => {
-            let Some(spawn_card) = state.card_pool.get(card_id) else {
+            let Some(_spawn_card) = state.card_pool.get(card_id) else {
                 return;
             };
             let Some(empty_slot) = state.board.iter().position(|s| s.is_none()) else {
                 return;
             };
 
-            state.board[empty_slot] = Some(crate::types::BoardUnit::new(
-                *card_id,
-                spawn_card.stats.health,
-            ));
+            state.board[empty_slot] = Some(crate::types::BoardUnit::new(*card_id));
         }
         AbilityEffect::Destroy { target } => {
             let targets = resolve_shop_targets(
@@ -694,26 +714,25 @@ fn shop_matcher_pass(
 
 fn shop_stat_value(state: &GameState, slot: usize, stat: StatType) -> Option<i32> {
     let unit = state.board.get(slot)?.as_ref()?;
+    let card = state.card_pool.get(&unit.card_id)?;
 
     match stat {
-        StatType::Health => Some(unit.current_health),
-        StatType::Attack => state.card_pool.get(&unit.card_id).map(|c| c.stats.attack),
-        StatType::Mana => state
-            .card_pool
-            .get(&unit.card_id)
-            .map(|c| c.economy.play_cost),
+        StatType::Health => Some(card.stats.health.saturating_add(unit.perm_health)),
+        StatType::Attack => Some(card.stats.attack.saturating_add(unit.perm_attack)),
+        StatType::Mana => Some(card.economy.play_cost),
     }
 }
 
 fn cleanup_dead_units(state: &mut GameState) {
-    for slot in &mut state.board {
-        if slot
+    for idx in 0..state.board.len() {
+        let should_remove = state.board[idx]
             .as_ref()
-            .map(|unit| unit.current_health <= 0)
-            .unwrap_or(false)
-        {
-            *slot = None;
-        }
+            .and_then(|unit| state.card_pool.get(&unit.card_id).map(|card| (unit, card)))
+            .map(|(unit, card)| card.stats.health.saturating_add(unit.perm_health) <= 0)
+            .unwrap_or(false);
+        if should_remove {
+            state.board[idx] = None;
+        };
     }
 }
 

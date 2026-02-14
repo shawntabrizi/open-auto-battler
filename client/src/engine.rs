@@ -9,7 +9,8 @@ use std::vec::Vec;
 
 use bounded_collections::ConstU32;
 use oab_core::battle::{
-    player_shop_mana_delta_from_events, resolve_battle, CombatEvent, CombatUnit, UnitView,
+    player_permanent_stat_deltas_from_events, player_shop_mana_delta_from_events, resolve_battle,
+    CombatEvent, CombatUnit, UnitId, UnitView,
 };
 use oab_core::bounded::{BoundedCardSet, BoundedLocalGameState};
 use oab_core::commit::{
@@ -322,9 +323,9 @@ impl GameEngine {
             return Err("Board slot is occupied".to_string());
         }
 
-        let (play_cost, health) = {
+        let play_cost = {
             let card = self.get_card(card_id);
-            (card.economy.play_cost, card.stats.health)
+            card.economy.play_cost
         };
 
         if self.state.shop_mana < play_cost {
@@ -343,7 +344,7 @@ impl GameEngine {
         });
 
         // Place the card on the board
-        self.state.board[board_slot] = Some(BoardUnit::new(card_id, health));
+        self.state.board[board_slot] = Some(BoardUnit::new(card_id));
         let action_index = self.action_log.len().saturating_sub(1);
         apply_on_buy_triggers(&mut self.state, action_index, board_slot);
 
@@ -592,6 +593,11 @@ impl GameEngine {
             serde_wasm_bindgen::from_value(player_board_js).unwrap_or_default();
         let enemy_board: Vec<Option<BoardUnit>> =
             serde_wasm_bindgen::from_value(enemy_board_js).unwrap_or_default();
+        let player_slots: Vec<usize> = player_board
+            .iter()
+            .enumerate()
+            .filter_map(|(slot, unit)| unit.as_ref().map(|_| slot))
+            .collect();
 
         // Convert player board to CombatUnits
         let player_units: Vec<CombatUnit> = player_board
@@ -600,7 +606,9 @@ impl GameEngine {
             .map(|u| {
                 let card = self.get_card(u.card_id);
                 let mut cu = CombatUnit::from_card(card.clone());
-                cu.health = u.current_health.max(0);
+                cu.attack_buff = u.perm_attack;
+                cu.health_buff = u.perm_health;
+                cu.health = cu.health.saturating_add(u.perm_health).max(0);
                 cu
             })
             .collect();
@@ -612,7 +620,9 @@ impl GameEngine {
             .map(|u| {
                 let card = self.get_card(u.card_id);
                 let mut cu = CombatUnit::from_card(card.clone());
-                cu.health = u.current_health.max(0);
+                cu.attack_buff = u.perm_attack;
+                cu.health_buff = u.perm_health;
+                cu.health = cu.health.saturating_add(u.perm_health).max(0);
                 cu
             })
             .collect();
@@ -637,8 +647,8 @@ impl GameEngine {
                     instance_id: limits.generate_instance_id(oab_core::limits::Team::Player),
                     card_id: card.id,
                     name: card.name.clone(),
-                    attack: card.stats.attack,
-                    health: u.current_health,
+                    attack: card.stats.attack.saturating_add(u.perm_attack),
+                    health: card.stats.health.saturating_add(u.perm_health),
                     abilities: card.abilities.clone(),
                 }
             })
@@ -654,8 +664,8 @@ impl GameEngine {
                     instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
                     card_id: card.id,
                     name: card.name.clone(),
-                    attack: card.stats.attack,
-                    health: u.current_health,
+                    attack: card.stats.attack.saturating_add(u.perm_attack),
+                    health: card.stats.health.saturating_add(u.perm_health),
                     abilities: card.abilities.clone(),
                 }
             })
@@ -671,6 +681,8 @@ impl GameEngine {
             log::info(&format!("P2P Battle Result: {:?}", result));
         }
         self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
+        let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
+        self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);
 
         // Note: Round advancement happens when continue_after_battle() is called
         // This keeps P2P flow consistent with single-player flow
@@ -836,19 +848,66 @@ impl GameEngine {
         self.undo_history.clear();
     }
 
+    fn apply_player_permanent_stat_deltas(
+        &mut self,
+        player_slots: &[usize],
+        deltas: &std::collections::BTreeMap<UnitId, (i32, i32)>,
+    ) {
+        for (unit_id, (attack_delta, health_delta)) in deltas {
+            let unit_index = unit_id.raw() as usize;
+            if unit_index == 0 || unit_index > player_slots.len() {
+                continue;
+            }
+
+            let slot = player_slots[unit_index - 1];
+
+            let unit_state =
+                self.state
+                    .board
+                    .get_mut(slot)
+                    .and_then(|s| s.as_mut())
+                    .map(|board_unit| {
+                        board_unit.perm_attack =
+                            board_unit.perm_attack.saturating_add(*attack_delta);
+                        board_unit.perm_health =
+                            board_unit.perm_health.saturating_add(*health_delta);
+                        (board_unit.card_id, board_unit.perm_health)
+                    });
+
+            let should_remove = unit_state
+                .and_then(|(card_id, perm_health)| {
+                    self.state
+                        .card_pool
+                        .get(&card_id)
+                        .map(|card| card.stats.health.saturating_add(perm_health) <= 0)
+                })
+                .unwrap_or(false);
+
+            if should_remove {
+                self.state.board[slot] = None;
+            }
+        }
+    }
+
     fn run_battle(&mut self) {
         log::info("=== BATTLE START ===");
+        let board_before_battle = self.state.board.clone();
 
+        let mut player_slots = Vec::new();
         let player_units: Vec<CombatUnit> = self
             .state
             .board
             .iter()
-            .flatten()
-            .map(|u| {
+            .enumerate()
+            .filter_map(|(slot, unit)| {
+                let u = unit.as_ref()?;
+                player_slots.push(slot);
                 let card = self.get_card(u.card_id);
                 let mut cu = CombatUnit::from_card(card.clone());
-                cu.health = u.current_health.max(0);
-                cu
+                cu.attack_buff = u.perm_attack;
+                cu.health_buff = u.perm_health;
+                cu.health = cu.health.saturating_add(u.perm_health).max(0);
+                Some(cu)
             })
             .collect();
 
@@ -860,6 +919,8 @@ impl GameEngine {
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
         let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool);
         self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
+        let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
+        self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);
 
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {
@@ -872,9 +933,7 @@ impl GameEngine {
 
         // Generate initial views for UI
         let mut limits = oab_core::limits::BattleLimits::new();
-        let initial_player_units: Vec<UnitView> = self
-            .state
-            .board
+        let initial_player_units: Vec<UnitView> = board_before_battle
             .iter()
             .flatten()
             .map(|u| {
@@ -883,8 +942,8 @@ impl GameEngine {
                     instance_id: limits.generate_instance_id(oab_core::limits::Team::Player),
                     card_id: card.id,
                     name: card.name.clone(),
-                    attack: card.stats.attack,
-                    health: u.current_health,
+                    attack: card.stats.attack.saturating_add(u.perm_attack),
+                    health: card.stats.health.saturating_add(u.perm_health),
                     abilities: card.abilities.clone(),
                 }
             })

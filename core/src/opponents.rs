@@ -141,7 +141,8 @@ pub struct GhostBoard {
 #[derive(Clone, Debug)]
 pub struct GhostBoardUnitSimple {
     pub card_id: CardId,
-    pub current_health: i32,
+    pub perm_attack: i32,
+    pub perm_health: i32,
 }
 
 /// Matchmaking bracket for ghost generation (simple version).
@@ -211,13 +212,14 @@ pub fn generate_genesis_ghosts(
                         .enumerate()
                         .filter_map(|(idx, &id)| {
                             let cid = CardId(id);
-                            card_pool.get(&cid).map(|card| {
+                            card_pool.get(&cid).map(|_card| {
                                 // Use a deterministic card ID based on the seed and index
                                 let ghost_card_id =
                                     CardId(((seed.wrapping_add(idx as u64)) % 1000 + 1) as u32);
                                 GhostBoardUnitSimple {
                                     card_id: ghost_card_id,
-                                    current_health: card.stats.health,
+                                    perm_attack: 0,
+                                    perm_health: 0,
                                 }
                             })
                         })

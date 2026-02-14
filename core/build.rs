@@ -145,6 +145,14 @@ fn gen_effect(effect: &JsonEffect) -> String {
                 "AbilityEffect::ModifyStats {{ health: {health}, attack: {attack}, target: {target} }}"
             )
         }
+        "ModifyStatsPermanent" => {
+            let health = effect.health.unwrap();
+            let attack = effect.attack.unwrap();
+            let target = gen_target(effect.target.as_ref().unwrap());
+            format!(
+                "AbilityEffect::ModifyStatsPermanent {{ health: {health}, attack: {attack}, target: {target} }}"
+            )
+        }
         "Destroy" => {
             let target = gen_target(effect.target.as_ref().unwrap());
             format!("AbilityEffect::Destroy {{ target: {target} }}")

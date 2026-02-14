@@ -428,8 +428,10 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
           : opponent_board?.units || [];
         const opponentUnits = rawUnits.map((u: any) => ({
           card_id: typeof u.card_id === 'number' ? u.card_id : Number(u.card_id),
-          current_health:
-            typeof u.current_health === 'number' ? u.current_health : Number(u.current_health),
+          perm_attack:
+            typeof u.perm_attack === 'number' ? u.perm_attack : Number(u.perm_attack || 0),
+          perm_health:
+            typeof u.perm_health === 'number' ? u.perm_health : Number(u.perm_health || 0),
         }));
 
         // Replay battle locally with the chain's seed and opponent

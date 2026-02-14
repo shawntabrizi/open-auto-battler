@@ -226,7 +226,7 @@ fn test_pitch_from_board() {
     state
         .card_pool
         .insert(pre_placed_id, pre_placed_card.clone());
-    state.board[0] = Some(BoardUnit::new(pre_placed_id, pre_placed_card.stats.health));
+    state.board[0] = Some(BoardUnit::new(pre_placed_id));
 
     // Pitch from board, then play a card to that slot
     let action = CommitTurnAction {
@@ -280,7 +280,7 @@ fn test_on_buy_trigger_applies_in_shop() {
     state.card_pool.insert(support_id, support_card);
     state.card_pool.insert(buyer_id, buyer_card);
 
-    state.board[0] = Some(BoardUnit::new(support_id, 2));
+    state.board[0] = Some(BoardUnit::new(support_id));
     state.hand = vec![buyer_id];
 
     let action = CommitTurnAction {
@@ -294,9 +294,9 @@ fn test_on_buy_trigger_applies_in_shop() {
     assert!(result.is_ok(), "OnBuy action should succeed: {:?}", result);
 
     assert_eq!(
-        state.board[0].as_ref().unwrap().current_health,
-        4,
-        "OnBuy should have granted +2 health"
+        state.board[0].as_ref().unwrap().perm_health,
+        2,
+        "OnBuy should have granted +2 permanent health"
     );
 }
 
@@ -330,8 +330,8 @@ fn test_on_sell_trigger_applies_in_shop() {
     state.card_pool.insert(seller_id, seller_card);
     state.card_pool.insert(ally_id, ally_card);
 
-    state.board[0] = Some(BoardUnit::new(seller_id, 2));
-    state.board[1] = Some(BoardUnit::new(ally_id, 4));
+    state.board[0] = Some(BoardUnit::new(seller_id));
+    state.board[1] = Some(BoardUnit::new(ally_id));
 
     let action = CommitTurnAction {
         actions: vec![TurnAction::PitchFromBoard { board_slot: 0 }],
@@ -342,9 +342,9 @@ fn test_on_sell_trigger_applies_in_shop() {
 
     assert!(state.board[0].is_none(), "Sold unit should be removed");
     assert_eq!(
-        state.board[1].as_ref().unwrap().current_health,
-        7,
-        "OnSell should have granted +3 health to ally behind"
+        state.board[1].as_ref().unwrap().perm_health,
+        3,
+        "OnSell should have granted +3 permanent health to ally behind"
     );
 }
 
@@ -374,7 +374,7 @@ fn test_on_buy_gain_mana_enables_extra_play() {
     state.card_pool.insert(free_buy_id, free_buy_card);
     state.card_pool.insert(paid_buy_id, paid_buy_card);
 
-    state.board[0] = Some(BoardUnit::new(booster_id, 2));
+    state.board[0] = Some(BoardUnit::new(booster_id));
     state.hand = vec![free_buy_id, paid_buy_id];
 
     // Without OnBuy GainMana, the second play (cost 1) would fail because mana starts at 0.
@@ -424,7 +424,7 @@ fn test_on_sell_gain_mana_enables_extra_play() {
     state.card_pool.insert(seller_id, seller_card);
     state.card_pool.insert(paid_buy_id, paid_buy_card);
 
-    state.board[0] = Some(BoardUnit::new(seller_id, 2));
+    state.board[0] = Some(BoardUnit::new(seller_id));
     state.hand = vec![paid_buy_id];
 
     // Without OnSell GainMana, this play would fail (no mana after the sell itself).
@@ -481,9 +481,9 @@ fn test_on_shop_start_random_is_deterministic_with_seed() {
         state.card_pool.insert(ally_a_id, ally_a);
         state.card_pool.insert(ally_b_id, ally_b);
 
-        state.board[0] = Some(BoardUnit::new(trigger_id, 2));
-        state.board[1] = Some(BoardUnit::new(ally_a_id, 3));
-        state.board[2] = Some(BoardUnit::new(ally_b_id, 3));
+        state.board[0] = Some(BoardUnit::new(trigger_id));
+        state.board[1] = Some(BoardUnit::new(ally_a_id));
+        state.board[2] = Some(BoardUnit::new(ally_b_id));
 
         state
     }
@@ -495,12 +495,12 @@ fn test_on_shop_start_random_is_deterministic_with_seed() {
     apply_shop_start_triggers(&mut state_b);
 
     let healths_a = (
-        state_a.board[1].as_ref().unwrap().current_health,
-        state_a.board[2].as_ref().unwrap().current_health,
+        state_a.board[1].as_ref().unwrap().perm_health,
+        state_a.board[2].as_ref().unwrap().perm_health,
     );
     let healths_b = (
-        state_b.board[1].as_ref().unwrap().current_health,
-        state_b.board[2].as_ref().unwrap().current_health,
+        state_b.board[1].as_ref().unwrap().perm_health,
+        state_b.board[2].as_ref().unwrap().perm_health,
     );
 
     assert_eq!(
@@ -509,8 +509,8 @@ fn test_on_shop_start_random_is_deterministic_with_seed() {
     );
     assert_eq!(
         healths_a.0 + healths_a.1,
-        7,
-        "Exactly one ally should receive +1 health"
+        1,
+        "Exactly one ally should receive +1 permanent health"
     );
 }
 
@@ -536,7 +536,7 @@ fn test_on_shop_start_gain_mana_sets_turn_starting_mana() {
 
     state.card_pool.insert(starter_id, starter);
     state.card_pool.insert(paid_buy_id, paid_buy);
-    state.board[0] = Some(BoardUnit::new(starter_id, 2));
+    state.board[0] = Some(BoardUnit::new(starter_id));
     state.hand = vec![paid_buy_id];
 
     apply_shop_start_triggers(&mut state);

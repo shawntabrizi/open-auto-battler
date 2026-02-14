@@ -33,6 +33,8 @@ pub use crate::limits::Team;
     Copy,
     PartialEq,
     Eq,
+    PartialOrd,
+    Ord,
     Hash,
     Encode,
     Decode,
@@ -130,6 +132,14 @@ pub enum CombatEvent {
         remaining_hp: i32,
     },
     AbilityModifyStats {
+        source_instance_id: UnitInstanceId,
+        target_instance_id: UnitInstanceId,
+        health_change: i32,
+        attack_change: i32,
+        new_attack: i32,
+        new_health: i32,
+    },
+    AbilityModifyStatsPermanent {
         source_instance_id: UnitInstanceId,
         target_instance_id: UnitInstanceId,
         health_change: i32,
@@ -399,6 +409,41 @@ pub fn shop_mana_delta_from_events(events: &[CombatEvent], team: Team) -> i32 {
 /// Convenience helper for the local player's next-shop mana delta.
 pub fn player_shop_mana_delta_from_events(events: &[CombatEvent]) -> i32 {
     shop_mana_delta_from_events(events, Team::Player)
+}
+
+/// Extract total permanent stat deltas for a team's units from battle events.
+pub fn permanent_stat_deltas_from_events(
+    events: &[CombatEvent],
+    team: Team,
+) -> BTreeMap<UnitId, (i32, i32)> {
+    let mut deltas: BTreeMap<UnitId, (i32, i32)> = BTreeMap::new();
+    for event in events {
+        let CombatEvent::AbilityModifyStatsPermanent {
+            target_instance_id,
+            health_change,
+            attack_change,
+            ..
+        } = event
+        else {
+            continue;
+        };
+
+        if target_instance_id.is_player() != (team == Team::Player) {
+            continue;
+        }
+
+        let entry = deltas.entry(*target_instance_id).or_insert((0, 0));
+        entry.0 = entry.0.saturating_add(*attack_change);
+        entry.1 = entry.1.saturating_add(*health_change);
+    }
+    deltas
+}
+
+/// Convenience helper for permanent deltas applied to the local player's board.
+pub fn player_permanent_stat_deltas_from_events(
+    events: &[CombatEvent],
+) -> BTreeMap<UnitId, (i32, i32)> {
+    permanent_stat_deltas_from_events(events, Team::Player)
 }
 
 fn finalize_with_limit_exceeded(
@@ -841,6 +886,38 @@ fn apply_ability_effect<R: BattleRng>(
                     unit.health = unit.health.saturating_add(*health);
                     unit.health_buff = unit.health_buff.saturating_add(*health);
                     events.push(CombatEvent::AbilityModifyStats {
+                        source_instance_id,
+                        target_instance_id: target_id,
+                        health_change: *health,
+                        attack_change: *attack,
+                        new_attack: unit.effective_attack(),
+                        new_health: unit.effective_health(),
+                    });
+                }
+            }
+            Ok(damaged_units)
+        }
+        AbilityEffect::ModifyStatsPermanent {
+            health,
+            attack,
+            target,
+        } => {
+            let targets = get_targets(
+                source_instance_id,
+                source_team,
+                target,
+                player_units,
+                enemy_units,
+                rng,
+                trigger_target_id,
+                spawn_index_override,
+            );
+            for target_id in targets {
+                if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
+                    unit.attack_buff = unit.attack_buff.saturating_add(*attack);
+                    unit.health = unit.health.saturating_add(*health);
+                    unit.health_buff = unit.health_buff.saturating_add(*health);
+                    events.push(CombatEvent::AbilityModifyStatsPermanent {
                         source_instance_id,
                         target_instance_id: target_id,
                         health_change: *health,
@@ -1988,6 +2065,7 @@ fn get_effect_target(effect: &AbilityEffect) -> AbilityTarget {
     match effect {
         AbilityEffect::Damage { target, .. } => target.clone(),
         AbilityEffect::ModifyStats { target, .. } => target.clone(),
+        AbilityEffect::ModifyStatsPermanent { target, .. } => target.clone(),
         AbilityEffect::SpawnUnit { .. } => AbilityTarget::All {
             scope: TargetScope::SelfUnit,
         },

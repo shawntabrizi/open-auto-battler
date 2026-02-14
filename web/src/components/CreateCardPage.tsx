@@ -153,6 +153,11 @@ export const CreateCardPage: React.FC = () => {
         ...newAbility,
         effect: { type: 'ModifyStats', health: 1, attack: 1, target },
       });
+    } else if (type === 'ModifyStatsPermanent') {
+      setNewAbility({
+        ...newAbility,
+        effect: { type: 'ModifyStatsPermanent', health: 1, attack: 1, target },
+      });
     } else if (type === 'SpawnUnit') {
       setNewAbility({ ...newAbility, effect: { type: 'SpawnUnit', card_id: 2 } });
     } else if (type === 'Destroy') {
@@ -515,7 +520,14 @@ export const CreateCardPage: React.FC = () => {
                     Effect Type
                   </label>
                   <div className="grid grid-cols-4 gap-2">
-                    {['Damage', 'ModifyStats', 'SpawnUnit', 'Destroy', 'GainMana'].map((type) => (
+                    {[
+                      'Damage',
+                      'ModifyStats',
+                      'ModifyStatsPermanent',
+                      'SpawnUnit',
+                      'Destroy',
+                      'GainMana',
+                    ].map((type) => (
                       <button
                         key={type}
                         onClick={() => updateEffectType(type)}
@@ -551,6 +563,48 @@ export const CreateCardPage: React.FC = () => {
                     </div>
                   )}
                   {newAbility.effect.type === 'ModifyStats' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          Health Change
+                        </label>
+                        <input
+                          type="number"
+                          value={newAbility.effect.health}
+                          onChange={(e) =>
+                            setNewAbility({
+                              ...newAbility,
+                              effect: {
+                                ...newAbility.effect,
+                                health: parseInt(e.target.value) || 0,
+                              } as any,
+                            })
+                          }
+                          className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          Attack Change
+                        </label>
+                        <input
+                          type="number"
+                          value={newAbility.effect.attack}
+                          onChange={(e) =>
+                            setNewAbility({
+                              ...newAbility,
+                              effect: {
+                                ...newAbility.effect,
+                                attack: parseInt(e.target.value) || 0,
+                              } as any,
+                            })
+                          }
+                          className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {newAbility.effect.type === 'ModifyStatsPermanent' && (
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">

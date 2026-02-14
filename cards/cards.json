@@ -2,7 +2,7 @@
   {
     "id": 0,
     "name": "Rat Swarm",
-    "emoji": "🐀",
+    "emoji": "\ud83d\udc00",
     "stats": {
       "attack": 1,
       "health": 1
@@ -28,7 +28,7 @@
   {
     "id": 1,
     "name": "Goblin Scout",
-    "emoji": "👺",
+    "emoji": "\ud83d\udc7a",
     "stats": {
       "attack": 1,
       "health": 2
@@ -42,7 +42,7 @@
   {
     "id": 2,
     "name": "Goblin Grunt",
-    "emoji": "👹",
+    "emoji": "\ud83d\udc79",
     "stats": {
       "attack": 2,
       "health": 2
@@ -56,7 +56,7 @@
   {
     "id": 3,
     "name": "Scaredy Cat",
-    "emoji": "🙀",
+    "emoji": "\ud83d\ude40",
     "stats": {
       "attack": 1,
       "health": 3
@@ -90,7 +90,7 @@
   {
     "id": 4,
     "name": "Brave Commander",
-    "emoji": "🫡",
+    "emoji": "\ud83e\udee1",
     "stats": {
       "attack": 2,
       "health": 3
@@ -124,7 +124,7 @@
   {
     "id": 5,
     "name": "Militia",
-    "emoji": "🛡️",
+    "emoji": "\ud83d\udee1\ufe0f",
     "stats": {
       "attack": 2,
       "health": 2
@@ -138,7 +138,7 @@
   {
     "id": 6,
     "name": "Shield Bearer",
-    "emoji": "🏰",
+    "emoji": "\ud83c\udff0",
     "stats": {
       "attack": 1,
       "health": 4
@@ -172,7 +172,7 @@
   {
     "id": 7,
     "name": "Nurse Goblin",
-    "emoji": "🩺",
+    "emoji": "\ud83e\ude7a",
     "stats": {
       "attack": 1,
       "health": 3
@@ -219,7 +219,7 @@
   {
     "id": 8,
     "name": "Wolf Rider",
-    "emoji": "🐺",
+    "emoji": "\ud83d\udc3a",
     "stats": {
       "attack": 3,
       "health": 2
@@ -252,7 +252,7 @@
   {
     "id": 9,
     "name": "Martyr Knight",
-    "emoji": "🕯️",
+    "emoji": "\ud83d\udd6f\ufe0f",
     "stats": {
       "attack": 2,
       "health": 3
@@ -286,7 +286,7 @@
   {
     "id": 10,
     "name": "Abyssal Bomber",
-    "emoji": "💣",
+    "emoji": "\ud83d\udca3",
     "stats": {
       "attack": 2,
       "health": 2
@@ -318,7 +318,7 @@
   {
     "id": 11,
     "name": "Archer",
-    "emoji": "🏹",
+    "emoji": "\ud83c\udff9",
     "stats": {
       "attack": 1,
       "health": 3
@@ -351,7 +351,7 @@
   {
     "id": 12,
     "name": "Sniper",
-    "emoji": "🎯",
+    "emoji": "\ud83c\udfaf",
     "stats": {
       "attack": 2,
       "health": 2
@@ -384,7 +384,7 @@
   {
     "id": 13,
     "name": "Skeleton Archer",
-    "emoji": "💀",
+    "emoji": "\ud83d\udc80",
     "stats": {
       "attack": 2,
       "health": 2
@@ -417,7 +417,7 @@
   {
     "id": 14,
     "name": "Battle Hardened",
-    "emoji": "💪",
+    "emoji": "\ud83d\udcaa",
     "stats": {
       "attack": 2,
       "health": 3
@@ -468,7 +468,7 @@
   {
     "id": 15,
     "name": "Lone Wolf",
-    "emoji": "🐕",
+    "emoji": "\ud83d\udc15",
     "stats": {
       "attack": 2,
       "health": 4
@@ -513,7 +513,7 @@
   {
     "id": 16,
     "name": "Pack Leader",
-    "emoji": "👑",
+    "emoji": "\ud83d\udc51",
     "stats": {
       "attack": 2,
       "health": 3
@@ -558,7 +558,7 @@
   {
     "id": 17,
     "name": "Spined Urchin",
-    "emoji": "🦔",
+    "emoji": "\ud83e\udd94",
     "stats": {
       "attack": 1,
       "health": 4
@@ -590,7 +590,7 @@
   {
     "id": 18,
     "name": "Vampire",
-    "emoji": "🧛",
+    "emoji": "\ud83e\udddb",
     "stats": {
       "attack": 3,
       "health": 3
@@ -623,7 +623,7 @@
   {
     "id": 19,
     "name": "Raging Orc",
-    "emoji": "🤬",
+    "emoji": "\ud83e\udd2c",
     "stats": {
       "attack": 2,
       "health": 8
@@ -656,7 +656,7 @@
   {
     "id": 20,
     "name": "Zombie Captain",
-    "emoji": "🧟‍♂️",
+    "emoji": "\ud83e\udddf\u200d\u2642\ufe0f",
     "stats": {
       "attack": 3,
       "health": 4
@@ -682,7 +682,7 @@
   {
     "id": 21,
     "name": "Necromancer",
-    "emoji": "🧙",
+    "emoji": "\ud83e\uddd9",
     "stats": {
       "attack": 2,
       "health": 3
@@ -715,7 +715,7 @@
   {
     "id": 22,
     "name": "Headhunter",
-    "emoji": "🕵️",
+    "emoji": "\ud83d\udd75\ufe0f",
     "stats": {
       "attack": 4,
       "health": 2
@@ -750,7 +750,7 @@
   {
     "id": 23,
     "name": "Giant Slayer",
-    "emoji": "🗡️",
+    "emoji": "\ud83d\udde1\ufe0f",
     "stats": {
       "attack": 2,
       "health": 2
@@ -785,7 +785,7 @@
   {
     "id": 24,
     "name": "Shield Squire",
-    "emoji": "🛡️",
+    "emoji": "\ud83d\udee1\ufe0f",
     "stats": {
       "attack": 2,
       "health": 3
@@ -819,7 +819,7 @@
   {
     "id": 25,
     "name": "Warder",
-    "emoji": "💂",
+    "emoji": "\ud83d\udc82",
     "stats": {
       "attack": 2,
       "health": 4
@@ -851,7 +851,7 @@
   {
     "id": 26,
     "name": "Artillery Mage",
-    "emoji": "☄️",
+    "emoji": "\u2604\ufe0f",
     "stats": {
       "attack": 3,
       "health": 3
@@ -884,7 +884,7 @@
   {
     "id": 27,
     "name": "Rear Guard",
-    "emoji": "🧱",
+    "emoji": "\ud83e\uddf1",
     "stats": {
       "attack": 2,
       "health": 5
@@ -918,7 +918,7 @@
   {
     "id": 28,
     "name": "Troll Brute",
-    "emoji": "🧌",
+    "emoji": "\ud83e\uddcc",
     "stats": {
       "attack": 4,
       "health": 5
@@ -950,7 +950,7 @@
   {
     "id": 29,
     "name": "Lich",
-    "emoji": "💀",
+    "emoji": "\ud83d\udc80",
     "stats": {
       "attack": 3,
       "health": 3
@@ -993,7 +993,7 @@
   {
     "id": 30,
     "name": "Assassin",
-    "emoji": "🥷",
+    "emoji": "\ud83e\udd77",
     "stats": {
       "attack": 5,
       "health": 1
@@ -1038,7 +1038,7 @@
   {
     "id": 31,
     "name": "Fire Elemental",
-    "emoji": "🔥",
+    "emoji": "\ud83d\udd25",
     "stats": {
       "attack": 4,
       "health": 4
@@ -1071,7 +1071,7 @@
   {
     "id": 32,
     "name": "Ogre Mauler",
-    "emoji": "👊",
+    "emoji": "\ud83d\udc4a",
     "stats": {
       "attack": 5,
       "health": 6
@@ -1104,7 +1104,7 @@
   {
     "id": 33,
     "name": "Phoenix",
-    "emoji": "🐦‍🔥",
+    "emoji": "\ud83d\udc26\u200d\ud83d\udd25",
     "stats": {
       "attack": 3,
       "health": 3
@@ -1130,7 +1130,7 @@
   {
     "id": 34,
     "name": "Shield Master",
-    "emoji": "👑",
+    "emoji": "\ud83d\udc51",
     "stats": {
       "attack": 3,
       "health": 10
@@ -1163,7 +1163,7 @@
   {
     "id": 35,
     "name": "Void Walker",
-    "emoji": "🌑",
+    "emoji": "\ud83c\udf11",
     "stats": {
       "attack": 4,
       "health": 4
@@ -1215,7 +1215,7 @@
   {
     "id": 36,
     "name": "Mana Reaper",
-    "emoji": "⚖️",
+    "emoji": "\u2696\ufe0f",
     "stats": {
       "attack": 2,
       "health": 2
@@ -1268,7 +1268,7 @@
   {
     "id": 37,
     "name": "Giant Crusher",
-    "emoji": "🦣",
+    "emoji": "\ud83e\udda3",
     "stats": {
       "attack": 6,
       "health": 8
@@ -1301,7 +1301,7 @@
   {
     "id": 38,
     "name": "Behemoth",
-    "emoji": "🐘",
+    "emoji": "\ud83d\udc18",
     "stats": {
       "attack": 10,
       "health": 10
@@ -1315,7 +1315,7 @@
   {
     "id": 39,
     "name": "Dragon Tyrant",
-    "emoji": "🐉",
+    "emoji": "\ud83d\udc09",
     "stats": {
       "attack": 8,
       "health": 12
@@ -1347,7 +1347,7 @@
   {
     "id": 40,
     "name": "Rat Token",
-    "emoji": "🐀",
+    "emoji": "\ud83d\udc00",
     "stats": {
       "attack": 1,
       "health": 1
@@ -1361,7 +1361,7 @@
   {
     "id": 41,
     "name": "Zombie Soldier",
-    "emoji": "🧟",
+    "emoji": "\ud83e\udddf",
     "stats": {
       "attack": 1,
       "health": 1
@@ -1375,7 +1375,7 @@
   {
     "id": 42,
     "name": "Zombie Spawn",
-    "emoji": "👶",
+    "emoji": "\ud83d\udc76",
     "stats": {
       "attack": 1,
       "health": 1
@@ -1389,7 +1389,7 @@
   {
     "id": 43,
     "name": "Golem",
-    "emoji": "🗿",
+    "emoji": "\ud83d\uddff",
     "stats": {
       "attack": 5,
       "health": 5
@@ -1403,7 +1403,7 @@
   {
     "id": 44,
     "name": "Phoenix Egg",
-    "emoji": "🥚",
+    "emoji": "\ud83e\udd5a",
     "stats": {
       "attack": 0,
       "health": 5
@@ -1429,7 +1429,7 @@
   {
     "id": 45,
     "name": "Ant",
-    "emoji": "🐜",
+    "emoji": "\ud83d\udc1c",
     "stats": {
       "attack": 2,
       "health": 1
@@ -1456,14 +1456,14 @@
         "name": "Work Ethic",
         "description": "Give a random other ally +2/+1 on faint",
         "conditions": [],
-        "max_triggers": 1
+        "max_triggers": null
       }
     ]
   },
   {
     "id": 46,
     "name": "Beaver",
-    "emoji": "🦫",
+    "emoji": "\ud83e\uddab",
     "stats": {
       "attack": 1,
       "health": 3
@@ -1474,21 +1474,21 @@
     },
     "abilities": [
       {
-        "trigger": "OnStart",
+        "trigger": "OnSell",
         "effect": {
-          "type": "ModifyStats",
-          "health": 2,
+          "type": "ModifyStatsPermanent",
+          "health": 1,
           "attack": 0,
           "target": {
-            "type": "Position",
+            "type": "Random",
             "data": {
-              "scope": "SelfUnit",
-              "index": 1
+              "scope": "Allies",
+              "count": 2
             }
           }
         },
-        "name": "Dam Build",
-        "description": "Give the ally behind +2 health at battle start",
+        "name": "Builder Bonus",
+        "description": "When sold, give 2 random allies +0/+1 permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -1497,7 +1497,7 @@
   {
     "id": 47,
     "name": "Cricket",
-    "emoji": "🦗",
+    "emoji": "\ud83e\udd97",
     "stats": {
       "attack": 1,
       "health": 2
@@ -1516,14 +1516,14 @@
         "name": "Zombie Cricket",
         "description": "Summon a 1/1 Zombie Cricket on faint",
         "conditions": [],
-        "max_triggers": 1
+        "max_triggers": null
       }
     ]
   },
   {
     "id": 48,
     "name": "Fish",
-    "emoji": "🐟",
+    "emoji": "\ud83d\udc1f",
     "stats": {
       "attack": 2,
       "health": 3
@@ -1534,20 +1534,21 @@
     },
     "abilities": [
       {
-        "trigger": "OnStart",
+        "trigger": "OnBuy",
         "effect": {
-          "type": "ModifyStats",
+          "type": "ModifyStatsPermanent",
           "health": 1,
           "attack": 1,
           "target": {
-            "type": "All",
+            "type": "Random",
             "data": {
-              "scope": "SelfUnit"
+              "scope": "AlliesOther",
+              "count": 2
             }
           }
         },
-        "name": "Scale Up",
-        "description": "Gain +1/+1 at battle start",
+        "name": "Schooling",
+        "description": "When bought, give 2 random other allies +1/+1 permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -1556,7 +1557,7 @@
   {
     "id": 49,
     "name": "Horse",
-    "emoji": "🐎",
+    "emoji": "\ud83d\udc0e",
     "stats": {
       "attack": 1,
       "health": 2
@@ -1589,7 +1590,7 @@
   {
     "id": 50,
     "name": "Mosquito",
-    "emoji": "🦟",
+    "emoji": "\ud83e\udd9f",
     "stats": {
       "attack": 1,
       "health": 2
@@ -1622,7 +1623,7 @@
   {
     "id": 51,
     "name": "Otter",
-    "emoji": "🦦",
+    "emoji": "\ud83e\udda6",
     "stats": {
       "attack": 1,
       "health": 3
@@ -1633,9 +1634,9 @@
     },
     "abilities": [
       {
-        "trigger": "OnStart",
+        "trigger": "OnBuy",
         "effect": {
-          "type": "ModifyStats",
+          "type": "ModifyStatsPermanent",
           "health": 1,
           "attack": 1,
           "target": {
@@ -1647,7 +1648,7 @@
           }
         },
         "name": "Helpful Nudge",
-        "description": "Give a random other ally +1/+1 at battle start",
+        "description": "When bought, give a random other ally +1/+1 permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -1656,7 +1657,7 @@
   {
     "id": 52,
     "name": "Pig",
-    "emoji": "🐷",
+    "emoji": "\ud83d\udc37",
     "stats": {
       "attack": 3,
       "health": 1
@@ -1682,7 +1683,7 @@
   {
     "id": 53,
     "name": "Sloth",
-    "emoji": "🦥",
+    "emoji": "\ud83e\udda5",
     "stats": {
       "attack": 2,
       "health": 2
@@ -1696,7 +1697,7 @@
   {
     "id": 54,
     "name": "Crab",
-    "emoji": "🦀",
+    "emoji": "\ud83e\udd80",
     "stats": {
       "attack": 2,
       "health": 5
@@ -1720,7 +1721,7 @@
           }
         },
         "name": "Shell Up",
-        "description": "Gain +2 health at battle start",
+        "description": "Gain +0/+2 at battle start",
         "conditions": [],
         "max_triggers": null
       }
@@ -1729,7 +1730,7 @@
   {
     "id": 55,
     "name": "Dodo",
-    "emoji": "🦤",
+    "emoji": "\ud83e\udda4",
     "stats": {
       "attack": 2,
       "health": 4
@@ -1754,7 +1755,7 @@
           }
         },
         "name": "Wingman",
-        "description": "Give the ally in front +2 attack at battle start",
+        "description": "Give the ally ahead +2 attack at battle start",
         "conditions": [],
         "max_triggers": null
       }
@@ -1763,7 +1764,7 @@
   {
     "id": 56,
     "name": "Elephant",
-    "emoji": "🐘",
+    "emoji": "\ud83d\udc18",
     "stats": {
       "attack": 3,
       "health": 6
@@ -1796,7 +1797,7 @@
   {
     "id": 57,
     "name": "Flamingo",
-    "emoji": "🦩",
+    "emoji": "\ud83e\udda9",
     "stats": {
       "attack": 3,
       "health": 2
@@ -1811,26 +1812,26 @@
         "effect": {
           "type": "ModifyStats",
           "health": 1,
-          "attack": 2,
+          "attack": 1,
           "target": {
-            "type": "Position",
+            "type": "Random",
             "data": {
-              "scope": "SelfUnit",
-              "index": 1
+              "scope": "AlliesOther",
+              "count": 2
             }
           }
         },
         "name": "Parting Gift",
-        "description": "Give the ally behind +2/+1 on faint",
+        "description": "Give 2 random other allies +1/+1 on faint",
         "conditions": [],
-        "max_triggers": 1
+        "max_triggers": null
       }
     ]
   },
   {
     "id": 58,
     "name": "Hedgehog",
-    "emoji": "🦔",
+    "emoji": "\ud83e\udd94",
     "stats": {
       "attack": 2,
       "health": 2
@@ -1862,7 +1863,7 @@
   {
     "id": 59,
     "name": "Peacock",
-    "emoji": "🦚",
+    "emoji": "\ud83e\udd9a",
     "stats": {
       "attack": 2,
       "health": 5
@@ -1875,18 +1876,18 @@
       {
         "trigger": "OnHurt",
         "effect": {
-          "type": "Damage",
-          "amount": 2,
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 4,
           "target": {
-            "type": "Random",
+            "type": "All",
             "data": {
-              "scope": "Enemies",
-              "count": 1
+              "scope": "SelfUnit"
             }
           }
         },
-        "name": "Vengeful Feathers",
-        "description": "Deal 2 damage to a random enemy when hurt",
+        "name": "Proud Plumage",
+        "description": "Gain +4 attack when hurt",
         "conditions": [],
         "max_triggers": null
       }
@@ -1895,7 +1896,7 @@
   {
     "id": 60,
     "name": "Rat",
-    "emoji": "🐀",
+    "emoji": "\ud83d\udc00",
     "stats": {
       "attack": 3,
       "health": 3
@@ -1908,29 +1909,20 @@
       {
         "trigger": "OnFaint",
         "effect": {
-          "type": "Damage",
-          "amount": 3,
-          "target": {
-            "type": "Standard",
-            "data": {
-              "scope": "Enemies",
-              "stat": "Health",
-              "order": "Ascending",
-              "count": 1
-            }
-          }
+          "type": "SpawnUnit",
+          "card_id": 40
         },
-        "name": "Dirty Bite",
-        "description": "Deal 3 damage to the lowest-health enemy on faint",
+        "name": "Dirty Rat",
+        "description": "Summon a 1/1 Dirty Rat token on faint",
         "conditions": [],
-        "max_triggers": 1
+        "max_triggers": null
       }
     ]
   },
   {
     "id": 61,
     "name": "Shrimp",
-    "emoji": "🦐",
+    "emoji": "\ud83e\udd90",
     "stats": {
       "attack": 2,
       "health": 4
@@ -1941,20 +1933,21 @@
     },
     "abilities": [
       {
-        "trigger": "OnAllySpawn",
+        "trigger": "OnSell",
         "effect": {
-          "type": "ModifyStats",
+          "type": "ModifyStatsPermanent",
           "health": 1,
-          "attack": 1,
+          "attack": 0,
           "target": {
-            "type": "All",
+            "type": "Random",
             "data": {
-              "scope": "SelfUnit"
+              "scope": "AlliesOther",
+              "count": 1
             }
           }
         },
         "name": "Growth Feed",
-        "description": "Gain +1/+1 whenever a friendly unit is spawned",
+        "description": "Whenever a unit is sold, give a random other ally +0/+1 permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -1963,7 +1956,7 @@
   {
     "id": 62,
     "name": "Spider",
-    "emoji": "🕷️",
+    "emoji": "\ud83d\udd77\ufe0f",
     "stats": {
       "attack": 2,
       "health": 3
@@ -1980,16 +1973,16 @@
           "card_id": 77
         },
         "name": "Web Cocoon",
-        "description": "Summon a 3/3 Spiderling on faint",
+        "description": "Summon a Spiderling on faint",
         "conditions": [],
-        "max_triggers": 1
+        "max_triggers": null
       }
     ]
   },
   {
     "id": 63,
     "name": "Swan",
-    "emoji": "🦢",
+    "emoji": "\ud83e\udda2",
     "stats": {
       "attack": 2,
       "health": 4
@@ -1998,12 +1991,24 @@
       "play_cost": 6,
       "pitch_value": 2
     },
-    "abilities": []
+    "abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "name": "Graceful Start",
+        "description": "Gain 1 mana at the start of shop",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
   },
   {
     "id": 64,
     "name": "Badger",
-    "emoji": "🦡",
+    "emoji": "\ud83e\udda1",
     "stats": {
       "attack": 4,
       "health": 3
@@ -2019,24 +2024,23 @@
           "type": "Damage",
           "amount": 4,
           "target": {
-            "type": "Position",
+            "type": "Adjacent",
             "data": {
-              "scope": "Enemies",
-              "index": 0
+              "scope": "SelfUnit"
             }
           }
         },
         "name": "Final Swipe",
-        "description": "Deal 4 damage to the front enemy on faint",
+        "description": "Deal 4 damage to adjacent units on faint",
         "conditions": [],
-        "max_triggers": 1
+        "max_triggers": null
       }
     ]
   },
   {
     "id": 65,
     "name": "Blowfish",
-    "emoji": "🐡",
+    "emoji": "\ud83d\udc21",
     "stats": {
       "attack": 2,
       "health": 6
@@ -2069,7 +2073,7 @@
   {
     "id": 66,
     "name": "Camel",
-    "emoji": "🐫",
+    "emoji": "\ud83d\udc2b",
     "stats": {
       "attack": 3,
       "health": 7
@@ -2103,7 +2107,7 @@
   {
     "id": 67,
     "name": "Dog",
-    "emoji": "🐕",
+    "emoji": "\ud83d\udc15",
     "stats": {
       "attack": 3,
       "health": 4
@@ -2136,7 +2140,7 @@
   {
     "id": 68,
     "name": "Giraffe",
-    "emoji": "🦒",
+    "emoji": "\ud83e\udd92",
     "stats": {
       "attack": 2,
       "health": 6
@@ -2147,11 +2151,11 @@
     },
     "abilities": [
       {
-        "trigger": "OnStart",
+        "trigger": "OnShopStart",
         "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 2,
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 1,
           "target": {
             "type": "Position",
             "data": {
@@ -2161,7 +2165,7 @@
           }
         },
         "name": "Long Reach",
-        "description": "Give the ally in front +2/+2 at battle start",
+        "description": "At shop start, give the ally ahead +1/+1 permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -2170,7 +2174,7 @@
   {
     "id": 69,
     "name": "Kangaroo",
-    "emoji": "🦘",
+    "emoji": "\ud83e\udd98",
     "stats": {
       "attack": 3,
       "health": 5
@@ -2184,8 +2188,8 @@
         "trigger": "BeforeUnitAttack",
         "effect": {
           "type": "ModifyStats",
-          "health": 1,
-          "attack": 1,
+          "health": 2,
+          "attack": 2,
           "target": {
             "type": "All",
             "data": {
@@ -2194,7 +2198,7 @@
           }
         },
         "name": "Momentum",
-        "description": "Gain +1/+1 before attacking",
+        "description": "Gain +2/+2 before this unit attacks",
         "conditions": [],
         "max_triggers": null
       }
@@ -2203,7 +2207,7 @@
   {
     "id": 70,
     "name": "Ox",
-    "emoji": "🐂",
+    "emoji": "\ud83d\udc02",
     "stats": {
       "attack": 4,
       "health": 6
@@ -2217,8 +2221,8 @@
         "trigger": "OnAllyFaint",
         "effect": {
           "type": "ModifyStats",
-          "health": 2,
-          "attack": 3,
+          "health": 1,
+          "attack": 1,
           "target": {
             "type": "All",
             "data": {
@@ -2227,7 +2231,7 @@
           }
         },
         "name": "Enrage",
-        "description": "Gain +3/+2 when a friendly unit faints",
+        "description": "Gain +1/+1 when a friendly unit faints",
         "conditions": [],
         "max_triggers": null
       }
@@ -2236,7 +2240,7 @@
   {
     "id": 71,
     "name": "Rabbit",
-    "emoji": "🐇",
+    "emoji": "\ud83d\udc07",
     "stats": {
       "attack": 3,
       "health": 5
@@ -2247,21 +2251,20 @@
     },
     "abilities": [
       {
-        "trigger": "OnStart",
+        "trigger": "OnBuy",
         "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 1,
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 0,
           "target": {
-            "type": "Random",
+            "type": "All",
             "data": {
-              "scope": "AlliesOther",
-              "count": 1
+              "scope": "TriggerSource"
             }
           }
         },
         "name": "Carrot Diet",
-        "description": "Give a random other ally +1/+2 at battle start",
+        "description": "When you buy a unit, give that unit +0/+1 permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -2270,7 +2273,7 @@
   {
     "id": 72,
     "name": "Sheep",
-    "emoji": "🐑",
+    "emoji": "\ud83d\udc11",
     "stats": {
       "attack": 4,
       "health": 6
@@ -2289,7 +2292,7 @@
         "name": "Split Herd I",
         "description": "Summon a 2/2 Ram on faint",
         "conditions": [],
-        "max_triggers": 1
+        "max_triggers": null
       },
       {
         "trigger": "OnFaint",
@@ -2300,14 +2303,14 @@
         "name": "Split Herd II",
         "description": "Summon another 2/2 Ram on faint",
         "conditions": [],
-        "max_triggers": 1
+        "max_triggers": null
       }
     ]
   },
   {
     "id": 73,
     "name": "Snail",
-    "emoji": "🐌",
+    "emoji": "\ud83d\udc0c",
     "stats": {
       "attack": 2,
       "health": 7
@@ -2318,11 +2321,11 @@
     },
     "abilities": [
       {
-        "trigger": "OnStart",
+        "trigger": "OnBuy",
         "effect": {
-          "type": "ModifyStats",
+          "type": "ModifyStatsPermanent",
           "health": 1,
-          "attack": 1,
+          "attack": 2,
           "target": {
             "type": "All",
             "data": {
@@ -2331,7 +2334,7 @@
           }
         },
         "name": "Steady Pace",
-        "description": "Give all allies +1/+1 at battle start",
+        "description": "When bought, give all allies +2/+1 permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -2340,7 +2343,7 @@
   {
     "id": 74,
     "name": "Turtle",
-    "emoji": "🐢",
+    "emoji": "\ud83d\udc22",
     "stats": {
       "attack": 3,
       "health": 8
@@ -2354,8 +2357,8 @@
         "trigger": "OnFaint",
         "effect": {
           "type": "ModifyStats",
-          "health": 3,
-          "attack": 2,
+          "health": 2,
+          "attack": 0,
           "target": {
             "type": "Position",
             "data": {
@@ -2365,16 +2368,16 @@
           }
         },
         "name": "Shell Legacy",
-        "description": "Give the ally behind +2/+3 on faint",
+        "description": "Give the ally behind +0/+2 on faint",
         "conditions": [],
-        "max_triggers": 1
+        "max_triggers": null
       }
     ]
   },
   {
     "id": 75,
     "name": "Zombie Cricket",
-    "emoji": "🪳",
+    "emoji": "\ud83e\udeb3",
     "stats": {
       "attack": 1,
       "health": 1
@@ -2388,7 +2391,7 @@
   {
     "id": 76,
     "name": "Ram",
-    "emoji": "🐏",
+    "emoji": "\ud83d\udc0f",
     "stats": {
       "attack": 2,
       "health": 2
@@ -2402,10 +2405,10 @@
   {
     "id": 77,
     "name": "Spiderling",
-    "emoji": "🕸️",
+    "emoji": "\ud83d\udd78\ufe0f",
     "stats": {
-      "attack": 3,
-      "health": 3
+      "attack": 2,
+      "health": 2
     },
     "economy": {
       "play_cost": 0,
@@ -2416,7 +2419,7 @@
   {
     "id": 78,
     "name": "Shopkeeper",
-    "emoji": "🛒",
+    "emoji": "\ud83d\uded2",
     "stats": {
       "attack": 1,
       "health": 2

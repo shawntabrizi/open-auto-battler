@@ -39,26 +39,27 @@ pub struct MatchmakingBracket {
     pub lives: i32,
 }
 
-/// A unit on a ghost board (CardId + current health).
-/// Stores minimal data since ghost opponents always battle within the same card set.
+/// A unit on a ghost board (CardId + permanent stat deltas).
+/// Stores minimal data needed to reconstruct buffed combat units.
 #[derive(
     Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen, Clone, PartialEq, Eq, Debug,
 )]
 pub struct GhostBoardUnit {
     pub card_id: CardId,
-    pub current_health: i32,
+    pub perm_attack: i32,
+    pub perm_health: i32,
 }
 
 /// A stored ghost board representing a player's board state.
-/// Contains only card references and health since the full card data
-/// can be looked up from the card set at battle time.
+/// Contains card references and permanent stat deltas; full card stats
+/// are looked up from the card set at battle time.
 #[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(MaxBoardSize))]
 pub struct BoundedGhostBoard<MaxBoardSize>
 where
     MaxBoardSize: Get<u32>,
 {
-    /// Units on the board (card references + health)
+    /// Units on the board (card references + permanent stat deltas)
     pub units: BoundedVec<GhostBoardUnit, MaxBoardSize>,
 }
 
@@ -239,6 +240,11 @@ pub enum BoundedAbilityEffect {
         attack: i32,
         target: AbilityTarget,
     },
+    ModifyStatsPermanent {
+        health: i32,
+        attack: i32,
+        target: AbilityTarget,
+    },
     SpawnUnit {
         card_id: CardId,
     },
@@ -263,6 +269,15 @@ impl From<AbilityEffect> for BoundedAbilityEffect {
                 attack,
                 target,
             },
+            AbilityEffect::ModifyStatsPermanent {
+                health,
+                attack,
+                target,
+            } => Self::ModifyStatsPermanent {
+                health,
+                attack,
+                target,
+            },
             AbilityEffect::SpawnUnit { card_id } => Self::SpawnUnit { card_id },
             AbilityEffect::Destroy { target } => Self::Destroy { target },
             AbilityEffect::GainMana { amount } => Self::GainMana { amount },
@@ -281,6 +296,15 @@ impl From<BoundedAbilityEffect> for AbilityEffect {
                 attack,
                 target,
             } => AbilityEffect::ModifyStats {
+                health,
+                attack,
+                target,
+            },
+            BoundedAbilityEffect::ModifyStatsPermanent {
+                health,
+                attack,
+                target,
+            } => AbilityEffect::ModifyStatsPermanent {
                 health,
                 attack,
                 target,
@@ -1190,6 +1214,14 @@ where
         new_attack: i32,
         new_health: i32,
     },
+    AbilityModifyStatsPermanent {
+        source_instance_id: UnitId,
+        target_instance_id: UnitId,
+        health_change: i32,
+        attack_change: i32,
+        new_attack: i32,
+        new_health: i32,
+    },
     AbilityGainMana {
         source_instance_id: UnitId,
         team: Team,
@@ -1267,6 +1299,21 @@ impl<
                 new_attack,
                 new_health,
             } => Self::AbilityModifyStats {
+                source_instance_id: *source_instance_id,
+                target_instance_id: *target_instance_id,
+                health_change: *health_change,
+                attack_change: *attack_change,
+                new_attack: *new_attack,
+                new_health: *new_health,
+            },
+            Self::AbilityModifyStatsPermanent {
+                source_instance_id,
+                target_instance_id,
+                health_change,
+                attack_change,
+                new_attack,
+                new_health,
+            } => Self::AbilityModifyStatsPermanent {
                 source_instance_id: *source_instance_id,
                 target_instance_id: *target_instance_id,
                 health_change: *health_change,
@@ -1381,6 +1428,24 @@ impl<
                     new_health: nh1,
                 },
                 Self::AbilityModifyStats {
+                    source_instance_id: s2,
+                    target_instance_id: t2,
+                    health_change: h2,
+                    attack_change: a2,
+                    new_attack: na2,
+                    new_health: nh2,
+                },
+            ) => s1 == s2 && t1 == t2 && h1 == h2 && a1 == a2 && na1 == na2 && nh1 == nh2,
+            (
+                Self::AbilityModifyStatsPermanent {
+                    source_instance_id: s1,
+                    target_instance_id: t1,
+                    health_change: h1,
+                    attack_change: a1,
+                    new_attack: na1,
+                    new_health: nh1,
+                },
+                Self::AbilityModifyStatsPermanent {
                     source_instance_id: s2,
                     target_instance_id: t2,
                     health_change: h2,
@@ -1512,6 +1577,22 @@ impl<
                 .field("new_attack", new_attack)
                 .field("new_health", new_health)
                 .finish(),
+            Self::AbilityModifyStatsPermanent {
+                source_instance_id,
+                target_instance_id,
+                health_change,
+                attack_change,
+                new_attack,
+                new_health,
+            } => f
+                .debug_struct("AbilityModifyStatsPermanent")
+                .field("source_instance_id", source_instance_id)
+                .field("target_instance_id", target_instance_id)
+                .field("health_change", health_change)
+                .field("attack_change", attack_change)
+                .field("new_attack", new_attack)
+                .field("new_health", new_health)
+                .finish(),
             Self::AbilityGainMana {
                 source_instance_id,
                 team,
@@ -1608,6 +1689,21 @@ where
                 attack_change: attack_change,
                 new_attack: new_attack,
                 new_health: new_health,
+            },
+            crate::battle::CombatEvent::AbilityModifyStatsPermanent {
+                source_instance_id,
+                target_instance_id,
+                health_change,
+                attack_change,
+                new_attack,
+                new_health,
+            } => Self::AbilityModifyStatsPermanent {
+                source_instance_id,
+                target_instance_id,
+                health_change,
+                attack_change,
+                new_attack,
+                new_health,
             },
             crate::battle::CombatEvent::AbilityGainMana {
                 source_instance_id,
