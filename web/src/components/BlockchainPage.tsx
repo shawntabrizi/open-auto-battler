@@ -20,14 +20,10 @@ export const BlockchainPage: React.FC = () => {
     startGame,
     refreshGameState,
     availableSets,
-    fetchSets
+    fetchSets,
   } = useBlockchainStore();
 
-  const {
-    init,
-    engine,
-    view,
-  } = useGameStore();
+  const { init, engine, view } = useGameStore();
 
   const { submitTurnOnChain } = useBlockchainStore();
 
@@ -39,9 +35,9 @@ export const BlockchainPage: React.FC = () => {
 
   // Initialize WASM engine and fetch sets
   useInitGuard(() => {
-    init();
+    void init();
     if (isConnected) {
-      fetchSets();
+      void fetchSets();
     }
   }, [init, isConnected, fetchSets]);
 
@@ -50,7 +46,7 @@ export const BlockchainPage: React.FC = () => {
     if (!engine || !isConnected || !selectedAccount) return;
     if (refreshCalled.current) return;
     refreshCalled.current = true;
-    refreshGameState();
+    void refreshGameState();
   }, [engine, isConnected, selectedAccount, refreshGameState]);
 
   const handleStartGame = async () => {
@@ -93,7 +89,9 @@ export const BlockchainPage: React.FC = () => {
         >
           {isConnecting ? 'CONNECTING...' : 'CONNECT WALLET'}
         </button>
-        <Link to="/" className="mt-6 lg:mt-8 text-slate-400 hover:text-white underline text-sm">Back to Menu</Link>
+        <Link to="/" className="mt-6 lg:mt-8 text-slate-400 hover:text-white underline text-sm">
+          Back to Menu
+        </Link>
       </div>
     );
   }
@@ -103,39 +101,48 @@ export const BlockchainPage: React.FC = () => {
       <div className="h-screen h-svh bg-board-bg text-slate-200 overflow-hidden font-sans selection:bg-yellow-500/30 flex flex-col">
         <div className="flex-1 flex items-center justify-center bg-slate-950 p-4">
           <div className="text-center bg-slate-900 p-4 lg:p-8 rounded-2xl lg:rounded-3xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-none lg:w-auto">
-            <h3 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 text-white">Initialize New Session</h3>
+            <h3 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 text-white">
+              Initialize New Session
+            </h3>
 
             {/* Connection Status & Account */}
             <div className="flex items-center justify-center gap-3 mb-6 lg:mb-8">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-lg border border-white/5">
-                <div className={`w-2 h-2 rounded-full ${blockNumber !== null ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                <div
+                  className={`w-2 h-2 rounded-full ${blockNumber !== null ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
+                />
                 <span className="text-xs font-mono text-slate-400">
                   {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'Offline'}
                 </span>
               </div>
               <select
                 value={selectedAccount?.address}
-                onChange={(e) => selectAccount(accounts.find(a => a.address === e.target.value))}
+                onChange={(e) => selectAccount(accounts.find((a) => a.address === e.target.value))}
                 className="bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50"
               >
-                {accounts.map(acc => (
+                {accounts.map((acc) => (
                   <option key={acc.address} value={acc.address}>
-                    {acc.source === 'dev' ? '🛠️ ' : ''}{acc.name} ({acc.address.slice(0, 6)}...)
+                    {acc.source === 'dev' ? '🛠️ ' : ''}
+                    {acc.name} ({acc.address.slice(0, 6)}...)
                   </option>
                 ))}
               </select>
             </div>
 
-            <p className="text-slate-500 mb-6 lg:mb-8 text-sm lg:text-base">Select a card set to play on the Substrate blockchain.</p>
+            <p className="text-slate-500 mb-6 lg:mb-8 text-sm lg:text-base">
+              Select a card set to play on the Substrate blockchain.
+            </p>
 
             <div className="flex flex-col gap-3 lg:gap-4 max-w-xs mx-auto mb-6 lg:mb-8">
-              <label className="text-xs font-bold text-slate-500 uppercase text-left ml-1">Select Card Set</label>
+              <label className="text-xs font-bold text-slate-500 uppercase text-left ml-1">
+                Select Card Set
+              </label>
               <select
                 value={selectedSetId}
                 onChange={(e) => setSelectedSetId(parseInt(e.target.value))}
                 className="bg-slate-800 border border-white/10 rounded-xl px-3 lg:px-4 py-2.5 lg:py-3 text-white outline-none focus:border-yellow-500/50 appearance-none cursor-pointer text-sm lg:text-base"
               >
-                {availableSets.map(set => (
+                {availableSets.map((set) => (
                   <option key={set.id} value={set.id}>
                     Set #{set.id} ({set.cards.length} Cards)
                   </option>
@@ -167,7 +174,9 @@ export const BlockchainPage: React.FC = () => {
               {txLoading ? 'TRANSACTING...' : 'START GAME ON-CHAIN'}
             </button>
 
-            <Link to="/" className="block mt-4 text-slate-500 hover:text-slate-300 text-xs">Back to Menu</Link>
+            <Link to="/" className="block mt-4 text-slate-500 hover:text-slate-300 text-xs">
+              Back to Menu
+            </Link>
           </div>
         </div>
         <RotatePrompt />

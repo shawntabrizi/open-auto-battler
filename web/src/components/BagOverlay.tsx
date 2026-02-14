@@ -1,17 +1,20 @@
 import { useGameStore } from '../store/gameStore';
 import { UnitCard } from './UnitCard';
-import { CardView } from '../types';
+import { type CardView } from '../types';
 
 export function BagOverlay() {
   const { view, bag, cardSet, showBag, setShowBag, selection, setSelection } = useGameStore();
 
   if (!showBag || !view) return null;
 
-  // Map bag IDs to CardView objects using the cardSet lookup, sorted by mana cost
+  // Keep original bag indexes so selection maps to the same source list used by GameShell.
   const bagCards = (bag ?? [])
-    .map(id => cardSet?.find(c => c.id === id))
-    .filter((c): c is CardView => !!c)
-    .sort((a, b) => a.play_cost - b.play_cost || a.name.localeCompare(b.name));
+    .map((id, bagIndex) => ({
+      bagIndex,
+      card: cardSet?.find((c) => c.id === id),
+    }))
+    .filter((entry): entry is { bagIndex: number; card: CardView } => !!entry.card)
+    .sort((a, b) => a.card.play_cost - b.card.play_cost || a.card.name.localeCompare(b.card.name));
 
   return (
     <div className="fixed left-[11rem] lg:left-80 right-0 top-0 lg:top-16 bottom-0 lg:bottom-48 z-[60] bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300">
@@ -40,7 +43,7 @@ export function BagOverlay() {
           </div>
         ) : (
           <div className="grid grid-cols-3 lg:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 lg:gap-6 pt-2 pb-4 lg:pb-12">
-            {bagCards.map((card, i) => {
+            {bagCards.map(({ card, bagIndex }, i) => {
               return (
                 <div key={`${card.id}-${i}`} className="flex justify-center">
                   <UnitCard
@@ -48,12 +51,12 @@ export function BagOverlay() {
                     showCost={true}
                     showPitch={true}
                     draggable={false}
-                    isSelected={selection?.type === "bag" && selection.index === i}
+                    isSelected={selection?.type === 'bag' && selection.index === bagIndex}
                     onClick={() => {
-                      if (selection?.type === "bag" && selection.index === i) {
+                      if (selection?.type === 'bag' && selection.index === bagIndex) {
                         setSelection(null);
                       } else {
-                        setSelection({ type: "bag", index: i });
+                        setSelection({ type: 'bag', index: bagIndex });
                       }
                     }}
                   />

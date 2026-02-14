@@ -23,7 +23,7 @@ export default function EmbedPage() {
   useInitGuard(() => {
     const seedParam = searchParams.get('seed');
     const seed = seedParam ? BigInt(seedParam) : undefined;
-    init(seed);
+    void init(seed);
   }, [init]);
 
   const {
@@ -54,10 +54,7 @@ export default function EmbedPage() {
       onDragEnd={handleDragEnd}
       autoScroll={false}
     >
-      <div
-        ref={containerRef}
-        className="game-layout h-screen flex flex-col bg-board-bg"
-      >
+      <div ref={containerRef} className="game-layout h-screen flex flex-col bg-board-bg">
         {/* Board */}
         <div className="game-main flex-1 flex flex-col overflow-hidden min-h-0">
           <Arena />
@@ -78,11 +75,7 @@ export default function EmbedPage() {
 
       <DragOverlay>
         {activeCard ? (
-          <UnitCard
-            card={activeCard}
-            showCost={activeId?.startsWith('hand')}
-            showPitch={true}
-          />
+          <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showPitch={true} />
         ) : null}
       </DragOverlay>
     </DndContext>

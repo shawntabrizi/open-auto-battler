@@ -11,7 +11,7 @@ export function MultiplayerGame() {
   // Redirect to lobby if not connected
   useEffect(() => {
     if (!conn || status === 'disconnected') {
-      navigate('/multiplayer');
+      void navigate('/multiplayer');
     }
   }, [conn, status, navigate]);
 

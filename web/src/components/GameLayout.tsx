@@ -9,7 +9,7 @@ export function GameLayout() {
 
   // Initialize game engine - both local and multiplayer modes need this
   useInitGuard(() => {
-    init();
+    void init();
   }, [init]);
 
   if (isLoading) {

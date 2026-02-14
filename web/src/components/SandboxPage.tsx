@@ -13,7 +13,7 @@ export function SandboxPage() {
   const isLoading = useSandboxStore((state) => state.isLoading);
 
   useInitGuard(() => {
-    init();
+    void init();
   }, [init]);
 
   // selectedTemplate is already a CardView from the store
@@ -72,13 +72,15 @@ function SandboxHeader() {
   const battleSeed = useSandboxStore((state) => state.battleSeed);
   const setBattleSeed = useSandboxStore((state) => state.setBattleSeed);
 
-  const hasUnits =
-    playerBoard.some((u) => u !== null) || enemyBoard.some((u) => u !== null);
+  const hasUnits = playerBoard.some((u) => u !== null) || enemyBoard.some((u) => u !== null);
 
   return (
     <div className="flex-shrink-0 bg-gray-900 border-b border-gray-700 px-2 lg:px-3 py-1.5 lg:py-2 flex items-center justify-between">
       <div className="flex items-center gap-2 lg:gap-3">
-        <Link to="/" className="text-gray-400 hover:text-white transition-colors text-xs lg:text-sm flex items-center gap-1">
+        <Link
+          to="/"
+          className="text-gray-400 hover:text-white transition-colors text-xs lg:text-sm flex items-center gap-1"
+        >
           <span>&larr;</span> <span className="hidden lg:inline">Back</span>
         </Link>
         <h1 className="text-sm lg:text-lg font-bold text-gold">Sandbox</h1>
@@ -155,13 +157,12 @@ function SandboxArena() {
 
     if (unit) {
       return (
-        <div key={`${team}-${index}`} className="relative group cursor-pointer sandbox-slot" onClick={onClick}>
-          <UnitCard
-            card={unit}
-            showCost={false}
-            showPitch={false}
-            compact={true}
-          />
+        <div
+          key={`${team}-${index}`}
+          className="relative group cursor-pointer sandbox-slot"
+          onClick={onClick}
+        >
+          <UnitCard card={unit} showCost={false} showPitch={false} compact={true} />
           <div className="absolute -top-1.5 lg:-top-2 left-1/2 -translate-x-1/2 text-[8px] lg:text-xs text-gray-400 pointer-events-none">
             {displayIndex}
           </div>
@@ -257,11 +258,7 @@ function UnitGallery() {
           key={template.id}
           card={template}
           isSelected={selectedTemplate?.id === template.id}
-          onClick={() =>
-            selectTemplate(
-              selectedTemplate?.id === template.id ? null : template
-            )
-          }
+          onClick={() => selectTemplate(selectedTemplate?.id === template.id ? null : template)}
           compact={true}
         />
       ))}

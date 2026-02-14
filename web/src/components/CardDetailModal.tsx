@@ -15,7 +15,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
 
   const getTriggerDescription = (trigger: any): string => {
     const type = typeof trigger === 'string' ? trigger : trigger?.type;
-    
+
     switch (type) {
       case 'OnStart':
         return 'Battle Start';
@@ -55,10 +55,11 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
     switch (type) {
       case 'Damage':
         return `Deal ${data.amount || 0} damage to ${getTargetDescription(data.target)}`;
-      case 'ModifyStats':
+      case 'ModifyStats': {
         const h = data.health || 0;
         const a = data.attack || 0;
         return `Give ${a >= 0 ? '+' : ''}${a}/${h >= 0 ? '+' : ''}${h} to ${getTargetDescription(data.target)}`;
+      }
       case 'SpawnUnit':
         return `Spawn unit (card #${data.card_id ?? '?'})`;
       case 'Destroy':
@@ -77,35 +78,51 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
     const describeScope = (scope: any) => {
       const s = typeof scope === 'string' ? scope : scope?.type || 'unknown';
       switch (s) {
-        case 'SelfUnit': return 'this unit';
-        case 'Allies': return 'all allies';
-        case 'Enemies': return 'all enemies';
-        case 'All': return 'all units';
-        case 'AlliesOther': return 'all other allies';
-        case 'TriggerSource': return 'the target';
-        case 'Aggressor': return 'the attacker';
-        default: return s;
+        case 'SelfUnit':
+          return 'this unit';
+        case 'Allies':
+          return 'all allies';
+        case 'Enemies':
+          return 'all enemies';
+        case 'All':
+          return 'all units';
+        case 'AlliesOther':
+          return 'all other allies';
+        case 'TriggerSource':
+          return 'the target';
+        case 'Aggressor':
+          return 'the attacker';
+        default:
+          return s;
       }
     };
 
     const describeScopeSingular = (scope: any) => {
       const s = typeof scope === 'string' ? scope : scope?.type || 'unknown';
       switch (s) {
-        case 'SelfUnit': return 'this unit';
-        case 'Allies': return 'ally';
-        case 'Enemies': return 'enemy';
-        case 'All': return 'unit';
-        case 'AlliesOther': return 'other ally';
-        case 'TriggerSource': return 'target';
-        case 'Aggressor': return 'attacker';
-        default: return s;
+        case 'SelfUnit':
+          return 'this unit';
+        case 'Allies':
+          return 'ally';
+        case 'Enemies':
+          return 'enemy';
+        case 'All':
+          return 'unit';
+        case 'AlliesOther':
+          return 'other ally';
+        case 'TriggerSource':
+          return 'target';
+        case 'Aggressor':
+          return 'attacker';
+        default:
+          return s;
       }
     };
 
     switch (type) {
       case 'All':
         return describeScope(data.scope);
-      case 'Position':
+      case 'Position': {
         const { scope, index } = data;
         const s = typeof scope === 'string' ? scope : scope?.type || 'unknown';
         if (s === 'SelfUnit') {
@@ -115,13 +132,16 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         }
         const posName = index === 0 ? 'front' : index === -1 ? 'back' : `slot ${index + 1}`;
         return `the ${posName} ${describeScopeSingular(scope)}`;
+      }
       case 'Random':
         return `a random ${describeScopeSingular(data.scope)}`;
-      case 'Standard':
+      case 'Standard': {
         const { stat, order, count } = data;
-        const orderName = (typeof order === 'string' ? order : order?.type) === 'Ascending' ? 'lowest' : 'highest';
+        const orderName =
+          (typeof order === 'string' ? order : order?.type) === 'Ascending' ? 'lowest' : 'highest';
         const countStr = count === 1 ? 'the' : `the ${count}`;
         return `${countStr} ${orderName} ${typeof stat === 'string' ? stat : stat?.type} ${describeScopeSingular(data.scope)}`;
+      }
       case 'Adjacent':
         return `units adjacent to ${describeScope(data.scope)}`;
       default:
@@ -186,10 +206,11 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         {card.abilities.length > 0 && (
           <div className="mb-6">
             {card.abilities.map((ability, index) => (
-              <div key={index} className="mb-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-                <h3 className="text-lg font-bold text-yellow-400 mb-2">
-                  Ability: {ability.name}
-                </h3>
+              <div
+                key={index}
+                className="mb-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700"
+              >
+                <h3 className="text-lg font-bold text-yellow-400 mb-2">Ability: {ability.name}</h3>
                 <div className="text-sm text-gray-300 mb-2">
                   <strong>Trigger:</strong> {getTriggerDescription(ability.trigger)}
                 </div>

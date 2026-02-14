@@ -288,7 +288,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       );
       set({
         view: engine.get_view(),
-        battleOutput: battleOutput as any,
+        battleOutput: battleOutput,
         selection: null,
         showBattleOverlay: true,
       });

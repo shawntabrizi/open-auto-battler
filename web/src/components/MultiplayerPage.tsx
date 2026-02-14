@@ -42,9 +42,11 @@ export function MultiplayerPage() {
       setAutoJoining(true);
       setTargetId(joinIdFromUrl);
       // Auto-initialize and connect
-      initializePeer().then(() => {
-        connectToPeer(joinIdFromUrl);
-      }).catch(console.error);
+      initializePeer()
+        .then(() => {
+          connectToPeer(joinIdFromUrl);
+        })
+        .catch(console.error);
     }
   }, [joinIdFromUrl, peer, autoJoining, initializePeer, connectToPeer]);
 
@@ -70,17 +72,17 @@ export function MultiplayerPage() {
   };
 
   const handleGoToGame = () => {
-    navigate('/multiplayer/game');
+    void navigate('/multiplayer/game');
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(joinUrl);
+    void navigator.clipboard.writeText(joinUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
   const handleCopyId = () => {
-    navigator.clipboard.writeText(myPeerId || '');
+    void navigator.clipboard.writeText(myPeerId || '');
     setCopiedId(true);
     setTimeout(() => setCopiedId(false), 2000);
   };
@@ -107,9 +109,12 @@ export function MultiplayerPage() {
             <div className="w-12 h-12 lg:w-20 lg:h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-2 lg:mb-4 border-2 border-green-500">
               <span className="text-2xl lg:text-4xl">🔗</span>
             </div>
-            <h2 className="text-lg lg:text-2xl font-bold text-green-400 mb-1 lg:mb-2">Connected!</h2>
+            <h2 className="text-lg lg:text-2xl font-bold text-green-400 mb-1 lg:mb-2">
+              Connected!
+            </h2>
             <p className="mb-3 lg:mb-6 text-gray-300 text-xs lg:text-base">
-              Opponent: <span className="font-mono text-yellow-300 break-all">{opponentPeerId}</span>
+              Opponent:{' '}
+              <span className="font-mono text-yellow-300 break-all">{opponentPeerId}</span>
             </p>
             {isHost && status === 'connected' && (
               <div className="mb-3 lg:mb-6">
@@ -147,7 +152,10 @@ export function MultiplayerPage() {
                   <div className="w-12 h-12 lg:w-16 lg:h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3 lg:mb-4"></div>
                   <h3 className="text-base lg:text-xl font-bold text-white mb-2">Connecting...</h3>
                   <p className="text-[10px] lg:text-sm text-gray-400">
-                    Joining game: <span className="font-mono text-yellow-400">{joinIdFromUrl.slice(0, 12)}...</span>
+                    Joining game:{' '}
+                    <span className="font-mono text-yellow-400">
+                      {joinIdFromUrl.slice(0, 12)}...
+                    </span>
                   </p>
                 </div>
               ) : (
@@ -187,12 +195,7 @@ export function MultiplayerPage() {
                         className="bg-white p-1.5 lg:p-2 rounded-lg cursor-pointer hover:scale-105 transition-transform"
                         title="Click to enlarge"
                       >
-                        <QRCodeSVG
-                          value={joinUrl}
-                          size={80}
-                          className="lg:hidden"
-                          level="M"
-                        />
+                        <QRCodeSVG value={joinUrl} size={80} className="lg:hidden" level="M" />
                         <QRCodeSVG
                           value={joinUrl}
                           size={120}
@@ -211,8 +214,12 @@ export function MultiplayerPage() {
 
                   {/* Peer ID Display */}
                   <div className="bg-gray-900 p-2 lg:p-4 rounded-xl border border-gray-700 text-center">
-                    <div className="text-[8px] lg:text-xs text-gray-500 uppercase tracking-widest mb-0.5 lg:mb-1">Your ID</div>
-                    <div className="text-[10px] lg:text-lg font-mono text-yellow-400 select-all break-all leading-tight">{myPeerId}</div>
+                    <div className="text-[8px] lg:text-xs text-gray-500 uppercase tracking-widest mb-0.5 lg:mb-1">
+                      Your ID
+                    </div>
+                    <div className="text-[10px] lg:text-lg font-mono text-yellow-400 select-all break-all leading-tight">
+                      {myPeerId}
+                    </div>
                     <button
                       onClick={handleCopyId}
                       className="text-[10px] lg:text-sm text-blue-400 hover:text-blue-300 transition-colors mt-1"
@@ -226,7 +233,9 @@ export function MultiplayerPage() {
                 <div className="flex-1 flex flex-col justify-center">
                   {/* Manual Join Section */}
                   <div className="lg:border-t lg:border-gray-700 lg:pt-6">
-                    <label className="block text-[10px] lg:text-sm font-medium mb-1.5 lg:mb-3 text-gray-300">Or Enter Opponent ID</label>
+                    <label className="block text-[10px] lg:text-sm font-medium mb-1.5 lg:mb-3 text-gray-300">
+                      Or Enter Opponent ID
+                    </label>
                     <div className="flex gap-1.5 lg:gap-2">
                       <input
                         type="text"
@@ -262,8 +271,14 @@ export function MultiplayerPage() {
                     {showLogs && (
                       <div className="mt-1 lg:mt-2 h-16 lg:h-32 overflow-y-auto bg-black/50 p-1.5 lg:p-3 text-[7px] lg:text-[10px] font-mono text-gray-400 rounded-lg border border-gray-800">
                         {logs.map((l, i) => (
-                          <div key={i} className="mb-0.5 lg:mb-1 border-b border-gray-900 pb-0.5 lg:pb-1 last:border-0">
-                            <span className="text-gray-600">[{new Date(l.timestamp).toLocaleTimeString()}]</span> {l.message}
+                          <div
+                            key={i}
+                            className="mb-0.5 lg:mb-1 border-b border-gray-900 pb-0.5 lg:pb-1 last:border-0"
+                          >
+                            <span className="text-gray-600">
+                              [{new Date(l.timestamp).toLocaleTimeString()}]
+                            </span>{' '}
+                            {l.message}
                           </div>
                         ))}
                       </div>
@@ -290,11 +305,7 @@ export function MultiplayerPage() {
           onClick={() => setShowLargeQR(false)}
         >
           <div className="bg-white p-4 lg:p-6 rounded-2xl" onClick={(e) => e.stopPropagation()}>
-            <QRCodeSVG
-              value={joinUrl}
-              size={250}
-              level="M"
-            />
+            <QRCodeSVG value={joinUrl} size={250} level="M" />
             <p className="text-center text-gray-600 text-sm mt-3">Tap outside to close</p>
           </div>
         </div>

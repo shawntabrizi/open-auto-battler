@@ -150,10 +150,10 @@ interface BlockchainStore {
 
   // Account state
   accounts: any[];
-  selectedAccount: any | null;
+  selectedAccount: any;
 
   // Game state
-  chainState: any | null;
+  chainState: any;
   blockNumber: number | null;
   isRefreshing: boolean;
   lastRefresh: number;

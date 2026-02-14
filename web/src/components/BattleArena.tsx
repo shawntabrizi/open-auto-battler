@@ -81,7 +81,7 @@ function computeBoardState(
   events: CombatEvent[],
   initialPlayer: UnitView[],
   initialEnemy: UnitView[],
-  upToIndex: number,
+  upToIndex: number
 ): { playerBoard: UnitView[]; enemyBoard: UnitView[] } {
   let player = [...initialPlayer];
   let enemy = [...initialEnemy];
@@ -92,7 +92,9 @@ function computeBoardState(
       case 'DamageTaken': {
         const { target_instance_id, remaining_hp } = event.payload;
         const update = (board: UnitView[]) =>
-          board.map((u) => (u.instance_id === target_instance_id ? { ...u, health: remaining_hp } : u));
+          board.map((u) =>
+            u.instance_id === target_instance_id ? { ...u, health: remaining_hp } : u
+          );
         player = update(player);
         enemy = update(enemy);
         break;
@@ -106,7 +108,9 @@ function computeBoardState(
       case 'AbilityDamage': {
         const { target_instance_id, remaining_hp } = event.payload;
         const update = (board: UnitView[]) =>
-          board.map((u) => (u.instance_id === target_instance_id ? { ...u, health: remaining_hp } : u));
+          board.map((u) =>
+            u.instance_id === target_instance_id ? { ...u, health: remaining_hp } : u
+          );
         player = update(player);
         enemy = update(enemy);
         break;
@@ -114,7 +118,11 @@ function computeBoardState(
       case 'AbilityModifyStats': {
         const { target_instance_id, new_attack, new_health } = event.payload;
         const update = (board: UnitView[]) =>
-          board.map((u) => (u.instance_id === target_instance_id ? { ...u, attack: new_attack, health: new_health } : u));
+          board.map((u) =>
+            u.instance_id === target_instance_id
+              ? { ...u, attack: new_attack, health: new_health }
+              : u
+          );
         player = update(player);
         enemy = update(enemy);
         break;
@@ -135,18 +143,26 @@ function computeBoardState(
 function getEventDelay(events: CombatEvent[], index: number, playbackSpeed: number): number {
   const event = events[index];
   switch (event.type) {
-    case 'AbilityTrigger': return 800 / playbackSpeed;
-    case 'Clash': return 300 / playbackSpeed;
+    case 'AbilityTrigger':
+      return 800 / playbackSpeed;
+    case 'Clash':
+      return 300 / playbackSpeed;
     case 'DamageTaken': {
       const prevEvent = index > 0 ? events[index - 1] : null;
       return (prevEvent?.type === 'DamageTaken' ? 400 : 200) / playbackSpeed;
     }
-    case 'UnitDeath': return 600 / playbackSpeed;
-    case 'BattleEnd': return 1000 / playbackSpeed;
-    case 'AbilityDamage': return 400 / playbackSpeed;
-    case 'AbilityModifyStats': return 400 / playbackSpeed;
-    case 'UnitSpawn': return 600 / playbackSpeed;
-    default: return 500 / playbackSpeed;
+    case 'UnitDeath':
+      return 600 / playbackSpeed;
+    case 'BattleEnd':
+      return 1000 / playbackSpeed;
+    case 'AbilityDamage':
+      return 400 / playbackSpeed;
+    case 'AbilityModifyStats':
+      return 400 / playbackSpeed;
+    case 'UnitSpawn':
+      return 600 / playbackSpeed;
+    default:
+      return 500 / playbackSpeed;
   }
 }
 
@@ -158,14 +174,18 @@ interface BattleArenaProps {
 }
 
 export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
-  const [playerBoard, setPlayerBoard] = useState<UnitView[]>(battleOutput.initial_player_units || []);
+  const [playerBoard, setPlayerBoard] = useState<UnitView[]>(
+    battleOutput.initial_player_units || []
+  );
   const [enemyBoard, setEnemyBoard] = useState<UnitView[]>(battleOutput.initial_enemy_units || []);
   const [eventIndex, setEventIndex] = useState(0);
 
   // Animation states
   const [clashingUnitIds, setClashingUnitIds] = useState<number[]>([]);
   const [damageNumbers, setDamageNumbers] = useState<Map<number, number>>(new Map());
-  const [statChanges, setStatChanges] = useState<Map<number, { health: number; attack: number }>>(new Map());
+  const [statChanges, setStatChanges] = useState<Map<number, { health: number; attack: number }>>(
+    new Map()
+  );
   const [abilityToasts, setAbilityToasts] = useState<Map<number, string>>(new Map());
 
   // Playback speed control
@@ -200,11 +220,11 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       }
 
       case 'Clash': {
-        setPlayerBoard(prevPlayer => {
-          setEnemyBoard(prevEnemy => {
+        setPlayerBoard((prevPlayer) => {
+          setEnemyBoard((prevEnemy) => {
             const pId = prevPlayer.length > 0 ? prevPlayer[0].instance_id : null;
             const eId = prevEnemy.length > 0 ? prevEnemy[0].instance_id : null;
-            const clashing = [pId, eId].filter((id) => id !== null) as number[];
+            const clashing = [pId, eId].filter((id) => id !== null);
             setClashingUnitIds(clashing);
             return prevEnemy;
           });
@@ -221,7 +241,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
             u.instance_id === target_instance_id ? { ...u, health: remaining_hp } : u
           );
 
-        setPlayerBoard(prev => {
+        setPlayerBoard((prev) => {
           const pUnit = prev.find((u) => u.instance_id === target_instance_id);
           if (pUnit) {
             const damage = pUnit.health - remaining_hp;
@@ -232,7 +252,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
           return updateBoard(prev);
         });
 
-        setEnemyBoard(prev => {
+        setEnemyBoard((prev) => {
           const eUnit = prev.find((u) => u.instance_id === target_instance_id);
           if (eUnit) {
             const damage = eUnit.health - remaining_hp;
@@ -280,31 +300,41 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       }
 
       case 'AbilityModifyStats': {
-        const { target_instance_id: statsTarget, new_attack, new_health, health_change, attack_change } = event.payload;
+        const {
+          target_instance_id: statsTarget,
+          new_attack,
+          new_health,
+          health_change,
+          attack_change,
+        } = event.payload;
 
         const updateBoard = (board: UnitView[]) =>
           board.map((u) =>
             u.instance_id === statsTarget ? { ...u, attack: new_attack, health: new_health } : u
           );
 
-        setPlayerBoard(prev => {
+        setPlayerBoard((prev) => {
           const pUnit = prev.find((u) => u.instance_id === statsTarget);
           if (pUnit && (health_change !== 0 || attack_change !== 0)) {
-            setStatChanges((prevStats) => new Map(prevStats).set(statsTarget, {
-              health: health_change,
-              attack: attack_change
-            }));
+            setStatChanges((prevStats) =>
+              new Map(prevStats).set(statsTarget, {
+                health: health_change,
+                attack: attack_change,
+              })
+            );
           }
           return updateBoard(prev);
         });
 
-        setEnemyBoard(prev => {
+        setEnemyBoard((prev) => {
           const eUnit = prev.find((u) => u.instance_id === statsTarget);
           if (eUnit && (health_change !== 0 || attack_change !== 0)) {
-            setStatChanges((prevStats) => new Map(prevStats).set(statsTarget, {
-              health: health_change,
-              attack: attack_change
-            }));
+            setStatChanges((prevStats) =>
+              new Map(prevStats).set(statsTarget, {
+                health: health_change,
+                attack: attack_change,
+              })
+            );
           }
           return updateBoard(prev);
         });
@@ -366,7 +396,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       battleOutput.events,
       battleOutput.initial_player_units || [],
       battleOutput.initial_enemy_units || [],
-      newIndex - 1,
+      newIndex - 1
     );
     setPlayerBoard(p);
     setEnemyBoard(e);
@@ -379,7 +409,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       battleOutput.events,
       battleOutput.initial_player_units || [],
       battleOutput.initial_enemy_units || [],
-      battleOutput.events.length - 1,
+      battleOutput.events.length - 1
     );
     setPlayerBoard(p);
     setEnemyBoard(e);

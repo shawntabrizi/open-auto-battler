@@ -42,8 +42,8 @@ export function BattleSlideComponent({ playerUnits, enemyUnits, seed = 42 }: Bat
         wasmModule = wasm;
       }
 
-      const playerSandbox: SandboxUnit[] = playerUnits.map(id => ({ card_id: Number(id) }));
-      const enemySandbox: SandboxUnit[] = enemyUnits.map(id => ({ card_id: Number(id) }));
+      const playerSandbox: SandboxUnit[] = playerUnits.map((id) => ({ card_id: Number(id) }));
+      const enemySandbox: SandboxUnit[] = enemyUnits.map((id) => ({ card_id: Number(id) }));
 
       const output = wasmModule.run_sandbox_battle(playerSandbox, enemySandbox, BigInt(seed));
       setBattleOutput(output);
@@ -56,11 +56,11 @@ export function BattleSlideComponent({ playerUnits, enemyUnits, seed = 42 }: Bat
   }, [playerUnits, enemyUnits, seed]);
 
   useEffect(() => {
-    runBattle();
+    void runBattle();
   }, [runBattle]);
 
   const handleReplay = () => {
-    setBattleKey(k => k + 1);
+    setBattleKey((k) => k + 1);
     setBattleEnded(false);
   };
 

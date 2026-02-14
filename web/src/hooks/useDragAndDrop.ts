@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { DragEndEvent, TouchSensor, MouseSensor, useSensor, useSensors, Modifier } from '@dnd-kit/core';
+import {
+  type DragEndEvent,
+  TouchSensor,
+  MouseSensor,
+  useSensor,
+  useSensors,
+  type Modifier,
+} from '@dnd-kit/core';
 import { useGameStore } from '../store/gameStore';
 import type { CardView, BoardUnitView } from '../types';
 
@@ -21,14 +28,8 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
   const [activeId, setActiveId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const {
-    view,
-    playHandCard,
-    swapBoardPositions,
-    pitchHandCard,
-    pitchBoardUnit,
-    setSelection,
-  } = useGameStore();
+  const { view, playHandCard, swapBoardPositions, pitchHandCard, pitchBoardUnit, setSelection } =
+    useGameStore();
 
   // Custom modifier to restrict dragging to the container
   const restrictToContainer: Modifier = useCallback(({ transform, draggingNodeRect }) => {
@@ -65,62 +66,68 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
   const sensors = useSensors(mouseSensor, touchSensor);
 
   // Handle drag start
-  const handleDragStart = useCallback((event: { active: { id: string | number } }) => {
-    setActiveId(String(event.active.id));
-    const [type, indexStr] = String(event.active.id).split('-');
-    const index = parseInt(indexStr);
-    if (type === 'hand' || type === 'board') {
-      setSelection({ type: type as 'hand' | 'board', index });
-    }
-  }, [setSelection]);
+  const handleDragStart = useCallback(
+    (event: { active: { id: string | number } }) => {
+      setActiveId(String(event.active.id));
+      const [type, indexStr] = String(event.active.id).split('-');
+      const index = parseInt(indexStr);
+      if (type === 'hand' || type === 'board') {
+        setSelection({ type: type, index });
+      }
+    },
+    [setSelection]
+  );
 
   // Handle drag end - dispatch actions based on source and destination
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveId(null);
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      setActiveId(null);
 
-    // Allow custom handler override
-    if (options.onDragEnd) {
-      options.onDragEnd(event);
-      return;
-    }
-
-    if (!over) return;
-
-    const activeData = active.data.current;
-    const overData = over.data.current;
-
-    if (!activeData || !overData) return;
-
-    const sourceType = activeData.type as string;
-    const sourceIndex = activeData.index as number;
-    const destType = overData.type as string;
-
-    // Handle dropping on ash pile
-    if (destType === 'ash-pile') {
-      if (sourceType === 'hand') {
-        pitchHandCard(sourceIndex);
-      } else if (sourceType === 'board') {
-        pitchBoardUnit(sourceIndex);
+      // Allow custom handler override
+      if (options.onDragEnd) {
+        options.onDragEnd(event);
+        return;
       }
-      setSelection(null);
-      return;
-    }
 
-    // Handle dropping on board slot
-    if (destType === 'board-slot') {
-      const destIndex = overData.index as number;
+      if (!over) return;
 
-      if (sourceType === 'hand') {
-        // Play card from hand to board
-        playHandCard(sourceIndex, destIndex);
-      } else if (sourceType === 'board' && sourceIndex !== destIndex) {
-        // Swap board positions
-        swapBoardPositions(sourceIndex, destIndex);
+      const activeData = active.data.current;
+      const overData = over.data.current;
+
+      if (!activeData || !overData) return;
+
+      const sourceType = activeData.type as string;
+      const sourceIndex = activeData.index as number;
+      const destType = overData.type as string;
+
+      // Handle dropping on ash pile
+      if (destType === 'ash-pile') {
+        if (sourceType === 'hand') {
+          pitchHandCard(sourceIndex);
+        } else if (sourceType === 'board') {
+          pitchBoardUnit(sourceIndex);
+        }
+        setSelection(null);
+        return;
       }
-      setSelection(null);
-    }
-  }, [options, pitchHandCard, pitchBoardUnit, playHandCard, swapBoardPositions, setSelection]);
+
+      // Handle dropping on board slot
+      if (destType === 'board-slot') {
+        const destIndex = overData.index as number;
+
+        if (sourceType === 'hand') {
+          // Play card from hand to board
+          playHandCard(sourceIndex, destIndex);
+        } else if (sourceType === 'board' && sourceIndex !== destIndex) {
+          // Swap board positions
+          swapBoardPositions(sourceIndex, destIndex);
+        }
+        setSelection(null);
+      }
+    },
+    [options, pitchHandCard, pitchBoardUnit, playHandCard, swapBoardPositions, setSelection]
+  );
 
   // Prevent body scroll during drag
   useEffect(() => {
