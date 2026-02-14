@@ -75,7 +75,6 @@ struct JsonSetEntry {
 
 #[derive(Deserialize)]
 struct JsonSet {
-    #[allow(dead_code)]
     id: u32,
     #[allow(dead_code)]
     name: String,
@@ -290,7 +289,21 @@ fn main() {
 
     let cards: Vec<JsonCard> =
         serde_json::from_str(&cards_json).expect("Failed to parse cards.json");
-    let sets: Vec<JsonSet> = serde_json::from_str(&sets_json).expect("Failed to parse sets.json");
+    let mut sets: Vec<JsonSet> =
+        serde_json::from_str(&sets_json).expect("Failed to parse sets.json");
+
+    // Respect explicit set IDs from JSON and enforce contiguous IDs starting at 0.
+    sets.sort_by_key(|s| s.id);
+    for (expected_id, set) in sets.iter().enumerate() {
+        let actual_id = set.id as usize;
+        assert!(
+            actual_id == expected_id,
+            "sets.json IDs must be contiguous and start at 0: expected {}, found {} (set name: {})",
+            expected_id,
+            set.id,
+            set.name
+        );
+    }
 
     // ── Generate cards ───────────────────────────────────────────────────────
     let card_entries: Vec<String> = cards.iter().map(gen_card).collect();

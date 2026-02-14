@@ -981,7 +981,7 @@
         "trigger": "OnStart",
         "effect": {
           "type": "SpawnUnit",
-          "card_id": 43
+          "card_id": 42
         },
         "name": "...Raise Golem",
         "description": "...to spawn a 5/5 Golem",
@@ -1118,7 +1118,7 @@
         "trigger": "OnFaint",
         "effect": {
           "type": "SpawnUnit",
-          "card_id": 44
+          "card_id": 43
         },
         "name": "Rebirth",
         "description": "Spawn a Phoenix Egg on death",
@@ -1374,20 +1374,6 @@
   },
   {
     "id": 42,
-    "name": "Zombie Spawn",
-    "emoji": "\ud83d\udc76",
-    "stats": {
-      "attack": 1,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 0,
-      "pitch_value": 0
-    },
-    "abilities": []
-  },
-  {
-    "id": 43,
     "name": "Golem",
     "emoji": "\ud83d\uddff",
     "stats": {
@@ -1401,7 +1387,7 @@
     "abilities": []
   },
   {
-    "id": 44,
+    "id": 43,
     "name": "Phoenix Egg",
     "emoji": "\ud83e\udd5a",
     "stats": {
@@ -1427,15 +1413,57 @@
     ]
   },
   {
+    "id": 44,
+    "name": "Zombie Cricket",
+    "emoji": "\ud83e\udeb3",
+    "stats": {
+      "attack": 1,
+      "health": 1
+    },
+    "economy": {
+      "play_cost": 0,
+      "pitch_value": 0
+    },
+    "abilities": []
+  },
+  {
     "id": 45,
+    "name": "Ram",
+    "emoji": "\ud83d\udc0f",
+    "stats": {
+      "attack": 2,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 0,
+      "pitch_value": 0
+    },
+    "abilities": []
+  },
+  {
+    "id": 46,
+    "name": "Spiderling",
+    "emoji": "\ud83d\udd78\ufe0f",
+    "stats": {
+      "attack": 2,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 0,
+      "pitch_value": 0
+    },
+    "abilities": []
+  },
+  {
+    "id": 47,
     "name": "Ant",
     "emoji": "\ud83d\udc1c",
     "stats": {
       "attack": 2,
-      "health": 1
+      "health": 2
     },
     "economy": {
-      "play_cost": 2,
+      "play_cost": 1,
       "pitch_value": 1
     },
     "abilities": [
@@ -1444,7 +1472,7 @@
         "effect": {
           "type": "ModifyStats",
           "health": 1,
-          "attack": 2,
+          "attack": 1,
           "target": {
             "type": "Random",
             "data": {
@@ -1453,20 +1481,20 @@
             }
           }
         },
-        "name": "Work Ethic",
-        "description": "Give a random other ally +2/+1 on faint",
+        "name": "Team Spirit",
+        "description": "Faint: Give a random other ally +1/+1",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 46,
+    "id": 48,
     "name": "Beaver",
     "emoji": "\ud83e\uddab",
     "stats": {
-      "attack": 1,
-      "health": 3
+      "attack": 3,
+      "health": 2
     },
     "economy": {
       "play_cost": 1,
@@ -1477,8 +1505,8 @@
         "trigger": "OnSell",
         "effect": {
           "type": "ModifyStatsPermanent",
-          "health": 1,
-          "attack": 0,
+          "health": 0,
+          "attack": 1,
           "target": {
             "type": "Random",
             "data": {
@@ -1487,15 +1515,15 @@
             }
           }
         },
-        "name": "Builder Bonus",
-        "description": "When sold, give 2 random allies +0/+1 permanently",
+        "name": "Builder",
+        "description": "Sell: Give 2 random allies +1 attack permanently",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 47,
+    "id": 49,
     "name": "Cricket",
     "emoji": "\ud83e\udd97",
     "stats": {
@@ -1511,17 +1539,50 @@
         "trigger": "OnFaint",
         "effect": {
           "type": "SpawnUnit",
-          "card_id": 75
+          "card_id": 44
         },
-        "name": "Zombie Cricket",
-        "description": "Summon a 1/1 Zombie Cricket on faint",
+        "name": "Undead Chirp",
+        "description": "Faint: Summon a 1/1 Zombie Cricket",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 48,
+    "id": 50,
+    "name": "Duck",
+    "emoji": "\ud83e\udd86",
+    "stats": {
+      "attack": 2,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 1,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnSell",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 0,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "name": "Shop Quack",
+        "description": "Sell: Give allies +1 health permanently (shop-pet buff approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 51,
     "name": "Fish",
     "emoji": "\ud83d\udc1f",
     "stats": {
@@ -1529,7 +1590,7 @@
       "health": 3
     },
     "economy": {
-      "play_cost": 2,
+      "play_cost": 1,
       "pitch_value": 1
     },
     "abilities": [
@@ -1548,22 +1609,22 @@
           }
         },
         "name": "Schooling",
-        "description": "When bought, give 2 random other allies +1/+1 permanently",
+        "description": "Buy: Give 2 random other allies +1/+1 permanently (level-up approximated)",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 49,
+    "id": 52,
     "name": "Horse",
     "emoji": "\ud83d\udc0e",
     "stats": {
-      "attack": 1,
-      "health": 2
+      "attack": 2,
+      "health": 1
     },
     "economy": {
-      "play_cost": 2,
+      "play_cost": 1,
       "pitch_value": 1
     },
     "abilities": [
@@ -1580,23 +1641,23 @@
             }
           }
         },
-        "name": "Rally",
-        "description": "Give spawned allies +1 attack",
+        "name": "Neigh",
+        "description": "Friend summoned: Give it +1 attack",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 50,
+    "id": 53,
     "name": "Mosquito",
     "emoji": "\ud83e\udd9f",
     "stats": {
-      "attack": 1,
+      "attack": 2,
       "health": 2
     },
     "economy": {
-      "play_cost": 3,
+      "play_cost": 1,
       "pitch_value": 1
     },
     "abilities": [
@@ -1613,17 +1674,379 @@
             }
           }
         },
-        "name": "Snipe",
-        "description": "Deal 1 damage to a random enemy at battle start",
+        "name": "Buzz",
+        "description": "Start of battle: Deal 1 damage to a random enemy",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 51,
+    "id": 54,
+    "name": "Mouse",
+    "emoji": "\ud83d\udc2d",
+    "stats": {
+      "attack": 1,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 1,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnSell",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "name": "Scrap",
+        "description": "Sell: Gain 1 mana (free-apple stock approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 55,
     "name": "Otter",
     "emoji": "\ud83e\udda6",
+    "stats": {
+      "attack": 1,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 1,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnBuy",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 0,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "AlliesOther",
+              "count": 1
+            }
+          }
+        },
+        "name": "Helpful Nudge",
+        "description": "Buy: Give a random other ally +1 health permanently",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 56,
+    "name": "Pig",
+    "emoji": "\ud83d\udc37",
+    "stats": {
+      "attack": 4,
+      "health": 1
+    },
+    "economy": {
+      "play_cost": 1,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnSell",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "name": "Coin Pouch",
+        "description": "Sell: Gain 1 mana",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 57,
+    "name": "Crab",
+    "emoji": "\ud83e\udd80",
+    "stats": {
+      "attack": 4,
+      "health": 1
+    },
+    "economy": {
+      "play_cost": 2,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 0,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Shell Copy",
+        "description": "Start of battle: Gain +2 health (copy-health approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 58,
+    "name": "Flamingo",
+    "emoji": "\ud83e\udda9",
+    "stats": {
+      "attack": 3,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 2,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "AlliesOther",
+              "count": 2
+            }
+          }
+        },
+        "name": "Parting Gift",
+        "description": "Faint: Give 2 random other allies +1/+1",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 59,
+    "name": "Hedgehog",
+    "emoji": "\ud83e\udd94",
+    "stats": {
+      "attack": 3,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 2,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "Damage",
+          "amount": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "All"
+            }
+          }
+        },
+        "name": "Needle Burst",
+        "description": "Faint: Deal 2 damage to all units",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 60,
+    "name": "Kangaroo",
+    "emoji": "\ud83e\udd98",
+    "stats": {
+      "attack": 2,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 2,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "BeforeUnitAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Pouch Power",
+        "description": "Before attack: Gain +1/+1 (friend-ahead trigger approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 61,
+    "name": "Peacock",
+    "emoji": "\ud83e\udd9a",
+    "stats": {
+      "attack": 2,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 2,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 4,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Proud Plumage",
+        "description": "Hurt: Gain +4 attack",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 62,
+    "name": "Rat",
+    "emoji": "\ud83d\udc00",
+    "stats": {
+      "attack": 3,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 2,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 40
+        },
+        "name": "Dirty Rat",
+        "description": "Faint: Summon a 1/1 Dirty Rat (opponent-side summon approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 63,
+    "name": "Snail",
+    "emoji": "\ud83d\udc0c",
+    "stats": {
+      "attack": 2,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 2,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 0,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "name": "Slow Support",
+        "description": "Shop start: Give allies +1 health permanently (after-loss condition approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 64,
+    "name": "Spider",
+    "emoji": "\ud83d\udd77\ufe0f",
+    "stats": {
+      "attack": 2,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 2,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 46
+        },
+        "name": "Web Cocoon",
+        "description": "Faint: Summon a Spiderling (random tier summon approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 65,
+    "name": "Swan",
+    "emoji": "\ud83e\udda2",
+    "stats": {
+      "attack": 1,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 2,
+      "pitch_value": 1
+    },
+    "abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "name": "Graceful Income",
+        "description": "Shop start: Gain 1 mana",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 66,
+    "name": "Worm",
+    "emoji": "\ud83e\udeb1",
     "stats": {
       "attack": 1,
       "health": 3
@@ -1640,103 +2063,95 @@
           "health": 1,
           "attack": 1,
           "target": {
-            "type": "Random",
-            "data": {
-              "scope": "AlliesOther",
-              "count": 1
-            }
-          }
-        },
-        "name": "Helpful Nudge",
-        "description": "When bought, give a random other ally +1/+1 permanently",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 52,
-    "name": "Pig",
-    "emoji": "\ud83d\udc37",
-    "stats": {
-      "attack": 3,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 1,
-      "pitch_value": 1
-    },
-    "abilities": [
-      {
-        "trigger": "OnSell",
-        "effect": {
-          "type": "GainMana",
-          "amount": 1
-        },
-        "name": "Coin Pouch",
-        "description": "Gain 1 mana when sold",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 53,
-    "name": "Sloth",
-    "emoji": "\ud83e\udda5",
-    "stats": {
-      "attack": 2,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 3,
-      "pitch_value": 1
-    },
-    "abilities": []
-  },
-  {
-    "id": 54,
-    "name": "Crab",
-    "emoji": "\ud83e\udd80",
-    "stats": {
-      "attack": 2,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 4,
-      "pitch_value": 2
-    },
-    "abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 0,
-          "target": {
             "type": "All",
             "data": {
               "scope": "SelfUnit"
             }
           }
         },
-        "name": "Shell Up",
-        "description": "Gain +0/+2 at battle start",
+        "name": "Apple Habit",
+        "description": "Buy: Gain +1/+1 permanently (food-stock mechanic approximated)",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 55,
-    "name": "Dodo",
-    "emoji": "\ud83e\udda4",
+    "id": 67,
+    "name": "Badger",
+    "emoji": "\ud83e\udda1",
+    "stats": {
+      "attack": 6,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 3,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "Damage",
+          "amount": 3,
+          "target": {
+            "type": "Adjacent",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Final Swipe",
+        "description": "Faint: Deal 3 damage to adjacent units (attack-scaling approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 68,
+    "name": "Camel",
+    "emoji": "\ud83d\udc2b",
     "stats": {
       "attack": 2,
       "health": 4
     },
     "economy": {
-      "play_cost": 5,
+      "play_cost": 3,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 2,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "SelfUnit",
+              "index": 1
+            }
+          }
+        },
+        "name": "Desert Guard",
+        "description": "Hurt: Give the nearest ally behind +2/+2",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 69,
+    "name": "Dodo",
+    "emoji": "\ud83e\udda4",
+    "stats": {
+      "attack": 4,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 3,
       "pitch_value": 2
     },
     "abilities": [
@@ -1755,27 +2170,95 @@
           }
         },
         "name": "Wingman",
-        "description": "Give the ally ahead +2 attack at battle start",
+        "description": "Start of battle: Give ally ahead +2 attack (percentage transfer approximated)",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 56,
-    "name": "Elephant",
-    "emoji": "\ud83d\udc18",
+    "id": 70,
+    "name": "Dog",
+    "emoji": "\ud83d\udc15",
     "stats": {
-      "attack": 3,
-      "health": 6
+      "attack": 2,
+      "health": 3
     },
     "economy": {
-      "play_cost": 5,
+      "play_cost": 3,
       "pitch_value": 2
     },
     "abilities": [
       {
-        "trigger": "BeforeUnitAttack",
+        "trigger": "OnAllySpawn",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 1,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Pack Instinct",
+        "description": "Friend summoned: Gain +2/+1",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 71,
+    "name": "Dolphin",
+    "emoji": "\ud83d\udc2c",
+    "stats": {
+      "attack": 4,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 3,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 3,
+          "target": {
+            "type": "Standard",
+            "data": {
+              "scope": "Enemies",
+              "stat": "Health",
+              "order": "Ascending",
+              "count": 1
+            }
+          }
+        },
+        "name": "Precision Strike",
+        "description": "Start of battle: Deal 3 damage to lowest-health enemy",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 72,
+    "name": "Elephant",
+    "emoji": "\ud83d\udc18",
+    "stats": {
+      "attack": 3,
+      "health": 7
+    },
+    "economy": {
+      "play_cost": 3,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "AfterUnitAttack",
         "effect": {
           "type": "Damage",
           "amount": 1,
@@ -1788,366 +2271,23 @@
           }
         },
         "name": "Trample",
-        "description": "Deal 1 damage to the ally behind before attacking",
+        "description": "After attack: Deal 1 damage to nearest ally behind",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 57,
-    "name": "Flamingo",
-    "emoji": "\ud83e\udda9",
-    "stats": {
-      "attack": 3,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 4,
-      "pitch_value": 2
-    },
-    "abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 1,
-          "attack": 1,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "AlliesOther",
-              "count": 2
-            }
-          }
-        },
-        "name": "Parting Gift",
-        "description": "Give 2 random other allies +1/+1 on faint",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 58,
-    "name": "Hedgehog",
-    "emoji": "\ud83e\udd94",
-    "stats": {
-      "attack": 2,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 4,
-      "pitch_value": 2
-    },
-    "abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "Damage",
-          "amount": 2,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "All"
-            }
-          }
-        },
-        "name": "Needle Burst",
-        "description": "Deal 2 damage to all units on faint",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 59,
-    "name": "Peacock",
-    "emoji": "\ud83e\udd9a",
-    "stats": {
-      "attack": 2,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 4,
-      "pitch_value": 2
-    },
-    "abilities": [
-      {
-        "trigger": "OnHurt",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 0,
-          "attack": 4,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "name": "Proud Plumage",
-        "description": "Gain +4 attack when hurt",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 60,
-    "name": "Rat",
-    "emoji": "\ud83d\udc00",
-    "stats": {
-      "attack": 3,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 5,
-      "pitch_value": 2
-    },
-    "abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 40
-        },
-        "name": "Dirty Rat",
-        "description": "Summon a 1/1 Dirty Rat token on faint",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 61,
-    "name": "Shrimp",
-    "emoji": "\ud83e\udd90",
-    "stats": {
-      "attack": 2,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 4,
-      "pitch_value": 2
-    },
-    "abilities": [
-      {
-        "trigger": "OnSell",
-        "effect": {
-          "type": "ModifyStatsPermanent",
-          "health": 1,
-          "attack": 0,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "AlliesOther",
-              "count": 1
-            }
-          }
-        },
-        "name": "Growth Feed",
-        "description": "Whenever a unit is sold, give a random other ally +0/+1 permanently",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 62,
-    "name": "Spider",
-    "emoji": "\ud83d\udd77\ufe0f",
-    "stats": {
-      "attack": 2,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 6,
-      "pitch_value": 2
-    },
-    "abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 77
-        },
-        "name": "Web Cocoon",
-        "description": "Summon a Spiderling on faint",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 63,
-    "name": "Swan",
-    "emoji": "\ud83e\udda2",
-    "stats": {
-      "attack": 2,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 6,
-      "pitch_value": 2
-    },
-    "abilities": [
-      {
-        "trigger": "OnShopStart",
-        "effect": {
-          "type": "GainMana",
-          "amount": 1
-        },
-        "name": "Graceful Start",
-        "description": "Gain 1 mana at the start of shop",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 64,
-    "name": "Badger",
-    "emoji": "\ud83e\udda1",
-    "stats": {
-      "attack": 4,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 7,
-      "pitch_value": 3
-    },
-    "abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "Damage",
-          "amount": 4,
-          "target": {
-            "type": "Adjacent",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "name": "Final Swipe",
-        "description": "Deal 4 damage to adjacent units on faint",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 65,
-    "name": "Blowfish",
-    "emoji": "\ud83d\udc21",
-    "stats": {
-      "attack": 2,
-      "health": 6
-    },
-    "economy": {
-      "play_cost": 8,
-      "pitch_value": 3
-    },
-    "abilities": [
-      {
-        "trigger": "OnHurt",
-        "effect": {
-          "type": "Damage",
-          "amount": 3,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "Enemies",
-              "count": 1
-            }
-          }
-        },
-        "name": "Spit Shot",
-        "description": "Deal 3 damage to a random enemy when hurt",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 66,
-    "name": "Camel",
-    "emoji": "\ud83d\udc2b",
-    "stats": {
-      "attack": 3,
-      "health": 7
-    },
-    "economy": {
-      "play_cost": 8,
-      "pitch_value": 3
-    },
-    "abilities": [
-      {
-        "trigger": "OnHurt",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 2,
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "SelfUnit",
-              "index": 1
-            }
-          }
-        },
-        "name": "Desert Guard",
-        "description": "Give the ally behind +2/+2 when hurt",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 67,
-    "name": "Dog",
-    "emoji": "\ud83d\udc15",
-    "stats": {
-      "attack": 3,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 8,
-      "pitch_value": 3
-    },
-    "abilities": [
-      {
-        "trigger": "OnAllySpawn",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 1,
-          "attack": 1,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "name": "Pack Instinct",
-        "description": "Gain +1/+1 whenever a friendly unit is spawned",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 68,
+    "id": 73,
     "name": "Giraffe",
     "emoji": "\ud83e\udd92",
     "stats": {
-      "attack": 2,
-      "health": 6
+      "attack": 1,
+      "health": 3
     },
     "economy": {
-      "play_cost": 7,
-      "pitch_value": 3
+      "play_cost": 3,
+      "pitch_value": 2
     },
     "abilities": [
       {
@@ -2165,63 +2305,30 @@
           }
         },
         "name": "Long Reach",
-        "description": "At shop start, give the ally ahead +1/+1 permanently",
+        "description": "Shop start: Give nearest ally ahead +1/+1 permanently (end-turn approximated)",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 69,
-    "name": "Kangaroo",
-    "emoji": "\ud83e\udd98",
-    "stats": {
-      "attack": 3,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 7,
-      "pitch_value": 3
-    },
-    "abilities": [
-      {
-        "trigger": "BeforeUnitAttack",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 2,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "name": "Momentum",
-        "description": "Gain +2/+2 before this unit attacks",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 70,
+    "id": 74,
     "name": "Ox",
     "emoji": "\ud83d\udc02",
     "stats": {
-      "attack": 4,
-      "health": 6
+      "attack": 1,
+      "health": 3
     },
     "economy": {
-      "play_cost": 8,
-      "pitch_value": 3
+      "play_cost": 3,
+      "pitch_value": 2
     },
     "abilities": [
       {
         "trigger": "OnAllyFaint",
         "effect": {
           "type": "ModifyStats",
-          "health": 1,
+          "health": 0,
           "attack": 1,
           "target": {
             "type": "All",
@@ -2231,23 +2338,23 @@
           }
         },
         "name": "Enrage",
-        "description": "Gain +1/+1 when a friendly unit faints",
+        "description": "Ally faints: Gain +1 attack (melon perk unsupported)",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 71,
+    "id": 75,
     "name": "Rabbit",
     "emoji": "\ud83d\udc07",
     "stats": {
-      "attack": 3,
-      "health": 5
+      "attack": 1,
+      "health": 2
     },
     "economy": {
-      "play_cost": 7,
-      "pitch_value": 3
+      "play_cost": 3,
+      "pitch_value": 2
     },
     "abilities": [
       {
@@ -2264,33 +2371,33 @@
           }
         },
         "name": "Carrot Diet",
-        "description": "When you buy a unit, give that unit +0/+1 permanently",
+        "description": "Buy a unit: Give it +1 health permanently (food trigger approximated)",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 72,
+    "id": 76,
     "name": "Sheep",
     "emoji": "\ud83d\udc11",
     "stats": {
-      "attack": 4,
-      "health": 6
+      "attack": 2,
+      "health": 2
     },
     "economy": {
-      "play_cost": 9,
-      "pitch_value": 3
+      "play_cost": 3,
+      "pitch_value": 2
     },
     "abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
           "type": "SpawnUnit",
-          "card_id": 76
+          "card_id": 45
         },
         "name": "Split Herd I",
-        "description": "Summon a 2/2 Ram on faint",
+        "description": "Faint: Summon a 2/2 Ram",
         "conditions": [],
         "max_triggers": null
       },
@@ -2298,59 +2405,280 @@
         "trigger": "OnFaint",
         "effect": {
           "type": "SpawnUnit",
-          "card_id": 76
+          "card_id": 45
         },
         "name": "Split Herd II",
-        "description": "Summon another 2/2 Ram on faint",
+        "description": "Faint: Summon another 2/2 Ram",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 73,
-    "name": "Snail",
-    "emoji": "\ud83d\udc0c",
+    "id": 77,
+    "name": "Bison",
+    "emoji": "\ud83e\uddac",
     "stats": {
-      "attack": 2,
-      "health": 7
+      "attack": 5,
+      "health": 3
     },
     "economy": {
-      "play_cost": 7,
-      "pitch_value": 3
+      "play_cost": 4,
+      "pitch_value": 2
     },
     "abilities": [
       {
-        "trigger": "OnBuy",
+        "trigger": "OnShopStart",
         "effect": {
           "type": "ModifyStatsPermanent",
-          "health": 1,
-          "attack": 2,
+          "health": 2,
+          "attack": 1,
           "target": {
             "type": "All",
             "data": {
-              "scope": "Allies"
+              "scope": "SelfUnit"
             }
           }
         },
-        "name": "Steady Pace",
-        "description": "When bought, give all allies +2/+1 permanently",
+        "name": "Heavy Growth",
+        "description": "Shop start: Gain +1/+2 permanently (level-3 friend condition approximated)",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 74,
+    "id": 78,
+    "name": "Blowfish",
+    "emoji": "\ud83d\udc21",
+    "stats": {
+      "attack": 3,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 4,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "Damage",
+          "amount": 3,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "Enemies",
+              "count": 1
+            }
+          }
+        },
+        "name": "Spit Shot",
+        "description": "Hurt: Deal 3 damage to a random enemy",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 79,
+    "name": "Deer",
+    "emoji": "\ud83e\udd8c",
+    "stats": {
+      "attack": 1,
+      "health": 1
+    },
+    "economy": {
+      "play_cost": 4,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 107
+        },
+        "name": "Bus Crash",
+        "description": "Faint: Summon a Bus (chili perk unsupported)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 80,
+    "name": "Hippo",
+    "emoji": "\ud83e\udd9b",
+    "stats": {
+      "attack": 4,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 4,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "AfterUnitAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 3,
+          "attack": 3,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Rampage",
+        "description": "After attack: Gain +3/+3 (knockout trigger approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 81,
+    "name": "Parrot",
+    "emoji": "\ud83e\udd9c",
+    "stats": {
+      "attack": 4,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 4,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "SelfUnit",
+              "index": -1
+            }
+          }
+        },
+        "name": "Echo",
+        "description": "Start of battle: Buff ally ahead +1/+1 (ability-copy approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 82,
+    "name": "Penguin",
+    "emoji": "\ud83d\udc27",
+    "stats": {
+      "attack": 2,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 4,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "AlliesOther",
+              "count": 2
+            }
+          }
+        },
+        "name": "Coach",
+        "description": "Shop start: Give 2 random allies +1/+1 permanently (level-condition approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 83,
+    "name": "Skunk",
+    "emoji": "\ud83e\udda8",
+    "stats": {
+      "attack": 3,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 4,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 3,
+          "target": {
+            "type": "Standard",
+            "data": {
+              "scope": "Enemies",
+              "stat": "Health",
+              "order": "Descending",
+              "count": 1
+            }
+          }
+        },
+        "name": "Stink Bomb",
+        "description": "Start of battle: Hit highest-health enemy for 3 (percent reduction approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 84,
+    "name": "Squirrel",
+    "emoji": "\ud83d\udc3f\ufe0f",
+    "stats": {
+      "attack": 2,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 4,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "name": "Coupon",
+        "description": "Shop start: Gain 1 mana (food-discount mechanic approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 85,
     "name": "Turtle",
     "emoji": "\ud83d\udc22",
     "stats": {
-      "attack": 3,
-      "health": 8
+      "attack": 2,
+      "health": 5
     },
     "economy": {
-      "play_cost": 9,
-      "pitch_value": 3
+      "play_cost": 4,
+      "pitch_value": 2
     },
     "abilities": [
       {
@@ -2368,18 +2696,706 @@
           }
         },
         "name": "Shell Legacy",
-        "description": "Give the ally behind +0/+2 on faint",
+        "description": "Faint: Give nearest ally behind +2 health (melon perk unsupported)",
         "conditions": [],
         "max_triggers": null
       }
     ]
   },
   {
-    "id": 75,
-    "name": "Zombie Cricket",
-    "emoji": "\ud83e\udeb3",
+    "id": 86,
+    "name": "Whale",
+    "emoji": "\ud83d\udc0b",
+    "stats": {
+      "attack": 3,
+      "health": 8
+    },
+    "economy": {
+      "play_cost": 4,
+      "pitch_value": 2
+    },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Destroy",
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "SelfUnit",
+              "index": -1
+            }
+          }
+        },
+        "name": "Swallow",
+        "description": "Start of battle: Remove nearest ally ahead (resummon logic unsupported)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 87,
+    "name": "Armadillo",
+    "emoji": "\ud83d\udee1\ufe0f",
+    "stats": {
+      "attack": 2,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 5,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 8,
+          "attack": 0,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "All"
+            }
+          }
+        },
+        "name": "Armor Wave",
+        "description": "Start of battle: Give all units +8 health",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 88,
+    "name": "Cow",
+    "emoji": "\ud83d\udc04",
+    "stats": {
+      "attack": 4,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 5,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnBuy",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 2,
+          "attack": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "name": "Dairy Supply",
+        "description": "Buy: Give allies +1/+2 permanently (milk-stock approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 89,
+    "name": "Crocodile",
+    "emoji": "\ud83d\udc0a",
+    "stats": {
+      "attack": 8,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 5,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 8,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "Enemies",
+              "index": -1
+            }
+          }
+        },
+        "name": "Backline Snap",
+        "description": "Start of battle: Deal 8 damage to the last enemy",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 90,
+    "name": "Monkey",
+    "emoji": "\ud83d\udc12",
     "stats": {
       "attack": 1,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 5,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 3,
+          "attack": 2,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "AlliesOther",
+              "count": 1
+            }
+          }
+        },
+        "name": "Mentor",
+        "description": "Shop start: Give a random ally +2/+3 permanently (right-most targeting approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 91,
+    "name": "Rhino",
+    "emoji": "\ud83e\udd8f",
+    "stats": {
+      "attack": 6,
+      "health": 9
+    },
+    "economy": {
+      "play_cost": 5,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "AfterUnitAttack",
+        "effect": {
+          "type": "Damage",
+          "amount": 4,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "Enemies",
+              "index": 0
+            }
+          }
+        },
+        "name": "Trample Shot",
+        "description": "After attack: Deal 4 damage to front enemy (knockout condition approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 92,
+    "name": "Rooster",
+    "emoji": "\ud83d\udc13",
+    "stats": {
+      "attack": 6,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 5,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 108
+        },
+        "name": "Last Crow",
+        "description": "Faint: Summon a Chick (count/attack-scaling approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 93,
+    "name": "Scorpion",
+    "emoji": "\ud83e\udd82",
+    "stats": {
+      "attack": 1,
+      "health": 1
+    },
+    "economy": {
+      "play_cost": 5,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 20,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Venom Strike",
+        "description": "Start of battle: Gain massive attack (peanut perk approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 94,
+    "name": "Seal",
+    "emoji": "\ud83e\uddad",
+    "stats": {
+      "attack": 3,
+      "health": 8
+    },
+    "economy": {
+      "play_cost": 5,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnBuy",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 0,
+          "attack": 1,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "AlliesOther",
+              "count": 3
+            }
+          }
+        },
+        "name": "Feeding Frenzy",
+        "description": "Buy: Give 3 random allies +1 attack permanently (food trigger approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 95,
+    "name": "Shark",
+    "emoji": "\ud83e\udd88",
+    "stats": {
+      "attack": 4,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 5,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnAllyFaint",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Blood Scent",
+        "description": "Ally faints: Gain +1/+2",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 96,
+    "name": "Turkey",
+    "emoji": "\ud83e\udd83",
+    "stats": {
+      "attack": 3,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 5,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnAllySpawn",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 3,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "TriggerSource"
+            }
+          }
+        },
+        "name": "Feast Call",
+        "description": "Friend summoned: Give it +2/+3",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 97,
+    "name": "Boar",
+    "emoji": "\ud83d\udc17",
+    "stats": {
+      "attack": 10,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 6,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "BeforeUnitAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 4,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Raging Charge",
+        "description": "Before attack: Gain +4/+2",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 98,
+    "name": "Cat",
+    "emoji": "\ud83d\udc31",
+    "stats": {
+      "attack": 4,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 6,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "name": "Kitchen Expert",
+        "description": "Shop start: Gain 1 mana (food-multiplier unsupported)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 99,
+    "name": "Dragon",
+    "emoji": "\ud83d\udc09",
+    "stats": {
+      "attack": 6,
+      "health": 8
+    },
+    "economy": {
+      "play_cost": 6,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnBuy",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "name": "Ancient Wisdom",
+        "description": "Buy a unit: Give allies +1/+1 permanently (tier-1-only condition approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 100,
+    "name": "Fly",
+    "emoji": "\ud83e\udeb0",
+    "stats": {
+      "attack": 5,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 6,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnAllyFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 109
+        },
+        "name": "Infestation",
+        "description": "Ally faints: Summon a Zombie Fly",
+        "conditions": [],
+        "max_triggers": 3
+      }
+    ]
+  },
+  {
+    "id": 101,
+    "name": "Gorilla",
+    "emoji": "\ud83e\udd8d",
+    "stats": {
+      "attack": 7,
+      "health": 10
+    },
+    "economy": {
+      "play_cost": 6,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 0,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Thick Hide",
+        "description": "Hurt: Gain +2 health (coconut perk unsupported)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 102,
+    "name": "Leopard",
+    "emoji": "\ud83d\udc06",
+    "stats": {
+      "attack": 10,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 6,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 5,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "Enemies",
+              "count": 1
+            }
+          }
+        },
+        "name": "Pounce",
+        "description": "Start of battle: Deal 5 damage to a random enemy (percentage/multi-target approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 103,
+    "name": "Mammoth",
+    "emoji": "\ud83e\udda3",
+    "stats": {
+      "attack": 3,
+      "health": 10
+    },
+    "economy": {
+      "play_cost": 6,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "AlliesOther"
+            }
+          }
+        },
+        "name": "Ancient Roar",
+        "description": "Faint: Give all other allies +2/+2",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 104,
+    "name": "Snake",
+    "emoji": "\ud83d\udc0d",
+    "stats": {
+      "attack": 6,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 6,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "AfterAnyAttack",
+        "effect": {
+          "type": "Damage",
+          "amount": 5,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "Enemies",
+              "count": 1
+            }
+          }
+        },
+        "name": "Ambush",
+        "description": "Any attack: Deal 5 damage to a random enemy (friend-ahead condition approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 105,
+    "name": "Tiger",
+    "emoji": "\ud83d\udc05",
+    "stats": {
+      "attack": 6,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 6,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 2,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "SelfUnit",
+              "index": -1
+            }
+          }
+        },
+        "name": "Pack Echo",
+        "description": "Start of battle: Buff ally ahead +2/+2 (repeat-ability mechanic unsupported)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 106,
+    "name": "Wolverine",
+    "emoji": "\ud83d\udc3a",
+    "stats": {
+      "attack": 5,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 6,
+      "pitch_value": 3
+    },
+    "abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 3,
+          "target": {
+            "type": "Adjacent",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Rending Aura",
+        "description": "Start of battle: Give adjacent allies +3 attack (ability-damage boost approximated)",
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 107,
+    "name": "Bus",
+    "emoji": "\ud83d\ude8c",
+    "stats": {
+      "attack": 5,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 0,
+      "pitch_value": 0
+    },
+    "abilities": []
+  },
+  {
+    "id": 108,
+    "name": "Chick",
+    "emoji": "\ud83d\udc25",
+    "stats": {
+      "attack": 3,
       "health": 1
     },
     "economy": {
@@ -2389,57 +3405,17 @@
     "abilities": []
   },
   {
-    "id": 76,
-    "name": "Ram",
-    "emoji": "\ud83d\udc0f",
+    "id": 109,
+    "name": "Zombie Fly",
+    "emoji": "\ud83e\udeb0",
     "stats": {
-      "attack": 2,
-      "health": 2
+      "attack": 4,
+      "health": 4
     },
     "economy": {
       "play_cost": 0,
       "pitch_value": 0
     },
     "abilities": []
-  },
-  {
-    "id": 77,
-    "name": "Spiderling",
-    "emoji": "\ud83d\udd78\ufe0f",
-    "stats": {
-      "attack": 2,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 0,
-      "pitch_value": 0
-    },
-    "abilities": []
-  },
-  {
-    "id": 78,
-    "name": "Shopkeeper",
-    "emoji": "\ud83d\uded2",
-    "stats": {
-      "attack": 1,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 2,
-      "pitch_value": 1
-    },
-    "abilities": [
-      {
-        "trigger": "OnBuy",
-        "effect": {
-          "type": "GainMana",
-          "amount": 1
-        },
-        "name": "Store Credit",
-        "description": "Gain 1 mana whenever you buy a unit",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
   }
 ]

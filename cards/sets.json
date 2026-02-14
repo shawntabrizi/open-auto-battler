@@ -167,16 +167,8 @@
   },
   {
     "id": 1,
-    "name": "SAP Starter Mirror",
+    "name": "SAP Turtle Pack Full",
     "cards": [
-      {
-        "card_id": 45,
-        "rarity": 10
-      },
-      {
-        "card_id": 46,
-        "rarity": 10
-      },
       {
         "card_id": 47,
         "rarity": 10
@@ -203,19 +195,19 @@
       },
       {
         "card_id": 53,
-        "rarity": 1
+        "rarity": 10
       },
       {
         "card_id": 54,
-        "rarity": 8
+        "rarity": 10
       },
       {
         "card_id": 55,
-        "rarity": 8
+        "rarity": 10
       },
       {
         "card_id": 56,
-        "rarity": 8
+        "rarity": 10
       },
       {
         "card_id": 57,
@@ -247,15 +239,15 @@
       },
       {
         "card_id": 64,
-        "rarity": 6
+        "rarity": 8
       },
       {
         "card_id": 65,
-        "rarity": 6
+        "rarity": 8
       },
       {
         "card_id": 66,
-        "rarity": 6
+        "rarity": 8
       },
       {
         "card_id": 67,
@@ -288,6 +280,134 @@
       {
         "card_id": 74,
         "rarity": 6
+      },
+      {
+        "card_id": 75,
+        "rarity": 6
+      },
+      {
+        "card_id": 76,
+        "rarity": 6
+      },
+      {
+        "card_id": 77,
+        "rarity": 4
+      },
+      {
+        "card_id": 78,
+        "rarity": 4
+      },
+      {
+        "card_id": 79,
+        "rarity": 4
+      },
+      {
+        "card_id": 80,
+        "rarity": 4
+      },
+      {
+        "card_id": 81,
+        "rarity": 4
+      },
+      {
+        "card_id": 82,
+        "rarity": 4
+      },
+      {
+        "card_id": 83,
+        "rarity": 4
+      },
+      {
+        "card_id": 84,
+        "rarity": 4
+      },
+      {
+        "card_id": 85,
+        "rarity": 4
+      },
+      {
+        "card_id": 86,
+        "rarity": 4
+      },
+      {
+        "card_id": 87,
+        "rarity": 2
+      },
+      {
+        "card_id": 88,
+        "rarity": 2
+      },
+      {
+        "card_id": 89,
+        "rarity": 2
+      },
+      {
+        "card_id": 90,
+        "rarity": 2
+      },
+      {
+        "card_id": 91,
+        "rarity": 2
+      },
+      {
+        "card_id": 92,
+        "rarity": 2
+      },
+      {
+        "card_id": 93,
+        "rarity": 2
+      },
+      {
+        "card_id": 94,
+        "rarity": 2
+      },
+      {
+        "card_id": 95,
+        "rarity": 2
+      },
+      {
+        "card_id": 96,
+        "rarity": 2
+      },
+      {
+        "card_id": 97,
+        "rarity": 1
+      },
+      {
+        "card_id": 98,
+        "rarity": 1
+      },
+      {
+        "card_id": 99,
+        "rarity": 1
+      },
+      {
+        "card_id": 100,
+        "rarity": 1
+      },
+      {
+        "card_id": 101,
+        "rarity": 1
+      },
+      {
+        "card_id": 102,
+        "rarity": 1
+      },
+      {
+        "card_id": 103,
+        "rarity": 1
+      },
+      {
+        "card_id": 104,
+        "rarity": 1
+      },
+      {
+        "card_id": 105,
+        "rarity": 1
+      },
+      {
+        "card_id": 106,
+        "rarity": 1
       }
     ]
   }
