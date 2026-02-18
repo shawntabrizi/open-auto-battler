@@ -134,34 +134,29 @@ export const BlockchainPage: React.FC = () => {
               Select a card set to play on the Substrate blockchain.
             </p>
 
-            <div className="flex flex-col gap-3 lg:gap-4 max-w-sm mx-auto mb-6 lg:mb-8">
+            <div className="flex flex-col gap-3 max-w-sm mx-auto mb-6 lg:mb-8">
               <label className="text-xs font-bold text-slate-500 uppercase text-left ml-1">
                 Select Card Set
               </label>
-              {availableSets.map((s) => (
-                <div
-                  key={s.id}
-                  className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                    selectedSetId === s.id
-                      ? 'bg-yellow-500/10 border-yellow-500/50'
-                      : 'bg-slate-800/50 border-white/5 hover:border-white/10'
-                  }`}
-                  onClick={() => setSelectedSetId(s.id)}
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedSetId}
+                  onChange={(e) => setSelectedSetId(Number(e.target.value))}
+                  className="flex-1 bg-slate-800 border border-white/10 text-white text-sm rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500/50 cursor-pointer"
                 >
-                  <div className="text-left">
-                    <div className="text-sm font-bold text-white">{s.name}</div>
-                    <div className="text-[10px] text-slate-500 font-mono">
-                      Set #{s.id} &middot; {s.cards.length} cards
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); previewSet(s.id); }}
-                    className="px-2 py-1 text-[10px] font-bold border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 rounded transition-all"
-                  >
-                    PREVIEW
-                  </button>
-                </div>
-              ))}
+                  {[...availableSets].sort((a, b) => a.id - b.id).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} (#{s.id}) &middot; {s.cards.length} cards
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => previewSet(selectedSetId)}
+                  className="px-3 py-3 text-xs font-bold border border-slate-600 text-slate-300 hover:text-white hover:border-slate-400 rounded-lg transition-all shrink-0"
+                >
+                  PREVIEW
+                </button>
+              </div>
             </div>
 
             {/* Creator links */}
