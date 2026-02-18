@@ -541,28 +541,13 @@ export function CardDetailPanel({
         )}
 
         <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="font-bold text-white mb-2">Game Mode</h3>
           <div className="space-y-3">
             <button
-              onClick={() => navigate('/sandbox')}
-              className="w-full btn bg-purple-900/50 hover:bg-purple-800 text-purple-200 border border-purple-700 text-xs py-2"
+              onClick={() => navigate('/blockchain/customize')}
+              className="w-full btn bg-yellow-900/50 hover:bg-yellow-800 text-yellow-200 border border-yellow-700 text-xs py-2"
             >
-              Enter Sandbox Mode
+              Customize
             </button>
-            <button
-              onClick={() => navigate('/multiplayer')}
-              className="w-full btn bg-green-900/50 hover:bg-green-800 text-green-200 border border-green-700 text-xs py-2"
-            >
-              Enter Multiplayer Mode
-            </button>
-            {!isBlockchain && (
-              <button
-                onClick={() => navigate('/blockchain')}
-                className="w-full btn bg-yellow-900/50 hover:bg-yellow-800 text-yellow-200 border border-yellow-700 text-xs py-2"
-              >
-                Enter Blockchain Mode
-              </button>
-            )}
             <button
               onClick={() => navigate('/')}
               className="w-full btn bg-slate-700/50 hover:bg-slate-600 text-slate-300 border border-slate-600 text-xs py-2"
