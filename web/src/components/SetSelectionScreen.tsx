@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 
 export function SetSelectionScreen() {
@@ -43,6 +44,13 @@ export function SetSelectionScreen() {
             <div className="text-slate-600 italic py-8">No sets available</div>
           )}
         </div>
+
+        <Link
+          to="/"
+          className="inline-block mt-6 text-sm text-slate-500 hover:text-slate-300 transition-colors"
+        >
+          &larr; Back to Main Menu
+        </Link>
       </div>
     </div>
   );

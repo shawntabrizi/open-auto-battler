@@ -132,7 +132,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // Phase 1: Load WASM, create engine, init emoji map, fetch set metas
   initEngine: async () => {
-    if (get().engine) return;
+    if (get().engine) {
+      // Engine exists from a previous session — reset to set selection
+      set({ gameStarted: false, view: null, cardSet: null, battleOutput: null, selection: null, showBattleOverlay: false });
+      return;
+    }
     if (initEnginePromise) return initEnginePromise;
 
     initEnginePromise = (async () => {
