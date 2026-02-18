@@ -334,3 +334,39 @@ fn test_create_card_set_zero_rarity() {
         );
     });
 }
+
+#[test]
+fn test_create_card_set_duplicate() {
+    new_test_ext().execute_with(|| {
+        let account_id = 1;
+
+        // Cards 1-5 already exist from genesis
+        let entries = vec![
+            crate::CardSetEntryInput {
+                card_id: 1,
+                rarity: 10,
+            },
+            crate::CardSetEntryInput {
+                card_id: 2,
+                rarity: 5,
+            },
+        ];
+
+        // First creation should succeed
+        assert_ok!(AutoBattle::create_card_set(
+            RuntimeOrigin::signed(account_id),
+            entries.clone(),
+            b"First Set".to_vec()
+        ));
+
+        // Second creation with same cards (different name) should fail
+        assert_noop!(
+            AutoBattle::create_card_set(
+                RuntimeOrigin::signed(account_id),
+                entries,
+                b"Different Name".to_vec()
+            ),
+            Error::<Test>::SetAlreadyExists
+        );
+    });
+}

@@ -307,6 +307,12 @@ pub mod pallet {
     pub type CardSetMetadataStore<T: Config> =
         StorageMap<_, Blake2_128Concat, u32, SetMetadata<T>, OptionQuery>;
 
+    /// Map of card set hashes to their unique set ID.
+    /// Used to prevent duplicate card sets from being stored.
+    #[pallet::storage]
+    pub type CardSetHashes<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::Hash, u32, OptionQuery>;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -363,6 +369,8 @@ pub mod pallet {
         RarityOverflow,
         /// The total rarity of the cards in the set is zero.
         InvalidRarity,
+        /// A card set with this exact card list already exists.
+        SetAlreadyExists,
     }
 
     /// Input for creating a card set.
@@ -436,7 +444,10 @@ pub mod pallet {
             // Store all sets
             let num_sets = sets.len();
             for (i, card_set) in sets.into_iter().enumerate() {
-                CardSets::<T>::insert(i as u32, BoundedCardSet::<T>::from(card_set));
+                let bounded = BoundedCardSet::<T>::from(card_set);
+                let set_hash = T::Hashing::hash_of(&bounded);
+                CardSetHashes::<T>::insert(set_hash, i as u32);
+                CardSets::<T>::insert(i as u32, bounded);
             }
             NextSetId::<T>::put(num_sets as u32);
 
@@ -820,7 +831,12 @@ pub mod pallet {
                     .collect(),
             };
 
-            CardSets::<T>::insert(set_id, BoundedCardSet::<T>::from(card_set));
+            let bounded_set = BoundedCardSet::<T>::from(card_set);
+            let set_hash = T::Hashing::hash_of(&bounded_set);
+            ensure!(!CardSetHashes::<T>::contains_key(&set_hash), Error::<T>::SetAlreadyExists);
+
+            CardSets::<T>::insert(set_id, bounded_set);
+            CardSetHashes::<T>::insert(&set_hash, set_id);
 
             // Store set metadata
             let set_metadata = SetMetadata {
