@@ -11,6 +11,7 @@ import { getPolkadotSigner } from 'polkadot-api/signer';
 import { AccountId } from '@polkadot-api/substrate-bindings';
 import { createCallArgCoercer } from '../utils/papiCoercion';
 import { initEmojiMap } from '../utils/emoji';
+import { submitTx } from '../utils/tx';
 
 // ============================================================================
 // PAPI-to-serde conversion helpers
@@ -388,7 +389,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       // Start game with selected set_id
       const tx = api.tx.AutoBattle.start_game({ set_id });
 
-      await tx.signAndSubmit(selectedAccount.polkadotSigner);
+      await submitTx(tx, selectedAccount.polkadotSigner, `AutoBattle.start_game(set_id=${set_id})`);
       await get().refreshGameState();
     } catch (err) {
       console.error('Start game failed:', err);
@@ -410,7 +411,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
 
       // Submit the turn - this runs shop actions + battle on-chain
       const tx = api.tx.AutoBattle.submit_turn(action);
-      const txResult = await tx.signAndSubmit(selectedAccount.polkadotSigner);
+      const txResult = await submitTx(tx, selectedAccount.polkadotSigner, 'AutoBattle.submit_turn');
 
       // Extract BattleReported event from transaction result
       // PAPI events: e.type is pallet name, e.value.type is event variant
@@ -592,8 +593,8 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       const cardDataForChain = cardDataCoercer ? cardDataCoercer(cardData) : cardData;
 
       // 1. Submit the card data
-      const submitTx = api.tx.AutoBattle.submit_card({ card_data: cardDataForChain });
-      await submitTx.signAndSubmit(selectedAccount.polkadotSigner);
+      const cardTx = api.tx.AutoBattle.submit_card({ card_data: cardDataForChain });
+      await submitTx(cardTx, selectedAccount.polkadotSigner, 'AutoBattle.submit_card');
 
       // We need to wait for the card to be indexed to get the ID,
       // but for simplicity in this prototype, we'll just fetch next card ID
@@ -601,7 +602,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       const cardId = Number(nextId) - 1;
 
       // 2. Set metadata
-      const metadataTx = api.tx.AutoBattle.set_card_metadata({
+      const metaTx = api.tx.AutoBattle.set_card_metadata({
         card_id: cardId,
         metadata: {
           name: Binary.fromText(metadata.name),
@@ -609,7 +610,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
           description: Binary.fromText(metadata.description),
         },
       });
-      await metadataTx.signAndSubmit(selectedAccount.polkadotSigner);
+      await submitTx(metaTx, selectedAccount.polkadotSigner, `AutoBattle.set_card_metadata(${cardId})`);
 
       await get().fetchCards();
     } catch (err) {
@@ -623,11 +624,11 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     try {
-      const tx = api.tx.AutoBattle.create_card_set({
+      const setTx = api.tx.AutoBattle.create_card_set({
         cards,
         name: Binary.fromText(name || ''),
       });
-      await tx.signAndSubmit(selectedAccount.polkadotSigner);
+      await submitTx(setTx, selectedAccount.polkadotSigner, 'AutoBattle.create_card_set');
       await get().fetchSets();
     } catch (err) {
       console.error('Create card set failed:', err);

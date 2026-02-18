@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useBlockchainStore } from '../store/blockchainStore';
 import { toast } from 'react-hot-toast';
 import { uploadToPinata, ipfsUrl } from '../utils/ipfs';
+import { submitTx } from '../utils/tx';
 import { IpfsImage } from './IpfsImage';
 import { Binary } from 'polkadot-api';
 import type { CustomizationType } from '../store/customizationStore';
@@ -27,10 +28,53 @@ export const MintNftPage: React.FC = () => {
   const [collectionId, setCollectionId] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
+  const [isCreatingCollection, setIsCreatingCollection] = useState(false);
+  const [collectionExists, setCollectionExists] = useState<boolean | null>(null);
   const [pinataKey, setPinataKey] = useState(() => {
     try { return localStorage.getItem(PINATA_KEY_STORAGE) || ''; } catch { return ''; }
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if the collection exists when collectionId or api changes
+  React.useEffect(() => {
+    if (!api || !isConnected) return;
+    setCollectionExists(null);
+    api.query.Nfts.Collection.getValue(collectionId)
+      .then((val: any) => setCollectionExists(val !== undefined && val !== null))
+      .catch(() => setCollectionExists(false));
+  }, [api, isConnected, collectionId]);
+
+  const handleCreateCollection = async () => {
+    if (!api || !selectedAccount) return;
+    setIsCreatingCollection(true);
+    try {
+      // pallet-nfts uses INVERTED bitflags:
+      //   BitFlags::EMPTY (0) = all settings ENABLED
+      //   A set bit = that setting is DISABLED
+      // So 0n = fully permissive (transferable, unlocked metadata, etc.)
+      const tx = api.tx.Nfts.create({
+        admin: { type: 'Id', value: selectedAccount.address },
+        config: {
+          settings: 0n,
+          max_supply: undefined,
+          mint_settings: {
+            mint_type: { type: 'Public' },
+            price: undefined,
+            start_block: undefined,
+            end_block: undefined,
+            default_item_settings: 0n,
+          },
+        },
+      });
+      await submitTx(tx, selectedAccount.polkadotSigner, 'Create collection');
+      toast.success(`Collection created!`);
+      setCollectionExists(true);
+    } catch {
+      // submitTx already logs and toasts
+    } finally {
+      setIsCreatingCollection(false);
+    }
+  };
 
   const selectedType = TYPE_OPTIONS.find((t) => t.value === nftType)!;
   const resolvedImageUrl = cid ? ipfsUrl(cid.startsWith('ipfs://') ? cid : `ipfs://${cid}`) : '';
@@ -104,7 +148,7 @@ export const MintNftPage: React.FC = () => {
         mint_to: { type: 'Id', value: selectedAccount.address },
         witness_data: undefined,
       });
-      await mintTx.signAndSubmit(selectedAccount.polkadotSigner);
+      await submitTx(mintTx, selectedAccount.polkadotSigner, `Nfts.mint(collection=${collectionId}, item=${itemId})`);
 
       // 2. Set metadata
       const metadataTx = api.tx.Nfts.set_metadata({
@@ -112,7 +156,7 @@ export const MintNftPage: React.FC = () => {
         item: itemId,
         data: Binary.fromText(metadata),
       });
-      await metadataTx.signAndSubmit(selectedAccount.polkadotSigner);
+      await submitTx(metadataTx, selectedAccount.polkadotSigner, `Nfts.set_metadata(collection=${collectionId}, item=${itemId})`);
 
       toast.success(`NFT minted! Item #${itemId}`);
 
@@ -120,9 +164,8 @@ export const MintNftPage: React.FC = () => {
       setCid('');
       setName('');
       setDescription('');
-    } catch (err: any) {
-      console.error('Mint failed:', err);
-      toast.error(err.message || 'Mint failed');
+    } catch {
+      // submitTx already logs and toasts
     } finally {
       setIsMinting(false);
     }
@@ -327,6 +370,27 @@ export const MintNftPage: React.FC = () => {
                     className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                     min="0"
                   />
+                  {/* Collection status */}
+                  {collectionExists === null && (
+                    <p className="text-[10px] text-slate-600 mt-1">Checking collection...</p>
+                  )}
+                  {collectionExists === true && (
+                    <p className="text-[10px] text-green-500 mt-1">Collection exists</p>
+                  )}
+                  {collectionExists === false && (
+                    <div className="mt-2 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                      <p className="text-xs text-orange-400 mb-2">
+                        Collection {collectionId} does not exist. Create it first to mint items.
+                      </p>
+                      <button
+                        onClick={handleCreateCollection}
+                        disabled={isCreatingCollection}
+                        className="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold py-2 px-4 rounded-lg text-xs transition-all disabled:opacity-50"
+                      >
+                        {isCreatingCollection ? 'Creating...' : 'Create Collection'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
