@@ -319,6 +319,16 @@ fn main() {
         })
         .collect();
 
+    // ── Generate set metas ─────────────────────────────────────────────────
+    let set_meta_entries: Vec<String> = sets
+        .iter()
+        .map(|s| {
+            let id = s.id;
+            let name = &s.name;
+            format!(r#"        SetMeta {{ id: {id}, name: "{name}" }}"#)
+        })
+        .collect();
+
     // ── Generate sets ────────────────────────────────────────────────────────
     let set_entries: Vec<String> = sets
         .iter()
@@ -360,6 +370,13 @@ pub struct CardMeta {{
     pub emoji: &'static str,
 }}
 
+/// Set metadata (id, name) — not used in game logic.
+#[derive(serde::Serialize)]
+pub struct SetMeta {{
+    pub id: u32,
+    pub name: &'static str,
+}}
+
 /// Returns all cards defined in cards.json.
 pub fn get_all_cards() -> Vec<UnitCard> {{
     vec![
@@ -381,6 +398,13 @@ pub fn get_all_sets() -> Vec<CardSet> {{
     ]
 }}
 
+/// Returns metadata (id, name) for every card set.
+pub fn get_all_set_metas() -> Vec<SetMeta> {{
+    vec![
+{}
+    ]
+}}
+
 /// Build a CardId → UnitCard lookup map from the static card data.
 pub fn build_card_pool() -> BTreeMap<CardId, UnitCard> {{
     get_all_cards().into_iter().map(|c| (c.id, c)).collect()
@@ -389,6 +413,7 @@ pub fn build_card_pool() -> BTreeMap<CardId, UnitCard> {{
         card_entries.join(",\n"),
         meta_entries.join(",\n"),
         set_entries.join(",\n"),
+        set_meta_entries.join(",\n"),
     );
 
     fs::write(&dest, generated).expect("Failed to write generated cards file");

@@ -181,6 +181,23 @@ pub mod pallet {
         pub created_at: BlockNumberFor<T>,
     }
 
+    /// Metadata for a card set (name, etc.).
+    #[derive(
+        Encode,
+        Decode,
+        DecodeWithMemTracking,
+        TypeInfo,
+        CloneNoBound,
+        PartialEqNoBound,
+        RuntimeDebugNoBound,
+        MaxEncodedLen,
+    )]
+    #[scale_info(skip_type_params(T))]
+    pub struct SetMetadata<T: Config> {
+        /// Display name of the set
+        pub name: BoundedVec<u8, T::MaxStringLen>,
+    }
+
     /// A game session stored on-chain.
     #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
     #[scale_info(skip_type_params(T))]
@@ -285,6 +302,11 @@ pub mod pallet {
     pub type CardMetadataStore<T: Config> =
         StorageMap<_, Blake2_128Concat, u32, CardMetadataEntry<T>, OptionQuery>;
 
+    /// Set metadata indexed by set_id.
+    #[pallet::storage]
+    pub type CardSetMetadataStore<T: Config> =
+        StorageMap<_, Blake2_128Concat, u32, SetMetadata<T>, OptionQuery>;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -315,6 +337,8 @@ pub mod pallet {
         CardMetadataUpdated { creator: T::AccountId, card_id: u32 },
         /// A new card set has been created.
         SetCreated { creator: T::AccountId, set_id: u32 },
+        /// Card set metadata has been set or updated.
+        SetMetadataUpdated { updater: T::AccountId, set_id: u32 },
     }
 
     #[pallet::error]
@@ -368,11 +392,12 @@ pub mod pallet {
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
-            use oab_core::cards::{get_all_card_metas, get_all_cards, get_all_sets};
+            use oab_core::cards::{get_all_card_metas, get_all_cards, get_all_set_metas, get_all_sets};
 
             let cards = get_all_cards();
             let metas = get_all_card_metas();
             let sets = get_all_sets();
+            let set_metas = get_all_set_metas();
 
             // Store all cards
             for (card, meta) in cards.iter().zip(metas.iter()) {
@@ -414,6 +439,14 @@ pub mod pallet {
                 CardSets::<T>::insert(i as u32, BoundedCardSet::<T>::from(card_set));
             }
             NextSetId::<T>::put(num_sets as u32);
+
+            // Store set metadata
+            for set_meta in set_metas {
+                let metadata = SetMetadata {
+                    name: BoundedVec::truncate_from(set_meta.name.as_bytes().to_vec()),
+                };
+                CardSetMetadataStore::<T>::insert(set_meta.id, metadata);
+            }
         }
     }
 
@@ -754,6 +787,7 @@ pub mod pallet {
         pub fn create_card_set(
             origin: OriginFor<T>,
             cards: Vec<CardSetEntryInput>,
+            name: Vec<u8>,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
@@ -787,10 +821,46 @@ pub mod pallet {
             };
 
             CardSets::<T>::insert(set_id, BoundedCardSet::<T>::from(card_set));
+
+            // Store set metadata
+            let set_metadata = SetMetadata {
+                name: BoundedVec::truncate_from(name),
+            };
+            CardSetMetadataStore::<T>::insert(set_id, set_metadata);
+
             NextSetId::<T>::put(set_id.saturating_add(1));
 
             Self::deposit_event(Event::SetCreated {
                 creator: who,
+                set_id,
+            });
+
+            Ok(())
+        }
+
+        /// Set or update metadata for a card set.
+        #[pallet::call_index(6)]
+        #[pallet::weight(Weight::default())]
+        pub fn set_set_metadata(
+            origin: OriginFor<T>,
+            set_id: u32,
+            name: Vec<u8>,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Ensure the set exists
+            ensure!(
+                CardSets::<T>::contains_key(set_id),
+                Error::<T>::CardSetNotFound
+            );
+
+            let set_metadata = SetMetadata {
+                name: BoundedVec::truncate_from(name),
+            };
+            CardSetMetadataStore::<T>::insert(set_id, set_metadata);
+
+            Self::deposit_event(Event::SetMetadataUpdated {
+                updater: who,
                 set_id,
             });
 

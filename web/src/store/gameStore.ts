@@ -3,6 +3,11 @@ import { toast } from 'react-hot-toast';
 import type { GameView, BattleOutput, Selection, CardView } from '../types';
 import { initEmojiMap } from '../utils/emoji';
 
+interface SetMeta {
+  id: number;
+  name: string;
+}
+
 interface GameEngine {
   // Core methods
   get_view: () => any;
@@ -23,6 +28,8 @@ interface GameEngine {
   get_bag: () => number[];
   get_card_set: () => CardView[];
   get_card_metas: () => Array<{ id: number; name: string; emoji: string }>;
+  get_set_metas: () => SetMeta[];
+  get_set_cards: (setId: number) => CardView[];
   new_run_p2p: (seed: bigint, lives: number) => void;
   get_starting_lives: () => number;
   get_wins_to_victory: () => number;
@@ -55,7 +62,24 @@ interface GameStore {
   startingLives: number;
   winsToVictory: number;
 
+  // Set selection state
+  setMetas: SetMeta[];
+  engineReady: boolean;
+  gameStarted: boolean;
+  previewCards: CardView[] | null;
+  showSetPreview: boolean;
+
+  // Two-phase init
+  initEngine: () => Promise<void>;
+  startGame: (setId: number) => void;
+
+  // Backward-compatible init (loads engine + starts game immediately)
   init: (seed?: bigint) => Promise<void>;
+
+  // Preview
+  previewSet: (setId: number) => void;
+  closePreview: () => void;
+
   pitchHandCard: (index: number) => void;
   playHandCard: (handIndex: number, boardSlot: number) => void;
   swapBoardPositions: (slotA: number, slotB: number) => void;
@@ -80,6 +104,7 @@ interface GameStore {
 
 let wasmInitialized = false;
 let initPromise: Promise<void> | null = null;
+let initEnginePromise: Promise<void> | null = null;
 
 export const useGameStore = create<GameStore>((set, get) => ({
   engine: null,
@@ -97,6 +122,78 @@ export const useGameStore = create<GameStore>((set, get) => ({
   winsToVictory: 10,
   afterBattleCallback: null,
 
+  // Set selection state
+  setMetas: [],
+  engineReady: false,
+  gameStarted: false,
+  previewCards: null,
+  showSetPreview: false,
+
+  // Phase 1: Load WASM, create engine, init emoji map, fetch set metas
+  initEngine: async () => {
+    if (get().engine) return;
+    if (initEnginePromise) return initEnginePromise;
+
+    initEnginePromise = (async () => {
+      try {
+        set({ isLoading: true, error: null });
+
+        const wasm = (await import('oab-client')) as unknown as WasmModule;
+
+        if (!wasmInitialized) {
+          await wasm.default();
+          wasmInitialized = true;
+        }
+        const engine = new wasm.GameEngine(undefined); // Don't auto-init
+
+        // Initialize emoji map from card metadata baked into the WASM binary
+        const metas = engine.get_card_metas();
+        initEmojiMap(metas);
+
+        // Fetch set metadata for set selection screen
+        const setMetas: SetMeta[] = engine.get_set_metas();
+
+        set({
+          engine,
+          setMetas,
+          engineReady: true,
+          gameStarted: false,
+          isLoading: false,
+        });
+      } catch (err) {
+        console.error('Failed to initialize WASM:', err);
+        set({ error: String(err), isLoading: false });
+      } finally {
+        initEnginePromise = null;
+      }
+    })();
+
+    return initEnginePromise;
+  },
+
+  // Phase 2: Load card set and start a new run
+  startGame: (setId: number) => {
+    const { engine } = get();
+    if (!engine) return;
+    try {
+      engine.load_card_set(setId);
+      const seed = BigInt(Date.now());
+      engine.new_run(seed);
+      set({
+        view: engine.get_view(),
+        cardSet: engine.get_card_set(),
+        gameStarted: true,
+        isLoading: false,
+        showSetPreview: false,
+        previewCards: null,
+      });
+    } catch (err) {
+      console.error('Failed to start game:', err);
+      set({ error: String(err) });
+    }
+  },
+
+  // Backward-compatible init (for blockchain/multiplayer flows)
   init: async (seed?: bigint) => {
     // If engine already exists, nothing to do
     if (get().engine) return;
@@ -120,6 +217,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const metas = engine.get_card_metas();
         initEmojiMap(metas);
 
+        // Fetch set metadata
+        const setMetas: SetMeta[] = engine.get_set_metas();
+
         if (seed !== undefined) {
           engine.new_run(seed);
         } else {
@@ -127,6 +227,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
         set({
           engine,
+          setMetas,
+          engineReady: true,
+          gameStarted: true,
           view: engine.get_view(),
           cardSet: engine.get_card_set(), // Fetch card set once on init
           isLoading: false,
@@ -140,6 +243,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })();
 
     return initPromise;
+  },
+
+  // Preview a set's cards without starting a game
+  previewSet: (setId: number) => {
+    const { engine } = get();
+    if (!engine) return;
+    try {
+      const cards: CardView[] = engine.get_set_cards(setId);
+      set({ previewCards: cards, showSetPreview: true });
+    } catch (err) {
+      console.error('Failed to preview set:', err);
+    }
+  },
+
+  closePreview: () => {
+    set({ showSetPreview: false, previewCards: null });
   },
 
   pitchHandCard: (index: number) => {
@@ -236,15 +355,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { engine } = get();
     if (!engine) return;
     try {
-      // Use current timestamp as seed for single-player games
-      const seed = BigInt(Date.now());
-      engine.new_run(seed);
+      // Return to set selection screen
       set({
-        view: engine.get_view(),
-        cardSet: engine.get_card_set(), // Refresh card set on new run
+        view: null,
+        cardSet: null,
         battleOutput: null,
         selection: null,
         showBattleOverlay: false,
+        gameStarted: false,
         startingLives: 3,
         winsToVictory: 10,
       });
@@ -268,6 +386,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         battleOutput: null,
         selection: null,
         showBattleOverlay: false,
+        gameStarted: true,
         startingLives: engine.get_starting_lives(),
         winsToVictory: engine.get_wins_to_victory(),
       });

@@ -3,6 +3,7 @@ import { useBlockchainStore } from '../store/blockchainStore';
 import { useGameStore } from '../store/gameStore';
 import { GameOverScreen } from './GameOverScreen';
 import { GameShell } from './GameShell';
+import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { RotatePrompt } from './RotatePrompt';
 import { useInitGuard } from '../hooks';
 import { Link } from 'react-router-dom';
@@ -23,7 +24,7 @@ export const BlockchainPage: React.FC = () => {
     fetchSets,
   } = useBlockchainStore();
 
-  const { init, engine, view } = useGameStore();
+  const { init, engine, view, previewSet } = useGameStore();
 
   const { submitTurnOnChain } = useBlockchainStore();
 
@@ -133,21 +134,34 @@ export const BlockchainPage: React.FC = () => {
               Select a card set to play on the Substrate blockchain.
             </p>
 
-            <div className="flex flex-col gap-3 lg:gap-4 max-w-xs mx-auto mb-6 lg:mb-8">
+            <div className="flex flex-col gap-3 lg:gap-4 max-w-sm mx-auto mb-6 lg:mb-8">
               <label className="text-xs font-bold text-slate-500 uppercase text-left ml-1">
                 Select Card Set
               </label>
-              <select
-                value={selectedSetId}
-                onChange={(e) => setSelectedSetId(parseInt(e.target.value))}
-                className="bg-slate-800 border border-white/10 rounded-xl px-3 lg:px-4 py-2.5 lg:py-3 text-white outline-none focus:border-yellow-500/50 appearance-none cursor-pointer text-sm lg:text-base"
-              >
-                {availableSets.map((set) => (
-                  <option key={set.id} value={set.id}>
-                    Set #{set.id} ({set.cards.length} Cards)
-                  </option>
-                ))}
-              </select>
+              {availableSets.map((s) => (
+                <div
+                  key={s.id}
+                  className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                    selectedSetId === s.id
+                      ? 'bg-yellow-500/10 border-yellow-500/50'
+                      : 'bg-slate-800/50 border-white/5 hover:border-white/10'
+                  }`}
+                  onClick={() => setSelectedSetId(s.id)}
+                >
+                  <div className="text-left">
+                    <div className="text-sm font-bold text-white">{s.name}</div>
+                    <div className="text-[10px] text-slate-500 font-mono">
+                      Set #{s.id} &middot; {s.cards.length} cards
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); previewSet(s.id); }}
+                    className="px-2 py-1 text-[10px] font-bold border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 rounded transition-all"
+                  >
+                    PREVIEW
+                  </button>
+                </div>
+              ))}
             </div>
 
             {/* Creator links */}
@@ -179,6 +193,7 @@ export const BlockchainPage: React.FC = () => {
             </Link>
           </div>
         </div>
+        <SetPreviewOverlay />
         <RotatePrompt />
       </div>
     );

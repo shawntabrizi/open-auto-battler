@@ -2,15 +2,17 @@ import { useGameStore } from '../store/gameStore';
 import { useInitGuard } from '../hooks';
 import { GameOverScreen } from './GameOverScreen';
 import { GameShell } from './GameShell';
+import { SetSelectionScreen } from './SetSelectionScreen';
+import { SetPreviewOverlay } from './SetPreviewOverlay';
 
 export function GameLayout() {
-  const { view, isLoading, error } = useGameStore();
-  const init = useGameStore((state) => state.init);
+  const { view, isLoading, error, engineReady, gameStarted } = useGameStore();
+  const initEngine = useGameStore((state) => state.initEngine);
 
-  // Initialize game engine - both local and multiplayer modes need this
+  // Phase 1: Load WASM engine (no game started yet)
   useInitGuard(() => {
-    void init();
-  }, [init]);
+    void initEngine();
+  }, [initEngine]);
 
   if (isLoading) {
     return (
@@ -28,6 +30,16 @@ export function GameLayout() {
     );
   }
 
+  // Engine ready but game not started — show set selection
+  if (engineReady && !gameStarted) {
+    return (
+      <>
+        <SetSelectionScreen />
+        <SetPreviewOverlay />
+      </>
+    );
+  }
+
   if (!view) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -41,5 +53,10 @@ export function GameLayout() {
     return <GameOverScreen />;
   }
 
-  return <GameShell />;
+  return (
+    <>
+      <GameShell />
+      <SetPreviewOverlay />
+    </>
+  );
 }

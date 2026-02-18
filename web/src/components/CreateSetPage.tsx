@@ -10,6 +10,7 @@ export const CreateSetPage: React.FC = () => {
   const { isConnected, connect, allCards, fetchCards, createCardSet } = useBlockchainStore();
 
   const [selectedCards, setSelectedCards] = useState<{ card_id: number; rarity: number }[]>([]);
+  const [setName, setSetName] = useState('');
   const [isCreatingSet, setIsCreatingSet] = useState(false);
   const [detailCard, setDetailCard] = useState<CardView | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,9 +56,10 @@ export const CreateSetPage: React.FC = () => {
 
     setIsCreatingSet(true);
     try {
-      await createCardSet(selectedCards);
+      await createCardSet(selectedCards, setName || undefined);
       toast.success('Card set created successfully!');
       setSelectedCards([]);
+      setSetName('');
     } catch (err) {
       toast.error('Failed to create card set');
     } finally {
@@ -205,6 +207,19 @@ export const CreateSetPage: React.FC = () => {
                     {selectedCards.length} SELECTED
                   </span>
                 </h2>
+
+                <div className="mb-4">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">
+                    Set Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Name your set..."
+                    value={setName}
+                    onChange={(e) => setSetName(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-white/10 rounded-lg text-white placeholder-slate-500 text-sm focus:outline-none focus:border-yellow-500/50"
+                  />
+                </div>
 
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                   {selectedCards.length > 0 ? (

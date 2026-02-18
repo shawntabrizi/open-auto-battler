@@ -144,6 +144,38 @@ impl GameEngine {
         serde_wasm_bindgen::to_value(&metas).unwrap_or(JsValue::NULL)
     }
 
+    /// Get set metadata (id, name) for all sets.
+    /// Used by the frontend for set selection screen.
+    #[wasm_bindgen]
+    pub fn get_set_metas(&self) -> JsValue {
+        let metas = oab_core::cards::get_all_set_metas();
+        serde_wasm_bindgen::to_value(&metas).unwrap_or(JsValue::NULL)
+    }
+
+    /// Get all cards in a set as CardView[] without mutating engine state.
+    /// Used for set preview before starting a game.
+    #[wasm_bindgen]
+    pub fn get_set_cards(&self, set_id: u32) -> Result<JsValue, String> {
+        use oab_core::cards::{build_card_pool, get_all_sets};
+        use oab_core::view::CardView;
+
+        let card_pool = build_card_pool();
+        let sets = get_all_sets();
+        let card_set = sets
+            .into_iter()
+            .nth(set_id as usize)
+            .ok_or_else(|| format!("Set {} not found", set_id))?;
+
+        let card_views: Vec<CardView> = card_set
+            .cards
+            .iter()
+            .filter_map(|entry| card_pool.get(&entry.card_id).map(CardView::from))
+            .collect();
+
+        serde_wasm_bindgen::to_value(&card_views)
+            .map_err(|e| format!("Serialization failed: {:?}", e))
+    }
+
     /// Add a card to the engine's card pool.
     /// Used by the frontend to inject custom blockchain cards that aren't in the
     /// statically compiled genesis set.

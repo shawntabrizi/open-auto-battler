@@ -170,7 +170,7 @@ interface BlockchainStore {
   fetchCards: () => Promise<void>;
   fetchSets: () => Promise<void>;
   submitCard: (cardData: any, metadata: any) => Promise<void>;
-  createCardSet: (cards: { card_id: number; rarity: number }[]) => Promise<void>;
+  createCardSet: (cards: { card_id: number; rarity: number }[], name?: string) => Promise<void>;
 
   // Internal helpers
   cardDataCoercer?: ((value: unknown) => any) | null;
@@ -542,10 +542,26 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
 
     try {
       const setEntries = await api.query.AutoBattle.CardSets.getEntries();
-      const sets = setEntries.map((entry: any) => ({
-        id: Number(entry.keyArgs[0]),
-        cards: entry.value,
-      }));
+
+      // Fetch set metadata
+      let metadataMap = new Map<number, string>();
+      try {
+        const metaEntries = await api.query.AutoBattle.CardSetMetadataStore.getEntries();
+        metaEntries.forEach((entry: any) => {
+          metadataMap.set(Number(entry.keyArgs[0]), entry.value.name.asText());
+        });
+      } catch {
+        // CardSetMetadataStore may not exist on older chains
+      }
+
+      const sets = setEntries.map((entry: any) => {
+        const id = Number(entry.keyArgs[0]);
+        return {
+          id,
+          cards: entry.value,
+          name: metadataMap.get(id) || `Set #${id}`,
+        };
+      });
       set({ availableSets: sets });
     } catch (err) {
       console.error('Failed to fetch sets:', err);
@@ -586,12 +602,15 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     }
   },
 
-  createCardSet: async (cards) => {
+  createCardSet: async (cards, name) => {
     const { api, selectedAccount } = get();
     if (!api || !selectedAccount) return;
 
     try {
-      const tx = api.tx.AutoBattle.create_card_set({ cards });
+      const tx = api.tx.AutoBattle.create_card_set({
+        cards,
+        name: Binary.fromText(name || ''),
+      });
       await tx.signAndSubmit(selectedAccount.polkadotSigner);
       await get().fetchSets();
     } catch (err) {

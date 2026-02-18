@@ -265,21 +265,26 @@ fn test_create_card_set() {
 
         assert_ok!(AutoBattle::create_card_set(
             RuntimeOrigin::signed(account_id),
-            entries
+            entries,
+            b"Test Set".to_vec()
         ));
 
         // Verify set was created
-        let set_id = 1; // Next set ID after genesis (0)
+        let set_id = 2; // Next set ID after genesis (0, 1)
         let set = crate::CardSets::<Test>::get(set_id).unwrap();
         assert_eq!(set.cards.len(), 3);
         assert_eq!(set.cards[0].card_id.0, 1);
         assert_eq!(set.cards[0].rarity, 10);
         assert_eq!(set.cards[2].rarity, 0);
 
+        // Verify set metadata was stored
+        let set_meta = crate::CardSetMetadataStore::<Test>::get(set_id).unwrap();
+        assert_eq!(set_meta.name.to_vec(), b"Test Set".to_vec());
+
         // Try to start game with new set
         assert_ok!(AutoBattle::start_game(
             RuntimeOrigin::signed(account_id),
-            set_id
+            set_id,
         ));
         let session = ActiveGame::<Test>::get(account_id).unwrap();
         assert_eq!(session.set_id, set_id);
@@ -305,7 +310,7 @@ fn test_create_card_set_rarity_overflow() {
 
         // Should fail due to overflow
         assert_noop!(
-            AutoBattle::create_card_set(RuntimeOrigin::signed(account_id), entries),
+            AutoBattle::create_card_set(RuntimeOrigin::signed(account_id), entries, b"Overflow Set".to_vec()),
             Error::<Test>::RarityOverflow
         );
     });
@@ -324,7 +329,7 @@ fn test_create_card_set_zero_rarity() {
 
         // Should fail because total rarity is 0
         assert_noop!(
-            AutoBattle::create_card_set(RuntimeOrigin::signed(account_id), entries),
+            AutoBattle::create_card_set(RuntimeOrigin::signed(account_id), entries, b"Zero Set".to_vec()),
             Error::<Test>::InvalidRarity
         );
     });
