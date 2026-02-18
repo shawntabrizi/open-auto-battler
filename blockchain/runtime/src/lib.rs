@@ -11,6 +11,7 @@ pub mod apis;
 mod benchmarks;
 pub mod configs;
 mod genesis_config_presets;
+mod nft_genesis;
 mod weights;
 
 extern crate alloc;

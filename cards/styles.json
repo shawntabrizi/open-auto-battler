@@ -1,0 +1,12 @@
+[
+  {
+    "id": 0,
+    "name": "Cosmic",
+    "items": [
+      { "id": 0, "type": "avatar", "name": "Cosmic Elf", "cid": "bafkreie47hbisockampzum46sebuwwcopkb5wovku7nksvkqgb2qmu6ggq" },
+      { "id": 1, "type": "hand_bg", "name": "Cosmic Soil", "cid": "bafybeicuqz6a4ejkrbv644lt5rxz6ha3oah22lrofkdnaxwk5lyt6kvdue" },
+      { "id": 2, "type": "card_style", "name": "Cosmic Vines", "cid": "bafkreieiwi6hgi7bgg4vw5pdpr6fqaxijktk42gd7cq443slztqvkazwmy" },
+      { "id": 3, "type": "board_bg", "name": "Cosmic Tree", "cid": "bafybeicdlpsvd2hk3bv5a3uakmcnlehp7nmhkgksvvusr66lbbla35ennu" }
+    ]
+  }
+]

@@ -81,6 +81,22 @@ struct JsonSet {
     cards: Vec<JsonSetEntry>,
 }
 
+#[derive(Deserialize)]
+struct JsonStyleItem {
+    id: u32,
+    #[serde(rename = "type")]
+    item_type: String,
+    name: String,
+    cid: String,
+}
+
+#[derive(Deserialize)]
+struct JsonStyleCollection {
+    id: u32,
+    name: String,
+    items: Vec<JsonStyleItem>,
+}
+
 // ── Code generation helpers ──────────────────────────────────────────────────
 
 fn gen_trigger(trigger: &str) -> String {
@@ -277,10 +293,12 @@ fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let cards_path = Path::new(&manifest_dir).join("../cards/cards.json");
     let sets_path = Path::new(&manifest_dir).join("../cards/sets.json");
+    let styles_path = Path::new(&manifest_dir).join("../cards/styles.json");
 
     // Tell Cargo to re-run if JSON files change
     println!("cargo:rerun-if-changed={}", cards_path.display());
     println!("cargo:rerun-if-changed={}", sets_path.display());
+    println!("cargo:rerun-if-changed={}", styles_path.display());
 
     let cards_json = fs::read_to_string(&cards_path)
         .unwrap_or_else(|e| panic!("Failed to read {}: {e}", cards_path.display()));
@@ -291,6 +309,10 @@ fn main() {
         serde_json::from_str(&cards_json).expect("Failed to parse cards.json");
     let mut sets: Vec<JsonSet> =
         serde_json::from_str(&sets_json).expect("Failed to parse sets.json");
+    let styles_json = fs::read_to_string(&styles_path)
+        .unwrap_or_else(|e| panic!("Failed to read {}: {e}", styles_path.display()));
+    let styles: Vec<JsonStyleCollection> =
+        serde_json::from_str(&styles_json).expect("Failed to parse styles.json");
 
     // Respect explicit set IDs from JSON and enforce contiguous IDs starting at 0.
     sets.sort_by_key(|s| s.id);
@@ -349,12 +371,44 @@ fn main() {
         })
         .collect();
 
+    // ── Generate NFT style collections ────────────────────────────────────────
+    let style_collection_entries: Vec<String> = styles
+        .iter()
+        .map(|col| {
+            let id = col.id;
+            let name = &col.name;
+            let item_entries: Vec<String> = col
+                .items
+                .iter()
+                .map(|item| {
+                    let item_id = item.id;
+                    // Build metadata JSON per NFT_SPEC.md format
+                    let metadata = serde_json::json!({
+                        "type": item.item_type,
+                        "name": item.name,
+                        "image": format!("ipfs://{}", item.cid),
+                    });
+                    let metadata_str = serde_json::to_string(&metadata).unwrap();
+                    // Escape for Rust string literal
+                    let escaped = metadata_str.replace('\\', "\\\\").replace('"', "\\\"");
+                    format!(
+                        "NftStyleItem {{ id: {item_id}, metadata_json: \"{escaped}\" }}"
+                    )
+                })
+                .collect();
+            format!(
+                "        NftStyleCollection {{\n            id: {id},\n            name: \"{name}\",\n            items: &[\n                {}\n            ],\n        }}",
+                item_entries.join(",\n                ")
+            )
+        })
+        .collect();
+
     // ── Write output ─────────────────────────────────────────────────────────
     let out_dir = env::var("OUT_DIR").unwrap();
     let dest = Path::new(&out_dir).join("cards_generated.rs");
 
     let generated = format!(
-        r#"// Auto-generated from cards.json and sets.json — DO NOT EDIT
+        r#"// Auto-generated from cards.json, sets.json, and styles.json — DO NOT EDIT
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -375,6 +429,19 @@ pub struct CardMeta {{
 pub struct SetMeta {{
     pub id: u32,
     pub name: &'static str,
+}}
+
+/// A single NFT style item with pre-built metadata JSON.
+pub struct NftStyleItem {{
+    pub id: u32,
+    pub metadata_json: &'static str,
+}}
+
+/// A collection of NFT style items.
+pub struct NftStyleCollection {{
+    pub id: u32,
+    pub name: &'static str,
+    pub items: &'static [NftStyleItem],
 }}
 
 /// Returns all cards defined in cards.json.
@@ -409,11 +476,19 @@ pub fn get_all_set_metas() -> Vec<SetMeta> {{
 pub fn build_card_pool() -> BTreeMap<CardId, UnitCard> {{
     get_all_cards().into_iter().map(|c| (c.id, c)).collect()
 }}
+
+/// Returns all NFT style collections defined in styles.json.
+pub fn get_all_nft_styles() -> Vec<NftStyleCollection> {{
+    vec![
+{}
+    ]
+}}
 "#,
         card_entries.join(",\n"),
         meta_entries.join(",\n"),
         set_entries.join(",\n"),
         set_meta_entries.join(",\n"),
+        style_collection_entries.join(",\n"),
     );
 
     fs::write(&dest, generated).expect("Failed to write generated cards file");

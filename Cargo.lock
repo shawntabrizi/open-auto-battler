@@ -1287,6 +1287,7 @@ dependencies = [
  "docify",
  "hex-literal",
  "log",
+ "oab-core",
  "pallet-auto-battle",
  "parity-scale-codec",
  "polkadot-sdk 2503.2.0",
