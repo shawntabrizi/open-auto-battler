@@ -83,20 +83,20 @@ export function UnitCard({
       `}
     >
       {/* Card name */}
-      <div className={`card-title ${titleClasses} font-bold text-center truncate mb-0.5 lg:mb-1`}>{card.name}</div>
+      <div className={`card-title relative z-10 ${titleClasses} font-bold text-center truncate mb-0.5 lg:mb-1`}>{card.name}</div>
 
       {/* Card art placeholder */}
       <div className={`card-art w-full ${artClasses} bg-gray-700 rounded flex items-center justify-center relative`}>
         {getCardEmoji(card.id)}
         {card.abilities.length > 0 && (
-          <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 bg-yellow-500 rounded-full w-3 h-3 lg:w-4 lg:h-4 flex items-center justify-center text-[0.4rem] lg:text-[0.55rem] font-bold border border-yellow-300 shadow">
+          <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 z-10 bg-yellow-500 rounded-full w-3 h-3 lg:w-4 lg:h-4 flex items-center justify-center text-[0.4rem] lg:text-[0.55rem] font-bold border border-yellow-300 shadow">
             {card.abilities.length > 1 ? card.abilities.length : '✶'}
           </div>
         )}
       </div>
 
       {/* Stats row */}
-      <div className="card-stats-row flex justify-between items-center mt-0.5 lg:mt-1">
+      <div className="card-stats-row relative z-10 flex justify-between items-center mt-0.5 lg:mt-1">
         {/* Attack */}
         <div className={`flex items-center ${statClasses}`}>
           <span className="text-red-400 mr-0.5 lg:mr-1">⚔</span>
@@ -112,24 +112,24 @@ export function UnitCard({
 
       {/* Cost badge (top left) */}
       {showCost && (
-        <div className={`card-cost-badge absolute -top-1 -left-1 lg:-top-2 lg:-left-2 ${badgeClasses} bg-mana-blue rounded-full flex items-center justify-center font-bold border lg:border-2 border-blue-300`}>
+        <div className={`card-cost-badge absolute -top-1 -left-1 lg:-top-2 lg:-left-2 z-10 ${badgeClasses} bg-mana-blue rounded-full flex items-center justify-center font-bold border lg:border-2 border-blue-300`}>
           {card.play_cost}
         </div>
       )}
 
       {/* Pitch value badge (top right) */}
       {showPitch && (
-        <div className={`card-pitch-badge absolute -top-1 -right-1 lg:-top-2 lg:-right-2 ${badgeClasses} bg-pitch-red rounded-full flex items-center justify-center font-bold border lg:border-2 border-red-300`}>
+        <div className={`card-pitch-badge absolute -top-1 -right-1 lg:-top-2 lg:-right-2 z-10 ${badgeClasses} bg-pitch-red rounded-full flex items-center justify-center font-bold border lg:border-2 border-red-300`}>
           {card.pitch_value}
         </div>
       )}
 
-      {/* Card style frame overlay */}
+      {/* Card style frame overlay - behind stats/badges but above card art */}
       {cardStyle && (
         <img
           src={cardStyle.imageUrl}
           alt=""
-          className="absolute inset-0 w-full h-full pointer-events-none z-20"
+          className="absolute inset-0 w-full h-full pointer-events-none z-[1] rounded-lg"
           style={{ objectFit: 'fill' }}
         />
       )}
