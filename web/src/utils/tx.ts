@@ -1,7 +1,9 @@
 import { toast } from 'react-hot-toast';
 
+const TX_TIMEOUT_MS = 30_000; // 30 seconds
+
 /**
- * Submit a PAPI transaction with full error logging.
+ * Submit a PAPI transaction with full error logging and timeout.
  * Logs the complete error object on failure and shows a toast.
  * Returns the tx result on success, throws on failure.
  */
@@ -12,8 +14,15 @@ export async function submitTx(
 ): Promise<any> {
   console.log(`[tx] Submitting: ${label}`);
   try {
-    const result = await tx.signAndSubmit(signer);
-    console.log(`[tx] Success: ${label}`, result);
+    const resultPromise = tx.signAndSubmit(signer);
+
+    // Race against a timeout so we don't hang forever
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Transaction timed out after ${TX_TIMEOUT_MS / 1000}s`)), TX_TIMEOUT_MS)
+    );
+
+    const result = await Promise.race([resultPromise, timeoutPromise]);
+    console.log(`[tx] Success: ${label}`);
 
     // Check for ExtrinsicFailed event even on "success"
     // (some PAPI versions resolve instead of rejecting)
@@ -23,7 +32,6 @@ export async function submitTx(
     if (failedEvent) {
       const dispatchError = failedEvent.value?.value?.dispatch_error ?? failedEvent.value?.value;
       console.error(`[tx] Dispatch error in ${label}:`, JSON.stringify(dispatchError, null, 2));
-      console.error(`[tx] Full failed event:`, failedEvent);
       const msg = formatDispatchError(dispatchError);
       toast.error(`${label}: ${msg}`);
       throw new Error(`${label}: ${msg}`);
@@ -31,21 +39,11 @@ export async function submitTx(
 
     return result;
   } catch (err: any) {
-    console.error(`[tx] Failed: ${label}`);
-    console.error(`[tx] Error type:`, err?.constructor?.name);
-    console.error(`[tx] Error message:`, err?.message);
-    console.error(`[tx] Full error:`, err);
+    console.error(`[tx] Failed: ${label}`, err?.message);
 
     // PAPI TransactionError has various shapes
     if (err?.dispatchError) {
       console.error(`[tx] Dispatch error:`, JSON.stringify(err.dispatchError, null, 2));
-    }
-    if (err?.events) {
-      console.error(`[tx] Events:`, err.events);
-    }
-    // Log all enumerable properties
-    for (const key of Object.keys(err || {})) {
-      console.error(`[tx] err.${key}:`, err[key]);
     }
 
     const msg = extractErrorMessage(err, label);
