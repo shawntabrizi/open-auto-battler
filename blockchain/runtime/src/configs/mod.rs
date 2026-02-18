@@ -37,7 +37,8 @@ use frame_support::{
     dispatch::DispatchClass,
     parameter_types,
     traits::{
-        ConstBool, ConstU32, ConstU64, ConstU8, EitherOfDiverse, TransformOrigin, VariantCountOf,
+        AsEnsureOriginWithArg, ConstBool, ConstU32, ConstU64, ConstU8, EitherOfDiverse,
+        TransformOrigin, VariantCountOf,
     },
     weights::{ConstantMultiplier, Weight},
     PalletId,
@@ -45,7 +46,7 @@ use frame_support::{
 use frame_system::{
     limits::{BlockLength, BlockWeights},
     pallet_prelude::BlockNumberFor,
-    EnsureRoot,
+    EnsureRoot, EnsureSigned,
 };
 use pallet_xcm::{EnsureXcm, IsVoiceOfBody};
 use parachains_common::message_queue::{NarrowOriginToSibling, ParaIdToSibling};
@@ -63,8 +64,8 @@ use super::{
     AccountId, Aura, Balance, Balances, Block, BlockNumber, CollatorSelection, ConsensusHook, Hash,
     MessageQueue, Nonce, PalletInfo, ParachainSystem, Runtime, RuntimeCall, RuntimeEvent,
     RuntimeFreezeReason, RuntimeHoldReason, RuntimeOrigin, RuntimeTask, Session, SessionKeys,
-    System, WeightToFee, XcmpQueue, AVERAGE_ON_INITIALIZE_RATIO, EXISTENTIAL_DEPOSIT, HOURS,
-    MAXIMUM_BLOCK_WEIGHT, MICRO_UNIT, NORMAL_DISPATCH_RATIO, SLOT_DURATION, VERSION,
+    System, WeightToFee, XcmpQueue, AVERAGE_ON_INITIALIZE_RATIO, DAYS, EXISTENTIAL_DEPOSIT, HOURS,
+    MAXIMUM_BLOCK_WEIGHT, MICRO_UNIT, NORMAL_DISPATCH_RATIO, SLOT_DURATION, UNIT, VERSION,
 };
 use xcm_config::{RelayLocation, XcmOriginToTransactDispatchOrigin};
 
@@ -357,4 +358,49 @@ impl pallet_auto_battle::Config for Runtime {
     type MaxConditions = ConstU32<5>;
     type MaxSetSize = ConstU32<100>;
     type MaxGhostsPerBracket = ConstU32<10>;
+}
+
+parameter_types! {
+    pub const CollectionDeposit: Balance = 10 * UNIT;
+    pub const ItemDeposit: Balance = UNIT / 100;
+    pub const MetadataDepositBase: Balance = UNIT / 100;
+    pub const MetadataDepositPerByte: Balance = MICRO_UNIT;
+    pub const StringLimit: u32 = 256;
+    pub const KeyLimit: u32 = 64;
+    pub const ValueLimit: u32 = 256;
+    pub const ApprovalsLimit: u32 = 20;
+    pub const ItemAttributesApprovalsLimit: u32 = 20;
+    pub const MaxTips: u32 = 10;
+    pub const MaxDeadlineDuration: BlockNumber = 12 * 30 * DAYS;
+    pub NftsPalletFeatures: pallet_nfts::PalletFeatures = pallet_nfts::PalletFeatures::all_enabled();
+}
+
+impl pallet_nfts::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type CollectionId = u32;
+    type ItemId = u32;
+    type Currency = Balances;
+    type ForceOrigin = EnsureRoot<AccountId>;
+    type CreateOrigin = AsEnsureOriginWithArg<EnsureSigned<AccountId>>;
+    type Locker = ();
+    type CollectionDeposit = CollectionDeposit;
+    type ItemDeposit = ItemDeposit;
+    type MetadataDepositBase = MetadataDepositBase;
+    type AttributeDepositBase = MetadataDepositBase;
+    type DepositPerByte = MetadataDepositPerByte;
+    type StringLimit = ConstU32<256>;
+    type KeyLimit = ConstU32<64>;
+    type ValueLimit = ConstU32<256>;
+    type ApprovalsLimit = ApprovalsLimit;
+    type ItemAttributesApprovalsLimit = ItemAttributesApprovalsLimit;
+    type MaxTips = MaxTips;
+    type MaxDeadlineDuration = MaxDeadlineDuration;
+    type MaxAttributesPerCall = ConstU32<10>;
+    type Features = NftsPalletFeatures;
+    type OffchainSignature = sp_runtime::MultiSignature;
+    type OffchainPublic = <sp_runtime::MultiSignature as sp_runtime::traits::Verify>::Signer;
+    type WeightInfo = pallet_nfts::weights::SubstrateWeight<Runtime>;
+    #[cfg(feature = "runtime-benchmarks")]
+    type Helper = ();
+    type BlockNumberProvider = frame_system::Pallet<Runtime>;
 }

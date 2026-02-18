@@ -1,9 +1,11 @@
 import { useGameStore } from '../store/gameStore';
+import { useCustomizationStore } from '../store/customizationStore';
 import React from 'react';
 import { DraggableCard, DroppableAshPile } from './DndComponents';
 
 export function Shop() {
   const { view, selection, setSelection, pitchHandCard, pitchBoardUnit, undo } = useGameStore();
+  const handBg = useCustomizationStore((s) => s.selections.handBackground);
   const [isAshHovered, setIsAshHovered] = React.useState(false);
 
   if (!view) return null;
@@ -38,8 +40,16 @@ export function Shop() {
   };
 
   return (
-    <div className="shop h-32 lg:h-60 bg-shop-bg border-t-2 border-gray-600 flex-shrink-0">
-      <div className="flex h-full">
+    <div
+      className={`shop h-32 lg:h-60 border-t-2 border-gray-600 flex-shrink-0 relative ${handBg ? '' : 'bg-shop-bg'}`}
+      style={handBg ? {
+        backgroundImage: `url(${handBg.imageUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      } : undefined}
+    >
+      {handBg && <div className="absolute inset-0 bg-shop-bg/50" />}
+      <div className="flex h-full relative z-10">
         {/* Left: Undo Button */}
         <div className="shop-side w-20 lg:w-32 h-full flex flex-col items-center justify-center">
           <button

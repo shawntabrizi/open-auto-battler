@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useMultiplayerStore } from '../store/multiplayerStore';
+import { useCustomizationStore } from '../store/customizationStore';
 
 const BATTLE_TIMER_SECONDS = 20;
 
@@ -17,6 +18,7 @@ interface HUDProps {
 export function HUD({ hideEndTurn, customAction }: HUDProps) {
   const { view, endTurn, engine, setShowBag, showBag, selection, startingLives, winsToVictory } = useGameStore();
   const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } = useMultiplayerStore();
+  const playerAvatar = useCustomizationStore((s) => s.selections.playerAvatar);
 
   // Local timer for the waiting player (who already submitted)
   const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
@@ -88,6 +90,11 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
     <div className={`hud h-12 lg:h-16 bg-gray-900/80 border-b border-gray-700 flex items-center justify-between px-2 lg:px-6 relative z-20 ${showCardPanel ? 'show-card-panel' : ''}`}>
       {/* Left: Lives */}
       <div className="flex items-center gap-1 lg:gap-2">
+        {playerAvatar && (
+          <div className="w-6 h-6 lg:w-10 lg:h-10 rounded-full overflow-hidden border-2 border-yellow-500/50 flex-shrink-0">
+            <img src={playerAvatar.imageUrl} alt="avatar" className="w-full h-full object-cover" />
+          </div>
+        )}
         <span className="text-gray-400 hidden lg:inline">Lives:</span>
         {/* Mobile: compact numeric */}
         <div className="flex lg:hidden items-center gap-1">

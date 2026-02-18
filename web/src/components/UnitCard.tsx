@@ -1,6 +1,7 @@
 import React from 'react';
 import type { CardView, BoardUnitView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
+import { useCustomizationStore } from '../store/customizationStore';
 
 interface UnitCardProps {
   card: CardView | BoardUnitView;
@@ -33,6 +34,7 @@ export function UnitCard({
   onDragOver,
   onDrop,
 }: UnitCardProps) {
+  const cardStyle = useCustomizationStore((s) => s.selections.cardStyle);
   const [isDragging, setIsDragging] = React.useState(false);
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -120,6 +122,16 @@ export function UnitCard({
         <div className={`card-pitch-badge absolute -top-1 -right-1 lg:-top-2 lg:-right-2 ${badgeClasses} bg-pitch-red rounded-full flex items-center justify-center font-bold border lg:border-2 border-red-300`}>
           {card.pitch_value}
         </div>
+      )}
+
+      {/* Card style frame overlay */}
+      {cardStyle && (
+        <img
+          src={cardStyle.imageUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full pointer-events-none z-20"
+          style={{ objectFit: 'fill' }}
+        />
       )}
     </div>
   );

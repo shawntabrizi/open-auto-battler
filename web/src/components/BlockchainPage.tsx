@@ -160,7 +160,7 @@ export const BlockchainPage: React.FC = () => {
             </div>
 
             {/* Creator links */}
-            <div className="flex gap-2 justify-center mb-6">
+            <div className="flex flex-wrap gap-2 justify-center mb-6">
               <Link
                 to="/blockchain/create-card"
                 className="text-yellow-500 border border-yellow-500/20 hover:bg-yellow-500/10 px-3 py-1.5 rounded text-xs transition-all"
@@ -172,6 +172,18 @@ export const BlockchainPage: React.FC = () => {
                 className="text-yellow-500 border border-yellow-500/20 hover:bg-yellow-500/10 px-3 py-1.5 rounded text-xs transition-all"
               >
                 Set Creator
+              </Link>
+              <Link
+                to="/blockchain/customize"
+                className="text-yellow-500 border border-yellow-500/20 hover:bg-yellow-500/10 px-3 py-1.5 rounded text-xs transition-all"
+              >
+                Customize
+              </Link>
+              <Link
+                to="/blockchain/mint-nft"
+                className="text-yellow-500 border border-yellow-500/20 hover:bg-yellow-500/10 px-3 py-1.5 rounded text-xs transition-all"
+              >
+                Mint NFT
               </Link>
             </div>
 
