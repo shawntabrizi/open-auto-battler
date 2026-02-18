@@ -563,6 +563,22 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         };
       });
       set({ availableSets: sets });
+
+      // Inject sets into the WASM engine so preview/load works for blockchain sets
+      const { engine } = useGameStore.getState();
+      if (engine) {
+        for (const s of sets) {
+          try {
+            const entries = s.cards.map((c: any) => ({
+              card_id: typeof c.card_id === 'object' ? c.card_id.value ?? c.card_id[0] : c.card_id,
+              rarity: c.rarity,
+            }));
+            engine.add_set(s.id, entries);
+          } catch (e) {
+            console.warn(`Failed to inject set ${s.id} into engine:`, e);
+          }
+        }
+      }
     } catch (err) {
       console.error('Failed to fetch sets:', err);
     }

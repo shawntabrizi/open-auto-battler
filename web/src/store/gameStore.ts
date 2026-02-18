@@ -35,6 +35,7 @@ interface GameEngine {
   get_wins_to_victory: () => number;
   load_card_set: (setId: number) => void;
   add_card: (card: any) => void;
+  add_set: (setId: number, cards: any) => void;
 
   // Universal Bridge methods
   // Note: seed is bigint because wasm-bindgen binds Rust u64 to JS BigInt

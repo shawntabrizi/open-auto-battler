@@ -27,6 +27,7 @@ declare module 'oab-client' {
     load_card_set(setId: number): void;
     get_card_metas(): Array<{ id: number; name: string; emoji: string }>;
     add_card(card: any): void;
+    add_set(setId: number, cards: any): void;
   }
 
   export function greet(): string;

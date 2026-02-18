@@ -66,6 +66,7 @@ pub struct GameEngine {
     start_board: Vec<Option<BoardUnit>>, // board state at the start of the turn
     start_shop_mana: i32,                // mana state at the start of the turn
     undo_history: Vec<TurnSnapshot>,     // Stack of snapshots for undo
+    custom_sets: std::collections::HashMap<u32, CardSet>, // Blockchain sets injected via add_set
 }
 
 #[wasm_bindgen]
@@ -91,6 +92,7 @@ impl GameEngine {
             start_board: vec![None; BOARD_SIZE],
             start_shop_mana: 0,
             undo_history: Vec::new(),
+            custom_sets: std::collections::HashMap::new(),
         };
 
         // Only initialize fully if a seed was actually provided (manual local start)
@@ -121,11 +123,14 @@ impl GameEngine {
         );
 
         let card_pool = build_card_pool();
-        let sets = get_all_sets();
-        let card_set = sets
-            .into_iter()
-            .nth(set_id as usize)
-            .ok_or_else(|| format!("Set {} not found", set_id))?;
+        let card_set = if let Some(custom) = self.custom_sets.get(&set_id) {
+            custom.clone()
+        } else {
+            let sets = get_all_sets();
+            sets.into_iter()
+                .nth(set_id as usize)
+                .ok_or_else(|| format!("Set {} not found", set_id))?
+        };
 
         let num_cards = card_pool.len();
         self.state.card_pool = card_pool;
@@ -154,26 +159,49 @@ impl GameEngine {
 
     /// Get all cards in a set as CardView[] without mutating engine state.
     /// Used for set preview before starting a game.
+    /// Checks custom (blockchain) sets first, then falls back to genesis sets.
     #[wasm_bindgen]
     pub fn get_set_cards(&self, set_id: u32) -> Result<JsValue, String> {
         use oab_core::cards::{build_card_pool, get_all_sets};
         use oab_core::view::CardView;
 
-        let card_pool = build_card_pool();
-        let sets = get_all_sets();
-        let card_set = sets
-            .into_iter()
-            .nth(set_id as usize)
-            .ok_or_else(|| format!("Set {} not found", set_id))?;
+        let card_set = if let Some(custom) = self.custom_sets.get(&set_id) {
+            custom.clone()
+        } else {
+            let sets = get_all_sets();
+            sets.into_iter()
+                .nth(set_id as usize)
+                .ok_or_else(|| format!("Set {} not found", set_id))?
+        };
 
+        // Use the engine's card pool (includes blockchain cards) with genesis as fallback
+        let genesis_pool = build_card_pool();
         let card_views: Vec<CardView> = card_set
             .cards
             .iter()
-            .filter_map(|entry| card_pool.get(&entry.card_id).map(CardView::from))
+            .filter_map(|entry| {
+                self.state
+                    .card_pool
+                    .get(&entry.card_id)
+                    .or_else(|| genesis_pool.get(&entry.card_id))
+                    .map(CardView::from)
+            })
             .collect();
 
         serde_wasm_bindgen::to_value(&card_views)
             .map_err(|e| format!("Serialization failed: {:?}", e))
+    }
+
+    /// Add a card set to the engine.
+    /// Used by the frontend to inject blockchain sets for preview/play.
+    #[wasm_bindgen]
+    pub fn add_set(&mut self, set_id: u32, cards_js: JsValue) -> Result<(), String> {
+        let entries: Vec<oab_core::state::CardSetEntry> =
+            serde_wasm_bindgen::from_value(cards_js)
+                .map_err(|e| format!("Failed to parse set entries: {:?}", e))?;
+        let card_set = CardSet { cards: entries };
+        self.custom_sets.insert(set_id, card_set);
+        Ok(())
     }
 
     /// Add a card to the engine's card pool.
