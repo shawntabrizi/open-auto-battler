@@ -8459,6 +8459,7 @@ version = "0.1.0"
 dependencies = [
  "oab-core",
  "parity-scale-codec",
+ "polkadot-sdk 2503.2.0",
  "polkadot-sdk-frame",
  "scale-info",
 ]

@@ -18,6 +18,9 @@ frame = { workspace = true, features = ["experimental", "runtime"], default-feat
 scale-info = { features = ["derive"], workspace = true }
 oab-core = { workspace = true, features = ["bounded"] }
 
+[dev-dependencies]
+polkadot-sdk = { workspace = true, features = ["pallet-balances", "std"] }
+
 [features]
 default = ["std"]
 runtime-benchmarks = ["frame/runtime-benchmarks"]

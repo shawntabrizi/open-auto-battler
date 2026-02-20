@@ -20,7 +20,12 @@ pub mod pallet {
     use alloc::collections::BTreeMap;
     use alloc::{vec, vec::Vec};
     use frame::prelude::*;
-    use frame::traits::{Get, Randomness};
+    use frame::traits::{
+        fungible,
+        tokens::Preservation,
+        Get, Randomness,
+    };
+    use frame::arithmetic::Perbill;
 
     // Import types from core engine
     use oab_core::bounded::{
@@ -83,6 +88,17 @@ pub mod pallet {
         /// Maximum number of cards in a set.
         #[pallet::constant]
         type MaxSetSize: Get<u32>;
+
+        /// Currency for tournament entry fees and prize payouts.
+        type Currency: fungible::Inspect<Self::AccountId>
+            + fungible::Mutate<Self::AccountId>;
+
+        /// Origin that can create tournaments (e.g. root or sudo).
+        type TournamentOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+
+        /// Pallet ID used to derive the pallet's account for holding tournament funds.
+        #[pallet::constant]
+        type PalletId: Get<frame::deps::frame_support::PalletId>;
     }
 
     /// Type alias for the bounded game state using pallet config.
@@ -116,6 +132,11 @@ pub mod pallet {
     /// Type alias for bounded ability using pallet config.
     pub type BoundedAbility<T> =
         CoreBoundedAbility<<T as Config>::MaxStringLen, <T as Config>::MaxConditions>;
+
+    /// Type alias for the balance type from the configured Currency.
+    pub type BalanceOf<T> = <<T as Config>::Currency as fungible::Inspect<
+        <T as frame_system::Config>::AccountId,
+    >>::Balance;
 
     /// The core game data of a user-submitted card (used for hashing).
     /// Does not include metadata like name or emoji - those are stored separately.
@@ -196,6 +217,8 @@ pub mod pallet {
     pub struct SetMetadata<T: Config> {
         /// Display name of the set
         pub name: BoundedVec<u8, T::MaxStringLen>,
+        /// The creator of this card set
+        pub creator: T::AccountId,
     }
 
     /// A game session stored on-chain.
@@ -229,6 +252,62 @@ pub mod pallet {
         pub board: BoundedGhostBoard<T>,
         /// Block number when the ghost was created
         pub created_at: BlockNumberFor<T>,
+    }
+
+    /// Prize distribution configuration for a tournament.
+    /// Uses `Perbill` (parts-per-billion, u32) for precise share calculation.
+    #[derive(
+        Encode, Decode, DecodeWithMemTracking, TypeInfo, Clone, PartialEq, RuntimeDebug, MaxEncodedLen,
+    )]
+    pub struct PrizeConfig {
+        /// Share of the pot awarded to players who achieve perfect (10-win) runs.
+        pub player_share: Perbill,
+        /// Share of the pot awarded to the card set creator.
+        pub set_creator_share: Perbill,
+        /// Share of the pot distributed among individual card creators.
+        pub card_creators_share: Perbill,
+    }
+
+    /// Configuration for a tournament.
+    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
+    #[scale_info(skip_type_params(T))]
+    pub struct TournamentConfig<T: Config> {
+        pub set_id: u32,
+        pub entry_fee: BalanceOf<T>,
+        pub start_block: BlockNumberFor<T>,
+        pub end_block: BlockNumberFor<T>,
+        pub prize_config: PrizeConfig,
+    }
+
+    /// Mutable state tracked for a tournament.
+    #[derive(
+        Encode, Decode, DecodeWithMemTracking, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen, DefaultNoBound,
+    )]
+    #[scale_info(skip_type_params(T))]
+    pub struct TournamentState<T: Config> {
+        pub total_pot: BalanceOf<T>,
+        pub total_entries: u32,
+        pub total_perfect_runs: u32,
+    }
+
+    /// Per-player statistics within a tournament.
+    #[derive(
+        Encode, Decode, DecodeWithMemTracking, TypeInfo, Clone, PartialEq, RuntimeDebug, MaxEncodedLen, Default,
+    )]
+    pub struct PlayerTournamentStats {
+        pub perfect_runs: u32,
+        pub total_wins: u32,
+        pub total_games: u32,
+    }
+
+    /// A tournament game session (separate from regular GameSession).
+    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
+    #[scale_info(skip_type_params(T))]
+    pub struct TournamentGameSession<T: Config> {
+        pub state: BoundedLocalGameState<T>,
+        pub set_id: u32,
+        pub owner: T::AccountId,
+        pub tournament_id: u32,
     }
 
     /// Map of Active Games: AccountId -> GameSession
@@ -313,6 +392,59 @@ pub mod pallet {
     pub type CardSetHashes<T: Config> =
         StorageMap<_, Blake2_128Concat, T::Hash, u32, OptionQuery>;
 
+    /// Next available tournament ID.
+    #[pallet::storage]
+    pub type NextTournamentId<T: Config> = StorageValue<_, u32, ValueQuery>;
+
+    /// Tournament configurations.
+    #[pallet::storage]
+    pub type Tournaments<T: Config> =
+        StorageMap<_, Blake2_128Concat, u32, TournamentConfig<T>, OptionQuery>;
+
+    /// Mutable tournament state (pot, entries, perfect runs).
+    #[pallet::storage]
+    pub type TournamentStates<T: Config> =
+        StorageMap<_, Blake2_128Concat, u32, TournamentState<T>, ValueQuery>;
+
+    /// Active tournament game sessions (separate from regular games).
+    #[pallet::storage]
+    pub type ActiveTournamentGame<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::AccountId, TournamentGameSession<T>, OptionQuery>;
+
+    /// Per-player stats within a tournament.
+    #[pallet::storage]
+    pub type TournamentPlayerStats<T: Config> = StorageDoubleMap<
+        _,
+        Blake2_128Concat, u32,          // tournament_id
+        Blake2_128Concat, T::AccountId, // player
+        PlayerTournamentStats,
+        ValueQuery,
+    >;
+
+    /// Whether a player has claimed their prize for a tournament.
+    #[pallet::storage]
+    pub type TournamentClaimed<T: Config> = StorageDoubleMap<
+        _,
+        Blake2_128Concat, u32,          // tournament_id
+        Blake2_128Concat, T::AccountId, // player
+        bool,
+        ValueQuery,
+    >;
+
+    /// Tournament-specific ghost opponents (separate from regular ghosts).
+    #[pallet::storage]
+    pub type TournamentGhostOpponents<T: Config> = StorageNMap<
+        _,
+        (
+            NMapKey<Blake2_128Concat, u32>, // tournament_id
+            NMapKey<Blake2_128Concat, i32>, // round
+            NMapKey<Blake2_128Concat, i32>, // wins
+            NMapKey<Blake2_128Concat, i32>, // lives
+        ),
+        BoundedVec<GhostEntry<T>, <T as Config>::MaxGhostsPerBracket>,
+        ValueQuery,
+    >;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -345,6 +477,18 @@ pub mod pallet {
         SetCreated { creator: T::AccountId, set_id: u32 },
         /// Card set metadata has been set or updated.
         SetMetadataUpdated { updater: T::AccountId, set_id: u32 },
+        /// A new tournament has been created.
+        TournamentCreated { tournament_id: u32, set_id: u32 },
+        /// A player has joined a tournament and started a game.
+        TournamentGameStarted { owner: T::AccountId, tournament_id: u32, seed: u64 },
+        /// A tournament game has been completed (win or loss).
+        TournamentGameCompleted { owner: T::AccountId, tournament_id: u32, wins: i32 },
+        /// A tournament game has been abandoned.
+        TournamentGameAbandoned { owner: T::AccountId, tournament_id: u32 },
+        /// A regular game has been abandoned.
+        GameAbandoned { owner: T::AccountId },
+        /// A tournament prize has been claimed.
+        PrizeClaimed { tournament_id: u32, player: T::AccountId, amount: BalanceOf<T> },
     }
 
     #[pallet::error]
@@ -371,6 +515,26 @@ pub mod pallet {
         InvalidRarity,
         /// A card set with this exact card list already exists.
         SetAlreadyExists,
+        /// The specified tournament does not exist.
+        TournamentNotFound,
+        /// The tournament has not started yet.
+        TournamentNotStarted,
+        /// The tournament has ended (past end_block).
+        TournamentEnded,
+        /// The tournament has not ended yet (before end_block).
+        TournamentNotEnded,
+        /// The prize configuration shares do not sum to 100%.
+        InvalidPrizeConfig,
+        /// The tournament period is invalid (end <= start or start < now).
+        InvalidTournamentPeriod,
+        /// No prize available for this player.
+        NoPrizeAvailable,
+        /// Prize has already been claimed for this tournament.
+        PrizeAlreadyClaimed,
+        /// Player already has an active tournament game.
+        TournamentGameAlreadyActive,
+        /// No active tournament game found.
+        NoActiveTournamentGame,
     }
 
     /// Input for creating a card set.
@@ -452,9 +616,12 @@ pub mod pallet {
             NextSetId::<T>::put(num_sets as u32);
 
             // Store set metadata
+            let default_creator =
+                T::AccountId::decode(&mut frame::traits::TrailingZeroInput::zeroes()).unwrap();
             for set_meta in set_metas {
                 let metadata = SetMetadata {
                     name: BoundedVec::truncate_from(set_meta.name.as_bytes().to_vec()),
+                    creator: default_creator.clone(),
                 };
                 CardSetMetadataStore::<T>::insert(set_meta.id, metadata);
             }
@@ -841,6 +1008,7 @@ pub mod pallet {
             // Store set metadata
             let set_metadata = SetMetadata {
                 name: BoundedVec::truncate_from(name),
+                creator: who.clone(),
             };
             CardSetMetadataStore::<T>::insert(set_id, set_metadata);
 
@@ -864,20 +1032,455 @@ pub mod pallet {
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
-            // Ensure the set exists
-            ensure!(
-                CardSets::<T>::contains_key(set_id),
-                Error::<T>::CardSetNotFound
-            );
+            // Ensure the set exists and get existing metadata for creator
+            let existing = CardSetMetadataStore::<T>::get(set_id)
+                .ok_or(Error::<T>::CardSetNotFound)?;
 
             let set_metadata = SetMetadata {
                 name: BoundedVec::truncate_from(name),
+                creator: existing.creator,
             };
             CardSetMetadataStore::<T>::insert(set_id, set_metadata);
 
             Self::deposit_event(Event::SetMetadataUpdated {
                 updater: who,
                 set_id,
+            });
+
+            Ok(())
+        }
+
+        /// Create a new tournament. Only callable by TournamentOrigin (e.g. root/sudo).
+        #[pallet::call_index(7)]
+        #[pallet::weight(Weight::default())]
+        pub fn create_tournament(
+            origin: OriginFor<T>,
+            set_id: u32,
+            entry_fee: BalanceOf<T>,
+            start_block: BlockNumberFor<T>,
+            end_block: BlockNumberFor<T>,
+            prize_config: PrizeConfig,
+        ) -> DispatchResult {
+            T::TournamentOrigin::ensure_origin(origin)?;
+
+            // Validate set exists
+            ensure!(CardSets::<T>::contains_key(set_id), Error::<T>::CardSetNotFound);
+
+            // Validate tournament period
+            let now = frame_system::Pallet::<T>::block_number();
+            ensure!(start_block >= now, Error::<T>::InvalidTournamentPeriod);
+            ensure!(end_block > start_block, Error::<T>::InvalidTournamentPeriod);
+
+            // Validate prize config sums to 100%
+            let total = prize_config.player_share
+                .saturating_add(prize_config.set_creator_share)
+                .saturating_add(prize_config.card_creators_share);
+            ensure!(total == Perbill::one(), Error::<T>::InvalidPrizeConfig);
+
+            let tournament_id = NextTournamentId::<T>::get();
+
+            let config = TournamentConfig {
+                set_id,
+                entry_fee,
+                start_block,
+                end_block,
+                prize_config,
+            };
+
+            Tournaments::<T>::insert(tournament_id, config);
+            // TournamentStates uses ValueQuery so defaults are already correct
+            NextTournamentId::<T>::put(tournament_id.saturating_add(1));
+
+            Self::deposit_event(Event::TournamentCreated { tournament_id, set_id });
+
+            Ok(())
+        }
+
+        /// Join a tournament and start a tournament game.
+        #[pallet::call_index(8)]
+        #[pallet::weight(Weight::default())]
+        pub fn join_tournament(
+            origin: OriginFor<T>,
+            tournament_id: u32,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let config = Tournaments::<T>::get(tournament_id)
+                .ok_or(Error::<T>::TournamentNotFound)?;
+
+            // Validate tournament is active
+            let now = frame_system::Pallet::<T>::block_number();
+            ensure!(now >= config.start_block, Error::<T>::TournamentNotStarted);
+            ensure!(now <= config.end_block, Error::<T>::TournamentEnded);
+
+            // Ensure no active tournament game
+            ensure!(
+                !ActiveTournamentGame::<T>::contains_key(&who),
+                Error::<T>::TournamentGameAlreadyActive
+            );
+
+            // Transfer entry fee to pallet account
+            let pallet_account = Self::pallet_account_id();
+            <T::Currency as fungible::Mutate<T::AccountId>>::transfer(
+                &who,
+                &pallet_account,
+                config.entry_fee,
+                Preservation::Expendable,
+            )?;
+
+            // Update tournament state
+            TournamentStates::<T>::mutate(tournament_id, |state| {
+                state.total_pot = state.total_pot.saturating_add(config.entry_fee);
+                state.total_entries = state.total_entries.saturating_add(1);
+            });
+
+            // Initialize game state (same logic as start_game)
+            let card_set_bounded = CardSets::<T>::get(config.set_id)
+                .ok_or(Error::<T>::CardSetNotFound)?;
+            let card_set: CardSet = card_set_bounded.into();
+            let card_pool = Self::get_card_pool(&card_set);
+
+            let seed = Self::generate_next_seed(&who, b"tournament_start");
+
+            let mut state = GameState::reconstruct(
+                card_pool,
+                config.set_id,
+                oab_core::state::LocalGameState {
+                    bag: create_starting_bag(&card_set, seed),
+                    hand: Vec::new(),
+                    board: vec![None; 5],
+                    mana_limit: 3,
+                    shop_mana: 0,
+                    round: 1,
+                    lives: 3,
+                    wins: 0,
+                    phase: GamePhase::Shop,
+                    next_card_id: 1000,
+                    game_seed: seed,
+                },
+            );
+
+            state.draw_hand();
+            apply_shop_start_triggers(&mut state);
+
+            let (_, _, local_state) = state.decompose();
+
+            let session = TournamentGameSession {
+                state: local_state.into(),
+                set_id: config.set_id,
+                owner: who.clone(),
+                tournament_id,
+            };
+
+            ActiveTournamentGame::<T>::insert(&who, session);
+
+            Self::deposit_event(Event::TournamentGameStarted {
+                owner: who,
+                tournament_id,
+                seed,
+            });
+
+            Ok(())
+        }
+
+        /// Submit a turn for an active tournament game.
+        #[pallet::call_index(9)]
+        #[pallet::weight(Weight::default())]
+        pub fn submit_tournament_turn(
+            origin: OriginFor<T>,
+            action: BoundedCommitTurnAction<T>,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let mut session = ActiveTournamentGame::<T>::get(&who)
+                .ok_or(Error::<T>::NoActiveTournamentGame)?;
+
+            ensure!(
+                session.state.phase == GamePhase::Shop,
+                Error::<T>::WrongPhase
+            );
+
+            let tid = session.tournament_id;
+
+            // Reconstruct full core state
+            let card_set_bounded = CardSets::<T>::get(session.set_id)
+                .ok_or(Error::<T>::CardSetNotFound)?;
+            let card_set: CardSet = card_set_bounded.into();
+            let card_pool = Self::get_card_pool(&card_set);
+
+            let mut core_state =
+                GameState::reconstruct(card_pool, session.set_id, session.state.clone().into());
+
+            let core_action: CommitTurnAction = action.into();
+
+            // Verify and apply shop phase actions
+            verify_and_apply_turn(&mut core_state, &core_action)
+                .map_err(|_| Error::<T>::InvalidTurn)?;
+
+            core_state.local_state.shop_mana = 0;
+
+            // Generate battle seed
+            let battle_seed = Self::generate_next_seed(&who, b"tournament_battle");
+
+            // Convert player board to CombatUnits
+            let mut player_slots = Vec::new();
+            let player_units: Vec<CombatUnit> = core_state
+                .local_state
+                .board
+                .iter()
+                .enumerate()
+                .filter_map(|(slot, board_unit)| {
+                    let board_unit = board_unit.as_ref()?;
+                    player_slots.push(slot);
+                    core_state.card_pool.get(&board_unit.card_id).map(|card| {
+                        let mut cu = CombatUnit::from_card(card.clone());
+                        cu.attack_buff = board_unit.perm_attack;
+                        cu.health_buff = board_unit.perm_health;
+                        cu.health = cu.health.saturating_add(board_unit.perm_health).max(0);
+                        cu
+                    })
+                })
+                .collect();
+
+            // Build matchmaking bracket for tournament ghost lookup
+            let bracket = MatchmakingBracket {
+                set_id: session.set_id,
+                round: core_state.local_state.round,
+                wins: core_state.local_state.wins,
+                lives: core_state.local_state.lives,
+            };
+
+            // Select ghost from tournament pool, fallback to procedural
+            let enemy_units = Self::select_tournament_ghost_opponent(
+                tid, &bracket, &card_set, battle_seed,
+            ).unwrap_or_else(|| {
+                get_opponent_for_round(
+                    core_state.local_state.round,
+                    battle_seed.wrapping_add(999),
+                    &core_state.card_pool,
+                )
+                .unwrap_or_default()
+            });
+
+            // Store player's board as tournament ghost
+            let ghost = Self::create_ghost_board(&core_state);
+            Self::store_tournament_ghost(&who, tid, &bracket, ghost);
+
+            // Run the battle
+            let mut rng = XorShiftRng::seed_from_u64(battle_seed);
+            let events = resolve_battle(player_units, enemy_units, &mut rng, &core_state.card_pool);
+            core_state.local_state.shop_mana =
+                oab_core::battle::player_shop_mana_delta_from_events(&events).max(0);
+            let permanent_deltas =
+                oab_core::battle::player_permanent_stat_deltas_from_events(&events);
+            Self::apply_player_permanent_stat_deltas(
+                &mut core_state,
+                &player_slots,
+                &permanent_deltas,
+            );
+
+            // Extract battle result
+            let result = events
+                .iter()
+                .rev()
+                .find_map(|e| {
+                    if let oab_core::battle::CombatEvent::BattleEnd { result } = e {
+                        Some(result.clone())
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or(BattleResult::Draw);
+
+            match result {
+                BattleResult::Victory => { core_state.local_state.wins += 1; }
+                BattleResult::Defeat => { core_state.local_state.lives -= 1; }
+                BattleResult::Draw => {}
+            }
+
+            let current_wins = core_state.local_state.wins;
+
+            // Check for game completion
+            let game_over = core_state.local_state.lives <= 0 || current_wins >= 10;
+
+            if game_over {
+                // Record tournament stats
+                TournamentPlayerStats::<T>::mutate(tid, &who, |stats| {
+                    stats.total_games += 1;
+                    stats.total_wins += current_wins as u32;
+                    if current_wins >= 10 {
+                        stats.perfect_runs += 1;
+                    }
+                });
+                if current_wins >= 10 {
+                    TournamentStates::<T>::mutate(tid, |state| {
+                        state.total_perfect_runs += 1;
+                    });
+                }
+
+                ActiveTournamentGame::<T>::remove(&who);
+                Self::deposit_event(Event::TournamentGameCompleted {
+                    owner: who,
+                    tournament_id: tid,
+                    wins: current_wins,
+                });
+                return Ok(());
+            }
+
+            // Prepare for next round
+            let new_seed = Self::generate_next_seed(&who, b"tournament_shop");
+            core_state.local_state.game_seed = new_seed;
+            core_state.local_state.round += 1;
+            core_state.local_state.mana_limit = core_state.calculate_mana_limit();
+            core_state.local_state.phase = GamePhase::Shop;
+
+            core_state.draw_hand();
+            apply_shop_start_triggers(&mut core_state);
+
+            session.state = core_state.local_state.into();
+            ActiveTournamentGame::<T>::insert(&who, &session);
+
+            Ok(())
+        }
+
+        /// Abandon an active regular game.
+        #[pallet::call_index(10)]
+        #[pallet::weight(Weight::default())]
+        pub fn abandon_game(origin: OriginFor<T>) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            ensure!(
+                ActiveGame::<T>::contains_key(&who),
+                Error::<T>::NoActiveGame
+            );
+
+            ActiveGame::<T>::remove(&who);
+
+            Self::deposit_event(Event::GameAbandoned { owner: who });
+
+            Ok(())
+        }
+
+        /// Abandon an active tournament game. Stats are recorded as a defeat.
+        #[pallet::call_index(11)]
+        #[pallet::weight(Weight::default())]
+        pub fn abandon_tournament(origin: OriginFor<T>) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let session = ActiveTournamentGame::<T>::get(&who)
+                .ok_or(Error::<T>::NoActiveTournamentGame)?;
+
+            let tid = session.tournament_id;
+
+            // Record stats as defeat
+            TournamentPlayerStats::<T>::mutate(tid, &who, |stats| {
+                stats.total_games += 1;
+                stats.total_wins += session.state.wins as u32;
+            });
+
+            ActiveTournamentGame::<T>::remove(&who);
+
+            Self::deposit_event(Event::TournamentGameAbandoned {
+                owner: who,
+                tournament_id: tid,
+            });
+
+            Ok(())
+        }
+
+        /// Claim tournament prizes. Sums player prize, set creator prize, and card creator prize.
+        #[pallet::call_index(12)]
+        #[pallet::weight(Weight::default())]
+        pub fn claim_prize(
+            origin: OriginFor<T>,
+            tournament_id: u32,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let config = Tournaments::<T>::get(tournament_id)
+                .ok_or(Error::<T>::TournamentNotFound)?;
+
+            // Ensure tournament has ended
+            let now = frame_system::Pallet::<T>::block_number();
+            ensure!(now > config.end_block, Error::<T>::TournamentNotEnded);
+
+            // Ensure not already claimed
+            ensure!(
+                !TournamentClaimed::<T>::get(tournament_id, &who),
+                Error::<T>::PrizeAlreadyClaimed
+            );
+
+            let tournament_state = TournamentStates::<T>::get(tournament_id);
+            let player_stats = TournamentPlayerStats::<T>::get(tournament_id, &who);
+
+            let mut total_prize = BalanceOf::<T>::zero();
+
+            // 1. Player prize (if caller has perfect runs)
+            if player_stats.perfect_runs > 0 && tournament_state.total_perfect_runs > 0 {
+                let player_pot = config.prize_config.player_share.mul_floor(tournament_state.total_pot);
+                // player_prize = player_pot * my_perfect_runs / total_perfect_runs
+                let my_runs: BalanceOf<T> = player_stats.perfect_runs.into();
+                let total_runs: BalanceOf<T> = tournament_state.total_perfect_runs.into();
+                let player_prize = player_pot
+                    .saturating_mul(my_runs)
+                    .checked_div(&total_runs)
+                    .unwrap_or(BalanceOf::<T>::zero());
+                total_prize = total_prize.saturating_add(player_prize);
+            }
+
+            // 2. Set creator prize (if caller == set creator)
+            if let Some(set_meta) = CardSetMetadataStore::<T>::get(config.set_id) {
+                if set_meta.creator == who {
+                    let set_creator_prize = config.prize_config.set_creator_share
+                        .mul_floor(tournament_state.total_pot);
+                    total_prize = total_prize.saturating_add(set_creator_prize);
+                }
+            }
+
+            // 3. Card creator prize (if caller created any cards in the set)
+            if let Some(card_set_bounded) = CardSets::<T>::get(config.set_id) {
+                let mut my_cards: u32 = 0;
+                let total_cards = card_set_bounded.cards.len() as u32;
+
+                for entry in card_set_bounded.cards.iter() {
+                    if let Some(card_meta) = CardMetadataStore::<T>::get(entry.card_id.0) {
+                        if card_meta.creator == who {
+                            my_cards += 1;
+                        }
+                    }
+                }
+
+                if my_cards > 0 && total_cards > 0 {
+                    let card_creators_pot = config.prize_config.card_creators_share
+                        .mul_floor(tournament_state.total_pot);
+                    let my: BalanceOf<T> = my_cards.into();
+                    let total: BalanceOf<T> = total_cards.into();
+                    let card_creator_prize = card_creators_pot
+                        .saturating_mul(my)
+                        .checked_div(&total)
+                        .unwrap_or(BalanceOf::<T>::zero());
+                    total_prize = total_prize.saturating_add(card_creator_prize);
+                }
+            }
+
+            // Ensure there's actually a prize to claim
+            ensure!(total_prize > BalanceOf::<T>::zero(), Error::<T>::NoPrizeAvailable);
+
+            // Transfer prize from pallet account
+            let pallet_account = Self::pallet_account_id();
+            <T::Currency as fungible::Mutate<T::AccountId>>::transfer(
+                &pallet_account,
+                &who,
+                total_prize,
+                Preservation::Expendable,
+            )?;
+
+            TournamentClaimed::<T>::insert(tournament_id, &who, true);
+
+            Self::deposit_event(Event::PrizeClaimed {
+                tournament_id,
+                player: who,
+                amount: total_prize,
             });
 
             Ok(())
@@ -1086,6 +1689,65 @@ pub mod pallet {
                 archive_entry,
             );
             NextGhostArchiveId::<T>::put(archive_id.saturating_add(1));
+        }
+
+        /// Derive the pallet's account ID from PalletId.
+        fn pallet_account_id() -> T::AccountId {
+            use frame::deps::sp_runtime::traits::AccountIdConversion;
+            T::PalletId::get().into_account_truncating()
+        }
+
+        /// Select a ghost opponent from the tournament-specific ghost pool.
+        fn select_tournament_ghost_opponent(
+            tournament_id: u32,
+            bracket: &MatchmakingBracket,
+            card_set: &CardSet,
+            seed: u64,
+        ) -> Option<Vec<CombatUnit>> {
+            let ghosts = TournamentGhostOpponents::<T>::get((
+                tournament_id,
+                bracket.round,
+                bracket.wins,
+                bracket.lives,
+            ));
+
+            if ghosts.is_empty() {
+                return None;
+            }
+
+            let mut rng = XorShiftRng::seed_from_u64(seed);
+            let index = rng.gen_range(ghosts.len());
+            let ghost_entry = &ghosts[index];
+
+            let card_pool = Self::get_card_pool(card_set);
+            Some(Self::ghost_to_combat_units(&ghost_entry.board, &card_pool))
+        }
+
+        /// Store a ghost board in the tournament-specific ghost pool.
+        fn store_tournament_ghost(
+            owner: &T::AccountId,
+            tournament_id: u32,
+            bracket: &MatchmakingBracket,
+            ghost: BoundedGhostBoard<T>,
+        ) {
+            if ghost.units.is_empty() {
+                return;
+            }
+
+            let ghost_entry = GhostEntry {
+                owner: owner.clone(),
+                board: ghost,
+            };
+
+            TournamentGhostOpponents::<T>::mutate(
+                (tournament_id, bracket.round, bracket.wins, bracket.lives),
+                |ghosts| {
+                    if ghosts.len() >= T::MaxGhostsPerBracket::get() as usize {
+                        ghosts.remove(0);
+                    }
+                    let _ = ghosts.try_push(ghost_entry);
+                },
+            );
         }
     }
 }

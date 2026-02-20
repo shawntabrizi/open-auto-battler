@@ -346,6 +346,10 @@ impl
     }
 }
 
+parameter_types! {
+    pub const AutoBattlePalletId: PalletId = PalletId(*b"autobttl");
+}
+
 impl pallet_auto_battle::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     //type WeightInfo = pallet_auto_battle::weights::SubstrateWeight<Runtime>;
@@ -358,6 +362,9 @@ impl pallet_auto_battle::Config for Runtime {
     type MaxConditions = ConstU32<5>;
     type MaxSetSize = ConstU32<100>;
     type MaxGhostsPerBracket = ConstU32<10>;
+    type Currency = Balances;
+    type TournamentOrigin = EnsureRoot<AccountId>;
+    type PalletId = AutoBattlePalletId;
 }
 
 parameter_types! {
