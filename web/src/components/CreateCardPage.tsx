@@ -235,20 +235,12 @@ export const CreateCardPage: React.FC = () => {
             </h1>
             <p className="text-slate-500 text-sm">Design custom units with complex abilities</p>
           </div>
-          <div className="flex gap-4">
-            <Link
-              to="/blockchain/create-set"
-              className="text-slate-400 hover:text-white border border-slate-800 px-4 py-2 rounded-lg transition-colors"
-            >
-              Go to Set Creator
-            </Link>
-            <Link
-              to="/blockchain"
-              className="text-slate-400 hover:text-white border border-slate-800 px-4 py-2 rounded-lg transition-colors"
-            >
-              Exit to Dashboard
-            </Link>
-          </div>
+          <Link
+            to="/blockchain/creator"
+            className="text-slate-400 hover:text-white border border-slate-800 px-4 py-2 rounded-lg transition-colors"
+          >
+            Creator Hub
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

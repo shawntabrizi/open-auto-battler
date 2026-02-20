@@ -44,6 +44,13 @@ This document is derived from `web/src/*`.
 - `web/src/components/SandboxPage.tsx` - Unit testing sandbox.
 - `web/src/components/HomePage.tsx` - Main menu.
 
+## Responsive Design
+- All new pages and components must be designed for both desktop and mobile from the start.
+- Use Tailwind responsive prefixes (`lg:`, `sm:`, etc.) for font sizes, padding, spacing, grid columns, and border radii.
+- Use `min-h-svh` alongside `min-h-screen` for full-height layouts.
+- Hide non-essential text on small screens with `hidden lg:block` when appropriate.
+- Reference existing pages like `BlockchainPage.tsx` for the responsive patterns used in this project.
+
 ## Styling
 - Base styles are in `web/src/index.css`.
 - Utility config is in `web/tailwind.config.js` and `web/postcss.config.js`.

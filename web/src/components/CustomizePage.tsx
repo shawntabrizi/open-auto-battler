@@ -89,20 +89,12 @@ export const CustomizePage: React.FC = () => {
             </h1>
             <p className="text-slate-500 text-sm">Select NFT cosmetics for your game</p>
           </div>
-          <div className="flex gap-2 lg:gap-4">
-            <Link
-              to="/blockchain/mint-nft"
-              className="text-yellow-500 border border-yellow-500/20 hover:bg-yellow-500/10 px-3 py-2 rounded-lg text-xs lg:text-sm transition-all"
-            >
-              Mint NFT
-            </Link>
-            <Link
-              to="/blockchain"
-              className="text-slate-400 hover:text-white border border-slate-800 px-3 py-2 rounded-lg text-xs lg:text-sm transition-colors"
-            >
-              Back
-            </Link>
-          </div>
+          <Link
+            to="/blockchain/creator"
+            className="text-slate-400 hover:text-white border border-slate-800 px-3 py-2 rounded-lg text-xs lg:text-sm transition-colors"
+          >
+            Creator Hub
+          </Link>
         </div>
 
         {/* Mobile preview toggle */}

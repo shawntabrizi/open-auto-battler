@@ -108,10 +108,10 @@ export const CreateSetPage: React.FC = () => {
                 <span className="text-xl">+</span> MINT NEW CARDS
               </Link>
               <Link
-                to="/blockchain"
+                to="/blockchain/creator"
                 className="text-slate-400 hover:text-white border border-slate-800 px-4 py-2 rounded-lg transition-colors flex items-center"
               >
-                Exit to Dashboard
+                Creator Hub
               </Link>
             </div>
           </div>

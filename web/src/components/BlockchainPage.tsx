@@ -130,10 +130,6 @@ export const BlockchainPage: React.FC = () => {
               </select>
             </div>
 
-            <p className="text-slate-500 mb-6 lg:mb-8 text-sm lg:text-base">
-              Select a card set to play on the Substrate blockchain.
-            </p>
-
             <div className="flex flex-col gap-3 max-w-sm mx-auto mb-6 lg:mb-8">
               <label className="text-xs font-bold text-slate-500 uppercase text-left ml-1">
                 Select Card Set
@@ -159,34 +155,6 @@ export const BlockchainPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Creator links */}
-            <div className="flex flex-wrap gap-2 justify-center mb-6">
-              <Link
-                to="/blockchain/create-card"
-                className="text-yellow-500 border border-yellow-500/20 hover:bg-yellow-500/10 px-3 py-1.5 rounded text-xs transition-all"
-              >
-                Card Creator
-              </Link>
-              <Link
-                to="/blockchain/create-set"
-                className="text-yellow-500 border border-yellow-500/20 hover:bg-yellow-500/10 px-3 py-1.5 rounded text-xs transition-all"
-              >
-                Set Creator
-              </Link>
-              <Link
-                to="/blockchain/customize"
-                className="text-yellow-500 border border-yellow-500/20 hover:bg-yellow-500/10 px-3 py-1.5 rounded text-xs transition-all"
-              >
-                Customize
-              </Link>
-              <Link
-                to="/blockchain/mint-nft"
-                className="text-yellow-500 border border-yellow-500/20 hover:bg-yellow-500/10 px-3 py-1.5 rounded text-xs transition-all"
-              >
-                Mint NFT
-              </Link>
-            </div>
-
             <button
               onClick={handleStartGame}
               disabled={txLoading}
@@ -195,9 +163,14 @@ export const BlockchainPage: React.FC = () => {
               {txLoading ? 'TRANSACTING...' : 'START GAME ON-CHAIN'}
             </button>
 
-            <Link to="/" className="block mt-4 text-slate-500 hover:text-slate-300 text-xs">
-              Back to Menu
-            </Link>
+            <div className="flex items-center justify-center gap-4 mt-4">
+              <Link to="/blockchain/creator" className="text-slate-500 hover:text-slate-300 text-xs">
+                Creator Hub
+              </Link>
+              <Link to="/" className="text-slate-500 hover:text-slate-300 text-xs">
+                Back to Menu
+              </Link>
+            </div>
           </div>
         </div>
         <SetPreviewOverlay />

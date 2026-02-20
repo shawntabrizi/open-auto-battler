@@ -183,8 +183,8 @@ export const MintNftPage: React.FC = () => {
         >
           CONNECT WALLET TO START
         </button>
-        <Link to="/blockchain" className="mt-8 text-slate-400 hover:text-white underline">
-          Back to Dashboard
+        <Link to="/blockchain/creator" className="mt-8 text-slate-400 hover:text-white underline">
+          Back to Creator Hub
         </Link>
       </div>
     );
@@ -201,20 +201,12 @@ export const MintNftPage: React.FC = () => {
             </h1>
             <p className="text-slate-500 text-sm">Upload an image and mint it as an on-chain NFT</p>
           </div>
-          <div className="flex gap-2 lg:gap-4">
-            <Link
-              to="/blockchain/customize"
-              className="text-slate-400 hover:text-white border border-slate-800 px-3 py-2 rounded-lg text-xs lg:text-sm transition-colors"
-            >
-              Customize
-            </Link>
-            <Link
-              to="/blockchain"
-              className="text-slate-400 hover:text-white border border-slate-800 px-3 py-2 rounded-lg text-xs lg:text-sm transition-colors"
-            >
-              Back
-            </Link>
-          </div>
+          <Link
+            to="/blockchain/creator"
+            className="text-slate-400 hover:text-white border border-slate-800 px-3 py-2 rounded-lg text-xs lg:text-sm transition-colors"
+          >
+            Creator Hub
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
