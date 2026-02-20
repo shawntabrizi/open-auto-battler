@@ -15,10 +15,12 @@ mod benchmarking;
 
 pub mod weights;
 
+mod impls;
+
 #[frame::pallet]
 pub mod pallet {
-    use alloc::collections::BTreeMap;
-    use alloc::{vec, vec::Vec};
+
+    use alloc::vec::Vec;
     use frame::prelude::*;
     use frame::traits::{
         fungible,
@@ -32,15 +34,10 @@ pub mod pallet {
         BoundedAbility as CoreBoundedAbility, BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
         BoundedGameState as CoreBoundedGameState, BoundedGhostBoard as CoreBoundedGhostBoard,
-        BoundedLocalGameState as CoreBoundedLocalGameState, GhostBoardUnit, MatchmakingBracket,
+        BoundedLocalGameState as CoreBoundedLocalGameState, MatchmakingBracket,
     };
-    use oab_core::rng::BattleRng;
     use oab_core::types::{EconomyStats, UnitStats};
-    use oab_core::{
-        apply_shop_start_triggers, get_opponent_for_round, resolve_battle,
-        units::create_starting_bag, verify_and_apply_turn, BattleResult, CardSet, CombatUnit,
-        CommitTurnAction, GamePhase, GameState, UnitCard, XorShiftRng,
-    };
+    use oab_core::{get_opponent_for_round, BattleResult, CardSet, CombatUnit, GamePhase};
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -642,48 +639,15 @@ pub mod pallet {
                 Error::<T>::GameAlreadyActive
             );
 
-            let card_set_bounded = CardSets::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
-            let card_set: CardSet = card_set_bounded.into();
-
-            // Reconstruct card pool from storage for this set
-            let card_pool = Self::get_card_pool(&card_set);
-
-            // Generate initial seed
-            let seed = Self::generate_next_seed(&who, b"start_game");
-
-            // Create initial state
-            let mut state = GameState::reconstruct(
-                card_pool,
-                set_id,
-                oab_core::state::LocalGameState {
-                    bag: create_starting_bag(&card_set, seed),
-                    hand: Vec::new(),
-                    board: vec![None; 5], // BOARD_SIZE is 5
-                    mana_limit: 3,        // STARTING_MANA_LIMIT is 3
-                    shop_mana: 0,
-                    round: 1,
-                    lives: 3, // STARTING_LIVES is 3
-                    wins: 0,
-                    phase: GamePhase::Shop,
-                    next_card_id: 1000, // Reserve 1-999 for templates
-                    game_seed: seed,
-                },
-            );
-
-            // Draw initial hand from bag
-            state.draw_hand();
-            apply_shop_start_triggers(&mut state);
-
-            let (_, _, local_state) = state.decompose();
+            let (state, seed) = Self::initialize_game_state(&who, set_id, b"start_game")?;
 
             let session = GameSession {
-                state: local_state.into(),
+                state,
                 set_id,
                 owner: who.clone(),
             };
 
             ActiveGame::<T>::insert(&who, session);
-
             Self::deposit_event(Event::GameStarted { owner: who, seed });
 
             Ok(())
@@ -700,183 +664,56 @@ pub mod pallet {
             let who = ensure_signed(origin)?;
 
             let mut session = ActiveGame::<T>::get(&who).ok_or(Error::<T>::NoActiveGame)?;
-
-            // Ensure we are in the correct phase
             ensure!(
                 session.state.phase == GamePhase::Shop,
                 Error::<T>::WrongPhase
             );
 
-            // Reconstruct full core state
-            let card_set_bounded =
-                CardSets::<T>::get(session.set_id).ok_or(Error::<T>::CardSetNotFound)?;
-            let card_set: CardSet = card_set_bounded.into();
-            let card_pool = Self::get_card_pool(&card_set);
+            let mut battle = Self::prepare_battle(
+                &who, session.set_id, session.state.clone().into(), action, b"battle",
+            )?;
 
-            let mut core_state =
-                GameState::reconstruct(card_pool, session.set_id, session.state.clone().into());
+            // Select ghost from regular pool, fallback to procedural
+            let enemy_units = Self::select_ghost_opponent(
+                &battle.bracket, &battle.card_set, battle.battle_seed,
+            ).unwrap_or_else(|| {
+                get_opponent_for_round(
+                    battle.core_state.local_state.round,
+                    battle.battle_seed.wrapping_add(999),
+                    &battle.core_state.card_pool,
+                )
+                .unwrap_or_default()
+            });
 
-            let core_action: CommitTurnAction = action.into();
+            // Store player's board as ghost (after selecting opponent)
+            let ghost = Self::create_ghost_board(&battle.core_state);
+            Self::store_ghost(&who, &battle.bracket, ghost);
 
-            // Verify and apply shop phase actions
-            verify_and_apply_turn(&mut core_state, &core_action)
-                .map_err(|_| Error::<T>::InvalidTurn)?;
+            let turn = Self::execute_and_advance(&who, &mut battle, enemy_units, b"shop");
 
-            // Leftover shop mana never carries naturally; only battle GainMana should.
-            core_state.local_state.shop_mana = 0;
-
-            // Generate battle seed
-            let battle_seed = Self::generate_next_seed(&who, b"battle");
-
-            // Convert player board to CombatUnits
-            let mut player_slots = Vec::new();
-            let player_units: Vec<CombatUnit> = core_state
-                .local_state
-                .board
-                .iter()
-                .enumerate()
-                .filter_map(|(slot, board_unit)| {
-                    let board_unit = board_unit.as_ref()?;
-                    player_slots.push(slot);
-                    core_state.card_pool.get(&board_unit.card_id).map(|card| {
-                        let mut cu = CombatUnit::from_card(card.clone());
-                        cu.attack_buff = board_unit.perm_attack;
-                        cu.health_buff = board_unit.perm_health;
-                        cu.health = cu.health.saturating_add(board_unit.perm_health).max(0);
-                        cu
-                    })
-                })
-                .collect();
-
-            // Build matchmaking bracket for ghost opponent lookup
-            let bracket = MatchmakingBracket {
-                set_id: session.set_id,
-                round: core_state.local_state.round,
-                wins: core_state.local_state.wins,
-                lives: core_state.local_state.lives,
-            };
-
-            // Select ghost opponent first, fallback to procedural if none available
-            let enemy_units = Self::select_ghost_opponent(&bracket, &card_set, battle_seed)
-                .unwrap_or_else(|| {
-                    get_opponent_for_round(
-                        core_state.local_state.round,
-                        battle_seed.wrapping_add(999),
-                        &core_state.card_pool,
-                    )
-                    .unwrap_or_default()
-                });
-
-            // Capture opponent board for event emission
-            let opponent_ghost: BoundedGhostBoard<T> = {
-                let units: Vec<GhostBoardUnit> = enemy_units
-                    .iter()
-                    .map(|cu| GhostBoardUnit {
-                        card_id: cu.card_id,
-                        perm_attack: cu.attack_buff,
-                        perm_health: cu.health_buff,
-                    })
-                    .collect();
-                CoreBoundedGhostBoard {
-                    units: units.try_into().unwrap_or_default(),
-                }
-            };
-
-            // Store player's board as a ghost for future opponents (after selecting opponent)
-            let ghost = Self::create_ghost_board(&core_state);
-            Self::store_ghost(&who, &bracket, ghost);
-
-            // Run the battle
-            let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-            let events = resolve_battle(player_units, enemy_units, &mut rng, &core_state.card_pool);
-            core_state.local_state.shop_mana =
-                oab_core::battle::player_shop_mana_delta_from_events(&events).max(0);
-            let permanent_deltas =
-                oab_core::battle::player_permanent_stat_deltas_from_events(&events);
-            Self::apply_player_permanent_stat_deltas(
-                &mut core_state,
-                &player_slots,
-                &permanent_deltas,
-            );
-
-            // Extract battle result from the last event
-            let result = events
-                .iter()
-                .rev()
-                .find_map(|e| {
-                    if let oab_core::battle::CombatEvent::BattleEnd { result } = e {
-                        Some(result.clone())
-                    } else {
-                        None
-                    }
-                })
-                .unwrap_or(BattleResult::Draw);
-
-            // Apply battle result
-            match result {
-                BattleResult::Victory => {
-                    core_state.local_state.wins += 1;
-                }
-                BattleResult::Defeat => {
-                    core_state.local_state.lives -= 1;
-                }
-                BattleResult::Draw => {}
-            }
-
-            let completed_round = core_state.local_state.round;
-
-            // Check for game over conditions
-            if core_state.local_state.lives <= 0 {
-                // Game over - defeat
+            if turn.game_over {
                 ActiveGame::<T>::remove(&who);
                 Self::deposit_event(Event::BattleReported {
                     owner: who,
-                    round: completed_round,
-                    result,
+                    round: turn.completed_round,
+                    result: turn.result,
                     new_seed: 0,
-                    battle_seed,
-                    opponent_board: opponent_ghost,
+                    battle_seed: battle.battle_seed,
+                    opponent_board: turn.opponent_ghost,
                 });
                 return Ok(());
             }
 
-            if core_state.local_state.wins >= 10 {
-                // Game over - victory
-                ActiveGame::<T>::remove(&who);
-                Self::deposit_event(Event::BattleReported {
-                    owner: who,
-                    round: completed_round,
-                    result,
-                    new_seed: 0,
-                    battle_seed,
-                    opponent_board: opponent_ghost,
-                });
-                return Ok(());
-            }
-
-            // Prepare for next round
-            let new_seed = Self::generate_next_seed(&who, b"shop");
-            core_state.local_state.game_seed = new_seed;
-            core_state.local_state.round += 1;
-            core_state.local_state.mana_limit = core_state.calculate_mana_limit();
-            core_state.local_state.phase = GamePhase::Shop;
-
-            // Draw new hand for the next shop phase
-            core_state.draw_hand();
-            apply_shop_start_triggers(&mut core_state);
-
-            // Update session state
-            session.state = core_state.local_state.into();
-
+            session.state = battle.core_state.local_state.into();
             ActiveGame::<T>::insert(&who, &session);
 
             Self::deposit_event(Event::BattleReported {
                 owner: who,
-                round: completed_round,
-                result,
-                new_seed,
-                battle_seed,
-                opponent_board: opponent_ghost,
+                round: turn.completed_round,
+                result: turn.result,
+                new_seed: turn.new_seed,
+                battle_seed: battle.battle_seed,
+                opponent_board: turn.opponent_ghost,
             });
 
             Ok(())
@@ -1108,12 +945,10 @@ pub mod pallet {
             let config = Tournaments::<T>::get(tournament_id)
                 .ok_or(Error::<T>::TournamentNotFound)?;
 
-            // Validate tournament is active
             let now = frame_system::Pallet::<T>::block_number();
             ensure!(now >= config.start_block, Error::<T>::TournamentNotStarted);
             ensure!(now <= config.end_block, Error::<T>::TournamentEnded);
 
-            // Ensure no active tournament game
             ensure!(
                 !ActiveTournamentGame::<T>::contains_key(&who),
                 Error::<T>::TournamentGameAlreadyActive
@@ -1128,45 +963,17 @@ pub mod pallet {
                 Preservation::Expendable,
             )?;
 
-            // Update tournament state
             TournamentStates::<T>::mutate(tournament_id, |state| {
                 state.total_pot = state.total_pot.saturating_add(config.entry_fee);
                 state.total_entries = state.total_entries.saturating_add(1);
             });
 
-            // Initialize game state (same logic as start_game)
-            let card_set_bounded = CardSets::<T>::get(config.set_id)
-                .ok_or(Error::<T>::CardSetNotFound)?;
-            let card_set: CardSet = card_set_bounded.into();
-            let card_pool = Self::get_card_pool(&card_set);
-
-            let seed = Self::generate_next_seed(&who, b"tournament_start");
-
-            let mut state = GameState::reconstruct(
-                card_pool,
-                config.set_id,
-                oab_core::state::LocalGameState {
-                    bag: create_starting_bag(&card_set, seed),
-                    hand: Vec::new(),
-                    board: vec![None; 5],
-                    mana_limit: 3,
-                    shop_mana: 0,
-                    round: 1,
-                    lives: 3,
-                    wins: 0,
-                    phase: GamePhase::Shop,
-                    next_card_id: 1000,
-                    game_seed: seed,
-                },
-            );
-
-            state.draw_hand();
-            apply_shop_start_triggers(&mut state);
-
-            let (_, _, local_state) = state.decompose();
+            let (state, seed) = Self::initialize_game_state(
+                &who, config.set_id, b"tournament_start",
+            )?;
 
             let session = TournamentGameSession {
-                state: local_state.into(),
+                state,
                 set_id: config.set_id,
                 owner: who.clone(),
                 tournament_id,
@@ -1194,7 +1001,6 @@ pub mod pallet {
 
             let mut session = ActiveTournamentGame::<T>::get(&who)
                 .ok_or(Error::<T>::NoActiveTournamentGame)?;
-
             ensure!(
                 session.state.phase == GamePhase::Shop,
                 Error::<T>::WrongPhase
@@ -1202,117 +1008,39 @@ pub mod pallet {
 
             let tid = session.tournament_id;
 
-            // Reconstruct full core state
-            let card_set_bounded = CardSets::<T>::get(session.set_id)
-                .ok_or(Error::<T>::CardSetNotFound)?;
-            let card_set: CardSet = card_set_bounded.into();
-            let card_pool = Self::get_card_pool(&card_set);
-
-            let mut core_state =
-                GameState::reconstruct(card_pool, session.set_id, session.state.clone().into());
-
-            let core_action: CommitTurnAction = action.into();
-
-            // Verify and apply shop phase actions
-            verify_and_apply_turn(&mut core_state, &core_action)
-                .map_err(|_| Error::<T>::InvalidTurn)?;
-
-            core_state.local_state.shop_mana = 0;
-
-            // Generate battle seed
-            let battle_seed = Self::generate_next_seed(&who, b"tournament_battle");
-
-            // Convert player board to CombatUnits
-            let mut player_slots = Vec::new();
-            let player_units: Vec<CombatUnit> = core_state
-                .local_state
-                .board
-                .iter()
-                .enumerate()
-                .filter_map(|(slot, board_unit)| {
-                    let board_unit = board_unit.as_ref()?;
-                    player_slots.push(slot);
-                    core_state.card_pool.get(&board_unit.card_id).map(|card| {
-                        let mut cu = CombatUnit::from_card(card.clone());
-                        cu.attack_buff = board_unit.perm_attack;
-                        cu.health_buff = board_unit.perm_health;
-                        cu.health = cu.health.saturating_add(board_unit.perm_health).max(0);
-                        cu
-                    })
-                })
-                .collect();
-
-            // Build matchmaking bracket for tournament ghost lookup
-            let bracket = MatchmakingBracket {
-                set_id: session.set_id,
-                round: core_state.local_state.round,
-                wins: core_state.local_state.wins,
-                lives: core_state.local_state.lives,
-            };
+            let mut battle = Self::prepare_battle(
+                &who, session.set_id, session.state.clone().into(), action, b"tournament_battle",
+            )?;
 
             // Select ghost from tournament pool, fallback to procedural
             let enemy_units = Self::select_tournament_ghost_opponent(
-                tid, &bracket, &card_set, battle_seed,
+                tid, &battle.bracket, &battle.card_set, battle.battle_seed,
             ).unwrap_or_else(|| {
                 get_opponent_for_round(
-                    core_state.local_state.round,
-                    battle_seed.wrapping_add(999),
-                    &core_state.card_pool,
+                    battle.core_state.local_state.round,
+                    battle.battle_seed.wrapping_add(999),
+                    &battle.core_state.card_pool,
                 )
                 .unwrap_or_default()
             });
 
             // Store player's board as tournament ghost
-            let ghost = Self::create_ghost_board(&core_state);
-            Self::store_tournament_ghost(&who, tid, &bracket, ghost);
+            let ghost = Self::create_ghost_board(&battle.core_state);
+            Self::store_tournament_ghost(&who, tid, &battle.bracket, ghost);
 
-            // Run the battle
-            let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-            let events = resolve_battle(player_units, enemy_units, &mut rng, &core_state.card_pool);
-            core_state.local_state.shop_mana =
-                oab_core::battle::player_shop_mana_delta_from_events(&events).max(0);
-            let permanent_deltas =
-                oab_core::battle::player_permanent_stat_deltas_from_events(&events);
-            Self::apply_player_permanent_stat_deltas(
-                &mut core_state,
-                &player_slots,
-                &permanent_deltas,
+            let turn = Self::execute_and_advance(
+                &who, &mut battle, enemy_units, b"tournament_shop",
             );
 
-            // Extract battle result
-            let result = events
-                .iter()
-                .rev()
-                .find_map(|e| {
-                    if let oab_core::battle::CombatEvent::BattleEnd { result } = e {
-                        Some(result.clone())
-                    } else {
-                        None
-                    }
-                })
-                .unwrap_or(BattleResult::Draw);
-
-            match result {
-                BattleResult::Victory => { core_state.local_state.wins += 1; }
-                BattleResult::Defeat => { core_state.local_state.lives -= 1; }
-                BattleResult::Draw => {}
-            }
-
-            let current_wins = core_state.local_state.wins;
-
-            // Check for game completion
-            let game_over = core_state.local_state.lives <= 0 || current_wins >= 10;
-
-            if game_over {
-                // Record tournament stats
+            if turn.game_over {
                 TournamentPlayerStats::<T>::mutate(tid, &who, |stats| {
                     stats.total_games += 1;
-                    stats.total_wins += current_wins as u32;
-                    if current_wins >= 10 {
+                    stats.total_wins += turn.current_wins as u32;
+                    if turn.current_wins >= 10 {
                         stats.perfect_runs += 1;
                     }
                 });
-                if current_wins >= 10 {
+                if turn.current_wins >= 10 {
                     TournamentStates::<T>::mutate(tid, |state| {
                         state.total_perfect_runs += 1;
                     });
@@ -1322,22 +1050,12 @@ pub mod pallet {
                 Self::deposit_event(Event::TournamentGameCompleted {
                     owner: who,
                     tournament_id: tid,
-                    wins: current_wins,
+                    wins: turn.current_wins,
                 });
                 return Ok(());
             }
 
-            // Prepare for next round
-            let new_seed = Self::generate_next_seed(&who, b"tournament_shop");
-            core_state.local_state.game_seed = new_seed;
-            core_state.local_state.round += 1;
-            core_state.local_state.mana_limit = core_state.calculate_mana_limit();
-            core_state.local_state.phase = GamePhase::Shop;
-
-            core_state.draw_hand();
-            apply_shop_start_triggers(&mut core_state);
-
-            session.state = core_state.local_state.into();
+            session.state = battle.core_state.local_state.into();
             ActiveTournamentGame::<T>::insert(&who, &session);
 
             Ok(())
@@ -1488,48 +1206,7 @@ pub mod pallet {
     }
 
     impl<T: Config> Pallet<T> {
-        /// Helper to reconstruct a card pool from storage based on a card set.
-        fn get_card_pool(card_set: &CardSet) -> BTreeMap<oab_core::types::CardId, UnitCard> {
-            let mut card_pool = BTreeMap::new();
-
-            for entry in &card_set.cards {
-                if let Some(user_data) = UserCards::<T>::get(entry.card_id.0) {
-                    card_pool.insert(
-                        entry.card_id,
-                        Self::entry_to_unit_card(entry.card_id, user_data),
-                    );
-                }
-            }
-
-            card_pool
-        }
-
-        /// Helper to convert UserCardData to UnitCard.
-        fn entry_to_unit_card(id: oab_core::types::CardId, data: UserCardData<T>) -> UnitCard {
-            UnitCard {
-                id,
-                name: alloc::string::String::new(), // Name is metadata, not used in game logic
-                stats: data.stats,
-                economy: data.economy,
-                abilities: data.abilities.into_iter().map(|a| a.into()).collect(),
-            }
-        }
-        /// Helper to generate a unique seed per user/block/context
-        fn generate_next_seed(who: &T::AccountId, context: &[u8]) -> u64 {
-            let random = T::Randomness::random(context);
-            let mut seed_data = Vec::new();
-            seed_data.extend_from_slice(&random.0.encode());
-            seed_data.extend_from_slice(&who.encode());
-
-            // Simple hash to u64
-            let hash = frame::hashing::blake2_128(&seed_data);
-            let mut bytes = [0u8; 8];
-            bytes.copy_from_slice(&hash[0..8]);
-            u64::from_le_bytes(bytes)
-        }
-
-        /// Select a ghost opponent from the given bracket, if any exist.
-        /// Returns None if no ghosts are available for the bracket.
+        /// Select a ghost opponent from the regular ghost pool.
         fn select_ghost_opponent(
             bracket: &MatchmakingBracket,
             card_set: &CardSet,
@@ -1541,133 +1218,40 @@ pub mod pallet {
                 bracket.wins,
                 bracket.lives,
             ));
-
-            if ghosts.is_empty() {
-                return None;
-            }
-
-            // Deterministic selection based on seed
-            let mut rng = XorShiftRng::seed_from_u64(seed);
-            let index = rng.gen_range(ghosts.len());
-            let ghost_entry = &ghosts[index];
-
-            // Reconstruct card pool for this set
-            let card_pool = Self::get_card_pool(card_set);
-
-            // Convert ghost board to combat units using the card pool
-            Some(Self::ghost_to_combat_units(&ghost_entry.board, &card_pool))
+            Self::select_ghost_from_pool(&ghosts, card_set, seed)
         }
 
-        /// Convert a ghost board to combat units using the provided card pool.
-        fn ghost_to_combat_units(
-            ghost: &BoundedGhostBoard<T>,
-            card_pool: &BTreeMap<oab_core::types::CardId, UnitCard>,
-        ) -> Vec<CombatUnit> {
-            ghost
-                .units
-                .iter()
-                .filter_map(|unit| {
-                    card_pool.get(&unit.card_id).map(|card| {
-                        let mut combat_unit = CombatUnit::from_card(card.clone());
-                        combat_unit.attack_buff = unit.perm_attack;
-                        combat_unit.health_buff = unit.perm_health;
-                        combat_unit.health = combat_unit.health.saturating_add(unit.perm_health);
-                        combat_unit
-                    })
-                })
-                .collect()
-        }
-
-        /// Create a ghost board from the current game state.
-        fn create_ghost_board(core_state: &GameState) -> BoundedGhostBoard<T> {
-            let units: Vec<GhostBoardUnit> = core_state
-                .local_state
-                .board
-                .iter()
-                .flatten()
-                .map(|board_unit| GhostBoardUnit {
-                    card_id: board_unit.card_id,
-                    perm_attack: board_unit.perm_attack,
-                    perm_health: board_unit.perm_health,
-                })
-                .collect();
-
-            let bounded_units: BoundedVec<GhostBoardUnit, T::MaxBoardSize> =
-                units.try_into().unwrap_or_default();
-
-            CoreBoundedGhostBoard {
-                units: bounded_units,
-            }
-        }
-
-        fn apply_player_permanent_stat_deltas(
-            core_state: &mut GameState,
-            player_slots: &[usize],
-            deltas: &BTreeMap<oab_core::battle::UnitId, (i32, i32)>,
-        ) {
-            for (unit_id, (attack_delta, health_delta)) in deltas {
-                let unit_index = unit_id.raw() as usize;
-                if unit_index == 0 || unit_index > player_slots.len() {
-                    continue;
-                }
-                let slot = player_slots[unit_index - 1];
-
-                let unit_state = core_state
-                    .local_state
-                    .board
-                    .get_mut(slot)
-                    .and_then(|s| s.as_mut())
-                    .map(|board_unit| {
-                        board_unit.perm_attack =
-                            board_unit.perm_attack.saturating_add(*attack_delta);
-                        board_unit.perm_health =
-                            board_unit.perm_health.saturating_add(*health_delta);
-                        (board_unit.card_id, board_unit.perm_health)
-                    });
-
-                let should_remove = unit_state
-                    .and_then(|(card_id, perm_health)| {
-                        core_state
-                            .card_pool
-                            .get(&card_id)
-                            .map(|card| card.stats.health.saturating_add(perm_health) <= 0)
-                    })
-                    .unwrap_or(false);
-
-                if should_remove {
-                    core_state.local_state.board[slot] = None;
-                }
-            }
+        /// Select a ghost opponent from the tournament-specific ghost pool.
+        fn select_tournament_ghost_opponent(
+            tournament_id: u32,
+            bracket: &MatchmakingBracket,
+            card_set: &CardSet,
+            seed: u64,
+        ) -> Option<Vec<CombatUnit>> {
+            let ghosts = TournamentGhostOpponents::<T>::get((
+                tournament_id,
+                bracket.round,
+                bracket.wins,
+                bracket.lives,
+            ));
+            Self::select_ghost_from_pool(&ghosts, card_set, seed)
         }
 
         /// Store a ghost board for the given bracket.
-        /// Uses FIFO rotation when at capacity for matchmaking storage.
-        /// Also archives the ghost permanently for off-chain analysis.
+        /// Uses FIFO rotation when at capacity, and archives permanently.
         fn store_ghost(
             owner: &T::AccountId,
             bracket: &MatchmakingBracket,
             ghost: BoundedGhostBoard<T>,
         ) {
-            // Only store non-empty ghost boards
             if ghost.units.is_empty() {
                 return;
             }
 
-            // Create ghost entry with owner
-            let ghost_entry = GhostEntry {
-                owner: owner.clone(),
-                board: ghost.clone(),
-            };
-
-            // Store in matchmaking bracket (with FIFO rotation)
             GhostOpponents::<T>::mutate(
                 (bracket.set_id, bracket.round, bracket.wins, bracket.lives),
                 |ghosts| {
-                    // FIFO rotation when at capacity
-                    if ghosts.len() >= T::MaxGhostsPerBracket::get() as usize {
-                        ghosts.remove(0);
-                    }
-                    let _ = ghosts.try_push(ghost_entry);
+                    Self::push_ghost_to_pool(ghosts, owner, ghost.clone());
                 },
             );
 
@@ -1691,38 +1275,6 @@ pub mod pallet {
             NextGhostArchiveId::<T>::put(archive_id.saturating_add(1));
         }
 
-        /// Derive the pallet's account ID from PalletId.
-        fn pallet_account_id() -> T::AccountId {
-            use frame::deps::sp_runtime::traits::AccountIdConversion;
-            T::PalletId::get().into_account_truncating()
-        }
-
-        /// Select a ghost opponent from the tournament-specific ghost pool.
-        fn select_tournament_ghost_opponent(
-            tournament_id: u32,
-            bracket: &MatchmakingBracket,
-            card_set: &CardSet,
-            seed: u64,
-        ) -> Option<Vec<CombatUnit>> {
-            let ghosts = TournamentGhostOpponents::<T>::get((
-                tournament_id,
-                bracket.round,
-                bracket.wins,
-                bracket.lives,
-            ));
-
-            if ghosts.is_empty() {
-                return None;
-            }
-
-            let mut rng = XorShiftRng::seed_from_u64(seed);
-            let index = rng.gen_range(ghosts.len());
-            let ghost_entry = &ghosts[index];
-
-            let card_pool = Self::get_card_pool(card_set);
-            Some(Self::ghost_to_combat_units(&ghost_entry.board, &card_pool))
-        }
-
         /// Store a ghost board in the tournament-specific ghost pool.
         fn store_tournament_ghost(
             owner: &T::AccountId,
@@ -1734,18 +1286,10 @@ pub mod pallet {
                 return;
             }
 
-            let ghost_entry = GhostEntry {
-                owner: owner.clone(),
-                board: ghost,
-            };
-
             TournamentGhostOpponents::<T>::mutate(
                 (tournament_id, bracket.round, bracket.wins, bracket.lives),
                 |ghosts| {
-                    if ghosts.len() >= T::MaxGhostsPerBracket::get() as usize {
-                        ghosts.remove(0);
-                    }
-                    let _ = ghosts.try_push(ghost_entry);
+                    Self::push_ghost_to_pool(ghosts, owner, ghost);
                 },
             );
         }
