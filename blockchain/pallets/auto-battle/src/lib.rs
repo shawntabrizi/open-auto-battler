@@ -1047,6 +1047,14 @@ pub mod pallet {
                 }
 
                 ActiveTournamentGame::<T>::remove(&who);
+                Self::deposit_event(Event::BattleReported {
+                    owner: who.clone(),
+                    round: turn.completed_round,
+                    result: turn.result.clone(),
+                    new_seed: 0,
+                    battle_seed: battle.battle_seed,
+                    opponent_board: turn.opponent_ghost.clone(),
+                });
                 Self::deposit_event(Event::TournamentGameCompleted {
                     owner: who,
                     tournament_id: tid,
@@ -1057,6 +1065,15 @@ pub mod pallet {
 
             session.state = battle.core_state.local_state.into();
             ActiveTournamentGame::<T>::insert(&who, &session);
+
+            Self::deposit_event(Event::BattleReported {
+                owner: who,
+                round: turn.completed_round,
+                result: turn.result,
+                new_seed: turn.new_seed,
+                battle_seed: battle.battle_seed,
+                opponent_board: turn.opponent_ghost,
+            });
 
             Ok(())
         }

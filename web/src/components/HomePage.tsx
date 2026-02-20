@@ -1,10 +1,19 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useBlockchainStore } from '../store/blockchainStore';
+import { useTournamentStore } from '../store/tournamentStore';
 import { RotatePrompt } from './RotatePrompt';
 import { useInitGuard } from '../hooks';
 
+const formatBalance = (raw: bigint, decimals = 12) =>
+  (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 4,
+  });
+
 export function HomePage() {
   const { blockNumber, connect, isConnecting, isConnected } = useBlockchainStore();
+  const { activeTournament, fetchActiveTournament } = useTournamentStore();
 
   // Try to connect to blockchain on mount to check availability
   useInitGuard(() => {
@@ -17,6 +26,13 @@ export function HomePage() {
 
   const isBlockchainAvailable = blockNumber !== null;
   const isChecking = isConnecting && !isConnected;
+
+  // Fetch active tournament when blockchain is connected
+  useEffect(() => {
+    if (isBlockchainAvailable) {
+      void fetchActiveTournament();
+    }
+  }, [isBlockchainAvailable, fetchActiveTournament]);
 
   return (
     <div className="min-h-screen min-h-svh bg-slate-950 flex flex-col items-center justify-center p-3 lg:p-4 text-white overflow-hidden">
@@ -66,6 +82,24 @@ export function HomePage() {
               </span>
             </div>
           </Link>
+
+          {/* Tournament - Conditional */}
+          {activeTournament && isBlockchainAvailable && (
+            <Link
+              to="/tournament"
+              className="relative group block w-full p-3 lg:p-6 rounded-xl lg:rounded-2xl border-2 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/50 hover:border-purple-400 active:scale-[0.98] transition-all text-center"
+            >
+              <div className="flex items-center justify-center gap-3 lg:flex-col lg:gap-1">
+                <div className="text-xl lg:text-2xl">🏆</div>
+                <div className="text-left lg:text-center">
+                  <h2 className="text-base lg:text-xl font-bold text-white">Tournament Live!</h2>
+                  <p className="text-purple-300 text-[10px] lg:text-sm">
+                    Entry: {formatBalance(activeTournament.config.entry_fee)} | Pool: {formatBalance(activeTournament.state.total_pot)}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          )}
 
           {/* Play Locally - Secondary */}
           <Link
