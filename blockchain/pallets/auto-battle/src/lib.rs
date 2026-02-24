@@ -20,6 +20,7 @@ mod impls;
 #[frame::pallet]
 pub mod pallet {
 
+    use crate::weights::WeightInfo;
     use alloc::vec::Vec;
     use frame::arithmetic::Perbill;
     use frame::prelude::*;
@@ -45,7 +46,7 @@ pub mod pallet {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         /// Type representing the weight of this pallet
-        //type WeightInfo: (); // Using () for now until weights are generated
+        type WeightInfo: WeightInfo;
 
         /// Source of randomness
         type Randomness: Randomness<Self::Hash, BlockNumberFor<Self>>;
@@ -667,7 +668,7 @@ pub mod pallet {
         /// Start a new game session.
         /// Generates a random seed and initializes the game state with a deterministic bag.
         #[pallet::call_index(0)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::start_game())]
         pub fn start_game(origin: OriginFor<T>, set_id: u32) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
@@ -693,7 +694,7 @@ pub mod pallet {
         /// Submit a complete turn: apply shop actions, run the battle, and prepare the next round.
         /// This is the main extrinsic for gameplay - it handles the full turn cycle on-chain.
         #[pallet::call_index(1)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::submit_turn())]
         pub fn submit_turn(
             origin: OriginFor<T>,
             action: BoundedCommitTurnAction<T>,
@@ -764,7 +765,7 @@ pub mod pallet {
         /// The card's unique identifier is a hash of its game logic data.
         /// Metadata (name, emoji, description) should be set separately via `set_card_metadata`.
         #[pallet::call_index(3)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::submit_card())]
         pub fn submit_card(origin: OriginFor<T>, card_data: UserCardData<T>) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
@@ -810,7 +811,7 @@ pub mod pallet {
         /// Set or update metadata for a card.
         /// Only the card creator can update the metadata.
         #[pallet::call_index(4)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::set_card_metadata())]
         pub fn set_card_metadata(
             origin: OriginFor<T>,
             card_id: u32,
@@ -839,11 +840,11 @@ pub mod pallet {
 
         /// Create a new card set.
         #[pallet::call_index(5)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::create_card_set())]
         pub fn create_card_set(
             origin: OriginFor<T>,
-            cards: Vec<CardSetEntryInput>,
-            name: Vec<u8>,
+            cards: BoundedVec<CardSetEntryInput, T::MaxSetSize>,
+            name: BoundedVec<u8, T::MaxStringLen>,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
@@ -888,7 +889,7 @@ pub mod pallet {
 
             // Store set metadata
             let set_metadata = SetMetadata {
-                name: BoundedVec::truncate_from(name),
+                name,
                 creator: who.clone(),
             };
             CardSetMetadataStore::<T>::insert(set_id, set_metadata);
@@ -905,11 +906,11 @@ pub mod pallet {
 
         /// Set or update metadata for a card set.
         #[pallet::call_index(6)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::set_set_metadata())]
         pub fn set_set_metadata(
             origin: OriginFor<T>,
             set_id: u32,
-            name: Vec<u8>,
+            name: BoundedVec<u8, T::MaxStringLen>,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
@@ -918,7 +919,7 @@ pub mod pallet {
                 CardSetMetadataStore::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
 
             let set_metadata = SetMetadata {
-                name: BoundedVec::truncate_from(name),
+                name,
                 creator: existing.creator,
             };
             CardSetMetadataStore::<T>::insert(set_id, set_metadata);
@@ -933,7 +934,7 @@ pub mod pallet {
 
         /// Create a new tournament. Only callable by TournamentOrigin (e.g. root/sudo).
         #[pallet::call_index(7)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::create_tournament())]
         pub fn create_tournament(
             origin: OriginFor<T>,
             set_id: u32,
@@ -986,7 +987,7 @@ pub mod pallet {
 
         /// Join a tournament and start a tournament game.
         #[pallet::call_index(8)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::join_tournament())]
         pub fn join_tournament(origin: OriginFor<T>, tournament_id: u32) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
@@ -1039,7 +1040,7 @@ pub mod pallet {
 
         /// Submit a turn for an active tournament game.
         #[pallet::call_index(9)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::submit_tournament_turn())]
         pub fn submit_tournament_turn(
             origin: OriginFor<T>,
             action: BoundedCommitTurnAction<T>,
@@ -1134,7 +1135,7 @@ pub mod pallet {
 
         /// Abandon an active regular game.
         #[pallet::call_index(10)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::abandon_game())]
         pub fn abandon_game(origin: OriginFor<T>) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
@@ -1152,7 +1153,7 @@ pub mod pallet {
 
         /// Abandon an active tournament game. Stats are recorded as a defeat.
         #[pallet::call_index(11)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::abandon_tournament())]
         pub fn abandon_tournament(origin: OriginFor<T>) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
@@ -1179,7 +1180,7 @@ pub mod pallet {
 
         /// Claim tournament prizes. Sums player prize, set creator prize, and card creator prize.
         #[pallet::call_index(12)]
-        #[pallet::weight(Weight::default())]
+        #[pallet::weight(T::WeightInfo::claim_prize())]
         pub fn claim_prize(origin: OriginFor<T>, tournament_id: u32) -> DispatchResult {
             let who = ensure_signed(origin)?;
 

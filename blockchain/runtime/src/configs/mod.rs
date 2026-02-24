@@ -352,7 +352,7 @@ parameter_types! {
 
 impl pallet_auto_battle::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    //type WeightInfo = pallet_auto_battle::weights::SubstrateWeight<Runtime>;
+    type WeightInfo = pallet_auto_battle::weights::SubstrateWeight<Runtime>;
     type Randomness = ParentHashRandomness;
     type MaxBagSize = ConstU32<50>;
     type MaxBoardSize = ConstU32<5>;

@@ -3,6 +3,16 @@ use frame::arithmetic::Perbill;
 use frame::testing_prelude::*;
 use oab_core::{CommitTurnAction, GamePhase};
 
+fn bounded_set_entries(
+    entries: Vec<crate::CardSetEntryInput>,
+) -> BoundedVec<crate::CardSetEntryInput, <Test as crate::Config>::MaxSetSize> {
+    BoundedVec::try_from(entries).unwrap()
+}
+
+fn bounded_set_name(name: &[u8]) -> BoundedVec<u8, <Test as crate::Config>::MaxStringLen> {
+    BoundedVec::try_from(name.to_vec()).unwrap()
+}
+
 #[test]
 fn test_start_game() {
     new_test_ext().execute_with(|| {
@@ -266,8 +276,8 @@ fn test_create_card_set() {
 
         assert_ok!(AutoBattle::create_card_set(
             RuntimeOrigin::signed(account_id),
-            entries,
-            b"Test Set".to_vec()
+            bounded_set_entries(entries),
+            bounded_set_name(b"Test Set")
         ));
 
         // Verify set was created
@@ -313,8 +323,8 @@ fn test_create_card_set_rarity_overflow() {
         assert_noop!(
             AutoBattle::create_card_set(
                 RuntimeOrigin::signed(account_id),
-                entries,
-                b"Overflow Set".to_vec()
+                bounded_set_entries(entries),
+                bounded_set_name(b"Overflow Set")
             ),
             Error::<Test>::RarityOverflow
         );
@@ -336,8 +346,8 @@ fn test_create_card_set_zero_rarity() {
         assert_noop!(
             AutoBattle::create_card_set(
                 RuntimeOrigin::signed(account_id),
-                entries,
-                b"Zero Set".to_vec()
+                bounded_set_entries(entries),
+                bounded_set_name(b"Zero Set")
             ),
             Error::<Test>::InvalidRarity
         );
@@ -364,16 +374,16 @@ fn test_create_card_set_duplicate() {
         // First creation should succeed
         assert_ok!(AutoBattle::create_card_set(
             RuntimeOrigin::signed(account_id),
-            entries.clone(),
-            b"First Set".to_vec()
+            bounded_set_entries(entries.clone()),
+            bounded_set_name(b"First Set")
         ));
 
         // Second creation with same cards (different name) should fail
         assert_noop!(
             AutoBattle::create_card_set(
                 RuntimeOrigin::signed(account_id),
-                entries,
-                b"Different Name".to_vec()
+                bounded_set_entries(entries),
+                bounded_set_name(b"Different Name")
             ),
             Error::<Test>::SetAlreadyExists
         );
@@ -888,8 +898,8 @@ fn test_claim_prize_double_claim() {
         ];
         assert_ok!(AutoBattle::create_card_set(
             RuntimeOrigin::signed(1),
-            entries,
-            b"Prize Test Set".to_vec()
+            bounded_set_entries(entries),
+            bounded_set_name(b"Prize Test Set")
         ));
         let set_id = 2; // After genesis sets 0 and 1
 
@@ -937,8 +947,8 @@ fn test_claim_prize_set_creator() {
         ];
         assert_ok!(AutoBattle::create_card_set(
             RuntimeOrigin::signed(1),
-            entries,
-            b"Creator Test".to_vec()
+            bounded_set_entries(entries),
+            bounded_set_name(b"Creator Test")
         ));
         let set_id = 2;
 
@@ -1082,8 +1092,8 @@ fn test_no_perfect_runs_player_share_stays_in_pallet() {
         }];
         assert_ok!(AutoBattle::create_card_set(
             RuntimeOrigin::signed(1),
-            entries,
-            b"No Win Set".to_vec()
+            bounded_set_entries(entries),
+            bounded_set_name(b"No Win Set")
         ));
         let set_id = 2;
 

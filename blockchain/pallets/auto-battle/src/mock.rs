@@ -77,6 +77,7 @@ frame::deps::frame_support::parameter_types! {
 
 impl crate::Config for Test {
     type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = ();
     type Randomness = MockRandomness;
     type MaxBagSize = ConstU32<50>;
     type MaxBoardSize = ConstU32<5>;
