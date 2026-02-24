@@ -1,4 +1,5 @@
 use crate::battle::{CombatEvent, UnitId};
+use crate::limits::LimitReason;
 use crate::tests::*;
 use crate::types::*;
 
@@ -402,5 +403,76 @@ fn test_spawn_limit_logic() {
     assert_eq!(
         spawns, 1,
         "Only 1 unit should spawn because board was full (4 alive + 1 spawn = 5)"
+    );
+}
+
+#[test]
+fn test_missing_spawn_card_fizzles_without_panic() {
+    let spawner = create_dummy_card(1, "BrokenSpawner", 2, 5).with_ability(create_ability(
+        AbilityTrigger::OnStart,
+        AbilityEffect::SpawnUnit {
+            card_id: CardId(999_999),
+        },
+        "Broken Spawn",
+    ));
+
+    let p_board = vec![CombatUnit::from_card(spawner)];
+    let e_board = vec![create_dummy_enemy()];
+
+    // Empty pool on purpose: missing spawn refs must not panic runtime execution.
+    let events = run_battle(&p_board, &e_board, 777);
+
+    let spawn_count = events
+        .iter()
+        .filter(|e| matches!(e, CombatEvent::UnitSpawn { .. }))
+        .count();
+    assert_eq!(spawn_count, 0, "Missing spawn card should safely fizzle");
+    assert!(
+        matches!(events.last(), Some(CombatEvent::BattleEnd { .. })),
+        "Battle should still complete when spawn card is missing"
+    );
+}
+
+#[test]
+fn test_full_board_spawn_spam_does_not_leak_recursion_depth() {
+    let spawn_spam = create_ability(
+        AbilityTrigger::BeforeAnyAttack,
+        AbilityEffect::SpawnUnit {
+            card_id: CardId(42),
+        },
+        "SpawnSpam",
+    );
+
+    let spammer = create_dummy_card(1, "Spawner", 0, 500).with_ability(spawn_spam);
+    let p_board = vec![
+        CombatUnit::from_card(spammer.clone()),
+        CombatUnit::from_card(spammer.clone()),
+        CombatUnit::from_card(spammer.clone()),
+        CombatUnit::from_card(spammer.clone()),
+        CombatUnit::from_card(spammer),
+    ];
+
+    let wall = create_dummy_card(2, "Wall", 0, 500);
+    let e_board = vec![CombatUnit::from_card(wall)];
+
+    let events = run_battle(&p_board, &e_board, 42);
+
+    let has_recursion_limit = events.iter().any(|e| {
+        matches!(
+            e,
+            CombatEvent::LimitExceeded {
+                reason: LimitReason::RecursionLimit { .. },
+                ..
+            }
+        )
+    });
+    assert!(
+        !has_recursion_limit,
+        "Spawn fizzles on a full board must not leak recursion depth"
+    );
+
+    assert!(
+        matches!(events.last(), Some(CombatEvent::BattleEnd { .. })),
+        "Battle should still complete with repeated full-board spawn attempts"
     );
 }

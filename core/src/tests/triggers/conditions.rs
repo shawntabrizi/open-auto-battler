@@ -18,7 +18,7 @@ fn test_condition_target_health_threshold() {
             name: "Emergency Heal".to_string(),
             description: "Heal ally ahead if HP <= 6".to_string(),
             conditions: vec![Condition::Is(Matcher::StatValueCompare {
-                scope: TargetScope::Allies,
+                scope: TargetScope::AlliesOther,
                 stat: StatType::Health,
                 op: CompareOp::LessThanOrEqual,
                 value: 6,
@@ -289,4 +289,211 @@ fn test_condition_logic_gates() {
             "Should NOT trigger when only one AND condition is met"
         );
     }
+}
+
+#[test]
+fn test_condition_stat_value_compare_uses_matcher_scope() {
+    let create_checker = || {
+        create_dummy_card(1, "Checker", 2, 1).with_ability(Ability {
+            trigger: AbilityTrigger::OnStart,
+            effect: AbilityEffect::ModifyStats {
+                health: 0,
+                attack: 1,
+                target: AbilityTarget::All {
+                    scope: TargetScope::SelfUnit,
+                },
+            },
+            name: "Enemy Health Check".to_string(),
+            description: "Trigger if any enemy has health >= 5".to_string(),
+            conditions: vec![Condition::Is(Matcher::StatValueCompare {
+                scope: TargetScope::Enemies,
+                stat: StatType::Health,
+                op: CompareOp::GreaterThanOrEqual,
+                value: 5,
+            })],
+            max_triggers: None,
+        })
+    };
+
+    {
+        let checker = create_checker();
+        let enemy = create_dummy_card(2, "Enemy", 1, 6);
+        let events = run_battle(
+            &[CombatUnit::from_card(checker)],
+            &[CombatUnit::from_card(enemy)],
+            2020,
+        );
+
+        let triggered = events.iter().any(|e| {
+            matches!(
+                e,
+                CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Enemy Health Check"
+            )
+        });
+        assert!(
+            triggered,
+            "Should trigger when enemy scope satisfies condition"
+        );
+    }
+
+    {
+        let checker = create_checker();
+        let enemy = create_dummy_card(2, "Enemy", 1, 4);
+        let events = run_battle(
+            &[CombatUnit::from_card(checker)],
+            &[CombatUnit::from_card(enemy)],
+            2021,
+        );
+
+        let triggered = events.iter().any(|e| {
+            matches!(
+                e,
+                CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Enemy Health Check"
+            )
+        });
+        assert!(
+            !triggered,
+            "Should not trigger when enemy scope does not satisfy condition"
+        );
+    }
+}
+
+#[test]
+fn test_condition_stat_stat_compare_uses_target_scope() {
+    let create_checker = || {
+        create_dummy_card(1, "Comparator", 2, 1).with_ability(Ability {
+            trigger: AbilityTrigger::OnStart,
+            effect: AbilityEffect::ModifyStats {
+                health: 0,
+                attack: 1,
+                target: AbilityTarget::All {
+                    scope: TargetScope::SelfUnit,
+                },
+            },
+            name: "Enemy Stat Compare".to_string(),
+            description: "Trigger if source attack is less than enemy health".to_string(),
+            conditions: vec![Condition::Is(Matcher::StatStatCompare {
+                source_stat: StatType::Attack,
+                op: CompareOp::LessThan,
+                target_scope: TargetScope::Enemies,
+                target_stat: StatType::Health,
+            })],
+            max_triggers: None,
+        })
+    };
+
+    {
+        let checker = create_checker();
+        let enemy = create_dummy_card(2, "Enemy", 1, 5);
+        let events = run_battle(
+            &[CombatUnit::from_card(checker)],
+            &[CombatUnit::from_card(enemy)],
+            3030,
+        );
+
+        let triggered = events.iter().any(|e| {
+            matches!(
+                e,
+                CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Enemy Stat Compare"
+            )
+        });
+        assert!(
+            triggered,
+            "Should trigger when enemy scope satisfies comparison"
+        );
+    }
+
+    {
+        let checker = create_checker();
+        let enemy = create_dummy_card(2, "Enemy", 1, 1);
+        let events = run_battle(
+            &[CombatUnit::from_card(checker)],
+            &[CombatUnit::from_card(enemy)],
+            3031,
+        );
+
+        let triggered = events.iter().any(|e| {
+            matches!(
+                e,
+                CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Enemy Stat Compare"
+            )
+        });
+        assert!(
+            !triggered,
+            "Should not trigger when enemy scope fails comparison"
+        );
+    }
+}
+
+#[test]
+fn test_condition_is_position_uses_matcher_scope() {
+    let enemy_scoped = create_dummy_card(1, "EnemyScoped", 2, 5).with_ability(Ability {
+        trigger: AbilityTrigger::OnStart,
+        effect: AbilityEffect::ModifyStats {
+            health: 0,
+            attack: 1,
+            target: AbilityTarget::All {
+                scope: TargetScope::SelfUnit,
+            },
+        },
+        name: "Enemy Position Check".to_string(),
+        description: "Should fail because source is not in enemy scope".to_string(),
+        conditions: vec![Condition::Is(Matcher::IsPosition {
+            scope: TargetScope::Enemies,
+            index: 0,
+        })],
+        max_triggers: None,
+    });
+
+    let ally_scoped = create_dummy_card(2, "AllyScoped", 2, 5).with_ability(Ability {
+        trigger: AbilityTrigger::OnStart,
+        effect: AbilityEffect::ModifyStats {
+            health: 0,
+            attack: 1,
+            target: AbilityTarget::All {
+                scope: TargetScope::SelfUnit,
+            },
+        },
+        name: "Ally Position Check".to_string(),
+        description: "Should pass when source is front ally".to_string(),
+        conditions: vec![Condition::Is(Matcher::IsPosition {
+            scope: TargetScope::Allies,
+            index: 0,
+        })],
+        max_triggers: None,
+    });
+
+    let enemy = create_dummy_card(3, "Enemy", 1, 5);
+
+    let enemy_scope_events = run_battle(
+        &[CombatUnit::from_card(enemy_scoped)],
+        &[CombatUnit::from_card(enemy.clone())],
+        4040,
+    );
+    let enemy_scope_triggered = enemy_scope_events.iter().any(|e| {
+        matches!(
+            e,
+            CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Enemy Position Check"
+        )
+    });
+    assert!(
+        !enemy_scope_triggered,
+        "Enemy-scoped position check should not trigger for the source unit"
+    );
+
+    let ally_scope_events = run_battle(
+        &[CombatUnit::from_card(ally_scoped)],
+        &[CombatUnit::from_card(enemy)],
+        4041,
+    );
+    let ally_scope_triggered = ally_scope_events.iter().any(|e| {
+        matches!(
+            e,
+            CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Ally Position Check"
+        )
+    });
+    assert!(
+        ally_scope_triggered,
+        "Ally-scoped position check should trigger for a front source unit"
+    );
 }

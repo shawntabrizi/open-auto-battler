@@ -581,22 +581,16 @@ fn resolve_trigger_queue<R: BattleRng>(
 
             let ctx = ConditionContext {
                 source,
-                source_position: trigger.priority.unit_position,
                 allies,
                 enemies,
             };
 
-            let effect_target = get_effect_target(&trigger.effect);
-
             if !evaluate_condition(
                 &trigger.conditions,
                 &ctx,
-                &effect_target,
                 player_units,
                 enemy_units,
-                rng,
                 trigger.trigger_target_id,
-                trigger.spawn_index_override,
             ) {
                 continue; // Condition not met, skip this trigger
             }
@@ -834,197 +828,168 @@ fn apply_ability_effect<R: BattleRng>(
     card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> Result<Vec<UnitInstanceId>, ()> {
     limits.enter_recursion(source_team)?;
-    let mut damaged_units = Vec::new();
+    let result = (|| -> Result<Vec<UnitInstanceId>, ()> {
+        let mut damaged_units = Vec::new();
 
-    let result = match effect {
-        AbilityEffect::Damage { amount, target } => {
-            let targets = get_targets(
-                source_instance_id,
-                source_team,
+        match effect {
+            AbilityEffect::Damage { amount, target } => {
+                let targets = get_targets(
+                    source_instance_id,
+                    source_team,
+                    target,
+                    player_units,
+                    enemy_units,
+                    rng,
+                    trigger_target_id,
+                    spawn_index_override,
+                );
+                for target_id in targets {
+                    if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
+                        let actual_damage = (*amount).max(0);
+                        if actual_damage > 0 {
+                            unit.health = unit.health.saturating_sub(actual_damage);
+                            damaged_units.push(target_id);
+                            events.push(CombatEvent::AbilityDamage {
+                                source_instance_id,
+                                target_instance_id: target_id,
+                                damage: actual_damage,
+                                remaining_hp: unit.health,
+                            });
+                        }
+                    }
+                }
+                Ok(damaged_units)
+            }
+            AbilityEffect::ModifyStats {
+                health,
+                attack,
                 target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                spawn_index_override,
-            );
-            for target_id in targets {
-                if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
-                    let actual_damage = (*amount).max(0);
-                    if actual_damage > 0 {
-                        unit.health = unit.health.saturating_sub(actual_damage);
-                        damaged_units.push(target_id);
-                        events.push(CombatEvent::AbilityDamage {
+            } => {
+                let targets = get_targets(
+                    source_instance_id,
+                    source_team,
+                    target,
+                    player_units,
+                    enemy_units,
+                    rng,
+                    trigger_target_id,
+                    spawn_index_override,
+                );
+                for target_id in targets {
+                    if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
+                        unit.attack_buff = unit.attack_buff.saturating_add(*attack);
+                        unit.health = unit.health.saturating_add(*health);
+                        unit.health_buff = unit.health_buff.saturating_add(*health);
+                        events.push(CombatEvent::AbilityModifyStats {
                             source_instance_id,
                             target_instance_id: target_id,
-                            damage: actual_damage,
-                            remaining_hp: unit.health,
+                            health_change: *health,
+                            attack_change: *attack,
+                            new_attack: unit.effective_attack(),
+                            new_health: unit.effective_health(),
                         });
                     }
                 }
+                Ok(damaged_units)
             }
-            Ok(damaged_units)
-        }
-        AbilityEffect::ModifyStats {
-            health,
-            attack,
-            target,
-        } => {
-            let targets = get_targets(
-                source_instance_id,
-                source_team,
+            AbilityEffect::ModifyStatsPermanent {
+                health,
+                attack,
                 target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                spawn_index_override,
-            );
-            for target_id in targets {
-                if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
-                    unit.attack_buff = unit.attack_buff.saturating_add(*attack);
-                    unit.health = unit.health.saturating_add(*health);
-                    unit.health_buff = unit.health_buff.saturating_add(*health);
-                    events.push(CombatEvent::AbilityModifyStats {
-                        source_instance_id,
-                        target_instance_id: target_id,
-                        health_change: *health,
-                        attack_change: *attack,
-                        new_attack: unit.effective_attack(),
-                        new_health: unit.effective_health(),
-                    });
-                }
-            }
-            Ok(damaged_units)
-        }
-        AbilityEffect::ModifyStatsPermanent {
-            health,
-            attack,
-            target,
-        } => {
-            let targets = get_targets(
-                source_instance_id,
-                source_team,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                spawn_index_override,
-            );
-            for target_id in targets {
-                if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
-                    unit.attack_buff = unit.attack_buff.saturating_add(*attack);
-                    unit.health = unit.health.saturating_add(*health);
-                    unit.health_buff = unit.health_buff.saturating_add(*health);
-                    events.push(CombatEvent::AbilityModifyStatsPermanent {
-                        source_instance_id,
-                        target_instance_id: target_id,
-                        health_change: *health,
-                        attack_change: *attack,
-                        new_attack: unit.effective_attack(),
-                        new_health: unit.effective_health(),
-                    });
-                }
-            }
-            Ok(damaged_units)
-        }
-        AbilityEffect::SpawnUnit {
-            card_id: spawn_card_id,
-        } => {
-            limits.record_spawn(source_team)?;
-
-            // 1. Create the unit and determine its insertion point
-            let (new_unit, safe_idx) = {
-                let my_board = match source_team {
-                    Team::Player => &mut *player_units,
-                    Team::Enemy => &mut *enemy_units,
-                };
-
-                if my_board.len() >= BOARD_SIZE {
-                    return Ok(damaged_units);
-                }
-
-                // Create Unit Logic from card pool
-                let spawn_card = card_pool
-                    .get(spawn_card_id)
-                    .expect("Spawn card not found in card pool");
-
-                let next_id = limits.generate_instance_id(source_team);
-                let instance_id = next_id;
-
-                let mut new_unit = CombatUnit::from_card(spawn_card.clone());
-                new_unit.instance_id = instance_id;
-                new_unit.team = source_team;
-
-                // INSERTION LOGIC: Use override if provided (e.g. Zombie Cricket), otherwise Front (e.g. Spawner)
-                let insert_idx = spawn_index_override.unwrap_or(0);
-                let safe_idx = core::cmp::min(insert_idx, my_board.len());
-
-                my_board.insert(safe_idx, new_unit.clone());
-
-                // Log Spawn
-                events.push(CombatEvent::UnitSpawn {
-                    team: source_team,
-                    spawned_unit: new_unit.to_view(),
-                    new_board_state: my_board.iter().map(|u| u.to_view()).collect(),
-                });
-
-                (new_unit, safe_idx)
-            };
-
-            // 2. TRIGGER REACTIONS: OnSpawn for the spawned unit, OnAllySpawn for others
-            // We do this AFTER dropping the 'my_board' borrow
-            let mut reactions = Vec::new();
-            let spawned_id = new_unit.instance_id;
-
-            {
-                let my_board = match source_team {
-                    Team::Player => &mut *player_units,
-                    Team::Enemy => &mut *enemy_units,
-                };
-
-                // 1. OnSpawn for the new unit itself
-                for (sub_idx, ability) in my_board[safe_idx].abilities.iter().enumerate() {
-                    if ability.trigger == AbilityTrigger::OnSpawn {
-                        reactions.push(PendingTrigger {
-                            source_id: spawned_id,
-                            team: source_team,
-                            effect: ability.effect.clone(),
-                            ability_name: ability.name.clone(),
-                            priority: TriggerPriority {
-                                attack: my_board[safe_idx].effective_attack(),
-                                health: my_board[safe_idx].effective_health(),
-                                unit_position: safe_idx,
-                                ability_order: sub_idx,
-                                tiebreaker: 0, // Assigned before sorting
-                            },
-                            is_from_dead: false,
-                            spawn_index_override: None,
-                            trigger_target_id: Some(spawned_id),
-                            conditions: ability.conditions.clone(),
-                            ability_index: sub_idx,
-                            max_triggers: ability.max_triggers,
+            } => {
+                let targets = get_targets(
+                    source_instance_id,
+                    source_team,
+                    target,
+                    player_units,
+                    enemy_units,
+                    rng,
+                    trigger_target_id,
+                    spawn_index_override,
+                );
+                for target_id in targets {
+                    if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
+                        unit.attack_buff = unit.attack_buff.saturating_add(*attack);
+                        unit.health = unit.health.saturating_add(*health);
+                        unit.health_buff = unit.health_buff.saturating_add(*health);
+                        events.push(CombatEvent::AbilityModifyStatsPermanent {
+                            source_instance_id,
+                            target_instance_id: target_id,
+                            health_change: *health,
+                            attack_change: *attack,
+                            new_attack: unit.effective_attack(),
+                            new_health: unit.effective_health(),
                         });
                     }
                 }
+                Ok(damaged_units)
+            }
+            AbilityEffect::SpawnUnit {
+                card_id: spawn_card_id,
+            } => {
+                limits.record_spawn(source_team)?;
 
-                // 2. OnAllySpawn for existing units
-                for (i, unit) in my_board.iter().enumerate() {
-                    if unit.instance_id == spawned_id {
-                        continue;
+                // 1. Create the unit and determine its insertion point
+                let (new_unit, safe_idx) = {
+                    let my_board = match source_team {
+                        Team::Player => &mut *player_units,
+                        Team::Enemy => &mut *enemy_units,
+                    };
+
+                    if my_board.len() >= BOARD_SIZE {
+                        return Ok(damaged_units);
                     }
-                    for (sub_idx, ability) in unit.abilities.iter().enumerate() {
-                        if ability.trigger == AbilityTrigger::OnAllySpawn {
+
+                    let Some(spawn_card) = card_pool.get(spawn_card_id) else {
+                        // Invalid card refs should safely fizzle instead of panicking.
+                        return Ok(damaged_units);
+                    };
+
+                    let instance_id = limits.generate_instance_id(source_team);
+
+                    let mut new_unit = CombatUnit::from_card(spawn_card.clone());
+                    new_unit.instance_id = instance_id;
+                    new_unit.team = source_team;
+
+                    // INSERTION LOGIC: Use override if provided (e.g. Zombie Cricket), otherwise Front (e.g. Spawner)
+                    let insert_idx = spawn_index_override.unwrap_or(0);
+                    let safe_idx = core::cmp::min(insert_idx, my_board.len());
+
+                    my_board.insert(safe_idx, new_unit.clone());
+
+                    // Log Spawn
+                    events.push(CombatEvent::UnitSpawn {
+                        team: source_team,
+                        spawned_unit: new_unit.to_view(),
+                        new_board_state: my_board.iter().map(|u| u.to_view()).collect(),
+                    });
+
+                    (new_unit, safe_idx)
+                };
+
+                // 2. TRIGGER REACTIONS: OnSpawn for the spawned unit, OnAllySpawn for others
+                // We do this AFTER dropping the 'my_board' borrow
+                let mut reactions = Vec::new();
+                let spawned_id = new_unit.instance_id;
+
+                {
+                    let my_board = match source_team {
+                        Team::Player => &mut *player_units,
+                        Team::Enemy => &mut *enemy_units,
+                    };
+
+                    // 1. OnSpawn for the new unit itself
+                    for (sub_idx, ability) in my_board[safe_idx].abilities.iter().enumerate() {
+                        if ability.trigger == AbilityTrigger::OnSpawn {
                             reactions.push(PendingTrigger {
-                                source_id: unit.instance_id,
+                                source_id: spawned_id,
                                 team: source_team,
                                 effect: ability.effect.clone(),
                                 ability_name: ability.name.clone(),
                                 priority: TriggerPriority {
-                                    attack: unit.effective_attack(),
-                                    health: unit.effective_health(),
-                                    unit_position: i,
+                                    attack: my_board[safe_idx].effective_attack(),
+                                    health: my_board[safe_idx].effective_health(),
+                                    unit_position: safe_idx,
                                     ability_order: sub_idx,
                                     tiebreaker: 0, // Assigned before sorting
                                 },
@@ -1037,95 +1002,125 @@ fn apply_ability_effect<R: BattleRng>(
                             });
                         }
                     }
-                }
 
-                // 3. OnEnemySpawn for units on the opposite team
-                let opposing_board = match source_team {
-                    Team::Player => &mut *enemy_units,
-                    Team::Enemy => &mut *player_units,
-                };
-                let opposing_team = match source_team {
-                    Team::Player => Team::Enemy,
-                    Team::Enemy => Team::Player,
-                };
+                    // 2. OnAllySpawn for existing units
+                    for (i, unit) in my_board.iter().enumerate() {
+                        if unit.instance_id == spawned_id {
+                            continue;
+                        }
+                        for (sub_idx, ability) in unit.abilities.iter().enumerate() {
+                            if ability.trigger == AbilityTrigger::OnAllySpawn {
+                                reactions.push(PendingTrigger {
+                                    source_id: unit.instance_id,
+                                    team: source_team,
+                                    effect: ability.effect.clone(),
+                                    ability_name: ability.name.clone(),
+                                    priority: TriggerPriority {
+                                        attack: unit.effective_attack(),
+                                        health: unit.effective_health(),
+                                        unit_position: i,
+                                        ability_order: sub_idx,
+                                        tiebreaker: 0, // Assigned before sorting
+                                    },
+                                    is_from_dead: false,
+                                    spawn_index_override: None,
+                                    trigger_target_id: Some(spawned_id),
+                                    conditions: ability.conditions.clone(),
+                                    ability_index: sub_idx,
+                                    max_triggers: ability.max_triggers,
+                                });
+                            }
+                        }
+                    }
 
-                for (i, unit) in opposing_board.iter().enumerate() {
-                    for (sub_idx, ability) in unit.abilities.iter().enumerate() {
-                        if ability.trigger == AbilityTrigger::OnEnemySpawn {
-                            reactions.push(PendingTrigger {
-                                source_id: unit.instance_id,
-                                team: opposing_team,
-                                effect: ability.effect.clone(),
-                                ability_name: ability.name.clone(),
-                                priority: TriggerPriority {
-                                    attack: unit.effective_attack(),
-                                    health: unit.effective_health(),
-                                    unit_position: i,
-                                    ability_order: sub_idx,
-                                    tiebreaker: 0, // Assigned before sorting
-                                },
-                                is_from_dead: false,
-                                spawn_index_override: None,
-                                trigger_target_id: Some(spawned_id),
-                                conditions: ability.conditions.clone(),
-                                ability_index: sub_idx,
-                                max_triggers: ability.max_triggers,
-                            });
+                    // 3. OnEnemySpawn for units on the opposite team
+                    let opposing_board = match source_team {
+                        Team::Player => &mut *enemy_units,
+                        Team::Enemy => &mut *player_units,
+                    };
+                    let opposing_team = match source_team {
+                        Team::Player => Team::Enemy,
+                        Team::Enemy => Team::Player,
+                    };
+
+                    for (i, unit) in opposing_board.iter().enumerate() {
+                        for (sub_idx, ability) in unit.abilities.iter().enumerate() {
+                            if ability.trigger == AbilityTrigger::OnEnemySpawn {
+                                reactions.push(PendingTrigger {
+                                    source_id: unit.instance_id,
+                                    team: opposing_team,
+                                    effect: ability.effect.clone(),
+                                    ability_name: ability.name.clone(),
+                                    priority: TriggerPriority {
+                                        attack: unit.effective_attack(),
+                                        health: unit.effective_health(),
+                                        unit_position: i,
+                                        ability_order: sub_idx,
+                                        tiebreaker: 0, // Assigned before sorting
+                                    },
+                                    is_from_dead: false,
+                                    spawn_index_override: None,
+                                    trigger_target_id: Some(spawned_id),
+                                    conditions: ability.conditions.clone(),
+                                    ability_index: sub_idx,
+                                    max_triggers: ability.max_triggers,
+                                });
+                            }
                         }
                     }
                 }
+
+                if !reactions.is_empty() {
+                    limits.enter_trigger_depth(source_team)?;
+                    resolve_trigger_queue(
+                        &mut reactions,
+                        player_units,
+                        enemy_units,
+                        events,
+                        rng,
+                        limits,
+                        card_pool,
+                    )?;
+                    limits.exit_trigger_depth();
+                }
+
+                Ok(damaged_units)
             }
-
-            if !reactions.is_empty() {
-                limits.enter_trigger_depth(source_team)?;
-                resolve_trigger_queue(
-                    &mut reactions,
+            AbilityEffect::Destroy { target } => {
+                let targets = get_targets(
+                    source_instance_id,
+                    source_team,
+                    target,
                     player_units,
                     enemy_units,
-                    events,
                     rng,
-                    limits,
-                    card_pool,
-                )?;
-                limits.exit_trigger_depth();
-            }
-
-            Ok(damaged_units)
-        }
-        AbilityEffect::Destroy { target } => {
-            let targets = get_targets(
-                source_instance_id,
-                source_team,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                spawn_index_override,
-            );
-            for target_id in targets {
-                if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
-                    let fatal = unit.health;
-                    unit.health = unit.health.saturating_sub(fatal);
-                    events.push(CombatEvent::AbilityDamage {
-                        source_instance_id,
-                        target_instance_id: target_id,
-                        damage: fatal,
-                        remaining_hp: unit.health,
-                    });
+                    trigger_target_id,
+                    spawn_index_override,
+                );
+                for target_id in targets {
+                    if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
+                        let fatal = unit.health;
+                        unit.health = unit.health.saturating_sub(fatal);
+                        events.push(CombatEvent::AbilityDamage {
+                            source_instance_id,
+                            target_instance_id: target_id,
+                            damage: fatal,
+                            remaining_hp: unit.health,
+                        });
+                    }
                 }
+                Ok(damaged_units)
             }
-            Ok(damaged_units)
+            AbilityEffect::GainMana { amount } => {
+                events.push(CombatEvent::AbilityGainMana {
+                    source_instance_id,
+                    team: source_team,
+                    amount: *amount,
+                });
+                Ok(damaged_units)
+            }
         }
-        AbilityEffect::GainMana { amount } => {
-            events.push(CombatEvent::AbilityGainMana {
-                source_instance_id,
-                team: source_team,
-                amount: *amount,
-            });
-            Ok(damaged_units)
-        }
-    };
+    })();
 
     limits.exit_recursion();
     result
@@ -1881,51 +1876,30 @@ fn get_stat_value(unit: &CombatUnit, stat: StatType) -> i32 {
 #[allow(dead_code)]
 struct ConditionContext<'a> {
     source: &'a CombatUnit,
-    source_position: usize,
     allies: &'a [CombatUnit],
     enemies: &'a [CombatUnit],
 }
 
 /// Evaluates a list of conditions given the context (implicit AND).
-fn evaluate_condition<R: BattleRng>(
+fn evaluate_condition(
     conditions: &[Condition],
     ctx: &ConditionContext,
-    target: &AbilityTarget,
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
-    rng: &mut R,
     trigger_target_id: Option<UnitInstanceId>,
-    source_position_override: Option<usize>,
 ) -> bool {
     for condition in conditions {
         match condition {
             Condition::Is(matcher) => {
-                if !evaluate_matcher(
-                    matcher,
-                    ctx,
-                    target,
-                    player_units,
-                    enemy_units,
-                    rng,
-                    trigger_target_id,
-                    source_position_override,
-                ) {
+                if !evaluate_matcher(matcher, ctx, player_units, enemy_units, trigger_target_id) {
                     return false;
                 }
             }
             Condition::AnyOf(matchers) => {
                 let mut any_passed = false;
                 for matcher in matchers {
-                    if evaluate_matcher(
-                        matcher,
-                        ctx,
-                        target,
-                        player_units,
-                        enemy_units,
-                        rng,
-                        trigger_target_id,
-                        source_position_override,
-                    ) {
+                    if evaluate_matcher(matcher, ctx, player_units, enemy_units, trigger_target_id)
+                    {
                         any_passed = true;
                         break;
                     }
@@ -1940,15 +1914,12 @@ fn evaluate_condition<R: BattleRng>(
 }
 
 /// Evaluates a single matcher.
-fn evaluate_matcher<R: BattleRng>(
+fn evaluate_matcher(
     matcher: &Matcher,
     ctx: &ConditionContext,
-    target: &AbilityTarget,
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
-    rng: &mut R,
     trigger_target_id: Option<UnitInstanceId>,
-    source_position_override: Option<usize>,
 ) -> bool {
     match matcher {
         Matcher::StatValueCompare {
@@ -1957,60 +1928,54 @@ fn evaluate_matcher<R: BattleRng>(
             op,
             value,
         } => {
-            if *scope == TargetScope::SelfUnit {
-                compare_i32(get_stat_value(ctx.source, *stat), *op, *value)
+            let scoped_targets: Vec<&CombatUnit> = if *scope == TargetScope::SelfUnit {
+                vec![ctx.source]
             } else {
-                let targets = get_targets(
+                resolve_scope_units(
+                    *scope,
                     ctx.source.instance_id,
                     ctx.source.team,
-                    target,
                     player_units,
                     enemy_units,
-                    rng,
                     trigger_target_id,
-                    source_position_override,
-                );
-                if targets.is_empty() {
-                    return false;
-                }
-                targets.iter().any(|tid| {
-                    if let Some(u) = find_unit_in_slices(*tid, player_units, enemy_units) {
-                        compare_i32(get_stat_value(u, *stat), *op, *value)
-                    } else {
-                        false
-                    }
-                })
+                )
+            };
+
+            if scoped_targets.is_empty() {
+                return false;
             }
+
+            scoped_targets
+                .iter()
+                .any(|unit| compare_i32(get_stat_value(unit, *stat), *op, *value))
         }
         Matcher::StatStatCompare {
             source_stat,
             op,
-            target_scope: _,
+            target_scope,
             target_stat,
         } => {
-            let targets = get_targets(
-                ctx.source.instance_id,
-                ctx.source.team,
-                target,
-                player_units,
-                enemy_units,
-                rng,
-                trigger_target_id,
-                source_position_override,
-            );
-            if let Some(tid) = targets.first() {
-                if let Some(u) = find_unit_in_slices(*tid, player_units, enemy_units) {
-                    compare_i32(
-                        get_stat_value(ctx.source, *source_stat),
-                        *op,
-                        get_stat_value(u, *target_stat),
-                    )
-                } else {
-                    false
-                }
+            let scoped_targets: Vec<&CombatUnit> = if *target_scope == TargetScope::SelfUnit {
+                vec![ctx.source]
             } else {
-                false
+                resolve_scope_units(
+                    *target_scope,
+                    ctx.source.instance_id,
+                    ctx.source.team,
+                    player_units,
+                    enemy_units,
+                    trigger_target_id,
+                )
+            };
+
+            if scoped_targets.is_empty() {
+                return false;
             }
+
+            let source_val = get_stat_value(ctx.source, *source_stat);
+            scoped_targets.iter().any(|target_unit| {
+                compare_i32(source_val, *op, get_stat_value(target_unit, *target_stat))
+            })
         }
         Matcher::UnitCount { scope, op, value } => {
             let count = resolve_scope_ids(
@@ -2024,18 +1989,36 @@ fn evaluate_matcher<R: BattleRng>(
             .len() as u32;
             compare_u32(count, *op, *value)
         }
-        Matcher::IsPosition { scope: _, index } => {
-            let allies = if ctx.source.team == Team::Player {
-                ctx.allies
+        Matcher::IsPosition { scope, index } => {
+            let scoped_targets: Vec<&CombatUnit> = if *scope == TargetScope::SelfUnit {
+                vec![ctx.source]
             } else {
-                ctx.allies
+                resolve_scope_units(
+                    *scope,
+                    ctx.source.instance_id,
+                    ctx.source.team,
+                    player_units,
+                    enemy_units,
+                    trigger_target_id,
+                )
             };
+
+            if scoped_targets.is_empty() {
+                return false;
+            }
+
             let actual_idx = if *index == -1 {
-                allies.len().saturating_sub(1)
-            } else {
+                scoped_targets.len().saturating_sub(1)
+            } else if *index >= 0 {
                 *index as usize
+            } else {
+                return false;
             };
-            ctx.source_position == actual_idx
+
+            scoped_targets
+                .get(actual_idx)
+                .map(|unit| unit.instance_id == ctx.source.instance_id)
+                .unwrap_or(false)
         }
     }
 }
@@ -2057,22 +2040,6 @@ fn compare_u32(a: u32, op: CompareOp, b: u32) -> bool {
         CompareOp::Equal => a == b,
         CompareOp::GreaterThanOrEqual => a >= b,
         CompareOp::LessThanOrEqual => a <= b,
-    }
-}
-
-/// Helper to get the target from an effect
-fn get_effect_target(effect: &AbilityEffect) -> AbilityTarget {
-    match effect {
-        AbilityEffect::Damage { target, .. } => target.clone(),
-        AbilityEffect::ModifyStats { target, .. } => target.clone(),
-        AbilityEffect::ModifyStatsPermanent { target, .. } => target.clone(),
-        AbilityEffect::SpawnUnit { .. } => AbilityTarget::All {
-            scope: TargetScope::SelfUnit,
-        },
-        AbilityEffect::Destroy { target } => target.clone(),
-        AbilityEffect::GainMana { .. } => AbilityTarget::All {
-            scope: TargetScope::SelfUnit,
-        },
     }
 }
 
