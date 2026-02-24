@@ -21,13 +21,9 @@ mod impls;
 pub mod pallet {
 
     use alloc::vec::Vec;
-    use frame::prelude::*;
-    use frame::traits::{
-        fungible,
-        tokens::Preservation,
-        Get, Randomness,
-    };
     use frame::arithmetic::Perbill;
+    use frame::prelude::*;
+    use frame::traits::{fungible, tokens::Preservation, Get, Randomness};
 
     // Import types from core engine
     use oab_core::bounded::{
@@ -87,8 +83,7 @@ pub mod pallet {
         type MaxSetSize: Get<u32>;
 
         /// Currency for tournament entry fees and prize payouts.
-        type Currency: fungible::Inspect<Self::AccountId>
-            + fungible::Mutate<Self::AccountId>;
+        type Currency: fungible::Inspect<Self::AccountId> + fungible::Mutate<Self::AccountId>;
 
         /// Origin that can create tournaments (e.g. root or sudo).
         type TournamentOrigin: EnsureOrigin<Self::RuntimeOrigin>;
@@ -254,7 +249,14 @@ pub mod pallet {
     /// Prize distribution configuration for a tournament.
     /// Uses `Perbill` (parts-per-billion, u32) for precise share calculation.
     #[derive(
-        Encode, Decode, DecodeWithMemTracking, TypeInfo, Clone, PartialEq, RuntimeDebug, MaxEncodedLen,
+        Encode,
+        Decode,
+        DecodeWithMemTracking,
+        TypeInfo,
+        Clone,
+        PartialEq,
+        RuntimeDebug,
+        MaxEncodedLen,
     )]
     pub struct PrizeConfig {
         /// Share of the pot awarded to players who achieve perfect (10-win) runs.
@@ -278,7 +280,14 @@ pub mod pallet {
 
     /// Mutable state tracked for a tournament.
     #[derive(
-        Encode, Decode, DecodeWithMemTracking, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen, DefaultNoBound,
+        Encode,
+        Decode,
+        DecodeWithMemTracking,
+        TypeInfo,
+        CloneNoBound,
+        PartialEqNoBound,
+        MaxEncodedLen,
+        DefaultNoBound,
     )]
     #[scale_info(skip_type_params(T))]
     pub struct TournamentState<T: Config> {
@@ -289,7 +298,15 @@ pub mod pallet {
 
     /// Per-player statistics within a tournament.
     #[derive(
-        Encode, Decode, DecodeWithMemTracking, TypeInfo, Clone, PartialEq, RuntimeDebug, MaxEncodedLen, Default,
+        Encode,
+        Decode,
+        DecodeWithMemTracking,
+        TypeInfo,
+        Clone,
+        PartialEq,
+        RuntimeDebug,
+        MaxEncodedLen,
+        Default,
     )]
     pub struct PlayerTournamentStats {
         pub perfect_runs: u32,
@@ -386,8 +403,7 @@ pub mod pallet {
     /// Map of card set hashes to their unique set ID.
     /// Used to prevent duplicate card sets from being stored.
     #[pallet::storage]
-    pub type CardSetHashes<T: Config> =
-        StorageMap<_, Blake2_128Concat, T::Hash, u32, OptionQuery>;
+    pub type CardSetHashes<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, u32, OptionQuery>;
 
     /// Next available tournament ID.
     #[pallet::storage]
@@ -412,8 +428,10 @@ pub mod pallet {
     #[pallet::storage]
     pub type TournamentPlayerStats<T: Config> = StorageDoubleMap<
         _,
-        Blake2_128Concat, u32,          // tournament_id
-        Blake2_128Concat, T::AccountId, // player
+        Blake2_128Concat,
+        u32, // tournament_id
+        Blake2_128Concat,
+        T::AccountId, // player
         PlayerTournamentStats,
         ValueQuery,
     >;
@@ -422,8 +440,10 @@ pub mod pallet {
     #[pallet::storage]
     pub type TournamentClaimed<T: Config> = StorageDoubleMap<
         _,
-        Blake2_128Concat, u32,          // tournament_id
-        Blake2_128Concat, T::AccountId, // player
+        Blake2_128Concat,
+        u32, // tournament_id
+        Blake2_128Concat,
+        T::AccountId, // player
         bool,
         ValueQuery,
     >;
@@ -477,15 +497,30 @@ pub mod pallet {
         /// A new tournament has been created.
         TournamentCreated { tournament_id: u32, set_id: u32 },
         /// A player has joined a tournament and started a game.
-        TournamentGameStarted { owner: T::AccountId, tournament_id: u32, seed: u64 },
+        TournamentGameStarted {
+            owner: T::AccountId,
+            tournament_id: u32,
+            seed: u64,
+        },
         /// A tournament game has been completed (win or loss).
-        TournamentGameCompleted { owner: T::AccountId, tournament_id: u32, wins: i32 },
+        TournamentGameCompleted {
+            owner: T::AccountId,
+            tournament_id: u32,
+            wins: i32,
+        },
         /// A tournament game has been abandoned.
-        TournamentGameAbandoned { owner: T::AccountId, tournament_id: u32 },
+        TournamentGameAbandoned {
+            owner: T::AccountId,
+            tournament_id: u32,
+        },
         /// A regular game has been abandoned.
         GameAbandoned { owner: T::AccountId },
         /// A tournament prize has been claimed.
-        PrizeClaimed { tournament_id: u32, player: T::AccountId, amount: BalanceOf<T> },
+        PrizeClaimed {
+            tournament_id: u32,
+            player: T::AccountId,
+            amount: BalanceOf<T>,
+        },
     }
 
     #[pallet::error]
@@ -561,7 +596,9 @@ pub mod pallet {
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
-            use oab_core::cards::{get_all_card_metas, get_all_cards, get_all_set_metas, get_all_sets};
+            use oab_core::cards::{
+                get_all_card_metas, get_all_cards, get_all_set_metas, get_all_sets,
+            };
 
             let cards = get_all_cards();
             let metas = get_all_card_metas();
@@ -670,20 +707,24 @@ pub mod pallet {
             );
 
             let mut battle = Self::prepare_battle(
-                &who, session.set_id, session.state.clone().into(), action, b"battle",
+                &who,
+                session.set_id,
+                session.state.clone().into(),
+                action,
+                b"battle",
             )?;
 
             // Select ghost from regular pool, fallback to procedural
-            let enemy_units = Self::select_ghost_opponent(
-                &battle.bracket, &battle.card_set, battle.battle_seed,
-            ).unwrap_or_else(|| {
-                get_opponent_for_round(
-                    battle.core_state.local_state.round,
-                    battle.battle_seed.wrapping_add(999),
-                    &battle.core_state.card_pool,
-                )
-                .unwrap_or_default()
-            });
+            let enemy_units =
+                Self::select_ghost_opponent(&battle.bracket, &battle.card_set, battle.battle_seed)
+                    .unwrap_or_else(|| {
+                        get_opponent_for_round(
+                            battle.core_state.local_state.round,
+                            battle.battle_seed.wrapping_add(999),
+                            &battle.core_state.card_pool,
+                        )
+                        .unwrap_or_default()
+                    });
 
             // Store player's board as ghost (after selecting opponent)
             let ghost = Self::create_ghost_board(&battle.core_state);
@@ -837,7 +878,10 @@ pub mod pallet {
 
             let bounded_set = BoundedCardSet::<T>::from(card_set);
             let set_hash = T::Hashing::hash_of(&bounded_set);
-            ensure!(!CardSetHashes::<T>::contains_key(&set_hash), Error::<T>::SetAlreadyExists);
+            ensure!(
+                !CardSetHashes::<T>::contains_key(&set_hash),
+                Error::<T>::SetAlreadyExists
+            );
 
             CardSets::<T>::insert(set_id, bounded_set);
             CardSetHashes::<T>::insert(&set_hash, set_id);
@@ -870,8 +914,8 @@ pub mod pallet {
             let who = ensure_signed(origin)?;
 
             // Ensure the set exists and get existing metadata for creator
-            let existing = CardSetMetadataStore::<T>::get(set_id)
-                .ok_or(Error::<T>::CardSetNotFound)?;
+            let existing =
+                CardSetMetadataStore::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
 
             let set_metadata = SetMetadata {
                 name: BoundedVec::truncate_from(name),
@@ -901,7 +945,10 @@ pub mod pallet {
             T::TournamentOrigin::ensure_origin(origin)?;
 
             // Validate set exists
-            ensure!(CardSets::<T>::contains_key(set_id), Error::<T>::CardSetNotFound);
+            ensure!(
+                CardSets::<T>::contains_key(set_id),
+                Error::<T>::CardSetNotFound
+            );
 
             // Validate tournament period
             let now = frame_system::Pallet::<T>::block_number();
@@ -909,7 +956,8 @@ pub mod pallet {
             ensure!(end_block > start_block, Error::<T>::InvalidTournamentPeriod);
 
             // Validate prize config sums to 100%
-            let total = prize_config.player_share
+            let total = prize_config
+                .player_share
                 .saturating_add(prize_config.set_creator_share)
                 .saturating_add(prize_config.card_creators_share);
             ensure!(total == Perbill::one(), Error::<T>::InvalidPrizeConfig);
@@ -928,7 +976,10 @@ pub mod pallet {
             // TournamentStates uses ValueQuery so defaults are already correct
             NextTournamentId::<T>::put(tournament_id.saturating_add(1));
 
-            Self::deposit_event(Event::TournamentCreated { tournament_id, set_id });
+            Self::deposit_event(Event::TournamentCreated {
+                tournament_id,
+                set_id,
+            });
 
             Ok(())
         }
@@ -936,14 +987,11 @@ pub mod pallet {
         /// Join a tournament and start a tournament game.
         #[pallet::call_index(8)]
         #[pallet::weight(Weight::default())]
-        pub fn join_tournament(
-            origin: OriginFor<T>,
-            tournament_id: u32,
-        ) -> DispatchResult {
+        pub fn join_tournament(origin: OriginFor<T>, tournament_id: u32) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
-            let config = Tournaments::<T>::get(tournament_id)
-                .ok_or(Error::<T>::TournamentNotFound)?;
+            let config =
+                Tournaments::<T>::get(tournament_id).ok_or(Error::<T>::TournamentNotFound)?;
 
             let now = frame_system::Pallet::<T>::block_number();
             ensure!(now >= config.start_block, Error::<T>::TournamentNotStarted);
@@ -968,9 +1016,8 @@ pub mod pallet {
                 state.total_entries = state.total_entries.saturating_add(1);
             });
 
-            let (state, seed) = Self::initialize_game_state(
-                &who, config.set_id, b"tournament_start",
-            )?;
+            let (state, seed) =
+                Self::initialize_game_state(&who, config.set_id, b"tournament_start")?;
 
             let session = TournamentGameSession {
                 state,
@@ -999,8 +1046,8 @@ pub mod pallet {
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
-            let mut session = ActiveTournamentGame::<T>::get(&who)
-                .ok_or(Error::<T>::NoActiveTournamentGame)?;
+            let mut session =
+                ActiveTournamentGame::<T>::get(&who).ok_or(Error::<T>::NoActiveTournamentGame)?;
             ensure!(
                 session.state.phase == GamePhase::Shop,
                 Error::<T>::WrongPhase
@@ -1009,13 +1056,21 @@ pub mod pallet {
             let tid = session.tournament_id;
 
             let mut battle = Self::prepare_battle(
-                &who, session.set_id, session.state.clone().into(), action, b"tournament_battle",
+                &who,
+                session.set_id,
+                session.state.clone().into(),
+                action,
+                b"tournament_battle",
             )?;
 
             // Select ghost from tournament pool, fallback to procedural
             let enemy_units = Self::select_tournament_ghost_opponent(
-                tid, &battle.bracket, &battle.card_set, battle.battle_seed,
-            ).unwrap_or_else(|| {
+                tid,
+                &battle.bracket,
+                &battle.card_set,
+                battle.battle_seed,
+            )
+            .unwrap_or_else(|| {
                 get_opponent_for_round(
                     battle.core_state.local_state.round,
                     battle.battle_seed.wrapping_add(999),
@@ -1028,9 +1083,8 @@ pub mod pallet {
             let ghost = Self::create_ghost_board(&battle.core_state);
             Self::store_tournament_ghost(&who, tid, &battle.bracket, ghost);
 
-            let turn = Self::execute_and_advance(
-                &who, &mut battle, enemy_units, b"tournament_shop",
-            );
+            let turn =
+                Self::execute_and_advance(&who, &mut battle, enemy_units, b"tournament_shop");
 
             if turn.game_over {
                 TournamentPlayerStats::<T>::mutate(tid, &who, |stats| {
@@ -1102,8 +1156,8 @@ pub mod pallet {
         pub fn abandon_tournament(origin: OriginFor<T>) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
-            let session = ActiveTournamentGame::<T>::get(&who)
-                .ok_or(Error::<T>::NoActiveTournamentGame)?;
+            let session =
+                ActiveTournamentGame::<T>::get(&who).ok_or(Error::<T>::NoActiveTournamentGame)?;
 
             let tid = session.tournament_id;
 
@@ -1126,14 +1180,11 @@ pub mod pallet {
         /// Claim tournament prizes. Sums player prize, set creator prize, and card creator prize.
         #[pallet::call_index(12)]
         #[pallet::weight(Weight::default())]
-        pub fn claim_prize(
-            origin: OriginFor<T>,
-            tournament_id: u32,
-        ) -> DispatchResult {
+        pub fn claim_prize(origin: OriginFor<T>, tournament_id: u32) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
-            let config = Tournaments::<T>::get(tournament_id)
-                .ok_or(Error::<T>::TournamentNotFound)?;
+            let config =
+                Tournaments::<T>::get(tournament_id).ok_or(Error::<T>::TournamentNotFound)?;
 
             // Ensure tournament has ended
             let now = frame_system::Pallet::<T>::block_number();
@@ -1152,7 +1203,10 @@ pub mod pallet {
 
             // 1. Player prize (if caller has perfect runs)
             if player_stats.perfect_runs > 0 && tournament_state.total_perfect_runs > 0 {
-                let player_pot = config.prize_config.player_share.mul_floor(tournament_state.total_pot);
+                let player_pot = config
+                    .prize_config
+                    .player_share
+                    .mul_floor(tournament_state.total_pot);
                 // player_prize = player_pot * my_perfect_runs / total_perfect_runs
                 let my_runs: BalanceOf<T> = player_stats.perfect_runs.into();
                 let total_runs: BalanceOf<T> = tournament_state.total_perfect_runs.into();
@@ -1166,7 +1220,9 @@ pub mod pallet {
             // 2. Set creator prize (if caller == set creator)
             if let Some(set_meta) = CardSetMetadataStore::<T>::get(config.set_id) {
                 if set_meta.creator == who {
-                    let set_creator_prize = config.prize_config.set_creator_share
+                    let set_creator_prize = config
+                        .prize_config
+                        .set_creator_share
                         .mul_floor(tournament_state.total_pot);
                     total_prize = total_prize.saturating_add(set_creator_prize);
                 }
@@ -1186,7 +1242,9 @@ pub mod pallet {
                 }
 
                 if my_cards > 0 && total_cards > 0 {
-                    let card_creators_pot = config.prize_config.card_creators_share
+                    let card_creators_pot = config
+                        .prize_config
+                        .card_creators_share
                         .mul_floor(tournament_state.total_pot);
                     let my: BalanceOf<T> = my_cards.into();
                     let total: BalanceOf<T> = total_cards.into();
@@ -1199,7 +1257,10 @@ pub mod pallet {
             }
 
             // Ensure there's actually a prize to claim
-            ensure!(total_prize > BalanceOf::<T>::zero(), Error::<T>::NoPrizeAvailable);
+            ensure!(
+                total_prize > BalanceOf::<T>::zero(),
+                Error::<T>::NoPrizeAvailable
+            );
 
             // Transfer prize from pallet account
             let pallet_account = Self::pallet_account_id();

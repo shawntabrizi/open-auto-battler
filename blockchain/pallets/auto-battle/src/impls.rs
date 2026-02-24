@@ -7,11 +7,11 @@ use oab_core::bounded::{
     BoundedGhostBoard as CoreBoundedGhostBoard, GhostBoardUnit, MatchmakingBracket,
 };
 use oab_core::rng::BattleRng;
+use oab_core::units::create_starting_bag;
 use oab_core::{
     apply_shop_start_triggers, resolve_battle, verify_and_apply_turn, BattleResult, CardSet,
     CombatUnit, CommitTurnAction, GamePhase, GameState, UnitCard, XorShiftRng,
 };
-use oab_core::units::create_starting_bag;
 
 /// Transient struct holding everything needed for battle execution.
 /// Not stored on-chain.
@@ -136,10 +136,8 @@ impl<T: Config> Pallet<T> {
                 .get_mut(slot)
                 .and_then(|s| s.as_mut())
                 .map(|board_unit| {
-                    board_unit.perm_attack =
-                        board_unit.perm_attack.saturating_add(*attack_delta);
-                    board_unit.perm_health =
-                        board_unit.perm_health.saturating_add(*health_delta);
+                    board_unit.perm_attack = board_unit.perm_attack.saturating_add(*attack_delta);
+                    board_unit.perm_health = board_unit.perm_health.saturating_add(*health_delta);
                     (board_unit.card_id, board_unit.perm_health)
                 });
 
@@ -173,8 +171,7 @@ impl<T: Config> Pallet<T> {
         set_id: u32,
         seed_context: &[u8],
     ) -> Result<(BoundedLocalGameState<T>, u64), DispatchError> {
-        let card_set_bounded =
-            CardSets::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
+        let card_set_bounded = CardSets::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
         let card_set: CardSet = card_set_bounded.into();
         let card_pool = Self::get_card_pool(&card_set);
 
@@ -214,13 +211,11 @@ impl<T: Config> Pallet<T> {
         action: BoundedCommitTurnAction<T>,
         battle_seed_context: &[u8],
     ) -> Result<PreparedBattle, DispatchError> {
-        let card_set_bounded =
-            CardSets::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
+        let card_set_bounded = CardSets::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
         let card_set: CardSet = card_set_bounded.into();
         let card_pool = Self::get_card_pool(&card_set);
 
-        let mut core_state =
-            GameState::reconstruct(card_pool, set_id, local_state);
+        let mut core_state = GameState::reconstruct(card_pool, set_id, local_state);
 
         let core_action: CommitTurnAction = action.into();
         verify_and_apply_turn(&mut core_state, &core_action)
@@ -302,8 +297,7 @@ impl<T: Config> Pallet<T> {
 
         battle.core_state.local_state.shop_mana =
             oab_core::battle::player_shop_mana_delta_from_events(&events).max(0);
-        let permanent_deltas =
-            oab_core::battle::player_permanent_stat_deltas_from_events(&events);
+        let permanent_deltas = oab_core::battle::player_permanent_stat_deltas_from_events(&events);
         Self::apply_player_permanent_stat_deltas(
             &mut battle.core_state,
             &battle.player_slots,
@@ -334,15 +328,13 @@ impl<T: Config> Pallet<T> {
 
         let completed_round = battle.core_state.local_state.round;
         let current_wins = battle.core_state.local_state.wins;
-        let game_over =
-            battle.core_state.local_state.lives <= 0 || current_wins >= 10;
+        let game_over = battle.core_state.local_state.lives <= 0 || current_wins >= 10;
 
         let new_seed = if !game_over {
             let new_seed = Self::generate_next_seed(who, next_seed_context);
             battle.core_state.local_state.game_seed = new_seed;
             battle.core_state.local_state.round += 1;
-            battle.core_state.local_state.mana_limit =
-                battle.core_state.calculate_mana_limit();
+            battle.core_state.local_state.mana_limit = battle.core_state.calculate_mana_limit();
             battle.core_state.local_state.phase = GamePhase::Shop;
             battle.core_state.draw_hand();
             apply_shop_start_triggers(&mut battle.core_state);

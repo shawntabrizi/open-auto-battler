@@ -196,9 +196,8 @@ impl GameEngine {
     /// Used by the frontend to inject blockchain sets for preview/play.
     #[wasm_bindgen]
     pub fn add_set(&mut self, set_id: u32, cards_js: JsValue) -> Result<(), String> {
-        let entries: Vec<oab_core::state::CardSetEntry> =
-            serde_wasm_bindgen::from_value(cards_js)
-                .map_err(|e| format!("Failed to parse set entries: {:?}", e))?;
+        let entries: Vec<oab_core::state::CardSetEntry> = serde_wasm_bindgen::from_value(cards_js)
+            .map_err(|e| format!("Failed to parse set entries: {:?}", e))?;
         let card_set = CardSet { cards: entries };
         self.custom_sets.insert(set_id, card_set);
         Ok(())

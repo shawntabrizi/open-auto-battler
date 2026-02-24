@@ -101,8 +101,7 @@ pub fn initialize() {
             // Item metadata
             let metadata_bytes: Vec<u8> = item.metadata_json.as_bytes().to_vec();
             let bounded_data: BoundedVec<u8, <Runtime as pallet_nfts::Config>::StringLimit> =
-                BoundedVec::try_from(metadata_bytes)
-                    .expect("NFT metadata exceeds StringLimit");
+                BoundedVec::try_from(metadata_bytes).expect("NFT metadata exceeds StringLimit");
 
             pallet_nfts::ItemMetadataOf::<Runtime>::insert(
                 collection_id,

@@ -311,7 +311,11 @@ fn test_create_card_set_rarity_overflow() {
 
         // Should fail due to overflow
         assert_noop!(
-            AutoBattle::create_card_set(RuntimeOrigin::signed(account_id), entries, b"Overflow Set".to_vec()),
+            AutoBattle::create_card_set(
+                RuntimeOrigin::signed(account_id),
+                entries,
+                b"Overflow Set".to_vec()
+            ),
             Error::<Test>::RarityOverflow
         );
     });
@@ -330,7 +334,11 @@ fn test_create_card_set_zero_rarity() {
 
         // Should fail because total rarity is 0
         assert_noop!(
-            AutoBattle::create_card_set(RuntimeOrigin::signed(account_id), entries, b"Zero Set".to_vec()),
+            AutoBattle::create_card_set(
+                RuntimeOrigin::signed(account_id),
+                entries,
+                b"Zero Set".to_vec()
+            ),
             Error::<Test>::InvalidRarity
         );
     });
@@ -426,7 +434,12 @@ fn test_create_tournament_invalid_period() {
         // start_block < now
         assert_noop!(
             AutoBattle::create_tournament(
-                RuntimeOrigin::root(), 0, 50, 3, 100, default_prize_config()
+                RuntimeOrigin::root(),
+                0,
+                50,
+                3,
+                100,
+                default_prize_config()
             ),
             Error::<Test>::InvalidTournamentPeriod
         );
@@ -434,7 +447,12 @@ fn test_create_tournament_invalid_period() {
         // end_block <= start_block
         assert_noop!(
             AutoBattle::create_tournament(
-                RuntimeOrigin::root(), 0, 50, 10, 10, default_prize_config()
+                RuntimeOrigin::root(),
+                0,
+                50,
+                10,
+                10,
+                default_prize_config()
             ),
             Error::<Test>::InvalidTournamentPeriod
         );
@@ -467,7 +485,12 @@ fn test_create_tournament_requires_special_origin() {
         // Signed origin should fail (only root allowed)
         assert_noop!(
             AutoBattle::create_tournament(
-                RuntimeOrigin::signed(1), 0, 50, 1, 100, default_prize_config()
+                RuntimeOrigin::signed(1),
+                0,
+                50,
+                1,
+                100,
+                default_prize_config()
             ),
             DispatchError::BadOrigin
         );
@@ -483,7 +506,10 @@ fn test_join_tournament() {
         let player = 1;
         let initial_balance = Balances::free_balance(player);
 
-        assert_ok!(AutoBattle::join_tournament(RuntimeOrigin::signed(player), 0));
+        assert_ok!(AutoBattle::join_tournament(
+            RuntimeOrigin::signed(player),
+            0
+        ));
 
         // Balance should decrease by entry fee
         let new_balance = Balances::free_balance(player);
@@ -561,7 +587,10 @@ fn test_regular_and_tournament_games_coexist() {
         assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(player), 0));
 
         // Join tournament game (separate storage, should succeed)
-        assert_ok!(AutoBattle::join_tournament(RuntimeOrigin::signed(player), 0));
+        assert_ok!(AutoBattle::join_tournament(
+            RuntimeOrigin::signed(player),
+            0
+        ));
 
         // Both should exist
         assert!(ActiveGame::<Test>::contains_key(player));
@@ -576,7 +605,10 @@ fn test_submit_tournament_turn() {
         create_test_tournament(1, 100, 50);
 
         let player = 1;
-        assert_ok!(AutoBattle::join_tournament(RuntimeOrigin::signed(player), 0));
+        assert_ok!(AutoBattle::join_tournament(
+            RuntimeOrigin::signed(player),
+            0
+        ));
 
         // Submit empty turn
         let action = CommitTurnAction { actions: vec![] };
@@ -601,7 +633,10 @@ fn test_tournament_game_over_records_stats() {
         create_test_tournament(1, 100, 50);
 
         let player = 1;
-        assert_ok!(AutoBattle::join_tournament(RuntimeOrigin::signed(player), 0));
+        assert_ok!(AutoBattle::join_tournament(
+            RuntimeOrigin::signed(player),
+            0
+        ));
 
         // Force lives to 1 so next loss ends the game
         ActiveTournamentGame::<Test>::mutate(player, |session| {
@@ -631,7 +666,10 @@ fn test_tournament_perfect_run_stats() {
         create_test_tournament(1, 100, 50);
 
         let player = 1;
-        assert_ok!(AutoBattle::join_tournament(RuntimeOrigin::signed(player), 0));
+        assert_ok!(AutoBattle::join_tournament(
+            RuntimeOrigin::signed(player),
+            0
+        ));
 
         // Force wins to 9, lives high
         ActiveTournamentGame::<Test>::mutate(player, |session| {
@@ -676,7 +714,10 @@ fn test_tournament_perfect_run_stats() {
         assert_eq!(stats.perfect_runs, 0);
 
         // Now test perfect run tracking: join again and simulate perfect run
-        assert_ok!(AutoBattle::join_tournament(RuntimeOrigin::signed(player), 0));
+        assert_ok!(AutoBattle::join_tournament(
+            RuntimeOrigin::signed(player),
+            0
+        ));
 
         // Set wins to 10 and force game completion via lives = 0
         // Actually, let's test just the perfect run counter directly:
@@ -746,11 +787,16 @@ fn test_abandon_tournament() {
             Error::<Test>::NoActiveTournamentGame
         );
 
-        assert_ok!(AutoBattle::join_tournament(RuntimeOrigin::signed(player), 0));
+        assert_ok!(AutoBattle::join_tournament(
+            RuntimeOrigin::signed(player),
+            0
+        ));
 
         // Abandon if still active
         if ActiveTournamentGame::<Test>::contains_key(player) {
-            assert_ok!(AutoBattle::abandon_tournament(RuntimeOrigin::signed(player)));
+            assert_ok!(AutoBattle::abandon_tournament(RuntimeOrigin::signed(
+                player
+            )));
         }
 
         assert!(!ActiveTournamentGame::<Test>::contains_key(player));
@@ -770,12 +816,18 @@ fn test_tournament_ghost_isolation() {
         // Player 1 plays regular game
         assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(1), 0));
         let action = CommitTurnAction { actions: vec![] };
-        assert_ok!(AutoBattle::submit_turn(RuntimeOrigin::signed(1), action.into()));
+        assert_ok!(AutoBattle::submit_turn(
+            RuntimeOrigin::signed(1),
+            action.into()
+        ));
 
         // Player 2 plays tournament game
         assert_ok!(AutoBattle::join_tournament(RuntimeOrigin::signed(2), 0));
         let action = CommitTurnAction { actions: vec![] };
-        assert_ok!(AutoBattle::submit_tournament_turn(RuntimeOrigin::signed(2), action.into()));
+        assert_ok!(AutoBattle::submit_tournament_turn(
+            RuntimeOrigin::signed(2),
+            action.into()
+        ));
 
         // Regular ghost storage should have player 1's ghost (if board was non-empty)
         // Tournament ghost storage should have player 2's ghost (if board was non-empty)
@@ -825,8 +877,14 @@ fn test_claim_prize_double_claim() {
 
         // Create a set where account 1 is the creator
         let entries = vec![
-            crate::CardSetEntryInput { card_id: 1, rarity: 10 },
-            crate::CardSetEntryInput { card_id: 2, rarity: 5 },
+            crate::CardSetEntryInput {
+                card_id: 1,
+                rarity: 10,
+            },
+            crate::CardSetEntryInput {
+                card_id: 2,
+                rarity: 5,
+            },
         ];
         assert_ok!(AutoBattle::create_card_set(
             RuntimeOrigin::signed(1),
@@ -868,8 +926,14 @@ fn test_claim_prize_set_creator() {
 
         // Account 1 creates a card set
         let entries = vec![
-            crate::CardSetEntryInput { card_id: 1, rarity: 10 },
-            crate::CardSetEntryInput { card_id: 2, rarity: 5 },
+            crate::CardSetEntryInput {
+                card_id: 1,
+                rarity: 10,
+            },
+            crate::CardSetEntryInput {
+                card_id: 2,
+                rarity: 5,
+            },
         ];
         assert_ok!(AutoBattle::create_card_set(
             RuntimeOrigin::signed(1),
@@ -918,7 +982,10 @@ fn test_claim_prize_perfect_run_player() {
         create_test_tournament(1, 100, 100);
 
         let player = 1;
-        assert_ok!(AutoBattle::join_tournament(RuntimeOrigin::signed(player), 0));
+        assert_ok!(AutoBattle::join_tournament(
+            RuntimeOrigin::signed(player),
+            0
+        ));
 
         // Simulate a perfect run: force wins to 10
         ActiveTournamentGame::<Test>::mutate(player, |session| {
@@ -968,7 +1035,10 @@ fn test_tournament_multiple_players_prize_split() {
             s.state.lives = 100;
         });
         let action = CommitTurnAction { actions: vec![] };
-        assert_ok!(AutoBattle::submit_tournament_turn(RuntimeOrigin::signed(1), action.into()));
+        assert_ok!(AutoBattle::submit_tournament_turn(
+            RuntimeOrigin::signed(1),
+            action.into()
+        ));
 
         // Player 2 also gets a perfect run
         ActiveTournamentGame::<Test>::mutate(2u64, |session| {
@@ -977,7 +1047,10 @@ fn test_tournament_multiple_players_prize_split() {
             s.state.lives = 100;
         });
         let action = CommitTurnAction { actions: vec![] };
-        assert_ok!(AutoBattle::submit_tournament_turn(RuntimeOrigin::signed(2), action.into()));
+        assert_ok!(AutoBattle::submit_tournament_turn(
+            RuntimeOrigin::signed(2),
+            action.into()
+        ));
 
         System::set_block_number(101);
 
@@ -1003,9 +1076,10 @@ fn test_no_perfect_runs_player_share_stays_in_pallet() {
         System::set_block_number(1);
 
         // Account 1 creates set
-        let entries = vec![
-            crate::CardSetEntryInput { card_id: 1, rarity: 10 },
-        ];
+        let entries = vec![crate::CardSetEntryInput {
+            card_id: 1,
+            rarity: 10,
+        }];
         assert_ok!(AutoBattle::create_card_set(
             RuntimeOrigin::signed(1),
             entries,
@@ -1014,7 +1088,12 @@ fn test_no_perfect_runs_player_share_stays_in_pallet() {
         let set_id = 2;
 
         assert_ok!(AutoBattle::create_tournament(
-            RuntimeOrigin::root(), set_id, 100, 1, 100, default_prize_config(),
+            RuntimeOrigin::root(),
+            set_id,
+            100,
+            1,
+            100,
+            default_prize_config(),
         ));
 
         // Player 2 joins and loses
@@ -1023,7 +1102,10 @@ fn test_no_perfect_runs_player_share_stays_in_pallet() {
             session.as_mut().unwrap().state.lives = 1;
         });
         let action = CommitTurnAction { actions: vec![] };
-        assert_ok!(AutoBattle::submit_tournament_turn(RuntimeOrigin::signed(2), action.into()));
+        assert_ok!(AutoBattle::submit_tournament_turn(
+            RuntimeOrigin::signed(2),
+            action.into()
+        ));
 
         System::set_block_number(101);
 
