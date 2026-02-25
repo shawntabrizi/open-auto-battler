@@ -286,7 +286,7 @@ export const CreateSetPage: React.FC = () => {
                     </div>
                   ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-slate-600 italic text-sm text-center p-8">
-                      <div className="text-4xl mb-4 opacity-20">🗂️</div>
+                      <div className="text-4xl mb-4 opacity-20 font-bold text-slate-600">---</div>
                       Select cards from the library to begin building your set.
                     </div>
                   )}

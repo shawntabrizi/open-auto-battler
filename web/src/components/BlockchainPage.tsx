@@ -123,7 +123,7 @@ export const BlockchainPage: React.FC = () => {
               >
                 {accounts.map((acc) => (
                   <option key={acc.address} value={acc.address}>
-                    {acc.source === 'dev' ? '🛠️ ' : ''}
+                    {acc.source === 'dev' ? '[DEV] ' : ''}
                     {acc.name} ({acc.address.slice(0, 6)}...)
                   </option>
                 ))}
@@ -140,11 +140,13 @@ export const BlockchainPage: React.FC = () => {
                   onChange={(e) => setSelectedSetId(Number(e.target.value))}
                   className="flex-1 bg-slate-800 border border-white/10 text-white text-sm rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500/50 cursor-pointer"
                 >
-                  {[...availableSets].sort((a, b) => a.id - b.id).map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} (#{s.id}) &middot; {s.cards.length} cards
-                    </option>
-                  ))}
+                  {[...availableSets]
+                    .sort((a, b) => a.id - b.id)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} (#{s.id}) &middot; {s.cards.length} cards
+                      </option>
+                    ))}
                 </select>
                 <button
                   onClick={() => previewSet(selectedSetId)}
@@ -164,7 +166,10 @@ export const BlockchainPage: React.FC = () => {
             </button>
 
             <div className="flex items-center justify-center gap-4 mt-4">
-              <Link to="/blockchain/creator" className="text-slate-500 hover:text-slate-300 text-xs">
+              <Link
+                to="/blockchain/creator"
+                className="text-slate-500 hover:text-slate-300 text-xs"
+              >
                 Creator Hub
               </Link>
               <Link to="/" className="text-slate-500 hover:text-slate-300 text-xs">

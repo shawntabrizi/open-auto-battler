@@ -1,4 +1,5 @@
 import { getCardEmoji } from '../../utils/emoji';
+import { getCardArtMd, hasCardArt } from '../../utils/cardArt';
 import type { CardView } from '../../types';
 
 /**
@@ -11,8 +12,16 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
     <div className="w-80 bg-gray-900 rounded-xl border border-gray-700 shadow-2xl p-5 text-left">
       {/* Card Basic Info */}
       <div className="flex items-center gap-4 mb-4">
-        <div className="w-16 h-16 bg-gray-800 rounded-xl border-2 border-gray-700 flex items-center justify-center text-3xl shadow-inner flex-shrink-0">
-          {getCardEmoji(card.id)}
+        <div className="w-16 h-16 bg-gray-800 rounded-xl border-2 border-gray-700 flex items-center justify-center text-3xl shadow-inner flex-shrink-0 overflow-hidden">
+          {hasCardArt(card.id) ? (
+            <img
+              src={getCardArtMd(card.id)!}
+              alt=""
+              className="w-full h-full object-cover object-[center_30%]"
+            />
+          ) : (
+            getCardEmoji(card.id)
+          )}
         </div>
         <div>
           <h2 className="text-xl font-bold text-white leading-tight">{card.name}</h2>

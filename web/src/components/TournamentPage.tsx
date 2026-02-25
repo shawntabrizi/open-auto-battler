@@ -16,7 +16,7 @@ const formatBalance = (raw: bigint, decimals = 12) =>
   });
 
 const formatPerbill = (value: number) => {
-  const pct = (value / 10_000_000);
+  const pct = value / 10_000_000;
   return `${pct.toFixed(pct % 1 === 0 ? 0 : 1)}%`;
 };
 
@@ -191,7 +191,9 @@ export const TournamentPage: React.FC = () => {
               : 'bg-red-900/30 border-2 border-red-500'
           }`}
         >
-          <h1 className={`text-3xl font-bold mb-4 ${isVictory ? 'text-green-400' : 'text-red-400'}`}>
+          <h1
+            className={`text-3xl font-bold mb-4 ${isVictory ? 'text-green-400' : 'text-red-400'}`}
+          >
             {isVictory ? 'PERFECT RUN!' : 'RUN OVER'}
           </h1>
           <div className="flex flex-col gap-3">
@@ -204,7 +206,10 @@ export const TournamentPage: React.FC = () => {
                 {txLoading ? 'JOINING...' : 'PLAY AGAIN'}
               </button>
             )}
-            <button onClick={handleBackToTournament} className="text-slate-400 hover:text-white underline text-sm">
+            <button
+              onClick={handleBackToTournament}
+              className="text-slate-400 hover:text-white underline text-sm"
+            >
               Back to Tournament
             </button>
           </div>
@@ -259,8 +264,9 @@ export const TournamentPage: React.FC = () => {
   }
 
   // ── Tournament Details Screen ──
-  const setName = availableSets.find((s) => s.id === activeTournament?.config.set_id)?.name
-    || `Set #${activeTournament?.config.set_id ?? '?'}`;
+  const setName =
+    availableSets.find((s) => s.id === activeTournament?.config.set_id)?.name ||
+    `Set #${activeTournament?.config.set_id ?? '?'}`;
 
   return (
     <div className="h-screen h-svh bg-board-bg text-slate-200 overflow-hidden font-sans flex flex-col">
@@ -288,7 +294,7 @@ export const TournamentPage: React.FC = () => {
             >
               {accounts.map((acc) => (
                 <option key={acc.address} value={acc.address}>
-                  {acc.source === 'dev' ? '🛠️ ' : ''}
+                  {acc.source === 'dev' ? '[DEV] ' : ''}
                   {acc.name} ({acc.address.slice(0, 6)}...)
                 </option>
               ))}
@@ -322,25 +328,33 @@ export const TournamentPage: React.FC = () => {
               {/* Info Grid */}
               <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5 lg:gap-3 mb-2 lg:mb-4 text-center lg:text-left">
                 <div className="bg-slate-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">Fee</div>
+                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">
+                    Fee
+                  </div>
                   <div className="text-xs lg:text-sm font-bold text-white">
                     {formatBalance(activeTournament.config.entry_fee)}
                   </div>
                 </div>
                 <div className="bg-slate-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">Pool</div>
+                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">
+                    Pool
+                  </div>
                   <div className="text-xs lg:text-sm font-bold text-purple-300">
                     {formatBalance(activeTournament.state.total_pot)}
                   </div>
                 </div>
                 <div className="bg-slate-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">Entries</div>
+                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">
+                    Entries
+                  </div>
                   <div className="text-xs lg:text-sm font-bold text-white">
                     {activeTournament.state.total_entries}
                   </div>
                 </div>
                 <div className="bg-slate-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">Perfect</div>
+                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">
+                    Perfect
+                  </div>
                   <div className="text-xs lg:text-sm font-bold text-green-400">
                     {activeTournament.state.total_perfect_runs}
                   </div>
@@ -349,19 +363,27 @@ export const TournamentPage: React.FC = () => {
 
               {/* Prize Distribution */}
               <div className="bg-slate-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
-                <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold mb-1 lg:mb-2">Prize Distribution</div>
+                <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold mb-1 lg:mb-2">
+                  Prize Distribution
+                </div>
                 <div className="flex gap-2 lg:gap-4 text-[10px] lg:text-xs">
                   <div>
                     <span className="text-slate-400">Players: </span>
-                    <span className="text-white font-bold">{formatPerbill(activeTournament.config.prize_config.player_share)}</span>
+                    <span className="text-white font-bold">
+                      {formatPerbill(activeTournament.config.prize_config.player_share)}
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-400">Set Creator: </span>
-                    <span className="text-white font-bold">{formatPerbill(activeTournament.config.prize_config.set_creator_share)}</span>
+                    <span className="text-white font-bold">
+                      {formatPerbill(activeTournament.config.prize_config.set_creator_share)}
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-400">Card Creators: </span>
-                    <span className="text-white font-bold">{formatPerbill(activeTournament.config.prize_config.card_creators_share)}</span>
+                    <span className="text-white font-bold">
+                      {formatPerbill(activeTournament.config.prize_config.card_creators_share)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -369,7 +391,9 @@ export const TournamentPage: React.FC = () => {
               {/* Your Stats */}
               {playerStats && playerStats.total_games > 0 && (
                 <div className="bg-purple-900/20 rounded lg:rounded-lg p-2 lg:p-3 border border-purple-500/20 mb-2 lg:mb-4 text-left">
-                  <div className="text-[8px] lg:text-[10px] text-purple-400 uppercase font-bold mb-1 lg:mb-2">Your Stats</div>
+                  <div className="text-[8px] lg:text-[10px] text-purple-400 uppercase font-bold mb-1 lg:mb-2">
+                    Your Stats
+                  </div>
                   <div className="flex gap-2 lg:gap-4 text-[10px] lg:text-xs">
                     <div>
                       <span className="text-slate-400">Games: </span>
@@ -390,15 +414,26 @@ export const TournamentPage: React.FC = () => {
               {/* Leaderboard */}
               {allPlayerStats.length > 0 && (
                 <div className="bg-slate-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
-                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold mb-1 lg:mb-2">Leaderboard</div>
+                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold mb-1 lg:mb-2">
+                    Leaderboard
+                  </div>
                   <table className="w-full text-[10px] lg:text-xs">
                     <thead>
                       <tr className="text-slate-500">
                         <th className="text-left pb-0.5 lg:pb-1">#</th>
                         <th className="text-left pb-0.5 lg:pb-1">Player</th>
-                        <th className="text-right pb-0.5 lg:pb-1"><span className="hidden lg:inline">Games</span><span className="lg:hidden">G</span></th>
-                        <th className="text-right pb-0.5 lg:pb-1"><span className="hidden lg:inline">Wins</span><span className="lg:hidden">W</span></th>
-                        <th className="text-right pb-0.5 lg:pb-1"><span className="hidden lg:inline">Perfect</span><span className="lg:hidden">P</span></th>
+                        <th className="text-right pb-0.5 lg:pb-1">
+                          <span className="hidden lg:inline">Games</span>
+                          <span className="lg:hidden">G</span>
+                        </th>
+                        <th className="text-right pb-0.5 lg:pb-1">
+                          <span className="hidden lg:inline">Wins</span>
+                          <span className="lg:hidden">W</span>
+                        </th>
+                        <th className="text-right pb-0.5 lg:pb-1">
+                          <span className="hidden lg:inline">Perfect</span>
+                          <span className="lg:hidden">P</span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -502,7 +537,9 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
       <p className="text-slate-400 text-sm mb-4">No active tournament found.</p>
 
       <div className="bg-slate-800/50 rounded-lg p-4 border border-white/5 mb-4 text-left">
-        <div className="text-[10px] text-slate-500 uppercase font-bold mb-3">Create Test Tournament (Sudo)</div>
+        <div className="text-[10px] text-slate-500 uppercase font-bold mb-3">
+          Create Test Tournament (Sudo)
+        </div>
         <div className="flex items-center gap-2 mb-3">
           <label className="text-xs text-slate-400 shrink-0">Card Set:</label>
           <select
@@ -510,11 +547,13 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
             onChange={(e) => setSelectedSetId(Number(e.target.value))}
             className="flex-1 bg-slate-700 border border-white/10 text-white text-xs rounded px-2 py-1.5 outline-none"
           >
-            {[...availableSets].sort((a, b) => a.id - b.id).map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name} (#{s.id})
-              </option>
-            ))}
+            {[...availableSets]
+              .sort((a, b) => a.id - b.id)
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} (#{s.id})
+                </option>
+              ))}
           </select>
         </div>
         <div className="text-[10px] text-slate-500 mb-3">

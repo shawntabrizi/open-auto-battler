@@ -1,6 +1,7 @@
 import { useGameStore } from '../store/gameStore';
 import { UnitCard } from './UnitCard';
 import { type CardView } from '../types';
+import { BagIcon, CloseIcon } from './Icons';
 
 export function BagOverlay() {
   const { view, bag, cardSet, showBag, setShowBag, selection, setSelection } = useGameStore();
@@ -21,7 +22,7 @@ export function BagOverlay() {
       <div className="flex justify-between items-center mb-3 lg:mb-8 border-b border-gray-700 pb-2 lg:pb-4">
         <div className="flex flex-col">
           <h2 className="text-lg lg:text-3xl font-bold text-white flex items-center gap-2 lg:gap-3">
-            <span className="text-blue-400">🎒</span> Draw Pool
+            <BagIcon className="w-5 h-5 lg:w-8 lg:h-8 text-amber-400" /> Draw Pool
           </h2>
           <p className="text-gray-400 text-xs lg:text-base mt-0.5 lg:mt-1">
             <span className="text-white font-bold">{view.bag_count}</span> cards remaining
@@ -32,7 +33,7 @@ export function BagOverlay() {
           onClick={() => setShowBag(false)}
           className="btn btn-secondary px-3 lg:px-6 py-2 lg:py-3 text-sm lg:text-lg flex items-center gap-1 lg:gap-2 hover:scale-105 transition-transform"
         >
-          <span>✕</span> <span className="hidden lg:inline">Close</span>
+          <CloseIcon className="w-4 h-4" /> <span className="hidden lg:inline">Close</span>
         </button>
       </div>
 

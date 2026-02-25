@@ -1,6 +1,8 @@
 import React from 'react';
 import type { CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
+import { getCardArtMd, hasCardArt } from '../utils/cardArt';
+import { SwordIcon, HeartIcon, CloseIcon } from './Icons';
 
 interface CardDetailModalProps {
   card: CardView;
@@ -174,26 +176,38 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         {/* Header */}
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-xl font-bold text-white">{card.name}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl">
-            ×
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <CloseIcon className="w-5 h-5" />
           </button>
         </div>
 
         {/* Card Display */}
         <div className="flex flex-col items-center mb-6">
           {/* Card Art */}
-          <div className="w-32 h-32 bg-gray-700 rounded-lg flex items-center justify-center text-6xl mb-4">
-            {getCardEmoji(card.id)}
+          <div className="w-32 h-40 bg-gray-700 rounded-lg flex items-center justify-center text-6xl mb-4 overflow-hidden">
+            {hasCardArt(card.id) ? (
+              <img
+                src={getCardArtMd(card.id)!}
+                alt=""
+                className="w-full h-full object-cover object-[center_30%]"
+              />
+            ) : (
+              getCardEmoji(card.id)
+            )}
           </div>
 
           {/* Stats */}
           <div className="flex gap-6 text-center">
             <div>
-              <div className="text-red-400 text-sm">⚔ ATTACK</div>
+              <div className="text-red-400 text-sm flex items-center justify-center gap-1">
+                <SwordIcon className="w-4 h-4" /> ATTACK
+              </div>
               <div className="text-2xl font-bold text-white">{card.attack}</div>
             </div>
             <div>
-              <div className="text-green-400 text-sm">❤ HEALTH</div>
+              <div className="text-green-400 text-sm flex items-center justify-center gap-1">
+                <HeartIcon className="w-4 h-4" /> HEALTH
+              </div>
               <div className="text-2xl font-bold text-white">{card.health}</div>
             </div>
           </div>

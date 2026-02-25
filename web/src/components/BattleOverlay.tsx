@@ -23,13 +23,19 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
   const battleOutput = isSandbox ? sandboxBattleOutput : gameBattleOutput;
   const showOverlay = isSandbox ? sandboxShowOverlay : gameShowOverlay;
   const onContinue = isSandbox ? sandboxClose : gameContinue;
-  const title = isSandbox ? `Sandbox Battle (Seed: ${sandboxSeed})` : `Round ${battleOutput?.round} Battle`;
+  const title = isSandbox
+    ? `Sandbox Battle (Seed: ${sandboxSeed})`
+    : `Round ${battleOutput?.round} Battle`;
 
   const [battleFinished, setBattleFinished] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
 
   useEffect(() => {
     if (showOverlay) {
       setBattleFinished(false);
+      setShowSplash(true);
+      const timer = setTimeout(() => setShowSplash(false), 1500);
+      return () => clearTimeout(timer);
     }
   }, [showOverlay]);
 
@@ -50,21 +56,35 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
 
   const result = battleOutput.events[battleOutput.events.length - 1];
   let resultBgColor = 'bg-yellow-900/50 text-yellow-400';
-  let resultText = '🤝 DRAW';
+  let resultText = 'DRAW';
 
   if (result?.type === 'BattleEnd') {
     const res = result.payload.result;
     if (res === 'Victory') {
       resultBgColor = 'bg-green-900/50 text-green-400';
-      resultText = '🏆 VICTORY!';
+      resultText = 'VICTORY!';
     } else if (res === 'Defeat') {
       resultBgColor = 'bg-red-900/50 text-red-400';
-      resultText = '💀 DEFEAT';
+      resultText = 'DEFEAT';
     }
   }
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-2 lg:p-4">
+      {/* BATTLE! Splash */}
+      {showSplash && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/60 pointer-events-none">
+          <span
+            className="font-title text-5xl lg:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 animate-phase-splash"
+            style={{
+              textShadow: '0 0 40px rgba(245, 158, 11, 0.6), 0 0 80px rgba(245, 158, 11, 0.3)',
+            }}
+          >
+            BATTLE!
+          </span>
+        </div>
+      )}
+
       <div className="bg-gray-900 rounded-xl p-3 lg:p-6 max-w-[98vw] lg:max-w-[95vw] w-full border border-gray-700 overflow-hidden flex flex-col max-h-[95vh] lg:max-h-[90vh] relative shadow-2xl">
         {/* Close X button for sandbox mode */}
         {isSandbox && (
@@ -73,11 +93,13 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
             className="absolute top-2 right-2 lg:top-4 lg:right-4 w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors z-10 text-sm lg:text-base"
             title="Close (Esc)"
           >
-            ×
+            x
           </button>
         )}
 
-        <h2 className="text-lg lg:text-2xl font-bold text-center mb-2 lg:mb-4 flex-shrink-0 text-white">{title}</h2>
+        <h2 className="text-lg lg:text-2xl font-heading font-bold text-center mb-2 lg:mb-4 flex-shrink-0 text-white">
+          {title}
+        </h2>
 
         <div className="flex-1 overflow-x-auto overflow-y-auto min-h-0 custom-scrollbar pb-2 lg:pb-4">
           <div className="min-w-max flex justify-center py-2 lg:py-4 px-1 lg:px-8">
@@ -103,7 +125,9 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
           </div>
 
           {battleFinished && (
-            <div className={`w-full max-w-xs lg:max-w-sm py-2 lg:py-3 rounded-lg text-center text-xl lg:text-2xl font-bold border ${resultBgColor} border-current/20 shadow-lg`}>
+            <div
+              className={`w-full max-w-xs lg:max-w-sm py-2 lg:py-3 rounded-lg text-center text-xl lg:text-2xl font-heading font-bold border ${resultBgColor} border-current/20 shadow-lg`}
+            >
               {resultText}
             </div>
           )}

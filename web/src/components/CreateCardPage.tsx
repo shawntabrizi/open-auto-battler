@@ -396,11 +396,21 @@ export const CreateCardPage: React.FC = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-1">
-                      <span className="text-red-500 text-sm">⚔️</span>
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-red-500">
+                        <path d="M6.92 5L5 7l4.5 4.5-2.5 2.5 1.41 1.41L11 12.83l1.58 1.58L11.17 16l1.41 1.41 1.42-1.41 1.58 1.58-2.12 2.12 1.41 1.42 2.13-2.12 1.41 1.41L19.83 19 20 18.83l.59.59 1.41-1.42-.58-.58L23 16l-8.5-8.5L16 6l-2-2-1.5 1.5L11 4 6.92 5zM8.34 7.34L11 6l1.93 1.93-2.12 2.12L8.34 7.34z" />
+                        <path d="M1 21l2.34-2.34 1.42 1.42L2.42 22.42z" />
+                        <path d="M3 19l5-5 1.41 1.41-5 5z" />
+                      </svg>
                       <span className="font-bold">{cardForm.attack}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-green-500 text-sm">❤️</span>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-4 h-4 text-green-500"
+                      >
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
                       <span className="font-bold">{cardForm.health}</span>
                     </div>
                   </div>

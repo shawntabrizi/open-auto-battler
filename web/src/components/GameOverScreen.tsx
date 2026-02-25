@@ -1,4 +1,5 @@
 import { useGameStore } from '../store/gameStore';
+import { TrophyIcon, SkullIcon } from './Icons';
 
 export function GameOverScreen() {
   const { view, newRun, winsToVictory } = useGameStore();
@@ -22,7 +23,17 @@ export function GameOverScreen() {
             ${isVictory ? 'text-green-400' : 'text-red-400'}
           `}
         >
-          {isVictory ? '🏆 VICTORY! 🏆' : '💀 DEFEAT 💀'}
+          {isVictory ? (
+            <span className="flex items-center justify-center gap-3">
+              <TrophyIcon className="w-8 h-8 lg:w-12 lg:h-12 text-yellow-400" /> VICTORY!{' '}
+              <TrophyIcon className="w-8 h-8 lg:w-12 lg:h-12 text-yellow-400" />
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-3">
+              <SkullIcon className="w-8 h-8 lg:w-12 lg:h-12 text-red-400" /> DEFEAT{' '}
+              <SkullIcon className="w-8 h-8 lg:w-12 lg:h-12 text-red-400" />
+            </span>
+          )}
         </h1>
 
         {/* Message */}
@@ -49,7 +60,10 @@ export function GameOverScreen() {
         </div>
 
         {/* New Run Button */}
-        <button onClick={newRun} className="btn btn-primary text-base lg:text-xl px-8 lg:px-12 py-3 lg:py-4">
+        <button
+          onClick={newRun}
+          className="btn btn-primary text-base lg:text-xl px-8 lg:px-12 py-3 lg:py-4"
+        >
           New Run
         </button>
       </div>

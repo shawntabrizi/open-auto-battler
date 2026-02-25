@@ -1,41 +1,54 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useBlockchainStore } from '../store/blockchainStore';
-import { useCustomizationStore, type CustomizationType, type NftItem } from '../store/customizationStore';
+import {
+  useCustomizationStore,
+  type CustomizationType,
+  type NftItem,
+} from '../store/customizationStore';
 import { CustomizationPreview } from './CustomizationPreview';
 
-const SECTIONS: { type: CustomizationType; label: string; icon: string; description: string; specs: string }[] = [
+const SECTIONS: {
+  type: CustomizationType;
+  label: string;
+  num: string;
+  description: string;
+  specs: string;
+}[] = [
   {
     type: 'board_bg',
     label: 'Background',
-    icon: '🖼',
+    num: '01',
     description: 'Background image for the game arena',
     specs: '16:9 ratio, 1920x1080 recommended, PNG/WebP, max 2 MB',
   },
   {
     type: 'hand_bg',
     label: 'Hand',
-    icon: '🃏',
+    num: '02',
     description: 'Background image for the hand/shop area',
     specs: '5:1 ratio, 1920x384 recommended, PNG/WebP, max 1 MB',
   },
   {
     type: 'card_style',
     label: 'Card Border',
-    icon: '🪟',
+    num: '03',
     description: 'Overlay frame for all cards',
     specs: '3:4 ratio, 256x352 recommended, PNG with alpha, max 500 KB',
   },
   {
     type: 'avatar',
     label: 'Avatar',
-    icon: '👤',
+    num: '04',
     description: 'Your avatar displayed in the HUD',
     specs: '1:1 ratio, 256x256 recommended, PNG/WebP, max 500 KB',
   },
 ];
 
-const SLOT_MAP: Record<CustomizationType, keyof ReturnType<typeof useCustomizationStore.getState>['selections']> = {
+const SLOT_MAP: Record<
+  CustomizationType,
+  keyof ReturnType<typeof useCustomizationStore.getState>['selections']
+> = {
   board_bg: 'boardBackground',
   hand_bg: 'handBackground',
   card_style: 'cardStyle',
@@ -44,7 +57,8 @@ const SLOT_MAP: Record<CustomizationType, keyof ReturnType<typeof useCustomizati
 
 export const CustomizePage: React.FC = () => {
   const { isConnected, connect, api, selectedAccount } = useBlockchainStore();
-  const { ownedNfts, selections, isLoading, fetchUserNfts, selectCustomization, loadFromStorage } = useCustomizationStore();
+  const { ownedNfts, selections, isLoading, fetchUserNfts, selectCustomization, loadFromStorage } =
+    useCustomizationStore();
   const [activeSection, setActiveSection] = useState<CustomizationType | null>(null);
 
   useEffect(() => {
@@ -74,7 +88,10 @@ export const CustomizePage: React.FC = () => {
         >
           CONNECT WALLET TO START
         </button>
-        <Link to="/blockchain" className="mt-6 lg:mt-8 text-slate-400 hover:text-white underline text-sm">
+        <Link
+          to="/blockchain"
+          className="mt-6 lg:mt-8 text-slate-400 hover:text-white underline text-sm"
+        >
           Back to Dashboard
         </Link>
       </div>
@@ -99,11 +116,15 @@ export const CustomizePage: React.FC = () => {
           </button>
           <div className="flex-1 min-w-0">
             <h2 className="text-sm lg:text-xl font-bold truncate">
-              {activeSectionData.icon} {activeSectionData.label}
+              {activeSectionData.num} {activeSectionData.label}
             </h2>
-            <p className="text-[9px] lg:text-xs text-slate-500 truncate">{activeSectionData.description}</p>
+            <p className="text-[9px] lg:text-xs text-slate-500 truncate">
+              {activeSectionData.description}
+            </p>
           </div>
-          <p className="text-[8px] lg:text-[10px] text-slate-600 hidden lg:block shrink-0">{activeSectionData.specs}</p>
+          <p className="text-[8px] lg:text-[10px] text-slate-600 hidden lg:block shrink-0">
+            {activeSectionData.specs}
+          </p>
         </div>
 
         {/* NFT selection area */}
@@ -204,7 +225,9 @@ export const CustomizePage: React.FC = () => {
                 onClick={() => setActiveSection(section.type)}
                 className="bg-slate-900/50 border border-white/5 hover:border-yellow-500/30 rounded-lg lg:rounded-2xl p-2 lg:p-6 text-center transition-all hover:bg-slate-800/50 active:scale-95"
               >
-                <div className="text-2xl lg:text-5xl mb-1 lg:mb-3">{section.icon}</div>
+                <div className="text-xl lg:text-4xl mb-1 lg:mb-3 font-bold text-yellow-500">
+                  {section.num}
+                </div>
                 <div className="text-[10px] lg:text-base font-bold text-white">{section.label}</div>
                 <div className="text-[8px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1">
                   {current ? current.name : 'Default'}
@@ -224,7 +247,10 @@ export const CustomizePage: React.FC = () => {
 
       {/* Footer */}
       <div className="text-center pb-2 lg:pb-6 shrink-0">
-        <Link to="/blockchain/creator" className="text-slate-600 hover:text-slate-400 text-[9px] lg:text-xs">
+        <Link
+          to="/blockchain/creator"
+          className="text-slate-600 hover:text-slate-400 text-[9px] lg:text-xs"
+        >
           Back to Creator Hub
         </Link>
       </div>
@@ -246,7 +272,15 @@ interface NftTileProps {
   size?: 'sm' | 'lg';
 }
 
-function NftTile({ isSelected, onClick, label, imageUrl, placeholder, subtitle, size = 'sm' }: NftTileProps) {
+function NftTile({
+  isSelected,
+  onClick,
+  label,
+  imageUrl,
+  placeholder,
+  subtitle,
+  size = 'sm',
+}: NftTileProps) {
   const isLg = size === 'lg';
   return (
     <button
@@ -259,16 +293,22 @@ function NftTile({ isSelected, onClick, label, imageUrl, placeholder, subtitle, 
     >
       <div
         className={`${isLg ? 'w-full aspect-[3/4]' : 'w-24 h-32'} bg-slate-700/50 rounded overflow-hidden ${isLg ? 'mb-2' : 'mb-0.5'} flex items-center justify-center`}
->
+      >
         {imageUrl ? (
           <IpfsImage src={imageUrl} alt={label} className="w-full h-full object-cover" />
         ) : (
           <span className={`text-slate-400 ${isLg ? 'text-2xl' : 'text-sm'}`}>{placeholder}</span>
         )}
       </div>
-      <div className={`font-bold truncate ${isLg ? 'text-xs max-w-none' : 'text-[10px] max-w-[6rem]'}`}>{label}</div>
+      <div
+        className={`font-bold truncate ${isLg ? 'text-xs max-w-none' : 'text-[10px] max-w-[6rem]'}`}
+      >
+        {label}
+      </div>
       {subtitle && (
-        <div className={`text-slate-500 ${isLg ? 'text-[10px]' : 'text-[7px] hidden'}`}>{subtitle}</div>
+        <div className={`text-slate-500 ${isLg ? 'text-[10px]' : 'text-[7px] hidden'}`}>
+          {subtitle}
+        </div>
       )}
     </button>
   );

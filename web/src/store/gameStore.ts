@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
 import type { GameView, BattleOutput, Selection, CardView } from '../types';
 import { initEmojiMap } from '../utils/emoji';
+import { initCardArt } from '../utils/cardArt';
 
 interface SetMeta {
   id: number;
@@ -134,7 +135,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   initEngine: async () => {
     if (get().engine) {
       // Engine exists from a previous session — reset to set selection
-      set({ gameStarted: false, view: null, cardSet: null, battleOutput: null, selection: null, showBattleOverlay: false });
+      set({
+        gameStarted: false,
+        view: null,
+        cardSet: null,
+        battleOutput: null,
+        selection: null,
+        showBattleOverlay: false,
+      });
       return;
     }
     if (initEnginePromise) return initEnginePromise;
@@ -154,6 +162,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         // Initialize emoji map from card metadata baked into the WASM binary
         const metas = engine.get_card_metas();
         initEmojiMap(metas);
+        initCardArt(metas.map((m) => m.id));
 
         // Fetch set metadata for set selection screen
         const setMetas: SetMeta[] = engine.get_set_metas();
@@ -221,6 +230,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         // Initialize emoji map from card metadata baked into the WASM binary
         const metas = engine.get_card_metas();
         initEmojiMap(metas);
+        initCardArt(metas.map((m) => m.id));
 
         // Fetch set metadata
         const setMetas: SetMeta[] = engine.get_set_metas();

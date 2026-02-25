@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMultiplayerStore } from '../store/multiplayerStore';
 import { RotatePrompt } from './RotatePrompt';
+import { CloseIcon } from './Icons';
 import { QRCodeSVG } from 'qrcode.react';
 
 export function MultiplayerPage() {
@@ -101,13 +102,19 @@ export function MultiplayerPage() {
           className="absolute top-2 right-2 lg:top-4 lg:right-4 text-gray-400 hover:text-white z-10"
           title="Back to Game"
         >
-          ✕
+          <CloseIcon className="w-5 h-5" />
         </button>
 
         {status === 'connected' || status === 'in-game' ? (
           <div className="text-center">
             <div className="w-12 h-12 lg:w-20 lg:h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-2 lg:mb-4 border-2 border-green-500">
-              <span className="text-2xl lg:text-4xl">🔗</span>
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-6 h-6 lg:w-10 lg:h-10 text-green-400"
+              >
+                <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+              </svg>
             </div>
             <h2 className="text-lg lg:text-2xl font-bold text-green-400 mb-1 lg:mb-2">
               Connected!

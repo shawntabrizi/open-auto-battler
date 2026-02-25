@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UnitCard } from './UnitCard';
 import type { BattleOutput, UnitView, CombatEvent } from '../types';
+import { useAudioStore } from '../store/audioStore';
 
 // --- Helper Components ---
 
@@ -17,7 +18,10 @@ const DamageNumber = ({
       className="absolute inset-0 flex items-center justify-center animate-float-up"
       onAnimationEnd={onAnimationEnd}
     >
-      <span className="text-2xl lg:text-4xl font-bold text-red-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+      <span
+        className="text-2xl lg:text-4xl font-stat font-bold text-red-500"
+        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(220,38,38,0.5)' }}
+      >
         -{amount}
       </span>
     </div>
@@ -55,7 +59,10 @@ const StatChangeNumber = ({
       className="absolute inset-0 flex items-center justify-center animate-float-up"
       onAnimationEnd={onAnimationEnd}
     >
-      <span className="text-2xl lg:text-4xl font-bold text-green-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+      <span
+        className="text-2xl lg:text-4xl font-stat font-bold text-green-500"
+        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(34,197,94,0.5)' }}
+      >
         {displayText}
       </span>
     </div>
@@ -202,6 +209,11 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
     new Map()
   );
   const [abilityToasts, setAbilityToasts] = useState<Map<number, string>>(new Map());
+  const [shakeActive, setShakeActive] = useState(false);
+  const [dyingUnitIds, setDyingUnitIds] = useState<Set<number>>(new Set());
+  const [colorFlash, setColorFlash] = useState<string | null>(null);
+
+  const playSfx = useAudioStore((s) => s.playSfx);
 
   // Playback speed control
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(() => {
@@ -231,10 +243,14 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       case 'AbilityTrigger': {
         const { source_instance_id, ability_name } = event.payload;
         setAbilityToasts((prev) => new Map(prev).set(source_instance_id, ability_name));
+        playSfx('ability-trigger');
         break;
       }
 
       case 'Clash': {
+        playSfx('clash-hit');
+        setShakeActive(true);
+        setTimeout(() => setShakeActive(false), 250);
         setPlayerBoard((prevPlayer) => {
           setEnemyBoard((prevEnemy) => {
             const pId = prevPlayer.length > 0 ? prevPlayer[0].instance_id : null;
@@ -249,6 +265,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       }
 
       case 'DamageTaken': {
+        playSfx('damage-taken');
         const { target_instance_id, remaining_hp } = event.payload;
 
         const updateBoard = (board: UnitView[]) =>
@@ -281,12 +298,34 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       }
 
       case 'UnitDeath': {
+        playSfx('unit-death');
         const { team, new_board_state } = event.payload;
         const isPlayerTeam = String(team).toUpperCase() === 'PLAYER';
-        if (isPlayerTeam) {
-          setPlayerBoard(new_board_state || []);
+        const newIds = new Set((new_board_state || []).map((u) => u.instance_id));
+        // Find the dying unit by diffing current board vs new board
+        const currentBoard = isPlayerTeam ? playerBoard : enemyBoard;
+        const dyingId = currentBoard.find((u) => !newIds.has(u.instance_id))?.instance_id;
+
+        if (dyingId !== undefined) {
+          setDyingUnitIds((prev) => new Set(prev).add(dyingId));
+          setTimeout(() => {
+            setDyingUnitIds((prev) => {
+              const next = new Set(prev);
+              next.delete(dyingId);
+              return next;
+            });
+            if (isPlayerTeam) {
+              setPlayerBoard(new_board_state || []);
+            } else {
+              setEnemyBoard(new_board_state || []);
+            }
+          }, 600);
         } else {
-          setEnemyBoard(new_board_state || []);
+          if (isPlayerTeam) {
+            setPlayerBoard(new_board_state || []);
+          } else {
+            setEnemyBoard(new_board_state || []);
+          }
         }
         setClashingUnitIds([]);
         break;
@@ -294,6 +333,16 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
 
       case 'BattleEnd': {
         setClashingUnitIds([]);
+        const res = event.payload.result;
+        playSfx(res === 'Victory' ? 'round-win' : res === 'Defeat' ? 'round-lose' : 'round-win');
+        if (res === 'Victory') {
+          setColorFlash('bg-victory-green');
+        } else if (res === 'Defeat') {
+          setColorFlash('bg-defeat-red');
+        } else {
+          setColorFlash('bg-gold');
+        }
+        setTimeout(() => setColorFlash(null), 300);
         break;
       }
 
@@ -501,9 +550,13 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
     }
 
     const isClashing = clashingUnitIds.includes(unit.instance_id);
+    const isDying = dyingUnitIds.has(unit.instance_id);
 
     return (
-      <div key={`${unit.instance_id}-${index}`} className="relative">
+      <div
+        key={`${unit.instance_id}-${index}`}
+        className={`relative ${isDying ? 'animate-death-shrink' : ''}`}
+      >
         <div
           className={`transition-transform duration-200 ${isClashing ? (isPlayer ? 'clash-bump-right' : 'clash-bump-left') : ''}`}
         >
@@ -575,7 +628,16 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
   const isAtEnd = eventIndex >= battleOutput.events.length;
 
   return (
-    <div className="battle-arena flex flex-col items-center gap-2 lg:gap-4 p-2 lg:p-4 bg-gray-800 rounded-lg">
+    <div
+      className={`battle-arena flex flex-col items-center gap-2 lg:gap-4 p-2 lg:p-4 bg-gray-800 rounded-lg relative ${shakeActive ? 'animate-screen-shake' : ''}`}
+    >
+      {/* Color flash overlay */}
+      {colorFlash && (
+        <div
+          className={`absolute inset-0 ${colorFlash} animate-color-flash rounded-lg pointer-events-none z-30`}
+        />
+      )}
+
       {/* Playback Controls */}
       <div className="flex items-center gap-1 flex-wrap justify-center">
         <span className="text-white text-xs lg:text-sm font-medium mr-1 lg:mr-2">Speed:</span>

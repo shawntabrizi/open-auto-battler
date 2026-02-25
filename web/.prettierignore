@@ -3,5 +3,5 @@ dist
 build
 *.min.js
 *.min.css
-package-lock.json</content>
-<parameter name="filePath">/Users/shawntabrizi/Documents/GitHub/auto-battle/web/.prettierignore
+package-lock.json
+src-tauri/

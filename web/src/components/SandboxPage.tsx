@@ -5,6 +5,7 @@ import { CardDetailPanel } from './CardDetailPanel';
 import { BattleOverlay } from './BattleOverlay';
 import { RotatePrompt } from './RotatePrompt';
 import { useInitGuard } from '../hooks';
+import { CloseIcon } from './Icons';
 import type { CardView } from '../types';
 
 export function SandboxPage() {
@@ -167,7 +168,7 @@ function SandboxArena() {
             {displayIndex}
           </div>
           <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/20 rounded-lg transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-            <span className="text-red-400 text-lg lg:text-2xl">×</span>
+            <CloseIcon className="w-5 h-5 lg:w-7 lg:h-7 text-red-400" />
           </div>
         </div>
       );

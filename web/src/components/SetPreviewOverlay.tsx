@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { UnitCard } from './UnitCard';
 import { CardDetailPanel } from './CardDetailPanel';
+import { CloseIcon } from './Icons';
 import type { CardView } from '../types';
 
 export function SetPreviewOverlay() {
@@ -17,12 +18,7 @@ export function SetPreviewOverlay() {
   return (
     <div className="fixed inset-0 z-[70] animate-in fade-in duration-300">
       {/* Left sidebar - card detail panel */}
-      <CardDetailPanel
-        card={selectedCard}
-        isVisible={true}
-        isReadOnly={true}
-        topOffset="0"
-      />
+      <CardDetailPanel card={selectedCard} isVisible={true} isReadOnly={true} topOffset="0" />
 
       {/* Card grid - offset to the right of the sidebar */}
       <div className="fixed left-[11rem] lg:left-80 right-0 top-0 bottom-0 bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden">
@@ -32,7 +28,8 @@ export function SetPreviewOverlay() {
               Set Preview
             </h2>
             <p className="text-gray-400 text-xs lg:text-base mt-0.5 lg:mt-1">
-              <span className="text-white font-bold">{sorted.length}</span> unique cards in this set.
+              <span className="text-white font-bold">{sorted.length}</span> unique cards in this
+              set.
               <span className="hidden lg:inline"> Click a card for full details.</span>
             </p>
           </div>
@@ -40,7 +37,7 @@ export function SetPreviewOverlay() {
             onClick={closePreview}
             className="btn btn-secondary px-3 lg:px-6 py-2 lg:py-3 text-sm lg:text-lg flex items-center gap-1 lg:gap-2 hover:scale-105 transition-transform"
           >
-            <span>✕</span> <span className="hidden lg:inline">Close</span>
+            <CloseIcon className="w-4 h-4" /> <span className="hidden lg:inline">Close</span>
           </button>
         </div>
 
@@ -59,9 +56,7 @@ export function SetPreviewOverlay() {
                     showPitch={true}
                     draggable={false}
                     isSelected={selectedCard?.id === card.id}
-                    onClick={() => setSelectedCard(
-                      selectedCard?.id === card.id ? null : card
-                    )}
+                    onClick={() => setSelectedCard(selectedCard?.id === card.id ? null : card)}
                   />
                 </div>
               ))}

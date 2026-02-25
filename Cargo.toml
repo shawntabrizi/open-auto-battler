@@ -3,9 +3,9 @@ resolver = "2"
 members = [
     "core",
     "client",
-    "blockchain/node",
     "blockchain/pallets/auto-battle",
     "blockchain/runtime",
+    "web/src-tauri",
 ]
 
 [workspace.package]

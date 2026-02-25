@@ -21,4 +21,9 @@ export default defineConfig({
     exclude: ['oab-client'],
   },
   assetsInclude: ['**/*.wasm'],
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
+  clearScreen: false,
 });
