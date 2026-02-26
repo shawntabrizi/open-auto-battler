@@ -14,7 +14,7 @@ export function SetSelectionScreen() {
 
   return (
     <div
-      className="h-full flex flex-col items-center justify-center px-4 lg:px-8 overflow-hidden"
+      className="h-full flex flex-col items-center justify-center px-4 lg:px-8 py-6 lg:py-10 overflow-hidden"
       style={{
         background:
           'radial-gradient(ellipse at 50% 30%, rgba(212,168,67,0.08) 0%, transparent 60%), radial-gradient(ellipse at 50% 80%, rgba(180,83,9,0.05) 0%, transparent 50%), #0e0c09',
@@ -55,8 +55,11 @@ export function SetSelectionScreen() {
                   {fanImages.slice(0, 5).map((img, j) => {
                     const count = Math.min(fanImages.length, 5);
                     const mid = (count - 1) / 2;
-                    const rotation = (j - mid) * 8;
-                    const translateX = (j - mid) * 36;
+                    const offset = j - mid;
+                    const rotation = offset * 8;
+                    const translateX = offset * 36;
+                    // Arc: outer cards drop lower, center card highest
+                    const arcY = offset * offset * 6;
                     return (
                       <img
                         key={img.id}
@@ -67,7 +70,8 @@ export function SetSelectionScreen() {
                           {
                             '--fan-x': `${translateX}px`,
                             '--fan-rot': `${rotation}deg`,
-                            zIndex: j,
+                            '--fan-arc': `${arcY}px`,
+                            zIndex: count - Math.abs(offset),
                           } as React.CSSProperties
                         }
                       />

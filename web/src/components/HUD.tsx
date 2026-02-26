@@ -120,46 +120,10 @@ interface HUDProps {
   };
 }
 
-export function HUD({ hideEndTurn, customAction }: HUDProps) {
-  const { view, endTurn, engine, setShowBag, showBag, selection, startingLives, winsToVictory } =
-    useGameStore();
-  const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } =
-    useMultiplayerStore();
+export function HUD() {
+  const { view, setShowBag, showBag, selection, startingLives, winsToVictory } = useGameStore();
   const playerAvatar = useCustomizationStore((s) => s.selections.playerAvatar);
-  const playSfx = useAudioStore((s) => s.playSfx);
 
-  // Local timer for the waiting player (who already submitted)
-  const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
-  const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Start waiting timer when we submit and opponent hasn't
-  useEffect(() => {
-    if (status === 'in-game' && isReady && !opponentReady && view?.phase === 'shop') {
-      setWaitingTimer(BATTLE_TIMER_SECONDS);
-      waitingTimerRef.current = setInterval(() => {
-        setWaitingTimer((prev) => {
-          if (prev !== null && prev > 1) return prev - 1;
-          return prev;
-        });
-      }, 1000);
-    }
-
-    // Clear when opponent is ready or we're no longer ready
-    if (!isReady || opponentReady) {
-      if (waitingTimerRef.current) {
-        clearInterval(waitingTimerRef.current);
-        waitingTimerRef.current = null;
-      }
-      setWaitingTimer(null);
-    }
-
-    return () => {
-      if (waitingTimerRef.current) {
-        clearInterval(waitingTimerRef.current);
-        waitingTimerRef.current = null;
-      }
-    };
-  }, [isReady, opponentReady, status, view?.phase]);
   // Keyboard shortcut for Bag view
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -177,23 +141,6 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
 
   // Check if card panel is visible (same logic as GameLayout)
   const showCardPanel = view?.phase === 'shop' || selection?.type === 'board' || showBag;
-
-  const handleEndTurn = () => {
-    playSfx('battle-start');
-    if (status === 'in-game') {
-      const board = engine?.get_board();
-      setIsReady(true);
-      sendMessage({ type: 'END_TURN_READY', board });
-    } else {
-      endTurn();
-    }
-  };
-
-  const isWaiting = status === 'in-game' && isReady && !opponentReady;
-  const opponentWaiting = status === 'in-game' && !isReady && opponentReady;
-
-  // Determine display timer
-  const displayTimer = isWaiting ? waitingTimer : opponentWaiting ? battleTimer : null;
 
   return (
     <div
@@ -227,92 +174,21 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
         </div>
       </div>
 
-      {/* Center: Reference cluster + Action cluster */}
-      <div className="flex items-center gap-2 lg:gap-5">
-        {/* Reference cluster: Round + Bag */}
-        <div className="flex items-center gap-2 lg:gap-3">
-          <div className="text-center">
-            <div className="text-xs lg:text-sm text-warm-400">Round</div>
-            <div className="text-lg lg:text-2xl font-bold text-gold">{view.round}</div>
-          </div>
-          {view.phase === 'shop' && (
-            <button
-              onClick={() => setShowBag(true)}
-              className="btn bg-warm-800 hover:bg-warm-700 text-warm-100 border-warm-600 flex items-center gap-1 lg:gap-2 px-2 lg:px-4"
-              title="View your draw pool"
-            >
-              <BagIcon className="w-5 h-5 lg:w-6 lg:h-6 text-amber-400" />
-              <span className="font-bold text-sm lg:text-base">{view.bag_count}</span>
-            </button>
-          )}
+      {/* Center: Round + Bag */}
+      <div className="flex items-center gap-2 lg:gap-3">
+        <div className="text-center">
+          <div className="text-xs lg:text-sm text-warm-400">Round</div>
+          <div className="text-lg lg:text-2xl font-bold text-gold">{view.round}</div>
         </div>
-
-        {/* Action cluster: Timer + Battle */}
         {view.phase === 'shop' && (
-          <div className="flex items-center gap-2 lg:gap-3">
-            {!hideEndTurn && (
-              <>
-                {/* Timer display when either player is waiting */}
-                {displayTimer !== null && (
-                  <div
-                    className={`flex items-center gap-2 px-3 py-1 rounded-lg ${
-                      opponentWaiting
-                        ? displayTimer <= 5
-                          ? 'bg-red-600 animate-pulse'
-                          : 'bg-orange-600'
-                        : 'bg-blue-600'
-                    }`}
-                  >
-                    <span className="text-white text-sm lg:text-base font-bold flex items-center gap-1">
-                      {opponentWaiting ? (
-                        <>
-                          <WarningIcon className="w-4 h-4" /> Submit in:
-                        </>
-                      ) : (
-                        <>
-                          <HourglassIcon className="w-4 h-4" /> Waiting:
-                        </>
-                      )}
-                    </span>
-                    <span
-                      className={`text-white text-lg lg:text-xl font-bold ${displayTimer <= 5 ? 'text-yellow-300' : ''}`}
-                    >
-                      {displayTimer}s
-                    </span>
-                  </div>
-                )}
-                <button
-                  onClick={handleEndTurn}
-                  disabled={isWaiting}
-                  className={`btn btn-primary text-sm lg:text-xl px-3 lg:px-8 py-2 lg:py-3.5 font-bold tracking-wide shadow-lg transition-all flex items-center gap-1.5 ${
-                    isWaiting
-                      ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
-                      : opponentWaiting && displayTimer !== null && displayTimer <= 5
-                        ? 'animate-pulse bg-red-500 hover:bg-red-400'
-                        : ''
-                  }`}
-                >
-                  <SwordIcon className="w-4 h-4 lg:w-5 lg:h-5" />
-                  {isWaiting ? 'Waiting...' : 'Battle!'}
-                </button>
-              </>
-            )}
-            {customAction && (
-              <button
-                onClick={customAction.onClick}
-                disabled={customAction.disabled}
-                className={`btn text-sm lg:text-lg px-3 lg:px-6 py-2 lg:py-3 transition-all font-bold ${
-                  customAction.disabled
-                    ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
-                    : customAction.variant === 'chain'
-                      ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900'
-                      : 'btn-primary'
-                }`}
-              >
-                {customAction.label}
-              </button>
-            )}
-          </div>
+          <button
+            onClick={() => setShowBag(true)}
+            className="btn bg-warm-800 hover:bg-warm-700 text-warm-100 border-warm-600 flex items-center gap-1 lg:gap-2 px-2 lg:px-4"
+            title="View your draw pool"
+          >
+            <BagIcon className="w-5 h-5 lg:w-6 lg:h-6 text-amber-400" />
+            <span className="font-bold text-sm lg:text-base">{view.bag_count}</span>
+          </button>
         )}
       </div>
 
@@ -337,6 +213,130 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
           )}
         </div>
         <AudioControls />
+      </div>
+    </div>
+  );
+}
+
+/** Floating Battle button — rendered in the arena area, centered above the board */
+export function BattleAction({
+  hideEndTurn,
+  customAction,
+}: {
+  hideEndTurn?: boolean;
+  customAction?: HUDProps['customAction'];
+}) {
+  const { view, endTurn, engine } = useGameStore();
+  const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } =
+    useMultiplayerStore();
+  const playSfx = useAudioStore((s) => s.playSfx);
+
+  const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
+  const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (status === 'in-game' && isReady && !opponentReady && view?.phase === 'shop') {
+      setWaitingTimer(BATTLE_TIMER_SECONDS);
+      waitingTimerRef.current = setInterval(() => {
+        setWaitingTimer((prev) => (prev !== null && prev > 1 ? prev - 1 : prev));
+      }, 1000);
+    }
+    if (!isReady || opponentReady) {
+      if (waitingTimerRef.current) {
+        clearInterval(waitingTimerRef.current);
+        waitingTimerRef.current = null;
+      }
+      setWaitingTimer(null);
+    }
+    return () => {
+      if (waitingTimerRef.current) {
+        clearInterval(waitingTimerRef.current);
+      }
+    };
+  }, [isReady, opponentReady, status, view?.phase]);
+
+  if (!view || view.phase !== 'shop') return null;
+  if (hideEndTurn && !customAction) return null;
+
+  const handleEndTurn = () => {
+    playSfx('battle-start');
+    if (status === 'in-game') {
+      const board = engine?.get_board();
+      setIsReady(true);
+      sendMessage({ type: 'END_TURN_READY', board });
+    } else {
+      endTurn();
+    }
+  };
+
+  const isWaiting = status === 'in-game' && isReady && !opponentReady;
+  const opponentWaiting = status === 'in-game' && !isReady && opponentReady;
+  const displayTimer = isWaiting ? waitingTimer : opponentWaiting ? battleTimer : null;
+
+  return (
+    <div className="flex justify-center pt-3 lg:pt-5 pb-1 z-30 pointer-events-none">
+      <div className="flex items-center gap-3 pointer-events-auto">
+        {!hideEndTurn && (
+          <>
+            {displayTimer !== null && (
+              <div
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                  opponentWaiting
+                    ? displayTimer <= 5
+                      ? 'bg-red-600 animate-pulse'
+                      : 'bg-orange-600'
+                    : 'bg-blue-600'
+                }`}
+              >
+                <span className="text-white text-sm lg:text-base font-bold flex items-center gap-1">
+                  {opponentWaiting ? (
+                    <>
+                      <WarningIcon className="w-4 h-4" /> Submit in:
+                    </>
+                  ) : (
+                    <>
+                      <HourglassIcon className="w-4 h-4" /> Waiting:
+                    </>
+                  )}
+                </span>
+                <span
+                  className={`text-white text-lg lg:text-xl font-bold ${displayTimer <= 5 ? 'text-yellow-300' : ''}`}
+                >
+                  {displayTimer}s
+                </span>
+              </div>
+            )}
+            <button
+              onClick={handleEndTurn}
+              disabled={isWaiting}
+              className={`battle-btn btn-primary rounded-xl text-base lg:text-2xl px-6 lg:px-12 py-2.5 lg:py-4 font-bold tracking-wide transition-all flex items-center gap-2 lg:gap-3 ${
+                isWaiting
+                  ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
+                  : opponentWaiting && displayTimer !== null && displayTimer <= 5
+                    ? 'animate-pulse bg-red-500 hover:bg-red-400'
+                    : ''
+              }`}
+            >
+              <SwordIcon className="w-5 h-5 lg:w-6 lg:h-6" />
+              {isWaiting ? 'Waiting...' : 'Battle!'}
+            </button>
+          </>
+        )}
+        {customAction && (
+          <button
+            onClick={customAction.onClick}
+            disabled={customAction.disabled}
+            className={`btn rounded-xl text-base lg:text-xl px-6 lg:px-10 py-2.5 lg:py-4 transition-all font-bold ${
+              customAction.disabled
+                ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
+                : customAction.variant === 'chain'
+                  ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900'
+                  : 'btn-primary'
+            }`}
+          >
+            {customAction.label}
+          </button>
+        )}
       </div>
     </div>
   );

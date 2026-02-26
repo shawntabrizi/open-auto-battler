@@ -1,5 +1,5 @@
 import { DndContext, DragOverlay } from '@dnd-kit/core';
-import { HUD } from './HUD';
+import { HUD, BattleAction } from './HUD';
 import { Arena } from './Arena';
 import { ManaBar } from './ManaBar';
 import { Shop } from './Shop';
@@ -95,12 +95,13 @@ export function GameShell({
         className={`game-layout h-screen flex flex-col bg-board-bg ${className}`}
       >
         {/* Zone 1: Top HUD */}
-        <HUD hideEndTurn={hideEndTurn} customAction={customAction} />
+        <HUD />
 
         {/* Zone 2: Arena (Board) with left panel */}
         <div
           className={`game-main flex-1 flex flex-col overflow-hidden min-h-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
         >
+          <BattleAction hideEndTurn={hideEndTurn} customAction={customAction} />
           <Arena />
         </div>
 
@@ -139,7 +140,13 @@ export function GameShell({
       <DragOverlay>
         {activeCard ? (
           <div className="drag-ghost">
-            <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showPitch={true} enableTilt={false} enableWobble={false} />
+            <UnitCard
+              card={activeCard}
+              showCost={activeId?.startsWith('hand')}
+              showPitch={true}
+              enableTilt={false}
+              enableWobble={false}
+            />
           </div>
         ) : null}
       </DragOverlay>

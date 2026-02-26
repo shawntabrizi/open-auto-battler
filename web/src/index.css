@@ -454,6 +454,145 @@ body {
   @apply shadow-none;
 }
 
+/* Floating battle button — polished reflective gold CTA */
+.battle-btn {
+  position: relative;
+  overflow: hidden;
+  background:
+    /* Diagonal specular highlight — the bright streak */
+    linear-gradient(
+      135deg,
+      transparent 0%,
+      transparent 35%,
+      rgba(255, 255, 255, 0.22) 42%,
+      rgba(255, 248, 220, 0.45) 50%,
+      rgba(255, 255, 255, 0.22) 58%,
+      transparent 65%,
+      transparent 100%
+    ),
+    /* Vertical bevel — lit top edge, shadowed bottom */
+    linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.2) 0%,
+        transparent 8%,
+        transparent 92%,
+        rgba(0, 0, 0, 0.12) 100%
+      ),
+    /* Base metallic gold — multi-stop for realism */
+    linear-gradient(
+        180deg,
+        #f5d96e 0%,
+        #e8c84a 15%,
+        #d4af37 35%,
+        #c9a02c 50%,
+        #d4af37 65%,
+        #e8c84a 85%,
+        #f5d96e 100%
+      );
+  color: #2a1a00;
+  border: 1px solid #96711a;
+  border-top-color: rgba(245, 217, 110, 0.7);
+  border-bottom-color: rgba(120, 80, 20, 0.7);
+  text-shadow: 0 1px 0 rgba(255, 230, 150, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 220, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    var(--shadow-lifted),
+    0 0 20px rgba(212, 168, 67, 0.2),
+    0 0 6px rgba(212, 168, 67, 0.12);
+}
+
+/* Hover-triggered shine sweep */
+.battle-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.05) 35%,
+    rgba(255, 255, 255, 0.4) 48%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0.4) 52%,
+    rgba(255, 255, 255, 0.05) 65%,
+    transparent 80%
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+  transition: left 0.6s ease-in-out;
+}
+
+.battle-btn:hover:not(:disabled)::after {
+  left: 120%;
+}
+
+.battle-btn:hover:not(:disabled) {
+  background:
+    linear-gradient(
+      135deg,
+      transparent 0%,
+      transparent 30%,
+      rgba(255, 255, 255, 0.28) 40%,
+      rgba(255, 248, 220, 0.55) 50%,
+      rgba(255, 255, 255, 0.28) 60%,
+      transparent 70%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.25) 0%,
+      transparent 8%,
+      transparent 92%,
+      rgba(0, 0, 0, 0.08) 100%
+    ),
+    linear-gradient(
+      180deg,
+      #f8e078 0%,
+      #ecd060 15%,
+      #dab840 35%,
+      #d0a835 50%,
+      #dab840 65%,
+      #ecd060 85%,
+      #f8e078 100%
+    );
+  transform: translateY(-2px) scale(1.03);
+  border-top-color: rgba(248, 224, 120, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 220, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    var(--shadow-lifted),
+    0 0 28px rgba(212, 168, 67, 0.35),
+    0 0 10px rgba(212, 168, 67, 0.2);
+}
+
+.battle-btn:active:not(:disabled) {
+  background:
+    linear-gradient(
+      135deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(255, 255, 255, 0.1) 48%,
+      rgba(255, 248, 220, 0.2) 50%,
+      rgba(255, 255, 255, 0.1) 52%,
+      transparent 60%,
+      transparent 100%
+    ),
+    linear-gradient(180deg, #c9a02c 0%, #b8892a 30%, #d4af37 70%, #e0be50 100%);
+  transform: translateY(0) scale(0.98);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.2),
+    var(--shadow-resting),
+    0 0 12px rgba(212, 168, 67, 0.15);
+}
+
+.battle-btn:active:not(:disabled)::after {
+  left: -120%;
+  transition: none;
+}
+
 /* Mana tank animation */
 @keyframes mana-glow {
   0%,
@@ -960,12 +1099,13 @@ body {
   border-radius: 0.5rem;
   border: 1px solid rgba(212, 168, 67, 0.15);
   box-shadow: var(--shadow-resting);
-  transform: translateX(var(--fan-x, 0px)) rotate(var(--fan-rot, 0deg));
+  transform: translateX(var(--fan-x, 0px)) translateY(var(--fan-arc, 0px))
+    rotate(var(--fan-rot, 0deg));
   transition:
     transform 0.4s var(--spring-bounce),
     box-shadow 0.3s,
     filter 0.3s;
-  transform-origin: center bottom;
+  transform-origin: center 140%;
   pointer-events: none;
 }
 
@@ -983,16 +1123,15 @@ body {
   }
 }
 
-/* Tile hover: all cards lift, spread wider, and glow */
+/* Tile hover: cards fan out like a hand of cards */
 .set-tile:hover .set-card-fan-img {
-  transform: translateX(calc(var(--fan-x, 0px) * 1.2)) rotate(var(--fan-rot, 0deg))
-    translateY(-10px);
+  transform: translateX(calc(var(--fan-x, 0px) * 1.8))
+    translateY(calc(var(--fan-arc, 0px) * 2.2 - 14px)) rotate(calc(var(--fan-rot, 0deg) * 2));
   box-shadow:
     var(--shadow-lifted),
     0 0 20px rgba(212, 168, 67, 0.12);
   filter: brightness(1.08);
 }
-
 
 /* Set tile — borderless, integrated */
 .set-tile {
