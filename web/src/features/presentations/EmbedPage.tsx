@@ -75,7 +75,7 @@ export default function EmbedPage() {
 
       <DragOverlay>
         {activeCard ? (
-          <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showPitch={true} />
+          <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showPitch={true} enableTilt={false} />
         ) : null}
       </DragOverlay>
     </DndContext>

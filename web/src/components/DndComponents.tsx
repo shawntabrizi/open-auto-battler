@@ -47,6 +47,7 @@ export function DraggableCard({
         showCost={showCost}
         showPitch={showPitch}
         can_afford={can_afford}
+        enableTilt={!isDragging}
         draggable={false} // Disable native drag since @dnd-kit handles it
       />
     </div>

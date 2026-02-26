@@ -4,6 +4,7 @@ import { getCardEmoji } from '../utils/emoji';
 import { getCardArtSm, hasCardArt } from '../utils/cardArt';
 import { useCustomizationStore } from '../store/customizationStore';
 import { useAudioStore } from '../store/audioStore';
+import { useCardTilt } from '../hooks/useCardTilt';
 import { SwordIcon, HeartIcon, AbilityIcon } from './Icons';
 
 interface UnitCardProps {
@@ -14,6 +15,7 @@ interface UnitCardProps {
   showPitch?: boolean;
   compact?: boolean;
   enableWobble?: boolean;
+  enableTilt?: boolean;
 
   can_afford?: boolean;
   draggable?: boolean;
@@ -31,6 +33,7 @@ export function UnitCard({
   showPitch = true,
   compact = false,
   enableWobble = true,
+  enableTilt = true,
 
   can_afford = true,
   draggable = false,
@@ -42,6 +45,11 @@ export function UnitCard({
   const cardStyle = useCustomizationStore((s) => s.selections.cardStyle);
   const playSfx = useAudioStore((s) => s.playSfx);
   const [isDragging, setIsDragging] = React.useState(false);
+
+  const { tiltRef } = useCardTilt({
+    enabled: enableTilt && !isDragging && !isSelected,
+    maxRotation: compact ? 8 : 12,
+  });
 
   const handleDragStart = (e: React.DragEvent) => {
     setIsDragging(true);
@@ -68,6 +76,7 @@ export function UnitCard({
 
   return (
     <div
+      ref={enableTilt ? tiltRef : undefined}
       onClick={() => {
         playSfx('card-select');
         onClick?.();
@@ -82,6 +91,7 @@ export function UnitCard({
         ${artSrc ? 'border-amber-900/60 bg-black' : 'bg-card-bg border-warm-600 p-1 lg:p-2'}
         ${isSelected ? 'card-selected ring-2 ring-yellow-400' : ''}
         ${enableWobble && !isDragging && !isSelected ? 'wobble-card' : ''}
+        ${enableTilt && !isDragging && !isSelected ? 'card-tilt' : ''}
         ${isDragging ? 'opacity-50 scale-105' : ''}
       `}
       style={

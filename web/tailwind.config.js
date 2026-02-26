@@ -96,7 +96,7 @@ export default {
       },
       animation: {
         'idle-wobble': 'idle-wobble 2.5s ease-in-out infinite',
-        'card-entrance': 'card-entrance 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+        'card-entrance': 'card-entrance 0.5s var(--spring-bounce) forwards',
         'scale-bounce': 'scale-bounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'death-shrink': 'death-shrink 0.6s ease-out forwards',
         'phase-splash': 'phase-splash 1.5s ease-out forwards',

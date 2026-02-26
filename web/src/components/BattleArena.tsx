@@ -576,6 +576,8 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
             showCost={false}
             showPitch={false}
             isSelected={false}
+            enableTilt={false}
+            enableWobble={false}
           />
         </div>
         {damageNumbers.has(unit.instance_id) && (
