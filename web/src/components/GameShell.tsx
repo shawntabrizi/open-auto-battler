@@ -138,7 +138,9 @@ export function GameShell({
       {/* Drag overlay - shows the card being dragged */}
       <DragOverlay>
         {activeCard ? (
-          <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showPitch={true} enableTilt={false} />
+          <div className="drag-ghost">
+            <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showPitch={true} enableTilt={false} enableWobble={false} />
+          </div>
         ) : null}
       </DragOverlay>
     </DndContext>

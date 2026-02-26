@@ -163,7 +163,7 @@ function SandboxArena() {
           className="relative group cursor-pointer sandbox-slot"
           onClick={onClick}
         >
-          <UnitCard card={unit} showCost={false} showPitch={false} compact={true} />
+          <UnitCard card={unit} showCost={false} showPitch={false} sizeVariant="compact" />
           <div className="absolute -top-1.5 lg:-top-2 left-1/2 -translate-x-1/2 text-[8px] lg:text-xs text-warm-400 pointer-events-none">
             {displayIndex}
           </div>
@@ -180,7 +180,7 @@ function SandboxArena() {
           onClick={onClick}
           label={`${displayIndex}`}
           isTarget={selectedTemplate !== null}
-          compact={true}
+          sizeVariant="compact"
         />
       </div>
     );
@@ -260,7 +260,7 @@ function UnitGallery() {
           card={template}
           isSelected={selectedTemplate?.id === template.id}
           onClick={() => selectTemplate(selectedTemplate?.id === template.id ? null : template)}
-          compact={true}
+          sizeVariant="compact"
         />
       ))}
     </div>

@@ -2,9 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import type { CardView } from '../types';
-import { getCardEmoji } from '../utils/emoji';
-import { getCardArtMd, hasCardArt } from '../utils/cardArt';
-import { CardIcon, BookIcon, GearIcon, PointerIcon } from './Icons';
+import { getCardArtMd } from '../utils/cardArt';
+import { CardIcon, BookIcon, GearIcon, BagIcon, SwordIcon, StarIcon, AbilityIcon } from './Icons';
 
 // Blockchain account type
 export interface BlockchainAccount {
@@ -99,10 +98,16 @@ export function CardDetailPanel({
   const renderCardTab = () => {
     if (!card) {
       return (
-        <div className="flex flex-col items-center justify-center py-6 lg:py-12 text-center">
-          <PointerIcon className="w-8 h-8 lg:w-12 lg:h-12 text-warm-500 mb-2 lg:mb-4" />
-          <h3 className="text-sm lg:text-lg font-bold text-warm-300 mb-1 lg:mb-2">Select a Card</h3>
-          <p className="text-[10px] lg:text-sm text-warm-400">Tap any card to view details.</p>
+        <div className="flex flex-col items-center justify-center py-8 lg:py-16 text-center">
+          <div className="w-14 h-14 lg:w-20 lg:h-20 rounded-2xl bg-warm-800/60 border border-warm-700/50 flex items-center justify-center mb-3 lg:mb-5">
+            <CardIcon className="w-7 h-7 lg:w-10 lg:h-10 text-warm-500" />
+          </div>
+          <h3 className="text-xs lg:text-base font-bold text-warm-300 mb-1 lg:mb-2">
+            No Card Selected
+          </h3>
+          <p className="text-[10px] lg:text-xs text-warm-400 leading-relaxed max-w-[10rem] lg:max-w-[14rem]">
+            Tap a card in your hand or on the board to see its stats and abilities.
+          </p>
         </div>
       );
     }
@@ -296,23 +301,25 @@ export function CardDetailPanel({
         )}
 
         {/* Card Basic Info */}
-        <div className="card-info flex items-center gap-2 lg:gap-4 mb-3 lg:mb-6">
-          <div className="card-emoji w-12 h-12 lg:w-20 lg:h-20 bg-warm-800 rounded-lg lg:rounded-xl border-2 border-warm-700 flex items-center justify-center text-2xl lg:text-4xl shadow-inner flex-shrink-0 overflow-hidden">
-            {hasCardArt(card.id) ? (
+        <div className="card-info flex flex-col items-center gap-2 lg:gap-3 mb-3 lg:mb-6">
+          <div className="w-20 h-20 lg:w-36 lg:h-36 bg-warm-800 rounded-xl lg:rounded-2xl border-2 border-warm-700 flex items-center justify-center shadow-inner flex-shrink-0 overflow-hidden">
+            {getCardArtMd(card.id) ? (
               <img
                 src={getCardArtMd(card.id)!}
                 alt=""
                 className="w-full h-full object-cover object-[center_30%]"
               />
             ) : (
-              getCardEmoji(card.id)
+              <span className="text-3xl lg:text-5xl font-bold text-warm-500/60 select-none">
+                {card.name.charAt(0)}
+              </span>
             )}
           </div>
-          <div className="card-stats min-w-0">
+          <div className="card-stats min-w-0 text-center">
             <h2 className="card-name text-base lg:text-2xl font-bold text-white leading-tight truncate">
               {card.name}
             </h2>
-            <div className="flex gap-1 lg:gap-2 mt-1">
+            <div className="flex gap-1 lg:gap-2 mt-1 justify-center">
               <span className="px-1.5 lg:px-2 py-0.5 bg-red-900/50 text-red-400 border border-red-800 rounded text-[10px] lg:text-xs font-bold">
                 ATK: {card.attack}
               </span>
@@ -331,21 +338,21 @@ export function CardDetailPanel({
                 key={index}
                 className="mb-2 lg:mb-4 p-2 lg:p-3 bg-warm-800/50 rounded-lg border border-warm-700"
               >
-                <h3 className="text-xs lg:text-md font-bold text-yellow-400 mb-1 lg:mb-2">
+                <h3 className="text-xs lg:text-base font-bold text-yellow-400 mb-1 lg:mb-2">
                   {ability.name}
                 </h3>
-                <div className="text-[10px] lg:text-xs text-warm-300 mb-1 lg:mb-2">
+                <div className="text-xs lg:text-sm text-warm-300 mb-1 lg:mb-2">
                   <strong>Trigger:</strong> {getTriggerDescription(ability.trigger)}
                 </div>
                 {ability.max_triggers && (
-                  <div className="text-[10px] lg:text-xs text-orange-400 mb-1 lg:mb-2">
+                  <div className="text-xs lg:text-sm text-orange-400 mb-1 lg:mb-2">
                     <strong>Max:</strong> {ability.max_triggers}
                   </div>
                 )}
-                <div className="text-[10px] lg:text-sm text-warm-200 bg-warm-900/50 p-1.5 lg:p-2 rounded border border-warm-700/50 italic">
+                <div className="text-xs lg:text-sm text-warm-200 bg-warm-900/50 p-1.5 lg:p-2 rounded border border-warm-700/50 italic">
                   "{ability.description}"
                 </div>
-                <div className="mt-1 lg:mt-2 text-[10px] lg:text-xs text-blue-400 font-semibold">
+                <div className="mt-1 lg:mt-2 text-xs lg:text-sm text-blue-400 font-semibold">
                   {getEffectDescription(ability.effect)}
                 </div>
               </div>
@@ -356,20 +363,20 @@ export function CardDetailPanel({
         {/* Economy Section */}
         <div className="grid grid-cols-2 gap-1.5 lg:gap-3 mb-3 lg:mb-6">
           <div className="p-1.5 lg:p-3 bg-blue-900/20 border border-blue-800/50 rounded-lg">
-            <div className="text-[8px] lg:text-[10px] text-blue-400 uppercase font-bold mb-0.5 lg:mb-1">
+            <div className="text-[10px] lg:text-xs text-blue-400 uppercase font-bold mb-0.5 lg:mb-1">
               Cost
             </div>
             <div className="text-sm lg:text-xl font-bold text-white flex items-center gap-0.5 lg:gap-1">
-              {card.play_cost} <span className="text-blue-400 text-[10px] lg:text-sm">Mana</span>
+              {card.play_cost} <span className="text-blue-400 text-[10px] lg:text-xs">Mana</span>
             </div>
           </div>
           <div className="p-1.5 lg:p-3 bg-orange-900/20 border border-orange-800/50 rounded-lg">
-            <div className="text-[8px] lg:text-[10px] text-orange-400 uppercase font-bold mb-0.5 lg:mb-1">
+            <div className="text-[10px] lg:text-xs text-orange-400 uppercase font-bold mb-0.5 lg:mb-1">
               Pitch
             </div>
             <div className="text-sm lg:text-xl font-bold text-white flex items-center gap-0.5 lg:gap-1">
               +{card.pitch_value}{' '}
-              <span className="text-orange-400 text-[10px] lg:text-sm">Mana</span>
+              <span className="text-orange-400 text-[10px] lg:text-xs">Mana</span>
             </div>
           </div>
         </div>
@@ -404,7 +411,8 @@ export function CardDetailPanel({
     return (
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-5 text-sm text-warm-300 pb-4">
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <BagIcon className="w-4 h-4" />
             Your Cards
           </h3>
           <p className="leading-relaxed text-xs">
@@ -419,7 +427,8 @@ export function CardDetailPanel({
         </section>
 
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <CardIcon className="w-4 h-4" />
             Playing & Pitching
           </h3>
           <p className="leading-relaxed text-xs">
@@ -436,7 +445,10 @@ export function CardDetailPanel({
         </section>
 
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">Mana</h3>
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <span className="w-4 h-4 rounded-full bg-mana-blue/40 border border-mana-blue/60 inline-block flex-shrink-0" />
+            Mana
+          </h3>
           <ul className="space-y-1.5 text-xs">
             <li className="flex items-start gap-2">
               <span className="text-blue-400 font-bold mt-0.5">*</span>
@@ -463,7 +475,10 @@ export function CardDetailPanel({
         </section>
 
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">Battle</h3>
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <SwordIcon className="w-4 h-4" />
+            Battle
+          </h3>
           <p className="leading-relaxed text-xs">
             When you end your turn, your units fight automatically! The two front units clash{' '}
             <strong className="text-white">at the same time</strong>, dealing damage to each other
@@ -478,7 +493,8 @@ export function CardDetailPanel({
         </section>
 
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <AbilityIcon className="w-4 h-4" />
             Chain Reactions
           </h3>
           <p className="leading-relaxed text-xs">
@@ -489,7 +505,10 @@ export function CardDetailPanel({
         </section>
 
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">Winning</h3>
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <StarIcon className="w-4 h-4" />
+            Winning
+          </h3>
           <p className="leading-relaxed text-xs">
             Win battles to earn <strong className="text-yellow-500">Stars</strong>. Collect{' '}
             <strong className="text-yellow-500">10 Stars</strong> and you win the run! But be
@@ -649,11 +668,6 @@ export function CardDetailPanel({
         {activeTab === 'card' && renderCardTab()}
         {activeTab === 'rules' && renderRulesTab()}
         {activeTab === 'mode' && renderModeTab()}
-      </div>
-
-      {/* Footer */}
-      <div className="p-1 lg:p-4 border-t border-warm-800 bg-warm-950/50 text-[6px] lg:text-[10px] text-warm-600 text-center uppercase tracking-tighter">
-        Open Auto Battler Engine v0.2.0
       </div>
     </div>
   );

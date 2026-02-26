@@ -4,6 +4,7 @@ import { useAudioStore } from '../store/audioStore';
 import React, { useRef } from 'react';
 import { DraggableCard, DroppableAshPile } from './DndComponents';
 import { FlameIcon } from './Icons';
+import { CARD_SIZES } from '../constants/cardSizes';
 
 export function Shop() {
   const { view, selection, setSelection, pitchHandCard, pitchBoardUnit, undo } = useGameStore();
@@ -58,7 +59,7 @@ export function Shop() {
 
   return (
     <div
-      className={`shop h-32 lg:h-60 border-t-2 border-warm-700 flex-shrink-0 relative ${handBg ? '' : 'bg-shop-bg'}`}
+      className={`shop zone-divider h-[8.5rem] lg:h-[17rem] border-t border-warm-800/60 flex-shrink-0 relative ${handBg ? '' : 'bg-shop-bg'}`}
       style={
         handBg
           ? {
@@ -72,13 +73,13 @@ export function Shop() {
       {handBg && <div className="absolute inset-0 bg-shop-bg/50" />}
       <div className="flex h-full relative z-10">
         {/* Left: Undo Button */}
-        <div className="shop-side w-20 lg:w-32 h-full flex flex-col items-center justify-center">
+        <div className="shop-side w-20 lg:w-32 h-full flex flex-col items-center justify-center border-r border-warm-700/50">
           <button
             onClick={undo}
             disabled={!view.can_undo}
-            className={`action-circle w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all border-2 ${
+            className={`action-circle w-16 h-16 rounded-full flex items-center justify-center transition-all border-2 ${
               view.can_undo
-                ? 'bg-gradient-to-br from-warm-600 to-warm-700 border-warm-400/50 text-warm-100 hover:from-warm-500 hover:to-warm-600 cursor-pointer shadow-warm-900/50 hover:shadow-warm-700/70'
+                ? 'bg-gradient-to-br from-warm-600 to-warm-700 border-warm-400/50 text-warm-100 hover:from-warm-500 hover:to-warm-600 cursor-pointer shadow-elevation-rest hover:shadow-elevation-hover'
                 : 'bg-warm-800 border-warm-700 text-warm-600 cursor-not-allowed'
             }`}
             title="Undo last action"
@@ -131,9 +132,9 @@ export function Shop() {
               ) : (
                 <div
                   key={`hand-empty-${i}`}
-                  className="card-slot-placeholder w-[4.5rem] h-24 lg:w-32 lg:h-44 rounded-lg border-2 border-dashed border-warm-600 bg-warm-800/30 flex items-center justify-center"
+                  className={`card-slot-placeholder ${CARD_SIZES.standard.tw} rounded-lg border-2 border-dashed border-warm-700/50 bg-warm-800/20 flex items-center justify-center`}
                 >
-                  <span className="text-warm-500 text-xs">H{i + 1}</span>
+                  <span className="text-warm-700/40 text-lg">&#9724;</span>
                 </div>
               )
             )}
@@ -143,13 +144,13 @@ export function Shop() {
         {/* Right: Ash Pile */}
         <DroppableAshPile onHoverChange={setIsAshHovered}>
           <div
-            className={`shop-side w-20 lg:w-32 h-full flex flex-col items-center justify-center transition-colors duration-200 ${isAshHovered ? 'bg-red-900/30' : ''}`}
+            className={`shop-side w-20 lg:w-32 h-full flex flex-col items-center justify-center border-l border-warm-700/50 transition-colors duration-200 ${isAshHovered ? 'bg-red-900/30' : ''}`}
           >
             <div
-              className={`action-circle w-16 h-16 rounded-full bg-gradient-to-br from-red-900 to-orange-800 flex items-center justify-center shadow-lg transition-all cursor-pointer border-2 border-orange-500/50 ${
+              className={`action-circle w-16 h-16 rounded-full bg-gradient-to-br from-red-900 to-orange-800 flex items-center justify-center transition-all cursor-pointer border-2 border-orange-500/50 ${
                 isAshHovered
-                  ? 'shadow-red-400/80 scale-110 ring-4 ring-red-400/30'
-                  : 'shadow-red-900/50 hover:shadow-red-700/70'
+                  ? 'shadow-elevation-lifted scale-110 ring-4 ring-red-400/30'
+                  : 'shadow-elevation-rest hover:shadow-elevation-hover'
               }`}
               onClick={handleAshClick}
             >

@@ -13,6 +13,7 @@ import {
   SpeakerMutedIcon,
   HourglassIcon,
   WarningIcon,
+  SwordIcon,
 } from './Icons';
 
 const BATTLE_TIMER_SECONDS = 20;
@@ -196,7 +197,8 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
 
   return (
     <div
-      className={`hud h-12 lg:h-16 bg-warm-900/90 border-b border-warm-700 flex items-center justify-between px-2 lg:px-6 relative z-20 ${showCardPanel ? 'show-card-panel' : ''}`}
+      className={`hud h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-2 lg:px-6 relative z-20 ${showCardPanel ? 'show-card-panel' : ''}`}
+      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
     >
       {/* Left: Lives */}
       <div className="flex items-center gap-1 lg:gap-2">
@@ -217,23 +219,23 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
         <div className="hidden lg:flex gap-1">
           {Array.from({ length: startingLives }).map((_, i) =>
             i < view.lives ? (
-              <HeartIcon key={i} className="w-6 h-6 text-red-500" />
+              <HeartIcon key={i} className="w-5 h-5 text-red-500" />
             ) : (
-              <HeartOutlineIcon key={i} className="w-6 h-6 text-warm-600" />
+              <HeartOutlineIcon key={i} className="w-5 h-5 text-warm-600" />
             )
           )}
         </div>
       </div>
 
-      {/* Center: Round & End Turn */}
-      <div className="flex items-center gap-2 lg:gap-4">
-        <div className="text-center">
-          <div className="text-xs lg:text-sm text-warm-400">Round</div>
-          <div className="text-lg lg:text-2xl font-bold text-gold">{view.round}</div>
-        </div>
-
-        {view.phase === 'shop' && (
-          <div className="flex items-center gap-2 lg:gap-3">
+      {/* Center: Reference cluster + Action cluster */}
+      <div className="flex items-center gap-2 lg:gap-5">
+        {/* Reference cluster: Round + Bag */}
+        <div className="flex items-center gap-2 lg:gap-3">
+          <div className="text-center">
+            <div className="text-xs lg:text-sm text-warm-400">Round</div>
+            <div className="text-lg lg:text-2xl font-bold text-gold">{view.round}</div>
+          </div>
+          {view.phase === 'shop' && (
             <button
               onClick={() => setShowBag(true)}
               className="btn bg-warm-800 hover:bg-warm-700 text-warm-100 border-warm-600 flex items-center gap-1 lg:gap-2 px-2 lg:px-4"
@@ -242,6 +244,12 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
               <BagIcon className="w-5 h-5 lg:w-6 lg:h-6 text-amber-400" />
               <span className="font-bold text-sm lg:text-base">{view.bag_count}</span>
             </button>
+          )}
+        </div>
+
+        {/* Action cluster: Timer + Battle */}
+        {view.phase === 'shop' && (
+          <div className="flex items-center gap-2 lg:gap-3">
             {!hideEndTurn && (
               <>
                 {/* Timer display when either player is waiting */}
@@ -276,7 +284,7 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
                 <button
                   onClick={handleEndTurn}
                   disabled={isWaiting}
-                  className={`btn btn-primary text-sm lg:text-lg px-3 lg:px-6 py-2 lg:py-3 transition-all ${
+                  className={`btn btn-primary text-sm lg:text-xl px-3 lg:px-8 py-2 lg:py-3.5 font-bold tracking-wide shadow-lg transition-all flex items-center gap-1.5 ${
                     isWaiting
                       ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
                       : opponentWaiting && displayTimer !== null && displayTimer <= 5
@@ -284,6 +292,7 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
                         : ''
                   }`}
                 >
+                  <SwordIcon className="w-4 h-4 lg:w-5 lg:h-5" />
                   {isWaiting ? 'Waiting...' : 'Battle!'}
                 </button>
               </>

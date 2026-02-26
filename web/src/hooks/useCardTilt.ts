@@ -55,8 +55,13 @@ export function useCardTilt({
       });
     };
 
+    let enterTimer: ReturnType<typeof setTimeout>;
     const handleMouseEnter = () => {
-      el.style.setProperty('--tilt-transition', '0ms');
+      // Start with 300ms ease-in to match wobble fade-out, then switch to instant tracking
+      el.style.setProperty('--tilt-transition', '300ms');
+      enterTimer = setTimeout(() => {
+        el.style.setProperty('--tilt-transition', '0ms');
+      }, 300);
     };
 
     const handleMouseLeave = () => {
@@ -74,6 +79,7 @@ export function useCardTilt({
 
     return () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
+      clearTimeout(enterTimer);
       el.removeEventListener('mouseenter', handleMouseEnter);
       el.removeEventListener('mousemove', handleMouseMove);
       el.removeEventListener('mouseleave', handleMouseLeave);

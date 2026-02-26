@@ -6,10 +6,10 @@ export function ManaBar() {
   if (!view) return null;
 
   return (
-    <div className="mana-bar-container w-full px-4 py-1.5 bg-warm-900/70 border-y border-warm-700">
+    <div className="mana-bar-container zone-divider w-full px-4 py-2.5 lg:py-3 bg-warm-900/70 border-y border-warm-600/50">
       <div className="flex items-center gap-3">
         {/* Mana label */}
-        <div className="text-[10px] lg:text-xs text-mana-blue font-bold uppercase tracking-wide whitespace-nowrap">
+        <div className="text-xs lg:text-sm text-mana-blue font-bold uppercase tracking-wide whitespace-nowrap">
           Mana
         </div>
 
@@ -18,9 +18,9 @@ export function ManaBar() {
           {Array.from({ length: view.mana_limit }, (_, i) => (
             <div
               key={i}
-              className={`flex-1 h-2.5 lg:h-3 rounded-full transition-all duration-200 ${
+              className={`flex-1 h-4 lg:h-5 rounded-md transition-all duration-200 ${
                 i < view.mana
-                  ? 'bg-gradient-to-t from-mana-blue to-blue-400 shadow-[0_0_6px_rgba(59,130,246,0.5)]'
+                  ? 'bg-gradient-to-t from-mana-blue to-blue-400 shadow-[0_0_8px_rgba(91,143,170,0.6)]'
                   : 'bg-warm-700 border border-warm-600'
               }`}
             />
@@ -28,7 +28,7 @@ export function ManaBar() {
         </div>
 
         {/* Mana count */}
-        <div className="text-xs lg:text-sm font-bold text-white whitespace-nowrap">
+        <div className="text-sm lg:text-base font-bold font-stat text-white whitespace-nowrap">
           <span className="text-mana-blue">{view.mana}</span>
           <span className="text-warm-500">/{view.mana_limit}</span>
         </div>

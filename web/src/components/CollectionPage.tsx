@@ -206,7 +206,7 @@ export function CollectionPage() {
               >
                 <UnitCard
                   card={card}
-                  compact={true}
+                  sizeVariant="compact"
                   showCost={true}
                   showPitch={true}
                   enableWobble={false}

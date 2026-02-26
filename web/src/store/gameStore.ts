@@ -70,6 +70,7 @@ interface GameStore {
   gameStarted: boolean;
   previewCards: CardView[] | null;
   showSetPreview: boolean;
+  setPreviewCards: Record<number, CardView[]>;
 
   // Two-phase init
   initEngine: () => Promise<void>;
@@ -79,6 +80,7 @@ interface GameStore {
   init: (seed?: bigint) => Promise<void>;
 
   // Preview
+  loadSetPreviews: () => void;
   previewSet: (setId: number) => void;
   closePreview: () => void;
 
@@ -130,6 +132,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   gameStarted: false,
   previewCards: null,
   showSetPreview: false,
+  setPreviewCards: {},
 
   // Phase 1: Load WASM, create engine, init emoji map, fetch set metas
   initEngine: async () => {
@@ -258,6 +261,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })();
 
     return initPromise;
+  },
+
+  // Load preview cards for all sets (for set selection tile art fans)
+  loadSetPreviews: () => {
+    const { engine, setMetas } = get();
+    if (!engine || setMetas.length === 0) return;
+    try {
+      const previews: Record<number, CardView[]> = {};
+      for (const meta of setMetas) {
+        previews[meta.id] = engine.get_set_cards(meta.id);
+      }
+      set({ setPreviewCards: previews });
+    } catch (err) {
+      console.error('Failed to load set previews:', err);
+    }
   },
 
   // Preview a set's cards without starting a game

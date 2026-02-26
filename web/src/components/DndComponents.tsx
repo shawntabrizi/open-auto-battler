@@ -3,6 +3,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { UnitCard, EmptySlot } from './UnitCard';
 import type { CardView, BoardUnitView } from '../types';
+import type { CardSizeVariant } from '../constants/cardSizes';
 
 // Draggable wrapper for UnitCard
 interface DraggableCardProps {
@@ -12,6 +13,7 @@ interface DraggableCardProps {
   onClick?: () => void;
   showCost?: boolean;
   showPitch?: boolean;
+  sizeVariant?: CardSizeVariant;
   can_afford?: boolean;
   disabled?: boolean;
 }
@@ -23,6 +25,7 @@ export function DraggableCard({
   onClick,
   showCost = true,
   showPitch = true,
+  sizeVariant = 'standard',
   can_afford = true,
   disabled = false,
 }: DraggableCardProps) {
@@ -46,6 +49,7 @@ export function DraggableCard({
         onClick={onClick}
         showCost={showCost}
         showPitch={showPitch}
+        sizeVariant={sizeVariant}
         can_afford={can_afford}
         enableTilt={!isDragging}
         draggable={false} // Disable native drag since @dnd-kit handles it
@@ -70,7 +74,11 @@ export function DroppableBoardSlot({ id, children }: DroppableBoardSlotProps) {
   return (
     <div
       ref={setNodeRef}
-      className={`transition-all duration-150 ${isOver ? 'scale-105' : ''}`}
+      className={`transition-all duration-150 rounded-lg ${
+        isOver
+          ? 'scale-105 ring-2 ring-amber-400/70 shadow-[0_0_12px_rgba(212,168,67,0.3)]'
+          : ''
+      }`}
     >
       {children}
     </div>

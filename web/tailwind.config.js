@@ -36,10 +36,15 @@ export default {
         'warm-900': '#1a1610',
         'warm-950': '#100e0a',
       },
+      boxShadow: {
+        'elevation-rest': 'var(--shadow-resting)',
+        'elevation-hover': 'var(--shadow-hover)',
+        'elevation-lifted': 'var(--shadow-lifted)',
+      },
       keyframes: {
         'idle-wobble': {
-          '0%, 100%': { transform: 'rotate(-1deg)' },
-          '50%': { transform: 'rotate(1deg)' },
+          '0%, 100%': { '--wobble-angle': '-0.4deg' },
+          '50%': { '--wobble-angle': '0.4deg' },
         },
         'card-entrance': {
           '0%': { opacity: '0', transform: 'translateY(30px) scale(0.8)' },
@@ -82,8 +87,8 @@ export default {
         },
         'number-pop': {
           '0%': { opacity: '1', transform: 'translateY(0) scale(1.3)' },
-          '30%': { opacity: '1', transform: 'translateY(-10px) scale(1)' },
-          '100%': { opacity: '0', transform: 'translateY(-40px) scale(0.8)' },
+          '30%': { opacity: '1', transform: 'translateY(-8px) scale(1)' },
+          '100%': { opacity: '0', transform: 'translateY(-24px) scale(0.8)' },
         },
         'stagger-fade-in': {
           '0%': { opacity: '0', transform: 'translateY(12px)' },
@@ -93,9 +98,27 @@ export default {
           '0%': { opacity: '0.4' },
           '100%': { opacity: '0' },
         },
+        'card-land': {
+          '0%': { opacity: '0', transform: 'translateY(-20px) scale(0.85)' },
+          '50%': { opacity: '1', transform: 'translateY(2px) scale(1.05)' },
+          '100%': { transform: 'translateY(0) scale(1)' },
+        },
+        'battle-continue': {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '30%': { opacity: '1', transform: 'translateY(0)' },
+          '45%': { transform: 'scale(1.05)' },
+          '55%': { transform: 'scale(0.98)' },
+          '65%': { transform: 'scale(1.02)' },
+          '75%, 100%': { transform: 'scale(1)' },
+        },
+        'stat-count-up': {
+          '0%': { opacity: '0', transform: 'translateY(16px) scale(0.8)' },
+          '60%': { opacity: '1', transform: 'translateY(-2px) scale(1.05)' },
+          '100%': { transform: 'translateY(0) scale(1)' },
+        },
       },
       animation: {
-        'idle-wobble': 'idle-wobble 2.5s ease-in-out infinite',
+        'idle-wobble': 'idle-wobble 3.5s ease-in-out infinite',
         'card-entrance': 'card-entrance 0.5s var(--spring-bounce) forwards',
         'scale-bounce': 'scale-bounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'death-shrink': 'death-shrink 0.6s ease-out forwards',
@@ -105,6 +128,9 @@ export default {
         'number-pop': 'number-pop 0.8s ease-out forwards',
         'stagger-fade-in': 'stagger-fade-in 0.5s ease-out forwards',
         'color-flash': 'color-flash 0.3s ease-out forwards',
+        'card-land': 'card-land 0.35s var(--spring-bounce) forwards',
+        'battle-continue': 'battle-continue 0.8s ease-out forwards',
+        'stat-count-up': 'stat-count-up 0.5s var(--spring-bounce) forwards',
       },
     },
   },

@@ -92,6 +92,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
     : `Round ${battleOutput?.round} Battle`;
 
   const [battleFinished, setBattleFinished] = useState(false);
+  const [showContinue, setShowContinue] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
   const [lastEventIndex, setLastEventIndex] = useState(-1);
   const logRef = useRef<HTMLDivElement>(null);
@@ -113,9 +114,20 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
     }
   }, [lastEventIndex]);
 
+  // Delay continue button appearance after battle ends
+  useEffect(() => {
+    if (battleFinished) {
+      const timer = setTimeout(() => setShowContinue(true), 600);
+      return () => clearTimeout(timer);
+    } else {
+      setShowContinue(false);
+    }
+  }, [battleFinished]);
+
   useEffect(() => {
     if (showOverlay) {
       setBattleFinished(false);
+      setShowContinue(false);
       setLastEventIndex(-1);
       setShowSplash(true);
       const timer = setTimeout(() => setShowSplash(false), 1500);
@@ -154,7 +166,19 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-2 lg:p-4">
+    <div className="fixed inset-0 z-50 flex flex-col battle-fullscreen">
+      {/* Dark atmospheric background */}
+      <div className="absolute inset-0 bg-surface-dark" />
+      <div className="absolute inset-0 battle-arena-bg" />
+
+      {/* Vignette overlay for depth */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)',
+        }}
+      />
+
       {/* BATTLE! Splash */}
       {showSplash && (
         <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/60 pointer-events-none">
@@ -169,33 +193,68 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
         </div>
       )}
 
-      <div className="bg-warm-900 rounded-xl p-3 lg:p-6 max-w-[98vw] lg:max-w-[95vw] w-full border border-warm-700 overflow-hidden flex flex-col max-h-[95vh] lg:max-h-[90vh] relative shadow-2xl">
-        {/* Close X button for sandbox mode */}
-        {isSandbox && (
+      {/* Top bar — title + close */}
+      <div className="relative z-10 flex items-center justify-between px-4 lg:px-8 py-2.5 lg:py-4">
+        <div className="w-8" /> {/* spacer */}
+        <h2 className="text-sm lg:text-xl font-heading font-bold text-warm-300/80 tracking-widest uppercase">
+          {title}
+        </h2>
+        {isSandbox ? (
           <button
             onClick={onContinue}
-            className="absolute top-2 right-2 lg:top-4 lg:right-4 w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center text-warm-400 hover:text-warm-100 hover:bg-warm-800 rounded-full transition-colors z-10 text-sm lg:text-base"
+            className="w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center text-warm-400 hover:text-warm-100 hover:bg-warm-800 rounded-full transition-colors text-sm lg:text-base"
             title="Close (Esc)"
           >
             x
           </button>
+        ) : (
+          <div className="w-8" /> /* spacer */
         )}
+        {/* Fade line instead of hard border */}
+        <div className="absolute bottom-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-warm-600/30 to-transparent" />
+      </div>
 
-        <h2 className="text-lg lg:text-2xl font-heading font-bold text-center mb-2 lg:mb-4 flex-shrink-0 text-white">
-          {title}
-        </h2>
+      {/* Main battle area + result overlay */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center min-h-0 px-2 lg:px-8">
+        <BattleArena battleOutput={battleOutput} onBattleEnd={() => setBattleFinished(true)} onEventProcessed={handleEventProcessed} />
 
-        <div className="flex-1 overflow-x-auto overflow-y-auto min-h-0 custom-scrollbar pb-2 lg:pb-4">
-          <div className="min-w-max flex justify-center py-2 lg:py-4 px-1 lg:px-8">
-            <BattleArena battleOutput={battleOutput} onBattleEnd={() => setBattleFinished(true)} onEventProcessed={handleEventProcessed} />
+        {/* Result overlay — centered over the battle field */}
+        {battleFinished && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none">
+            {/* Dim scrim behind result */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
+
+            <div className="relative flex flex-col items-center gap-4 lg:gap-6 pointer-events-auto">
+              {/* Result banner */}
+              <div
+                className={`battle-result-banner px-8 lg:px-16 py-3 lg:py-5 rounded-xl text-center text-3xl lg:text-5xl font-title font-bold tracking-wide ${resultBgColor} animate-scale-bounce`}
+                style={{
+                  textShadow: '0 2px 8px rgba(0,0,0,0.6)',
+                }}
+              >
+                {resultText}
+              </div>
+
+              {/* Continue button */}
+              {showContinue && (
+                <button
+                  onClick={onContinue}
+                  className={`btn ${isSandbox ? 'bg-warm-700 hover:bg-warm-600' : 'btn-primary'} text-sm lg:text-lg px-10 lg:px-20 py-2.5 lg:py-3 animate-battle-continue shadow-[0_0_20px_rgba(234,179,8,0.3)]`}
+                >
+                  {isSandbox ? 'Close' : 'Continue'}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+      </div>
 
-        <div className="flex flex-col items-center gap-2 lg:gap-3 mt-2 lg:mt-3 flex-shrink-0 border-t border-warm-800 pt-2 lg:pt-3">
-          {/* Event Log */}
+      {/* Bottom — event log */}
+      <div className="relative z-10 px-4 lg:px-8 py-3 lg:py-5">
+        <div className="battle-log-container w-full max-w-3xl mx-auto">
           <div
             ref={logRef}
-            className="w-full max-w-2xl h-16 lg:h-24 overflow-y-auto custom-scrollbar bg-warm-950/50 rounded-lg px-3 py-1.5 font-mono text-[11px] lg:text-xs leading-relaxed"
+            className="battle-log h-20 lg:h-28 overflow-y-auto custom-scrollbar px-3 lg:px-4 py-2 font-body text-[11px] lg:text-sm leading-relaxed"
           >
             {battleOutput && lastEventIndex >= 0 ? (
               battleOutput.events.slice(0, lastEventIndex + 1).map((event, i) => {
@@ -214,26 +273,6 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
               </div>
             )}
           </div>
-
-          {/* Continue / Result */}
-          <div className="h-10 lg:h-12 flex items-center justify-center">
-            {battleFinished ? (
-              <button
-                onClick={onContinue}
-                className={`btn ${isSandbox ? 'bg-warm-700 hover:bg-warm-600' : 'btn-primary'} text-sm lg:text-lg px-8 lg:px-16 py-2 animate-pulse shadow-[0_0_15px_rgba(234,179,8,0.3)]`}
-              >
-                {isSandbox ? 'Close' : 'Continue'}
-              </button>
-            ) : null}
-          </div>
-
-          {battleFinished && (
-            <div
-              className={`w-full max-w-xs lg:max-w-sm py-2 lg:py-3 rounded-lg text-center text-xl lg:text-2xl font-heading font-bold border ${resultBgColor} border-current/20 shadow-lg`}
-            >
-              {resultText}
-            </div>
-          )}
         </div>
       </div>
     </div>

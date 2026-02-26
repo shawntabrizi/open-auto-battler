@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UnitCard } from './UnitCard';
+import { UnitCard, EmptySlot } from './UnitCard';
 import type { BattleOutput, UnitView, CombatEvent } from '../types';
 import { useAudioStore } from '../store/audioStore';
 
@@ -73,7 +73,7 @@ const StatChangeNumber = ({
 const AbilityToast = ({ name, onAnimationEnd }: { name: string; onAnimationEnd: () => void }) => {
   return (
     <div
-      className="absolute -top-6 lg:-top-10 left-1/2 -translate-x-1/2 px-1.5 lg:px-3 py-0.5 lg:py-1 bg-yellow-500 text-black text-[10px] lg:text-sm font-bold rounded lg:rounded-lg shadow-lg animate-fade-in-out whitespace-nowrap z-20"
+      className="absolute -top-8 lg:-top-12 left-1/2 -translate-x-1/2 px-1.5 lg:px-3 py-0.5 lg:py-1 bg-yellow-500 text-black text-[10px] lg:text-sm font-bold rounded lg:rounded-lg shadow-lg animate-fade-in-out whitespace-nowrap z-20"
       onAnimationEnd={onAnimationEnd}
     >
       {name}
@@ -168,7 +168,7 @@ function getEventDelay(events: CombatEvent[], index: number, playbackSpeed: numb
       return 300 / playbackSpeed;
     case 'DamageTaken': {
       const prevEvent = index > 0 ? events[index - 1] : null;
-      return (prevEvent?.type === 'DamageTaken' ? 400 : 200) / playbackSpeed;
+      return (prevEvent?.type === 'DamageTaken' ? 500 : 300) / playbackSpeed;
     }
     case 'UnitDeath':
       return 600 / playbackSpeed;
@@ -213,6 +213,8 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
   const [shakeActive, setShakeActive] = useState(false);
   const [dyingUnitIds, setDyingUnitIds] = useState<Set<number>>(new Set());
   const [colorFlash, setColorFlash] = useState<string | null>(null);
+  const [targetHighlightIds, setTargetHighlightIds] = useState<Set<number>>(new Set());
+  const [sourceGlowIds, setSourceGlowIds] = useState<Set<number>>(new Set());
 
   const playSfx = useAudioStore((s) => s.playSfx);
 
@@ -246,6 +248,10 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
       case 'AbilityTrigger': {
         const { source_instance_id, ability_name } = event.payload;
         setAbilityToasts((prev) => new Map(prev).set(source_instance_id, ability_name));
+        setSourceGlowIds((prev) => new Set(prev).add(source_instance_id));
+        setTimeout(() => {
+          setSourceGlowIds((prev) => { const next = new Set(prev); next.delete(source_instance_id); return next; });
+        }, 800);
         playSfx('ability-trigger');
         break;
       }
@@ -270,6 +276,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
       case 'DamageTaken': {
         playSfx('damage-taken');
         const { target_instance_id, remaining_hp } = event.payload;
+
+        setTargetHighlightIds((prev) => new Set(prev).add(target_instance_id));
+        setTimeout(() => {
+          setTargetHighlightIds((prev) => { const next = new Set(prev); next.delete(target_instance_id); return next; });
+        }, 600);
 
         const updateBoard = (board: UnitView[]) =>
           board.map((u) =>
@@ -352,6 +363,13 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
       case 'AbilityDamage': {
         const { target_instance_id, damage, remaining_hp } = event.payload;
 
+        setTargetHighlightIds((prev) => new Set(prev).add(target_instance_id));
+        setSourceGlowIds((prev) => new Set(prev).add(event.payload.source_instance_id));
+        setTimeout(() => {
+          setTargetHighlightIds((prev) => { const next = new Set(prev); next.delete(target_instance_id); return next; });
+          setSourceGlowIds((prev) => { const next = new Set(prev); next.delete(event.payload.source_instance_id); return next; });
+        }, 600);
+
         const updateBoard = (board: UnitView[]) =>
           board.map((u) =>
             u.instance_id === target_instance_id ? { ...u, health: remaining_hp } : u
@@ -374,6 +392,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
           health_change,
           attack_change,
         } = event.payload;
+
+        setTargetHighlightIds((prev) => new Set(prev).add(statsTarget));
+        setTimeout(() => {
+          setTargetHighlightIds((prev) => { const next = new Set(prev); next.delete(statsTarget); return next; });
+        }, 600);
 
         const updateBoard = (board: UnitView[]) =>
           board.map((u) =>
@@ -416,6 +439,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
           health_change,
           attack_change,
         } = event.payload;
+
+        setTargetHighlightIds((prev) => new Set(prev).add(statsTarget));
+        setTimeout(() => {
+          setTargetHighlightIds((prev) => { const next = new Set(prev); next.delete(statsTarget); return next; });
+        }, 600);
 
         const updateBoard = (board: UnitView[]) =>
           board.map((u) =>
@@ -487,6 +515,8 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
     setDamageNumbers(new Map());
     setStatChanges(new Map());
     setAbilityToasts(new Map());
+    setTargetHighlightIds(new Set());
+    setSourceGlowIds(new Set());
   };
 
   const stepForward = () => {
@@ -543,22 +573,23 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
 
     if (!unit) {
       return (
-        <div
+        <EmptySlot
           key={`${team}-empty-${displayIndex}`}
-          className="w-[4.5rem] h-24 lg:w-32 lg:h-44 rounded border border-warm-600 bg-warm-800/50 flex items-center justify-center"
-        >
-          <span className="text-warm-600 text-xs">-</span>
-        </div>
+          label={index === 0 ? 'Front' : undefined}
+          sizeVariant="battle"
+        />
       );
     }
 
     const isClashing = clashingUnitIds.includes(unit.instance_id);
     const isDying = dyingUnitIds.has(unit.instance_id);
+    const isTargetHighlighted = targetHighlightIds.has(unit.instance_id);
+    const isSourceGlowing = sourceGlowIds.has(unit.instance_id);
 
     return (
       <div
         key={`${unit.instance_id}-${index}`}
-        className={`relative ${isDying ? 'animate-death-shrink' : ''}`}
+        className={`relative ${isDying ? 'animate-death-shrink' : ''} ${isTargetHighlighted ? 'unit-target-highlight' : ''} ${isSourceGlowing ? 'unit-source-glow' : ''}`}
       >
         <div
           className={`transition-transform duration-200 ${isClashing ? (isPlayer ? 'clash-bump-right' : 'clash-bump-left') : ''}`}
@@ -575,6 +606,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
             }}
             showCost={false}
             showPitch={false}
+            sizeVariant="battle"
             isSelected={false}
             enableTilt={false}
             enableWobble={false}
@@ -634,78 +666,102 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
 
   return (
     <div
-      className={`battle-arena flex flex-col items-center gap-2 lg:gap-4 p-2 lg:p-4 bg-warm-800 rounded-lg relative ${shakeActive ? 'animate-screen-shake' : ''}`}
+      className={`battle-arena flex flex-col items-center gap-4 lg:gap-6 w-full relative ${shakeActive ? 'animate-screen-shake' : ''}`}
+      style={{ '--battle-speed': `${1 / playbackSpeed}` } as React.CSSProperties}
     >
       {/* Color flash overlay */}
       {colorFlash && (
         <div
-          className={`absolute inset-0 ${colorFlash} animate-color-flash rounded-lg pointer-events-none z-30`}
+          className={`absolute inset-0 ${colorFlash} animate-color-flash pointer-events-none z-30`}
         />
       )}
 
-      {/* Playback Controls */}
-      <div className="flex items-center gap-1 flex-wrap justify-center">
-        <span className="text-white text-xs lg:text-sm font-medium mr-1 lg:mr-2">Speed:</span>
-        {speedOptions.map((option) => (
+      {/* Playback Controls — compact bar */}
+      <div className="flex items-center gap-1.5 lg:gap-2 flex-wrap justify-center">
+        {/* Transport controls */}
+        <div className="flex items-center bg-warm-900/60 rounded-lg border border-warm-700/50 p-0.5 lg:p-1 gap-0.5">
           <button
-            key={option.value}
-            onClick={() => selectSpeed(option.value)}
-            className={`px-1.5 lg:px-2 py-0.5 lg:py-1 text-[10px] lg:text-xs font-medium rounded ${
-              playMode === 'auto' && playbackSpeed === option.value
-                ? 'bg-blue-600 text-white'
-                : 'bg-warm-600 text-warm-200 hover:bg-warm-500'
+            onClick={stepBackward}
+            disabled={isAtStart}
+            className={`p-1.5 lg:p-2 rounded-md transition-colors ${
+              isAtStart
+                ? 'text-warm-600 cursor-not-allowed'
+                : 'text-warm-200 hover:bg-warm-700 hover:text-warm-100'
             }`}
+            title="Previous event"
           >
-            {option.label}
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 lg:w-5 lg:h-5">
+              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+            </svg>
           </button>
-        ))}
-        <span className="text-warm-500 mx-1">|</span>
-        <button
-          onClick={stepBackward}
-          disabled={isAtStart}
-          className={`px-1.5 lg:px-2 py-0.5 lg:py-1 text-[10px] lg:text-xs font-medium rounded ${
-            isAtStart
-              ? 'bg-warm-700 text-warm-500 cursor-not-allowed'
-              : 'bg-warm-600 text-warm-200 hover:bg-warm-500'
-          }`}
-        >
-          Prev
-        </button>
-        <button
-          onClick={stepForward}
-          disabled={isAtEnd}
-          className={`px-1.5 lg:px-2 py-0.5 lg:py-1 text-[10px] lg:text-xs font-medium rounded ${
-            isAtEnd
-              ? 'bg-warm-700 text-warm-500 cursor-not-allowed'
-              : playMode === 'step'
-                ? 'bg-blue-600 text-white'
-                : 'bg-warm-600 text-warm-200 hover:bg-warm-500'
-          }`}
-        >
-          Step
-        </button>
-        <button
-          onClick={skipToEnd}
-          className="px-1.5 lg:px-2 py-0.5 lg:py-1 text-[10px] lg:text-xs font-medium rounded bg-warm-600 text-warm-200 hover:bg-warm-500"
-        >
-          Skip
-        </button>
-      </div>
-
-      {/* Battle Arena */}
-      <div className="flex items-center justify-center gap-2 lg:gap-8">
-        {/* Player side (left) */}
-        <div className="flex gap-1 lg:gap-2">
-          {Array.from({ length: 5 }).map((_, i) =>
-            renderUnit((playerBoard || [])[4 - i], 'player', 4 - i)
-          )}
+          <button
+            onClick={stepForward}
+            disabled={isAtEnd}
+            className={`p-1.5 lg:p-2 rounded-md transition-colors ${
+              isAtEnd
+                ? 'text-warm-600 cursor-not-allowed'
+                : playMode === 'step'
+                  ? 'text-gold bg-warm-700'
+                  : 'text-warm-200 hover:bg-warm-700 hover:text-warm-100'
+            }`}
+            title="Step forward"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 lg:w-5 lg:h-5">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </button>
+          <button
+            onClick={skipToEnd}
+            className="p-1.5 lg:p-2 rounded-md text-warm-200 hover:bg-warm-700 hover:text-warm-100 transition-colors"
+            title="Skip to end"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 lg:w-5 lg:h-5">
+              <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+            </svg>
+          </button>
         </div>
 
-        <div className="text-xl lg:text-4xl font-bold text-warm-500">VS</div>
+        {/* Speed controls */}
+        <div className="flex items-center bg-warm-900/60 rounded-lg border border-warm-700/50 p-0.5 lg:p-1 gap-0.5">
+          {speedOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => selectSpeed(option.value)}
+              className={`px-2 lg:px-2.5 py-1 lg:py-1.5 text-xs lg:text-sm font-medium rounded-md transition-colors ${
+                playMode === 'auto' && playbackSpeed === option.value
+                  ? 'bg-accent-amber text-warm-950 shadow-sm'
+                  : 'text-warm-300 hover:bg-warm-700 hover:text-warm-100'
+              }`}
+              title={`${option.value}x speed`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Battle field — teams face off */}
+      <div className="flex items-center justify-center gap-4 lg:gap-12 w-full">
+        {/* Player side (left) */}
+        <div className="flex flex-col items-center gap-2 lg:gap-3">
+          <span className="text-xs lg:text-sm text-accent-emerald font-heading uppercase tracking-[0.15em]">Your Team</span>
+          <div className="flex gap-0.5 lg:gap-3 px-2 lg:px-6 py-2 lg:py-4 rounded-xl team-zone-player">
+            {Array.from({ length: 5 }).map((_, i) =>
+              renderUnit((playerBoard || [])[4 - i], 'player', 4 - i)
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center gap-1">
+          <div className="text-2xl lg:text-5xl font-title font-bold text-gold" style={{ textShadow: '0 0 20px rgba(212, 168, 67, 0.4)' }}>VS</div>
+        </div>
 
         {/* Enemy side (right) */}
-        <div className="flex gap-1 lg:gap-2">
-          {Array.from({ length: 5 }).map((_, i) => renderUnit((enemyBoard || [])[i], 'enemy', i))}
+        <div className="flex flex-col items-center gap-2 lg:gap-3">
+          <span className="text-xs lg:text-sm text-pitch-red font-heading uppercase tracking-[0.15em]">Enemy</span>
+          <div className="flex gap-0.5 lg:gap-3 px-2 lg:px-6 py-2 lg:py-4 rounded-xl team-zone-enemy">
+            {Array.from({ length: 5 }).map((_, i) => renderUnit((enemyBoard || [])[i], 'enemy', i))}
+          </div>
         </div>
       </div>
     </div>
