@@ -1,9 +1,12 @@
 import { create } from 'zustand';
 import type { BattleOutput, SandboxUnit, CardView } from '../types';
+import { initCardArt } from '../utils/cardArt';
+import { initEmojiMap } from '../utils/emoji';
 
 interface WasmModule {
   default: () => Promise<void>;
   get_unit_templates: () => CardView[];
+  get_card_metas: () => Array<{ id: number; name: string; emoji: string }>;
   run_sandbox_battle: (
     playerUnits: SandboxUnit[],
     enemyUnits: SandboxUnit[],
@@ -70,6 +73,11 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
 
       wasmModule = wasm;
       const templates = wasm.get_unit_templates();
+
+      // Initialize card art & emoji maps so cards render with images
+      const metas = wasm.get_card_metas();
+      initEmojiMap(metas);
+      initCardArt(metas.map((m) => m.id));
 
       set({
         templates,

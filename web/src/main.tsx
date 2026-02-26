@@ -64,7 +64,7 @@ createRoot(document.getElementById('root')!).render(
           <Route
             path="/embed"
             element={
-              <Suspense fallback={<div className="min-h-screen bg-gray-900" />}>
+              <Suspense fallback={<div className="min-h-screen bg-warm-900" />}>
                 <EmbedPage />
               </Suspense>
             }
@@ -74,7 +74,7 @@ createRoot(document.getElementById('root')!).render(
             element={
               <Suspense
                 fallback={
-                  <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+                  <div className="min-h-screen bg-warm-900 text-white flex items-center justify-center">
                     Loading...
                   </div>
                 }
@@ -88,7 +88,7 @@ createRoot(document.getElementById('root')!).render(
             element={
               <Suspense
                 fallback={
-                  <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+                  <div className="min-h-screen bg-warm-900 text-white flex items-center justify-center">
                     Loading...
                   </div>
                 }
@@ -102,7 +102,7 @@ createRoot(document.getElementById('root')!).render(
             element={
               <Suspense
                 fallback={
-                  <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+                  <div className="min-h-screen bg-warm-900 text-white flex items-center justify-center">
                     Loading...
                   </div>
                 }

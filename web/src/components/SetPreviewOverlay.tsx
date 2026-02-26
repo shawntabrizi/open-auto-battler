@@ -22,12 +22,12 @@ export function SetPreviewOverlay() {
 
       {/* Card grid - offset to the right of the sidebar */}
       <div className="fixed left-[11rem] lg:left-80 right-0 top-0 bottom-0 bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden">
-        <div className="flex justify-between items-center mb-3 lg:mb-8 border-b border-gray-700 pb-2 lg:pb-4">
+        <div className="flex justify-between items-center mb-3 lg:mb-8 border-b border-warm-700 pb-2 lg:pb-4">
           <div className="flex flex-col">
             <h2 className="text-lg lg:text-3xl font-bold text-white flex items-center gap-2 lg:gap-3">
               Set Preview
             </h2>
-            <p className="text-gray-400 text-xs lg:text-base mt-0.5 lg:mt-1">
+            <p className="text-warm-400 text-xs lg:text-base mt-0.5 lg:mt-1">
               <span className="text-white font-bold">{sorted.length}</span> unique cards in this
               set.
               <span className="hidden lg:inline"> Click a card for full details.</span>
@@ -43,7 +43,7 @@ export function SetPreviewOverlay() {
 
         <div className="flex-1 overflow-y-auto pr-1 lg:pr-4 custom-scrollbar">
           {sorted.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="flex items-center justify-center h-full text-warm-500">
               No cards in this set.
             </div>
           ) : (
@@ -64,7 +64,7 @@ export function SetPreviewOverlay() {
           )}
         </div>
 
-        <div className="mt-2 lg:mt-6 text-center text-gray-500 text-[10px] lg:text-sm border-t border-gray-800 pt-2 lg:pt-4 uppercase tracking-wider lg:tracking-widest">
+        <div className="mt-2 lg:mt-6 text-center text-warm-500 text-[10px] lg:text-sm border-t border-warm-800 pt-2 lg:pt-4 uppercase tracking-wider lg:tracking-widest">
           Sorted by mana cost, then name
         </div>
       </div>

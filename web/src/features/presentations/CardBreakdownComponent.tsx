@@ -9,10 +9,10 @@ import type { CardView } from '../../types';
  */
 export function CardBreakdownComponent({ card }: { card: CardView }) {
   return (
-    <div className="w-80 bg-gray-900 rounded-xl border border-gray-700 shadow-2xl p-5 text-left">
+    <div className="w-80 bg-warm-900 rounded-xl border border-warm-700 shadow-2xl p-5 text-left">
       {/* Card Basic Info */}
       <div className="flex items-center gap-4 mb-4">
-        <div className="w-16 h-16 bg-gray-800 rounded-xl border-2 border-gray-700 flex items-center justify-center text-3xl shadow-inner flex-shrink-0 overflow-hidden">
+        <div className="w-16 h-16 bg-warm-800 rounded-xl border-2 border-warm-700 flex items-center justify-center text-3xl shadow-inner flex-shrink-0 overflow-hidden">
           {hasCardArt(card.id) ? (
             <img
               src={getCardArtMd(card.id)!}
@@ -38,12 +38,12 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
 
       {/* Abilities */}
       {card.abilities.map((ability, index) => (
-        <div key={index} className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+        <div key={index} className="mb-3 p-3 bg-warm-800/50 rounded-lg border border-warm-700">
           <h3 className="text-sm font-bold text-yellow-400 mb-1">{ability.name}</h3>
-          <div className="text-xs text-gray-300 mb-1">
+          <div className="text-xs text-warm-300 mb-1">
             <strong>Trigger:</strong> {formatTrigger(ability.trigger)}
           </div>
-          <div className="text-sm text-gray-200 bg-gray-900/50 p-2 rounded border border-gray-700/50 italic">
+          <div className="text-sm text-warm-200 bg-warm-900/50 p-2 rounded border border-warm-700/50 italic">
             "{ability.description}"
           </div>
         </div>

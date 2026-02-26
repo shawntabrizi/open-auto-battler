@@ -126,7 +126,7 @@ export const TournamentPage: React.FC = () => {
   if (tournamentGameOver) {
     const isPerfect = lastGameWins >= 10;
     return (
-      <div className="min-h-screen min-h-svh bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
         <div
           className={`p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm lg:max-w-none ${
             isPerfect
@@ -141,7 +141,7 @@ export const TournamentPage: React.FC = () => {
           >
             {isPerfect ? 'PERFECT RUN!' : 'RUN OVER'}
           </h1>
-          <p className="text-sm lg:text-xl text-gray-300 mb-4 lg:mb-8">
+          <p className="text-sm lg:text-xl text-warm-300 mb-4 lg:mb-8">
             {isPerfect
               ? 'Amazing! You achieved a perfect 10-win run in the tournament!'
               : `You finished with ${lastGameWins} win${lastGameWins !== 1 ? 's' : ''}.`}
@@ -150,7 +150,7 @@ export const TournamentPage: React.FC = () => {
           <div className="flex justify-center gap-6 lg:gap-12 mb-6 lg:mb-8">
             <div className="text-center">
               <div className="text-2xl lg:text-4xl font-bold text-gold">{lastGameWins}</div>
-              <div className="text-xs lg:text-base text-gray-400">Wins</div>
+              <div className="text-xs lg:text-base text-warm-400">Wins</div>
             </div>
           </div>
 
@@ -166,7 +166,7 @@ export const TournamentPage: React.FC = () => {
             )}
             <button
               onClick={handleBackToTournament}
-              className="text-slate-400 hover:text-white underline text-sm"
+              className="text-warm-400 hover:text-white underline text-sm"
             >
               Back to Tournament
             </button>
@@ -183,7 +183,7 @@ export const TournamentPage: React.FC = () => {
     // but handle it gracefully
     const isVictory = view.phase === 'victory';
     return (
-      <div className="min-h-screen min-h-svh bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
         <div
           className={`p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm ${
             isVictory
@@ -208,7 +208,7 @@ export const TournamentPage: React.FC = () => {
             )}
             <button
               onClick={handleBackToTournament}
-              className="text-slate-400 hover:text-white underline text-sm"
+              className="text-warm-400 hover:text-white underline text-sm"
             >
               Back to Tournament
             </button>
@@ -222,7 +222,7 @@ export const TournamentPage: React.FC = () => {
   // ── Not Connected ──
   if (!isConnected) {
     return (
-      <div className="min-h-screen min-h-svh bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
         <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
           TOURNAMENT
         </h1>
@@ -233,7 +233,7 @@ export const TournamentPage: React.FC = () => {
         >
           {isConnecting ? 'CONNECTING...' : 'CONNECT WALLET'}
         </button>
-        <Link to="/" className="mt-6 lg:mt-8 text-slate-400 hover:text-white underline text-sm">
+        <Link to="/" className="mt-6 lg:mt-8 text-warm-400 hover:text-white underline text-sm">
           Back to Menu
         </Link>
       </div>
@@ -243,7 +243,7 @@ export const TournamentPage: React.FC = () => {
   // ── Active Tournament Game ──
   if (hasActiveTournamentGame && view) {
     return (
-      <div className="h-screen h-svh bg-board-bg text-slate-200 overflow-hidden font-sans selection:bg-purple-500/30 flex flex-col">
+      <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans selection:bg-purple-500/30 flex flex-col">
         <GameShell
           hideEndTurn={true}
           customAction={{
@@ -269,9 +269,9 @@ export const TournamentPage: React.FC = () => {
     `Set #${activeTournament?.config.set_id ?? '?'}`;
 
   return (
-    <div className="h-screen h-svh bg-board-bg text-slate-200 overflow-hidden font-sans flex flex-col">
-      <div className="flex-1 flex items-center justify-center bg-slate-950 p-4 overflow-y-auto">
-        <div className="text-center bg-slate-900 p-3 lg:p-6 rounded-xl lg:rounded-2xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-lg">
+    <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans flex flex-col">
+      <div className="flex-1 flex items-center justify-center bg-warm-950 p-4 overflow-y-auto">
+        <div className="text-center bg-warm-900 p-3 lg:p-6 rounded-xl lg:rounded-2xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-lg">
           {/* Header */}
           <h3 className="text-lg lg:text-2xl font-black mb-1 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
             TOURNAMENT
@@ -279,18 +279,18 @@ export const TournamentPage: React.FC = () => {
 
           {/* Connection Status & Account */}
           <div className="flex items-center justify-center gap-2 lg:gap-3 mb-2 lg:mb-6">
-            <div className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1 lg:py-1.5 bg-slate-800 rounded lg:rounded-lg border border-white/5">
+            <div className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1 lg:py-1.5 bg-warm-800 rounded lg:rounded-lg border border-white/5">
               <div
                 className={`w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full ${blockNumber !== null ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
               />
-              <span className="text-[10px] lg:text-xs font-mono text-slate-400">
+              <span className="text-[10px] lg:text-xs font-mono text-warm-400">
                 {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'Offline'}
               </span>
             </div>
             <select
               value={selectedAccount?.address}
               onChange={(e) => selectAccount(accounts.find((a) => a.address === e.target.value))}
-              className="bg-slate-800 border border-white/10 rounded lg:rounded-lg px-1.5 lg:px-2 py-1 lg:py-1.5 text-[10px] lg:text-xs outline-none focus:border-purple-500/50"
+              className="bg-warm-800 border border-white/10 rounded lg:rounded-lg px-1.5 lg:px-2 py-1 lg:py-1.5 text-[10px] lg:text-xs outline-none focus:border-purple-500/50"
             >
               {accounts.map((acc) => (
                 <option key={acc.address} value={acc.address}>
@@ -302,7 +302,7 @@ export const TournamentPage: React.FC = () => {
           </div>
 
           {isLoadingTournament ? (
-            <p className="text-slate-400 text-sm">Loading tournament...</p>
+            <p className="text-warm-400 text-sm">Loading tournament...</p>
           ) : !activeTournament ? (
             <CreateTestTournament
               onCreated={() => {
@@ -314,12 +314,12 @@ export const TournamentPage: React.FC = () => {
             <>
               {/* Card Set */}
               <div className="flex items-center justify-center gap-2 mb-2 lg:mb-4">
-                <span className="text-xs lg:text-sm text-slate-300">
+                <span className="text-xs lg:text-sm text-warm-300">
                   Card Set: <span className="font-bold text-white">{setName}</span>
                 </span>
                 <button
                   onClick={() => previewSet(activeTournament.config.set_id)}
-                  className="px-1.5 lg:px-2 py-0.5 lg:py-1 text-[9px] lg:text-[10px] font-bold border border-slate-600 text-slate-300 hover:text-white hover:border-slate-400 rounded transition-all"
+                  className="px-1.5 lg:px-2 py-0.5 lg:py-1 text-[9px] lg:text-[10px] font-bold border border-warm-600 text-warm-300 hover:text-white hover:border-warm-400 rounded transition-all"
                 >
                   PREVIEW
                 </button>
@@ -327,32 +327,32 @@ export const TournamentPage: React.FC = () => {
 
               {/* Info Grid */}
               <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5 lg:gap-3 mb-2 lg:mb-4 text-center lg:text-left">
-                <div className="bg-slate-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">
+                <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
                     Fee
                   </div>
                   <div className="text-xs lg:text-sm font-bold text-white">
                     {formatBalance(activeTournament.config.entry_fee)}
                   </div>
                 </div>
-                <div className="bg-slate-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">
+                <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
                     Pool
                   </div>
                   <div className="text-xs lg:text-sm font-bold text-purple-300">
                     {formatBalance(activeTournament.state.total_pot)}
                   </div>
                 </div>
-                <div className="bg-slate-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">
+                <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
                     Entries
                   </div>
                   <div className="text-xs lg:text-sm font-bold text-white">
                     {activeTournament.state.total_entries}
                   </div>
                 </div>
-                <div className="bg-slate-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold lg:mb-1">
+                <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
                     Perfect
                   </div>
                   <div className="text-xs lg:text-sm font-bold text-green-400">
@@ -362,25 +362,25 @@ export const TournamentPage: React.FC = () => {
               </div>
 
               {/* Prize Distribution */}
-              <div className="bg-slate-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
-                <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold mb-1 lg:mb-2">
+              <div className="bg-warm-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
+                <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">
                   Prize Distribution
                 </div>
                 <div className="flex gap-2 lg:gap-4 text-[10px] lg:text-xs">
                   <div>
-                    <span className="text-slate-400">Players: </span>
+                    <span className="text-warm-400">Players: </span>
                     <span className="text-white font-bold">
                       {formatPerbill(activeTournament.config.prize_config.player_share)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400">Set Creator: </span>
+                    <span className="text-warm-400">Set Creator: </span>
                     <span className="text-white font-bold">
                       {formatPerbill(activeTournament.config.prize_config.set_creator_share)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400">Card Creators: </span>
+                    <span className="text-warm-400">Card Creators: </span>
                     <span className="text-white font-bold">
                       {formatPerbill(activeTournament.config.prize_config.card_creators_share)}
                     </span>
@@ -396,15 +396,15 @@ export const TournamentPage: React.FC = () => {
                   </div>
                   <div className="flex gap-2 lg:gap-4 text-[10px] lg:text-xs">
                     <div>
-                      <span className="text-slate-400">Games: </span>
+                      <span className="text-warm-400">Games: </span>
                       <span className="text-white font-bold">{playerStats.total_games}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400">Wins: </span>
+                      <span className="text-warm-400">Wins: </span>
                       <span className="text-white font-bold">{playerStats.total_wins}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400">Perfect Runs: </span>
+                      <span className="text-warm-400">Perfect Runs: </span>
                       <span className="text-green-400 font-bold">{playerStats.perfect_runs}</span>
                     </div>
                   </div>
@@ -413,13 +413,13 @@ export const TournamentPage: React.FC = () => {
 
               {/* Leaderboard */}
               {allPlayerStats.length > 0 && (
-                <div className="bg-slate-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
-                  <div className="text-[8px] lg:text-[10px] text-slate-500 uppercase font-bold mb-1 lg:mb-2">
+                <div className="bg-warm-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">
                     Leaderboard
                   </div>
                   <table className="w-full text-[10px] lg:text-xs">
                     <thead>
-                      <tr className="text-slate-500">
+                      <tr className="text-warm-500">
                         <th className="text-left pb-0.5 lg:pb-1">#</th>
                         <th className="text-left pb-0.5 lg:pb-1">Player</th>
                         <th className="text-right pb-0.5 lg:pb-1">
@@ -443,7 +443,7 @@ export const TournamentPage: React.FC = () => {
                           className={
                             entry.account === selectedAccount?.address
                               ? 'text-purple-300'
-                              : 'text-slate-300'
+                              : 'text-warm-300'
                           }
                         >
                           <td className="py-px lg:py-0.5">{i + 1}</td>
@@ -472,7 +472,7 @@ export const TournamentPage: React.FC = () => {
               </button>
 
               <div className="mt-2 lg:mt-4">
-                <Link to="/" className="text-slate-500 hover:text-slate-300 text-[10px] lg:text-xs">
+                <Link to="/" className="text-warm-500 hover:text-warm-300 text-[10px] lg:text-xs">
                   Back to Menu
                 </Link>
               </div>
@@ -534,18 +534,18 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
 
   return (
     <div className="text-center">
-      <p className="text-slate-400 text-sm mb-4">No active tournament found.</p>
+      <p className="text-warm-400 text-sm mb-4">No active tournament found.</p>
 
-      <div className="bg-slate-800/50 rounded-lg p-4 border border-white/5 mb-4 text-left">
-        <div className="text-[10px] text-slate-500 uppercase font-bold mb-3">
+      <div className="bg-warm-800/50 rounded-lg p-4 border border-white/5 mb-4 text-left">
+        <div className="text-[10px] text-warm-500 uppercase font-bold mb-3">
           Create Test Tournament (Sudo)
         </div>
         <div className="flex items-center gap-2 mb-3">
-          <label className="text-xs text-slate-400 shrink-0">Card Set:</label>
+          <label className="text-xs text-warm-400 shrink-0">Card Set:</label>
           <select
             value={selectedSetId}
             onChange={(e) => setSelectedSetId(Number(e.target.value))}
-            className="flex-1 bg-slate-700 border border-white/10 text-white text-xs rounded px-2 py-1.5 outline-none"
+            className="flex-1 bg-warm-700 border border-white/10 text-white text-xs rounded px-2 py-1.5 outline-none"
           >
             {[...availableSets]
               .sort((a, b) => a.id - b.id)
@@ -556,7 +556,7 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
               ))}
           </select>
         </div>
-        <div className="text-[10px] text-slate-500 mb-3">
+        <div className="text-[10px] text-warm-500 mb-3">
           Entry: 1 unit | Duration: 1000 blocks | Prize: 70/20/10
         </div>
         <button
@@ -568,7 +568,7 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
         </button>
       </div>
 
-      <Link to="/" className="text-slate-500 hover:text-slate-300 text-xs underline">
+      <Link to="/" className="text-warm-500 hover:text-warm-300 text-xs underline">
         Back to Menu
       </Link>
     </div>

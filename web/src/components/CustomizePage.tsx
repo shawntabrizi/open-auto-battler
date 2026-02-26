@@ -78,19 +78,19 @@ export const CustomizePage: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen min-h-svh bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
         <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase">
           Customize
         </h1>
         <button
           onClick={connect}
-          className="bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-full text-sm lg:text-base transition-all transform hover:scale-105"
+          className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-full text-sm lg:text-base transition-all transform hover:scale-105"
         >
           CONNECT WALLET TO START
         </button>
         <Link
           to="/blockchain"
-          className="mt-6 lg:mt-8 text-slate-400 hover:text-white underline text-sm"
+          className="mt-6 lg:mt-8 text-warm-400 hover:text-white underline text-sm"
         >
           Back to Dashboard
         </Link>
@@ -105,12 +105,12 @@ export const CustomizePage: React.FC = () => {
   // ── Detail view: horizontal scroll on mobile, grid on desktop ──
   if (activeSection && activeSectionData) {
     return (
-      <div className="h-screen h-svh bg-slate-950 text-slate-200 flex flex-col overflow-hidden">
+      <div className="h-screen h-svh bg-warm-950 text-warm-200 flex flex-col overflow-hidden">
         {/* Header bar */}
         <div className="flex items-center gap-2 p-2 lg:p-4 shrink-0 border-b border-white/5">
           <button
             onClick={() => setActiveSection(null)}
-            className="text-slate-400 hover:text-white text-sm lg:text-base px-2 py-1 rounded hover:bg-slate-800 transition-colors"
+            className="text-warm-400 hover:text-white text-sm lg:text-base px-2 py-1 rounded hover:bg-warm-800 transition-colors"
           >
             &larr;
           </button>
@@ -118,22 +118,22 @@ export const CustomizePage: React.FC = () => {
             <h2 className="text-sm lg:text-xl font-bold truncate">
               {activeSectionData.num} {activeSectionData.label}
             </h2>
-            <p className="text-[9px] lg:text-xs text-slate-500 truncate">
+            <p className="text-[9px] lg:text-xs text-warm-500 truncate">
               {activeSectionData.description}
             </p>
           </div>
-          <p className="text-[8px] lg:text-[10px] text-slate-600 hidden lg:block shrink-0">
+          <p className="text-[8px] lg:text-[10px] text-warm-600 hidden lg:block shrink-0">
             {activeSectionData.specs}
           </p>
         </div>
 
         {/* NFT selection area */}
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center text-slate-400 text-xs lg:text-sm">
+          <div className="flex-1 flex items-center justify-center text-warm-400 text-xs lg:text-sm">
             Loading your NFTs...
           </div>
         ) : filteredNfts.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-500 text-xs lg:text-sm">
+          <div className="flex-1 flex flex-col items-center justify-center text-warm-500 text-xs lg:text-sm">
             <p>No {activeSectionData.label.toLowerCase()} NFTs found.</p>
             <Link
               to="/blockchain/mint-nft"
@@ -197,18 +197,18 @@ export const CustomizePage: React.FC = () => {
 
   // ── Category menu ──
   return (
-    <div className="h-screen h-svh bg-slate-950 text-slate-200 flex flex-col">
+    <div className="h-screen h-svh bg-warm-950 text-warm-200 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-2 lg:p-6 shrink-0">
         <div>
           <h1 className="text-base lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase">
             Customize
           </h1>
-          <p className="text-slate-500 text-[9px] lg:text-sm">Select a category to customize</p>
+          <p className="text-warm-500 text-[9px] lg:text-sm">Select a category to customize</p>
         </div>
         <Link
           to="/blockchain/creator"
-          className="text-slate-400 hover:text-white border border-slate-800 px-2 py-1 lg:px-3 lg:py-2 rounded lg:rounded-lg text-[9px] lg:text-sm transition-colors"
+          className="text-warm-400 hover:text-white border border-warm-800 px-2 py-1 lg:px-3 lg:py-2 rounded lg:rounded-lg text-[9px] lg:text-sm transition-colors"
         >
           Creator Hub
         </Link>
@@ -223,13 +223,13 @@ export const CustomizePage: React.FC = () => {
               <button
                 key={section.type}
                 onClick={() => setActiveSection(section.type)}
-                className="bg-slate-900/50 border border-white/5 hover:border-yellow-500/30 rounded-lg lg:rounded-2xl p-2 lg:p-6 text-center transition-all hover:bg-slate-800/50 active:scale-95"
+                className="bg-warm-900/50 border border-white/5 hover:border-yellow-500/30 rounded-lg lg:rounded-2xl p-2 lg:p-6 text-center transition-all hover:bg-warm-800/50 active:scale-95"
               >
                 <div className="text-xl lg:text-4xl mb-1 lg:mb-3 font-bold text-yellow-500">
                   {section.num}
                 </div>
                 <div className="text-[10px] lg:text-base font-bold text-white">{section.label}</div>
-                <div className="text-[8px] lg:text-xs text-slate-500 mt-0.5 lg:mt-1">
+                <div className="text-[8px] lg:text-xs text-warm-500 mt-0.5 lg:mt-1">
                   {current ? current.name : 'Default'}
                 </div>
               </button>
@@ -249,7 +249,7 @@ export const CustomizePage: React.FC = () => {
       <div className="text-center pb-2 lg:pb-6 shrink-0">
         <Link
           to="/blockchain/creator"
-          className="text-slate-600 hover:text-slate-400 text-[9px] lg:text-xs"
+          className="text-warm-600 hover:text-warm-400 text-[9px] lg:text-xs"
         >
           Back to Creator Hub
         </Link>
@@ -288,16 +288,16 @@ function NftTile({
       className={`shrink-0 ${isLg ? 'p-3 rounded-xl' : 'p-1.5 rounded-lg'} border-2 transition-all text-center ${
         isSelected
           ? 'border-yellow-400 bg-yellow-400/10'
-          : 'border-white/10 bg-slate-800/50 hover:border-white/20'
+          : 'border-white/10 bg-warm-800/50 hover:border-white/20'
       }`}
     >
       <div
-        className={`${isLg ? 'w-full aspect-[3/4]' : 'w-24 h-32'} bg-slate-700/50 rounded overflow-hidden ${isLg ? 'mb-2' : 'mb-0.5'} flex items-center justify-center`}
+        className={`${isLg ? 'w-full aspect-[3/4]' : 'w-24 h-32'} bg-warm-700/50 rounded overflow-hidden ${isLg ? 'mb-2' : 'mb-0.5'} flex items-center justify-center`}
       >
         {imageUrl ? (
           <IpfsImage src={imageUrl} alt={label} className="w-full h-full object-cover" />
         ) : (
-          <span className={`text-slate-400 ${isLg ? 'text-2xl' : 'text-sm'}`}>{placeholder}</span>
+          <span className={`text-warm-400 ${isLg ? 'text-2xl' : 'text-sm'}`}>{placeholder}</span>
         )}
       </div>
       <div
@@ -306,7 +306,7 @@ function NftTile({
         {label}
       </div>
       {subtitle && (
-        <div className={`text-slate-500 ${isLg ? 'text-[10px]' : 'text-[7px] hidden'}`}>
+        <div className={`text-warm-500 ${isLg ? 'text-[10px]' : 'text-[7px] hidden'}`}>
           {subtitle}
         </div>
       )}

@@ -4,15 +4,14 @@
 
 :root {
   font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+    'Crimson Pro',
+    Georgia,
+    'Times New Roman',
+    serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #efefef;
-  background-color: #0a0a14;
+  color: #e8dcc8;
+  background-color: #0e0c09;
 }
 
 body {
@@ -40,7 +39,7 @@ body {
 
 /* Card styles */
 .card {
-  @apply bg-card-bg rounded-lg border-2 border-gray-600 p-2 transition-all duration-200;
+  @apply bg-card-bg rounded-lg border-2 border-warm-600 p-2 transition-all duration-200;
 }
 
 .card:hover {
@@ -53,12 +52,12 @@ body {
 }
 
 .card-selected {
-  @apply border-yellow-400 shadow-lg shadow-yellow-400/40;
+  @apply border-amber-400 shadow-lg shadow-amber-400/40;
 }
 
 /* Slot styles */
 .slot {
-  @apply bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-600 flex items-center justify-center;
+  @apply bg-warm-800/50 rounded-lg border-2 border-dashed border-warm-600 flex items-center justify-center;
 }
 
 .slot-empty {
@@ -67,30 +66,63 @@ body {
 
 /* Button styles */
 .btn {
-  @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200;
+  @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200 border border-warm-600 shadow-sm;
+}
+
+.btn:hover {
+  @apply shadow-md;
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+  @apply shadow-sm;
 }
 
 .btn-primary {
-  @apply bg-mana-blue hover:bg-blue-500 text-white;
+  background: linear-gradient(to bottom, #d4a843, #c48a2a);
+  color: #100e0a;
+  border-color: rgba(180, 83, 9, 0.6);
+  box-shadow: 0 1px 3px rgba(120, 60, 10, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(to bottom, #f0c050, #d4a843);
+  border-color: rgba(180, 83, 9, 0.6);
+  box-shadow: 0 4px 8px rgba(120, 60, 10, 0.4);
+}
+
+.btn-secondary {
+  @apply bg-warm-700 hover:bg-warm-600 text-warm-100 border-warm-500/50;
 }
 
 .btn-danger {
-  @apply bg-pitch-red hover:bg-red-500 text-white;
+  @apply bg-pitch-red text-white;
+  border-color: rgba(127, 29, 29, 0.6);
+}
+
+.btn-danger:hover {
+  @apply bg-red-700;
 }
 
 .btn-disabled {
-  @apply bg-gray-600 text-gray-400 cursor-not-allowed;
+  @apply bg-warm-700 text-warm-500 cursor-not-allowed border-warm-600 shadow-none;
+}
+
+.btn-disabled:hover {
+  transform: none;
+  @apply shadow-none;
 }
 
 /* Mana tank animation */
 @keyframes mana-glow {
   0%,
   100% {
-    box-shadow: 0 0 10px rgba(74, 144, 217, 0.5);
+    box-shadow: 0 0 10px rgba(91, 143, 170, 0.5);
   }
 
   50% {
-    box-shadow: 0 0 20px rgba(74, 144, 217, 0.8);
+    box-shadow: 0 0 20px rgba(91, 143, 170, 0.8);
   }
 }
 
@@ -324,7 +356,7 @@ body {
   }
 
   .hand-row::-webkit-scrollbar-thumb {
-    background: #374151;
+    background: #332c20;
     border-radius: 9999px;
   }
 
@@ -336,7 +368,7 @@ body {
     left: 0;
     right: auto;
     height: 100% !important;
-    border-right: 1px solid #374151;
+    border-right: 1px solid #332c20;
     border-top: none;
   }
 
@@ -525,7 +557,7 @@ body {
     display: flex !important;
     position: fixed;
     inset: 0;
-    background: rgba(8, 8, 16, 0.95);
+    background: rgba(14, 12, 9, 0.95);
     align-items: center;
     justify-content: center;
     z-index: 100;
@@ -533,8 +565,8 @@ body {
 
   .rotate-prompt__card {
     width: min(90vw, 320px);
-    background: #111827;
-    border: 1px solid #374151;
+    background: #1e1a14;
+    border: 1px solid #332c20;
     border-radius: 16px;
     padding: 1.5rem;
     text-align: center;
@@ -544,18 +576,18 @@ body {
   .rotate-prompt__icon {
     font-size: 2.5rem;
     margin-bottom: 0.75rem;
-    color: #facc15;
+    color: #d4a843;
   }
 
   .rotate-prompt__title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #f9fafb;
+    color: #e8dcc8;
     margin-bottom: 0.5rem;
   }
 
   .rotate-prompt__subtitle {
     font-size: 0.85rem;
-    color: #9ca3af;
+    color: #7d6b50;
   }
 }

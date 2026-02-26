@@ -100,9 +100,9 @@ export function CardDetailPanel({
     if (!card) {
       return (
         <div className="flex flex-col items-center justify-center py-6 lg:py-12 text-center">
-          <PointerIcon className="w-8 h-8 lg:w-12 lg:h-12 text-gray-500 mb-2 lg:mb-4" />
-          <h3 className="text-sm lg:text-lg font-bold text-gray-300 mb-1 lg:mb-2">Select a Card</h3>
-          <p className="text-[10px] lg:text-sm text-gray-400">Tap any card to view details.</p>
+          <PointerIcon className="w-8 h-8 lg:w-12 lg:h-12 text-warm-500 mb-2 lg:mb-4" />
+          <h3 className="text-sm lg:text-lg font-bold text-warm-300 mb-1 lg:mb-2">Select a Card</h3>
+          <p className="text-[10px] lg:text-sm text-warm-400">Tap any card to view details.</p>
         </div>
       );
     }
@@ -297,7 +297,7 @@ export function CardDetailPanel({
 
         {/* Card Basic Info */}
         <div className="card-info flex items-center gap-2 lg:gap-4 mb-3 lg:mb-6">
-          <div className="card-emoji w-12 h-12 lg:w-20 lg:h-20 bg-gray-800 rounded-lg lg:rounded-xl border-2 border-gray-700 flex items-center justify-center text-2xl lg:text-4xl shadow-inner flex-shrink-0 overflow-hidden">
+          <div className="card-emoji w-12 h-12 lg:w-20 lg:h-20 bg-warm-800 rounded-lg lg:rounded-xl border-2 border-warm-700 flex items-center justify-center text-2xl lg:text-4xl shadow-inner flex-shrink-0 overflow-hidden">
             {hasCardArt(card.id) ? (
               <img
                 src={getCardArtMd(card.id)!}
@@ -329,12 +329,12 @@ export function CardDetailPanel({
             {card.abilities.map((ability, index) => (
               <div
                 key={index}
-                className="mb-2 lg:mb-4 p-2 lg:p-3 bg-gray-800/50 rounded-lg border border-gray-700"
+                className="mb-2 lg:mb-4 p-2 lg:p-3 bg-warm-800/50 rounded-lg border border-warm-700"
               >
                 <h3 className="text-xs lg:text-md font-bold text-yellow-400 mb-1 lg:mb-2">
                   {ability.name}
                 </h3>
-                <div className="text-[10px] lg:text-xs text-gray-300 mb-1 lg:mb-2">
+                <div className="text-[10px] lg:text-xs text-warm-300 mb-1 lg:mb-2">
                   <strong>Trigger:</strong> {getTriggerDescription(ability.trigger)}
                 </div>
                 {ability.max_triggers && (
@@ -342,7 +342,7 @@ export function CardDetailPanel({
                     <strong>Max:</strong> {ability.max_triggers}
                   </div>
                 )}
-                <div className="text-[10px] lg:text-sm text-gray-200 bg-gray-900/50 p-1.5 lg:p-2 rounded border border-gray-700/50 italic">
+                <div className="text-[10px] lg:text-sm text-warm-200 bg-warm-900/50 p-1.5 lg:p-2 rounded border border-warm-700/50 italic">
                   "{ability.description}"
                 </div>
                 <div className="mt-1 lg:mt-2 text-[10px] lg:text-xs text-blue-400 font-semibold">
@@ -375,14 +375,14 @@ export function CardDetailPanel({
         </div>
 
         {/* Metadata */}
-        <div className="text-[10px] text-gray-500 font-mono flex flex-col gap-1 border-t border-gray-800 pt-4">
+        <div className="text-[10px] text-warm-500 font-mono flex flex-col gap-1 border-t border-warm-800 pt-4">
           <div>CARD_ID: {card.id}</div>
         </div>
 
         {/* Card Raw JSON */}
         {showRawJson && (
-          <div className="mt-4 p-2 bg-black/50 rounded border border-gray-800">
-            <div className="text-[10px] text-gray-500 mb-1 flex justify-between items-center">
+          <div className="mt-4 p-2 bg-black/50 rounded border border-warm-800">
+            <div className="text-[10px] text-warm-500 mb-1 flex justify-between items-center">
               <span>CARD_DATA.JSON</span>
               <button
                 onClick={() => navigator.clipboard.writeText(JSON.stringify(card, null, 2))}
@@ -402,9 +402,9 @@ export function CardDetailPanel({
 
   const renderRulesTab = () => {
     return (
-      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-5 text-sm text-gray-300 pb-4">
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-5 text-sm text-warm-300 pb-4">
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-gray-700 pb-1">
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">
             Your Cards
           </h3>
           <p className="leading-relaxed text-xs">
@@ -412,14 +412,14 @@ export function CardDetailPanel({
             you draw <strong className="text-white">5 cards</strong> into your hand. Cards you don't
             use go back into your Bag for next time.
           </p>
-          <p className="mt-2 text-xs text-gray-400 leading-relaxed">
+          <p className="mt-2 text-xs text-warm-400 leading-relaxed">
             But any card you play or pitch is gone from your Bag for good — so think carefully about
             what you spend!
           </p>
         </section>
 
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-gray-700 pb-1">
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">
             Playing & Pitching
           </h3>
           <p className="leading-relaxed text-xs">
@@ -429,14 +429,14 @@ export function CardDetailPanel({
             cards, so you'll always be making tough choices about what to keep and what to
             sacrifice.
           </p>
-          <p className="mt-2 text-xs text-gray-400 leading-relaxed">
+          <p className="mt-2 text-xs text-warm-400 leading-relaxed">
             You can also pitch units already on your board if you need to make room or need more
             Mana.
           </p>
         </section>
 
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-gray-700 pb-1">Mana</h3>
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">Mana</h3>
           <ul className="space-y-1.5 text-xs">
             <li className="flex items-start gap-2">
               <span className="text-blue-400 font-bold mt-0.5">*</span>
@@ -463,14 +463,14 @@ export function CardDetailPanel({
         </section>
 
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-gray-700 pb-1">Battle</h3>
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">Battle</h3>
           <p className="leading-relaxed text-xs">
             When you end your turn, your units fight automatically! The two front units clash{' '}
             <strong className="text-white">at the same time</strong>, dealing damage to each other
             simultaneously. When a unit falls, the next one steps up. The team that loses all its
             units first takes a loss.
           </p>
-          <p className="mt-2 text-xs text-gray-400 leading-relaxed">
+          <p className="mt-2 text-xs text-warm-400 leading-relaxed">
             Many units have special <strong className="text-yellow-400">abilities</strong> that
             trigger during battle — like buffing allies, damaging enemies, or spawning new units
             when they die. When multiple abilities trigger at once, stronger units go first.
@@ -478,7 +478,7 @@ export function CardDetailPanel({
         </section>
 
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-gray-700 pb-1">
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">
             Chain Reactions
           </h3>
           <p className="leading-relaxed text-xs">
@@ -489,7 +489,7 @@ export function CardDetailPanel({
         </section>
 
         <section>
-          <h3 className="font-bold text-amber-400 mb-2 border-b border-gray-700 pb-1">Winning</h3>
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1">Winning</h3>
           <p className="leading-relaxed text-xs">
             Win battles to earn <strong className="text-yellow-500">Stars</strong>. Collect{' '}
             <strong className="text-yellow-500">10 Stars</strong> and you win the run! But be
@@ -508,15 +508,15 @@ export function CardDetailPanel({
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
         {/* Blockchain Connection Status - only shown in blockchain mode */}
         {isBlockchain && (
-          <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+          <div className="p-4 bg-warm-800/50 rounded-lg border border-warm-700">
             <h3 className="font-bold text-white mb-3">Chain Connection</h3>
 
             {/* Connection Status */}
-            <div className="flex items-center gap-2 mb-3 p-2 bg-slate-900 rounded border border-white/5">
+            <div className="flex items-center gap-2 mb-3 p-2 bg-warm-900 rounded border border-white/5">
               <div
                 className={`w-2 h-2 rounded-full ${resolvedMode.blockNumber != null ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
               />
-              <span className="text-xs font-mono text-slate-400">
+              <span className="text-xs font-mono text-warm-400">
                 {resolvedMode.blockNumber != null
                   ? `Block #${resolvedMode.blockNumber.toLocaleString()}`
                   : 'Offline'}
@@ -526,14 +526,14 @@ export function CardDetailPanel({
             {/* Account Selector */}
             {resolvedMode.accounts.length > 0 && (
               <div className="space-y-2">
-                <label className="text-[10px] text-gray-500 uppercase font-bold">Account</label>
+                <label className="text-[10px] text-warm-500 uppercase font-bold">Account</label>
                 <select
                   value={resolvedMode.selectedAccount?.address || ''}
                   onChange={(e) => {
                     const account = resolvedMode.accounts.find((a) => a.address === e.target.value);
                     resolvedMode.onSelectAccount?.(account);
                   }}
-                  className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50"
+                  className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50"
                 >
                   {resolvedMode.accounts.map((acc) => (
                     <option key={acc.address} value={acc.address}>
@@ -547,7 +547,7 @@ export function CardDetailPanel({
           </div>
         )}
 
-        <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+        <div className="p-4 bg-warm-800/50 rounded-lg border border-warm-700">
           <div className="space-y-3">
             <button
               onClick={() => navigate('/blockchain/customize')}
@@ -557,14 +557,14 @@ export function CardDetailPanel({
             </button>
             <button
               onClick={() => navigate('/')}
-              className="w-full btn bg-slate-700/50 hover:bg-slate-600 text-slate-300 border border-slate-600 text-xs py-2"
+              className="w-full btn bg-warm-700/50 hover:bg-warm-600 text-warm-300 border border-warm-600 text-xs py-2"
             >
               Exit to Menu
             </button>
           </div>
         </div>
 
-        <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+        <div className="p-4 bg-warm-800/50 rounded-lg border border-warm-700">
           <h3 className="font-bold text-white mb-2">Debug Tools</h3>
           <div className="space-y-3">
             <button
@@ -577,8 +577,8 @@ export function CardDetailPanel({
         </div>
 
         {showRawJson && view && (
-          <div className="mt-4 p-2 bg-black/50 rounded border border-gray-800">
-            <div className="text-[10px] text-gray-500 mb-1 flex justify-between items-center">
+          <div className="mt-4 p-2 bg-black/50 rounded border border-warm-800">
+            <div className="text-[10px] text-warm-500 mb-1 flex justify-between items-center">
               <span>GAME_VIEW.JSON</span>
               <button
                 onClick={() => navigator.clipboard.writeText(JSON.stringify(view, null, 2))}
@@ -598,17 +598,17 @@ export function CardDetailPanel({
 
   return (
     <div
-      className="card-detail-panel fixed left-0 bottom-0 w-44 lg:w-80 bg-gray-900 border-r border-gray-700 shadow-2xl flex flex-col z-10"
+      className="card-detail-panel fixed left-0 bottom-0 w-44 lg:w-80 bg-warm-900 border-r border-warm-700 shadow-2xl flex flex-col z-10"
       style={{ top: topOffset }}
     >
       {/* Tabs */}
-      <div className="flex border-b border-gray-800">
+      <div className="flex border-b border-warm-800">
         <button
           onClick={() => setActiveTab('card')}
           className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
             activeTab === 'card'
-              ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-gray-500 hover:text-gray-300'
+              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+              : 'text-warm-500 hover:text-warm-300'
           }`}
         >
           <span className="lg:hidden">
@@ -620,8 +620,8 @@ export function CardDetailPanel({
           onClick={() => setActiveTab('rules')}
           className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
             activeTab === 'rules'
-              ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-gray-500 hover:text-gray-300'
+              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+              : 'text-warm-500 hover:text-warm-300'
           }`}
         >
           <span className="lg:hidden">
@@ -633,8 +633,8 @@ export function CardDetailPanel({
           onClick={() => setActiveTab('mode')}
           className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
             activeTab === 'mode'
-              ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-gray-500 hover:text-gray-300'
+              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+              : 'text-warm-500 hover:text-warm-300'
           }`}
         >
           <span className="lg:hidden">
@@ -652,7 +652,7 @@ export function CardDetailPanel({
       </div>
 
       {/* Footer */}
-      <div className="p-1 lg:p-4 border-t border-gray-800 bg-black/20 text-[6px] lg:text-[10px] text-gray-600 text-center uppercase tracking-tighter">
+      <div className="p-1 lg:p-4 border-t border-warm-800 bg-warm-950/50 text-[6px] lg:text-[10px] text-warm-600 text-center uppercase tracking-tighter">
         Open Auto Battler Engine v0.2.0
       </div>
     </div>

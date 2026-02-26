@@ -40,7 +40,7 @@ export function HomePage() {
         className="absolute inset-0 z-0"
         style={{
           background:
-            'radial-gradient(ellipse at 50% 30%, rgba(139, 92, 246, 0.08), transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(245, 158, 11, 0.06), transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(16, 185, 129, 0.05), transparent 50%)',
+            'radial-gradient(ellipse at 50% 30%, rgba(196, 138, 42, 0.08), transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(184, 92, 74, 0.06), transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(91, 143, 170, 0.05), transparent 50%)',
         }}
       />
       <ParticleBackground />
@@ -55,7 +55,7 @@ export function HomePage() {
           <h1 className="font-title text-3xl lg:text-5xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 mb-1 lg:mb-2">
             OPEN AUTO BATTLER
           </h1>
-          <p className="font-heading text-gray-400 text-xs lg:text-sm tracking-widest uppercase">
+          <p className="font-heading text-warm-400 text-xs lg:text-sm tracking-widest uppercase">
             Roguelike Deck-Building Auto-Battler
           </p>
         </div>
@@ -71,7 +71,7 @@ export function HomePage() {
             <h2 className="font-heading text-2xl lg:text-3xl font-bold text-white tracking-wide">
               PLAY
             </h2>
-            <p className="text-gray-400 text-xs lg:text-sm mt-1">Single player, offline</p>
+            <p className="text-warm-400 text-xs lg:text-sm mt-1">Single player, offline</p>
           </Link>
 
           {/* PLAY ONLINE - only when blockchain is enabled */}
@@ -82,7 +82,7 @@ export function HomePage() {
               className={`opacity-0 animate-stagger-fade-in stagger-3 relative group block w-full p-3 lg:p-5 rounded-xl border transition-all text-center ${
                 isBlockchainAvailable
                   ? 'border-accent-violet/40 bg-gradient-to-br from-accent-violet/10 to-purple-900/5 hover:border-accent-violet hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] active:scale-[0.98] cursor-pointer'
-                  : 'border-gray-700/50 bg-gray-900/30 cursor-not-allowed opacity-50'
+                  : 'border-warm-700/50 bg-warm-900/30 cursor-not-allowed opacity-50'
               }`}
               style={{ animationFillMode: 'forwards' }}
             >
@@ -91,7 +91,7 @@ export function HomePage() {
                   <h2 className="font-heading text-lg lg:text-xl font-bold text-white">
                     PLAY ONLINE
                   </h2>
-                  <p className="text-gray-400 text-[10px] lg:text-sm">
+                  <p className="text-warm-400 text-[10px] lg:text-sm">
                     {isChecking
                       ? 'Connecting to blockchain...'
                       : isBlockchainAvailable
@@ -112,7 +112,7 @@ export function HomePage() {
                         : 'bg-red-500'
                   }`}
                 />
-                <span className="text-[8px] lg:text-[10px] text-gray-500 font-mono">
+                <span className="text-[8px] lg:text-[10px] text-warm-500 font-mono">
                   {isChecking
                     ? '...'
                     : isBlockchainAvailable
@@ -143,33 +143,33 @@ export function HomePage() {
 
         {/* Secondary Links */}
         <div
-          className="mt-6 lg:mt-10 flex flex-wrap justify-center gap-3 lg:gap-5 text-[10px] lg:text-xs text-gray-500 opacity-0 animate-stagger-fade-in stagger-5"
+          className="mt-6 lg:mt-10 flex flex-wrap justify-center gap-3 lg:gap-5 text-[10px] lg:text-xs text-warm-500 opacity-0 animate-stagger-fade-in stagger-5"
           style={{ animationFillMode: 'forwards' }}
         >
           <Link
             to="/collection"
-            className="hover:text-gray-300 transition-colors font-heading tracking-wider uppercase"
+            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
           >
             Collection
           </Link>
-          <span className="text-gray-700">|</span>
+          <span className="text-warm-700">|</span>
           <Link
             to="/sandbox"
-            className="hover:text-gray-300 transition-colors font-heading tracking-wider uppercase"
+            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
           >
             Sandbox
           </Link>
-          <span className="text-gray-700">|</span>
+          <span className="text-warm-700">|</span>
           <Link
             to="/multiplayer"
-            className="hover:text-gray-300 transition-colors font-heading tracking-wider uppercase"
+            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
           >
             P2P
           </Link>
-          <span className="text-gray-700">|</span>
+          <span className="text-warm-700">|</span>
           <Link
             to="/presentations"
-            className="hover:text-gray-300 transition-colors font-heading tracking-wider uppercase"
+            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
           >
             Presentations
           </Link>
@@ -177,7 +177,7 @@ export function HomePage() {
 
         {/* Version */}
         <div
-          className="mt-4 text-[9px] lg:text-[10px] text-gray-600 font-mono opacity-0 animate-stagger-fade-in stagger-6"
+          className="mt-4 text-[9px] lg:text-[10px] text-warm-600 font-mono opacity-0 animate-stagger-fade-in stagger-6"
           style={{ animationFillMode: 'forwards' }}
         >
           v0.1.0

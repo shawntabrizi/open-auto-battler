@@ -37,7 +37,7 @@ export function GameOverScreen() {
         </h1>
 
         {/* Message */}
-        <p className="text-sm lg:text-xl text-gray-300 mb-4 lg:mb-8">
+        <p className="text-sm lg:text-xl text-warm-200 mb-4 lg:mb-8">
           {isVictory
             ? `Congratulations! You won ${winsToVictory === 10 ? 'all 10 rounds' : 'the match'}!`
             : 'Your forces have been overwhelmed. Try again!'}
@@ -47,15 +47,15 @@ export function GameOverScreen() {
         <div className="flex justify-center gap-6 lg:gap-12 mb-4 lg:mb-8">
           <div className="text-center">
             <div className="text-2xl lg:text-4xl font-bold text-gold">{view.wins}</div>
-            <div className="text-xs lg:text-base text-gray-400">Wins</div>
+            <div className="text-xs lg:text-base text-warm-400">Wins</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl lg:text-4xl font-bold text-gray-400">{view.round}</div>
-            <div className="text-xs lg:text-base text-gray-400">Round</div>
+            <div className="text-2xl lg:text-4xl font-bold text-warm-400">{view.round}</div>
+            <div className="text-xs lg:text-base text-warm-400">Round</div>
           </div>
           <div className="text-center">
             <div className="text-2xl lg:text-4xl font-bold text-red-400">{view.lives}</div>
-            <div className="text-xs lg:text-base text-gray-400">Lives Left</div>
+            <div className="text-xs lg:text-base text-warm-400">Lives Left</div>
           </div>
         </div>
 

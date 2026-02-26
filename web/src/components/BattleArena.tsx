@@ -193,9 +193,10 @@ function getEventDelay(events: CombatEvent[], index: number, playbackSpeed: numb
 interface BattleArenaProps {
   battleOutput: BattleOutput;
   onBattleEnd: () => void;
+  onEventProcessed?: (eventIndex: number) => void;
 }
 
-export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
+export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: BattleArenaProps) {
   const [playerBoard, setPlayerBoard] = useState<UnitView[]>(
     battleOutput.initial_player_units || []
   );
@@ -236,6 +237,8 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
   // Process event visual effects when eventIndex changes
   useEffect(() => {
     if (eventIndex >= battleOutput.events.length) return;
+
+    onEventProcessed?.(eventIndex);
 
     const event = battleOutput.events[eventIndex];
 
@@ -542,9 +545,9 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
       return (
         <div
           key={`${team}-empty-${displayIndex}`}
-          className="w-[4.5rem] h-24 lg:w-32 lg:h-44 rounded border border-gray-600 bg-gray-800/50 flex items-center justify-center"
+          className="w-[4.5rem] h-24 lg:w-32 lg:h-44 rounded border border-warm-600 bg-warm-800/50 flex items-center justify-center"
         >
-          <span className="text-gray-600 text-xs">-</span>
+          <span className="text-warm-600 text-xs">-</span>
         </div>
       );
     }
@@ -629,7 +632,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
 
   return (
     <div
-      className={`battle-arena flex flex-col items-center gap-2 lg:gap-4 p-2 lg:p-4 bg-gray-800 rounded-lg relative ${shakeActive ? 'animate-screen-shake' : ''}`}
+      className={`battle-arena flex flex-col items-center gap-2 lg:gap-4 p-2 lg:p-4 bg-warm-800 rounded-lg relative ${shakeActive ? 'animate-screen-shake' : ''}`}
     >
       {/* Color flash overlay */}
       {colorFlash && (
@@ -648,20 +651,20 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
             className={`px-1.5 lg:px-2 py-0.5 lg:py-1 text-[10px] lg:text-xs font-medium rounded ${
               playMode === 'auto' && playbackSpeed === option.value
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                : 'bg-warm-600 text-warm-200 hover:bg-warm-500'
             }`}
           >
             {option.label}
           </button>
         ))}
-        <span className="text-gray-500 mx-1">|</span>
+        <span className="text-warm-500 mx-1">|</span>
         <button
           onClick={stepBackward}
           disabled={isAtStart}
           className={`px-1.5 lg:px-2 py-0.5 lg:py-1 text-[10px] lg:text-xs font-medium rounded ${
             isAtStart
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-              : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+              ? 'bg-warm-700 text-warm-500 cursor-not-allowed'
+              : 'bg-warm-600 text-warm-200 hover:bg-warm-500'
           }`}
         >
           Prev
@@ -671,17 +674,17 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
           disabled={isAtEnd}
           className={`px-1.5 lg:px-2 py-0.5 lg:py-1 text-[10px] lg:text-xs font-medium rounded ${
             isAtEnd
-              ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              ? 'bg-warm-700 text-warm-500 cursor-not-allowed'
               : playMode === 'step'
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                : 'bg-warm-600 text-warm-200 hover:bg-warm-500'
           }`}
         >
           Step
         </button>
         <button
           onClick={skipToEnd}
-          className="px-1.5 lg:px-2 py-0.5 lg:py-1 text-[10px] lg:text-xs font-medium rounded bg-gray-600 text-gray-300 hover:bg-gray-500"
+          className="px-1.5 lg:px-2 py-0.5 lg:py-1 text-[10px] lg:text-xs font-medium rounded bg-warm-600 text-warm-200 hover:bg-warm-500"
         >
           Skip
         </button>
@@ -696,7 +699,7 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
           )}
         </div>
 
-        <div className="text-xl lg:text-4xl font-bold text-gray-500">VS</div>
+        <div className="text-xl lg:text-4xl font-bold text-warm-500">VS</div>
 
         {/* Enemy side (right) */}
         <div className="flex gap-1 lg:gap-2">

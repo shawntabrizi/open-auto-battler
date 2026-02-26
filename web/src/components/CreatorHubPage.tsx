@@ -30,11 +30,11 @@ const TOOLS = [
 
 export const CreatorHubPage: React.FC = () => {
   return (
-    <div className="min-h-screen min-h-svh bg-slate-950 text-slate-200 flex flex-col items-center justify-center p-4 lg:p-8">
+    <div className="min-h-screen min-h-svh bg-warm-950 text-warm-200 flex flex-col items-center justify-center p-4 lg:p-8">
       <h1 className="text-2xl lg:text-4xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase mb-1 lg:mb-2">
         Creator Hub
       </h1>
-      <p className="text-slate-500 text-xs lg:text-sm mb-6 lg:mb-10">
+      <p className="text-warm-500 text-xs lg:text-sm mb-6 lg:mb-10">
         Build, mint, and customize on-chain content
       </p>
 
@@ -43,7 +43,7 @@ export const CreatorHubPage: React.FC = () => {
           <Link
             key={tool.to}
             to={tool.to}
-            className="group bg-slate-900/50 border border-white/5 hover:border-yellow-500/30 rounded-xl lg:rounded-2xl p-3 lg:p-6 transition-all hover:bg-slate-900/80"
+            className="group bg-warm-900/50 border border-white/5 hover:border-yellow-500/30 rounded-xl lg:rounded-2xl p-3 lg:p-6 transition-all hover:bg-warm-900/80"
           >
             <div className="flex items-center gap-2 lg:block">
               <div className="text-xl lg:text-3xl lg:mb-3 font-bold text-yellow-500">
@@ -53,7 +53,7 @@ export const CreatorHubPage: React.FC = () => {
                 {tool.title}
               </h2>
             </div>
-            <p className="text-slate-500 text-xs lg:text-sm hidden lg:block mt-1">
+            <p className="text-warm-500 text-xs lg:text-sm hidden lg:block mt-1">
               {tool.description}
             </p>
           </Link>
@@ -62,7 +62,7 @@ export const CreatorHubPage: React.FC = () => {
 
       <Link
         to="/blockchain"
-        className="mt-6 lg:mt-10 text-slate-500 hover:text-slate-300 text-xs lg:text-sm underline"
+        className="mt-6 lg:mt-10 text-warm-500 hover:text-warm-300 text-xs lg:text-sm underline"
       >
         Back to Dashboard
       </Link>

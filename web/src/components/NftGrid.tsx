@@ -13,7 +13,7 @@ interface NftGridProps {
 export function NftGrid({ items, selectedItemId, onSelect, onDeselect, emptyMessage, emptyAction }: NftGridProps) {
   if (items.length === 0) {
     return (
-      <div className="text-center py-2 lg:py-6 text-slate-500 text-[10px] lg:text-sm">
+      <div className="text-center py-2 lg:py-6 text-warm-500 text-[10px] lg:text-sm">
         <p>{emptyMessage || 'No NFTs found'}</p>
         {emptyAction}
       </div>
@@ -26,13 +26,13 @@ export function NftGrid({ items, selectedItemId, onSelect, onDeselect, emptyMess
       className={`shrink-0 p-1 lg:p-3 rounded lg:rounded-xl border-2 transition-all text-center ${
         selectedItemId === null
           ? 'border-yellow-400 bg-yellow-400/10'
-          : 'border-white/10 bg-slate-800/50 hover:border-white/20'
+          : 'border-white/10 bg-warm-800/50 hover:border-white/20'
       }`}
     >
-      <div className="w-12 h-12 lg:w-full lg:aspect-square bg-slate-700/50 rounded flex items-center justify-center mb-0.5 lg:mb-2">
-        <span className="text-slate-400 text-sm lg:text-2xl">--</span>
+      <div className="w-12 h-12 lg:w-full lg:aspect-square bg-warm-700/50 rounded flex items-center justify-center mb-0.5 lg:mb-2">
+        <span className="text-warm-400 text-sm lg:text-2xl">--</span>
       </div>
-      <span className="text-[8px] lg:text-xs font-bold text-slate-400">Default</span>
+      <span className="text-[8px] lg:text-xs font-bold text-warm-400">Default</span>
     </button>
   );
 
@@ -43,10 +43,10 @@ export function NftGrid({ items, selectedItemId, onSelect, onDeselect, emptyMess
       className={`shrink-0 p-1 lg:p-3 rounded lg:rounded-xl border-2 transition-all text-left ${
         selectedItemId === nft.itemId
           ? 'border-yellow-400 bg-yellow-400/10'
-          : 'border-white/10 bg-slate-800/50 hover:border-white/20'
+          : 'border-white/10 bg-warm-800/50 hover:border-white/20'
       }`}
     >
-      <div className="w-12 h-12 lg:w-full lg:aspect-square rounded overflow-hidden mb-0.5 lg:mb-2 bg-slate-700/50">
+      <div className="w-12 h-12 lg:w-full lg:aspect-square rounded overflow-hidden mb-0.5 lg:mb-2 bg-warm-700/50">
         <IpfsImage
           src={nft.imageUrl}
           alt={nft.name}
@@ -54,7 +54,7 @@ export function NftGrid({ items, selectedItemId, onSelect, onDeselect, emptyMess
         />
       </div>
       <div className="text-[8px] lg:text-xs font-bold truncate max-w-[3rem] lg:max-w-none">{nft.name}</div>
-      <div className="text-[7px] lg:text-[10px] text-slate-500 hidden lg:block">#{nft.itemId}</div>
+      <div className="text-[7px] lg:text-[10px] text-warm-500 hidden lg:block">#{nft.itemId}</div>
     </button>
   ));
 

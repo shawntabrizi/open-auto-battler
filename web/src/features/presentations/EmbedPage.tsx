@@ -39,7 +39,7 @@ export default function EmbedPage() {
   if (isLoading || !view) {
     return (
       <div className="h-screen flex items-center justify-center bg-board-bg">
-        <div className="text-xl text-gray-400">Loading...</div>
+        <div className="text-xl text-warm-400">Loading...</div>
       </div>
     );
   }

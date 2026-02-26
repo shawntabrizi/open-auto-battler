@@ -79,18 +79,18 @@ export const BlockchainPage: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen min-h-svh bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
         <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600">
           BLOCKCHAIN MODE
         </h1>
         <button
           onClick={connect}
           disabled={isConnecting}
-          className="bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-full text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
+          className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-full text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
         >
           {isConnecting ? 'CONNECTING...' : 'CONNECT WALLET'}
         </button>
-        <Link to="/" className="mt-6 lg:mt-8 text-slate-400 hover:text-white underline text-sm">
+        <Link to="/" className="mt-6 lg:mt-8 text-warm-400 hover:text-white underline text-sm">
           Back to Menu
         </Link>
       </div>
@@ -99,27 +99,27 @@ export const BlockchainPage: React.FC = () => {
 
   if (!chainState) {
     return (
-      <div className="h-screen h-svh bg-board-bg text-slate-200 overflow-hidden font-sans selection:bg-yellow-500/30 flex flex-col">
-        <div className="flex-1 flex items-center justify-center bg-slate-950 p-4">
-          <div className="text-center bg-slate-900 p-4 lg:p-8 rounded-2xl lg:rounded-3xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-none lg:w-auto">
+      <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans selection:bg-yellow-500/30 flex flex-col">
+        <div className="flex-1 flex items-center justify-center bg-warm-950 p-4">
+          <div className="text-center bg-warm-900 p-4 lg:p-8 rounded-2xl lg:rounded-3xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-none lg:w-auto">
             <h3 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 text-white">
               Initialize New Session
             </h3>
 
             {/* Connection Status & Account */}
             <div className="flex items-center justify-center gap-3 mb-6 lg:mb-8">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-lg border border-white/5">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-warm-800 rounded-lg border border-white/5">
                 <div
                   className={`w-2 h-2 rounded-full ${blockNumber !== null ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
                 />
-                <span className="text-xs font-mono text-slate-400">
+                <span className="text-xs font-mono text-warm-400">
                   {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'Offline'}
                 </span>
               </div>
               <select
                 value={selectedAccount?.address}
                 onChange={(e) => selectAccount(accounts.find((a) => a.address === e.target.value))}
-                className="bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50"
+                className="bg-warm-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50"
               >
                 {accounts.map((acc) => (
                   <option key={acc.address} value={acc.address}>
@@ -131,14 +131,14 @@ export const BlockchainPage: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-3 max-w-sm mx-auto mb-6 lg:mb-8">
-              <label className="text-xs font-bold text-slate-500 uppercase text-left ml-1">
+              <label className="text-xs font-bold text-warm-500 uppercase text-left ml-1">
                 Select Card Set
               </label>
               <div className="flex items-center gap-2">
                 <select
                   value={selectedSetId}
                   onChange={(e) => setSelectedSetId(Number(e.target.value))}
-                  className="flex-1 bg-slate-800 border border-white/10 text-white text-sm rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500/50 cursor-pointer"
+                  className="flex-1 bg-warm-800 border border-white/10 text-white text-sm rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500/50 cursor-pointer"
                 >
                   {[...availableSets]
                     .sort((a, b) => a.id - b.id)
@@ -150,7 +150,7 @@ export const BlockchainPage: React.FC = () => {
                 </select>
                 <button
                   onClick={() => previewSet(selectedSetId)}
-                  className="px-3 py-3 text-xs font-bold border border-slate-600 text-slate-300 hover:text-white hover:border-slate-400 rounded-lg transition-all shrink-0"
+                  className="px-3 py-3 text-xs font-bold border border-warm-600 text-warm-300 hover:text-white hover:border-warm-400 rounded-lg transition-all shrink-0"
                 >
                   PREVIEW
                 </button>
@@ -160,7 +160,7 @@ export const BlockchainPage: React.FC = () => {
             <button
               onClick={handleStartGame}
               disabled={txLoading}
-              className="bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black px-8 lg:px-12 py-3 lg:py-4 rounded-full text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50 shadow-lg shadow-yellow-500/20"
+              className="bg-yellow-500 hover:bg-yellow-400 text-warm-950 font-black px-8 lg:px-12 py-3 lg:py-4 rounded-full text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50 shadow-lg shadow-yellow-500/20"
             >
               {txLoading ? 'TRANSACTING...' : 'START GAME ON-CHAIN'}
             </button>
@@ -168,11 +168,11 @@ export const BlockchainPage: React.FC = () => {
             <div className="flex items-center justify-center gap-4 mt-4">
               <Link
                 to="/blockchain/creator"
-                className="text-slate-500 hover:text-slate-300 text-xs"
+                className="text-warm-500 hover:text-warm-300 text-xs"
               >
                 Creator Hub
               </Link>
-              <Link to="/" className="text-slate-500 hover:text-slate-300 text-xs">
+              <Link to="/" className="text-warm-500 hover:text-warm-300 text-xs">
                 Back to Menu
               </Link>
             </div>
@@ -186,7 +186,7 @@ export const BlockchainPage: React.FC = () => {
 
   // Game is active - render the game shell with blockchain customizations
   return (
-    <div className="h-screen h-svh bg-board-bg text-slate-200 overflow-hidden font-sans selection:bg-yellow-500/30 flex flex-col">
+    <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans selection:bg-yellow-500/30 flex flex-col">
       <GameShell
         hideEndTurn={true}
         customAction={{

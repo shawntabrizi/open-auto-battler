@@ -67,7 +67,7 @@ export function BattleSlideComponent({ playerUnits, enemyUnits, seed = 42 }: Bat
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <p className="text-gray-400 text-lg">Loading battle...</p>
+        <p className="text-warm-400 text-lg">Loading battle...</p>
       </div>
     );
   }

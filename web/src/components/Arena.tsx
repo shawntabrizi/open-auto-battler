@@ -43,7 +43,7 @@ export function Arena() {
       } : undefined}
     >
       {boardBg && <div className="absolute inset-0 bg-board-bg/50" />}
-      <div className="board-label text-sm text-gray-400 mb-2 relative z-10">Board</div>
+      <div className="board-label text-sm text-warm-400 mb-2 relative z-10">Board</div>
       <div className="board-row flex gap-3 lg:gap-4 relative z-10">
         {Array.from({ length: 5 }).map((_, displayIndex) => {
           const arrayIndex = 4 - displayIndex;

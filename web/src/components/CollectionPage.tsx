@@ -76,7 +76,7 @@ export function CollectionPage() {
   if (!engineReady) {
     return (
       <div className="min-h-screen bg-surface-dark flex items-center justify-center text-white">
-        <div className="animate-pulse text-gray-400">Loading engine...</div>
+        <div className="animate-pulse text-warm-400">Loading engine...</div>
       </div>
     );
   }
@@ -84,10 +84,10 @@ export function CollectionPage() {
   return (
     <div className="min-h-screen bg-surface-dark text-white">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-surface-dark/95 backdrop-blur border-b border-gray-800 px-4 py-3">
+      <div className="sticky top-0 z-20 bg-surface-dark/95 backdrop-blur border-b border-warm-800 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link to="/" className="text-gray-400 hover:text-white transition-colors text-sm">
+            <Link to="/" className="text-warm-400 hover:text-white transition-colors text-sm">
               &larr; Back
             </Link>
             <h1 className="font-heading text-xl lg:text-2xl font-bold tracking-wide">COLLECTION</h1>
@@ -96,7 +96,7 @@ export function CollectionPage() {
             <select
               value={selectedSetId ?? ''}
               onChange={(e) => setSelectedSetId(e.target.value ? Number(e.target.value) : null)}
-              className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm"
+              className="bg-warm-800 border border-warm-700 rounded px-2 py-1 text-sm"
             >
               <option value="">Default Set</option>
               {setMetas.map((s) => (
@@ -118,16 +118,16 @@ export function CollectionPage() {
             placeholder="Search cards..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm placeholder-gray-500 focus:outline-none focus:border-amber-500"
+            className="w-full bg-warm-800 border border-warm-700 rounded-lg px-3 py-2 text-sm placeholder-warm-500 focus:outline-none focus:border-amber-500"
           />
 
           {/* Cost filter */}
           <div>
-            <span className="text-xs text-gray-400 mb-1 block">Cost</span>
+            <span className="text-xs text-warm-400 mb-1 block">Cost</span>
             <div className="flex flex-wrap gap-1">
               <button
                 onClick={() => setCostFilter(null)}
-                className={`px-2 py-1 text-xs rounded ${costFilter === null ? 'bg-amber-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                className={`px-2 py-1 text-xs rounded ${costFilter === null ? 'bg-amber-600 text-white' : 'bg-warm-800 text-warm-400 hover:bg-warm-700'}`}
               >
                 All
               </button>
@@ -135,7 +135,7 @@ export function CollectionPage() {
                 <button
                   key={c}
                   onClick={() => setCostFilter(c)}
-                  className={`px-2 py-1 text-xs rounded ${costFilter === c ? 'bg-mana-blue text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                  className={`px-2 py-1 text-xs rounded ${costFilter === c ? 'bg-mana-blue text-white' : 'bg-warm-800 text-warm-400 hover:bg-warm-700'}`}
                 >
                   {c >= 6 ? '6+' : c}
                 </button>
@@ -145,7 +145,7 @@ export function CollectionPage() {
 
           {/* Sort */}
           <div>
-            <span className="text-xs text-gray-400 mb-1 block">Sort</span>
+            <span className="text-xs text-warm-400 mb-1 block">Sort</span>
             <div className="flex flex-wrap gap-1">
               {(
                 [
@@ -158,7 +158,7 @@ export function CollectionPage() {
                 <button
                   key={key}
                   onClick={() => setSortBy(key)}
-                  className={`px-2 py-1 text-xs rounded ${sortBy === key ? 'bg-accent-violet text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                  className={`px-2 py-1 text-xs rounded ${sortBy === key ? 'bg-accent-violet text-white' : 'bg-warm-800 text-warm-400 hover:bg-warm-700'}`}
                 >
                   {label}
                 </button>
@@ -168,7 +168,7 @@ export function CollectionPage() {
 
           {/* Ability filter */}
           <div>
-            <span className="text-xs text-gray-400 mb-1 block">Ability</span>
+            <span className="text-xs text-warm-400 mb-1 block">Ability</span>
             <div className="flex flex-wrap gap-1">
               {(
                 [
@@ -180,7 +180,7 @@ export function CollectionPage() {
                 <button
                   key={key}
                   onClick={() => setAbilityFilter(key)}
-                  className={`px-2 py-1 text-xs rounded ${abilityFilter === key ? 'bg-accent-emerald text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                  className={`px-2 py-1 text-xs rounded ${abilityFilter === key ? 'bg-accent-emerald text-white' : 'bg-warm-800 text-warm-400 hover:bg-warm-700'}`}
                 >
                   {label}
                 </button>
@@ -191,7 +191,7 @@ export function CollectionPage() {
 
         {/* Card Grid */}
         <div className="flex-1 min-w-0">
-          <div className="text-xs text-gray-500 mb-3">
+          <div className="text-xs text-warm-500 mb-3">
             Showing {filteredCards.length} of {allCards.length} cards
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 lg:gap-3">
@@ -217,7 +217,7 @@ export function CollectionPage() {
             ))}
           </div>
           {filteredCards.length === 0 && (
-            <div className="text-center text-gray-500 py-12">No cards match your filters.</div>
+            <div className="text-center text-warm-500 py-12">No cards match your filters.</div>
           )}
         </div>
       </div>

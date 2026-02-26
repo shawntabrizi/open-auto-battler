@@ -23,7 +23,7 @@ export function SandboxPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-board-bg flex items-center justify-center">
-        <div className="text-2xl text-gray-400">Loading Sandbox...</div>
+        <div className="text-2xl text-warm-400">Loading Sandbox...</div>
       </div>
     );
   }
@@ -38,12 +38,12 @@ export function SandboxPage() {
         {/* Center - Battle arena and gallery */}
         <div className="flex-1 flex flex-col min-h-0 ml-44 lg:ml-80">
           {/* Battle Arena */}
-          <div className="flex-shrink-0 p-2 lg:p-3 border-b border-gray-700">
+          <div className="flex-shrink-0 p-2 lg:p-3 border-b border-warm-700">
             <SandboxArena />
           </div>
 
           {/* Search Bar - fixed between arena and gallery */}
-          <div className="flex-shrink-0 px-2 lg:px-3 py-1.5 lg:py-2 bg-shop-bg border-b border-gray-700">
+          <div className="flex-shrink-0 px-2 lg:px-3 py-1.5 lg:py-2 bg-shop-bg border-b border-warm-700">
             <SearchBar />
           </div>
 
@@ -76,11 +76,11 @@ function SandboxHeader() {
   const hasUnits = playerBoard.some((u) => u !== null) || enemyBoard.some((u) => u !== null);
 
   return (
-    <div className="flex-shrink-0 bg-gray-900 border-b border-gray-700 px-2 lg:px-3 py-1.5 lg:py-2 flex items-center justify-between">
+    <div className="flex-shrink-0 bg-warm-900 border-b border-warm-700 px-2 lg:px-3 py-1.5 lg:py-2 flex items-center justify-between">
       <div className="flex items-center gap-2 lg:gap-3">
         <Link
           to="/"
-          className="text-gray-400 hover:text-white transition-colors text-xs lg:text-sm flex items-center gap-1"
+          className="text-warm-400 hover:text-white transition-colors text-xs lg:text-sm flex items-center gap-1"
         >
           <span>&larr;</span> <span className="hidden lg:inline">Back</span>
         </Link>
@@ -89,18 +89,18 @@ function SandboxHeader() {
 
       <div className="flex items-center gap-1.5 lg:gap-3">
         <div className="hidden lg:flex items-center gap-1">
-          <label className="text-gray-400 text-xs">Seed:</label>
+          <label className="text-warm-400 text-xs">Seed:</label>
           <input
             type="number"
             value={battleSeed}
             onChange={(e) => setBattleSeed(parseInt(e.target.value) || 0)}
-            className="w-16 px-2 py-1 bg-gray-800 border border-gray-600 rounded text-white text-xs"
+            className="w-16 px-2 py-1 bg-warm-800 border border-warm-600 rounded text-white text-xs"
           />
         </div>
 
         <button
           onClick={clearAllBoards}
-          className="px-2 lg:px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-white text-xs lg:text-sm transition-colors"
+          className="px-2 lg:px-3 py-1 bg-warm-700 hover:bg-warm-600 rounded text-white text-xs lg:text-sm transition-colors"
         >
           Clear
         </button>
@@ -111,7 +111,7 @@ function SandboxHeader() {
           className={`px-3 lg:px-4 py-1 rounded font-bold text-xs lg:text-sm transition-colors ${
             hasUnits
               ? 'bg-gold text-black hover:bg-yellow-400'
-              : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              : 'bg-warm-600 text-warm-400 cursor-not-allowed'
           }`}
         >
           Battle!
@@ -164,7 +164,7 @@ function SandboxArena() {
           onClick={onClick}
         >
           <UnitCard card={unit} showCost={false} showPitch={false} compact={true} />
-          <div className="absolute -top-1.5 lg:-top-2 left-1/2 -translate-x-1/2 text-[8px] lg:text-xs text-gray-400 pointer-events-none">
+          <div className="absolute -top-1.5 lg:-top-2 left-1/2 -translate-x-1/2 text-[8px] lg:text-xs text-warm-400 pointer-events-none">
             {displayIndex}
           </div>
           <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/20 rounded-lg transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
@@ -187,7 +187,7 @@ function SandboxArena() {
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-2 lg:p-4">
+    <div className="bg-warm-800 rounded-lg p-2 lg:p-4">
       <div className="flex items-center justify-center gap-2 lg:gap-6">
         {/* Player side (left) - display 5 4 3 2 1 */}
         <div className="flex flex-col items-center gap-0.5 lg:gap-1">
@@ -199,7 +199,7 @@ function SandboxArena() {
           </div>
         </div>
 
-        <div className="text-sm lg:text-2xl font-bold text-gray-500">VS</div>
+        <div className="text-sm lg:text-2xl font-bold text-warm-500">VS</div>
 
         {/* Enemy side (right) - display 1 2 3 4 5 */}
         <div className="flex flex-col items-center gap-0.5 lg:gap-1">
@@ -213,7 +213,7 @@ function SandboxArena() {
       </div>
 
       {selectedTemplate && (
-        <div className="mt-1.5 lg:mt-2 text-center text-[10px] lg:text-xs text-gray-400">
+        <div className="mt-1.5 lg:mt-2 text-center text-[10px] lg:text-xs text-warm-400">
           Placing: <span className="text-yellow-400">{selectedTemplate.name}</span>
         </div>
       )}
@@ -231,7 +231,7 @@ function SearchBar() {
       placeholder="Search cards..."
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
-      className="w-full px-2 lg:px-3 py-1.5 lg:py-2 bg-gray-800 border border-gray-600 rounded text-white placeholder-gray-400 text-xs lg:text-sm focus:outline-none focus:border-blue-500"
+      className="w-full px-2 lg:px-3 py-1.5 lg:py-2 bg-warm-800 border border-warm-600 rounded text-white placeholder-warm-400 text-xs lg:text-sm focus:outline-none focus:border-amber-500"
     />
   );
 }

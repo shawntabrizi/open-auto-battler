@@ -34,20 +34,20 @@ function AudioControls() {
     <div className="relative ml-2">
       <button
         onClick={() => setOpen(!open)}
-        className="w-7 h-7 lg:w-8 lg:h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-colors text-xs lg:text-sm"
+        className="w-7 h-7 lg:w-8 lg:h-8 flex items-center justify-center rounded-full bg-warm-800 hover:bg-warm-700 text-warm-400 hover:text-warm-100 transition-colors text-xs lg:text-sm"
         title="Audio settings"
       >
         {isMuted ? <SpeakerMutedIcon className="w-4 h-4" /> : <SpeakerIcon className="w-4 h-4" />}
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-44 bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-xl z-50">
+        <div className="absolute right-0 top-full mt-1 w-44 bg-warm-900 border border-warm-700 rounded-lg p-3 shadow-xl z-50">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs text-gray-400">Audio</span>
-            <button onClick={toggleMute} className="text-xs text-gray-400 hover:text-white">
+            <span className="text-xs text-warm-400">Audio</span>
+            <button onClick={toggleMute} className="text-xs text-warm-400 hover:text-white">
               {isMuted ? 'Unmute' : 'Mute'}
             </button>
           </div>
-          <label className="flex items-center justify-between text-[10px] text-gray-400 mb-1">
+          <label className="flex items-center justify-between text-[10px] text-warm-400 mb-1">
             <span>Master</span>
             <input
               type="range"
@@ -59,7 +59,7 @@ function AudioControls() {
               className="w-20 h-1 accent-amber-500"
             />
           </label>
-          <label className="flex items-center justify-between text-[10px] text-gray-400 mb-1">
+          <label className="flex items-center justify-between text-[10px] text-warm-400 mb-1">
             <span>SFX</span>
             <input
               type="range"
@@ -71,7 +71,7 @@ function AudioControls() {
               className="w-20 h-1 accent-amber-500"
             />
           </label>
-          <label className="flex items-center justify-between text-[10px] text-gray-400">
+          <label className="flex items-center justify-between text-[10px] text-warm-400">
             <span>Music</span>
             <input
               type="range"
@@ -196,7 +196,7 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
 
   return (
     <div
-      className={`hud h-12 lg:h-16 bg-gray-900/80 border-b border-gray-700 flex items-center justify-between px-2 lg:px-6 relative z-20 ${showCardPanel ? 'show-card-panel' : ''}`}
+      className={`hud h-12 lg:h-16 bg-warm-900/90 border-b border-warm-700 flex items-center justify-between px-2 lg:px-6 relative z-20 ${showCardPanel ? 'show-card-panel' : ''}`}
     >
       {/* Left: Lives */}
       <div className="flex items-center gap-1 lg:gap-2">
@@ -205,7 +205,7 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
             <img src={playerAvatar.imageUrl} alt="avatar" className="w-full h-full object-cover" />
           </div>
         )}
-        <span className="text-gray-400 hidden lg:inline">Lives:</span>
+        <span className="text-warm-400 hidden lg:inline">Lives:</span>
         {/* Mobile: compact numeric */}
         <div className="flex lg:hidden items-center gap-1">
           <HeartIcon className="w-5 h-5 text-red-500" />
@@ -219,8 +219,8 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
             i < view.lives ? (
               <HeartIcon key={i} className="w-6 h-6 text-red-500" />
             ) : (
-              <HeartOutlineIcon key={i} className="w-6 h-6 text-gray-600" />
-            ),
+              <HeartOutlineIcon key={i} className="w-6 h-6 text-warm-600" />
+            )
           )}
         </div>
       </div>
@@ -228,7 +228,7 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
       {/* Center: Round & End Turn */}
       <div className="flex items-center gap-2 lg:gap-4">
         <div className="text-center">
-          <div className="text-xs lg:text-sm text-gray-400">Round</div>
+          <div className="text-xs lg:text-sm text-warm-400">Round</div>
           <div className="text-lg lg:text-2xl font-bold text-gold">{view.round}</div>
         </div>
 
@@ -236,7 +236,7 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
           <div className="flex items-center gap-2 lg:gap-3">
             <button
               onClick={() => setShowBag(true)}
-              className="btn bg-gray-800 hover:bg-gray-700 text-white border-gray-600 flex items-center gap-1 lg:gap-2 px-2 lg:px-4"
+              className="btn bg-warm-800 hover:bg-warm-700 text-warm-100 border-warm-600 flex items-center gap-1 lg:gap-2 px-2 lg:px-4"
               title="View your draw pool"
             >
               <BagIcon className="w-5 h-5 lg:w-6 lg:h-6 text-amber-400" />
@@ -257,9 +257,13 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
                   >
                     <span className="text-white text-sm lg:text-base font-bold flex items-center gap-1">
                       {opponentWaiting ? (
-                        <><WarningIcon className="w-4 h-4" /> Submit in:</>
+                        <>
+                          <WarningIcon className="w-4 h-4" /> Submit in:
+                        </>
                       ) : (
-                        <><HourglassIcon className="w-4 h-4" /> Waiting:</>
+                        <>
+                          <HourglassIcon className="w-4 h-4" /> Waiting:
+                        </>
                       )}
                     </span>
                     <span
@@ -274,7 +278,7 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
                   disabled={isWaiting}
                   className={`btn btn-primary text-sm lg:text-lg px-3 lg:px-6 py-2 lg:py-3 transition-all ${
                     isWaiting
-                      ? 'bg-gray-600 scale-95 opacity-80 cursor-not-allowed'
+                      ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
                       : opponentWaiting && displayTimer !== null && displayTimer <= 5
                         ? 'animate-pulse bg-red-500 hover:bg-red-400'
                         : ''
@@ -290,9 +294,9 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
                 disabled={customAction.disabled}
                 className={`btn text-sm lg:text-lg px-3 lg:px-6 py-2 lg:py-3 transition-all font-bold ${
                   customAction.disabled
-                    ? 'bg-gray-600 scale-95 opacity-80 cursor-not-allowed'
+                    ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
                     : customAction.variant === 'chain'
-                      ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-slate-900'
+                      ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900'
                       : 'btn-primary'
                 }`}
               >
@@ -305,7 +309,7 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
 
       {/* Right: Wins + Audio */}
       <div className="flex items-center gap-1 lg:gap-2">
-        <span className="text-gray-400 hidden lg:inline">Wins:</span>
+        <span className="text-warm-400 hidden lg:inline">Wins:</span>
         {/* Mobile: compact numeric */}
         <div className="flex lg:hidden items-center gap-1">
           <StarIcon className="w-5 h-5 text-gold" />
@@ -319,8 +323,8 @@ export function HUD({ hideEndTurn, customAction }: HUDProps) {
             i < view.wins ? (
               <StarIcon key={i} className="w-5 h-5 text-gold" />
             ) : (
-              <StarOutlineIcon key={i} className="w-5 h-5 text-gray-600" />
-            ),
+              <StarOutlineIcon key={i} className="w-5 h-5 text-warm-600" />
+            )
           )}
         </div>
         <AudioControls />

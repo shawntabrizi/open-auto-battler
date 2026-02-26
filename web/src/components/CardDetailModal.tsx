@@ -170,13 +170,13 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
       onClick={onClose}
     >
       <div
-        className="bg-card-bg border-2 border-gray-600 rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl"
+        className="bg-card-bg border-2 border-warm-600 rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-xl font-bold text-white">{card.name}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-warm-400 hover:text-white">
             <CloseIcon className="w-5 h-5" />
           </button>
         </div>
@@ -184,7 +184,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         {/* Card Display */}
         <div className="flex flex-col items-center mb-6">
           {/* Card Art */}
-          <div className="w-32 h-40 bg-gray-700 rounded-lg flex items-center justify-center text-6xl mb-4 overflow-hidden">
+          <div className="w-32 h-40 bg-warm-700 rounded-lg flex items-center justify-center text-6xl mb-4 overflow-hidden">
             {hasCardArt(card.id) ? (
               <img
                 src={getCardArtMd(card.id)!}
@@ -218,13 +218,13 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
               <div className="w-6 h-6 bg-mana-blue rounded-full flex items-center justify-center text-xs font-bold border border-blue-300">
                 {card.play_cost}
               </div>
-              <span className="text-xs text-gray-400">Play</span>
+              <span className="text-xs text-warm-400">Play</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-6 h-6 bg-pitch-red rounded-full flex items-center justify-center text-xs font-bold border border-red-300">
                 {card.pitch_value}
               </div>
-              <span className="text-xs text-gray-400">Pitch</span>
+              <span className="text-xs text-warm-400">Pitch</span>
             </div>
           </div>
         </div>
@@ -235,14 +235,14 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
             {card.abilities.map((ability, index) => (
               <div
                 key={index}
-                className="mb-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700"
+                className="mb-4 p-4 bg-warm-800/50 rounded-lg border border-warm-700"
               >
                 <h3 className="text-lg font-bold text-yellow-400 mb-2">Ability: {ability.name}</h3>
-                <div className="text-sm text-gray-300 mb-2">
+                <div className="text-sm text-warm-300 mb-2">
                   <strong>Trigger:</strong> {getTriggerDescription(ability.trigger)}
                 </div>
                 <div className="text-sm text-white">{ability.description}</div>
-                <div className="text-xs text-gray-400 mt-2 italic">
+                <div className="text-xs text-warm-400 mt-2 italic">
                   {getEffectDescription(ability.effect)}
                 </div>
               </div>
@@ -254,7 +254,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         <div className="flex gap-3">
           <button
             onClick={() => setShowRaw(!showRaw)}
-            className="flex-1 btn bg-gray-600 hover:bg-gray-500 text-white"
+            className="flex-1 btn bg-warm-600 hover:bg-warm-500 text-white"
           >
             {showRaw ? 'Hide' : 'Show'} Raw JSON
           </button>
@@ -265,8 +265,8 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
 
         {/* Raw JSON Section */}
         {showRaw && (
-          <div className="mt-4 p-3 bg-gray-900 rounded border border-gray-700">
-            <pre className="text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap">
+          <div className="mt-4 p-3 bg-warm-900 rounded border border-warm-700">
+            <pre className="text-xs text-warm-300 overflow-x-auto whitespace-pre-wrap">
               {JSON.stringify(card, null, 2)}
             </pre>
           </div>

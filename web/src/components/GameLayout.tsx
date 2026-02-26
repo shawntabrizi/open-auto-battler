@@ -17,7 +17,7 @@ export function GameLayout() {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-xl text-gray-400">Loading WASM...</div>
+        <div className="text-xl text-warm-400">Loading WASM...</div>
       </div>
     );
   }
@@ -43,7 +43,7 @@ export function GameLayout() {
   if (!view) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-xl text-gray-400">Initializing game...</div>
+        <div className="text-xl text-warm-400">Initializing game...</div>
       </div>
     );
   }

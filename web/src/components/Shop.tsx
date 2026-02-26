@@ -58,7 +58,7 @@ export function Shop() {
 
   return (
     <div
-      className={`shop h-32 lg:h-60 border-t-2 border-gray-600 flex-shrink-0 relative ${handBg ? '' : 'bg-shop-bg'}`}
+      className={`shop h-32 lg:h-60 border-t-2 border-warm-700 flex-shrink-0 relative ${handBg ? '' : 'bg-shop-bg'}`}
       style={
         handBg
           ? {
@@ -78,8 +78,8 @@ export function Shop() {
             disabled={!view.can_undo}
             className={`action-circle w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all border-2 ${
               view.can_undo
-                ? 'bg-gradient-to-br from-gray-600 to-gray-700 border-gray-400/50 text-white hover:from-gray-500 hover:to-gray-600 cursor-pointer shadow-gray-900/50 hover:shadow-gray-700/70'
-                : 'bg-gray-800 border-gray-700 text-gray-600 cursor-not-allowed'
+                ? 'bg-gradient-to-br from-warm-600 to-warm-700 border-warm-400/50 text-warm-100 hover:from-warm-500 hover:to-warm-600 cursor-pointer shadow-warm-900/50 hover:shadow-warm-700/70'
+                : 'bg-warm-800 border-warm-700 text-warm-600 cursor-not-allowed'
             }`}
             title="Undo last action"
           >
@@ -96,15 +96,15 @@ export function Shop() {
               />
             </svg>
           </button>
-          <div className="text-[10px] text-gray-500 mt-2">Undo</div>
+          <div className="text-[10px] text-warm-500 mt-2">Undo</div>
         </div>
 
         {/* Center: Hand */}
         <div className="shop-hand flex-1 flex flex-col items-center justify-center overflow-hidden relative">
           {/* Hand label - desktop only */}
           <div className="hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 items-center gap-2">
-            <span className="text-sm text-gray-400">Hand</span>
-            <span className="text-xs text-gray-500">({view.bag_count} in deck)</span>
+            <span className="text-sm text-warm-400">Hand</span>
+            <span className="text-xs text-warm-500">({view.bag_count} in deck)</span>
           </div>
           <div className="hand-row flex gap-2 lg:gap-4 lg:mt-4">
             {view.hand.map((card, i) =>
@@ -131,9 +131,9 @@ export function Shop() {
               ) : (
                 <div
                   key={`hand-empty-${i}`}
-                  className="card-slot-placeholder w-[4.5rem] h-24 lg:w-32 lg:h-44 rounded-lg border-2 border-dashed border-gray-600 bg-gray-800/30 flex items-center justify-center"
+                  className="card-slot-placeholder w-[4.5rem] h-24 lg:w-32 lg:h-44 rounded-lg border-2 border-dashed border-warm-600 bg-warm-800/30 flex items-center justify-center"
                 >
-                  <span className="text-gray-500 text-xs">H{i + 1}</span>
+                  <span className="text-warm-500 text-xs">H{i + 1}</span>
                 </div>
               )
             )}
@@ -155,7 +155,7 @@ export function Shop() {
             >
               <FlameIcon className="w-7 h-7 text-orange-400" />
             </div>
-            <div className="text-[10px] text-gray-500 mt-2 text-center px-2">
+            <div className="text-[10px] text-warm-500 mt-2 text-center px-2">
               {isAshHovered ? 'BURN IT!' : 'Ash Pile'}
             </div>
           </div>

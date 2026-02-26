@@ -79,10 +79,9 @@ export function UnitCard({
       onDrop={onDrop}
       className={`
         unit-card card relative ${sizeClasses} ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none rounded-lg border-2 transition-all duration-200 overflow-hidden
-        ${artSrc ? 'border-amber-900/60 bg-black' : 'bg-card-bg border-gray-600 p-1 lg:p-2'}
+        ${artSrc ? 'border-amber-900/60 bg-black' : 'bg-card-bg border-warm-600 p-1 lg:p-2'}
         ${isSelected ? 'card-selected ring-2 ring-yellow-400' : ''}
         ${enableWobble && !isDragging && !isSelected ? 'wobble-card' : ''}
-        ${!can_afford && showCost ? 'opacity-60' : ''}
         ${isDragging ? 'opacity-50 scale-105' : ''}
       `}
       style={
@@ -148,7 +147,7 @@ export function UnitCard({
           </div>
 
           <div
-            className={`card-art w-full ${compact ? 'h-10 lg:h-14 text-xl lg:text-2xl' : 'h-10 lg:h-20 text-xl lg:text-3xl'} bg-gray-700 rounded flex items-center justify-center relative`}
+            className={`card-art w-full ${compact ? 'h-10 lg:h-14 text-xl lg:text-2xl' : 'h-10 lg:h-20 text-xl lg:text-3xl'} bg-warm-700 rounded flex items-center justify-center relative`}
           >
             {getCardEmoji(card.id)}
             {card.abilities.length > 0 && (
@@ -178,7 +177,11 @@ export function UnitCard({
       {/* Cost badge (top left) */}
       {showCost && (
         <div
-          className={`card-cost-badge absolute -top-1 -left-1 lg:-top-2 lg:-left-2 z-10 ${badgeClasses} bg-mana-blue rounded-full flex items-center justify-center font-bold border lg:border-2 border-blue-300`}
+          className={`card-cost-badge absolute -top-1 -left-1 lg:-top-2 lg:-left-2 z-10 ${badgeClasses} rounded-full flex items-center justify-center font-stat font-bold border lg:border-2 ${
+            can_afford
+              ? 'bg-mana-blue border-sky-300/40 shadow-[0_0_6px_rgba(91,143,170,0.5)]'
+              : 'bg-warm-600 border-warm-500/60 text-warm-400 shadow-sm'
+          }`}
         >
           {card.play_cost}
         </div>
@@ -187,7 +190,7 @@ export function UnitCard({
       {/* Pitch value badge (top right) */}
       {showPitch && (
         <div
-          className={`card-pitch-badge absolute -top-1 -right-1 lg:-top-2 lg:-right-2 z-10 ${badgeClasses} bg-pitch-red rounded-full flex items-center justify-center font-bold border lg:border-2 border-red-300`}
+          className={`card-pitch-badge absolute -top-1 -right-1 lg:-top-2 lg:-right-2 z-10 ${badgeClasses} bg-pitch-red rounded-full flex items-center justify-center font-stat font-bold border lg:border-2 border-red-800/60 shadow-sm`}
         >
           {card.pitch_value}
         </div>
@@ -234,11 +237,11 @@ export function EmptySlot({
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={`
-        empty-slot slot ${sizeClasses} cursor-pointer bg-gray-800/50 rounded-lg border-2 border-dashed border-gray-600 flex items-center justify-center transition-all duration-200
+        empty-slot slot ${sizeClasses} cursor-pointer bg-warm-800/50 rounded-lg border-2 border-dashed border-warm-600 flex items-center justify-center transition-all duration-200
         ${isTarget ? 'border-yellow-400 bg-yellow-400/10' : ''}
       `}
     >
-      {label && <span className="text-gray-500 text-xs">{label}</span>}
+      {label && <span className="text-warm-500 text-xs">{label}</span>}
     </div>
   );
 }

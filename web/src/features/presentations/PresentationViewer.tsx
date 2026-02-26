@@ -181,7 +181,7 @@ export default function PresentationViewer() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-warm-900 text-white flex items-center justify-center">
         <p>Loading...</p>
       </div>
     );
@@ -189,7 +189,7 @@ export default function PresentationViewer() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-warm-900 text-white flex flex-col items-center justify-center gap-4">
         <p className="text-red-400">{error}</p>
         <Link to="/presentations" className="text-blue-400 hover:text-blue-300">
           ← Back to Presentations
@@ -201,7 +201,7 @@ export default function PresentationViewer() {
   const slide = slides[currentSlide];
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+    <div className="min-h-screen bg-warm-900 text-white flex flex-col">
       {/* Slide content */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div
@@ -212,8 +212,8 @@ export default function PresentationViewer() {
       </div>
 
       {/* Navigation bar */}
-      <div className="bg-gray-800 px-4 py-3 flex items-center justify-between">
-        <Link to="/presentations" className="text-gray-400 hover:text-white text-sm">
+      <div className="bg-warm-800 px-4 py-3 flex items-center justify-between">
+        <Link to="/presentations" className="text-warm-400 hover:text-white text-sm">
           ← Back
         </Link>
 
@@ -221,25 +221,25 @@ export default function PresentationViewer() {
           <button
             onClick={() => goTo(currentSlide - 1)}
             disabled={currentSlide === 0}
-            className="px-3 py-1 bg-gray-700 rounded disabled:opacity-50"
+            className="px-3 py-1 bg-warm-700 rounded disabled:opacity-50"
           >
             Prev
           </button>
 
-          <span className="text-gray-400 text-sm min-w-[80px] text-center">
+          <span className="text-warm-400 text-sm min-w-[80px] text-center">
             {currentSlide + 1} / {slides.length}
           </span>
 
           <button
             onClick={() => goTo(currentSlide + 1)}
             disabled={currentSlide === slides.length - 1}
-            className="px-3 py-1 bg-gray-700 rounded disabled:opacity-50"
+            className="px-3 py-1 bg-warm-700 rounded disabled:opacity-50"
           >
             Next
           </button>
         </div>
 
-        <span className="text-gray-500 text-xs">← → to navigate</span>
+        <span className="text-warm-500 text-xs">← → to navigate</span>
       </div>
     </div>
   );

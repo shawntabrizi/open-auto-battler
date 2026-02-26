@@ -173,17 +173,17 @@ export const MintNftPage: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
+      <div className="min-h-screen bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
         <h1 className="text-4xl font-black mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase">
           Mint NFT
         </h1>
         <button
           onClick={connect}
-          className="bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105"
+          className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105"
         >
           CONNECT WALLET TO START
         </button>
-        <Link to="/blockchain/creator" className="mt-8 text-slate-400 hover:text-white underline">
+        <Link to="/blockchain/creator" className="mt-8 text-warm-400 hover:text-white underline">
           Back to Creator Hub
         </Link>
       </div>
@@ -191,7 +191,7 @@ export const MintNftPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 lg:p-8">
+    <div className="min-h-screen bg-warm-950 text-warm-200 p-4 lg:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6 lg:mb-8">
@@ -199,11 +199,11 @@ export const MintNftPage: React.FC = () => {
             <h1 className="text-2xl lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase">
               Mint Customization NFT
             </h1>
-            <p className="text-slate-500 text-sm">Upload an image and mint it as an on-chain NFT</p>
+            <p className="text-warm-500 text-sm">Upload an image and mint it as an on-chain NFT</p>
           </div>
           <Link
             to="/blockchain/creator"
-            className="text-slate-400 hover:text-white border border-slate-800 px-3 py-2 rounded-lg text-xs lg:text-sm transition-colors"
+            className="text-warm-400 hover:text-white border border-warm-800 px-3 py-2 rounded-lg text-xs lg:text-sm transition-colors"
           >
             Creator Hub
           </Link>
@@ -213,24 +213,24 @@ export const MintNftPage: React.FC = () => {
           {/* Left: Form */}
           <div className="space-y-6">
             {/* Type selector */}
-            <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
+            <div className="bg-warm-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <span className="text-yellow-500">01</span> Type
               </h2>
               <select
                 value={nftType}
                 onChange={(e) => setNftType(e.target.value as CustomizationType)}
-                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
+                className="w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
               >
                 {TYPE_OPTIONS.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
-              <p className="text-xs text-slate-500 mt-2">{selectedType.specs}</p>
+              <p className="text-xs text-warm-500 mt-2">{selectedType.specs}</p>
             </div>
 
             {/* Image upload */}
-            <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
+            <div className="bg-warm-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <span className="text-yellow-500">02</span> Image
               </h2>
@@ -242,7 +242,7 @@ export const MintNftPage: React.FC = () => {
                   className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${
                     uploadTab === 'pinata'
                       ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500'
-                      : 'bg-slate-800 text-slate-400 border border-white/5'
+                      : 'bg-warm-800 text-warm-400 border border-white/5'
                   }`}
                 >
                   Pinata Upload
@@ -252,7 +252,7 @@ export const MintNftPage: React.FC = () => {
                   className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${
                     uploadTab === 'manual'
                       ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500'
-                      : 'bg-slate-800 text-slate-400 border border-white/5'
+                      : 'bg-warm-800 text-warm-400 border border-white/5'
                   }`}
                 >
                   Manual CID
@@ -262,7 +262,7 @@ export const MintNftPage: React.FC = () => {
               {uploadTab === 'pinata' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                    <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
                       Pinata API Key (JWT)
                     </label>
                     <input
@@ -270,7 +270,7 @@ export const MintNftPage: React.FC = () => {
                       value={pinataKey}
                       onChange={(e) => handlePinataKeyChange(e.target.value)}
                       placeholder="eyJhbGciOi..."
-                      className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-yellow-500/50"
+                      className="w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-yellow-500/50"
                     />
                   </div>
                   <div
@@ -293,13 +293,13 @@ export const MintNftPage: React.FC = () => {
                       <p className="text-yellow-500 text-sm">Uploading...</p>
                     ) : (
                       <>
-                        <p className="text-slate-400 text-sm">Drop image here or click to select</p>
-                        <p className="text-slate-600 text-xs mt-1">PNG or WebP</p>
+                        <p className="text-warm-400 text-sm">Drop image here or click to select</p>
+                        <p className="text-warm-600 text-xs mt-1">PNG or WebP</p>
                       </>
                     )}
                   </div>
                   {cid && (
-                    <div className="bg-slate-800/50 rounded-lg px-3 py-2 text-xs font-mono text-green-400 break-all">
+                    <div className="bg-warm-800/50 rounded-lg px-3 py-2 text-xs font-mono text-green-400 break-all">
                       CID: {cid}
                     </div>
                   )}
@@ -308,7 +308,7 @@ export const MintNftPage: React.FC = () => {
 
               {uploadTab === 'manual' && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                  <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
                     IPFS CID
                   </label>
                   <input
@@ -316,20 +316,20 @@ export const MintNftPage: React.FC = () => {
                     value={cid}
                     onChange={(e) => setCid(e.target.value.trim())}
                     placeholder="bafybeih5..."
-                    className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-yellow-500/50 font-mono"
+                    className="w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-yellow-500/50 font-mono"
                   />
                 </div>
               )}
             </div>
 
             {/* Name & Description */}
-            <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
+            <div className="bg-warm-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <span className="text-yellow-500">03</span> Details
               </h2>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                  <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
                     Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -337,34 +337,34 @@ export const MintNftPage: React.FC = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Galaxy Arena"
-                    className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
+                    className="w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                  <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
                     Description
                   </label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="A cosmic galaxy board background"
-                    className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50 h-16 resize-none text-sm"
+                    className="w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50 h-16 resize-none text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                  <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
                     Collection ID
                   </label>
                   <input
                     type="number"
                     value={collectionId}
                     onChange={(e) => setCollectionId(parseInt(e.target.value) || 0)}
-                    className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
+                    className="w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                     min="0"
                   />
                   {/* Collection status */}
                   {collectionExists === null && (
-                    <p className="text-[10px] text-slate-600 mt-1">Checking collection...</p>
+                    <p className="text-[10px] text-warm-600 mt-1">Checking collection...</p>
                   )}
                   {collectionExists === true && (
                     <p className="text-[10px] text-green-500 mt-1">Collection exists</p>
@@ -377,7 +377,7 @@ export const MintNftPage: React.FC = () => {
                       <button
                         onClick={handleCreateCollection}
                         disabled={isCreatingCollection}
-                        className="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold py-2 px-4 rounded-lg text-xs transition-all disabled:opacity-50"
+                        className="bg-orange-500 hover:bg-orange-400 text-warm-950 font-bold py-2 px-4 rounded-lg text-xs transition-all disabled:opacity-50"
                       >
                         {isCreatingCollection ? 'Creating...' : 'Create Collection'}
                       </button>
@@ -391,7 +391,7 @@ export const MintNftPage: React.FC = () => {
             <button
               onClick={handleMint}
               disabled={isMinting || !cid || !name}
-              className="w-full bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black py-4 rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-yellow-500/10 uppercase tracking-wider"
+              className="w-full bg-yellow-500 hover:bg-yellow-400 text-warm-950 font-black py-4 rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-yellow-500/10 uppercase tracking-wider"
             >
               {isMinting ? 'MINTING...' : 'MINT NFT ON-CHAIN'}
             </button>
@@ -400,8 +400,8 @@ export const MintNftPage: React.FC = () => {
           {/* Right: Image Preview */}
           <div>
             <div className="sticky top-8">
-              <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
-                <h3 className="text-sm font-bold text-slate-400 uppercase mb-3">Image Preview</h3>
+              <div className="bg-warm-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
+                <h3 className="text-sm font-bold text-warm-400 uppercase mb-3">Image Preview</h3>
                 {resolvedImageUrl ? (
                   <div className="rounded-xl overflow-hidden border border-white/10">
                     <IpfsImage
@@ -409,23 +409,23 @@ export const MintNftPage: React.FC = () => {
                       alt={name || 'Preview'}
                       className="w-full"
                       fallback={
-                        <div className="w-full aspect-video bg-slate-800 flex items-center justify-center text-slate-500 text-sm">
+                        <div className="w-full aspect-video bg-warm-800 flex items-center justify-center text-warm-500 text-sm">
                           Failed to load image
                         </div>
                       }
                     />
                   </div>
                 ) : (
-                  <div className="w-full aspect-video bg-slate-800/50 rounded-xl border border-white/5 flex items-center justify-center">
-                    <span className="text-slate-600 text-sm">No image set</span>
+                  <div className="w-full aspect-video bg-warm-800/50 rounded-xl border border-white/5 flex items-center justify-center">
+                    <span className="text-warm-600 text-sm">No image set</span>
                   </div>
                 )}
 
                 {/* Metadata preview */}
                 {(cid || name) && (
                   <div className="mt-4">
-                    <h4 className="text-xs font-bold text-slate-500 uppercase mb-2">Metadata JSON</h4>
-                    <pre className="bg-slate-950 border border-white/10 rounded-lg p-3 text-[10px] font-mono text-blue-400 overflow-auto max-h-32">
+                    <h4 className="text-xs font-bold text-warm-500 uppercase mb-2">Metadata JSON</h4>
+                    <pre className="bg-warm-950 border border-white/10 rounded-lg p-3 text-[10px] font-mono text-blue-400 overflow-auto max-h-32">
                       {JSON.stringify({
                         type: nftType,
                         name: name || '...',
@@ -435,7 +435,7 @@ export const MintNftPage: React.FC = () => {
                     </pre>
                     <p className={`text-[10px] mt-1 ${
                       JSON.stringify({ type: nftType, name, image: `ipfs://${cid}`, description }).length > 256
-                        ? 'text-red-500' : 'text-slate-600'
+                        ? 'text-red-500' : 'text-warm-600'
                     }`}>
                       {JSON.stringify({ type: nftType, name, image: `ipfs://${cid}`, description }).length}/256 bytes
                     </p>
