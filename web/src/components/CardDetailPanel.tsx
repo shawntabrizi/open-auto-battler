@@ -554,16 +554,14 @@ export function CardDetailPanel({
           </h3>
           <div className="grid grid-cols-2 gap-2 text-[10px] lg:text-xs">
             <div className="flex items-center gap-1.5">
-              <div className="cost-badge w-5 h-6 lg:w-6 lg:h-7 rounded flex flex-col items-center justify-center font-stat font-bold text-white text-[10px] lg:text-xs flex-shrink-0">
-                <BoltIcon className="w-2 h-2 opacity-30" />
-                <span className="-mt-px">3</span>
+              <div className="cost-badge w-5 h-5 lg:w-6 lg:h-6 rounded-lg flex items-center justify-center font-stat font-bold text-white text-[10px] lg:text-xs flex-shrink-0">
+                3
               </div>
               <span className="text-warm-300">Mana Cost</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="pitch-badge w-5 h-6 lg:w-6 lg:h-7 rounded flex flex-col items-center justify-center font-stat font-bold text-[10px] lg:text-xs flex-shrink-0">
-                <FlameIcon className="w-2 h-2 opacity-30" />
-                <span className="-mt-px">2</span>
+              <div className="pitch-badge w-5 h-5 lg:w-6 lg:h-6 rounded-lg flex items-center justify-center font-stat font-bold text-[10px] lg:text-xs flex-shrink-0">
+                2
               </div>
               <span className="text-warm-300">Pitch Value</span>
             </div>
@@ -587,7 +585,7 @@ export function CardDetailPanel({
             </div>
           </div>
           <p className="mt-2 text-[10px] lg:text-xs text-warm-500 leading-relaxed">
-            Blue bolt = mana spent to play. Gold flame = mana gained when pitched. Yellow circle = has an ability.
+            Blue = mana spent to play. Gold = mana gained when pitched. Yellow circle = has an ability.
           </p>
         </section>
 

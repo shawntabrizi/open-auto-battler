@@ -2,7 +2,7 @@ import React from 'react';
 import type { CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import { getCardArtMd, hasCardArt } from '../utils/cardArt';
-import { SwordIcon, HeartIcon, CloseIcon, BoltIcon, FlameIcon } from './Icons';
+import { SwordIcon, HeartIcon, CloseIcon } from './Icons';
 
 interface CardDetailModalProps {
   card: CardView;
@@ -215,16 +215,14 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           {/* Costs */}
           <div className="flex gap-4 mt-4">
             <div className="flex items-center gap-1.5">
-              <div className="cost-badge w-7 h-8 rounded-lg flex flex-col items-center justify-center font-stat font-bold">
-                <BoltIcon className="w-2.5 h-2.5 opacity-30" />
-                <span className="text-xs -mt-0.5">{card.play_cost}</span>
+              <div className="cost-badge w-7 h-7 rounded-lg flex items-center justify-center font-stat font-bold text-sm">
+                {card.play_cost}
               </div>
               <span className="text-xs text-warm-400">Cost</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="pitch-badge w-7 h-8 rounded-lg flex flex-col items-center justify-center font-stat font-bold">
-                <FlameIcon className="w-2.5 h-2.5 opacity-30" />
-                <span className="text-xs -mt-0.5">{card.pitch_value}</span>
+              <div className="pitch-badge w-7 h-7 rounded-lg flex items-center justify-center font-stat font-bold text-sm">
+                {card.pitch_value}
               </div>
               <span className="text-xs text-warm-400">Pitch</span>
             </div>

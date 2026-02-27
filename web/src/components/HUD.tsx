@@ -16,8 +16,6 @@ import {
   CardIcon,
   SwordIcon,
   AbilityIcon,
-  BoltIcon,
-  FlameIcon,
 } from './Icons';
 import battleSwordIcon from '../../battle-sword.svg';
 
@@ -325,16 +323,14 @@ function RulesOverlay({ onClose }: { onClose: () => void }) {
           </h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2">
-              <div className="cost-badge w-7 h-8 rounded flex flex-col items-center justify-center font-stat font-bold text-white text-xs flex-shrink-0">
-                <BoltIcon className="w-2.5 h-2.5 opacity-30" />
-                <span className="-mt-px">3</span>
+              <div className="cost-badge w-7 h-7 rounded-lg flex items-center justify-center font-stat font-bold text-white text-xs flex-shrink-0">
+                3
               </div>
               <span className="text-warm-300">Mana Cost</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="pitch-badge w-7 h-8 rounded flex flex-col items-center justify-center font-stat font-bold text-xs flex-shrink-0">
-                <FlameIcon className="w-2.5 h-2.5 opacity-30" />
-                <span className="-mt-px">2</span>
+              <div className="pitch-badge w-7 h-7 rounded-lg flex items-center justify-center font-stat font-bold text-xs flex-shrink-0">
+                2
               </div>
               <span className="text-warm-300">Pitch Value</span>
             </div>
@@ -358,7 +354,7 @@ function RulesOverlay({ onClose }: { onClose: () => void }) {
             </div>
           </div>
           <p className="mt-2 text-sm text-warm-500 leading-relaxed">
-            Blue bolt = mana spent to play. Gold flame = mana gained when pitched. Yellow circle = has an ability.
+            Blue = mana spent to play. Gold = mana gained when pitched. Yellow circle = has an ability.
           </p>
         </section>
 
