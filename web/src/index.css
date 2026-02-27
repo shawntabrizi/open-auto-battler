@@ -115,12 +115,12 @@ body {
 
 /* ── Cost & Pitch badge treatments ── */
 .cost-badge {
-  background: linear-gradient(180deg, #6da3be 0%, #4a7a94 40%, #3d6a82 100%);
-  border: 1.5px solid rgba(135, 195, 225, 0.4);
+  background: linear-gradient(180deg, #6ea8c8 0%, #5b8faa 40%, #3e6f8c 100%);
+  border: 1.5px solid rgba(110, 168, 200, 0.5);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 1px 0 rgba(200, 230, 255, 0.25),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15),
-    0 0 6px rgba(91, 143, 170, 0.5);
+    0 0 6px rgba(91, 143, 200, 0.5);
 }
 
 .pitch-badge {

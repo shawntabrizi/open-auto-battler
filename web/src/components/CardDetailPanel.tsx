@@ -579,9 +579,15 @@ export function CardDetailPanel({
               </div>
               <span className="text-warm-300">Health</span>
             </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-yellow-500 border border-yellow-300 flex items-center justify-center flex-shrink-0">
+                <AbilityIcon className="w-2.5 h-2.5" />
+              </div>
+              <span className="text-warm-300">Has Ability</span>
+            </div>
           </div>
           <p className="mt-2 text-[10px] lg:text-xs text-warm-500 leading-relaxed">
-            Blue bolt = mana spent to play. Gold flame = mana gained when pitched.
+            Blue bolt = mana spent to play. Gold flame = mana gained when pitched. Yellow circle = has an ability.
           </p>
         </section>
 

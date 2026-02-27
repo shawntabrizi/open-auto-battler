@@ -350,9 +350,15 @@ function RulesOverlay({ onClose }: { onClose: () => void }) {
               </div>
               <span className="text-warm-300">Health</span>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-yellow-500 border border-yellow-300 flex items-center justify-center flex-shrink-0">
+                <AbilityIcon className="w-3 h-3" />
+              </div>
+              <span className="text-warm-300">Has Ability</span>
+            </div>
           </div>
           <p className="mt-2 text-sm text-warm-500 leading-relaxed">
-            Blue bolt = mana spent to play. Gold flame = mana gained when pitched.
+            Blue bolt = mana spent to play. Gold flame = mana gained when pitched. Yellow circle = has an ability.
           </p>
         </section>
 
