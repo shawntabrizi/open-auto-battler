@@ -66,7 +66,7 @@ Open http://localhost:5173 and click "Blockchain Mode".
 auto-battle/
 ├── core/          # The heart: battle engine, shared by browser & chain
 ├── client/        # WASM wrapper around core for browser
-├── blockchain/    # Substrate node + auto-battle pallet
+├── blockchain/    # Substrate runtime + auto-battle pallet
 ├── web/           # React frontend
 └── docs/          # You are here
 ```
@@ -130,7 +130,7 @@ The WASM engine logs to console. Look for:
 
 ### Chain Logs
 
-The Substrate node outputs block info and extrinsic results.
+Omni Node outputs block info and extrinsic results.
 
 ### State Inspection
 

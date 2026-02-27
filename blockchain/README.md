@@ -23,7 +23,6 @@
 
   - [Omni Node](#omni-node-prerequisites)
   - [Zombienet setup with Omni Node](#zombienet-setup-with-omni-node)
-  - [Parachain Template Node](#auto-battle-node)
   - [Connect with the Polkadot-JS Apps Front-End](#connect-with-the-polkadot-js-apps-front-end)
   - [Takeaways](#takeaways)
 
@@ -49,9 +48,7 @@ A Polkadot SDK based project such as this one consists of:
 
 - 🧮 the [Runtime](./runtime/README.md) - the core logic of the parachain.
 - 🎨 the [Pallets](./pallets/README.md) - from which the runtime is constructed.
-- 💿 a [Node](./node/README.md) - the binary application, not part of the project default-members list and not compiled unless
-  building the project with `--workspace` flag, which builds all workspace members, and is an alternative to
-  [Omni Node](https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/reference_docs/omni_node/index.html).
+- 🖥️ [Omni Node](https://paritytech.github.io/polkadot-sdk/master/polkadot_sdk_docs/reference_docs/omni_node/index.html) - used to run the parachain.
 
 ## Getting Started
 
@@ -167,28 +164,6 @@ chain_spec_path = "<TO BE UPDATED WITH A VALID PATH>"
 zombienet --provider native spawn zombienet-omni-node.toml
 ```
 
-### Parachain Template Node
-
-As mentioned in the `Template Structure` section, the `node` crate is optionally compiled and it is an alternative
-to `Omni Node`. Similarly, it requires setting up a relay chain, and we'll use `zombienet` once more.
-
-#### Install the `auto-battle-node`
-
-```sh
-cargo install --path node
-```
-
-#### Setup and start the network
-
-For setup, please consider the instructions for `zombienet` installation [here](https://paritytech.github.io/zombienet/install.html#installation)
-and [relay chain prerequisites](#relay-chain-prerequisites).
-
-We're left just with starting the network:
-
-```sh
-zombienet --provider native spawn zombienet.toml
-```
-
 ### Connect with the Polkadot-JS Apps Front-End
 
 - 🌐 You can interact with your local node using the
@@ -238,9 +213,8 @@ npx @acala-network/chopsticks@latest --chain-spec <path/to/chain_spec.json>
 
 ### Alternatives
 
-`OmniNode` can be still used for runtime development if using the `--dev` flag, while `auto-battle-node` doesn't
-support it at this moment. It can still be used to test a runtime in a full setup where it is started alongside a
-relay chain network (see [Parachain Template node](#auto-battle-node) setup).
+`OmniNode` can be used for runtime development with the `--dev` flag, or in a full setup alongside a
+relay chain network (see [Zombienet setup with Omni Node](#zombienet-setup-with-omni-node)).
 
 ## Contributing
 

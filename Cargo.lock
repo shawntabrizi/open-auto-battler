@@ -1264,22 +1264,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "auto-battle-node"
-version = "0.1.0"
-dependencies = [
- "auto-battle-runtime",
- "clap",
- "color-print",
- "docify",
- "futures",
- "jsonrpsee",
- "log",
- "polkadot-sdk 2503.2.0",
- "serde",
- "substrate-prometheus-endpoint",
-]
-
-[[package]]
 name = "auto-battle-runtime"
 version = "0.1.0"
 dependencies = [

@@ -22,8 +22,8 @@ jobs:
       - uses: ./.github/actions/free-disk-space
       - uses: ./.github/actions/ubuntu-dependencies
 
-      - name: Build the node individually in release mode
-        run: cargo build --package auto-battle-node --release
+      - name: Build the runtime in release mode
+        run: cargo build --release --locked
         timeout-minutes: 90
 
       - name: Download relaychain binaries

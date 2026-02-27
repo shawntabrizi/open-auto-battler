@@ -6,7 +6,7 @@ This document is derived from the source code structure and entry points.
 - `core/` Rust game engine and rules. Entry in `core/src/lib.rs`.
 - `client/` WASM bridge exposing the engine to JavaScript. Entry in `client/src/lib.rs` and `client/src/engine.rs`.
 - `web/` React UI and state management. Entry in `web/src/main.tsx` and `web/src/App.tsx`.
-- `blockchain/` Substrate node, runtime, and the `auto-battle` pallet. Entry in `blockchain/pallets/auto-battle/src/lib.rs` and `blockchain/runtime/src/lib.rs`.
+- `blockchain/` Substrate runtime and the `auto-battle` pallet (runs via Omni Node). Entry in `blockchain/pallets/auto-battle/src/lib.rs` and `blockchain/runtime/src/lib.rs`.
 
 ## Primary Data Flow
 1. Core game logic lives in `core/src/*` and defines all types and rules.

@@ -3,7 +3,6 @@ resolver = "2"
 members = [
     "core",
     "client",
-    "blockchain/node",
     "blockchain/pallets/auto-battle",
     "blockchain/runtime",
 ]
@@ -19,14 +18,9 @@ edition = "2021"
 oab-core = { path = "./core", default-features = false }
 auto-battle-runtime = { path = "./blockchain/runtime", default-features = false }
 pallet-auto-battle = { path = "./blockchain/pallets/auto-battle", default-features = false }
-clap = { version = "4.5.13" }
-color-print = { version = "0.3.4" }
 docify = { version = "0.2.9" }
-futures = { version = "0.3.31" }
-jsonrpsee = { version = "0.24.3" }
 log = { version = "0.4.22", default-features = false }
 polkadot-sdk = { version = "2503.0.1", default-features = false }
-prometheus-endpoint = { version = "0.17.2", default-features = false, package = "substrate-prometheus-endpoint" }
 serde = { version = "1.0.214", default-features = false }
 codec = { version = "3.7.4", default-features = false, package = "parity-scale-codec" }
 parity-scale-codec = { version = "3.7.4", default-features = false }

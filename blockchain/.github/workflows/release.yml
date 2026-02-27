@@ -61,5 +61,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            target/production/auto-battle-node
             target/production/wbuild/auto-battle-runtime/auto_battle_runtime.compact.compressed.wasm

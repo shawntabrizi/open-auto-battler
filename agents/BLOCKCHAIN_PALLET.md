@@ -20,7 +20,7 @@ This document is derived from `blockchain/pallets/auto-battle/src/lib.rs` and ru
 
 ## Runtime Integration
 - Runtime wiring is in `blockchain/runtime/src/lib.rs` and `blockchain/runtime/src/configs/*`.
-- Node entry is in `blockchain/node/src/main.rs`.
+- The chain runs via [Omni Node](https://crates.io/crates/polkadot-omni-node).
 
 ## Update Rules
 - When core types change, update bounded types and SCALE encoding in the pallet.
