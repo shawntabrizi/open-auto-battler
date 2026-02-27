@@ -14,7 +14,8 @@ use oab_core::battle::{
 };
 use oab_core::bounded::{BoundedCardSet, BoundedLocalGameState};
 use oab_core::commit::{
-    apply_on_buy_triggers, apply_on_sell_triggers, apply_shop_start_triggers, verify_and_apply_turn,
+    apply_on_buy_triggers, apply_on_sell_triggers, apply_shop_start_triggers,
+    apply_shop_start_triggers_with_result, verify_and_apply_turn,
 };
 use oab_core::log;
 use oab_core::opponents::get_opponent_for_round;
@@ -558,7 +559,16 @@ impl GameEngine {
         self.state.mana_limit = self.state.calculate_mana_limit();
         self.state.phase = GamePhase::Shop;
         self.state.draw_hand();
-        apply_shop_start_triggers(&mut self.state);
+        let previous_battle_result = self.last_battle_output.as_ref().and_then(|output| {
+            output.events.iter().rev().find_map(|event| {
+                if let CombatEvent::BattleEnd { result } = event {
+                    Some(result.clone())
+                } else {
+                    None
+                }
+            })
+        });
+        apply_shop_start_triggers_with_result(&mut self.state, previous_battle_result);
         self.start_planning_phase();
 
         self.log_state();

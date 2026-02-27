@@ -41,7 +41,14 @@ const BATTLE_TRIGGERS: BattleTrigger[] = [
   'AfterAnyAttack',
 ];
 
-const SHOP_TRIGGERS: ShopTrigger[] = ['OnBuy', 'OnSell', 'OnShopStart'];
+const SHOP_TRIGGERS: ShopTrigger[] = [
+  'OnBuy',
+  'OnSell',
+  'OnShopStart',
+  'AfterLoss',
+  'AfterWin',
+  'AfterDraw',
+];
 
 const BATTLE_SCOPES: BattleScope[] = [
   'SelfUnit',

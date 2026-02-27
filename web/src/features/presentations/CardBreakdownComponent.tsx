@@ -76,6 +76,12 @@ function formatTrigger(trigger: string): string {
       return 'On Sell';
     case 'OnShopStart':
       return 'Shop Start';
+    case 'AfterLoss':
+      return 'After Loss';
+    case 'AfterWin':
+      return 'After Win';
+    case 'AfterDraw':
+      return 'After Draw';
     case 'OnSpawn':
       return 'On Spawn';
     case 'BeforeUnitAttack':

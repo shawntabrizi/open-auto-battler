@@ -9,8 +9,9 @@ use oab_core::bounded::{
 use oab_core::rng::BattleRng;
 use oab_core::units::create_starting_bag;
 use oab_core::{
-    apply_shop_start_triggers, resolve_battle, verify_and_apply_turn, BattleResult, CardSet,
-    CombatUnit, CommitTurnAction, GamePhase, GameState, UnitCard, XorShiftRng,
+    apply_shop_start_triggers, apply_shop_start_triggers_with_result, resolve_battle,
+    verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, GamePhase,
+    GameState, UnitCard, XorShiftRng,
 };
 
 /// Transient struct holding everything needed for battle execution.
@@ -378,7 +379,7 @@ impl<T: Config> Pallet<T> {
             battle.core_state.local_state.mana_limit = battle.core_state.calculate_mana_limit();
             battle.core_state.local_state.phase = GamePhase::Shop;
             battle.core_state.draw_hand();
-            apply_shop_start_triggers(&mut battle.core_state);
+            apply_shop_start_triggers_with_result(&mut battle.core_state, Some(result.clone()));
             new_seed
         } else {
             0

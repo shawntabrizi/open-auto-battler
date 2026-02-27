@@ -373,6 +373,9 @@ pub enum ShopTrigger {
     OnBuy,
     OnSell,
     OnShopStart,
+    AfterLoss,
+    AfterWin,
+    AfterDraw,
 }
 
 /// Battle ability effect types.

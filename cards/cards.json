@@ -2035,7 +2035,7 @@
     },
     "shop_abilities": [
       {
-        "trigger": "OnShopStart",
+        "trigger": "AfterLoss",
         "effect": {
           "type": "ModifyStatsPermanent",
           "health": 1,
@@ -2048,7 +2048,7 @@
           }
         },
         "name": "Slow Support",
-        "description": "Shop start: Give allies +1 health permanently (after-loss condition approximated)",
+        "description": "After loss: Give allies +1 health permanently",
         "conditions": [],
         "max_triggers": null
       }

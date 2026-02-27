@@ -265,7 +265,7 @@ fn normalize_shop_ability(
     all_card_ids: &BTreeSet<u32>,
 ) -> JsonAbility {
     match ability.trigger.as_str() {
-        "OnBuy" | "OnSell" | "OnShopStart" => {}
+        "OnBuy" | "OnSell" | "OnShopStart" | "AfterLoss" | "AfterWin" | "AfterDraw" => {}
         other => panic!(
             "Card {card_id} ability '{}' uses shop lane with invalid trigger '{other}'",
             ability.name
@@ -373,7 +373,7 @@ fn normalize_battle_ability(
         "OnStart" | "OnFaint" | "OnAllyFaint" | "OnHurt" | "OnSpawn" | "OnAllySpawn"
         | "OnEnemySpawn" | "BeforeUnitAttack" | "AfterUnitAttack" | "BeforeAnyAttack"
         | "AfterAnyAttack" => {}
-        "OnBuy" | "OnSell" | "OnShopStart" => panic!(
+        "OnBuy" | "OnSell" | "OnShopStart" | "AfterLoss" | "AfterWin" | "AfterDraw" => panic!(
             "Card {card_id} ability '{}' uses battle lane with shop trigger '{}'",
             ability.name, ability.trigger
         ),

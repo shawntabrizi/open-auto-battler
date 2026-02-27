@@ -67,7 +67,13 @@ export type BattleTrigger =
   | 'BeforeAnyAttack'
   | 'AfterAnyAttack';
 
-export type ShopTrigger = 'OnBuy' | 'OnSell' | 'OnShopStart';
+export type ShopTrigger =
+  | 'OnBuy'
+  | 'OnSell'
+  | 'OnShopStart'
+  | 'AfterLoss'
+  | 'AfterWin'
+  | 'AfterDraw';
 
 export type BattleTarget =
   | { type: 'Position'; data: { scope: BattleScope; index: number } }

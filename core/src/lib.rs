@@ -30,7 +30,9 @@ pub mod bounded;
 pub use battle::{
     resolve_battle, BattlePhase, BattleResult, CombatEvent, CombatUnit, UnitId, UnitView,
 };
-pub use commit::{apply_shop_start_triggers, verify_and_apply_turn};
+pub use commit::{
+    apply_shop_start_triggers, apply_shop_start_triggers_with_result, verify_and_apply_turn,
+};
 pub use error::{GameError, GameResult};
 pub use limits::{BattleLimits, LimitReason, Team};
 pub use opponents::{

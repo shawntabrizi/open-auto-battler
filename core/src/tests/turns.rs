@@ -581,3 +581,105 @@ fn test_on_shop_start_keeps_carryover_and_clamps_to_limit() {
         "Shop start should preserve carryover model but clamp to mana limit"
     );
 }
+
+#[test]
+fn test_after_battle_shop_triggers_fire_by_result() {
+    use crate::battle::BattleResult;
+    use crate::commit::apply_shop_start_triggers_with_result;
+
+    fn build_state(seed: u64) -> GameState {
+        let mut state = GameState::new(seed);
+
+        let unit_id = state.generate_card_id();
+        let unit = UnitCard::new(unit_id, "ResultAware", 1, 2, 1, 1).with_shop_abilities(vec![
+            ShopAbility {
+                trigger: ShopTrigger::AfterLoss,
+                effect: ShopEffect::ModifyStatsPermanent {
+                    health: 1,
+                    attack: 0,
+                    target: ShopTarget::All {
+                        scope: ShopScope::SelfUnit,
+                    },
+                },
+                name: "After Loss".to_string(),
+                description: "Gain +1 health after losing".to_string(),
+                conditions: vec![],
+                max_triggers: None,
+            },
+            ShopAbility {
+                trigger: ShopTrigger::AfterWin,
+                effect: ShopEffect::ModifyStatsPermanent {
+                    health: 0,
+                    attack: 1,
+                    target: ShopTarget::All {
+                        scope: ShopScope::SelfUnit,
+                    },
+                },
+                name: "After Win".to_string(),
+                description: "Gain +1 attack after winning".to_string(),
+                conditions: vec![],
+                max_triggers: None,
+            },
+            ShopAbility {
+                trigger: ShopTrigger::AfterDraw,
+                effect: ShopEffect::GainMana { amount: 1 },
+                name: "After Draw".to_string(),
+                description: "Gain 1 mana after drawing".to_string(),
+                conditions: vec![],
+                max_triggers: None,
+            },
+        ]);
+
+        state.card_pool.insert(unit_id, unit);
+        state.board[0] = Some(BoardUnit::new(unit_id));
+        state
+    }
+
+    let mut loss_state = build_state(41);
+    apply_shop_start_triggers_with_result(&mut loss_state, Some(BattleResult::Defeat));
+    let loss_unit = loss_state.board[0].as_ref().unwrap();
+    assert_eq!(
+        loss_unit.perm_health, 1,
+        "AfterLoss should grant +1 permanent health"
+    );
+    assert_eq!(
+        loss_unit.perm_attack, 0,
+        "AfterWin should not fire on a loss result"
+    );
+    assert_eq!(
+        loss_state.shop_mana, 0,
+        "AfterDraw should not fire on a loss result"
+    );
+
+    let mut win_state = build_state(42);
+    apply_shop_start_triggers_with_result(&mut win_state, Some(BattleResult::Victory));
+    let win_unit = win_state.board[0].as_ref().unwrap();
+    assert_eq!(
+        win_unit.perm_attack, 1,
+        "AfterWin should grant +1 permanent attack"
+    );
+    assert_eq!(
+        win_unit.perm_health, 0,
+        "AfterLoss should not fire on a win result"
+    );
+    assert_eq!(
+        win_state.shop_mana, 0,
+        "AfterDraw should not fire on a win result"
+    );
+
+    let mut draw_state = build_state(43);
+    apply_shop_start_triggers_with_result(&mut draw_state, Some(BattleResult::Draw));
+    let draw_unit = draw_state.board[0].as_ref().unwrap();
+    assert_eq!(
+        draw_state.shop_mana, 1,
+        "AfterDraw should grant mana at shop start"
+    );
+    assert_eq!(
+        draw_unit.perm_attack, 0,
+        "AfterWin should not fire on a draw result"
+    );
+    assert_eq!(
+        draw_unit.perm_health, 0,
+        "AfterLoss should not fire on a draw result"
+    );
+}

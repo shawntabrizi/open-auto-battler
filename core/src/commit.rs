@@ -14,10 +14,14 @@ use crate::types::{
     CardId, CommitTurnAction, CompareOp, ShopAbility, ShopCondition, ShopEffect, ShopMatcher,
     ShopScope, ShopTarget, ShopTrigger, StatType, TurnAction,
 };
+use crate::BattleResult;
 
 const SHOP_START_SALT: u64 = 0x5348_4f50_0000_0001;
 const SHOP_BUY_SALT: u64 = 0x5348_4f50_0000_0002;
 const SHOP_SELL_SALT: u64 = 0x5348_4f50_0000_0003;
+const SHOP_AFTER_LOSS_SALT: u64 = 0x5348_4f50_0000_0004;
+const SHOP_AFTER_WIN_SALT: u64 = 0x5348_4f50_0000_0005;
+const SHOP_AFTER_DRAW_SALT: u64 = 0x5348_4f50_0000_0006;
 
 #[derive(Clone)]
 struct ShopPendingAbility {
@@ -30,9 +34,31 @@ struct ShopPendingAbility {
 ///
 /// This should be called exactly once when entering a new shop phase.
 pub fn apply_shop_start_triggers(state: &mut GameState) {
+    apply_shop_start_triggers_with_result(state, None);
+}
+
+/// Apply shop-start triggers for all units currently on the board.
+///
+/// Runs `OnShopStart`, then one of `AfterLoss` / `AfterWin` / `AfterDraw`
+/// if a previous battle result is provided.
+pub fn apply_shop_start_triggers_with_result(
+    state: &mut GameState,
+    previous_battle_result: Option<BattleResult>,
+) {
     state.shop_mana = state.shop_mana.clamp(0, state.mana_limit);
-    let mut rng = shop_rng(state, SHOP_START_SALT);
-    execute_shop_trigger(state, ShopTrigger::OnShopStart, None, None, &mut rng);
+    let mut start_rng = shop_rng(state, SHOP_START_SALT);
+    execute_shop_trigger(state, ShopTrigger::OnShopStart, None, None, &mut start_rng);
+
+    if let Some(result) = previous_battle_result {
+        let (trigger, salt) = match result {
+            BattleResult::Defeat => (ShopTrigger::AfterLoss, SHOP_AFTER_LOSS_SALT),
+            BattleResult::Victory => (ShopTrigger::AfterWin, SHOP_AFTER_WIN_SALT),
+            BattleResult::Draw => (ShopTrigger::AfterDraw, SHOP_AFTER_DRAW_SALT),
+        };
+        let mut outcome_rng = shop_rng(state, salt);
+        execute_shop_trigger(state, trigger, None, None, &mut outcome_rng);
+    }
+
     state.shop_mana = state.shop_mana.clamp(0, state.mana_limit);
 }
 
