@@ -12,6 +12,7 @@ export default {
       colors: {
         'mana-blue': '#5b8faa',
         'pitch-red': '#b85c4a',
+        'pitch-gold': '#d4a843',
         gold: '#d4a843',
         'card-bg': '#1e1a14',
         'board-bg': '#161310',
@@ -168,6 +169,10 @@ export default {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
+        'panel-card-enter': {
+          '0%': { opacity: '0', transform: 'translateY(12px) scale(0.97)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
       },
       animation: {
         'idle-wobble': 'idle-wobble 3.5s ease-in-out infinite',
@@ -192,6 +197,7 @@ export default {
         'pip-fill': 'pip-fill 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both',
         'glow-breathe': 'glow-breathe 2.5s ease-in-out infinite',
         'vignette-creep': 'vignette-creep 1.5s ease-out forwards',
+        'panel-card-enter': 'panel-card-enter 0.4s var(--spring-bounce) both',
       },
     },
   },

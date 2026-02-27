@@ -119,7 +119,7 @@ function GameShellInner({
 
       {/* Zone 4: Shop (Hand) — hidden on mobile when board tab is active, expands on hand tab */}
       <div
-        className={`game-shop ${mHand ? 'flex-1 min-h-0' : 'flex-shrink-0'} lg:flex-shrink-0 ${contentMargin} ${mBoard ? 'hidden lg:block' : ''}`}
+        className={`game-shop ${mHand ? 'flex-1 min-h-0' : 'flex-shrink-0'} lg:flex-none ${contentMargin} ${mBoard ? 'hidden lg:block' : ''}`}
       >
         <Shop expandMobile={mHand} />
       </div>

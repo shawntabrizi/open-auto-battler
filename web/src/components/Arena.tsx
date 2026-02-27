@@ -138,7 +138,7 @@ export function Arena() {
 
   return (
     <div
-      className="arena flex-1 flex flex-col items-center justify-center relative"
+      className="arena flex-1 flex flex-col items-center justify-center relative min-w-0"
       style={
         boardBg
           ? {
@@ -260,7 +260,7 @@ export function Arena() {
       </div>
 
       {/* Mobile board tab: ability info + pitch + undo */}
-      <div className="lg:hidden flex-shrink-0 flex items-center gap-2 px-2 py-1 bg-warm-900/95 border-t border-warm-700/50 w-full">
+      <div className="lg:hidden flex-shrink-0 flex items-center gap-2 safe-area-lr py-1 bg-warm-900/95 border-t border-warm-700/50 w-full">
         <div
           className="flex-1 min-w-0 mr-2 cursor-pointer"
           onClick={() => {

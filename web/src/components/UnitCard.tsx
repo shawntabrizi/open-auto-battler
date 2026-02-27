@@ -4,11 +4,11 @@ import { getCardArtSm } from '../utils/cardArt';
 import { useCustomizationStore } from '../store/customizationStore';
 import { useAudioStore } from '../store/audioStore';
 import { useCardTilt } from '../hooks/useCardTilt';
-import { SwordIcon, HeartIcon, AbilityIcon } from './Icons';
+import { SwordIcon, HeartIcon, AbilityIcon, BoltIcon, FlameIcon } from './Icons';
 import { CARD_SIZES, CARD_TEXT, type CardSizeVariant } from '../constants/cardSizes';
 
 /** Derive a visual rarity tier from play_cost + ability count. */
-function getRarityTier(card: CardView | BoardUnitView): 'common' | 'uncommon' | 'rare' | 'legendary' {
+export function getRarityTier(card: CardView | BoardUnitView): 'common' | 'uncommon' | 'rare' | 'legendary' {
   const cost = card.play_cost;
   const abilityCount = card.abilities.length;
   if (cost >= 5 || (cost >= 4 && abilityCount >= 2)) return 'legendary';
@@ -18,7 +18,7 @@ function getRarityTier(card: CardView | BoardUnitView): 'common' | 'uncommon' | 
 }
 
 /** Border and glow styles per rarity tier. */
-const RARITY_STYLES = {
+export const RARITY_STYLES = {
   common: {
     border: 'border-amber-900/60',
     glow: '',
@@ -151,25 +151,25 @@ export function UnitCard({
         </div>
       </div>
 
-      {/* Cost badge (top left) */}
+      {/* Cost badge (top left) — blue mana bolt */}
       {showCost && (
         <div
-          className={`card-cost-badge absolute -top-0.5 -left-0.5 lg:-top-1 lg:-left-1 z-10 ${text.badge} rounded-full flex items-center justify-center font-stat font-bold border lg:border-2 ${
-            can_afford
-              ? 'bg-mana-blue border-sky-300/40 shadow-[0_0_6px_rgba(91,143,170,0.5)]'
-              : 'bg-warm-600 border-warm-500/60 text-warm-400 shadow-sm'
+          className={`card-cost-badge absolute -top-0.5 -left-0.5 lg:-top-1 lg:-left-1 z-10 ${text.badge} rounded-lg flex flex-col items-center justify-center font-stat font-bold ${
+            can_afford ? 'cost-badge' : 'cost-badge-dim'
           }`}
         >
-          {card.play_cost}
+          <BoltIcon className="w-2.5 h-2.5 lg:w-3 lg:h-3 opacity-30 hidden lg:block absolute top-0.5" />
+          <span className="relative z-[1] lg:mt-1">{card.play_cost}</span>
         </div>
       )}
 
-      {/* Pitch value badge (top right) */}
+      {/* Pitch value badge (top right) — gold flame */}
       {showPitch && (
         <div
-          className={`card-pitch-badge absolute -top-0.5 -right-0.5 lg:-top-1 lg:-right-1 z-10 ${text.badge} bg-pitch-red rounded-full flex items-center justify-center font-stat font-bold border lg:border-2 border-red-800/60 shadow-sm`}
+          className={`card-pitch-badge absolute -top-0.5 -right-0.5 lg:-top-1 lg:-right-1 z-10 ${text.badge} pitch-badge rounded-lg flex flex-col items-center justify-center font-stat font-bold`}
         >
-          {card.pitch_value}
+          <FlameIcon className="w-2.5 h-2.5 lg:w-3 lg:h-3 opacity-30 hidden lg:block absolute top-0.5" />
+          <span className="relative z-[1] lg:mt-1">{card.pitch_value}</span>
         </div>
       )}
 

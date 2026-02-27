@@ -204,8 +204,9 @@ export function Shop({ expandMobile = false }: { expandMobile?: boolean }) {
                   {boardFull ? 'Full' : 'Deploy'}
                 </span>
                 {mobileSelected && (
-                  <span className={`text-[0.6rem] font-bold ${mobileCanAfford ? 'text-amber-800' : 'text-red-300'}`}>
-                    {mobileSelected.play_cost}⚡
+                  <span className={`text-[0.6rem] font-bold flex items-center gap-0.5 ${mobileCanAfford ? 'text-mana-blue' : 'text-red-300'}`}>
+                    {mobileSelected.play_cost}
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                   </span>
                 )}
               </button>
@@ -236,7 +237,7 @@ export function Shop({ expandMobile = false }: { expandMobile?: boolean }) {
 
         {/* Mobile bottom bar: ability info + pitch (droppable) + undo */}
         {expandMobile && (
-          <div className="lg:hidden flex-shrink-0 flex items-center gap-2 px-2 py-1 bg-warm-900/95 border-t border-warm-700/50">
+          <div className="lg:hidden flex-shrink-0 flex items-center gap-2 safe-area-lr py-1 bg-warm-900/95 border-t border-warm-700/50">
             <div
               className="flex-1 min-w-0 mr-2 cursor-pointer"
               onClick={() => {

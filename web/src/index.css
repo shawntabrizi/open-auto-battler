@@ -100,7 +100,44 @@ body {
 .game-layout {
   touch-action: manipulation;
   overscroll-behavior: contain;
+}
+
+/* Safe area padding for fullscreen overlays (battle, bag, etc.) */
+.safe-area-pad {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Left/right safe area with minimum padding for content bars */
+.safe-area-lr {
+  padding-left: max(0.5rem, env(safe-area-inset-left));
+  padding-right: max(0.5rem, env(safe-area-inset-right));
+}
+
+/* ── Cost & Pitch badge treatments ── */
+.cost-badge {
+  background: linear-gradient(180deg, #6da3be 0%, #4a7a94 40%, #3d6a82 100%);
+  border: 1.5px solid rgba(135, 195, 225, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    0 0 6px rgba(91, 143, 170, 0.5);
+}
+
+.pitch-badge {
+  background: linear-gradient(180deg, #e8c84a 0%, #d4a843 40%, #b8892a 100%);
+  border: 1.5px solid rgba(232, 200, 74, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 220, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    0 0 6px rgba(212, 168, 67, 0.5);
+  color: #2a1a00;
+}
+
+.cost-badge-dim {
+  background: linear-gradient(180deg, #554a3a 0%, #453a2a 100%);
+  border: 1.5px solid rgba(93, 79, 58, 0.6);
+  box-shadow: none;
+  color: #7d6b50;
 }
 
 /* Card styles */
@@ -668,6 +705,17 @@ body {
   @apply bg-red-700;
 }
 
+.btn-pitch {
+  background: linear-gradient(to bottom, #c9a02c, #a07a1a);
+  color: #fff8dc;
+  border-color: rgba(180, 130, 20, 0.5);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.btn-pitch:hover {
+  background: linear-gradient(to bottom, #d4af37, #b8892a);
+}
+
 .btn-disabled {
   @apply bg-warm-700 text-warm-500 cursor-not-allowed border-warm-600 shadow-none;
 }
@@ -1053,30 +1101,43 @@ body {
     height: 100svh;
     width: 100vw;
     overflow: hidden;
+    /* Safe area handled by child elements, not the container,
+       so backgrounds extend edge-to-edge */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .hud {
     height: 2.25rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
   }
 
   .arena {
     gap: 0.25rem;
-    padding: 0.25rem 0;
+    padding: 0;
     flex: 1;
     min-height: 0;
-    align-items: start;
   }
 
   .arena-surface {
-    padding: 0.25rem 0.25rem 0.25rem 0;
+    padding: 0;
     gap: 0.25rem;
   }
 
   .board-row {
-    padding-top: 0.125rem;
+    padding: 0.125rem 0.25rem;
     gap: 0.25rem;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    justify-content: center;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .board-row::-webkit-scrollbar {
+    display: none;
   }
 
   .board-label {
@@ -1135,6 +1196,7 @@ body {
   .card::before {
     display: none;
   }
+
 
   /* Card panel on left, full height on mobile */
   .card-detail-panel {
@@ -1447,4 +1509,75 @@ body {
 
 .set-tile:hover::before {
   background: radial-gradient(ellipse, rgba(212, 168, 67, 0.06) 0%, transparent 70%);
+}
+
+/* ── Sidebar card portrait effects (desktop only) ── */
+@media (min-width: 1024px) {
+  .sidebar-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .sidebar-particles::before,
+  .sidebar-particles::after,
+  .sidebar-particles span {
+    content: '';
+    position: absolute;
+    display: block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--particle-color, #92400e);
+    opacity: 0;
+  }
+
+  .sidebar-particles::before {
+    left: 25%;
+    bottom: 10%;
+    animation: sidebar-mote 4s ease-in-out infinite;
+  }
+
+  .sidebar-particles::after {
+    left: 70%;
+    bottom: 15%;
+    animation: sidebar-mote 5s ease-in-out 1.2s infinite;
+  }
+
+  .sidebar-particles span {
+    left: 48%;
+    bottom: 5%;
+    animation: sidebar-mote 4.5s ease-in-out 2.5s infinite;
+  }
+
+  @keyframes sidebar-mote {
+    0% {
+      opacity: 0;
+      transform: translateY(0) translateX(0);
+    }
+    15% {
+      opacity: 0.7;
+    }
+    85% {
+      opacity: 0.4;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-60px) translateX(8px);
+    }
+  }
+
+  .sidebar-legendary-pulse {
+    animation: sidebar-legendary-breathe 2.5s ease-in-out infinite;
+  }
+
+  @keyframes sidebar-legendary-breathe {
+    0%, 100% {
+      box-shadow: 0 0 8px rgba(251, 191, 36, 0.2), inset 0 0 4px rgba(251, 191, 36, 0.1);
+    }
+    50% {
+      box-shadow: 0 0 16px rgba(251, 191, 36, 0.4), inset 0 0 8px rgba(251, 191, 36, 0.15);
+    }
+  }
 }

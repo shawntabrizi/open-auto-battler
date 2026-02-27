@@ -12,7 +12,12 @@ import {
   SpeakerIcon,
   SpeakerMutedIcon,
   HourglassIcon,
-  WarningIcon
+  WarningIcon,
+  CardIcon,
+  SwordIcon,
+  AbilityIcon,
+  BoltIcon,
+  FlameIcon,
 } from './Icons';
 import battleSwordIcon from '../../battle-sword.svg';
 
@@ -123,6 +128,7 @@ interface HUDProps {
 export function HUD() {
   const { view, setShowBag, showBag, selection, startingLives, winsToVictory, mobileTab, setMobileTab } = useGameStore();
   const playerAvatar = useCustomizationStore((s) => s.selections.playerAvatar);
+  const [showRules, setShowRules] = useState(false);
 
   // Keyboard shortcut for Bag view
   useEffect(() => {
@@ -207,24 +213,35 @@ export function HUD() {
         )}
         {!isShopPhase && <div className="flex-1" />}
 
-        {/* Lives */}
-        <div className="flex items-center gap-0.5 flex-shrink-0">
-          <HeartIcon className="w-3.5 h-3.5 text-red-500" />
-          <span className="font-bold text-[0.7rem]">
-            <AnimatedValue value={view.lives} />/{startingLives}
-          </span>
+        {/* Lives, Wins, Info, Audio — evenly spaced */}
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          <div className="flex items-center gap-0.5">
+            <HeartIcon className="w-3.5 h-3.5 text-red-500" />
+            <span className="font-bold text-[0.7rem]">
+              <AnimatedValue value={view.lives} />/{startingLives}
+            </span>
+          </div>
+          <div className="flex items-center gap-0.5">
+            <StarIcon className="w-3.5 h-3.5 text-gold" />
+            <span className="font-bold text-[0.7rem]">
+              <AnimatedValue value={view.wins} />/{winsToVictory}
+            </span>
+          </div>
+          <button
+            onClick={() => setShowRules(true)}
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-warm-800 hover:bg-warm-700 text-warm-400 hover:text-warm-100 transition-colors"
+            title="Rules"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+            </svg>
+          </button>
+          <AudioControls />
         </div>
-
-        {/* Wins */}
-        <div className="flex items-center gap-0.5 flex-shrink-0">
-          <StarIcon className="w-3.5 h-3.5 text-gold" />
-          <span className="font-bold text-[0.7rem]">
-            <AnimatedValue value={view.wins} />/{winsToVictory}
-          </span>
-        </div>
-
-        <AudioControls />
       </div>
+
+      {/* Mobile rules overlay */}
+      {showRules && <RulesOverlay onClose={() => setShowRules(false)} />}
 
       {/* === DESKTOP: original full layout === */}
       {/* Left: Lives */}
@@ -277,6 +294,174 @@ export function HUD() {
           )}
         </div>
         <AudioControls />
+      </div>
+    </div>
+  );
+}
+
+function RulesOverlay({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-warm-950/95 flex flex-col safe-area-pad">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-warm-700/50">
+        <h2 className="text-lg font-bold text-gold">How to Play</h2>
+        <button
+          onClick={onClose}
+          className="w-8 h-8 rounded-full bg-warm-800 text-warm-300 flex items-center justify-center active:bg-warm-700"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+        {/* Card Anatomy Legend */}
+        <section>
+          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <CardIcon className="w-5 h-5" />
+            Reading a Card
+          </h3>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="cost-badge w-7 h-8 rounded flex flex-col items-center justify-center font-stat font-bold text-white text-xs flex-shrink-0">
+                <BoltIcon className="w-2.5 h-2.5 opacity-30" />
+                <span className="-mt-px">3</span>
+              </div>
+              <span className="text-warm-300">Mana Cost</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="pitch-badge w-7 h-8 rounded flex flex-col items-center justify-center font-stat font-bold text-xs flex-shrink-0">
+                <FlameIcon className="w-2.5 h-2.5 opacity-30" />
+                <span className="-mt-px">2</span>
+              </div>
+              <span className="text-warm-300">Pitch Value</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded bg-warm-800 border border-warm-700 flex items-center justify-center flex-shrink-0">
+                <SwordIcon className="w-3.5 h-3.5 text-red-400" />
+              </div>
+              <span className="text-warm-300">Attack</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded bg-warm-800 border border-warm-700 flex items-center justify-center flex-shrink-0">
+                <HeartIcon className="w-3.5 h-3.5 text-green-400" />
+              </div>
+              <span className="text-warm-300">Health</span>
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-warm-500 leading-relaxed">
+            Blue bolt = mana spent to play. Gold flame = mana gained when pitched.
+          </p>
+        </section>
+
+        <section>
+          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <BagIcon className="w-5 h-5" />
+            Your Cards
+          </h3>
+          <p className="text-sm text-warm-300 leading-relaxed">
+            You start with a <strong className="text-white">Bag</strong> full of cards. Each round,
+            you draw <strong className="text-white">5 cards</strong> into your hand. Cards you don't
+            use go back into your Bag for next time.
+          </p>
+          <p className="mt-2 text-sm text-warm-400 leading-relaxed">
+            But any card you play or pitch is gone from your Bag for good — so think carefully about
+            what you spend!
+          </p>
+        </section>
+
+        <section>
+          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <CardIcon className="w-5 h-5" />
+            Playing & Pitching
+          </h3>
+          <p className="text-sm text-warm-300 leading-relaxed">
+            Every card can be <strong className="text-blue-400">Played</strong> onto your board (up
+            to <strong className="text-white">5 slots</strong>) to fight, or{' '}
+            <strong className="text-amber-400">Pitched</strong> to gain Mana. You need Mana to play
+            cards, so you'll always be making tough choices about what to keep and what to
+            sacrifice.
+          </p>
+          <p className="mt-2 text-sm text-warm-400 leading-relaxed">
+            You can also pitch units already on your board if you need to make room or need more
+            Mana.
+          </p>
+        </section>
+
+        <section>
+          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <span className="w-5 h-5 rounded-full bg-mana-blue/40 border border-mana-blue/60 inline-block flex-shrink-0" />
+            Mana
+          </h3>
+          <ul className="space-y-2 text-sm text-warm-300">
+            <li className="flex items-start gap-2">
+              <span className="text-blue-400 font-bold mt-0.5">*</span>
+              <span>
+                You start each turn with <strong className="text-blue-400">0 Mana</strong> — pitch
+                cards to fill up.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-400 font-bold mt-0.5">*</span>
+              <span>
+                Your Mana tank starts at <strong className="text-white">3</strong> capacity and
+                grows by +1 each round, up to 10.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-400 font-bold mt-0.5">*</span>
+              <span>
+                You can pitch, spend, then pitch again in the same turn — just can't go over your
+                max.
+              </span>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <SwordIcon className="w-5 h-5" />
+            Battle
+          </h3>
+          <p className="text-sm text-warm-300 leading-relaxed">
+            When you end your turn, your units fight automatically! The two front units clash{' '}
+            <strong className="text-white">at the same time</strong>, dealing damage to each other
+            simultaneously. When a unit falls, the next one steps up. The team that loses all its
+            units first takes a loss.
+          </p>
+          <p className="mt-2 text-sm text-warm-400 leading-relaxed">
+            Many units have special <strong className="text-yellow-400">abilities</strong> that
+            trigger during battle — like buffing allies, damaging enemies, or spawning new units
+            when they die. When multiple abilities trigger at once, stronger units go first.
+          </p>
+        </section>
+
+        <section>
+          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <AbilityIcon className="w-5 h-5" />
+            Chain Reactions
+          </h3>
+          <p className="text-sm text-warm-300 leading-relaxed">
+            Abilities can cause <strong className="text-yellow-500">chain reactions</strong>. If a
+            unit dies and its death triggers a new effect, that happens right away — even in the
+            middle of another ability resolving. This is where clever combos come to life!
+          </p>
+        </section>
+
+        <section>
+          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <StarIcon className="w-5 h-5" />
+            Winning
+          </h3>
+          <p className="text-sm text-warm-300 leading-relaxed">
+            Win battles to earn <strong className="text-yellow-500">Stars</strong>. Collect{' '}
+            <strong className="text-yellow-500">10 Stars</strong> and you win the run! But be
+            careful — you start with just <strong className="text-red-400">3 lives</strong>. Lose
+            them all and it's game over.
+          </p>
+        </section>
       </div>
     </div>
   );

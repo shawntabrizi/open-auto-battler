@@ -50,6 +50,15 @@ export function StarOutlineIcon({ className = 'w-4 h-4' }: IconProps) {
 }
 
 /** Stylized flame — ash pile / burn */
+/** Mana bolt — cost indicator */
+export function BoltIcon({ className = 'w-4 h-4' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+    </svg>
+  );
+}
+
 export function FlameIcon({ className = 'w-4 h-4' }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>

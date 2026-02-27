@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import type { CardView } from '../types';
 import { getCardArtMd } from '../utils/cardArt';
-import { CardIcon, BookIcon, GearIcon, BagIcon, SwordIcon, StarIcon, AbilityIcon } from './Icons';
+import { CardIcon, BookIcon, GearIcon, BagIcon, SwordIcon, HeartIcon, StarIcon, AbilityIcon, BoltIcon, FlameIcon } from './Icons';
+import { getRarityTier } from './UnitCard';
 
 // Blockchain account type
 export interface BlockchainAccount {
@@ -42,6 +43,34 @@ export interface CardDetailPanelProps {
 
 type TabType = 'card' | 'rules' | 'mode';
 
+/** Sidebar-specific rarity styles (border, glow, accent bar, particle color). */
+const SIDEBAR_RARITY = {
+  common: {
+    border: 'border-amber-900/60',
+    glow: '#92400e',
+    accent: 'bg-amber-900/60',
+    particleColor: '#92400e',
+  },
+  uncommon: {
+    border: 'border-emerald-700/70',
+    glow: '#059669',
+    accent: 'bg-emerald-700/70',
+    particleColor: '#059669',
+  },
+  rare: {
+    border: 'border-sky-500/70',
+    glow: '#0ea5e9',
+    accent: 'bg-sky-500/70',
+    particleColor: '#0ea5e9',
+  },
+  legendary: {
+    border: 'border-amber-400/80',
+    glow: '#fbbf24',
+    accent: 'bg-amber-400/80',
+    particleColor: '#fbbf24',
+  },
+} as const;
+
 export function CardDetailPanel({
   card,
   isVisible,
@@ -57,6 +86,8 @@ export function CardDetailPanel({
   onSelectAccount,
 }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
+  const [animKey, setAnimKey] = React.useState(0);
+  const prevCardId = React.useRef<number | null>(null);
   const navigate = useNavigate();
   const {
     view,
@@ -85,6 +116,14 @@ export function CardDetailPanel({
               onSelectAccount,
             }
           : { type: 'standard' });
+
+  // Animate card content on card change (desktop only via CSS class)
+  React.useEffect(() => {
+    if (card && card.id !== prevCardId.current) {
+      prevCardId.current = card.id;
+      setAnimKey((k) => k + 1);
+    }
+  }, [card]);
 
   if (!isVisible) return null;
 
@@ -147,6 +186,28 @@ export function CardDetailPanel({
           return 'After Any Attack';
         default:
           return typeof type === 'string' ? type : 'Unknown';
+      }
+    };
+
+    /** Natural-language sentence prefix for each trigger type. */
+    const getTriggerPrefix = (trigger: any): string => {
+      const type = typeof trigger === 'string' ? trigger : trigger?.type;
+      switch (type) {
+        case 'OnStart': return 'At battle start,';
+        case 'OnFaint': return 'When this unit dies,';
+        case 'OnAllyFaint': return 'When an ally dies,';
+        case 'OnHurt': return 'When hurt,';
+        case 'OnBuy': return 'When bought,';
+        case 'OnSell': return 'When sold,';
+        case 'OnShopStart': return 'At shop start,';
+        case 'OnSpawn': return 'When spawned,';
+        case 'OnAllySpawn': return 'When an ally spawns,';
+        case 'OnEnemySpawn': return 'When an enemy spawns,';
+        case 'BeforeUnitAttack': return 'Before attacking,';
+        case 'AfterUnitAttack': return 'After attacking,';
+        case 'BeforeAnyAttack': return 'Before any attack,';
+        case 'AfterAnyAttack': return 'After any attack,';
+        default: return '';
       }
     };
 
@@ -264,6 +325,9 @@ export function CardDetailPanel({
       }
     };
 
+    const rarity = getRarityTier(card);
+    const sidebarRarity = SIDEBAR_RARITY[rarity];
+
     return (
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
         {/* Action Buttons */}
@@ -278,7 +342,7 @@ export function CardDetailPanel({
                     setSelection(null); // Clear selection after pitching
                   }
                 }}
-                className="w-full btn btn-danger text-[10px] lg:text-sm py-1.5 lg:py-2"
+                className="w-full btn btn-pitch text-[10px] lg:text-sm py-1.5 lg:py-2"
               >
                 Pitch (+{card.pitch_value})
               </button>
@@ -299,7 +363,7 @@ export function CardDetailPanel({
                       setSelection(null); // Clear selection after pitching
                     }
                   }}
-                  className="w-full btn btn-danger text-[10px] lg:text-sm py-1.5 lg:py-2"
+                  className="w-full btn btn-pitch text-[10px] lg:text-sm py-1.5 lg:py-2"
                 >
                   Pitch (+{card.pitch_value})
                 </button>
@@ -308,32 +372,72 @@ export function CardDetailPanel({
           </div>
         )}
 
-        {/* Card Basic Info */}
+        {/* Animated card content — re-mounts on card change */}
+        <div key={animKey} className="lg:animate-panel-card-enter">
+
+        {/* Rarity accent line — desktop only */}
+        <div className={`hidden lg:block h-0.5 rounded-full mb-4 ${sidebarRarity.accent}`} />
+
+        {/* Card Portrait with rarity frame */}
         <div className="card-info flex flex-col items-center gap-2 lg:gap-3 mb-3 lg:mb-6">
-          <div className="w-20 h-20 lg:w-36 lg:h-36 bg-warm-800 rounded-xl lg:rounded-2xl border-2 border-warm-700 flex items-center justify-center shadow-inner flex-shrink-0 overflow-hidden">
-            {getCardArtMd(card.id) ? (
-              <img
-                src={getCardArtMd(card.id)!}
-                alt=""
-                className="w-full h-full object-cover object-[center_30%]"
-              />
-            ) : (
-              <span className="text-3xl lg:text-5xl font-bold text-warm-500/60 select-none">
-                {card.name.charAt(0)}
-              </span>
-            )}
+          <div className="relative flex justify-center">
+            {/* Ambient glow — desktop only */}
+            <div
+              className="hidden lg:block absolute -inset-4 rounded-full blur-xl opacity-50"
+              style={{ background: `radial-gradient(circle, ${sidebarRarity.glow}40, transparent 70%)` }}
+            />
+            {/* Portrait frame */}
+            <div
+              className={`relative w-20 h-20 lg:w-44 lg:h-52 rounded-xl lg:rounded-2xl border-2 ${sidebarRarity.border} overflow-hidden shadow-inner flex-shrink-0 bg-warm-800 ${rarity === 'legendary' ? 'sidebar-legendary-pulse' : ''}`}
+            >
+              {getCardArtMd(card.id) ? (
+                <img
+                  src={getCardArtMd(card.id)!}
+                  alt=""
+                  className="w-full h-full object-cover object-[center_30%]"
+                />
+              ) : (
+                <span className="absolute inset-0 flex items-center justify-center text-3xl lg:text-5xl font-bold text-warm-500/60 select-none">
+                  {card.name.charAt(0)}
+                </span>
+              )}
+              {/* Vignette overlay — desktop only */}
+              <div className="hidden lg:block absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5)_100%)]" />
+            </div>
+            {/* Floating particles — desktop only */}
+            <div
+              className="hidden lg:block sidebar-particles"
+              style={{ '--particle-color': sidebarRarity.particleColor } as React.CSSProperties}
+            >
+              <span />
+            </div>
           </div>
+
+          {/* Card name + stats */}
           <div className="card-stats min-w-0 text-center">
-            <h2 className="card-name text-base lg:text-2xl font-bold text-white leading-tight truncate">
+            <h2 className="card-name text-base lg:text-2xl font-bold lg:font-heading text-white leading-tight truncate">
               {card.name}
             </h2>
-            <div className="flex gap-1 lg:gap-2 mt-1 justify-center">
-              <span className="px-1.5 lg:px-2 py-0.5 bg-red-900/50 text-red-400 border border-red-800 rounded text-[10px] lg:text-xs font-bold">
+            {/* Mobile stats — unchanged */}
+            <div className="flex gap-1 mt-1 justify-center lg:hidden">
+              <span className="px-1.5 py-0.5 bg-red-900/50 text-red-400 border border-red-800 rounded text-[10px] font-bold">
                 ATK: {card.attack}
               </span>
-              <span className="px-1.5 lg:px-2 py-0.5 bg-green-900/50 text-green-400 border border-green-800 rounded text-[10px] lg:text-xs font-bold">
+              <span className="px-1.5 py-0.5 bg-green-900/50 text-green-400 border border-green-800 rounded text-[10px] font-bold">
                 HP: {card.health}
               </span>
+            </div>
+            {/* Desktop iconic stats */}
+            <div className="hidden lg:flex items-center justify-center gap-3 mt-2">
+              <div className="flex items-center gap-1">
+                <SwordIcon className="w-5 h-5 text-red-400" />
+                <span className="text-2xl font-stat font-bold text-white">{card.attack}</span>
+              </div>
+              <div className="w-px h-6 bg-warm-600" />
+              <div className="flex items-center gap-1">
+                <HeartIcon className="w-5 h-5 text-green-400" />
+                <span className="text-2xl font-stat font-bold text-white">{card.health}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -346,45 +450,68 @@ export function CardDetailPanel({
                 key={index}
                 className="mb-2 lg:mb-4 p-2 lg:p-3 bg-warm-800/50 rounded-lg border border-warm-700"
               >
-                <h3 className="text-xs lg:text-base font-bold text-yellow-400 mb-1 lg:mb-2">
+                <h3 className="text-xs lg:text-base font-bold lg:font-heading text-yellow-400 mb-1 lg:mb-2">
                   {ability.name}
                 </h3>
-                <div className="text-xs lg:text-sm text-warm-300 mb-1 lg:mb-2">
+                {/* Mobile: trigger + description + effect (existing layout) */}
+                <div className="lg:hidden text-xs text-warm-300 mb-1">
                   <strong>Trigger:</strong> {getTriggerDescription(ability.trigger)}
                 </div>
                 {ability.max_triggers && (
-                  <div className="text-xs lg:text-sm text-orange-400 mb-1 lg:mb-2">
+                  <div className="text-xs text-amber-400 mb-1 lg:hidden">
                     <strong>Max:</strong> {ability.max_triggers}
                   </div>
                 )}
-                <div className="text-xs lg:text-sm text-warm-200 bg-warm-900/50 p-1.5 lg:p-2 rounded border border-warm-700/50 italic">
-                  "{ability.description}"
+                <div className="lg:hidden text-xs text-warm-200 bg-warm-900/50 p-1.5 rounded border border-warm-700/50 italic">
+                  &ldquo;{ability.description}&rdquo;
                 </div>
-                <div className="mt-1 lg:mt-2 text-xs lg:text-sm text-blue-400 font-semibold">
+                <div className="mt-1 lg:hidden text-xs text-blue-400 font-semibold">
                   {getEffectDescription(ability.effect)}
+                </div>
+                {/* Desktop: single natural sentence (trigger prefix + effect) */}
+                <div className="hidden lg:block text-sm text-warm-200 leading-relaxed">
+                  <span className="text-warm-100">{getTriggerPrefix(ability.trigger)}</span>{' '}
+                  <span className="text-blue-400 font-semibold">{getEffectDescription(ability.effect).replace(/^./, c => c.toLowerCase())}</span>
+                  {ability.max_triggers && (
+                    <span className="text-warm-500 text-xs ml-2">({ability.max_triggers}&times;)</span>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Economy Section */}
-        <div className="grid grid-cols-2 gap-1.5 lg:gap-3 mb-3 lg:mb-6">
-          <div className="p-1.5 lg:p-3 bg-blue-900/20 border border-blue-800/50 rounded-lg">
-            <div className="text-[10px] lg:text-xs text-blue-400 uppercase font-bold mb-0.5 lg:mb-1">
-              Cost
-            </div>
-            <div className="text-sm lg:text-xl font-bold text-white flex items-center gap-0.5 lg:gap-1">
-              {card.play_cost} <span className="text-blue-400 text-[10px] lg:text-xs">Mana</span>
+        {/* Economy — Mobile: 2-col grid */}
+        <div className="grid grid-cols-2 gap-1.5 mb-3 lg:hidden">
+          <div className="p-1.5 bg-blue-900/20 border border-blue-800/50 rounded-lg">
+            <div className="text-[10px] text-blue-400 uppercase font-bold mb-0.5">Cost</div>
+            <div className="text-sm font-bold text-white flex items-center gap-0.5">
+              {card.play_cost} <span className="text-blue-400 text-[10px]">Mana</span>
             </div>
           </div>
-          <div className="p-1.5 lg:p-3 bg-orange-900/20 border border-orange-800/50 rounded-lg">
-            <div className="text-[10px] lg:text-xs text-orange-400 uppercase font-bold mb-0.5 lg:mb-1">
-              Pitch
+          <div className="p-1.5 bg-amber-900/20 border border-amber-800/50 rounded-lg">
+            <div className="text-[10px] text-amber-400 uppercase font-bold mb-0.5">Pitch</div>
+            <div className="text-sm font-bold text-white flex items-center gap-0.5">
+              +{card.pitch_value} <span className="text-amber-400 text-[10px]">Mana</span>
             </div>
-            <div className="text-sm lg:text-xl font-bold text-white flex items-center gap-0.5 lg:gap-1">
-              +{card.pitch_value}{' '}
-              <span className="text-orange-400 text-[10px] lg:text-xs">Mana</span>
+          </div>
+        </div>
+
+        {/* Economy — Desktop: compact horizontal row */}
+        <div className="hidden lg:flex items-center justify-center gap-4 mb-6 py-2">
+          <div className="flex items-center gap-2">
+            <div className="cost-badge w-10 h-12 rounded-lg flex flex-col items-center justify-center font-stat font-bold text-white">
+              <BoltIcon className="w-3.5 h-3.5 opacity-40" />
+              <span className="text-lg -mt-0.5">{card.play_cost}</span>
+            </div>
+            <span className="text-xs text-warm-400 uppercase font-bold">Cost</span>
+          </div>
+          <div className="w-px h-8 bg-warm-700" />
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-warm-400 uppercase font-bold">Pitch</span>
+            <div className="pitch-badge w-10 h-12 rounded-lg flex flex-col items-center justify-center font-stat font-bold">
+              <FlameIcon className="w-3.5 h-3.5 opacity-40" />
+              <span className="text-lg -mt-0.5">+{card.pitch_value}</span>
             </div>
           </div>
         </div>
@@ -411,6 +538,7 @@ export function CardDetailPanel({
             </pre>
           </div>
         )}
+        </div>
       </div>
     );
   };
@@ -418,6 +546,45 @@ export function CardDetailPanel({
   const renderRulesTab = () => {
     return (
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-5 text-sm text-warm-300 pb-4">
+        {/* Card Anatomy Legend */}
+        <section>
+          <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
+            <CardIcon className="w-4 h-4" />
+            Reading a Card
+          </h3>
+          <div className="grid grid-cols-2 gap-2 text-[10px] lg:text-xs">
+            <div className="flex items-center gap-1.5">
+              <div className="cost-badge w-5 h-6 lg:w-6 lg:h-7 rounded flex flex-col items-center justify-center font-stat font-bold text-white text-[10px] lg:text-xs flex-shrink-0">
+                <BoltIcon className="w-2 h-2 opacity-30" />
+                <span className="-mt-px">3</span>
+              </div>
+              <span className="text-warm-300">Mana Cost</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="pitch-badge w-5 h-6 lg:w-6 lg:h-7 rounded flex flex-col items-center justify-center font-stat font-bold text-[10px] lg:text-xs flex-shrink-0">
+                <FlameIcon className="w-2 h-2 opacity-30" />
+                <span className="-mt-px">2</span>
+              </div>
+              <span className="text-warm-300">Pitch Value</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 lg:w-6 lg:h-6 rounded bg-warm-800 border border-warm-700 flex items-center justify-center flex-shrink-0">
+                <SwordIcon className="w-3 h-3 text-red-400" />
+              </div>
+              <span className="text-warm-300">Attack</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 lg:w-6 lg:h-6 rounded bg-warm-800 border border-warm-700 flex items-center justify-center flex-shrink-0">
+                <HeartIcon className="w-3 h-3 text-green-400" />
+              </div>
+              <span className="text-warm-300">Health</span>
+            </div>
+          </div>
+          <p className="mt-2 text-[10px] lg:text-xs text-warm-500 leading-relaxed">
+            Blue bolt = mana spent to play. Gold flame = mana gained when pitched.
+          </p>
+        </section>
+
         <section>
           <h3 className="font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
             <BagIcon className="w-4 h-4" />
@@ -442,7 +609,7 @@ export function CardDetailPanel({
           <p className="leading-relaxed text-xs">
             Every card can be <strong className="text-blue-400">Played</strong> onto your board (up
             to <strong className="text-white">5 slots</strong>) to fight, or{' '}
-            <strong className="text-orange-400">Pitched</strong> to gain Mana. You need Mana to play
+            <strong className="text-amber-400">Pitched</strong> to gain Mana. You need Mana to play
             cards, so you'll always be making tough choices about what to keep and what to
             sacrifice.
           </p>

@@ -175,7 +175,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col battle-fullscreen">
+    <div className="fixed inset-0 z-50 flex flex-col battle-fullscreen safe-area-pad">
       {/* Dark atmospheric background */}
       <div className="absolute inset-0 bg-surface-dark" />
       <div className="absolute inset-0 battle-arena-bg" />
