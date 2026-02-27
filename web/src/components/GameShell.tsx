@@ -45,7 +45,7 @@ export function GameShell(props: GameShellProps) {
 function GameShellInner({
   hideEndTurn = false,
   customAction,
-  cardPanelTopOffset = '4rem',
+  cardPanelTopOffset = 'calc(4rem - 1px)',
   blockchainMode = false,
   blockNumber,
   accounts = [],

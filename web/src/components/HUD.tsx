@@ -143,17 +143,16 @@ export function HUD() {
 
   if (!view) return null;
 
-  // Responsive panel margin — no mobile sidebar during shop phase (both tabs), desktop during shop phase
-  const showCardPanel = view?.phase === 'shop' || selection?.type === 'board' || showBag;
+  // Mobile sidebar margin — only when selection is active outside shop phase
   const hasSelection = selection !== null || showBag;
-  const isShopMobile = view?.phase === 'shop'; // Both hand and board tabs hide sidebar on mobile
-  const hudMargin = `${hasSelection && !isShopMobile ? 'ml-44' : ''} ${showCardPanel ? 'lg:ml-80' : ''}`;
+  const isShopMobile = view?.phase === 'shop';
+  const hudMarginMobile = hasSelection && !isShopMobile ? 'ml-44' : '';
 
   const isShopPhase = view.phase === 'shop';
 
   return (
     <div
-      className={`hud h-9 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-1.5 lg:px-6 relative z-20 ${hudMargin}`}
+      className={`hud h-9 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-1.5 lg:px-6 relative z-20 ${hudMarginMobile} lg:ml-0`}
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
     >
       {/* === MOBILE: single consolidated bar === */}
@@ -242,40 +241,43 @@ export function HUD() {
       {showRules && <RulesOverlay onClose={() => setShowRules(false)} />}
 
       {/* === DESKTOP: original full layout === */}
-      {/* Left: Lives */}
-      <div className="hidden lg:flex items-center gap-2">
+      {/* Left: Lives + Round + Bag */}
+      <div className="hidden lg:flex items-center gap-5">
         {playerAvatar && (
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-yellow-500/50 flex-shrink-0">
             <img src={playerAvatar.imageUrl} alt="avatar" className="w-full h-full object-cover" />
           </div>
         )}
-        <span className="text-warm-400">Lives:</span>
-        <div className="flex gap-1">
-          {Array.from({ length: startingLives }).map((_, i) =>
-            i < view.lives ? (
-              <HeartIcon key={i} className="w-5 h-5 text-red-500" />
-            ) : (
-              <HeartOutlineIcon key={i} className="w-5 h-5 text-warm-600" />
-            )
-          )}
+        <div className="flex items-center gap-1.5">
+          <span className="text-warm-400 text-sm">Lives</span>
+          <div className="flex gap-1">
+            {Array.from({ length: startingLives }).map((_, i) =>
+              i < view.lives ? (
+                <HeartIcon key={i} className="w-5 h-5 text-red-500" />
+              ) : (
+                <HeartOutlineIcon key={i} className="w-5 h-5 text-warm-600" />
+              )
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* Center: Round + Bag */}
-      <div className="hidden lg:flex items-center gap-3">
-        <div className="text-center">
-          <div className="text-sm text-warm-400">Round</div>
-          <div className="text-2xl font-bold text-gold">{view.round}</div>
+        <div className="w-px h-6 bg-warm-700/60" />
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm text-warm-400">Round</span>
+          <span className="text-lg font-bold text-gold">{view.round}</span>
         </div>
         {view.phase === 'shop' && (
-          <button
-            onClick={() => setShowBag(true)}
-            className="flex btn bg-warm-800 hover:bg-warm-700 text-warm-100 border-warm-600 items-center gap-2 px-4"
-            title="View your draw pool"
-          >
-            <BagIcon className="w-6 h-6 text-amber-400" />
-            <span className="font-bold text-base">{view.bag_count}</span>
-          </button>
+          <>
+            <div className="w-px h-6 bg-warm-700/60" />
+            <button
+              onClick={() => setShowBag(true)}
+              className="flex items-center gap-1.5 hover:bg-warm-800/60 rounded-lg px-2 py-1 transition-colors"
+              title="View your draw bag (B)"
+            >
+              <BagIcon className="w-5 h-5 text-amber-400" />
+              <span className="font-bold text-base text-warm-100">{view.bag_count}</span>
+              <span className="text-xs text-warm-500">cards</span>
+            </button>
+          </>
         )}
       </div>
 
