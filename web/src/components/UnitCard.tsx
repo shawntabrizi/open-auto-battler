@@ -36,6 +36,7 @@ export function UnitCard({
 }: UnitCardProps) {
   const cardStyle = useCustomizationStore((s) => s.selections.cardStyle);
   const [isDragging, setIsDragging] = React.useState(false);
+  const abilityCount = (card.shop_abilities?.length ?? 0) + (card.battle_abilities?.length ?? 0);
 
   const handleDragStart = (e: React.DragEvent) => {
     setIsDragging(true);
@@ -56,12 +57,8 @@ export function UnitCard({
   const artClasses = compact
     ? 'h-10 lg:h-14 text-xl lg:text-2xl'
     : 'h-10 lg:h-20 text-xl lg:text-3xl';
-  const titleClasses = compact
-    ? 'text-[0.45rem] lg:text-xs'
-    : 'text-[0.45rem] lg:text-sm';
-  const statClasses = compact
-    ? 'text-[0.5rem] lg:text-sm'
-    : 'text-[0.5rem] lg:text-base';
+  const titleClasses = compact ? 'text-[0.45rem] lg:text-xs' : 'text-[0.45rem] lg:text-sm';
+  const statClasses = compact ? 'text-[0.5rem] lg:text-sm' : 'text-[0.5rem] lg:text-base';
   const badgeClasses = compact
     ? 'w-4 h-4 lg:w-6 lg:h-6 text-[0.5rem] lg:text-xs'
     : 'w-4 h-4 lg:w-7 lg:h-7 text-[0.5rem] lg:text-sm';
@@ -83,14 +80,20 @@ export function UnitCard({
       `}
     >
       {/* Card name */}
-      <div className={`card-title relative z-10 ${titleClasses} font-bold text-center truncate mb-0.5 lg:mb-1`}>{card.name}</div>
+      <div
+        className={`card-title relative z-10 ${titleClasses} font-bold text-center truncate mb-0.5 lg:mb-1`}
+      >
+        {card.name}
+      </div>
 
       {/* Card art placeholder */}
-      <div className={`card-art w-full ${artClasses} bg-gray-700 rounded flex items-center justify-center relative`}>
+      <div
+        className={`card-art w-full ${artClasses} bg-gray-700 rounded flex items-center justify-center relative`}
+      >
         {getCardEmoji(card.id)}
-        {card.abilities.length > 0 && (
+        {abilityCount > 0 && (
           <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 z-10 bg-yellow-500 rounded-full w-3 h-3 lg:w-4 lg:h-4 flex items-center justify-center text-[0.4rem] lg:text-[0.55rem] font-bold border border-yellow-300 shadow">
-            {card.abilities.length > 1 ? card.abilities.length : '✶'}
+            {abilityCount > 1 ? abilityCount : '✶'}
           </div>
         )}
       </div>
@@ -112,14 +115,18 @@ export function UnitCard({
 
       {/* Cost badge (top left) */}
       {showCost && (
-        <div className={`card-cost-badge absolute -top-1 -left-1 lg:-top-2 lg:-left-2 z-10 ${badgeClasses} bg-mana-blue rounded-full flex items-center justify-center font-bold border lg:border-2 border-blue-300`}>
+        <div
+          className={`card-cost-badge absolute -top-1 -left-1 lg:-top-2 lg:-left-2 z-10 ${badgeClasses} bg-mana-blue rounded-full flex items-center justify-center font-bold border lg:border-2 border-blue-300`}
+        >
           {card.play_cost}
         </div>
       )}
 
       {/* Pitch value badge (top right) */}
       {showPitch && (
-        <div className={`card-pitch-badge absolute -top-1 -right-1 lg:-top-2 lg:-right-2 z-10 ${badgeClasses} bg-pitch-red rounded-full flex items-center justify-center font-bold border lg:border-2 border-red-300`}>
+        <div
+          className={`card-pitch-badge absolute -top-1 -right-1 lg:-top-2 lg:-right-2 z-10 ${badgeClasses} bg-pitch-red rounded-full flex items-center justify-center font-bold border lg:border-2 border-red-300`}
+        >
           {card.pitch_value}
         </div>
       )}

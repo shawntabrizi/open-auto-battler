@@ -708,7 +708,7 @@ impl GameEngine {
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),
                     health: card.stats.health.saturating_add(u.perm_health),
-                    abilities: card.abilities.clone(),
+                    battle_abilities: card.battle_abilities.clone(),
                 }
             })
             .collect();
@@ -725,7 +725,7 @@ impl GameEngine {
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),
                     health: card.stats.health.saturating_add(u.perm_health),
-                    abilities: card.abilities.clone(),
+                    battle_abilities: card.battle_abilities.clone(),
                 }
             })
             .collect();
@@ -1003,7 +1003,7 @@ impl GameEngine {
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),
                     health: card.stats.health.saturating_add(u.perm_health),
-                    abilities: card.abilities.clone(),
+                    battle_abilities: card.battle_abilities.clone(),
                 }
             })
             .collect();
@@ -1019,7 +1019,7 @@ impl GameEngine {
                     name: cu.name,
                     attack: cu.attack,
                     health: cu.health,
-                    abilities: cu.abilities,
+                    battle_abilities: cu.abilities,
                 })
                 .collect();
 

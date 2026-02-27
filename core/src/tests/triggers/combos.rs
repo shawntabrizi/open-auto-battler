@@ -26,7 +26,7 @@ fn test_berserker_combo() {
         "Fire",
     );
     let pain_smith =
-        create_dummy_card(1, "Smith", 3, 3).with_abilities(vec![smith_buff, smith_dmg]);
+        create_dummy_card(1, "Smith", 3, 3).with_battle_abilities(vec![smith_buff, smith_dmg]);
 
     let orc_rage = create_ability(
         AbilityTrigger::OnHurt,
@@ -39,7 +39,7 @@ fn test_berserker_combo() {
         },
         "Berserk",
     );
-    let raging_orc = create_dummy_card(2, "Orc", 2, 8).with_ability(orc_rage);
+    let raging_orc = create_dummy_card(2, "Orc", 2, 8).with_battle_ability(orc_rage);
 
     let p_board = vec![
         CombatUnit::from_card(pain_smith),

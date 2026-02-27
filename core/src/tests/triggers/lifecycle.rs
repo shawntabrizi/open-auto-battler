@@ -5,7 +5,7 @@ use crate::types::*;
 #[test]
 fn test_on_spawn_triggers_for_spawned_unit() {
     let spawnling =
-        UnitCard::new(CardId(120), "Spawnling", 1, 3, 0, 0).with_ability(create_ability(
+        UnitCard::new(CardId(120), "Spawnling", 1, 3, 0, 0).with_battle_ability(create_ability(
             AbilityTrigger::OnSpawn,
             AbilityEffect::ModifyStats {
                 health: 0,
@@ -20,7 +20,7 @@ fn test_on_spawn_triggers_for_spawned_unit() {
     let mut card_pool = spawn_test_card_pool();
     card_pool.insert(CardId(120), spawnling);
 
-    let summoner = create_dummy_card(1, "Summoner", 0, 10).with_ability(create_ability(
+    let summoner = create_dummy_card(1, "Summoner", 0, 10).with_battle_ability(create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::SpawnUnit {
             card_id: CardId(120),
@@ -76,7 +76,7 @@ fn test_on_spawn_triggers_for_spawned_unit() {
 
 #[test]
 fn test_on_hurt_aggressor_scope_hits_the_attacker() {
-    let retaliator = create_dummy_card(1, "Retaliator", 0, 2).with_ability(create_ability(
+    let retaliator = create_dummy_card(1, "Retaliator", 0, 2).with_battle_ability(create_ability(
         AbilityTrigger::OnHurt,
         AbilityEffect::Damage {
             amount: 2,

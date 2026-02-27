@@ -18,7 +18,7 @@ fn test_snipe_lowest_health() {
         "SnipeLowest",
     );
 
-    let hh = create_dummy_card(1, "Headhunter", 4, 2).with_ability(headhunter_ability);
+    let hh = create_dummy_card(1, "Headhunter", 4, 2).with_battle_ability(headhunter_ability);
 
     let tank = create_dummy_card(2, "Tank", 1, 10);
     let glass = create_dummy_card(3, "Glass", 1, 2);
@@ -67,7 +67,7 @@ fn test_snipe_highest_attack() {
         "SnipeStrongest",
     );
 
-    let gs = create_dummy_card(1, "GiantSlayer", 2, 2).with_ability(giantslayer_ability);
+    let gs = create_dummy_card(1, "GiantSlayer", 2, 2).with_battle_ability(giantslayer_ability);
 
     let weak = create_dummy_card(2, "Weak", 1, 10);
     let strong = create_dummy_card(3, "Strong", 10, 10);
@@ -109,7 +109,7 @@ fn test_snipe_highest_health() {
         "SnipeHighestHP",
     );
 
-    let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
+    let sniper = create_dummy_card(1, "Sniper", 1, 1).with_battle_ability(snipe_ability);
     let weak = create_dummy_card(2, "Weak", 1, 5);
     let healthy = create_dummy_card(3, "Healthy", 1, 20);
     let medium = create_dummy_card(4, "Medium", 1, 10);
@@ -147,7 +147,7 @@ fn test_snipe_lowest_attack() {
         "SnipeLowestAtk",
     );
 
-    let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
+    let sniper = create_dummy_card(1, "Sniper", 1, 1).with_battle_ability(snipe_ability);
     let strong = create_dummy_card(2, "Strong", 10, 10);
     let weak = create_dummy_card(3, "Weak", 1, 10);
     let medium = create_dummy_card(4, "Medium", 5, 10);
@@ -185,7 +185,7 @@ fn test_snipe_highest_mana() {
         "SnipeHighestMana",
     );
 
-    let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
+    let sniper = create_dummy_card(1, "Sniper", 1, 1).with_battle_ability(snipe_ability);
 
     let cheap = UnitCard::new(CardId(2), "Cheap", 1, 10, 1, 0);
     let expensive = UnitCard::new(CardId(3), "Expensive", 1, 10, 10, 0);
@@ -224,7 +224,7 @@ fn test_snipe_lowest_mana() {
         "SnipeLowestMana",
     );
 
-    let sniper = create_dummy_card(1, "Sniper", 1, 1).with_ability(snipe_ability);
+    let sniper = create_dummy_card(1, "Sniper", 1, 1).with_battle_ability(snipe_ability);
 
     let expensive = UnitCard::new(CardId(2), "Expensive", 1, 10, 10, 0);
     let cheap = UnitCard::new(CardId(3), "Cheap", 1, 10, 1, 0);
@@ -275,7 +275,7 @@ fn test_mana_reaper_dual_kill() {
     );
 
     let reaper = create_dummy_card(1, "ManaReaper", 2, 2)
-        .with_abilities(vec![reaper_ability_high, reaper_ability_low]);
+        .with_battle_abilities(vec![reaper_ability_high, reaper_ability_low]);
 
     let cheap = UnitCard::new(CardId(2), "Cheap", 1, 10, 1, 0);
     let medium = UnitCard::new(CardId(3), "Medium", 1, 10, 5, 0);

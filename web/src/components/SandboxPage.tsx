@@ -54,7 +54,7 @@ export function SandboxPage() {
       </div>
 
       {/* Card Detail Panel - Always visible in sandbox */}
-      <CardDetailPanel card={selectedCard} isVisible={true} isSandbox={true} />
+      <CardDetailPanel card={selectedCard} isVisible={true} mode={{ type: 'sandbox' }} />
 
       {/* Battle Overlay - Sandbox Mode */}
       <BattleOverlay mode="sandbox" />

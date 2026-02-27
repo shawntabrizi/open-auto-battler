@@ -4,6 +4,7 @@
 //! keeping it fully no_std compatible.
 
 use serde::Deserialize;
+use std::collections::BTreeSet;
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -11,6 +12,7 @@ use std::path::Path;
 // ── JSON schema types (build-time only) ──────────────────────────────────────
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct JsonCard {
     id: u32,
     name: String,
@@ -18,7 +20,9 @@ struct JsonCard {
     stats: JsonStats,
     economy: JsonEconomy,
     #[serde(default)]
-    abilities: Vec<JsonAbility>,
+    shop_abilities: Vec<JsonAbility>,
+    #[serde(default)]
+    battle_abilities: Vec<JsonAbility>,
 }
 
 #[derive(Deserialize)]
@@ -33,7 +37,7 @@ struct JsonEconomy {
     pitch_value: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 struct JsonAbility {
     trigger: String,
     effect: JsonEffect,
@@ -44,7 +48,7 @@ struct JsonAbility {
     max_triggers: Option<u32>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 struct JsonEffect {
     #[serde(rename = "type")]
     effect_type: String,
@@ -59,7 +63,7 @@ struct JsonEffect {
     target: Option<JsonTarget>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 struct JsonTarget {
     #[serde(rename = "type")]
     target_type: String,
@@ -99,12 +103,347 @@ struct JsonStyleCollection {
 
 // ── Code generation helpers ──────────────────────────────────────────────────
 
-fn gen_trigger(trigger: &str) -> String {
-    // Trigger names in JSON match Rust variant names exactly
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum AbilityLane {
+    Shop,
+    Battle,
+}
+
+fn escape_rust_string(s: &str) -> String {
+    s.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+fn require_i32(value: Option<i32>, card_id: u32, ability_name: &str, field: &str) -> i32 {
+    value.unwrap_or_else(|| {
+        panic!("Card {card_id} ability '{ability_name}' missing required '{field}' field")
+    })
+}
+
+fn require_target<'a>(
+    value: &'a Option<JsonTarget>,
+    card_id: u32,
+    ability_name: &str,
+    effect_type: &str,
+) -> &'a JsonTarget {
+    value.as_ref().unwrap_or_else(|| {
+        panic!("Card {card_id} ability '{ability_name}' effect '{effect_type}' missing target")
+    })
+}
+
+fn extract_scope(data: &serde_json::Value, card_id: u32, ability_name: &str) -> String {
+    data["scope"]
+        .as_str()
+        .unwrap_or_else(|| {
+            panic!("Card {card_id} ability '{ability_name}' target/matcher missing scope")
+        })
+        .to_string()
+}
+
+fn validate_shop_scope(scope: &str, card_id: u32, ability_name: &str, context: &str) {
+    match scope {
+        "SelfUnit" | "Allies" | "All" | "AlliesOther" | "TriggerSource" => {}
+        other => panic!(
+            "Card {card_id} ability '{ability_name}' has shop-incompatible scope '{other}' in {context}"
+        ),
+    }
+}
+
+fn validate_target(
+    target: &JsonTarget,
+    lane: AbilityLane,
+    card_id: u32,
+    ability_name: &str,
+    effect_type: &str,
+) {
+    match target.target_type.as_str() {
+        "All" | "Position" | "Random" | "Standard" => {}
+        "Adjacent" if lane == AbilityLane::Battle => {}
+        "Adjacent" => panic!(
+            "Card {card_id} ability '{ability_name}' effect '{effect_type}' uses shop-incompatible target Adjacent"
+        ),
+        other => panic!(
+            "Card {card_id} ability '{ability_name}' effect '{effect_type}' has unknown target type '{other}'"
+        ),
+    }
+
+    let scope = extract_scope(&target.data, card_id, ability_name);
+    if lane == AbilityLane::Shop {
+        validate_shop_scope(&scope, card_id, ability_name, "target");
+    }
+}
+
+fn validate_matcher(
+    matcher: &serde_json::Value,
+    lane: AbilityLane,
+    card_id: u32,
+    ability_name: &str,
+) {
+    let matcher_type = matcher["type"].as_str().unwrap_or_else(|| {
+        panic!("Card {card_id} ability '{ability_name}' has matcher missing 'type'")
+    });
+    let data = &matcher["data"];
+
+    match matcher_type {
+        "StatValueCompare" | "UnitCount" | "IsPosition" => {
+            let scope = extract_scope(data, card_id, ability_name);
+            if lane == AbilityLane::Shop {
+                validate_shop_scope(&scope, card_id, ability_name, "matcher");
+            }
+        }
+        "StatStatCompare" => {
+            if lane == AbilityLane::Shop {
+                panic!(
+                    "Card {card_id} ability '{ability_name}' uses shop-incompatible matcher StatStatCompare"
+                );
+            }
+            let target_scope = data["target_scope"].as_str().unwrap_or_else(|| {
+                panic!(
+                    "Card {card_id} ability '{ability_name}' StatStatCompare missing target_scope"
+                )
+            });
+            if lane == AbilityLane::Shop {
+                validate_shop_scope(target_scope, card_id, ability_name, "matcher");
+            }
+        }
+        other => panic!("Card {card_id} ability '{ability_name}' has unknown matcher '{other}'"),
+    }
+}
+
+fn validate_condition(
+    condition: &serde_json::Value,
+    lane: AbilityLane,
+    card_id: u32,
+    ability_name: &str,
+) {
+    let condition_type = condition["type"].as_str().unwrap_or_else(|| {
+        panic!("Card {card_id} ability '{ability_name}' has condition missing 'type'")
+    });
+    match condition_type {
+        "Is" => validate_matcher(&condition["data"], lane, card_id, ability_name),
+        "AnyOf" => {
+            for matcher in condition["data"].as_array().unwrap_or_else(|| {
+                panic!("Card {card_id} ability '{ability_name}' AnyOf must be an array")
+            }) {
+                validate_matcher(matcher, lane, card_id, ability_name);
+            }
+        }
+        other => {
+            panic!("Card {card_id} ability '{ability_name}' has unknown condition type '{other}'")
+        }
+    }
+}
+
+fn normalize_shop_ability(
+    card_id: u32,
+    ability: JsonAbility,
+    all_card_ids: &BTreeSet<u32>,
+) -> JsonAbility {
+    match ability.trigger.as_str() {
+        "OnBuy" | "OnSell" | "OnShopStart" => {}
+        other => panic!(
+            "Card {card_id} ability '{}' uses shop lane with invalid trigger '{other}'",
+            ability.name
+        ),
+    }
+
+    if ability.effect.effect_type == "ModifyStats" {
+        panic!(
+            "Card {card_id} ability '{}' uses shop-incompatible effect ModifyStats",
+            ability.name
+        );
+    }
+
+    match ability.effect.effect_type.as_str() {
+        "ModifyStatsPermanent" => {
+            let _ = require_i32(ability.effect.health, card_id, &ability.name, "health");
+            let _ = require_i32(ability.effect.attack, card_id, &ability.name, "attack");
+            let target = require_target(
+                &ability.effect.target,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+            validate_target(
+                target,
+                AbilityLane::Shop,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+        }
+        "SpawnUnit" => {
+            let spawn_id = ability.effect.card_id.unwrap_or_else(|| {
+                panic!(
+                    "Card {card_id} ability '{}' SpawnUnit missing card_id",
+                    ability.name
+                )
+            });
+            assert!(
+                all_card_ids.contains(&spawn_id),
+                "Card {} ability '{}' SpawnUnit references missing card_id {}",
+                card_id,
+                ability.name,
+                spawn_id
+            );
+        }
+        "Destroy" => {
+            let target = require_target(
+                &ability.effect.target,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+            validate_target(
+                target,
+                AbilityLane::Shop,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+        }
+        "GainMana" => {
+            let _ = require_i32(ability.effect.amount, card_id, &ability.name, "amount");
+        }
+        other => panic!(
+            "Card {card_id} ability '{}' uses shop-incompatible effect '{other}'",
+            ability.name
+        ),
+    }
+
+    for condition in &ability.conditions {
+        validate_condition(condition, AbilityLane::Shop, card_id, &ability.name);
+    }
+
+    ability
+}
+
+fn normalize_battle_ability(
+    card_id: u32,
+    ability: JsonAbility,
+    all_card_ids: &BTreeSet<u32>,
+) -> JsonAbility {
+    match ability.trigger.as_str() {
+        "OnStart" | "OnFaint" | "OnAllyFaint" | "OnHurt" | "OnSpawn" | "OnAllySpawn"
+        | "OnEnemySpawn" | "BeforeUnitAttack" | "AfterUnitAttack" | "BeforeAnyAttack"
+        | "AfterAnyAttack" => {}
+        "OnBuy" | "OnSell" | "OnShopStart" => panic!(
+            "Card {card_id} ability '{}' uses battle lane with shop trigger '{}'",
+            ability.name, ability.trigger
+        ),
+        _ => panic!(
+            "Card {card_id} ability '{}' has unknown trigger '{}'",
+            ability.name, ability.trigger
+        ),
+    }
+
+    match ability.effect.effect_type.as_str() {
+        "Damage" => {
+            let _ = require_i32(ability.effect.amount, card_id, &ability.name, "amount");
+            let target = require_target(
+                &ability.effect.target,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+            validate_target(
+                target,
+                AbilityLane::Battle,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+        }
+        "ModifyStats" | "ModifyStatsPermanent" => {
+            let _ = require_i32(ability.effect.health, card_id, &ability.name, "health");
+            let _ = require_i32(ability.effect.attack, card_id, &ability.name, "attack");
+            let target = require_target(
+                &ability.effect.target,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+            validate_target(
+                target,
+                AbilityLane::Battle,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+        }
+        "Destroy" => {
+            let target = require_target(
+                &ability.effect.target,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+            validate_target(
+                target,
+                AbilityLane::Battle,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+        }
+        "SpawnUnit" => {
+            let spawn_id = ability.effect.card_id.unwrap_or_else(|| {
+                panic!(
+                    "Card {card_id} ability '{}' SpawnUnit missing card_id",
+                    ability.name
+                )
+            });
+            assert!(
+                all_card_ids.contains(&spawn_id),
+                "Card {} ability '{}' SpawnUnit references missing card_id {}",
+                card_id,
+                ability.name,
+                spawn_id
+            );
+        }
+        "GainMana" => {
+            let _ = require_i32(ability.effect.amount, card_id, &ability.name, "amount");
+        }
+        other => panic!(
+            "Card {card_id} ability '{}' has unsupported battle effect '{other}'",
+            ability.name
+        ),
+    }
+
+    for condition in &ability.conditions {
+        validate_condition(condition, AbilityLane::Battle, card_id, &ability.name);
+    }
+
+    ability
+}
+
+fn normalize_card_abilities(
+    card: &JsonCard,
+    all_card_ids: &BTreeSet<u32>,
+) -> (Vec<JsonAbility>, Vec<JsonAbility>) {
+    let shop = card
+        .shop_abilities
+        .iter()
+        .cloned()
+        .map(|ability| normalize_shop_ability(card.id, ability, all_card_ids))
+        .collect();
+    let battle = card
+        .battle_abilities
+        .iter()
+        .cloned()
+        .map(|ability| normalize_battle_ability(card.id, ability, all_card_ids))
+        .collect();
+    (shop, battle)
+}
+
+fn gen_battle_trigger(trigger: &str) -> String {
     format!("AbilityTrigger::{trigger}")
 }
 
-fn gen_target(target: &JsonTarget) -> String {
+fn gen_shop_trigger(trigger: &str) -> String {
+    format!("ShopTrigger::{trigger}")
+}
+
+fn gen_battle_target(target: &JsonTarget) -> String {
     match target.target_type.as_str() {
         "All" => {
             let scope = target.data["scope"].as_str().unwrap();
@@ -133,11 +472,40 @@ fn gen_target(target: &JsonTarget) -> String {
             let scope = target.data["scope"].as_str().unwrap();
             format!("AbilityTarget::Adjacent {{ scope: TargetScope::{scope} }}")
         }
-        other => panic!("Unknown target type: {other}"),
+        other => panic!("Unknown battle target type: {other}"),
     }
 }
 
-fn gen_effect(effect: &JsonEffect) -> String {
+fn gen_shop_target(target: &JsonTarget) -> String {
+    match target.target_type.as_str() {
+        "All" => {
+            let scope = target.data["scope"].as_str().unwrap();
+            format!("ShopTarget::All {{ scope: ShopScope::{scope} }}")
+        }
+        "Position" => {
+            let scope = target.data["scope"].as_str().unwrap();
+            let index = target.data["index"].as_i64().unwrap();
+            format!("ShopTarget::Position {{ scope: ShopScope::{scope}, index: {index} }}")
+        }
+        "Random" => {
+            let scope = target.data["scope"].as_str().unwrap();
+            let count = target.data["count"].as_u64().unwrap();
+            format!("ShopTarget::Random {{ scope: ShopScope::{scope}, count: {count} }}")
+        }
+        "Standard" => {
+            let scope = target.data["scope"].as_str().unwrap();
+            let stat = target.data["stat"].as_str().unwrap();
+            let order = target.data["order"].as_str().unwrap();
+            let count = target.data["count"].as_u64().unwrap();
+            format!(
+                "ShopTarget::Standard {{ scope: ShopScope::{scope}, stat: StatType::{stat}, order: SortOrder::{order}, count: {count} }}"
+            )
+        }
+        other => panic!("Unknown shop target type: {other}"),
+    }
+}
+
+fn gen_battle_effect(effect: &JsonEffect) -> String {
     match effect.effect_type.as_str() {
         "GainMana" => {
             let amount = effect.amount.unwrap();
@@ -149,13 +517,13 @@ fn gen_effect(effect: &JsonEffect) -> String {
         }
         "Damage" => {
             let amount = effect.amount.unwrap();
-            let target = gen_target(effect.target.as_ref().unwrap());
+            let target = gen_battle_target(effect.target.as_ref().unwrap());
             format!("AbilityEffect::Damage {{ amount: {amount}, target: {target} }}")
         }
         "ModifyStats" => {
             let health = effect.health.unwrap();
             let attack = effect.attack.unwrap();
-            let target = gen_target(effect.target.as_ref().unwrap());
+            let target = gen_battle_target(effect.target.as_ref().unwrap());
             format!(
                 "AbilityEffect::ModifyStats {{ health: {health}, attack: {attack}, target: {target} }}"
             )
@@ -163,20 +531,46 @@ fn gen_effect(effect: &JsonEffect) -> String {
         "ModifyStatsPermanent" => {
             let health = effect.health.unwrap();
             let attack = effect.attack.unwrap();
-            let target = gen_target(effect.target.as_ref().unwrap());
+            let target = gen_battle_target(effect.target.as_ref().unwrap());
             format!(
                 "AbilityEffect::ModifyStatsPermanent {{ health: {health}, attack: {attack}, target: {target} }}"
             )
         }
         "Destroy" => {
-            let target = gen_target(effect.target.as_ref().unwrap());
+            let target = gen_battle_target(effect.target.as_ref().unwrap());
             format!("AbilityEffect::Destroy {{ target: {target} }}")
         }
-        other => panic!("Unknown effect type: {other}"),
+        other => panic!("Unknown battle effect type: {other}"),
     }
 }
 
-fn gen_matcher(val: &serde_json::Value) -> String {
+fn gen_shop_effect(effect: &JsonEffect) -> String {
+    match effect.effect_type.as_str() {
+        "GainMana" => {
+            let amount = effect.amount.unwrap();
+            format!("ShopEffect::GainMana {{ amount: {amount} }}")
+        }
+        "SpawnUnit" => {
+            let card_id = effect.card_id.unwrap();
+            format!("ShopEffect::SpawnUnit {{ card_id: CardId({card_id}) }}")
+        }
+        "ModifyStatsPermanent" => {
+            let health = effect.health.unwrap();
+            let attack = effect.attack.unwrap();
+            let target = gen_shop_target(effect.target.as_ref().unwrap());
+            format!(
+                "ShopEffect::ModifyStatsPermanent {{ health: {health}, attack: {attack}, target: {target} }}"
+            )
+        }
+        "Destroy" => {
+            let target = gen_shop_target(effect.target.as_ref().unwrap());
+            format!("ShopEffect::Destroy {{ target: {target} }}")
+        }
+        other => panic!("Unknown shop effect type: {other}"),
+    }
+}
+
+fn gen_battle_matcher(val: &serde_json::Value) -> String {
     let mtype = val["type"].as_str().unwrap();
     let data = &val["data"];
     match mtype {
@@ -206,15 +600,50 @@ fn gen_matcher(val: &serde_json::Value) -> String {
                 "Matcher::StatStatCompare {{ source_stat: StatType::{source_stat}, op: CompareOp::{op}, target_scope: TargetScope::{target_scope}, target_stat: StatType::{target_stat} }}"
             )
         }
-        other => panic!("Unknown matcher type: {other}"),
+        "IsPosition" => {
+            let scope = data["scope"].as_str().unwrap();
+            let index = data["index"].as_i64().unwrap();
+            format!("Matcher::IsPosition {{ scope: TargetScope::{scope}, index: {index} }}")
+        }
+        other => panic!("Unknown battle matcher type: {other}"),
     }
 }
 
-fn gen_condition(val: &serde_json::Value) -> String {
+fn gen_shop_matcher(val: &serde_json::Value) -> String {
+    let mtype = val["type"].as_str().unwrap();
+    let data = &val["data"];
+    match mtype {
+        "StatValueCompare" => {
+            let scope = data["scope"].as_str().unwrap();
+            let stat = data["stat"].as_str().unwrap();
+            let op = data["op"].as_str().unwrap();
+            let value = data["value"].as_i64().unwrap();
+            format!(
+                "ShopMatcher::StatValueCompare {{ scope: ShopScope::{scope}, stat: StatType::{stat}, op: CompareOp::{op}, value: {value} }}"
+            )
+        }
+        "UnitCount" => {
+            let scope = data["scope"].as_str().unwrap();
+            let op = data["op"].as_str().unwrap();
+            let value = data["value"].as_i64().unwrap();
+            format!(
+                "ShopMatcher::UnitCount {{ scope: ShopScope::{scope}, op: CompareOp::{op}, value: {value} }}"
+            )
+        }
+        "IsPosition" => {
+            let scope = data["scope"].as_str().unwrap();
+            let index = data["index"].as_i64().unwrap();
+            format!("ShopMatcher::IsPosition {{ scope: ShopScope::{scope}, index: {index} }}")
+        }
+        other => panic!("Unknown shop matcher type: {other}"),
+    }
+}
+
+fn gen_battle_condition(val: &serde_json::Value) -> String {
     let ctype = val["type"].as_str().unwrap();
     match ctype {
         "Is" => {
-            let matcher = gen_matcher(&val["data"]);
+            let matcher = gen_battle_matcher(&val["data"]);
             format!("Condition::Is({matcher})")
         }
         "AnyOf" => {
@@ -222,20 +651,44 @@ fn gen_condition(val: &serde_json::Value) -> String {
                 .as_array()
                 .unwrap()
                 .iter()
-                .map(gen_matcher)
+                .map(gen_battle_matcher)
                 .collect();
             format!("Condition::AnyOf(vec![{}])", matchers.join(", "))
         }
-        other => panic!("Unknown condition type: {other}"),
+        other => panic!("Unknown battle condition type: {other}"),
     }
 }
 
-fn gen_ability(ability: &JsonAbility) -> String {
-    let trigger = gen_trigger(&ability.trigger);
-    let effect = gen_effect(&ability.effect);
-    let name = &ability.name;
-    let desc = &ability.description;
-    let conditions: Vec<String> = ability.conditions.iter().map(gen_condition).collect();
+fn gen_shop_condition(val: &serde_json::Value) -> String {
+    let ctype = val["type"].as_str().unwrap();
+    match ctype {
+        "Is" => {
+            let matcher = gen_shop_matcher(&val["data"]);
+            format!("ShopCondition::Is({matcher})")
+        }
+        "AnyOf" => {
+            let matchers: Vec<String> = val["data"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(gen_shop_matcher)
+                .collect();
+            format!("ShopCondition::AnyOf(vec![{}])", matchers.join(", "))
+        }
+        other => panic!("Unknown shop condition type: {other}"),
+    }
+}
+
+fn gen_battle_ability(ability: &JsonAbility) -> String {
+    let trigger = gen_battle_trigger(&ability.trigger);
+    let effect = gen_battle_effect(&ability.effect);
+    let name = escape_rust_string(&ability.name);
+    let desc = escape_rust_string(&ability.description);
+    let conditions: Vec<String> = ability
+        .conditions
+        .iter()
+        .map(gen_battle_condition)
+        .collect();
     let conditions_str = if conditions.is_empty() {
         "vec![]".to_string()
     } else {
@@ -258,21 +711,63 @@ fn gen_ability(ability: &JsonAbility) -> String {
     )
 }
 
-fn gen_card(card: &JsonCard) -> String {
+fn gen_shop_ability(ability: &JsonAbility) -> String {
+    let trigger = gen_shop_trigger(&ability.trigger);
+    let effect = gen_shop_effect(&ability.effect);
+    let name = escape_rust_string(&ability.name);
+    let desc = escape_rust_string(&ability.description);
+    let conditions: Vec<String> = ability.conditions.iter().map(gen_shop_condition).collect();
+    let conditions_str = if conditions.is_empty() {
+        "vec![]".to_string()
+    } else {
+        format!("vec![{}]", conditions.join(", "))
+    };
+    let max_triggers = match ability.max_triggers {
+        Some(n) => format!("Some({n})"),
+        None => "None".to_string(),
+    };
+
+    format!(
+        r#"ShopAbility {{
+                    trigger: {trigger},
+                    effect: {effect},
+                    name: String::from("{name}"),
+                    description: String::from("{desc}"),
+                    conditions: {conditions_str},
+                    max_triggers: {max_triggers},
+                }}"#
+    )
+}
+
+fn gen_card(
+    card: &JsonCard,
+    shop_abilities: &[JsonAbility],
+    battle_abilities: &[JsonAbility],
+) -> String {
     let id = card.id;
-    let name = &card.name;
+    let name = escape_rust_string(&card.name);
     let atk = card.stats.attack;
     let hp = card.stats.health;
     let cost = card.economy.play_cost;
     let pitch = card.economy.pitch_value;
 
-    let abilities: Vec<String> = card.abilities.iter().map(gen_ability).collect();
-    let abilities_str = if abilities.is_empty() {
+    let shop_entries: Vec<String> = shop_abilities.iter().map(gen_shop_ability).collect();
+    let shop_abilities_str = if shop_entries.is_empty() {
         "vec![]".to_string()
     } else {
         format!(
             "vec![\n                {}\n            ]",
-            abilities.join(",\n                ")
+            shop_entries.join(",\n                ")
+        )
+    };
+
+    let battle_entries: Vec<String> = battle_abilities.iter().map(gen_battle_ability).collect();
+    let battle_abilities_str = if battle_entries.is_empty() {
+        "vec![]".to_string()
+    } else {
+        format!(
+            "vec![\n                {}\n            ]",
+            battle_entries.join(",\n                ")
         )
     };
 
@@ -282,7 +777,8 @@ fn gen_card(card: &JsonCard) -> String {
             name: String::from("{name}"),
             stats: UnitStats {{ attack: {atk}, health: {hp} }},
             economy: EconomyStats {{ play_cost: {cost}, pitch_value: {pitch} }},
-            abilities: {abilities_str},
+            shop_abilities: {shop_abilities_str},
+            battle_abilities: {battle_abilities_str},
         }}"#
     )
 }
@@ -327,16 +823,38 @@ fn main() {
         );
     }
 
+    let card_id_set: BTreeSet<u32> = cards.iter().map(|c| c.id).collect();
+    // Validate all set references up front.
+    for set in &sets {
+        for entry in &set.cards {
+            assert!(
+                card_id_set.contains(&entry.card_id),
+                "sets.json set {} references missing card_id {}",
+                set.id,
+                entry.card_id
+            );
+        }
+    }
+
+    let split_abilities: Vec<(Vec<JsonAbility>, Vec<JsonAbility>)> = cards
+        .iter()
+        .map(|card| normalize_card_abilities(card, &card_id_set))
+        .collect();
+
     // ── Generate cards ───────────────────────────────────────────────────────
-    let card_entries: Vec<String> = cards.iter().map(gen_card).collect();
+    let card_entries: Vec<String> = cards
+        .iter()
+        .zip(split_abilities.iter())
+        .map(|(card, (shop, battle))| gen_card(card, shop, battle))
+        .collect();
 
     // ── Generate card metas ──────────────────────────────────────────────────
     let meta_entries: Vec<String> = cards
         .iter()
         .map(|c| {
             let id = c.id;
-            let name = &c.name;
-            let emoji = &c.emoji;
+            let name = escape_rust_string(&c.name);
+            let emoji = escape_rust_string(&c.emoji);
             format!(r#"        CardMeta {{ id: {id}, name: "{name}", emoji: "{emoji}" }}"#)
         })
         .collect();
@@ -346,7 +864,7 @@ fn main() {
         .iter()
         .map(|s| {
             let id = s.id;
-            let name = &s.name;
+            let name = escape_rust_string(&s.name);
             format!(r#"        SetMeta {{ id: {id}, name: "{name}" }}"#)
         })
         .collect();

@@ -16,7 +16,7 @@ fn test_fatal_damage_trigger() {
         "Revenge",
     );
 
-    let martyr = create_dummy_card(1, "Martyr", 1, 1).with_ability(revenge_shot);
+    let martyr = create_dummy_card(1, "Martyr", 1, 1).with_battle_ability(revenge_shot);
     let killer = create_dummy_card(2, "Killer", 10, 10);
 
     let p_board = vec![CombatUnit::from_card(martyr)];
@@ -69,7 +69,7 @@ fn test_destroy_exact_health() {
         "GrimReaper",
     );
 
-    let reaper = create_dummy_card(1, "Reaper", 1, 1).with_ability(reaper_ability);
+    let reaper = create_dummy_card(1, "Reaper", 1, 1).with_battle_ability(reaper_ability);
     let victim = create_dummy_card(2, "Victim", 1, 42);
 
     let p_board = vec![CombatUnit::from_card(reaper)];

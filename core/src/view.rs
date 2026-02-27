@@ -23,7 +23,8 @@ pub struct CardView {
     pub health: i32,
     pub play_cost: i32,
     pub pitch_value: i32,
-    pub abilities: Vec<crate::types::Ability>,
+    pub shop_abilities: Vec<crate::types::ShopAbility>,
+    pub battle_abilities: Vec<crate::types::Ability>,
 }
 
 impl From<&UnitCard> for CardView {
@@ -35,7 +36,8 @@ impl From<&UnitCard> for CardView {
             health: card.stats.health,
             play_cost: card.economy.play_cost,
             pitch_value: card.economy.pitch_value,
-            abilities: card.abilities.clone(),
+            shop_abilities: card.shop_abilities.clone(),
+            battle_abilities: card.battle_abilities.clone(),
         }
     }
 }
@@ -50,7 +52,8 @@ pub struct BoardUnitView {
     pub health: i32,
     pub play_cost: i32,
     pub pitch_value: i32,
-    pub abilities: Vec<crate::types::Ability>,
+    pub shop_abilities: Vec<crate::types::ShopAbility>,
+    pub battle_abilities: Vec<crate::types::Ability>,
 }
 
 /// The complete game view sent to React (Hot Path - lightweight)
@@ -129,7 +132,8 @@ impl GameView {
                                 health: card.stats.health.saturating_add(unit.perm_health),
                                 play_cost: card.economy.play_cost,
                                 pitch_value: card.economy.pitch_value,
-                                abilities: card.abilities.clone(),
+                                shop_abilities: card.shop_abilities.clone(),
+                                battle_abilities: card.battle_abilities.clone(),
                             })
                     })
                 })

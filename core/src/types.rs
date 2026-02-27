@@ -37,7 +37,7 @@ impl From<u32> for CardId {
     }
 }
 
-/// Scope for targeting and condition evaluation
+/// Battle scope for targeting and condition evaluation
 #[derive(
     Debug,
     Clone,
@@ -59,6 +59,28 @@ pub enum TargetScope {
     AlliesOther,
     TriggerSource,
     Aggressor,
+}
+
+/// Shop scope for targeting and condition evaluation.
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Encode,
+    Decode,
+    DecodeWithMemTracking,
+    TypeInfo,
+    MaxEncodedLen,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub enum ShopScope {
+    SelfUnit,
+    Allies,
+    All,
+    AlliesOther,
+    TriggerSource,
 }
 
 /// Stat types for targeting and comparison
@@ -122,7 +144,7 @@ pub enum CompareOp {
     LessThanOrEqual,
 }
 
-/// Conditions that must be met for an ability to activate
+/// Battle matchers that must be met for an ability to activate.
 #[derive(
     Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
 )]
@@ -156,7 +178,31 @@ pub enum Matcher {
     IsPosition { scope: TargetScope, index: i32 },
 }
 
-/// Structural conditions that control the flow of evaluation
+/// Shop matchers that must be met for an ability to activate.
+#[derive(
+    Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "data"))]
+pub enum ShopMatcher {
+    /// Compare a unit's stat to a constant value.
+    StatValueCompare {
+        scope: ShopScope,
+        stat: StatType,
+        op: CompareOp,
+        value: i32,
+    },
+    /// Count units in a scope and compare to a value.
+    UnitCount {
+        scope: ShopScope,
+        op: CompareOp,
+        value: u32,
+    },
+    /// Check if unit is at a specific position.
+    IsPosition { scope: ShopScope, index: i32 },
+}
+
+/// Structural battle conditions that control the flow of evaluation.
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(tag = "type", content = "data"))]
@@ -170,7 +216,18 @@ pub enum Condition {
     AnyOf(Vec<Matcher>),
 }
 
-/// Ability trigger conditions
+/// Structural shop conditions that control the flow of evaluation.
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "data"))]
+pub enum ShopCondition {
+    /// A single mandatory requirement.
+    Is(ShopMatcher),
+    /// A "Shallow OR" list. Stack-safe (cannot contain nested AnyOf).
+    AnyOf(Vec<ShopMatcher>),
+}
+
+/// Battle ability trigger conditions.
 #[derive(
     Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
 )]
@@ -180,9 +237,6 @@ pub enum AbilityTrigger {
     OnFaint,
     OnAllyFaint,
     OnHurt,
-    OnBuy,
-    OnSell,
-    OnShopStart,
     OnSpawn,
     OnAllySpawn,
     OnEnemySpawn,
@@ -192,7 +246,18 @@ pub enum AbilityTrigger {
     AfterAnyAttack,
 }
 
-/// Ability effect types
+/// Shop ability trigger conditions.
+#[derive(
+    Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub enum ShopTrigger {
+    OnBuy,
+    OnSell,
+    OnShopStart,
+}
+
+/// Battle ability effect types.
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(tag = "type"))]
@@ -215,11 +280,30 @@ pub enum AbilityEffect {
     SpawnUnit { card_id: CardId },
     /// Destroy a target directly
     Destroy { target: AbilityTarget },
-    /// Modify current shop mana (used by shop-phase triggers like OnBuy/OnSell)
+    /// Add mana for next shop via battle event processing.
     GainMana { amount: i32 },
 }
 
-/// Ability target specifications
+/// Shop ability effect types.
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(tag = "type"))]
+pub enum ShopEffect {
+    /// Permanently modify health and/or attack stats on board units (until sold).
+    ModifyStatsPermanent {
+        health: i32,
+        attack: i32,
+        target: ShopTarget,
+    },
+    /// Spawn a new unit on the board.
+    SpawnUnit { card_id: CardId },
+    /// Destroy a target directly.
+    Destroy { target: ShopTarget },
+    /// Modify current shop mana.
+    GainMana { amount: i32 },
+}
+
+/// Battle ability target specifications.
 #[derive(
     Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
 )]
@@ -243,7 +327,29 @@ pub enum AbilityTarget {
     All { scope: TargetScope },
 }
 
-/// A unit ability
+/// Shop ability target specifications.
+#[derive(
+    Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(tag = "type", content = "data"))]
+pub enum ShopTarget {
+    /// Specific position (0=front, -1=back). scope=SelfUnit means relative.
+    Position { scope: ShopScope, index: i32 },
+    /// Random units from scope.
+    Random { scope: ShopScope, count: u32 },
+    /// Selection based on stats (e.g., Highest Attack).
+    Standard {
+        scope: ShopScope,
+        stat: StatType,
+        order: SortOrder,
+        count: u32,
+    },
+    /// Everyone in scope.
+    All { scope: ShopScope },
+}
+
+/// A battle ability.
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct Ability {
@@ -256,6 +362,24 @@ pub struct Ability {
     #[cfg_attr(feature = "std", serde(default))]
     pub conditions: Vec<Condition>,
     /// Optional limit on how many times this ability can trigger per battle.
+    /// If None, the ability can trigger unlimited times.
+    #[cfg_attr(feature = "std", serde(default))]
+    pub max_triggers: Option<u32>,
+}
+
+/// A shop ability.
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct ShopAbility {
+    pub trigger: ShopTrigger,
+    pub effect: ShopEffect,
+    pub name: String,
+    pub description: String,
+    /// The list of conditions implies "AND".
+    /// If empty, it always triggers.
+    #[cfg_attr(feature = "std", serde(default))]
+    pub conditions: Vec<ShopCondition>,
+    /// Optional limit on how many times this ability can trigger per shop phase.
     /// If None, the ability can trigger unlimited times.
     #[cfg_attr(feature = "std", serde(default))]
     pub max_triggers: Option<u32>,
@@ -289,7 +413,10 @@ pub struct UnitCard {
     pub name: String,
     pub stats: UnitStats,
     pub economy: EconomyStats,
-    pub abilities: Vec<Ability>,
+    #[cfg_attr(feature = "std", serde(default))]
+    pub shop_abilities: Vec<ShopAbility>,
+    #[cfg_attr(feature = "std", serde(default))]
+    pub battle_abilities: Vec<Ability>,
 }
 
 impl UnitCard {
@@ -309,17 +436,27 @@ impl UnitCard {
                 play_cost,
                 pitch_value,
             },
-            abilities: vec![],
+            shop_abilities: vec![],
+            battle_abilities: vec![],
         }
     }
 
-    pub fn with_abilities(mut self, abilities: Vec<Ability>) -> Self {
-        self.abilities = abilities;
+    pub fn with_shop_abilities(mut self, abilities: Vec<ShopAbility>) -> Self {
+        self.shop_abilities = abilities;
         self
     }
 
-    pub fn with_ability(self, ability: Ability) -> Self {
-        self.with_abilities(vec![ability])
+    pub fn with_shop_ability(self, ability: ShopAbility) -> Self {
+        self.with_shop_abilities(vec![ability])
+    }
+
+    pub fn with_battle_abilities(mut self, abilities: Vec<Ability>) -> Self {
+        self.battle_abilities = abilities;
+        self
+    }
+
+    pub fn with_battle_ability(self, ability: Ability) -> Self {
+        self.with_battle_abilities(vec![ability])
     }
 }
 

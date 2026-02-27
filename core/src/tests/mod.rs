@@ -73,7 +73,8 @@ fn create_tester_unit(
             play_cost: 1,
             pitch_value: 1,
         },
-        abilities: vec![ability],
+        shop_abilities: vec![],
+        battle_abilities: vec![ability],
     };
 
     CombatUnit::from_card(card)
@@ -91,7 +92,8 @@ fn create_dummy_enemy() -> CombatUnit {
             play_cost: 0,
             pitch_value: 0,
         },
-        abilities: vec![],
+        shop_abilities: vec![],
+        battle_abilities: vec![],
     };
     CombatUnit::from_card(card)
 }

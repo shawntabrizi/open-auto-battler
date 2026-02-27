@@ -6,7 +6,7 @@
       "wsUrl": "ws://127.0.0.1:9944",
       "metadata": ".papi/metadata/auto_battle.scale",
       "genesis": "0x4545454545454545454545454545454545454545454545454545454545454545",
-      "codeHash": "0x00db063012c469a2f4c9b3ce990e5399822ae249e21d66b39090bb60b78c259d"
+      "codeHash": "0x28c0fc2a83ad3e63e2831191bea47de92f60fcd9e1c7bbad2f7c822300786fbe"
     }
   }
 }

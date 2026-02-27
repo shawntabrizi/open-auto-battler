@@ -74,7 +74,7 @@ interface GameStore {
   initEngine: () => Promise<void>;
   startGame: (setId: number) => void;
 
-  // Backward-compatible init (loads engine + starts game immediately)
+  // One-shot init (loads engine + starts game immediately)
   init: (seed?: bigint) => Promise<void>;
 
   // Preview
@@ -134,7 +134,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   initEngine: async () => {
     if (get().engine) {
       // Engine exists from a previous session — reset to set selection
-      set({ gameStarted: false, view: null, cardSet: null, battleOutput: null, selection: null, showBattleOverlay: false });
+      set({
+        gameStarted: false,
+        view: null,
+        cardSet: null,
+        battleOutput: null,
+        selection: null,
+        showBattleOverlay: false,
+      });
       return;
     }
     if (initEnginePromise) return initEnginePromise;
@@ -198,7 +205,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  // Backward-compatible init (for blockchain/multiplayer flows)
+  // One-shot init (for blockchain/multiplayer flows)
   init: async (seed?: bigint) => {
     // If engine already exists, nothing to do
     if (get().engine) return;

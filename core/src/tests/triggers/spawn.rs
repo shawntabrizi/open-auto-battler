@@ -5,7 +5,7 @@ use crate::types::*;
 
 #[test]
 fn test_warder_seal_fate() {
-    let warder = create_dummy_card(1, "Warder", 2, 4).with_ability(Ability {
+    let warder = create_dummy_card(1, "Warder", 2, 4).with_battle_ability(Ability {
         trigger: AbilityTrigger::OnEnemySpawn,
         effect: AbilityEffect::Damage {
             amount: 1,
@@ -19,7 +19,7 @@ fn test_warder_seal_fate() {
         max_triggers: None,
     });
 
-    let rat_swarm = create_dummy_card(2, "Rat Swarm", 1, 1).with_ability(Ability {
+    let rat_swarm = create_dummy_card(2, "Rat Swarm", 1, 1).with_battle_ability(Ability {
         trigger: AbilityTrigger::OnFaint,
         effect: AbilityEffect::SpawnUnit {
             card_id: CardId(40), // rat_token
@@ -64,7 +64,7 @@ fn test_warder_seal_fate() {
 
 #[test]
 fn test_necromancer_spawn_boost() {
-    let rat_swarm = create_dummy_card(1, "Rat Swarm", 1, 1).with_ability(Ability {
+    let rat_swarm = create_dummy_card(1, "Rat Swarm", 1, 1).with_battle_ability(Ability {
         trigger: AbilityTrigger::OnFaint,
         effect: AbilityEffect::SpawnUnit {
             card_id: CardId(40), // rat_token
@@ -75,7 +75,7 @@ fn test_necromancer_spawn_boost() {
         max_triggers: None,
     });
 
-    let necromancer = create_dummy_card(2, "Necromancer", 2, 3).with_ability(Ability {
+    let necromancer = create_dummy_card(2, "Necromancer", 2, 3).with_battle_ability(Ability {
         trigger: AbilityTrigger::OnAllySpawn,
         effect: AbilityEffect::ModifyStats {
             health: 0,
@@ -144,7 +144,7 @@ fn test_spawn_index_preservation() {
     );
 
     let tank = create_dummy_card(1, "Tank", 5, 10);
-    let spawner = create_dummy_card(2, "Spawner", 0, 1).with_ability(spawn_ability);
+    let spawner = create_dummy_card(2, "Spawner", 0, 1).with_battle_ability(spawn_ability);
     let backline = create_dummy_card(3, "Backline", 5, 10);
 
     let p_board = vec![
@@ -153,7 +153,7 @@ fn test_spawn_index_preservation() {
         CombatUnit::from_card(backline),
     ];
 
-    let aoe_killer = create_dummy_card(4, "AoE", 5, 10).with_ability(create_ability(
+    let aoe_killer = create_dummy_card(4, "AoE", 5, 10).with_battle_ability(create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::Damage {
             amount: 5,
@@ -205,7 +205,8 @@ fn test_sacrifice_combo() {
         },
         "Raise",
     );
-    let lich = create_dummy_card(2, "Lich", 3, 3).with_abilities(vec![lich_destroy, lich_spawn]);
+    let lich =
+        create_dummy_card(2, "Lich", 3, 3).with_battle_abilities(vec![lich_destroy, lich_spawn]);
 
     let cart_ability = create_ability(
         AbilityTrigger::OnAllyFaint,
@@ -218,7 +219,7 @@ fn test_sacrifice_combo() {
         },
         "Scavenge",
     );
-    let corpse_cart = create_dummy_card(3, "Cart", 0, 4).with_ability(cart_ability);
+    let corpse_cart = create_dummy_card(3, "Cart", 0, 4).with_battle_ability(cart_ability);
 
     let p_board = vec![
         CombatUnit::from_card(fodder),
@@ -271,7 +272,7 @@ fn test_damage_taken_no_slide_trigger() {
     );
 
     let fodder = create_dummy_card(1, "Fodder", 1, 1);
-    let breeder = create_dummy_card(2, "Breeder", 2, 4).with_ability(spawn_ability);
+    let breeder = create_dummy_card(2, "Breeder", 2, 4).with_battle_ability(spawn_ability);
     let killer = create_dummy_card(3, "Killer", 0, 10);
 
     let p_board = vec![
@@ -307,7 +308,7 @@ fn test_spawn_id_uniqueness_and_buffs() {
         "Spawn",
     );
     let spawner = create_dummy_card(1, "Spawner", 10, 10)
-        .with_abilities(vec![spawn_ability.clone(), spawn_ability]);
+        .with_battle_abilities(vec![spawn_ability.clone(), spawn_ability]);
 
     let buff_ability = create_ability(
         AbilityTrigger::OnStart,
@@ -320,7 +321,7 @@ fn test_spawn_id_uniqueness_and_buffs() {
         },
         "BuffAll",
     );
-    let buffer = create_dummy_card(2, "Buffer", 5, 10).with_ability(buff_ability);
+    let buffer = create_dummy_card(2, "Buffer", 5, 10).with_battle_ability(buff_ability);
 
     let p_board = vec![
         CombatUnit::from_card(spawner),
@@ -369,7 +370,7 @@ fn test_spawn_limit_logic() {
     );
 
     let captain = create_dummy_card(1, "Captain", 1, 1)
-        .with_abilities(vec![multi_spawn.clone(), multi_spawn]);
+        .with_battle_abilities(vec![multi_spawn.clone(), multi_spawn]);
 
     let filler = create_dummy_card(2, "Filler", 1, 10);
 
@@ -408,7 +409,7 @@ fn test_spawn_limit_logic() {
 
 #[test]
 fn test_missing_spawn_card_fizzles_without_panic() {
-    let spawner = create_dummy_card(1, "BrokenSpawner", 2, 5).with_ability(create_ability(
+    let spawner = create_dummy_card(1, "BrokenSpawner", 2, 5).with_battle_ability(create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::SpawnUnit {
             card_id: CardId(999_999),
@@ -443,7 +444,7 @@ fn test_full_board_spawn_spam_does_not_leak_recursion_depth() {
         "SpawnSpam",
     );
 
-    let spammer = create_dummy_card(1, "Spawner", 0, 500).with_ability(spawn_spam);
+    let spammer = create_dummy_card(1, "Spawner", 0, 500).with_battle_ability(spawn_spam);
     let p_board = vec![
         CombatUnit::from_card(spammer.clone()),
         CombatUnit::from_card(spammer.clone()),

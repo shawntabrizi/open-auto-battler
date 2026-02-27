@@ -2,7 +2,7 @@
   {
     "id": 0,
     "name": "Rat Swarm",
-    "emoji": "\ud83d\udc00",
+    "emoji": "🐀",
     "stats": {
       "attack": 1,
       "health": 1
@@ -11,7 +11,8 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -28,7 +29,7 @@
   {
     "id": 1,
     "name": "Goblin Scout",
-    "emoji": "\ud83d\udc7a",
+    "emoji": "👺",
     "stats": {
       "attack": 1,
       "health": 2
@@ -37,12 +38,13 @@
       "play_cost": 1,
       "pitch_value": 2
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 2,
     "name": "Goblin Grunt",
-    "emoji": "\ud83d\udc79",
+    "emoji": "👹",
     "stats": {
       "attack": 2,
       "health": 2
@@ -51,12 +53,13 @@
       "play_cost": 2,
       "pitch_value": 1
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 3,
     "name": "Scaredy Cat",
-    "emoji": "\ud83d\ude40",
+    "emoji": "🙀",
     "stats": {
       "attack": 1,
       "health": 3
@@ -65,7 +68,8 @@
       "play_cost": 1,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -90,7 +94,7 @@
   {
     "id": 4,
     "name": "Brave Commander",
-    "emoji": "\ud83e\udee1",
+    "emoji": "🫡",
     "stats": {
       "attack": 2,
       "health": 3
@@ -99,7 +103,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -124,7 +129,7 @@
   {
     "id": 5,
     "name": "Militia",
-    "emoji": "\ud83d\udee1\ufe0f",
+    "emoji": "🛡️",
     "stats": {
       "attack": 2,
       "health": 2
@@ -133,12 +138,13 @@
       "play_cost": 2,
       "pitch_value": 2
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 6,
     "name": "Shield Bearer",
-    "emoji": "\ud83c\udff0",
+    "emoji": "🏰",
     "stats": {
       "attack": 1,
       "health": 4
@@ -147,7 +153,8 @@
       "play_cost": 2,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -172,7 +179,7 @@
   {
     "id": 7,
     "name": "Nurse Goblin",
-    "emoji": "\ud83e\ude7a",
+    "emoji": "🩺",
     "stats": {
       "attack": 1,
       "health": 3
@@ -181,7 +188,8 @@
       "play_cost": 2,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "BeforeAnyAttack",
         "effect": {
@@ -219,7 +227,7 @@
   {
     "id": 8,
     "name": "Wolf Rider",
-    "emoji": "\ud83d\udc3a",
+    "emoji": "🐺",
     "stats": {
       "attack": 3,
       "health": 2
@@ -228,7 +236,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -252,7 +261,7 @@
   {
     "id": 9,
     "name": "Martyr Knight",
-    "emoji": "\ud83d\udd6f\ufe0f",
+    "emoji": "🕯️",
     "stats": {
       "attack": 2,
       "health": 3
@@ -261,7 +270,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -286,7 +296,7 @@
   {
     "id": 10,
     "name": "Abyssal Bomber",
-    "emoji": "\ud83d\udca3",
+    "emoji": "💣",
     "stats": {
       "attack": 2,
       "health": 2
@@ -295,7 +305,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -318,7 +329,7 @@
   {
     "id": 11,
     "name": "Archer",
-    "emoji": "\ud83c\udff9",
+    "emoji": "🏹",
     "stats": {
       "attack": 1,
       "health": 3
@@ -327,7 +338,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -351,7 +363,7 @@
   {
     "id": 12,
     "name": "Sniper",
-    "emoji": "\ud83c\udfaf",
+    "emoji": "🎯",
     "stats": {
       "attack": 2,
       "health": 2
@@ -360,7 +372,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -384,7 +397,7 @@
   {
     "id": 13,
     "name": "Skeleton Archer",
-    "emoji": "\ud83d\udc80",
+    "emoji": "💀",
     "stats": {
       "attack": 2,
       "health": 2
@@ -393,7 +406,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -417,7 +431,7 @@
   {
     "id": 14,
     "name": "Battle Hardened",
-    "emoji": "\ud83d\udcaa",
+    "emoji": "💪",
     "stats": {
       "attack": 2,
       "health": 3
@@ -426,7 +440,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "BeforeUnitAttack",
         "effect": {
@@ -468,7 +483,7 @@
   {
     "id": 15,
     "name": "Lone Wolf",
-    "emoji": "\ud83d\udc15",
+    "emoji": "🐕",
     "stats": {
       "attack": 2,
       "health": 4
@@ -477,7 +492,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "BeforeUnitAttack",
         "effect": {
@@ -513,7 +529,7 @@
   {
     "id": 16,
     "name": "Pack Leader",
-    "emoji": "\ud83d\udc51",
+    "emoji": "👑",
     "stats": {
       "attack": 2,
       "health": 3
@@ -522,7 +538,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -558,7 +575,7 @@
   {
     "id": 17,
     "name": "Spined Urchin",
-    "emoji": "\ud83e\udd94",
+    "emoji": "🦔",
     "stats": {
       "attack": 1,
       "health": 4
@@ -567,7 +584,8 @@
       "play_cost": 2,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnHurt",
         "effect": {
@@ -590,7 +608,7 @@
   {
     "id": 18,
     "name": "Vampire",
-    "emoji": "\ud83e\udddb",
+    "emoji": "🧛",
     "stats": {
       "attack": 3,
       "health": 3
@@ -599,7 +617,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "AfterUnitAttack",
         "effect": {
@@ -623,7 +642,7 @@
   {
     "id": 19,
     "name": "Raging Orc",
-    "emoji": "\ud83e\udd2c",
+    "emoji": "🤬",
     "stats": {
       "attack": 2,
       "health": 8
@@ -632,7 +651,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnHurt",
         "effect": {
@@ -656,7 +676,7 @@
   {
     "id": 20,
     "name": "Zombie Captain",
-    "emoji": "\ud83e\udddf\u200d\u2642\ufe0f",
+    "emoji": "🧟‍♂️",
     "stats": {
       "attack": 3,
       "health": 4
@@ -665,7 +685,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -682,7 +703,7 @@
   {
     "id": 21,
     "name": "Necromancer",
-    "emoji": "\ud83e\uddd9",
+    "emoji": "🧙",
     "stats": {
       "attack": 2,
       "health": 3
@@ -691,7 +712,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnAllySpawn",
         "effect": {
@@ -715,7 +737,7 @@
   {
     "id": 22,
     "name": "Headhunter",
-    "emoji": "\ud83d\udd75\ufe0f",
+    "emoji": "🕵️",
     "stats": {
       "attack": 4,
       "health": 2
@@ -724,7 +746,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -750,7 +773,7 @@
   {
     "id": 23,
     "name": "Giant Slayer",
-    "emoji": "\ud83d\udde1\ufe0f",
+    "emoji": "🗡️",
     "stats": {
       "attack": 2,
       "health": 2
@@ -759,7 +782,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -785,7 +809,7 @@
   {
     "id": 24,
     "name": "Shield Squire",
-    "emoji": "\ud83d\udee1\ufe0f",
+    "emoji": "🛡️",
     "stats": {
       "attack": 2,
       "health": 3
@@ -794,7 +818,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "BeforeAnyAttack",
         "effect": {
@@ -819,7 +844,7 @@
   {
     "id": 25,
     "name": "Warder",
-    "emoji": "\ud83d\udc82",
+    "emoji": "💂",
     "stats": {
       "attack": 2,
       "health": 4
@@ -828,7 +853,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnEnemySpawn",
         "effect": {
@@ -851,7 +877,7 @@
   {
     "id": 26,
     "name": "Artillery Mage",
-    "emoji": "\u2604\ufe0f",
+    "emoji": "☄️",
     "stats": {
       "attack": 3,
       "health": 3
@@ -860,7 +886,8 @@
       "play_cost": 5,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -884,7 +911,7 @@
   {
     "id": 27,
     "name": "Rear Guard",
-    "emoji": "\ud83e\uddf1",
+    "emoji": "🧱",
     "stats": {
       "attack": 2,
       "health": 5
@@ -893,7 +920,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -918,7 +946,7 @@
   {
     "id": 28,
     "name": "Troll Brute",
-    "emoji": "\ud83e\uddcc",
+    "emoji": "🧌",
     "stats": {
       "attack": 4,
       "health": 5
@@ -927,7 +955,8 @@
       "play_cost": 5,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -950,7 +979,7 @@
   {
     "id": 29,
     "name": "Lich",
-    "emoji": "\ud83d\udc80",
+    "emoji": "💀",
     "stats": {
       "attack": 3,
       "health": 3
@@ -959,7 +988,8 @@
       "play_cost": 5,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -993,7 +1023,7 @@
   {
     "id": 30,
     "name": "Assassin",
-    "emoji": "\ud83e\udd77",
+    "emoji": "🥷",
     "stats": {
       "attack": 5,
       "health": 1
@@ -1002,7 +1032,8 @@
       "play_cost": 5,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -1038,7 +1069,7 @@
   {
     "id": 31,
     "name": "Fire Elemental",
-    "emoji": "\ud83d\udd25",
+    "emoji": "🔥",
     "stats": {
       "attack": 4,
       "health": 4
@@ -1047,7 +1078,8 @@
       "play_cost": 5,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "AfterUnitAttack",
         "effect": {
@@ -1071,7 +1103,7 @@
   {
     "id": 32,
     "name": "Ogre Mauler",
-    "emoji": "\ud83d\udc4a",
+    "emoji": "👊",
     "stats": {
       "attack": 5,
       "health": 6
@@ -1080,7 +1112,8 @@
       "play_cost": 6,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -1104,7 +1137,7 @@
   {
     "id": 33,
     "name": "Phoenix",
-    "emoji": "\ud83d\udc26\u200d\ud83d\udd25",
+    "emoji": "🐦‍🔥",
     "stats": {
       "attack": 3,
       "health": 3
@@ -1113,7 +1146,8 @@
       "play_cost": 6,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -1130,7 +1164,7 @@
   {
     "id": 34,
     "name": "Shield Master",
-    "emoji": "\ud83d\udc51",
+    "emoji": "👑",
     "stats": {
       "attack": 3,
       "health": 10
@@ -1139,7 +1173,8 @@
       "play_cost": 7,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "BeforeAnyAttack",
         "effect": {
@@ -1163,7 +1198,7 @@
   {
     "id": 35,
     "name": "Void Walker",
-    "emoji": "\ud83c\udf11",
+    "emoji": "🌑",
     "stats": {
       "attack": 4,
       "health": 4
@@ -1172,7 +1207,8 @@
       "play_cost": 7,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -1215,7 +1251,7 @@
   {
     "id": 36,
     "name": "Mana Reaper",
-    "emoji": "\u2696\ufe0f",
+    "emoji": "⚖️",
     "stats": {
       "attack": 2,
       "health": 2
@@ -1224,7 +1260,8 @@
       "play_cost": 8,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -1268,7 +1305,7 @@
   {
     "id": 37,
     "name": "Giant Crusher",
-    "emoji": "\ud83e\udda3",
+    "emoji": "🦣",
     "stats": {
       "attack": 6,
       "health": 8
@@ -1277,7 +1314,8 @@
       "play_cost": 8,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -1301,7 +1339,7 @@
   {
     "id": 38,
     "name": "Behemoth",
-    "emoji": "\ud83d\udc18",
+    "emoji": "🐘",
     "stats": {
       "attack": 10,
       "health": 10
@@ -1310,12 +1348,13 @@
       "play_cost": 10,
       "pitch_value": 2
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 39,
     "name": "Dragon Tyrant",
-    "emoji": "\ud83d\udc09",
+    "emoji": "🐉",
     "stats": {
       "attack": 8,
       "health": 12
@@ -1324,7 +1363,8 @@
       "play_cost": 10,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -1347,7 +1387,7 @@
   {
     "id": 40,
     "name": "Rat Token",
-    "emoji": "\ud83d\udc00",
+    "emoji": "🐀",
     "stats": {
       "attack": 1,
       "health": 1
@@ -1356,12 +1396,13 @@
       "play_cost": 0,
       "pitch_value": 0
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 41,
     "name": "Zombie Soldier",
-    "emoji": "\ud83e\udddf",
+    "emoji": "🧟",
     "stats": {
       "attack": 1,
       "health": 1
@@ -1370,12 +1411,13 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 42,
     "name": "Golem",
-    "emoji": "\ud83d\uddff",
+    "emoji": "🗿",
     "stats": {
       "attack": 5,
       "health": 5
@@ -1384,12 +1426,13 @@
       "play_cost": 0,
       "pitch_value": 0
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 43,
     "name": "Phoenix Egg",
-    "emoji": "\ud83e\udd5a",
+    "emoji": "🥚",
     "stats": {
       "attack": 0,
       "health": 5
@@ -1398,7 +1441,8 @@
       "play_cost": 0,
       "pitch_value": 0
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -1415,7 +1459,7 @@
   {
     "id": 44,
     "name": "Zombie Cricket",
-    "emoji": "\ud83e\udeb3",
+    "emoji": "🪳",
     "stats": {
       "attack": 1,
       "health": 1
@@ -1424,12 +1468,13 @@
       "play_cost": 0,
       "pitch_value": 0
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 45,
     "name": "Ram",
-    "emoji": "\ud83d\udc0f",
+    "emoji": "🐏",
     "stats": {
       "attack": 2,
       "health": 2
@@ -1438,12 +1483,13 @@
       "play_cost": 0,
       "pitch_value": 0
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 46,
     "name": "Spiderling",
-    "emoji": "\ud83d\udd78\ufe0f",
+    "emoji": "🕸️",
     "stats": {
       "attack": 2,
       "health": 2
@@ -1452,12 +1498,13 @@
       "play_cost": 0,
       "pitch_value": 0
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 47,
     "name": "Ant",
-    "emoji": "\ud83d\udc1c",
+    "emoji": "🐜",
     "stats": {
       "attack": 2,
       "health": 2
@@ -1466,7 +1513,8 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -1491,7 +1539,7 @@
   {
     "id": 48,
     "name": "Beaver",
-    "emoji": "\ud83e\uddab",
+    "emoji": "🦫",
     "stats": {
       "attack": 3,
       "health": 2
@@ -1500,7 +1548,7 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnSell",
         "effect": {
@@ -1520,12 +1568,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 49,
     "name": "Cricket",
-    "emoji": "\ud83e\udd97",
+    "emoji": "🦗",
     "stats": {
       "attack": 1,
       "health": 2
@@ -1534,7 +1583,8 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -1551,7 +1601,7 @@
   {
     "id": 50,
     "name": "Duck",
-    "emoji": "\ud83e\udd86",
+    "emoji": "🦆",
     "stats": {
       "attack": 2,
       "health": 3
@@ -1560,7 +1610,7 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnSell",
         "effect": {
@@ -1579,12 +1629,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 51,
     "name": "Fish",
-    "emoji": "\ud83d\udc1f",
+    "emoji": "🐟",
     "stats": {
       "attack": 2,
       "health": 3
@@ -1593,7 +1644,7 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnBuy",
         "effect": {
@@ -1613,12 +1664,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 52,
     "name": "Horse",
-    "emoji": "\ud83d\udc0e",
+    "emoji": "🐎",
     "stats": {
       "attack": 2,
       "health": 1
@@ -1627,7 +1679,8 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnAllySpawn",
         "effect": {
@@ -1651,7 +1704,7 @@
   {
     "id": 53,
     "name": "Mosquito",
-    "emoji": "\ud83e\udd9f",
+    "emoji": "🦟",
     "stats": {
       "attack": 2,
       "health": 2
@@ -1660,7 +1713,8 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -1684,7 +1738,7 @@
   {
     "id": 54,
     "name": "Mouse",
-    "emoji": "\ud83d\udc2d",
+    "emoji": "🐭",
     "stats": {
       "attack": 1,
       "health": 2
@@ -1693,7 +1747,7 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnSell",
         "effect": {
@@ -1705,12 +1759,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 55,
     "name": "Otter",
-    "emoji": "\ud83e\udda6",
+    "emoji": "🦦",
     "stats": {
       "attack": 1,
       "health": 3
@@ -1719,7 +1774,7 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnBuy",
         "effect": {
@@ -1739,12 +1794,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 56,
     "name": "Pig",
-    "emoji": "\ud83d\udc37",
+    "emoji": "🐷",
     "stats": {
       "attack": 4,
       "health": 1
@@ -1753,7 +1809,7 @@
       "play_cost": 1,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnSell",
         "effect": {
@@ -1765,12 +1821,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 57,
     "name": "Crab",
-    "emoji": "\ud83e\udd80",
+    "emoji": "🦀",
     "stats": {
       "attack": 4,
       "health": 1
@@ -1779,7 +1836,8 @@
       "play_cost": 2,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -1803,7 +1861,7 @@
   {
     "id": 58,
     "name": "Flamingo",
-    "emoji": "\ud83e\udda9",
+    "emoji": "🦩",
     "stats": {
       "attack": 3,
       "health": 2
@@ -1812,7 +1870,8 @@
       "play_cost": 2,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -1837,7 +1896,7 @@
   {
     "id": 59,
     "name": "Hedgehog",
-    "emoji": "\ud83e\udd94",
+    "emoji": "🦔",
     "stats": {
       "attack": 3,
       "health": 2
@@ -1846,7 +1905,8 @@
       "play_cost": 2,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -1869,7 +1929,7 @@
   {
     "id": 60,
     "name": "Kangaroo",
-    "emoji": "\ud83e\udd98",
+    "emoji": "🦘",
     "stats": {
       "attack": 2,
       "health": 3
@@ -1878,7 +1938,8 @@
       "play_cost": 2,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "BeforeUnitAttack",
         "effect": {
@@ -1902,7 +1963,7 @@
   {
     "id": 61,
     "name": "Peacock",
-    "emoji": "\ud83e\udd9a",
+    "emoji": "🦚",
     "stats": {
       "attack": 2,
       "health": 5
@@ -1911,7 +1972,8 @@
       "play_cost": 2,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnHurt",
         "effect": {
@@ -1935,7 +1997,7 @@
   {
     "id": 62,
     "name": "Rat",
-    "emoji": "\ud83d\udc00",
+    "emoji": "🐀",
     "stats": {
       "attack": 3,
       "health": 6
@@ -1944,7 +2006,8 @@
       "play_cost": 2,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -1961,7 +2024,7 @@
   {
     "id": 63,
     "name": "Snail",
-    "emoji": "\ud83d\udc0c",
+    "emoji": "🐌",
     "stats": {
       "attack": 2,
       "health": 2
@@ -1970,7 +2033,7 @@
       "play_cost": 2,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnShopStart",
         "effect": {
@@ -1989,12 +2052,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 64,
     "name": "Spider",
-    "emoji": "\ud83d\udd77\ufe0f",
+    "emoji": "🕷️",
     "stats": {
       "attack": 2,
       "health": 2
@@ -2003,7 +2067,8 @@
       "play_cost": 2,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -2020,7 +2085,7 @@
   {
     "id": 65,
     "name": "Swan",
-    "emoji": "\ud83e\udda2",
+    "emoji": "🦢",
     "stats": {
       "attack": 1,
       "health": 2
@@ -2029,7 +2094,7 @@
       "play_cost": 2,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnShopStart",
         "effect": {
@@ -2041,12 +2106,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 66,
     "name": "Worm",
-    "emoji": "\ud83e\udeb1",
+    "emoji": "🪱",
     "stats": {
       "attack": 1,
       "health": 3
@@ -2055,7 +2121,7 @@
       "play_cost": 2,
       "pitch_value": 1
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnBuy",
         "effect": {
@@ -2074,12 +2140,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 67,
     "name": "Badger",
-    "emoji": "\ud83e\udda1",
+    "emoji": "🦡",
     "stats": {
       "attack": 6,
       "health": 3
@@ -2088,7 +2155,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -2111,7 +2179,7 @@
   {
     "id": 68,
     "name": "Camel",
-    "emoji": "\ud83d\udc2b",
+    "emoji": "🐫",
     "stats": {
       "attack": 2,
       "health": 4
@@ -2120,7 +2188,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnHurt",
         "effect": {
@@ -2145,7 +2214,7 @@
   {
     "id": 69,
     "name": "Dodo",
-    "emoji": "\ud83e\udda4",
+    "emoji": "🦤",
     "stats": {
       "attack": 4,
       "health": 2
@@ -2154,7 +2223,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -2179,7 +2249,7 @@
   {
     "id": 70,
     "name": "Dog",
-    "emoji": "\ud83d\udc15",
+    "emoji": "🐕",
     "stats": {
       "attack": 2,
       "health": 3
@@ -2188,7 +2258,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnAllySpawn",
         "effect": {
@@ -2212,7 +2283,7 @@
   {
     "id": 71,
     "name": "Dolphin",
-    "emoji": "\ud83d\udc2c",
+    "emoji": "🐬",
     "stats": {
       "attack": 4,
       "health": 3
@@ -2221,7 +2292,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -2247,7 +2319,7 @@
   {
     "id": 72,
     "name": "Elephant",
-    "emoji": "\ud83d\udc18",
+    "emoji": "🐘",
     "stats": {
       "attack": 3,
       "health": 7
@@ -2256,7 +2328,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "AfterUnitAttack",
         "effect": {
@@ -2280,7 +2353,7 @@
   {
     "id": 73,
     "name": "Giraffe",
-    "emoji": "\ud83e\udd92",
+    "emoji": "🦒",
     "stats": {
       "attack": 1,
       "health": 3
@@ -2289,7 +2362,7 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnShopStart",
         "effect": {
@@ -2309,12 +2382,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 74,
     "name": "Ox",
-    "emoji": "\ud83d\udc02",
+    "emoji": "🐂",
     "stats": {
       "attack": 1,
       "health": 3
@@ -2323,7 +2397,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnAllyFaint",
         "effect": {
@@ -2347,7 +2422,7 @@
   {
     "id": 75,
     "name": "Rabbit",
-    "emoji": "\ud83d\udc07",
+    "emoji": "🐇",
     "stats": {
       "attack": 1,
       "health": 2
@@ -2356,7 +2431,7 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnBuy",
         "effect": {
@@ -2375,12 +2450,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 76,
     "name": "Sheep",
-    "emoji": "\ud83d\udc11",
+    "emoji": "🐑",
     "stats": {
       "attack": 2,
       "health": 2
@@ -2389,7 +2465,8 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -2417,7 +2494,7 @@
   {
     "id": 77,
     "name": "Bison",
-    "emoji": "\ud83e\uddac",
+    "emoji": "🦬",
     "stats": {
       "attack": 5,
       "health": 3
@@ -2426,7 +2503,7 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnShopStart",
         "effect": {
@@ -2445,12 +2522,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 78,
     "name": "Blowfish",
-    "emoji": "\ud83d\udc21",
+    "emoji": "🐡",
     "stats": {
       "attack": 3,
       "health": 6
@@ -2459,7 +2537,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnHurt",
         "effect": {
@@ -2483,7 +2562,7 @@
   {
     "id": 79,
     "name": "Deer",
-    "emoji": "\ud83e\udd8c",
+    "emoji": "🦌",
     "stats": {
       "attack": 1,
       "health": 1
@@ -2492,7 +2571,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -2509,7 +2589,7 @@
   {
     "id": 80,
     "name": "Hippo",
-    "emoji": "\ud83e\udd9b",
+    "emoji": "🦛",
     "stats": {
       "attack": 4,
       "health": 5
@@ -2518,7 +2598,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "AfterUnitAttack",
         "effect": {
@@ -2542,7 +2623,7 @@
   {
     "id": 81,
     "name": "Parrot",
-    "emoji": "\ud83e\udd9c",
+    "emoji": "🦜",
     "stats": {
       "attack": 4,
       "health": 2
@@ -2551,7 +2632,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -2576,7 +2658,7 @@
   {
     "id": 82,
     "name": "Penguin",
-    "emoji": "\ud83d\udc27",
+    "emoji": "🐧",
     "stats": {
       "attack": 2,
       "health": 4
@@ -2585,7 +2667,7 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnShopStart",
         "effect": {
@@ -2605,12 +2687,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 83,
     "name": "Skunk",
-    "emoji": "\ud83e\udda8",
+    "emoji": "🦨",
     "stats": {
       "attack": 3,
       "health": 5
@@ -2619,7 +2702,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -2645,7 +2729,7 @@
   {
     "id": 84,
     "name": "Squirrel",
-    "emoji": "\ud83d\udc3f\ufe0f",
+    "emoji": "🐿️",
     "stats": {
       "attack": 2,
       "health": 5
@@ -2654,7 +2738,7 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnShopStart",
         "effect": {
@@ -2666,12 +2750,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 85,
     "name": "Turtle",
-    "emoji": "\ud83d\udc22",
+    "emoji": "🐢",
     "stats": {
       "attack": 2,
       "health": 5
@@ -2680,7 +2765,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -2705,7 +2791,7 @@
   {
     "id": 86,
     "name": "Whale",
-    "emoji": "\ud83d\udc0b",
+    "emoji": "🐋",
     "stats": {
       "attack": 3,
       "health": 8
@@ -2714,7 +2800,8 @@
       "play_cost": 4,
       "pitch_value": 2
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -2737,7 +2824,7 @@
   {
     "id": 87,
     "name": "Armadillo",
-    "emoji": "\ud83d\udee1\ufe0f",
+    "emoji": "🛡️",
     "stats": {
       "attack": 2,
       "health": 6
@@ -2746,7 +2833,8 @@
       "play_cost": 5,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -2770,7 +2858,7 @@
   {
     "id": 88,
     "name": "Cow",
-    "emoji": "\ud83d\udc04",
+    "emoji": "🐄",
     "stats": {
       "attack": 4,
       "health": 6
@@ -2779,7 +2867,7 @@
       "play_cost": 5,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnBuy",
         "effect": {
@@ -2798,12 +2886,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 89,
     "name": "Crocodile",
-    "emoji": "\ud83d\udc0a",
+    "emoji": "🐊",
     "stats": {
       "attack": 8,
       "health": 4
@@ -2812,7 +2901,8 @@
       "play_cost": 5,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -2836,7 +2926,7 @@
   {
     "id": 90,
     "name": "Monkey",
-    "emoji": "\ud83d\udc12",
+    "emoji": "🐒",
     "stats": {
       "attack": 1,
       "health": 2
@@ -2845,7 +2935,7 @@
       "play_cost": 5,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnShopStart",
         "effect": {
@@ -2865,12 +2955,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 91,
     "name": "Rhino",
-    "emoji": "\ud83e\udd8f",
+    "emoji": "🦏",
     "stats": {
       "attack": 6,
       "health": 9
@@ -2879,7 +2970,8 @@
       "play_cost": 5,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "AfterUnitAttack",
         "effect": {
@@ -2903,7 +2995,7 @@
   {
     "id": 92,
     "name": "Rooster",
-    "emoji": "\ud83d\udc13",
+    "emoji": "🐓",
     "stats": {
       "attack": 6,
       "health": 4
@@ -2912,7 +3004,8 @@
       "play_cost": 5,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -2929,7 +3022,7 @@
   {
     "id": 93,
     "name": "Scorpion",
-    "emoji": "\ud83e\udd82",
+    "emoji": "🦂",
     "stats": {
       "attack": 1,
       "health": 1
@@ -2938,7 +3031,8 @@
       "play_cost": 5,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -2962,7 +3056,7 @@
   {
     "id": 94,
     "name": "Seal",
-    "emoji": "\ud83e\uddad",
+    "emoji": "🦭",
     "stats": {
       "attack": 3,
       "health": 8
@@ -2971,7 +3065,7 @@
       "play_cost": 5,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnBuy",
         "effect": {
@@ -2991,12 +3085,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 95,
     "name": "Shark",
-    "emoji": "\ud83e\udd88",
+    "emoji": "🦈",
     "stats": {
       "attack": 4,
       "health": 2
@@ -3005,7 +3100,8 @@
       "play_cost": 5,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnAllyFaint",
         "effect": {
@@ -3029,7 +3125,7 @@
   {
     "id": 96,
     "name": "Turkey",
-    "emoji": "\ud83e\udd83",
+    "emoji": "🦃",
     "stats": {
       "attack": 3,
       "health": 4
@@ -3038,7 +3134,8 @@
       "play_cost": 5,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnAllySpawn",
         "effect": {
@@ -3062,7 +3159,7 @@
   {
     "id": 97,
     "name": "Boar",
-    "emoji": "\ud83d\udc17",
+    "emoji": "🐗",
     "stats": {
       "attack": 10,
       "health": 6
@@ -3071,7 +3168,8 @@
       "play_cost": 6,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "BeforeUnitAttack",
         "effect": {
@@ -3095,7 +3193,7 @@
   {
     "id": 98,
     "name": "Cat",
-    "emoji": "\ud83d\udc31",
+    "emoji": "🐱",
     "stats": {
       "attack": 4,
       "health": 5
@@ -3104,7 +3202,7 @@
       "play_cost": 6,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnShopStart",
         "effect": {
@@ -3116,12 +3214,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 99,
     "name": "Dragon",
-    "emoji": "\ud83d\udc09",
+    "emoji": "🐉",
     "stats": {
       "attack": 6,
       "health": 8
@@ -3130,7 +3229,7 @@
       "play_cost": 6,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [
       {
         "trigger": "OnBuy",
         "effect": {
@@ -3149,12 +3248,13 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
     "id": 100,
     "name": "Fly",
-    "emoji": "\ud83e\udeb0",
+    "emoji": "🪰",
     "stats": {
       "attack": 5,
       "health": 5
@@ -3163,7 +3263,8 @@
       "play_cost": 6,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnAllyFaint",
         "effect": {
@@ -3180,7 +3281,7 @@
   {
     "id": 101,
     "name": "Gorilla",
-    "emoji": "\ud83e\udd8d",
+    "emoji": "🦍",
     "stats": {
       "attack": 7,
       "health": 10
@@ -3189,7 +3290,8 @@
       "play_cost": 6,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnHurt",
         "effect": {
@@ -3213,7 +3315,7 @@
   {
     "id": 102,
     "name": "Leopard",
-    "emoji": "\ud83d\udc06",
+    "emoji": "🐆",
     "stats": {
       "attack": 10,
       "health": 4
@@ -3222,7 +3324,8 @@
       "play_cost": 6,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -3246,7 +3349,7 @@
   {
     "id": 103,
     "name": "Mammoth",
-    "emoji": "\ud83e\udda3",
+    "emoji": "🦣",
     "stats": {
       "attack": 3,
       "health": 10
@@ -3255,7 +3358,8 @@
       "play_cost": 6,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnFaint",
         "effect": {
@@ -3279,7 +3383,7 @@
   {
     "id": 104,
     "name": "Snake",
-    "emoji": "\ud83d\udc0d",
+    "emoji": "🐍",
     "stats": {
       "attack": 6,
       "health": 6
@@ -3288,7 +3392,8 @@
       "play_cost": 6,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "AfterAnyAttack",
         "effect": {
@@ -3312,7 +3417,7 @@
   {
     "id": 105,
     "name": "Tiger",
-    "emoji": "\ud83d\udc05",
+    "emoji": "🐅",
     "stats": {
       "attack": 6,
       "health": 4
@@ -3321,7 +3426,8 @@
       "play_cost": 6,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -3346,7 +3452,7 @@
   {
     "id": 106,
     "name": "Wolverine",
-    "emoji": "\ud83d\udc3a",
+    "emoji": "🐺",
     "stats": {
       "attack": 5,
       "health": 4
@@ -3355,7 +3461,8 @@
       "play_cost": 6,
       "pitch_value": 3
     },
-    "abilities": [
+    "shop_abilities": [],
+    "battle_abilities": [
       {
         "trigger": "OnStart",
         "effect": {
@@ -3379,7 +3486,7 @@
   {
     "id": 107,
     "name": "Bus",
-    "emoji": "\ud83d\ude8c",
+    "emoji": "🚌",
     "stats": {
       "attack": 5,
       "health": 5
@@ -3388,12 +3495,13 @@
       "play_cost": 0,
       "pitch_value": 0
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 108,
     "name": "Chick",
-    "emoji": "\ud83d\udc25",
+    "emoji": "🐥",
     "stats": {
       "attack": 3,
       "health": 1
@@ -3402,12 +3510,13 @@
       "play_cost": 0,
       "pitch_value": 0
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   },
   {
     "id": 109,
     "name": "Zombie Fly",
-    "emoji": "\ud83e\udeb0",
+    "emoji": "🪰",
     "stats": {
       "attack": 4,
       "health": 4
@@ -3416,6 +3525,7 @@
       "play_cost": 0,
       "pitch_value": 0
     },
-    "abilities": []
+    "shop_abilities": [],
+    "battle_abilities": []
   }
 ]

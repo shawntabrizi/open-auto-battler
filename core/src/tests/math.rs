@@ -33,7 +33,7 @@ fn test_saturating_stat_buffs() {
         "SuperBuff",
     );
 
-    let unit_card = create_dummy_card(1, "Hero", 10, 10).with_ability(buff_ability);
+    let unit_card = create_dummy_card(1, "Hero", 10, 10).with_battle_ability(buff_ability);
     let p_board = vec![CombatUnit::from_card(unit_card)];
     let e_board = vec![create_dummy_enemy()];
 
@@ -82,7 +82,7 @@ fn test_negative_attack_prevention() {
         "Weakness",
     );
 
-    let weak_unit = create_dummy_card(1, "Weakling", 5, 10).with_ability(debuff_ability);
+    let weak_unit = create_dummy_card(1, "Weakling", 5, 10).with_battle_ability(debuff_ability);
     let enemy = create_dummy_card(2, "Enemy", 0, 10);
 
     let p_board = vec![CombatUnit::from_card(weak_unit)];

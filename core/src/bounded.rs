@@ -17,7 +17,8 @@ use crate::limits::{LimitReason, Team};
 use crate::state::{calculate_mana_limit, derive_hand_indices_logic, CardSetEntry};
 use crate::types::{
     Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CardId, CommitTurnAction,
-    Condition, EconomyStats, Matcher, TurnAction, UnitCard, UnitStats,
+    Condition, EconomyStats, Matcher, ShopAbility, ShopCondition, ShopEffect, ShopMatcher,
+    ShopTarget, ShopTrigger, TurnAction, UnitCard, UnitStats,
 };
 use crate::{GamePhase, GameState};
 
@@ -167,7 +168,7 @@ fn bounded_to_string<S: Get<u32>>(b: BoundedVec<u8, S>) -> String {
 /// The AnyOf variant uses a BoundedVec instead of Vec.
 #[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(MaxConditions))]
-pub enum BoundedCondition<MaxConditions>
+pub enum BoundedBattleCondition<MaxConditions>
 where
     MaxConditions: Get<u32>,
 {
@@ -177,7 +178,7 @@ where
     AnyOf(BoundedVec<Matcher, MaxConditions>),
 }
 
-impl<MaxConditions: Get<u32>> Clone for BoundedCondition<MaxConditions> {
+impl<MaxConditions: Get<u32>> Clone for BoundedBattleCondition<MaxConditions> {
     fn clone(&self) -> Self {
         match self {
             Self::Is(m) => Self::Is(m.clone()),
@@ -186,7 +187,7 @@ impl<MaxConditions: Get<u32>> Clone for BoundedCondition<MaxConditions> {
     }
 }
 
-impl<MaxConditions: Get<u32>> PartialEq for BoundedCondition<MaxConditions> {
+impl<MaxConditions: Get<u32>> PartialEq for BoundedBattleCondition<MaxConditions> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Is(m1), Self::Is(m2)) => m1 == m2,
@@ -196,9 +197,9 @@ impl<MaxConditions: Get<u32>> PartialEq for BoundedCondition<MaxConditions> {
     }
 }
 
-impl<MaxConditions: Get<u32>> Eq for BoundedCondition<MaxConditions> {}
+impl<MaxConditions: Get<u32>> Eq for BoundedBattleCondition<MaxConditions> {}
 
-impl<MaxConditions: Get<u32>> Debug for BoundedCondition<MaxConditions> {
+impl<MaxConditions: Get<u32>> Debug for BoundedBattleCondition<MaxConditions> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Is(m) => f.debug_tuple("Is").field(m).finish(),
@@ -207,7 +208,7 @@ impl<MaxConditions: Get<u32>> Debug for BoundedCondition<MaxConditions> {
     }
 }
 
-impl<MaxConditions: Get<u32>> From<Condition> for BoundedCondition<MaxConditions> {
+impl<MaxConditions: Get<u32>> From<Condition> for BoundedBattleCondition<MaxConditions> {
     fn from(c: Condition) -> Self {
         match c {
             Condition::Is(m) => Self::Is(m),
@@ -216,11 +217,70 @@ impl<MaxConditions: Get<u32>> From<Condition> for BoundedCondition<MaxConditions
     }
 }
 
-impl<MaxConditions: Get<u32>> From<BoundedCondition<MaxConditions>> for Condition {
-    fn from(bounded: BoundedCondition<MaxConditions>) -> Self {
+impl<MaxConditions: Get<u32>> From<BoundedBattleCondition<MaxConditions>> for Condition {
+    fn from(bounded: BoundedBattleCondition<MaxConditions>) -> Self {
         match bounded {
-            BoundedCondition::Is(m) => Condition::Is(m),
-            BoundedCondition::AnyOf(v) => Condition::AnyOf(v.into_inner()),
+            BoundedBattleCondition::Is(m) => Condition::Is(m),
+            BoundedBattleCondition::AnyOf(v) => Condition::AnyOf(v.into_inner()),
+        }
+    }
+}
+
+/// Bounded version of ShopCondition for on-chain storage.
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxConditions))]
+pub enum BoundedShopCondition<MaxConditions>
+where
+    MaxConditions: Get<u32>,
+{
+    Is(ShopMatcher),
+    AnyOf(BoundedVec<ShopMatcher, MaxConditions>),
+}
+
+impl<MaxConditions: Get<u32>> Clone for BoundedShopCondition<MaxConditions> {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Is(m) => Self::Is(m.clone()),
+            Self::AnyOf(v) => Self::AnyOf(v.clone()),
+        }
+    }
+}
+
+impl<MaxConditions: Get<u32>> PartialEq for BoundedShopCondition<MaxConditions> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Is(m1), Self::Is(m2)) => m1 == m2,
+            (Self::AnyOf(v1), Self::AnyOf(v2)) => v1 == v2,
+            _ => false,
+        }
+    }
+}
+
+impl<MaxConditions: Get<u32>> Eq for BoundedShopCondition<MaxConditions> {}
+
+impl<MaxConditions: Get<u32>> Debug for BoundedShopCondition<MaxConditions> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Is(m) => f.debug_tuple("Is").field(m).finish(),
+            Self::AnyOf(v) => f.debug_tuple("AnyOf").field(v).finish(),
+        }
+    }
+}
+
+impl<MaxConditions: Get<u32>> From<ShopCondition> for BoundedShopCondition<MaxConditions> {
+    fn from(c: ShopCondition) -> Self {
+        match c {
+            ShopCondition::Is(m) => Self::Is(m),
+            ShopCondition::AnyOf(v) => Self::AnyOf(BoundedVec::truncate_from(v)),
+        }
+    }
+}
+
+impl<MaxConditions: Get<u32>> From<BoundedShopCondition<MaxConditions>> for ShopCondition {
+    fn from(bounded: BoundedShopCondition<MaxConditions>) -> Self {
+        match bounded {
+            BoundedShopCondition::Is(m) => ShopCondition::Is(m),
+            BoundedShopCondition::AnyOf(v) => ShopCondition::AnyOf(v.into_inner()),
         }
     }
 }
@@ -230,7 +290,7 @@ impl<MaxConditions: Get<u32>> From<BoundedCondition<MaxConditions>> for Conditio
 #[derive(
     Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen, Clone, PartialEq, Eq, Debug,
 )]
-pub enum BoundedAbilityEffect {
+pub enum BoundedBattleEffect {
     Damage {
         amount: i32,
         target: AbilityTarget,
@@ -256,7 +316,7 @@ pub enum BoundedAbilityEffect {
     },
 }
 
-impl From<AbilityEffect> for BoundedAbilityEffect {
+impl From<AbilityEffect> for BoundedBattleEffect {
     fn from(effect: AbilityEffect) -> Self {
         match effect {
             AbilityEffect::Damage { amount, target } => Self::Damage { amount, target },
@@ -285,13 +345,13 @@ impl From<AbilityEffect> for BoundedAbilityEffect {
     }
 }
 
-impl From<BoundedAbilityEffect> for AbilityEffect {
-    fn from(bounded: BoundedAbilityEffect) -> Self {
+impl From<BoundedBattleEffect> for AbilityEffect {
+    fn from(bounded: BoundedBattleEffect) -> Self {
         match bounded {
-            BoundedAbilityEffect::Damage { amount, target } => {
+            BoundedBattleEffect::Damage { amount, target } => {
                 AbilityEffect::Damage { amount, target }
             }
-            BoundedAbilityEffect::ModifyStats {
+            BoundedBattleEffect::ModifyStats {
                 health,
                 attack,
                 target,
@@ -300,7 +360,7 @@ impl From<BoundedAbilityEffect> for AbilityEffect {
                 attack,
                 target,
             },
-            BoundedAbilityEffect::ModifyStatsPermanent {
+            BoundedBattleEffect::ModifyStatsPermanent {
                 health,
                 attack,
                 target,
@@ -309,9 +369,67 @@ impl From<BoundedAbilityEffect> for AbilityEffect {
                 attack,
                 target,
             },
-            BoundedAbilityEffect::SpawnUnit { card_id } => AbilityEffect::SpawnUnit { card_id },
-            BoundedAbilityEffect::Destroy { target } => AbilityEffect::Destroy { target },
-            BoundedAbilityEffect::GainMana { amount } => AbilityEffect::GainMana { amount },
+            BoundedBattleEffect::SpawnUnit { card_id } => AbilityEffect::SpawnUnit { card_id },
+            BoundedBattleEffect::Destroy { target } => AbilityEffect::Destroy { target },
+            BoundedBattleEffect::GainMana { amount } => AbilityEffect::GainMana { amount },
+        }
+    }
+}
+
+#[derive(
+    Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen, Clone, PartialEq, Eq, Debug,
+)]
+pub enum BoundedShopEffect {
+    ModifyStatsPermanent {
+        health: i32,
+        attack: i32,
+        target: ShopTarget,
+    },
+    SpawnUnit {
+        card_id: CardId,
+    },
+    Destroy {
+        target: ShopTarget,
+    },
+    GainMana {
+        amount: i32,
+    },
+}
+
+impl From<ShopEffect> for BoundedShopEffect {
+    fn from(effect: ShopEffect) -> Self {
+        match effect {
+            ShopEffect::ModifyStatsPermanent {
+                health,
+                attack,
+                target,
+            } => Self::ModifyStatsPermanent {
+                health,
+                attack,
+                target,
+            },
+            ShopEffect::SpawnUnit { card_id } => Self::SpawnUnit { card_id },
+            ShopEffect::Destroy { target } => Self::Destroy { target },
+            ShopEffect::GainMana { amount } => Self::GainMana { amount },
+        }
+    }
+}
+
+impl From<BoundedShopEffect> for ShopEffect {
+    fn from(bounded: BoundedShopEffect) -> Self {
+        match bounded {
+            BoundedShopEffect::ModifyStatsPermanent {
+                health,
+                attack,
+                target,
+            } => ShopEffect::ModifyStatsPermanent {
+                health,
+                attack,
+                target,
+            },
+            BoundedShopEffect::SpawnUnit { card_id } => ShopEffect::SpawnUnit { card_id },
+            BoundedShopEffect::Destroy { target } => ShopEffect::Destroy { target },
+            BoundedShopEffect::GainMana { amount } => ShopEffect::GainMana { amount },
         }
     }
 }
@@ -320,21 +438,21 @@ impl From<BoundedAbilityEffect> for AbilityEffect {
 
 #[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
 #[scale_info(skip_type_params(MaxStringLen, MaxConditions))]
-pub struct BoundedAbility<MaxStringLen, MaxConditions>
+pub struct BoundedBattleAbility<MaxStringLen, MaxConditions>
 where
     MaxStringLen: Get<u32>,
     MaxConditions: Get<u32>,
 {
     pub trigger: AbilityTrigger,
-    pub effect: BoundedAbilityEffect,
+    pub effect: BoundedBattleEffect,
     pub name: BoundedVec<u8, MaxStringLen>,
     pub description: BoundedVec<u8, MaxStringLen>,
-    pub conditions: BoundedVec<BoundedCondition<MaxConditions>, MaxConditions>,
+    pub conditions: BoundedVec<BoundedBattleCondition<MaxConditions>, MaxConditions>,
     pub max_triggers: Option<u32>,
 }
 
 impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Clone
-    for BoundedAbility<MaxStringLen, MaxConditions>
+    for BoundedBattleAbility<MaxStringLen, MaxConditions>
 {
     fn clone(&self) -> Self {
         Self {
@@ -349,7 +467,7 @@ impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Clone
 }
 
 impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> PartialEq
-    for BoundedAbility<MaxStringLen, MaxConditions>
+    for BoundedBattleAbility<MaxStringLen, MaxConditions>
 {
     fn eq(&self, other: &Self) -> bool {
         self.trigger == other.trigger
@@ -362,15 +480,15 @@ impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> PartialEq
 }
 
 impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Eq
-    for BoundedAbility<MaxStringLen, MaxConditions>
+    for BoundedBattleAbility<MaxStringLen, MaxConditions>
 {
 }
 
 impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Debug
-    for BoundedAbility<MaxStringLen, MaxConditions>
+    for BoundedBattleAbility<MaxStringLen, MaxConditions>
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("BoundedAbility")
+        f.debug_struct("BoundedBattleAbility")
             .field("trigger", &self.trigger)
             .field("effect", &self.effect)
             .field("name", &self.name)
@@ -382,7 +500,7 @@ impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Debug
 }
 
 impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> From<Ability>
-    for BoundedAbility<MaxStringLen, MaxConditions>
+    for BoundedBattleAbility<MaxStringLen, MaxConditions>
 {
     fn from(a: Ability) -> Self {
         Self {
@@ -399,9 +517,109 @@ impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> From<Ability>
 }
 
 impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>>
-    From<BoundedAbility<MaxStringLen, MaxConditions>> for Ability
+    From<BoundedBattleAbility<MaxStringLen, MaxConditions>> for Ability
 {
-    fn from(bounded: BoundedAbility<MaxStringLen, MaxConditions>) -> Self {
+    fn from(bounded: BoundedBattleAbility<MaxStringLen, MaxConditions>) -> Self {
+        Self {
+            trigger: bounded.trigger,
+            effect: bounded.effect.into(),
+            name: bounded_to_string(bounded.name),
+            description: bounded_to_string(bounded.description),
+            conditions: bounded
+                .conditions
+                .into_inner()
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+            max_triggers: bounded.max_triggers,
+        }
+    }
+}
+
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxStringLen, MaxConditions))]
+pub struct BoundedShopAbility<MaxStringLen, MaxConditions>
+where
+    MaxStringLen: Get<u32>,
+    MaxConditions: Get<u32>,
+{
+    pub trigger: ShopTrigger,
+    pub effect: BoundedShopEffect,
+    pub name: BoundedVec<u8, MaxStringLen>,
+    pub description: BoundedVec<u8, MaxStringLen>,
+    pub conditions: BoundedVec<BoundedShopCondition<MaxConditions>, MaxConditions>,
+    pub max_triggers: Option<u32>,
+}
+
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Clone
+    for BoundedShopAbility<MaxStringLen, MaxConditions>
+{
+    fn clone(&self) -> Self {
+        Self {
+            trigger: self.trigger.clone(),
+            effect: self.effect.clone(),
+            name: self.name.clone(),
+            description: self.description.clone(),
+            conditions: self.conditions.clone(),
+            max_triggers: self.max_triggers,
+        }
+    }
+}
+
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> PartialEq
+    for BoundedShopAbility<MaxStringLen, MaxConditions>
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.trigger == other.trigger
+            && self.effect == other.effect
+            && self.name == other.name
+            && self.description == other.description
+            && self.conditions == other.conditions
+            && self.max_triggers == other.max_triggers
+    }
+}
+
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Eq
+    for BoundedShopAbility<MaxStringLen, MaxConditions>
+{
+}
+
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Debug
+    for BoundedShopAbility<MaxStringLen, MaxConditions>
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("BoundedShopAbility")
+            .field("trigger", &self.trigger)
+            .field("effect", &self.effect)
+            .field("name", &self.name)
+            .field("description", &self.description)
+            .field("conditions", &self.conditions)
+            .field("max_triggers", &self.max_triggers)
+            .finish()
+    }
+}
+
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>> From<ShopAbility>
+    for BoundedShopAbility<MaxStringLen, MaxConditions>
+{
+    fn from(a: ShopAbility) -> Self {
+        Self {
+            trigger: a.trigger,
+            effect: a.effect.into(),
+            name: string_to_bounded(a.name),
+            description: string_to_bounded(a.description),
+            conditions: BoundedVec::truncate_from(
+                a.conditions.into_iter().map(Into::into).collect(),
+            ),
+            max_triggers: a.max_triggers,
+        }
+    }
+}
+
+impl<MaxStringLen: Get<u32>, MaxConditions: Get<u32>>
+    From<BoundedShopAbility<MaxStringLen, MaxConditions>> for ShopAbility
+{
+    fn from(bounded: BoundedShopAbility<MaxStringLen, MaxConditions>) -> Self {
         Self {
             trigger: bounded.trigger,
             effect: bounded.effect.into(),
@@ -432,7 +650,9 @@ where
     pub name: BoundedVec<u8, MaxStringLen>,
     pub stats: UnitStats,
     pub economy: EconomyStats,
-    pub abilities: BoundedVec<BoundedAbility<MaxStringLen, MaxConditions>, MaxAbilities>,
+    pub shop_abilities: BoundedVec<BoundedShopAbility<MaxStringLen, MaxConditions>, MaxAbilities>,
+    pub battle_abilities:
+        BoundedVec<BoundedBattleAbility<MaxStringLen, MaxConditions>, MaxAbilities>,
 }
 
 impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Clone
@@ -444,7 +664,8 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Cl
             name: self.name.clone(),
             stats: self.stats.clone(),
             economy: self.economy.clone(),
-            abilities: self.abilities.clone(),
+            shop_abilities: self.shop_abilities.clone(),
+            battle_abilities: self.battle_abilities.clone(),
         }
     }
 }
@@ -457,7 +678,8 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Pa
             && self.name == other.name
             && self.stats == other.stats
             && self.economy == other.economy
-            && self.abilities == other.abilities
+            && self.shop_abilities == other.shop_abilities
+            && self.battle_abilities == other.battle_abilities
     }
 }
 
@@ -475,7 +697,8 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> De
             .field("name", &self.name)
             .field("stats", &self.stats)
             .field("economy", &self.economy)
-            .field("abilities", &self.abilities)
+            .field("shop_abilities", &self.shop_abilities)
+            .field("battle_abilities", &self.battle_abilities)
             .finish()
     }
 }
@@ -493,8 +716,11 @@ where
             name: string_to_bounded(card.name),
             stats: card.stats,
             economy: card.economy,
-            abilities: BoundedVec::truncate_from(
-                card.abilities.into_iter().map(Into::into).collect(),
+            shop_abilities: BoundedVec::truncate_from(
+                card.shop_abilities.into_iter().map(Into::into).collect(),
+            ),
+            battle_abilities: BoundedVec::truncate_from(
+                card.battle_abilities.into_iter().map(Into::into).collect(),
             ),
         }
     }
@@ -513,8 +739,14 @@ where
             name: bounded_to_string(bounded.name),
             stats: bounded.stats,
             economy: bounded.economy,
-            abilities: bounded
-                .abilities
+            shop_abilities: bounded
+                .shop_abilities
+                .into_inner()
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+            battle_abilities: bounded
+                .battle_abilities
                 .into_inner()
                 .into_iter()
                 .map(Into::into)
@@ -1066,7 +1298,8 @@ where
     pub name: BoundedVec<u8, MaxStringLen>,
     pub attack: i32,
     pub health: i32,
-    pub abilities: BoundedVec<BoundedAbility<MaxStringLen, MaxConditions>, MaxAbilities>,
+    pub battle_abilities:
+        BoundedVec<BoundedBattleAbility<MaxStringLen, MaxConditions>, MaxAbilities>,
 }
 
 impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Clone
@@ -1079,7 +1312,7 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Cl
             name: self.name.clone(),
             attack: self.attack,
             health: self.health,
-            abilities: self.abilities.clone(),
+            battle_abilities: self.battle_abilities.clone(),
         }
     }
 }
@@ -1093,7 +1326,7 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Pa
             && self.name == other.name
             && self.attack == other.attack
             && self.health == other.health
-            && self.abilities == other.abilities
+            && self.battle_abilities == other.battle_abilities
     }
 }
 
@@ -1112,7 +1345,7 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> De
             .field("name", &self.name)
             .field("attack", &self.attack)
             .field("health", &self.health)
-            .field("abilities", &self.abilities)
+            .field("battle_abilities", &self.battle_abilities)
             .finish()
     }
 }
@@ -1131,8 +1364,8 @@ where
             name: string_to_bounded(uv.name),
             attack: uv.attack,
             health: uv.health,
-            abilities: BoundedVec::truncate_from(
-                uv.abilities.into_iter().map(Into::into).collect(),
+            battle_abilities: BoundedVec::truncate_from(
+                uv.battle_abilities.into_iter().map(Into::into).collect(),
             ),
         }
     }
@@ -1152,8 +1385,8 @@ where
             name: bounded_to_string(bounded.name),
             attack: bounded.attack,
             health: bounded.health,
-            abilities: bounded
-                .abilities
+            battle_abilities: bounded
+                .battle_abilities
                 .into_inner()
                 .into_iter()
                 .map(Into::into)

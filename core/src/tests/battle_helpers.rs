@@ -80,7 +80,7 @@ fn test_permanent_stat_delta_helpers_accumulate_by_target_and_team() {
 
 #[test]
 fn test_modify_stats_permanent_effect_emits_expected_delta() {
-    let durable = create_dummy_card(1, "Durable", 2, 5).with_ability(create_ability(
+    let durable = create_dummy_card(1, "Durable", 2, 5).with_battle_ability(create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStatsPermanent {
             health: 3,

@@ -7,6 +7,7 @@ import type { CardView } from '../../types';
  * the game store or router.
  */
 export function CardBreakdownComponent({ card }: { card: CardView }) {
+  const allAbilities = [...card.shop_abilities, ...card.battle_abilities];
   return (
     <div className="w-80 bg-gray-900 rounded-xl border border-gray-700 shadow-2xl p-5 text-left">
       {/* Card Basic Info */}
@@ -28,7 +29,7 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
       </div>
 
       {/* Abilities */}
-      {card.abilities.map((ability, index) => (
+      {allAbilities.map((ability, index) => (
         <div key={index} className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
           <h3 className="text-sm font-bold text-yellow-400 mb-1">{ability.name}</h3>
           <div className="text-xs text-gray-300 mb-1">

@@ -16,7 +16,7 @@ fn test_enemy_position_targeting() {
         "ArtilleryStrike",
     );
 
-    let mage = create_dummy_card(1, "Artillery Mage", 3, 3).with_ability(mage_ability);
+    let mage = create_dummy_card(1, "Artillery Mage", 3, 3).with_battle_ability(mage_ability);
 
     let t0 = create_dummy_card(2, "T0", 1, 10);
     let t1 = create_dummy_card(3, "T1", 1, 10);
@@ -53,7 +53,7 @@ fn test_enemy_position_fizzle() {
         "ArtilleryStrike",
     );
 
-    let mage = create_dummy_card(1, "Artillery Mage", 3, 3).with_ability(mage_ability);
+    let mage = create_dummy_card(1, "Artillery Mage", 3, 3).with_battle_ability(mage_ability);
 
     let t0 = create_dummy_card(2, "T0", 1, 10);
     let t1 = create_dummy_card(3, "T1", 1, 10);
@@ -88,7 +88,7 @@ fn test_ally_position_targeting() {
         "SupplyLine",
     );
 
-    let guard = create_dummy_card(1, "Rear Guard", 2, 5).with_ability(guard_ability);
+    let guard = create_dummy_card(1, "Rear Guard", 2, 5).with_battle_ability(guard_ability);
     let a1 = create_dummy_card(2, "A1", 1, 1);
     let a2 = create_dummy_card(3, "A2", 1, 1);
     let a3 = create_dummy_card(4, "A3", 1, 1);
@@ -130,7 +130,7 @@ fn test_ally_position_fizzle() {
         "SupplyLine",
     );
 
-    let guard = create_dummy_card(1, "Rear Guard", 2, 5).with_ability(guard_ability);
+    let guard = create_dummy_card(1, "Rear Guard", 2, 5).with_battle_ability(guard_ability);
     let enemy = create_dummy_card(6, "Enemy", 1, 10);
 
     let p_board = vec![CombatUnit::from_card(guard)];

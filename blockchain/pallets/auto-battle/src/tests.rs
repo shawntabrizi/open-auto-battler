@@ -187,7 +187,8 @@ fn test_submit_card_and_metadata() {
                 play_cost: 1,
                 pitch_value: 1,
             },
-            abilities: BoundedVec::try_from(vec![]).unwrap(),
+            shop_abilities: BoundedVec::try_from(vec![]).unwrap(),
+            battle_abilities: BoundedVec::try_from(vec![]).unwrap(),
         };
 
         // Submit first card
@@ -239,7 +240,8 @@ fn test_submit_card_and_metadata() {
                 play_cost: 2,
                 pitch_value: 2,
             },
-            abilities: BoundedVec::try_from(vec![]).unwrap(),
+            shop_abilities: BoundedVec::try_from(vec![]).unwrap(),
+            battle_abilities: BoundedVec::try_from(vec![]).unwrap(),
         };
         assert_ok!(AutoBattle::submit_card(
             RuntimeOrigin::signed(account_id),

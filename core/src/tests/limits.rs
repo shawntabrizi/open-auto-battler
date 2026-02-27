@@ -6,7 +6,7 @@ use crate::types::*;
 fn test_max_triggers_unlimited() {
     let create_unlimited_rager = || {
         let mut card = create_dummy_card(1, "UnlimitedRager", 1, 10);
-        card.abilities = vec![Ability {
+        card.battle_abilities = vec![Ability {
             trigger: AbilityTrigger::OnHurt,
             effect: AbilityEffect::ModifyStats {
                 health: 0,
@@ -53,7 +53,7 @@ fn test_max_triggers_unlimited() {
 fn test_max_triggers_not_exceeded_on_death() {
     let create_limited_unit = || {
         let mut card = create_dummy_card(1, "LimitedUnit", 1, 4);
-        card.abilities = vec![Ability {
+        card.battle_abilities = vec![Ability {
             trigger: AbilityTrigger::OnHurt,
             effect: AbilityEffect::ModifyStats {
                 health: 0,
@@ -100,7 +100,7 @@ fn test_max_triggers_not_exceeded_on_death() {
 fn test_max_triggers_limit() {
     let create_limited_spawner = || {
         let mut card = create_dummy_card(1, "LimitedSpawner", 1, 10);
-        card.abilities = vec![Ability {
+        card.battle_abilities = vec![Ability {
             trigger: AbilityTrigger::OnHurt,
             effect: AbilityEffect::ModifyStats {
                 health: 0,

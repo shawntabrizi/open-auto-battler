@@ -41,8 +41,8 @@ fn test_mutual_destruction_chain() {
         "Revenge",
     );
 
-    let p1 = create_dummy_card(1, "P1", 1, 5).with_ability(start_nuke);
-    let e1 = create_dummy_card(2, "E1", 1, 5).with_ability(faint_nuke);
+    let p1 = create_dummy_card(1, "P1", 1, 5).with_battle_ability(start_nuke);
+    let e1 = create_dummy_card(2, "E1", 1, 5).with_battle_ability(faint_nuke);
 
     let p_board = vec![CombatUnit::from_card(p1)];
     let e_board = vec![CombatUnit::from_card(e1)];
@@ -69,7 +69,7 @@ fn test_mutual_destruction_chain() {
 #[test]
 fn test_infinite_battle_draw() {
     let grunt = create_dummy_card(1, "Grunt", 2, 2);
-    let squire = create_dummy_card(2, "Squire", 2, 3).with_ability(create_ability(
+    let squire = create_dummy_card(2, "Squire", 2, 3).with_battle_ability(create_ability(
         AbilityTrigger::BeforeAnyAttack,
         AbilityEffect::ModifyStats {
             health: 2,

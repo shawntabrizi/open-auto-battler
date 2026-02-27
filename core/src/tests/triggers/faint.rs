@@ -4,7 +4,7 @@ use crate::types::*;
 
 #[test]
 fn test_ally_behind_on_faint_buffs_correctly() {
-    let martyr = create_dummy_card(1, "Martyr", 2, 3).with_ability(Ability {
+    let martyr = create_dummy_card(1, "Martyr", 2, 3).with_battle_ability(Ability {
         trigger: AbilityTrigger::OnFaint,
         effect: AbilityEffect::ModifyStats {
             health: 2,
@@ -75,10 +75,10 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
         max_triggers: Some(1),
     };
 
-    let mk1 = create_dummy_card(1, "MK1", 2, 3).with_ability(mk_ability.clone());
-    let mk2 = create_dummy_card(2, "MK2", 2, 3).with_ability(mk_ability.clone());
-    let mk3 = create_dummy_card(3, "MK3", 2, 3).with_ability(mk_ability.clone());
-    let lich = create_dummy_card(4, "Lich", 3, 3).with_abilities(vec![
+    let mk1 = create_dummy_card(1, "MK1", 2, 3).with_battle_ability(mk_ability.clone());
+    let mk2 = create_dummy_card(2, "MK2", 2, 3).with_battle_ability(mk_ability.clone());
+    let mk3 = create_dummy_card(3, "MK3", 2, 3).with_battle_ability(mk_ability.clone());
+    let lich = create_dummy_card(4, "Lich", 3, 3).with_battle_abilities(vec![
         Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::Destroy {
@@ -103,11 +103,11 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
             max_triggers: None,
         },
     ]);
-    let mk5 = create_dummy_card(5, "MK5", 2, 3).with_ability(mk_ability.clone());
+    let mk5 = create_dummy_card(5, "MK5", 2, 3).with_battle_ability(mk_ability.clone());
 
-    let e_mk1 = create_dummy_card(6, "EMK1", 2, 3).with_ability(mk_ability.clone());
-    let e_mk2 = create_dummy_card(7, "EMK2", 2, 3).with_ability(mk_ability.clone());
-    let e_lich = create_dummy_card(8, "ELich", 3, 3).with_abilities(vec![
+    let e_mk1 = create_dummy_card(6, "EMK1", 2, 3).with_battle_ability(mk_ability.clone());
+    let e_mk2 = create_dummy_card(7, "EMK2", 2, 3).with_battle_ability(mk_ability.clone());
+    let e_lich = create_dummy_card(8, "ELich", 3, 3).with_battle_abilities(vec![
         Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::Destroy {
@@ -190,7 +190,7 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
 
 #[test]
 fn test_on_faint_gain_mana_carries_to_next_shop_pool() {
-    let martyr = create_dummy_card(1, "Martyr", 1, 1).with_ability(Ability {
+    let martyr = create_dummy_card(1, "Martyr", 1, 1).with_battle_ability(Ability {
         trigger: AbilityTrigger::OnFaint,
         effect: AbilityEffect::GainMana { amount: 1 },
         name: "Last Coin".to_string(),

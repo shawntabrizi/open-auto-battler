@@ -198,6 +198,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
         // Inject all cards from blockchain into engine
         for (const card of allCards) {
           try {
+            const shopAbilities = (card.data.shop_abilities || []).map(convertAbility);
+            const battleAbilities = (card.data.battle_abilities || []).map(convertAbility);
             engine.add_card({
               id: card.id,
               name: card.metadata?.name || `Card #${card.id}`,
@@ -209,7 +211,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
                 play_cost: card.data.economy.play_cost,
                 pitch_value: card.data.economy.pitch_value,
               },
-              abilities: card.data.abilities.map(convertAbility),
+              shop_abilities: shopAbilities,
+              battle_abilities: battleAbilities,
             });
           } catch (e) {
             console.warn(`Failed to inject card ${card.id} into engine:`, e);
@@ -363,7 +366,12 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
   resetGameOver: () => {
     set({ tournamentGameOver: false, lastGameWins: 0 });
-    useGameStore.setState({ view: null, cardSet: null, battleOutput: null, showBattleOverlay: false });
+    useGameStore.setState({
+      view: null,
+      cardSet: null,
+      battleOutput: null,
+      showBattleOverlay: false,
+    });
   },
 }));
 

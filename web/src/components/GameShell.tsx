@@ -3,7 +3,11 @@ import { HUD } from './HUD';
 import { Arena } from './Arena';
 import { ManaBar } from './ManaBar';
 import { Shop } from './Shop';
-import { CardDetailPanel, type BlockchainAccount } from './CardDetailPanel';
+import {
+  CardDetailPanel,
+  type BlockchainAccount,
+  type CardDetailPanelMode,
+} from './CardDetailPanel';
 import { BattleOverlay } from './BattleOverlay';
 import { BagOverlay } from './BagOverlay';
 import { UnitCard } from './UnitCard';
@@ -78,6 +82,15 @@ export function GameShell({
 
   const cardToShow = selectedCard || selectedBoardUnit;
   const activeCard = getActiveCard();
+  const cardPanelMode: CardDetailPanelMode = blockchainMode
+    ? {
+        type: 'blockchain',
+        blockNumber: blockNumber ?? null,
+        accounts,
+        selectedAccount,
+        onSelectAccount,
+      }
+    : { type: 'standard' };
 
   // Margin class for the content area when card panel is visible
   const contentMargin = showCardPanel ? 'ml-44 lg:ml-80' : '';
@@ -121,11 +134,7 @@ export function GameShell({
           card={cardToShow}
           isVisible={showCardPanel}
           topOffset={cardPanelTopOffset}
-          blockchainMode={blockchainMode}
-          blockNumber={blockNumber}
-          accounts={accounts}
-          selectedAccount={selectedAccount}
-          onSelectAccount={onSelectAccount}
+          mode={cardPanelMode}
         />
 
         {/* Battle Overlay */}

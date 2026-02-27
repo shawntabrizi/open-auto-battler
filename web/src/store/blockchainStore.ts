@@ -324,6 +324,8 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
             const { allCards } = get();
             for (const card of allCards) {
               try {
+                const shopAbilities = (card.data.shop_abilities || []).map(convertAbility);
+                const battleAbilities = (card.data.battle_abilities || []).map(convertAbility);
                 engine.add_card({
                   id: card.id,
                   name: card.metadata?.name || `Card #${card.id}`,
@@ -335,7 +337,8 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
                     play_cost: card.data.economy.play_cost,
                     pitch_value: card.data.economy.pitch_value,
                   },
-                  abilities: card.data.abilities.map(convertAbility),
+                  shop_abilities: shopAbilities,
+                  battle_abilities: battleAbilities,
                 });
               } catch (e) {
                 console.warn(`Failed to inject card ${card.id} into engine:`, e);
@@ -571,7 +574,8 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         for (const s of sets) {
           try {
             const entries = s.cards.map((c: any) => ({
-              card_id: typeof c.card_id === 'object' ? c.card_id.value ?? c.card_id[0] : c.card_id,
+              card_id:
+                typeof c.card_id === 'object' ? (c.card_id.value ?? c.card_id[0]) : c.card_id,
               rarity: c.rarity,
             }));
             engine.add_set(s.id, entries);
@@ -610,7 +614,11 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
           description: Binary.fromText(metadata.description),
         },
       });
-      await submitTx(metaTx, selectedAccount.polkadotSigner, `AutoBattle.set_card_metadata(${cardId})`);
+      await submitTx(
+        metaTx,
+        selectedAccount.polkadotSigner,
+        `AutoBattle.set_card_metadata(${cardId})`
+      );
 
       await get().fetchCards();
     } catch (err) {

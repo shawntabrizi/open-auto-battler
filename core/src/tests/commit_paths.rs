@@ -130,12 +130,13 @@ fn test_on_buy_damage_trigger_source_removes_bought_unit() {
     state.shop_mana = 10;
 
     let support_id = state.generate_card_id();
-    let support = UnitCard::new(support_id, "Bomber", 1, 2, 1, 1).with_ability(Ability {
-        trigger: AbilityTrigger::OnBuy,
-        effect: AbilityEffect::Damage {
-            amount: 3,
-            target: AbilityTarget::All {
-                scope: TargetScope::TriggerSource,
+    let support = UnitCard::new(support_id, "Bomber", 1, 2, 1, 1).with_shop_ability(ShopAbility {
+        trigger: ShopTrigger::OnBuy,
+        effect: ShopEffect::ModifyStatsPermanent {
+            health: -3,
+            attack: 0,
+            target: ShopTarget::All {
+                scope: ShopScope::TriggerSource,
             },
         },
         name: "Explosive Welcome".to_string(),
@@ -171,21 +172,22 @@ fn test_on_buy_destroy_standard_target_selects_highest_attack() {
     state.shop_mana = 10;
 
     let controller_id = state.generate_card_id();
-    let controller = UnitCard::new(controller_id, "Controller", 1, 2, 1, 1).with_ability(Ability {
-        trigger: AbilityTrigger::OnBuy,
-        effect: AbilityEffect::Destroy {
-            target: AbilityTarget::Standard {
-                scope: TargetScope::Allies,
-                stat: StatType::Attack,
-                order: SortOrder::Descending,
-                count: 1,
+    let controller =
+        UnitCard::new(controller_id, "Controller", 1, 2, 1, 1).with_shop_ability(ShopAbility {
+            trigger: ShopTrigger::OnBuy,
+            effect: ShopEffect::Destroy {
+                target: ShopTarget::Standard {
+                    scope: ShopScope::Allies,
+                    stat: StatType::Attack,
+                    order: SortOrder::Descending,
+                    count: 1,
+                },
             },
-        },
-        name: "Cull Strongest".to_string(),
-        description: "Destroy strongest ally".to_string(),
-        conditions: vec![],
-        max_triggers: None,
-    });
+            name: "Cull Strongest".to_string(),
+            description: "Destroy strongest ally".to_string(),
+            conditions: vec![],
+            max_triggers: None,
+        });
 
     let high_id = add_card(&mut state, "High", 6, 3, 0, 0);
     let low_id = add_card(&mut state, "Low", 1, 3, 0, 0);
@@ -219,13 +221,13 @@ fn test_on_sell_self_position_zero_fizzles_when_source_is_removed() {
 
     let seller_id = state.generate_card_id();
     let ally_id = add_card(&mut state, "Ally", 2, 4, 0, 0);
-    let seller = UnitCard::new(seller_id, "Seller", 1, 2, 1, 1).with_ability(Ability {
-        trigger: AbilityTrigger::OnSell,
-        effect: AbilityEffect::ModifyStats {
+    let seller = UnitCard::new(seller_id, "Seller", 1, 2, 1, 1).with_shop_ability(ShopAbility {
+        trigger: ShopTrigger::OnSell,
+        effect: ShopEffect::ModifyStatsPermanent {
             health: 10,
             attack: 0,
-            target: AbilityTarget::Position {
-                scope: TargetScope::SelfUnit,
+            target: ShopTarget::Position {
+                scope: ShopScope::SelfUnit,
                 index: 0,
             },
         },
@@ -256,13 +258,13 @@ fn test_on_sell_allies_other_targets_survivors_when_source_is_removed() {
     let seller_id = state.generate_card_id();
     let ally_a_id = add_card(&mut state, "AllyA", 2, 4, 0, 0);
     let ally_b_id = add_card(&mut state, "AllyB", 3, 5, 0, 0);
-    let seller = UnitCard::new(seller_id, "Seller", 1, 2, 1, 1).with_ability(Ability {
-        trigger: AbilityTrigger::OnSell,
-        effect: AbilityEffect::ModifyStats {
+    let seller = UnitCard::new(seller_id, "Seller", 1, 2, 1, 1).with_shop_ability(ShopAbility {
+        trigger: ShopTrigger::OnSell,
+        effect: ShopEffect::ModifyStatsPermanent {
             health: 0,
             attack: 2,
-            target: AbilityTarget::All {
-                scope: TargetScope::AlliesOther,
+            target: ShopTarget::All {
+                scope: ShopScope::AlliesOther,
             },
         },
         name: "Farewell Buff".to_string(),
@@ -287,7 +289,7 @@ fn test_on_sell_allies_other_targets_survivors_when_source_is_removed() {
 }
 
 #[test]
-fn test_shop_condition_stat_stat_compare_never_passes() {
+fn test_shop_condition_gate_can_prevent_effects() {
     let mut state = GameState::new(10);
     state.mana_limit = 10;
     state.shop_mana = 0;
@@ -295,16 +297,15 @@ fn test_shop_condition_stat_stat_compare_never_passes() {
     let gate_id = state.generate_card_id();
     let buy_id = add_card(&mut state, "FreeBuy", 1, 1, 0, 0);
 
-    let gated = UnitCard::new(gate_id, "Gate", 3, 3, 0, 0).with_ability(Ability {
-        trigger: AbilityTrigger::OnBuy,
-        effect: AbilityEffect::GainMana { amount: 2 },
-        name: "StatStat Gate".to_string(),
-        description: "Should never pass in shop path".to_string(),
-        conditions: vec![Condition::Is(Matcher::StatStatCompare {
-            source_stat: StatType::Attack,
+    let gated = UnitCard::new(gate_id, "Gate", 3, 3, 0, 0).with_shop_ability(ShopAbility {
+        trigger: ShopTrigger::OnBuy,
+        effect: ShopEffect::GainMana { amount: 2 },
+        name: "UnitCount Gate".to_string(),
+        description: "Should not pass in this scenario".to_string(),
+        conditions: vec![ShopCondition::Is(ShopMatcher::UnitCount {
+            scope: ShopScope::Allies,
             op: CompareOp::GreaterThan,
-            target_scope: TargetScope::Allies,
-            target_stat: StatType::Health,
+            value: 10,
         })],
         max_triggers: None,
     });
@@ -324,12 +325,12 @@ fn test_shop_condition_stat_stat_compare_never_passes() {
     assert!(result.is_ok(), "buy action should succeed: {:?}", result);
     assert_eq!(
         state.shop_mana, 0,
-        "StatStatCompare should prevent mana gain in shop trigger evaluation"
+        "condition should prevent mana gain in shop trigger evaluation"
     );
 }
 
 #[test]
-fn test_shop_condition_anyof_and_adjacent_target_path() {
+fn test_shop_condition_anyof_path_applies_with_valid_targets() {
     let mut state = GameState::new(11);
     state.mana_limit = 10;
     state.shop_mana = 0;
@@ -337,25 +338,25 @@ fn test_shop_condition_anyof_and_adjacent_target_path() {
     let source_id = state.generate_card_id();
     let ally_id = add_card(&mut state, "Ally", 2, 3, 0, 0);
 
-    let source = UnitCard::new(source_id, "Source", 1, 2, 0, 0).with_ability(Ability {
-        trigger: AbilityTrigger::OnShopStart,
-        effect: AbilityEffect::ModifyStats {
+    let source = UnitCard::new(source_id, "Source", 1, 2, 0, 0).with_shop_ability(ShopAbility {
+        trigger: ShopTrigger::OnShopStart,
+        effect: ShopEffect::ModifyStatsPermanent {
             health: 0,
             attack: 5,
-            target: AbilityTarget::Adjacent {
-                scope: TargetScope::Allies,
+            target: ShopTarget::All {
+                scope: ShopScope::AlliesOther,
             },
         },
-        name: "Adjacent Noop".to_string(),
-        description: "Covers Adjacent target path in shop effects".to_string(),
-        conditions: vec![Condition::AnyOf(vec![
-            Matcher::UnitCount {
-                scope: TargetScope::Allies,
+        name: "AnyOf Buff".to_string(),
+        description: "Covers AnyOf matcher path in shop effects".to_string(),
+        conditions: vec![ShopCondition::AnyOf(vec![
+            ShopMatcher::UnitCount {
+                scope: ShopScope::Allies,
                 op: CompareOp::GreaterThanOrEqual,
                 value: 1,
             },
-            Matcher::IsPosition {
-                scope: TargetScope::SelfUnit,
+            ShopMatcher::IsPosition {
+                scope: ShopScope::SelfUnit,
                 index: 99,
             },
         ])],
@@ -369,7 +370,7 @@ fn test_shop_condition_anyof_and_adjacent_target_path() {
     apply_shop_start_triggers(&mut state);
     assert_eq!(
         state.board[1].as_ref().unwrap().perm_attack,
-        0,
-        "Adjacent targeting is intentionally unsupported in shop effects"
+        5,
+        "AnyOf should pass and buff allies-other via valid shop target"
     );
 }

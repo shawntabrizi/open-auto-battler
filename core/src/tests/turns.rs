@@ -261,20 +261,21 @@ fn test_on_buy_trigger_applies_in_shop() {
     let support_id = state.generate_card_id();
     let buyer_id = state.generate_card_id();
 
-    let support_card = UnitCard::new(support_id, "Support", 1, 2, 1, 1).with_ability(Ability {
-        trigger: AbilityTrigger::OnBuy,
-        effect: AbilityEffect::ModifyStats {
-            health: 2,
-            attack: 0,
-            target: AbilityTarget::All {
-                scope: TargetScope::SelfUnit,
+    let support_card =
+        UnitCard::new(support_id, "Support", 1, 2, 1, 1).with_shop_ability(ShopAbility {
+            trigger: ShopTrigger::OnBuy,
+            effect: ShopEffect::ModifyStatsPermanent {
+                health: 2,
+                attack: 0,
+                target: ShopTarget::All {
+                    scope: ShopScope::SelfUnit,
+                },
             },
-        },
-        name: "Shop Cheer".to_string(),
-        description: "Gain +2 health when a unit is bought".to_string(),
-        conditions: vec![],
-        max_triggers: None,
-    });
+            name: "Shop Cheer".to_string(),
+            description: "Gain +2 health when a unit is bought".to_string(),
+            conditions: vec![],
+            max_triggers: None,
+        });
     let buyer_card = UnitCard::new(buyer_id, "Buyer", 1, 1, 0, 1);
 
     state.card_pool.insert(support_id, support_card);
@@ -310,21 +311,22 @@ fn test_on_sell_trigger_applies_in_shop() {
     let seller_id = state.generate_card_id();
     let ally_id = state.generate_card_id();
 
-    let seller_card = UnitCard::new(seller_id, "Seller", 1, 2, 1, 1).with_ability(Ability {
-        trigger: AbilityTrigger::OnSell,
-        effect: AbilityEffect::ModifyStats {
-            health: 3,
-            attack: 0,
-            target: AbilityTarget::Position {
-                scope: TargetScope::SelfUnit,
-                index: 1,
+    let seller_card =
+        UnitCard::new(seller_id, "Seller", 1, 2, 1, 1).with_shop_ability(ShopAbility {
+            trigger: ShopTrigger::OnSell,
+            effect: ShopEffect::ModifyStatsPermanent {
+                health: 3,
+                attack: 0,
+                target: ShopTarget::Position {
+                    scope: ShopScope::SelfUnit,
+                    index: 1,
+                },
             },
-        },
-        name: "Parting Gift".to_string(),
-        description: "Give the ally behind +3 health when sold".to_string(),
-        conditions: vec![],
-        max_triggers: None,
-    });
+            name: "Parting Gift".to_string(),
+            description: "Give the ally behind +3 health when sold".to_string(),
+            conditions: vec![],
+            max_triggers: None,
+        });
     let ally_card = UnitCard::new(ally_id, "Ally", 2, 4, 1, 1);
 
     state.card_pool.insert(seller_id, seller_card);
@@ -359,14 +361,15 @@ fn test_on_buy_gain_mana_enables_extra_play() {
     let free_buy_id = state.generate_card_id();
     let paid_buy_id = state.generate_card_id();
 
-    let booster_card = UnitCard::new(booster_id, "Booster", 1, 2, 1, 1).with_ability(Ability {
-        trigger: AbilityTrigger::OnBuy,
-        effect: AbilityEffect::GainMana { amount: 1 },
-        name: "Cashback".to_string(),
-        description: "Gain 1 mana when a unit is bought".to_string(),
-        conditions: vec![],
-        max_triggers: None,
-    });
+    let booster_card =
+        UnitCard::new(booster_id, "Booster", 1, 2, 1, 1).with_shop_ability(ShopAbility {
+            trigger: ShopTrigger::OnBuy,
+            effect: ShopEffect::GainMana { amount: 1 },
+            name: "Cashback".to_string(),
+            description: "Gain 1 mana when a unit is bought".to_string(),
+            conditions: vec![],
+            max_triggers: None,
+        });
     let free_buy_card = UnitCard::new(free_buy_id, "FreeBuy", 1, 1, 0, 1);
     let paid_buy_card = UnitCard::new(paid_buy_id, "PaidBuy", 2, 2, 1, 1);
 
@@ -411,14 +414,15 @@ fn test_on_sell_gain_mana_enables_extra_play() {
     let seller_id = state.generate_card_id();
     let paid_buy_id = state.generate_card_id();
 
-    let seller_card = UnitCard::new(seller_id, "Seller", 1, 2, 1, 1).with_ability(Ability {
-        trigger: AbilityTrigger::OnSell,
-        effect: AbilityEffect::GainMana { amount: 1 },
-        name: "Sell Bonus".to_string(),
-        description: "Gain 1 mana when sold".to_string(),
-        conditions: vec![],
-        max_triggers: None,
-    });
+    let seller_card =
+        UnitCard::new(seller_id, "Seller", 1, 2, 1, 1).with_shop_ability(ShopAbility {
+            trigger: ShopTrigger::OnSell,
+            effect: ShopEffect::GainMana { amount: 1 },
+            name: "Sell Bonus".to_string(),
+            description: "Gain 1 mana when sold".to_string(),
+            conditions: vec![],
+            max_triggers: None,
+        });
     let paid_buy_card = UnitCard::new(paid_buy_id, "PaidBuy", 2, 2, 1, 1);
 
     state.card_pool.insert(seller_id, seller_card);
@@ -458,21 +462,22 @@ fn test_on_shop_start_random_is_deterministic_with_seed() {
         let ally_a_id = state.generate_card_id();
         let ally_b_id = state.generate_card_id();
 
-        let trigger_card = UnitCard::new(trigger_id, "Starter", 1, 2, 1, 1).with_ability(Ability {
-            trigger: AbilityTrigger::OnShopStart,
-            effect: AbilityEffect::ModifyStats {
-                health: 1,
-                attack: 0,
-                target: AbilityTarget::Random {
-                    scope: TargetScope::AlliesOther,
-                    count: 1,
+        let trigger_card =
+            UnitCard::new(trigger_id, "Starter", 1, 2, 1, 1).with_shop_ability(ShopAbility {
+                trigger: ShopTrigger::OnShopStart,
+                effect: ShopEffect::ModifyStatsPermanent {
+                    health: 1,
+                    attack: 0,
+                    target: ShopTarget::Random {
+                        scope: ShopScope::AlliesOther,
+                        count: 1,
+                    },
                 },
-            },
-            name: "Morning Buff".to_string(),
-            description: "Buff one random ally at shop start".to_string(),
-            conditions: vec![],
-            max_triggers: None,
-        });
+                name: "Morning Buff".to_string(),
+                description: "Buff one random ally at shop start".to_string(),
+                conditions: vec![],
+                max_triggers: None,
+            });
 
         let ally_a = UnitCard::new(ally_a_id, "AllyA", 2, 3, 1, 1);
         let ally_b = UnitCard::new(ally_b_id, "AllyB", 2, 3, 1, 1);
@@ -524,9 +529,9 @@ fn test_on_shop_start_gain_mana_sets_turn_starting_mana() {
     let starter_id = state.generate_card_id();
     let paid_buy_id = state.generate_card_id();
 
-    let starter = UnitCard::new(starter_id, "Starter", 1, 2, 1, 1).with_ability(Ability {
-        trigger: AbilityTrigger::OnShopStart,
-        effect: AbilityEffect::GainMana { amount: 1 },
+    let starter = UnitCard::new(starter_id, "Starter", 1, 2, 1, 1).with_shop_ability(ShopAbility {
+        trigger: ShopTrigger::OnShopStart,
+        effect: ShopEffect::GainMana { amount: 1 },
         name: "Opening Coin".to_string(),
         description: "Gain 1 mana at shop start".to_string(),
         conditions: vec![],

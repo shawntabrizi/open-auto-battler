@@ -29,14 +29,6 @@ export interface CardDetailPanelProps {
   isVisible: boolean;
   mode?: CardDetailPanelMode;
   topOffset?: string;
-  // Legacy props for backwards compatibility - prefer using mode
-  isSandbox?: boolean;
-  isReadOnly?: boolean;
-  blockchainMode?: boolean;
-  blockNumber?: number | null;
-  accounts?: BlockchainAccount[];
-  selectedAccount?: BlockchainAccount;
-  onSelectAccount?: (account: BlockchainAccount | undefined) => void;
 }
 
 type TabType = 'card' | 'rules' | 'mode';
@@ -46,14 +38,6 @@ export function CardDetailPanel({
   isVisible,
   mode,
   topOffset = '4rem',
-  // Legacy props
-  isSandbox = false,
-  isReadOnly = false,
-  blockchainMode = false,
-  blockNumber,
-  accounts = [],
-  selectedAccount,
-  onSelectAccount,
 }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
   const navigate = useNavigate();
@@ -67,22 +51,7 @@ export function CardDetailPanel({
     toggleShowRawJson,
   } = useGameStore();
 
-  // Normalize mode from legacy props if not provided
-  const resolvedMode: CardDetailPanelMode =
-    mode ??
-    (isSandbox
-      ? { type: 'sandbox' }
-      : isReadOnly
-        ? { type: 'readOnly' }
-        : blockchainMode
-          ? {
-              type: 'blockchain',
-              blockNumber: blockNumber ?? null,
-              accounts,
-              selectedAccount,
-              onSelectAccount,
-            }
-          : { type: 'standard' });
+  const resolvedMode: CardDetailPanelMode = mode ?? { type: 'standard' };
 
   if (!isVisible) return null;
 
@@ -104,6 +73,8 @@ export function CardDetailPanel({
         </div>
       );
     }
+
+    const allAbilities = [...card.shop_abilities, ...card.battle_abilities];
 
     const getTriggerDescription = (trigger: any): string => {
       const type = typeof trigger === 'string' ? trigger : trigger?.type;
@@ -314,9 +285,9 @@ export function CardDetailPanel({
         </div>
 
         {/* Ability Section */}
-        {card.abilities.length > 0 && (
+        {allAbilities.length > 0 && (
           <div className="mb-3 lg:mb-6">
-            {card.abilities.map((ability, index) => (
+            {allAbilities.map((ability, index) => (
               <div
                 key={index}
                 className="mb-2 lg:mb-4 p-2 lg:p-3 bg-gray-800/50 rounded-lg border border-gray-700"

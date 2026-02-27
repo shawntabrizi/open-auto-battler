@@ -11,8 +11,8 @@ use crate::error::{GameError, GameResult};
 use crate::rng::{BattleRng, XorShiftRng};
 use crate::state::{GameState, BOARD_SIZE};
 use crate::types::{
-    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CardId, CommitTurnAction, CompareOp,
-    Condition, Matcher, StatType, TargetScope, TurnAction,
+    CardId, CommitTurnAction, CompareOp, ShopAbility, ShopCondition, ShopEffect, ShopMatcher,
+    ShopScope, ShopTarget, ShopTrigger, StatType, TurnAction,
 };
 
 const SHOP_START_SALT: u64 = 0x5348_4f50_0000_0001;
@@ -23,7 +23,7 @@ const SHOP_SELL_SALT: u64 = 0x5348_4f50_0000_0003;
 struct ShopPendingAbility {
     source_slot: Option<usize>,
     source_on_board: bool,
-    ability: Ability,
+    ability: ShopAbility,
 }
 
 /// Apply `OnShopStart` triggers for all units currently on the board.
@@ -32,7 +32,7 @@ struct ShopPendingAbility {
 pub fn apply_shop_start_triggers(state: &mut GameState) {
     state.shop_mana = state.shop_mana.clamp(0, state.mana_limit);
     let mut rng = shop_rng(state, SHOP_START_SALT);
-    execute_shop_trigger(state, AbilityTrigger::OnShopStart, None, None, &mut rng);
+    execute_shop_trigger(state, ShopTrigger::OnShopStart, None, None, &mut rng);
     state.shop_mana = state.shop_mana.clamp(0, state.mana_limit);
 }
 
@@ -43,13 +43,7 @@ pub fn apply_on_buy_triggers(state: &mut GameState, action_index: usize, bought_
     }
 
     let mut rng = shop_rng(state, SHOP_BUY_SALT.wrapping_add(action_index as u64));
-    execute_shop_trigger(
-        state,
-        AbilityTrigger::OnBuy,
-        Some(bought_slot),
-        None,
-        &mut rng,
-    );
+    execute_shop_trigger(state, ShopTrigger::OnBuy, Some(bought_slot), None, &mut rng);
 }
 
 /// Apply `OnSell` triggers for a successful shop sell action.
@@ -66,7 +60,7 @@ pub fn apply_on_sell_triggers(
     let mut rng = shop_rng(state, SHOP_SELL_SALT.wrapping_add(action_index as u64));
     execute_shop_trigger(
         state,
-        AbilityTrigger::OnSell,
+        ShopTrigger::OnSell,
         None,
         Some((sold_card_id, sold_slot)),
         &mut rng,
@@ -240,7 +234,7 @@ fn shop_rng(state: &GameState, salt: u64) -> XorShiftRng {
 
 fn execute_shop_trigger<R: BattleRng>(
     state: &mut GameState,
-    trigger: AbilityTrigger,
+    trigger: ShopTrigger,
     trigger_source_slot: Option<usize>,
     sold_source: Option<(CardId, usize)>,
     rng: &mut R,
@@ -256,7 +250,7 @@ fn execute_shop_trigger<R: BattleRng>(
             continue;
         };
 
-        for ability in &card.abilities {
+        for ability in &card.shop_abilities {
             if ability.trigger == trigger {
                 pending.push(ShopPendingAbility {
                     source_slot: Some(slot),
@@ -269,7 +263,7 @@ fn execute_shop_trigger<R: BattleRng>(
 
     if let Some((sold_card_id, sold_slot)) = sold_source {
         if let Some(card) = state.card_pool.get(&sold_card_id) {
-            for ability in &card.abilities {
+            for ability in &card.shop_abilities {
                 if ability.trigger == trigger {
                     pending.push(ShopPendingAbility {
                         source_slot: Some(sold_slot),
@@ -305,31 +299,14 @@ fn execute_shop_trigger<R: BattleRng>(
 
 fn apply_shop_effect<R: BattleRng>(
     state: &mut GameState,
-    effect: &AbilityEffect,
+    effect: &ShopEffect,
     source_slot: Option<usize>,
     source_on_board: bool,
     trigger_source_slot: Option<usize>,
     rng: &mut R,
 ) {
     match effect {
-        AbilityEffect::Damage { amount, target } => {
-            let targets = resolve_shop_targets(
-                state,
-                target,
-                source_slot,
-                source_on_board,
-                trigger_source_slot,
-                rng,
-            );
-            for slot in targets {
-                if let Some(unit) = state.board.get_mut(slot).and_then(|s| s.as_mut()) {
-                    let damage = (*amount).max(0);
-                    unit.perm_health = unit.perm_health.saturating_sub(damage);
-                }
-            }
-            cleanup_dead_units(state);
-        }
-        AbilityEffect::ModifyStats {
+        ShopEffect::ModifyStatsPermanent {
             health,
             attack,
             target,
@@ -350,28 +327,7 @@ fn apply_shop_effect<R: BattleRng>(
             }
             cleanup_dead_units(state);
         }
-        AbilityEffect::ModifyStatsPermanent {
-            health,
-            attack,
-            target,
-        } => {
-            let targets = resolve_shop_targets(
-                state,
-                target,
-                source_slot,
-                source_on_board,
-                trigger_source_slot,
-                rng,
-            );
-            for slot in targets {
-                if let Some(unit) = state.board.get_mut(slot).and_then(|s| s.as_mut()) {
-                    unit.perm_health = unit.perm_health.saturating_add(*health);
-                    unit.perm_attack = unit.perm_attack.saturating_add(*attack);
-                }
-            }
-            cleanup_dead_units(state);
-        }
-        AbilityEffect::SpawnUnit { card_id } => {
+        ShopEffect::SpawnUnit { card_id } => {
             let Some(_spawn_card) = state.card_pool.get(card_id) else {
                 return;
             };
@@ -381,7 +337,7 @@ fn apply_shop_effect<R: BattleRng>(
 
             state.board[empty_slot] = Some(crate::types::BoardUnit::new(*card_id));
         }
-        AbilityEffect::Destroy { target } => {
+        ShopEffect::Destroy { target } => {
             let targets = resolve_shop_targets(
                 state,
                 target,
@@ -394,7 +350,7 @@ fn apply_shop_effect<R: BattleRng>(
                 state.board[slot] = None;
             }
         }
-        AbilityEffect::GainMana { amount } => {
+        ShopEffect::GainMana { amount } => {
             state.shop_mana = state
                 .shop_mana
                 .saturating_add(*amount)
@@ -405,15 +361,15 @@ fn apply_shop_effect<R: BattleRng>(
 
 fn resolve_shop_targets<R: BattleRng>(
     state: &GameState,
-    target: &AbilityTarget,
+    target: &ShopTarget,
     source_slot: Option<usize>,
     source_on_board: bool,
     trigger_source_slot: Option<usize>,
     rng: &mut R,
 ) -> Vec<usize> {
     match target {
-        AbilityTarget::Position { scope, index } => {
-            if *scope == TargetScope::SelfUnit {
+        ShopTarget::Position { scope, index } => {
+            if *scope == ShopScope::SelfUnit {
                 resolve_self_position_target(state, source_slot, source_on_board, *index)
             } else {
                 resolve_absolute_position_target(
@@ -426,8 +382,7 @@ fn resolve_shop_targets<R: BattleRng>(
                 )
             }
         }
-        AbilityTarget::Adjacent { .. } => Vec::new(),
-        AbilityTarget::Random { scope, count } => {
+        ShopTarget::Random { scope, count } => {
             let mut candidates = resolve_scope_slots(
                 state,
                 *scope,
@@ -443,7 +398,7 @@ fn resolve_shop_targets<R: BattleRng>(
             candidates.truncate((*count as usize).min(candidates.len()));
             candidates
         }
-        AbilityTarget::Standard {
+        ShopTarget::Standard {
             scope,
             stat,
             order,
@@ -472,7 +427,7 @@ fn resolve_shop_targets<R: BattleRng>(
             candidates.truncate((*count as usize).min(candidates.len()));
             candidates
         }
-        AbilityTarget::All { scope } => resolve_scope_slots(
+        ShopTarget::All { scope } => resolve_scope_slots(
             state,
             *scope,
             source_slot,
@@ -524,7 +479,7 @@ fn resolve_self_position_target(
 
 fn resolve_absolute_position_target(
     state: &GameState,
-    scope: TargetScope,
+    scope: ShopScope,
     source_slot: Option<usize>,
     source_on_board: bool,
     trigger_source_slot: Option<usize>,
@@ -563,7 +518,7 @@ fn resolve_absolute_position_target(
 
 fn resolve_scope_slots(
     state: &GameState,
-    scope: TargetScope,
+    scope: ShopScope,
     source_slot: Option<usize>,
     source_on_board: bool,
     trigger_source_slot: Option<usize>,
@@ -576,7 +531,7 @@ fn resolve_scope_slots(
         .collect();
 
     match scope {
-        TargetScope::SelfUnit => {
+        ShopScope::SelfUnit => {
             if source_on_board {
                 source_slot
                     .filter(|idx| state.board[*idx].is_some())
@@ -586,9 +541,9 @@ fn resolve_scope_slots(
                 Vec::new()
             }
         }
-        TargetScope::Allies => occupied,
-        TargetScope::All => occupied,
-        TargetScope::AlliesOther => {
+        ShopScope::Allies => occupied,
+        ShopScope::All => occupied,
+        ShopScope::AlliesOther => {
             if source_on_board {
                 occupied
                     .into_iter()
@@ -598,24 +553,23 @@ fn resolve_scope_slots(
                 occupied
             }
         }
-        TargetScope::TriggerSource => trigger_source_slot
+        ShopScope::TriggerSource => trigger_source_slot
             .filter(|idx| state.board[*idx].is_some())
             .map(|idx| vec![idx])
             .unwrap_or_default(),
-        TargetScope::Enemies | TargetScope::Aggressor => Vec::new(),
     }
 }
 
 fn shop_conditions_pass(
     state: &GameState,
-    conditions: &[Condition],
+    conditions: &[ShopCondition],
     source_slot: Option<usize>,
     source_on_board: bool,
     trigger_source_slot: Option<usize>,
 ) -> bool {
     for condition in conditions {
         match condition {
-            Condition::Is(matcher) => {
+            ShopCondition::Is(matcher) => {
                 if !shop_matcher_pass(
                     state,
                     matcher,
@@ -626,7 +580,7 @@ fn shop_conditions_pass(
                     return false;
                 }
             }
-            Condition::AnyOf(matchers) => {
+            ShopCondition::AnyOf(matchers) => {
                 if !matchers.iter().any(|matcher| {
                     shop_matcher_pass(
                         state,
@@ -646,13 +600,13 @@ fn shop_conditions_pass(
 
 fn shop_matcher_pass(
     state: &GameState,
-    matcher: &Matcher,
+    matcher: &ShopMatcher,
     source_slot: Option<usize>,
     source_on_board: bool,
     trigger_source_slot: Option<usize>,
 ) -> bool {
     match matcher {
-        Matcher::UnitCount { scope, op, value } => {
+        ShopMatcher::UnitCount { scope, op, value } => {
             let count = resolve_scope_slots(
                 state,
                 *scope,
@@ -663,7 +617,7 @@ fn shop_matcher_pass(
             .len() as u32;
             compare_u32(count, *op, *value)
         }
-        Matcher::StatValueCompare {
+        ShopMatcher::StatValueCompare {
             scope,
             stat,
             op,
@@ -686,7 +640,7 @@ fn shop_matcher_pass(
                     .unwrap_or(false)
             })
         }
-        Matcher::IsPosition { scope, index } => {
+        ShopMatcher::IsPosition { scope, index } => {
             let targets = resolve_scope_slots(
                 state,
                 *scope,
@@ -708,7 +662,6 @@ fn shop_matcher_pass(
 
             desired.map(|idx| targets.contains(&idx)).unwrap_or(false)
         }
-        Matcher::StatStatCompare { .. } => false,
     }
 }
 

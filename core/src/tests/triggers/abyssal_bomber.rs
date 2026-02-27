@@ -15,7 +15,7 @@ fn test_abyssal_bomber_death_nova() {
         "Abyssal Blast",
     );
 
-    let bomber = create_dummy_card(1, "Abyssal Bomber", 2, 2).with_ability(bomber_ability);
+    let bomber = create_dummy_card(1, "Abyssal Bomber", 2, 2).with_battle_ability(bomber_ability);
     let ally = create_dummy_card(2, "Ally", 1, 5);
 
     let enemy1 = create_dummy_card(3, "Enemy1", 2, 5);

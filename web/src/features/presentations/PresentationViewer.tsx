@@ -115,7 +115,8 @@ export default function PresentationViewer() {
             health: props.health ?? 3,
             play_cost: props.play_cost ?? 2,
             pitch_value: props.pitch_value ?? 1,
-            abilities: props.abilities || [],
+            shop_abilities: props.shop_abilities || [],
+            battle_abilities: props.battle_abilities || props.abilities || [],
           };
           root.render(
             <div className="inline-block transform scale-150 origin-center m-8">
@@ -134,7 +135,8 @@ export default function PresentationViewer() {
             health: props.health ?? 3,
             play_cost: props.play_cost ?? 2,
             pitch_value: props.pitch_value ?? 1,
-            abilities: props.abilities || [],
+            shop_abilities: props.shop_abilities || [],
+            battle_abilities: props.battle_abilities || props.abilities || [],
           };
           root.render(<CardBreakdownComponent card={cardData} />);
         } else if (componentType === 'shop-demo') {

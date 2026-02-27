@@ -515,7 +515,8 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
               health: unit.health,
               play_cost: 0,
               pitch_value: 0,
-              abilities: unit.abilities,
+              shop_abilities: [],
+              battle_abilities: unit.battle_abilities,
             }}
             showCost={false}
             showPitch={false}

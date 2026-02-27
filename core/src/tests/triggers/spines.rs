@@ -15,7 +15,7 @@ fn test_spined_urchin_retribution() {
         "Spines",
     );
 
-    let urchin = create_dummy_card(1, "Spined Urchin", 1, 4).with_ability(spines_ability);
+    let urchin = create_dummy_card(1, "Spined Urchin", 1, 4).with_battle_ability(spines_ability);
     let wolf = create_dummy_card(2, "Wolf Rider", 3, 2);
 
     let p_board = vec![CombatUnit::from_card(urchin)];
@@ -76,8 +76,8 @@ fn test_spined_urchin_self_harm_retribution() {
         "Spines",
     );
 
-    let bomber = create_dummy_card(1, "Bomber", 10, 1).with_ability(bomber_ability);
-    let urchin = create_dummy_card(2, "Urchin", 1, 4).with_ability(spines_ability);
+    let bomber = create_dummy_card(1, "Bomber", 10, 1).with_battle_ability(bomber_ability);
+    let urchin = create_dummy_card(2, "Urchin", 1, 4).with_battle_ability(spines_ability);
     let enemy = create_dummy_card(3, "Enemy", 1, 10);
 
     let p_board = vec![CombatUnit::from_card(bomber), CombatUnit::from_card(urchin)];

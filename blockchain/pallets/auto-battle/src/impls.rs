@@ -59,7 +59,12 @@ impl<T: Config> Pallet<T> {
             name: alloc::string::String::new(),
             stats: data.stats,
             economy: data.economy,
-            abilities: data.abilities.into_iter().map(|a| a.into()).collect(),
+            shop_abilities: data.shop_abilities.into_iter().map(|a| a.into()).collect(),
+            battle_abilities: data
+                .battle_abilities
+                .into_iter()
+                .map(|a| a.into())
+                .collect(),
         }
     }
 

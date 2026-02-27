@@ -17,7 +17,7 @@ fn test_random_ally_other_targeting() {
         "Command",
     );
 
-    let commander = create_dummy_card(1, "Commander", 2, 3).with_ability(commander_ability);
+    let commander = create_dummy_card(1, "Commander", 2, 3).with_battle_ability(commander_ability);
     let soldier = create_dummy_card(2, "Soldier", 1, 1);
     let enemy = create_dummy_card(3, "Enemy", 1, 10);
 
@@ -64,7 +64,7 @@ fn test_random_ally_other_fizzle() {
         "Command",
     );
 
-    let commander = create_dummy_card(1, "Commander", 2, 3).with_ability(commander_ability);
+    let commander = create_dummy_card(1, "Commander", 2, 3).with_battle_ability(commander_ability);
     let enemy = create_dummy_card(2, "Enemy", 1, 10);
 
     let p_board = vec![CombatUnit::from_card(commander)];

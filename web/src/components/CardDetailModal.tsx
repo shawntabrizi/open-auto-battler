@@ -10,6 +10,7 @@ interface CardDetailModalProps {
 
 export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps) {
   const [showRaw, setShowRaw] = React.useState(false);
+  const allAbilities = [...card.shop_abilities, ...card.battle_abilities];
 
   if (!isOpen) return null;
 
@@ -216,9 +217,9 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         </div>
 
         {/* Ability Section */}
-        {card.abilities.length > 0 && (
+        {allAbilities.length > 0 && (
           <div className="mb-6">
-            {card.abilities.map((ability, index) => (
+            {allAbilities.map((ability, index) => (
               <div
                 key={index}
                 className="mb-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700"

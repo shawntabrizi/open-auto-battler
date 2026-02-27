@@ -1,5 +1,5 @@
 // Composable ability building blocks
-export type TargetScope =
+export type BattleScope =
   | 'SelfUnit'
   | 'Allies'
   | 'Enemies'
@@ -7,6 +7,7 @@ export type TargetScope =
   | 'AlliesOther'
   | 'TriggerSource'
   | 'Aggressor';
+export type ShopScope = 'SelfUnit' | 'Allies' | 'All' | 'AlliesOther' | 'TriggerSource';
 export type StatType = 'Health' | 'Attack' | 'Mana';
 export type SortOrder = 'Ascending' | 'Descending';
 export type CompareOp =
@@ -16,44 +17,46 @@ export type CompareOp =
   | 'GreaterThanOrEqual'
   | 'LessThanOrEqual';
 
-// Ability condition types
-export type Matcher =
+// Battle condition types
+export type BattleMatcher =
   | {
       type: 'StatValueCompare';
-      data: { scope: TargetScope; stat: StatType; op: CompareOp; value: number };
+      data: { scope: BattleScope; stat: StatType; op: CompareOp; value: number };
     }
   | {
       type: 'StatStatCompare';
       data: {
         source_stat: StatType;
         op: CompareOp;
-        target_scope: TargetScope;
+        target_scope: BattleScope;
         target_stat: StatType;
       };
     }
-  | { type: 'UnitCount'; data: { scope: TargetScope; op: CompareOp; value: number } }
-  | { type: 'IsPosition'; data: { scope: TargetScope; index: number } };
+  | { type: 'UnitCount'; data: { scope: BattleScope; op: CompareOp; value: number } }
+  | { type: 'IsPosition'; data: { scope: BattleScope; index: number } };
 
-export type Condition = { type: 'Is'; data: Matcher } | { type: 'AnyOf'; data: Matcher[] };
+export type BattleCondition =
+  | { type: 'Is'; data: BattleMatcher }
+  | { type: 'AnyOf'; data: BattleMatcher[] };
 
-// Ability types
-export interface Ability {
-  trigger: AbilityTrigger;
-  effect: AbilityEffect;
-  name: string;
-  description: string;
-  conditions: Condition[];
-  max_triggers?: number;
-}
+// Shop condition types
+export type ShopMatcher =
+  | {
+      type: 'StatValueCompare';
+      data: { scope: ShopScope; stat: StatType; op: CompareOp; value: number };
+    }
+  | { type: 'UnitCount'; data: { scope: ShopScope; op: CompareOp; value: number } }
+  | { type: 'IsPosition'; data: { scope: ShopScope; index: number } };
 
-export type AbilityTrigger =
+export type ShopCondition =
+  | { type: 'Is'; data: ShopMatcher }
+  | { type: 'AnyOf'; data: ShopMatcher[] };
+
+export type BattleTrigger =
   | 'OnStart'
   | 'OnFaint'
   | 'OnAllyFaint'
   | 'OnHurt'
-  | 'OnBuy'
-  | 'OnSell'
-  | 'OnShopStart'
   | 'OnSpawn'
   | 'OnAllySpawn'
   | 'OnEnemySpawn'
@@ -62,23 +65,60 @@ export type AbilityTrigger =
   | 'BeforeAnyAttack'
   | 'AfterAnyAttack';
 
-export type AbilityTarget =
-  | { type: 'Position'; data: { scope: TargetScope; index: number } }
-  | { type: 'Adjacent'; data: { scope: TargetScope } }
-  | { type: 'Random'; data: { scope: TargetScope; count: number } }
+export type ShopTrigger = 'OnBuy' | 'OnSell' | 'OnShopStart';
+
+export type BattleTarget =
+  | { type: 'Position'; data: { scope: BattleScope; index: number } }
+  | { type: 'Adjacent'; data: { scope: BattleScope } }
+  | { type: 'Random'; data: { scope: BattleScope; count: number } }
   | {
       type: 'Standard';
-      data: { scope: TargetScope; stat: StatType; order: SortOrder; count: number };
+      data: { scope: BattleScope; stat: StatType; order: SortOrder; count: number };
     }
-  | { type: 'All'; data: { scope: TargetScope } };
+  | { type: 'All'; data: { scope: BattleScope } };
 
-export type AbilityEffect =
-  | { type: 'Damage'; amount: number; target: AbilityTarget }
-  | { type: 'ModifyStats'; health: number; attack: number; target: AbilityTarget }
-  | { type: 'ModifyStatsPermanent'; health: number; attack: number; target: AbilityTarget }
+export type ShopTarget =
+  | { type: 'Position'; data: { scope: ShopScope; index: number } }
+  | { type: 'Random'; data: { scope: ShopScope; count: number } }
+  | {
+      type: 'Standard';
+      data: { scope: ShopScope; stat: StatType; order: SortOrder; count: number };
+    }
+  | { type: 'All'; data: { scope: ShopScope } };
+
+export type BattleEffect =
+  | { type: 'Damage'; amount: number; target: BattleTarget }
+  | { type: 'ModifyStats'; health: number; attack: number; target: BattleTarget }
+  | { type: 'ModifyStatsPermanent'; health: number; attack: number; target: BattleTarget }
   | { type: 'SpawnUnit'; card_id: number }
-  | { type: 'Destroy'; target: AbilityTarget }
+  | { type: 'Destroy'; target: BattleTarget }
   | { type: 'GainMana'; amount: number };
+
+export type ShopEffect =
+  | { type: 'ModifyStatsPermanent'; health: number; attack: number; target: ShopTarget }
+  | { type: 'SpawnUnit'; card_id: number }
+  | { type: 'Destroy'; target: ShopTarget }
+  | { type: 'GainMana'; amount: number };
+
+export interface BattleAbility {
+  trigger: BattleTrigger;
+  effect: BattleEffect;
+  name: string;
+  description: string;
+  conditions: BattleCondition[];
+  max_triggers?: number;
+}
+
+export interface ShopAbility {
+  trigger: ShopTrigger;
+  effect: ShopEffect;
+  name: string;
+  description: string;
+  conditions: ShopCondition[];
+  max_triggers?: number;
+}
+
+export type AnyAbility = BattleAbility | ShopAbility;
 
 // Types matching the Rust view structs
 
@@ -89,7 +129,8 @@ export interface CardView {
   health: number;
   play_cost: number;
   pitch_value: number;
-  abilities: Ability[];
+  shop_abilities: ShopAbility[];
+  battle_abilities: BattleAbility[];
 }
 
 export interface BoardUnitView {
@@ -99,7 +140,8 @@ export interface BoardUnitView {
   health: number;
   play_cost: number;
   pitch_value: number;
-  abilities: Ability[];
+  shop_abilities: ShopAbility[];
+  battle_abilities: BattleAbility[];
 }
 
 export interface GameView {
@@ -125,7 +167,7 @@ export interface UnitView {
   name: string;
   attack: number;
   health: number;
-  abilities: Ability[];
+  battle_abilities: BattleAbility[];
 }
 
 export type Team = 'Player' | 'Enemy';

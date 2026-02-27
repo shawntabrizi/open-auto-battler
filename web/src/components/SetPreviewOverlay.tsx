@@ -20,7 +20,7 @@ export function SetPreviewOverlay() {
       <CardDetailPanel
         card={selectedCard}
         isVisible={true}
-        isReadOnly={true}
+        mode={{ type: 'readOnly' }}
         topOffset="0"
       />
 
@@ -32,7 +32,8 @@ export function SetPreviewOverlay() {
               Set Preview
             </h2>
             <p className="text-gray-400 text-xs lg:text-base mt-0.5 lg:mt-1">
-              <span className="text-white font-bold">{sorted.length}</span> unique cards in this set.
+              <span className="text-white font-bold">{sorted.length}</span> unique cards in this
+              set.
               <span className="hidden lg:inline"> Click a card for full details.</span>
             </p>
           </div>
@@ -59,9 +60,7 @@ export function SetPreviewOverlay() {
                     showPitch={true}
                     draggable={false}
                     isSelected={selectedCard?.id === card.id}
-                    onClick={() => setSelectedCard(
-                      selectedCard?.id === card.id ? null : card
-                    )}
+                    onClick={() => setSelectedCard(selectedCard?.id === card.id ? null : card)}
                   />
                 </div>
               ))}

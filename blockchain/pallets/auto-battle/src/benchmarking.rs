@@ -58,7 +58,7 @@ mod benchmarks {
         BoundedVec::try_from(entries).expect("set size is bounded by MaxSetSize")
     }
 
-    fn max_abilities<T: Config>() -> BoundedVec<BoundedAbility<T>, T::MaxAbilities> {
+    fn max_battle_abilities<T: Config>() -> BoundedVec<BoundedBattleAbility<T>, T::MaxAbilities> {
         let max = T::MaxAbilities::get() as usize;
         if max == 0 {
             return BoundedVec::default();
@@ -66,7 +66,26 @@ mod benchmarks {
 
         for card_id in 0..NextUserCardId::<T>::get() {
             if let Some(card) = UserCards::<T>::get(card_id) {
-                if let Some(sample) = card.abilities.into_iter().next() {
+                if let Some(sample) = card.battle_abilities.into_iter().next() {
+                    let abilities: Vec<_> = (0..max).map(|_| sample.clone()).collect();
+                    return BoundedVec::try_from(abilities)
+                        .expect("ability count is bounded by MaxAbilities");
+                }
+            }
+        }
+
+        BoundedVec::default()
+    }
+
+    fn max_shop_abilities<T: Config>() -> BoundedVec<BoundedShopAbility<T>, T::MaxAbilities> {
+        let max = T::MaxAbilities::get() as usize;
+        if max == 0 {
+            return BoundedVec::default();
+        }
+
+        for card_id in 0..NextUserCardId::<T>::get() {
+            if let Some(card) = UserCards::<T>::get(card_id) {
+                if let Some(sample) = card.shop_abilities.into_iter().next() {
                     let abilities: Vec<_> = (0..max).map(|_| sample.clone()).collect();
                     return BoundedVec::try_from(abilities)
                         .expect("ability count is bounded by MaxAbilities");
@@ -101,7 +120,8 @@ mod benchmarks {
                 play_cost: 1,
                 pitch_value: 1,
             },
-            abilities: max_abilities::<T>(),
+            shop_abilities: max_shop_abilities::<T>(),
+            battle_abilities: max_battle_abilities::<T>(),
         };
 
         Pallet::<T>::submit_card(RawOrigin::Signed(creator.clone()).into(), card_data)
@@ -211,7 +231,8 @@ mod benchmarks {
                 play_cost: 1,
                 pitch_value: 1,
             },
-            abilities: max_abilities::<T>(),
+            shop_abilities: max_shop_abilities::<T>(),
+            battle_abilities: max_battle_abilities::<T>(),
         };
         let card_hash = T::Hashing::hash_of(&card_data);
 

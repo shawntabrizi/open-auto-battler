@@ -5,7 +5,7 @@ use crate::types::*;
 #[test]
 fn test_condition_target_health_threshold() {
     let create_nurse = || {
-        create_dummy_card(2, "Nurse", 1, 3).with_ability(Ability {
+        create_dummy_card(2, "Nurse", 1, 3).with_battle_ability(Ability {
             trigger: AbilityTrigger::BeforeAnyAttack,
             effect: AbilityEffect::ModifyStats {
                 health: 2,
@@ -73,7 +73,7 @@ fn test_condition_target_health_threshold() {
 #[test]
 fn test_condition_ally_count() {
     let create_pack_leader = || {
-        create_dummy_card(1, "PackLeader", 2, 3).with_ability(Ability {
+        create_dummy_card(1, "PackLeader", 2, 3).with_battle_ability(Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::ModifyStats {
                 health: 1,
@@ -147,7 +147,7 @@ fn test_condition_ally_count() {
 #[test]
 fn test_condition_last_stand() {
     let create_lone_wolf = || {
-        create_dummy_card(1, "LoneWolf", 2, 4).with_ability(Ability {
+        create_dummy_card(1, "LoneWolf", 2, 4).with_battle_ability(Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::ModifyStats {
                 health: 0,
@@ -218,7 +218,7 @@ fn test_condition_last_stand() {
 #[test]
 fn test_condition_logic_gates() {
     let create_conditional_unit = || {
-        create_dummy_card(1, "Conditional", 2, 3).with_ability(Ability {
+        create_dummy_card(1, "Conditional", 2, 3).with_battle_ability(Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::ModifyStats {
                 health: 0,
@@ -294,7 +294,7 @@ fn test_condition_logic_gates() {
 #[test]
 fn test_condition_stat_value_compare_uses_matcher_scope() {
     let create_checker = || {
-        create_dummy_card(1, "Checker", 2, 1).with_ability(Ability {
+        create_dummy_card(1, "Checker", 2, 1).with_battle_ability(Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::ModifyStats {
                 health: 0,
@@ -361,7 +361,7 @@ fn test_condition_stat_value_compare_uses_matcher_scope() {
 #[test]
 fn test_condition_stat_stat_compare_uses_target_scope() {
     let create_checker = || {
-        create_dummy_card(1, "Comparator", 2, 1).with_ability(Ability {
+        create_dummy_card(1, "Comparator", 2, 1).with_battle_ability(Ability {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::ModifyStats {
                 health: 0,
@@ -427,7 +427,7 @@ fn test_condition_stat_stat_compare_uses_target_scope() {
 
 #[test]
 fn test_condition_is_position_uses_matcher_scope() {
-    let enemy_scoped = create_dummy_card(1, "EnemyScoped", 2, 5).with_ability(Ability {
+    let enemy_scoped = create_dummy_card(1, "EnemyScoped", 2, 5).with_battle_ability(Ability {
         trigger: AbilityTrigger::OnStart,
         effect: AbilityEffect::ModifyStats {
             health: 0,
@@ -445,7 +445,7 @@ fn test_condition_is_position_uses_matcher_scope() {
         max_triggers: None,
     });
 
-    let ally_scoped = create_dummy_card(2, "AllyScoped", 2, 5).with_ability(Ability {
+    let ally_scoped = create_dummy_card(2, "AllyScoped", 2, 5).with_battle_ability(Ability {
         trigger: AbilityTrigger::OnStart,
         effect: AbilityEffect::ModifyStats {
             health: 0,

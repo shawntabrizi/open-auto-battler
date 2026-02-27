@@ -21,7 +21,7 @@ use crate::types::{
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-// Re-export Team for backward compatibility
+// Re-export Team for battle module consumers
 pub use crate::limits::Team;
 
 // A unique ID for a unit instance in a battle
@@ -81,7 +81,7 @@ pub struct UnitView {
     pub name: String,
     pub attack: i32,
     pub health: i32,
-    pub abilities: Vec<Ability>,
+    pub battle_abilities: Vec<Ability>,
 }
 
 #[derive(
@@ -231,13 +231,13 @@ pub struct CombatUnit {
 
 impl CombatUnit {
     pub fn from_card(card: crate::types::UnitCard) -> Self {
-        let ability_count = card.abilities.len();
+        let ability_count = card.battle_abilities.len();
         Self {
             instance_id: UnitId::player(0), // Placeholder
             team: Team::Player,             // This will be overridden when spawning
             attack: card.stats.attack,
             health: card.stats.health,
-            abilities: card.abilities,
+            abilities: card.battle_abilities,
             card_id: card.id,
             name: card.name,
             attack_buff: 0,
@@ -254,7 +254,7 @@ impl CombatUnit {
             name: self.name.clone(),
             attack: self.effective_attack(),
             health: self.effective_health(),
-            abilities: self.abilities.clone(),
+            battle_abilities: self.abilities.clone(),
         }
     }
 

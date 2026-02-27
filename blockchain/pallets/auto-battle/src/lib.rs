@@ -28,10 +28,11 @@ pub mod pallet {
 
     // Import types from core engine
     use oab_core::bounded::{
-        BoundedAbility as CoreBoundedAbility, BoundedCardSet as CoreBoundedCardSet,
+        BoundedBattleAbility as CoreBoundedBattleAbility, BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
         BoundedGameState as CoreBoundedGameState, BoundedGhostBoard as CoreBoundedGhostBoard,
-        BoundedLocalGameState as CoreBoundedLocalGameState, MatchmakingBracket,
+        BoundedLocalGameState as CoreBoundedLocalGameState,
+        BoundedShopAbility as CoreBoundedShopAbility, MatchmakingBracket,
     };
     use oab_core::types::{EconomyStats, UnitStats};
     use oab_core::{get_opponent_for_round, BattleResult, CardSet, CombatUnit, GamePhase};
@@ -123,8 +124,11 @@ pub mod pallet {
     pub type BoundedGhostBoard<T> = CoreBoundedGhostBoard<<T as Config>::MaxBoardSize>;
 
     /// Type alias for bounded ability using pallet config.
-    pub type BoundedAbility<T> =
-        CoreBoundedAbility<<T as Config>::MaxStringLen, <T as Config>::MaxConditions>;
+    pub type BoundedBattleAbility<T> =
+        CoreBoundedBattleAbility<<T as Config>::MaxStringLen, <T as Config>::MaxConditions>;
+    /// Type alias for bounded shop ability using pallet config.
+    pub type BoundedShopAbility<T> =
+        CoreBoundedShopAbility<<T as Config>::MaxStringLen, <T as Config>::MaxConditions>;
 
     /// Type alias for the balance type from the configured Currency.
     pub type BalanceOf<T> = <<T as Config>::Currency as fungible::Inspect<
@@ -149,8 +153,10 @@ pub mod pallet {
         pub stats: UnitStats,
         /// Economy stats (play_cost, pitch_value)
         pub economy: EconomyStats,
-        /// Card abilities
-        pub abilities: BoundedVec<BoundedAbility<T>, T::MaxAbilities>,
+        /// Card shop-phase abilities
+        pub shop_abilities: BoundedVec<BoundedShopAbility<T>, T::MaxAbilities>,
+        /// Card battle-phase abilities
+        pub battle_abilities: BoundedVec<BoundedBattleAbility<T>, T::MaxAbilities>,
     }
 
     /// Metadata for a card (name, emoji, etc. - not used in game logic).
@@ -612,11 +618,18 @@ pub mod pallet {
                 let data = UserCardData::<T> {
                     stats: card.stats.clone(),
                     economy: card.economy.clone(),
-                    abilities: BoundedVec::truncate_from(
-                        card.abilities
+                    shop_abilities: BoundedVec::truncate_from(
+                        card.shop_abilities
                             .iter()
                             .cloned()
-                            .map(|a| BoundedAbility::<T>::from(a))
+                            .map(|a| BoundedShopAbility::<T>::from(a))
+                            .collect(),
+                    ),
+                    battle_abilities: BoundedVec::truncate_from(
+                        card.battle_abilities
+                            .iter()
+                            .cloned()
+                            .map(|a| BoundedBattleAbility::<T>::from(a))
                             .collect(),
                     ),
                 };

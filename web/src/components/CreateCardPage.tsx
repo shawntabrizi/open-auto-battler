@@ -3,24 +3,27 @@ import { useBlockchainStore } from '../store/blockchainStore';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import {
-  type Ability,
-  type AbilityTrigger,
-  type AbilityEffect,
-  type AbilityTarget,
-  type TargetScope,
+  type AnyAbility,
+  type BattleAbility,
+  type BattleTrigger,
+  type BattleEffect,
+  type BattleTarget,
+  type BattleScope,
+  type ShopAbility,
+  type ShopTrigger,
+  type ShopEffect,
+  type ShopTarget,
+  type ShopScope,
   type StatType,
 } from '../types';
 
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 
-const TRIGGERS: AbilityTrigger[] = [
+const BATTLE_TRIGGERS: BattleTrigger[] = [
   'OnStart',
   'OnFaint',
   'OnAllyFaint',
   'OnHurt',
-  'OnBuy',
-  'OnSell',
-  'OnShopStart',
   'OnSpawn',
   'OnAllySpawn',
   'OnEnemySpawn',
@@ -30,7 +33,9 @@ const TRIGGERS: AbilityTrigger[] = [
   'AfterAnyAttack',
 ];
 
-const SCOPES: TargetScope[] = [
+const SHOP_TRIGGERS: ShopTrigger[] = ['OnBuy', 'OnSell', 'OnShopStart'];
+
+const BATTLE_SCOPES: BattleScope[] = [
   'SelfUnit',
   'Allies',
   'Enemies',
@@ -40,10 +45,35 @@ const SCOPES: TargetScope[] = [
   'Aggressor',
 ];
 
+const SHOP_SCOPES: ShopScope[] = ['SelfUnit', 'Allies', 'All', 'AlliesOther', 'TriggerSource'];
+
 const STATS: StatType[] = ['Health', 'Attack', 'Mana'];
 
 export const CreateCardPage: React.FC = () => {
   const { isConnected, connect, submitCard } = useBlockchainStore();
+
+  const defaultBattleAbility = (): BattleAbility => ({
+    name: '',
+    description: '',
+    trigger: 'OnStart',
+    effect: { type: 'Damage', amount: 1, target: { type: 'All', data: { scope: 'Enemies' } } },
+    conditions: [],
+    max_triggers: undefined,
+  });
+
+  const defaultShopAbility = (): ShopAbility => ({
+    name: '',
+    description: '',
+    trigger: 'OnBuy',
+    effect: {
+      type: 'ModifyStatsPermanent',
+      health: 1,
+      attack: 1,
+      target: { type: 'All', data: { scope: 'SelfUnit' } },
+    },
+    conditions: [],
+    max_triggers: undefined,
+  });
 
   const [cardForm, setCardForm] = useState({
     name: '',
@@ -53,23 +83,18 @@ export const CreateCardPage: React.FC = () => {
     play_cost: 1,
     pitch_value: 1,
     description: '',
-    abilities: [] as Ability[],
+    shop_abilities: [] as ShopAbility[],
+    battle_abilities: [] as BattleAbility[],
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [triedSubmitCard, setTriedSubmitCard] = useState(false);
   const [triedAddAbility, setTriedAddAbility] = useState(false);
+  const [abilityLane, setAbilityLane] = useState<'battle' | 'shop'>('battle');
 
   // New Ability Form State
-  const [newAbility, setNewAbility] = useState<Ability>({
-    name: '',
-    description: '',
-    trigger: 'OnStart',
-    effect: { type: 'Damage', amount: 1, target: { type: 'All', data: { scope: 'Enemies' } } },
-    conditions: [],
-    max_triggers: undefined,
-  });
+  const [newAbility, setNewAbility] = useState<AnyAbility>(defaultBattleAbility());
 
   const handleCardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +113,8 @@ export const CreateCardPage: React.FC = () => {
         {
           stats: { attack: cardForm.attack, health: cardForm.health },
           economy: { play_cost: cardForm.play_cost, pitch_value: cardForm.pitch_value },
-          abilities: cardForm.abilities,
+          shop_abilities: cardForm.shop_abilities,
+          battle_abilities: cardForm.battle_abilities,
         },
         {
           name: cardForm.name,
@@ -106,7 +132,8 @@ export const CreateCardPage: React.FC = () => {
         play_cost: 1,
         pitch_value: 1,
         description: '',
-        abilities: [],
+        shop_abilities: [],
+        battle_abilities: [],
       });
     } catch (err) {
       toast.error('Failed to submit card');
@@ -121,81 +148,148 @@ export const CreateCardPage: React.FC = () => {
       toast.error('Ability name is required');
       return;
     }
-    setCardForm((prev) => ({
-      ...prev,
-      abilities: [...prev.abilities, { ...newAbility }],
-    }));
+    if (abilityLane === 'battle') {
+      setCardForm((prev) => ({
+        ...prev,
+        battle_abilities: [...prev.battle_abilities, { ...(newAbility as BattleAbility) }],
+      }));
+    } else {
+      setCardForm((prev) => ({
+        ...prev,
+        shop_abilities: [...prev.shop_abilities, { ...(newAbility as ShopAbility) }],
+      }));
+    }
     // Reset ability form partially
     setTriedAddAbility(false);
-    setNewAbility({
-      name: '',
-      description: '',
-      trigger: 'OnStart',
-      effect: { type: 'Damage', amount: 1, target: { type: 'All', data: { scope: 'Enemies' } } },
-      conditions: [],
-      max_triggers: undefined,
-    });
+    setNewAbility(abilityLane === 'battle' ? defaultBattleAbility() : defaultShopAbility());
   };
 
-  const removeAbility = (index: number) => {
-    setCardForm((prev) => ({
-      ...prev,
-      abilities: prev.abilities.filter((_, i) => i !== index),
-    }));
+  const removeAbility = (lane: 'battle' | 'shop', index: number) => {
+    if (lane === 'battle') {
+      setCardForm((prev) => ({
+        ...prev,
+        battle_abilities: prev.battle_abilities.filter((_, i) => i !== index),
+      }));
+    } else {
+      setCardForm((prev) => ({
+        ...prev,
+        shop_abilities: prev.shop_abilities.filter((_, i) => i !== index),
+      }));
+    }
   };
 
   const updateEffectType = (type: string) => {
-    const target: AbilityTarget = { type: 'All', data: { scope: 'Enemies' } };
-    if (type === 'Damage') {
-      setNewAbility({ ...newAbility, effect: { type: 'Damage', amount: 1, target } });
-    } else if (type === 'ModifyStats') {
-      setNewAbility({
-        ...newAbility,
-        effect: { type: 'ModifyStats', health: 1, attack: 1, target },
-      });
-    } else if (type === 'ModifyStatsPermanent') {
-      setNewAbility({
-        ...newAbility,
-        effect: { type: 'ModifyStatsPermanent', health: 1, attack: 1, target },
-      });
-    } else if (type === 'SpawnUnit') {
-      setNewAbility({ ...newAbility, effect: { type: 'SpawnUnit', card_id: 2 } });
-    } else if (type === 'Destroy') {
-      setNewAbility({ ...newAbility, effect: { type: 'Destroy', target } });
-    } else if (type === 'GainMana') {
-      setNewAbility({ ...newAbility, effect: { type: 'GainMana', amount: 1 } });
+    if (abilityLane === 'battle') {
+      const target: BattleTarget = { type: 'All', data: { scope: 'Enemies' } };
+      if (type === 'Damage') {
+        setNewAbility({
+          ...(newAbility as BattleAbility),
+          effect: { type: 'Damage', amount: 1, target },
+        });
+      } else if (type === 'ModifyStats') {
+        setNewAbility({
+          ...(newAbility as BattleAbility),
+          effect: { type: 'ModifyStats', health: 1, attack: 1, target },
+        });
+      } else if (type === 'ModifyStatsPermanent') {
+        setNewAbility({
+          ...(newAbility as BattleAbility),
+          effect: { type: 'ModifyStatsPermanent', health: 1, attack: 1, target },
+        });
+      } else if (type === 'SpawnUnit') {
+        setNewAbility({
+          ...(newAbility as BattleAbility),
+          effect: { type: 'SpawnUnit', card_id: 2 },
+        });
+      } else if (type === 'Destroy') {
+        setNewAbility({ ...(newAbility as BattleAbility), effect: { type: 'Destroy', target } });
+      } else if (type === 'GainMana') {
+        setNewAbility({
+          ...(newAbility as BattleAbility),
+          effect: { type: 'GainMana', amount: 1 },
+        });
+      }
+    } else {
+      const target: ShopTarget = { type: 'All', data: { scope: 'SelfUnit' } };
+      if (type === 'ModifyStatsPermanent') {
+        setNewAbility({
+          ...(newAbility as ShopAbility),
+          effect: { type: 'ModifyStatsPermanent', health: 1, attack: 1, target },
+        });
+      } else if (type === 'SpawnUnit') {
+        setNewAbility({
+          ...(newAbility as ShopAbility),
+          effect: { type: 'SpawnUnit', card_id: 2 },
+        });
+      } else if (type === 'Destroy') {
+        setNewAbility({ ...(newAbility as ShopAbility), effect: { type: 'Destroy', target } });
+      } else if (type === 'GainMana') {
+        setNewAbility({ ...(newAbility as ShopAbility), effect: { type: 'GainMana', amount: 1 } });
+      }
     }
   };
 
   const updateTargetType = (type: string) => {
     if (newAbility.effect.type === 'SpawnUnit' || newAbility.effect.type === 'GainMana') return;
 
-    let target: AbilityTarget;
-    const scope: TargetScope = 'Enemies';
-
-    if (type === 'Position') {
-      target = { type: 'Position', data: { scope, index: 0 } };
-    } else if (type === 'Adjacent') {
-      target = { type: 'Adjacent', data: { scope } };
-    } else if (type === 'Random') {
-      target = { type: 'Random', data: { scope, count: 1 } };
-    } else if (type === 'Standard') {
-      target = { type: 'Standard', data: { scope, stat: 'Health', order: 'Descending', count: 1 } };
+    if (abilityLane === 'battle') {
+      let target: BattleTarget;
+      const scope: BattleScope = 'Enemies';
+      if (type === 'Position') {
+        target = { type: 'Position', data: { scope, index: 0 } };
+      } else if (type === 'Adjacent') {
+        target = { type: 'Adjacent', data: { scope } };
+      } else if (type === 'Random') {
+        target = { type: 'Random', data: { scope, count: 1 } };
+      } else if (type === 'Standard') {
+        target = {
+          type: 'Standard',
+          data: { scope, stat: 'Health', order: 'Descending', count: 1 },
+        };
+      } else {
+        target = { type: 'All', data: { scope } };
+      }
+      setNewAbility({
+        ...(newAbility as BattleAbility),
+        effect: { ...(newAbility.effect as BattleEffect), target } as BattleEffect,
+      });
     } else {
-      target = { type: 'All', data: { scope } };
+      let target: ShopTarget;
+      const scope: ShopScope = 'SelfUnit';
+      if (type === 'Position') {
+        target = { type: 'Position', data: { scope, index: 0 } };
+      } else if (type === 'Random') {
+        target = { type: 'Random', data: { scope, count: 1 } };
+      } else if (type === 'Standard') {
+        target = {
+          type: 'Standard',
+          data: { scope, stat: 'Health', order: 'Descending', count: 1 },
+        };
+      } else {
+        target = { type: 'All', data: { scope } };
+      }
+      setNewAbility({
+        ...(newAbility as ShopAbility),
+        effect: { ...(newAbility.effect as ShopEffect), target } as ShopEffect,
+      });
     }
-
-    setNewAbility({
-      ...newAbility,
-      effect: { ...newAbility.effect, target } as AbilityEffect,
-    });
   };
+
+  const allAbilities = [
+    ...cardForm.shop_abilities.map((ability, index) => ({ lane: 'shop' as const, ability, index })),
+    ...cardForm.battle_abilities.map((ability, index) => ({
+      lane: 'battle' as const,
+      ability,
+      index,
+    })),
+  ];
 
   const rawJson = JSON.stringify(
     {
       stats: { attack: cardForm.attack, health: cardForm.health },
       economy: { play_cost: cardForm.play_cost, pitch_value: cardForm.pitch_value },
-      abilities: cardForm.abilities,
+      shop_abilities: cardForm.shop_abilities,
+      battle_abilities: cardForm.battle_abilities,
       metadata: {
         name: cardForm.name,
         emoji: cardForm.emoji,
@@ -432,17 +526,20 @@ export const CreateCardPage: React.FC = () => {
 
               {/* Added Abilities List */}
               <div className="space-y-2 mb-6 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                {cardForm.abilities.map((ability, idx) => (
+                {allAbilities.map(({ lane, ability, index }) => (
                   <div
-                    key={idx}
+                    key={`${lane}-${index}`}
                     className="bg-slate-800/50 border border-white/5 p-3 rounded-lg flex justify-between items-start"
                   >
                     <div>
-                      <div className="text-sm font-bold text-yellow-500">{ability.name}</div>
+                      <div className="text-sm font-bold text-yellow-500">
+                        {ability.name}{' '}
+                        <span className="text-[10px] uppercase text-slate-400">[{lane}]</span>
+                      </div>
                       <div className="text-xs text-slate-400 italic">{ability.trigger}</div>
                     </div>
                     <button
-                      onClick={() => removeAbility(idx)}
+                      onClick={() => removeAbility(lane, index)}
                       className="text-slate-500 hover:text-red-500"
                     >
                       <svg
@@ -460,7 +557,7 @@ export const CreateCardPage: React.FC = () => {
                     </button>
                   </div>
                 ))}
-                {cardForm.abilities.length === 0 && (
+                {allAbilities.length === 0 && (
                   <div className="text-center py-4 text-slate-600 text-sm italic">
                     No abilities added yet
                   </div>
@@ -489,16 +586,33 @@ export const CreateCardPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Ability Lane
+                    </label>
+                    <select
+                      value={abilityLane}
+                      onChange={(e) => {
+                        const lane = e.target.value as 'battle' | 'shop';
+                        setAbilityLane(lane);
+                        setNewAbility(
+                          lane === 'battle' ? defaultBattleAbility() : defaultShopAbility()
+                        );
+                      }}
+                      className="w-full bg-slate-900 border border-white/10 rounded px-2 py-1.5 text-sm outline-none focus:border-yellow-500/50 mb-2"
+                    >
+                      <option value="battle">battle</option>
+                      <option value="shop">shop</option>
+                    </select>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                       Trigger
                     </label>
                     <select
                       value={newAbility.trigger}
                       onChange={(e) =>
-                        setNewAbility({ ...newAbility, trigger: e.target.value as AbilityTrigger })
+                        setNewAbility({ ...newAbility, trigger: e.target.value as any })
                       }
                       className="w-full bg-slate-900 border border-white/10 rounded px-2 py-1.5 text-sm outline-none focus:border-yellow-500/50"
                     >
-                      {TRIGGERS.map((t) => (
+                      {(abilityLane === 'battle' ? BATTLE_TRIGGERS : SHOP_TRIGGERS).map((t) => (
                         <option key={t} value={t}>
                           {t}
                         </option>
@@ -512,14 +626,17 @@ export const CreateCardPage: React.FC = () => {
                     Effect Type
                   </label>
                   <div className="grid grid-cols-4 gap-2">
-                    {[
-                      'Damage',
-                      'ModifyStats',
-                      'ModifyStatsPermanent',
-                      'SpawnUnit',
-                      'Destroy',
-                      'GainMana',
-                    ].map((type) => (
+                    {(abilityLane === 'battle'
+                      ? [
+                          'Damage',
+                          'ModifyStats',
+                          'ModifyStatsPermanent',
+                          'SpawnUnit',
+                          'Destroy',
+                          'GainMana',
+                        ]
+                      : ['ModifyStatsPermanent', 'SpawnUnit', 'Destroy', 'GainMana']
+                    ).map((type) => (
                       <button
                         key={type}
                         onClick={() => updateEffectType(type)}
@@ -699,7 +816,9 @@ export const CreateCardPage: React.FC = () => {
                             >
                               <option value="All">All</option>
                               <option value="Position">Position</option>
-                              <option value="Adjacent">Adjacent</option>
+                              {abilityLane === 'battle' && (
+                                <option value="Adjacent">Adjacent</option>
+                              )}
                               <option value="Random">Random</option>
                               <option value="Standard">Standard</option>
                             </select>
@@ -720,7 +839,7 @@ export const CreateCardPage: React.FC = () => {
                               }}
                               className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                             >
-                              {SCOPES.map((s) => (
+                              {(abilityLane === 'battle' ? BATTLE_SCOPES : SHOP_SCOPES).map((s) => (
                                 <option key={s} value={s}>
                                   {s}
                                 </option>
