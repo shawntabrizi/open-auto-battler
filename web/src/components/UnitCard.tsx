@@ -2,6 +2,7 @@ import React from 'react';
 import type { CardView, BoardUnitView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import { useCustomizationStore } from '../store/customizationStore';
+import { statusesFromMask, STATUS_ICON } from '../utils/status';
 
 interface UnitCardProps {
   card: CardView | BoardUnitView;
@@ -37,6 +38,8 @@ export function UnitCard({
   const cardStyle = useCustomizationStore((s) => s.selections.cardStyle);
   const [isDragging, setIsDragging] = React.useState(false);
   const abilityCount = (card.shop_abilities?.length ?? 0) + (card.battle_abilities?.length ?? 0);
+  const statusMask = 'active_statuses' in card ? card.active_statuses : card.base_statuses;
+  const displayStatuses = statusesFromMask(statusMask);
 
   const handleDragStart = (e: React.DragEvent) => {
     setIsDragging(true);
@@ -94,6 +97,19 @@ export function UnitCard({
         {abilityCount > 0 && (
           <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 z-10 bg-yellow-500 rounded-full w-3 h-3 lg:w-4 lg:h-4 flex items-center justify-center text-[0.4rem] lg:text-[0.55rem] font-bold border border-yellow-300 shadow">
             {abilityCount > 1 ? abilityCount : '✶'}
+          </div>
+        )}
+        {displayStatuses.length > 0 && (
+          <div className="absolute top-0 left-0 z-10 flex gap-0.5 lg:gap-1 p-0.5">
+            {displayStatuses.map((status) => (
+              <span
+                key={status}
+                className="text-[0.45rem] lg:text-[0.65rem] px-1 py-0.5 rounded bg-black/60 border border-white/20"
+                title={status}
+              >
+                {STATUS_ICON[status]}
+              </span>
+            ))}
           </div>
         )}
       </div>

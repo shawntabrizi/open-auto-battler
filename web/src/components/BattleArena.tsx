@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { UnitCard } from './UnitCard';
 import type { BattleOutput, UnitView, CombatEvent } from '../types';
+import { setStatus } from '../utils/status';
 
 // --- Helper Components ---
 
@@ -145,10 +146,36 @@ function computeBoardState(
         else enemy = new_board_state;
         break;
       }
+      case 'StatusApplied': {
+        const { target_instance_id, status } = event.payload;
+        player = applyStatusUpdate(player, target_instance_id, status, true);
+        enemy = applyStatusUpdate(enemy, target_instance_id, status, true);
+        break;
+      }
+      case 'StatusRemoved':
+      case 'StatusConsumed': {
+        const { target_instance_id, status } = event.payload;
+        player = applyStatusUpdate(player, target_instance_id, status, false);
+        enemy = applyStatusUpdate(enemy, target_instance_id, status, false);
+        break;
+      }
     }
   }
 
   return { playerBoard: player, enemyBoard: enemy };
+}
+
+function applyStatusUpdate(
+  board: UnitView[],
+  targetInstanceId: number,
+  status: 'Shield' | 'Poison' | 'Guard',
+  enabled: boolean
+): UnitView[] {
+  return board.map((unit) =>
+    unit.instance_id === targetInstanceId
+      ? { ...unit, statuses: setStatus(unit.statuses, status, enabled) }
+      : unit
+  );
 }
 
 // Get the animation delay for a given event
@@ -173,6 +200,10 @@ function getEventDelay(events: CombatEvent[], index: number, playbackSpeed: numb
     case 'AbilityModifyStatsPermanent':
       return 400 / playbackSpeed;
     case 'AbilityGainMana':
+      return 300 / playbackSpeed;
+    case 'StatusApplied':
+    case 'StatusRemoved':
+    case 'StatusConsumed':
       return 300 / playbackSpeed;
     case 'UnitSpawn':
       return 600 / playbackSpeed;
@@ -410,6 +441,21 @@ export function BattleArena({ battleOutput, onBattleEnd }: BattleArenaProps) {
         } else {
           setEnemyBoard(new_board_state);
         }
+        break;
+      }
+
+      case 'StatusApplied': {
+        const { target_instance_id, status } = event.payload;
+        setPlayerBoard((prev) => applyStatusUpdate(prev, target_instance_id, status, true));
+        setEnemyBoard((prev) => applyStatusUpdate(prev, target_instance_id, status, true));
+        break;
+      }
+
+      case 'StatusRemoved':
+      case 'StatusConsumed': {
+        const { target_instance_id, status } = event.payload;
+        setPlayerBoard((prev) => applyStatusUpdate(prev, target_instance_id, status, false));
+        setEnemyBoard((prev) => applyStatusUpdate(prev, target_instance_id, status, false));
         break;
       }
     }

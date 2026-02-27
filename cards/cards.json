@@ -2328,6 +2328,7 @@
       "play_cost": 3,
       "pitch_value": 2
     },
+    "base_statuses": ["Guard"],
     "shop_abilities": [],
     "battle_abilities": [
       {
@@ -2413,7 +2414,24 @@
           }
         },
         "name": "Enrage",
-        "description": "Ally faints: Gain +1 attack (melon perk unsupported)",
+        "description": "Ally faints: Gain +1 attack",
+        "conditions": [],
+        "max_triggers": null
+      },
+      {
+        "trigger": "OnAllyFaint",
+        "effect": {
+          "type": "GrantStatusThisBattle",
+          "status": "Shield",
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "name": "Melon Hide",
+        "description": "Ally faints: Gain Shield for this battle",
         "conditions": [],
         "max_triggers": null
       }
@@ -2770,9 +2788,8 @@
       {
         "trigger": "OnFaint",
         "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 0,
+          "type": "GrantStatusPermanent",
+          "status": "Shield",
           "target": {
             "type": "Position",
             "data": {
@@ -2782,7 +2799,7 @@
           }
         },
         "name": "Shell Legacy",
-        "description": "Faint: Give nearest ally behind +2 health (melon perk unsupported)",
+        "description": "Faint: Give nearest ally behind Shield permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -3031,27 +3048,9 @@
       "play_cost": 5,
       "pitch_value": 3
     },
+    "base_statuses": ["Poison"],
     "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 0,
-          "attack": 20,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "name": "Venom Strike",
-        "description": "Start of battle: Gain massive attack (peanut perk approximated)",
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
+    "battle_abilities": []
   },
   {
     "id": 94,
@@ -3295,9 +3294,8 @@
       {
         "trigger": "OnHurt",
         "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 0,
+          "type": "GrantStatusThisBattle",
+          "status": "Shield",
           "target": {
             "type": "All",
             "data": {
@@ -3305,8 +3303,8 @@
             }
           }
         },
-        "name": "Thick Hide",
-        "description": "Hurt: Gain +2 health (coconut perk unsupported)",
+        "name": "Coconut Skin",
+        "description": "Hurt: Gain Shield for this battle",
         "conditions": [],
         "max_triggers": null
       }

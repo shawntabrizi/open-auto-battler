@@ -3,6 +3,7 @@ import { Binary } from 'polkadot-api';
 import { useBlockchainStore } from './blockchainStore';
 import { useGameStore } from './gameStore';
 import { submitTx } from '../utils/tx';
+import { decodeStatusMask } from '../utils/status';
 
 interface TournamentInfo {
   id: number;
@@ -389,24 +390,7 @@ function binaryToStr(v: any): string {
 }
 
 function toStatusMask(v: any): number[] {
-  if (Array.isArray(v)) {
-    return v.map((x) => Number(x) & 0xff);
-  }
-  if (typeof v === 'number') {
-    const out = new Array(32).fill(0);
-    out[0] = v & 0xff;
-    out[1] = (v >> 8) & 0xff;
-    return out;
-  }
-  if (v && typeof v === 'object') {
-    if (Array.isArray(v.value)) {
-      return v.value.map((x: any) => Number(x) & 0xff);
-    }
-    if (Array.isArray(v.asBytes)) {
-      return v.asBytes.map((x: any) => Number(x) & 0xff);
-    }
-  }
-  return new Array(32).fill(0);
+  return decodeStatusMask(v);
 }
 
 function convertEffect(v: any): any {

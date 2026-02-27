@@ -15,8 +15,15 @@ import {
   type ShopTarget,
   type ShopScope,
   type StatType,
-  type Status,
 } from '../types';
+import {
+  STATUS_ICON,
+  STATUS_ORDER,
+  emptyStatusMask,
+  hasStatus,
+  statusesFromMask,
+  toggleStatus,
+} from '../utils/status';
 
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 
@@ -49,8 +56,6 @@ const BATTLE_SCOPES: BattleScope[] = [
 const SHOP_SCOPES: ShopScope[] = ['SelfUnit', 'Allies', 'All', 'AlliesOther', 'TriggerSource'];
 
 const STATS: StatType[] = ['Health', 'Attack', 'Mana'];
-const STATUSES: Status[] = ['Shield', 'Poison', 'Guard'];
-const EMPTY_STATUS_MASK = Array(32).fill(0);
 
 export const CreateCardPage: React.FC = () => {
   const { isConnected, connect, submitCard } = useBlockchainStore();
@@ -88,7 +93,7 @@ export const CreateCardPage: React.FC = () => {
     description: '',
     shop_abilities: [] as ShopAbility[],
     battle_abilities: [] as BattleAbility[],
-    base_statuses: EMPTY_STATUS_MASK,
+    base_statuses: emptyStatusMask(),
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -139,7 +144,7 @@ export const CreateCardPage: React.FC = () => {
         description: '',
         shop_abilities: [],
         battle_abilities: [],
-        base_statuses: EMPTY_STATUS_MASK,
+        base_statuses: emptyStatusMask(),
       });
     } catch (err) {
       toast.error('Failed to submit card');
@@ -332,6 +337,8 @@ export const CreateCardPage: React.FC = () => {
     2
   );
 
+  const baseStatuses = statusesFromMask(cardForm.base_statuses);
+
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
@@ -507,6 +514,37 @@ export const CreateCardPage: React.FC = () => {
                     placeholder="General description of the card..."
                   />
                 </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                    Base Statuses
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {STATUS_ORDER.map((status) => {
+                      const active = hasStatus(cardForm.base_statuses, status);
+                      return (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() =>
+                            setCardForm({
+                              ...cardForm,
+                              base_statuses: toggleStatus(cardForm.base_statuses, status),
+                            })
+                          }
+                          className={`rounded-lg border px-2 py-1.5 text-xs font-semibold transition-colors ${
+                            active
+                              ? 'border-yellow-500 bg-yellow-500/20 text-yellow-300'
+                              : 'border-white/10 bg-slate-800 text-slate-300 hover:border-white/30'
+                          }`}
+                        >
+                          <span className="mr-1">{STATUS_ICON[status]}</span>
+                          {status}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -520,6 +558,19 @@ export const CreateCardPage: React.FC = () => {
                   <div className="w-full h-20 bg-slate-700/50 rounded-lg flex items-center justify-center text-4xl mb-2">
                     {cardForm.emoji}
                   </div>
+                  {baseStatuses.length > 0 && (
+                    <div className="flex flex-wrap gap-1 justify-center mb-2">
+                      {baseStatuses.map((status) => (
+                        <span
+                          key={status}
+                          className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700 border border-white/10"
+                          title={status}
+                        >
+                          {STATUS_ICON[status]}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-1">
                       <span className="text-red-500 text-sm">⚔️</span>
@@ -862,7 +913,7 @@ export const CreateCardPage: React.FC = () => {
                         }
                         className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                       >
-                        {STATUSES.map((status) => (
+                        {STATUS_ORDER.map((status) => (
                           <option key={status} value={status}>
                             {status}
                           </option>

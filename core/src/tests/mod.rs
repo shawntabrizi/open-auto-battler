@@ -9,6 +9,7 @@ mod opponents;
 mod priority;
 mod state;
 mod state_ops;
+mod status;
 mod triggers;
 mod turns;
 mod units;
