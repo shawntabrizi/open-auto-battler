@@ -93,19 +93,20 @@ export function DroppableBoardSlot({ id, children }: DroppableBoardSlotProps) {
 interface DroppableAshPileProps {
   children: React.ReactNode;
   onHoverChange: (isHovered: boolean) => void;
+  zoneId?: string;
 }
 
-export function DroppableAshPile({ children, onHoverChange }: DroppableAshPileProps) {
+export function DroppableAshPile({ children, onHoverChange, zoneId = 'ash-pile' }: DroppableAshPileProps) {
   const { registerDropZone, unregisterDropZone, hoveredZoneId } = useDragContext();
   const ref = useRef<HTMLDivElement>(null);
-  const isOver = hoveredZoneId === 'ash-pile';
+  const isOver = hoveredZoneId === zoneId;
 
   useEffect(() => {
     if (ref.current) {
-      registerDropZone('ash-pile', ref.current, { type: 'ash-pile' });
+      registerDropZone(zoneId, ref.current, { type: 'ash-pile' });
     }
-    return () => unregisterDropZone('ash-pile');
-  }, [registerDropZone, unregisterDropZone]);
+    return () => unregisterDropZone(zoneId);
+  }, [registerDropZone, unregisterDropZone, zoneId]);
 
   useEffect(() => {
     onHoverChange(isOver);

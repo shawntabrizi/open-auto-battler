@@ -65,6 +65,15 @@ export function Shop({ expandMobile = false }: { expandMobile?: boolean }) {
   const mobileSelected = expandMobile && selection?.type === 'hand' ? view.hand[selection.index] : null;
   const mobileCanAfford = expandMobile && selection?.type === 'hand' ? view.can_afford[selection.index] : false;
 
+  // Ability cycling for mobile bottom bar
+  const [abilityIdx, setAbilityIdx] = React.useState(0);
+  const prevSelKey = useRef<string | null>(null);
+  const selKey = mobileSelected ? `${mobileSelected.id}-${selection?.index}` : null;
+  if (selKey !== prevSelKey.current) {
+    prevSelKey.current = selKey;
+    if (abilityIdx !== 0) setAbilityIdx(0);
+  }
+
   const handleMobilePitch = () => {
     if (selection?.type === 'hand') {
       playSfx('pitch-burn');
@@ -176,52 +185,27 @@ export function Shop({ expandMobile = false }: { expandMobile?: boolean }) {
             </div>
           </div>
 
-          {/* Mobile right: stacked Deploy + Pitch buttons — always visible on hand tab */}
+          {/* Mobile right: Deploy column (full height, like battle button) */}
           {expandMobile && (
-            <div className="lg:hidden flex flex-col gap-1.5 justify-center w-20 flex-shrink-0 border-l border-warm-700/50 px-1.5 py-1">
-              {/* Deploy button */}
+            <div className="lg:hidden flex flex-col items-center justify-center w-20 flex-shrink-0 border-l border-warm-700/50 px-1.5 py-1">
               <button
                 onClick={handleMobileDeploy}
                 disabled={!mobileSelected || !mobileCanAfford || boardFull}
-                className={`flex-1 flex flex-col items-center justify-center rounded-lg border transition-colors ${
+                className={`flex-1 w-full flex flex-col items-center justify-center rounded-lg border transition-colors ${
                   mobileSelected && mobileCanAfford && !boardFull
-                    ? 'bg-gradient-to-b from-amber-600 to-amber-700 border-amber-500/60 active:from-amber-500 active:to-amber-600'
+                    ? 'battle-btn border-amber-500/60 active:scale-95'
                     : 'bg-warm-800 border-warm-700 opacity-40 cursor-not-allowed'
                 }`}
               >
-                <svg className={`w-6 h-6 ${mobileSelected && mobileCanAfford && !boardFull ? 'text-white' : 'text-warm-500'}`} viewBox="0 0 24 24" fill="currentColor">
+                <svg className={`w-7 h-7 ${mobileSelected && mobileCanAfford && !boardFull ? 'text-amber-900' : 'text-warm-500'}`} viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8 5v14l11-7z" />
                 </svg>
-                <span className={`text-[0.55rem] font-bold uppercase tracking-wide ${mobileSelected && mobileCanAfford && !boardFull ? 'text-white' : 'text-warm-500'}`}>
+                <span className={`text-[0.55rem] font-bold uppercase tracking-wide mt-0.5 ${mobileSelected && mobileCanAfford && !boardFull ? 'text-amber-900' : 'text-warm-500'}`}>
                   {boardFull ? 'Full' : 'Deploy'}
                 </span>
                 {mobileSelected && (
-                  <span className={`text-[0.6rem] font-bold ${mobileCanAfford ? 'text-amber-200' : 'text-red-300'}`}>
+                  <span className={`text-[0.6rem] font-bold ${mobileCanAfford ? 'text-amber-800' : 'text-red-300'}`}>
                     {mobileSelected.play_cost}⚡
-                  </span>
-                )}
-              </button>
-              {/* Pitch button */}
-              <button
-                onClick={handleMobilePitch}
-                disabled={!mobileSelected}
-                className={`flex-1 flex flex-col items-center justify-center rounded-lg border transition-colors ${
-                  mobileSelected
-                    ? 'bg-gradient-to-b from-warm-700 to-warm-800 border-warm-600/60 active:from-warm-600 active:to-warm-700'
-                    : 'bg-warm-800 border-warm-700 opacity-40 cursor-not-allowed'
-                }`}
-              >
-                <img
-                  src={ashpileIcon}
-                  alt="Pitch"
-                  className={`w-6 h-6 ${mobileSelected ? 'opacity-90' : 'opacity-40'}`}
-                />
-                <span className={`text-[0.55rem] font-bold uppercase tracking-wide ${mobileSelected ? 'text-red-400' : 'text-warm-600'}`}>
-                  Pitch
-                </span>
-                {mobileSelected && (
-                  <span className="text-[0.6rem] font-bold text-mana-blue">
-                    +{mobileSelected.pitch_value}
                   </span>
                 )}
               </button>
@@ -250,21 +234,63 @@ export function Shop({ expandMobile = false }: { expandMobile?: boolean }) {
           </DroppableAshPile>
         </div>
 
-        {/* Mobile bottom bar: ability description + undo — always visible on hand tab */}
+        {/* Mobile bottom bar: ability info + pitch (droppable) + undo */}
         {expandMobile && (
           <div className="lg:hidden flex-shrink-0 flex items-center gap-2 px-2 py-1 bg-warm-900/95 border-t border-warm-700/50">
-            <div className="flex-1 min-w-0">
+            <div
+              className="flex-1 min-w-0 mr-2 cursor-pointer"
+              onClick={() => {
+                if (mobileSelected && mobileSelected.abilities.length > 1) {
+                  setAbilityIdx((i) => (i + 1) % mobileSelected.abilities.length);
+                }
+              }}
+            >
               {mobileSelected && mobileSelected.abilities.length > 0 ? (
-                <p className="text-xs text-warm-300 italic truncate">
-                  <span className="text-amber-400 font-bold not-italic">{mobileSelected.abilities[0].name}:</span>{' '}
-                  {mobileSelected.abilities[0].description}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs text-warm-300 italic truncate flex-1 min-w-0">
+                    <span className="text-amber-400 font-bold not-italic">{mobileSelected.abilities[abilityIdx % mobileSelected.abilities.length].name}:</span>{' '}
+                    {mobileSelected.abilities[abilityIdx % mobileSelected.abilities.length].description}
+                  </p>
+                  {mobileSelected.abilities.length > 1 && (
+                    <div className="flex-shrink-0 flex items-center gap-0.5">
+                      {mobileSelected.abilities.map((_, i) => (
+                        <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === abilityIdx % mobileSelected.abilities.length ? 'bg-amber-400' : 'bg-warm-600'}`} />
+                      ))}
+                    </div>
+                  )}
+                </div>
               ) : mobileSelected ? (
                 <p className="text-xs text-warm-500 italic">No abilities</p>
               ) : (
                 <p className="text-xs text-warm-500 italic">Tap a card to see details</p>
               )}
             </div>
+            {/* Pitch button — also a drag target */}
+            <DroppableAshPile onHoverChange={setIsAshHovered} zoneId="ash-pile-mobile">
+              <button
+                onClick={handleMobilePitch}
+                disabled={!mobileSelected}
+                className={`flex-shrink-0 h-10 px-5 rounded-none flex items-center gap-2 border-2 border-dashed transition-colors ${
+                  isAshHovered
+                    ? 'bg-red-900/40 border-red-500/70'
+                    : mobileSelected
+                      ? 'bg-warm-800/80 border-warm-500/40 active:bg-warm-700/80'
+                      : 'bg-warm-800/50 border-warm-700/30 opacity-40 cursor-not-allowed'
+                }`}
+                title="Pitch card — or drag here"
+              >
+                <img src={ashpileIcon} alt="Pitch" className={`w-6 h-6 ${mobileSelected || isAshHovered ? 'opacity-90' : 'opacity-40'}`} />
+                <span className={`text-[0.6rem] font-bold uppercase ${isAshHovered ? 'text-orange-400' : mobileSelected ? 'text-red-400' : 'text-warm-600'}`}>
+                  {isAshHovered ? 'Burn!' : 'Pitch'}
+                </span>
+                {mobileSelected && !isAshHovered && (
+                  <span className="text-[0.6rem] font-bold text-mana-blue">
+                    +{mobileSelected.pitch_value}
+                  </span>
+                )}
+              </button>
+            </DroppableAshPile>
+            {/* Undo button */}
             <button
               onClick={undo}
               disabled={!view.can_undo}
