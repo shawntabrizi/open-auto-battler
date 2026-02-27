@@ -120,6 +120,28 @@ cargo test -p oab-core
 cargo test -p pallet-auto-battle
 ```
 
+## Core Coverage
+
+```bash
+# One-time install
+cargo install cargo-llvm-cov
+rustup component add llvm-tools-preview
+
+# Generate core coverage summary + reports
+./core/coverage.sh
+```
+
+Coverage outputs:
+- Summary printed to stdout
+- `target/coverage/oab-core/lcov.info`
+- `target/coverage/oab-core/html/index.html`
+
+Optional minimum line coverage gate:
+
+```bash
+FAIL_UNDER_LINES=85 ./core/coverage.sh
+```
+
 ## Debugging
 
 ### Browser Console

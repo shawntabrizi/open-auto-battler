@@ -1,0 +1,45 @@
+name: Core Coverage
+
+on:
+  pull_request:
+    paths:
+      - "core/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/core-coverage.yml"
+  push:
+    branches: [ master ]
+    paths:
+      - "core/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/core-coverage.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Generate core coverage reports
+        run: ./core/coverage.sh
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oab-core-coverage
+          path: |
+            target/coverage/oab-core/lcov.info
+            target/coverage/oab-core/html
