@@ -3,6 +3,7 @@ mod combos;
 mod conditions;
 mod damage;
 mod faint;
+mod lifecycle;
 mod positions;
 mod random_ally_other;
 mod scopes;

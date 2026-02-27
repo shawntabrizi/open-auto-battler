@@ -5,7 +5,7 @@ use crate::types::*;
 fn test_hand_derivation_deterministic() {
     // Create a state with a known bag using simple test cards
     let mut state = GameState::new(12345);
-    for i in 0..15 {
+    for _ in 0..15 {
         let id = state.generate_card_id();
         let card = UnitCard::new(id, "TestCard", 1, 1, 1, 1);
         state.card_pool.insert(id, card);
