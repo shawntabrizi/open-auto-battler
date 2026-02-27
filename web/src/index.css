@@ -749,28 +749,28 @@ body {
         transparent 92%,
         rgba(0, 0, 0, 0.12) 100%
       ),
-    /* Base metallic gold — multi-stop for realism */
+    /* Base metallic gold — deeper, richer stops */
     linear-gradient(
         180deg,
-        #f5d96e 0%,
-        #e8c84a 15%,
-        #d4af37 35%,
-        #c9a02c 50%,
-        #d4af37 65%,
-        #e8c84a 85%,
-        #f5d96e 100%
+        #e8c44a 0%,
+        #d4a830 15%,
+        #b8892a 35%,
+        #a07520 50%,
+        #b8892a 65%,
+        #d4a830 85%,
+        #e8c44a 100%
       );
-  color: #2a1a00;
-  border: 1px solid #96711a;
-  border-top-color: rgba(245, 217, 110, 0.7);
-  border-bottom-color: rgba(120, 80, 20, 0.7);
-  text-shadow: 0 1px 0 rgba(255, 230, 150, 0.4);
+  color: #1a0f00;
+  border: 1px solid #7a5810;
+  border-top-color: rgba(232, 196, 74, 0.7);
+  border-bottom-color: rgba(90, 60, 10, 0.7);
+  text-shadow: 0 1px 0 rgba(255, 220, 120, 0.4);
   box-shadow:
-    inset 0 1px 0 rgba(255, 248, 220, 0.4),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 240, 180, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
     var(--shadow-lifted),
-    0 0 20px rgba(212, 168, 67, 0.2),
-    0 0 6px rgba(212, 168, 67, 0.12);
+    0 0 20px rgba(184, 137, 42, 0.3),
+    0 0 8px rgba(184, 137, 42, 0.2);
 }
 
 /* Hover-triggered shine sweep */
@@ -821,22 +821,22 @@ body {
     ),
     linear-gradient(
       180deg,
-      #f8e078 0%,
-      #ecd060 15%,
-      #dab840 35%,
-      #d0a835 50%,
-      #dab840 65%,
-      #ecd060 85%,
-      #f8e078 100%
+      #f0d060 0%,
+      #e0c048 15%,
+      #c8a030 35%,
+      #b89028 50%,
+      #c8a030 65%,
+      #e0c048 85%,
+      #f0d060 100%
     );
   transform: translateY(-2px) scale(1.03);
-  border-top-color: rgba(248, 224, 120, 0.8);
+  border-top-color: rgba(240, 208, 96, 0.8);
   box-shadow:
-    inset 0 1px 0 rgba(255, 248, 220, 0.5),
+    inset 0 1px 0 rgba(255, 240, 180, 0.55),
     inset 0 -1px 0 rgba(0, 0, 0, 0.1),
     var(--shadow-lifted),
-    0 0 28px rgba(212, 168, 67, 0.35),
-    0 0 10px rgba(212, 168, 67, 0.2);
+    0 0 30px rgba(184, 137, 42, 0.45),
+    0 0 12px rgba(184, 137, 42, 0.25);
 }
 
 .battle-btn:active:not(:disabled) {
@@ -851,7 +851,7 @@ body {
       transparent 60%,
       transparent 100%
     ),
-    linear-gradient(180deg, #c9a02c 0%, #b8892a 30%, #d4af37 70%, #e0be50 100%);
+    linear-gradient(180deg, #a07520 0%, #906818 30%, #b8892a 70%, #c8a030 100%);
   transform: translateY(0) scale(0.98);
   box-shadow:
     inset 0 2px 4px rgba(0, 0, 0, 0.2),
