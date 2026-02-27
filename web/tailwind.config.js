@@ -99,9 +99,28 @@ export default {
           '100%': { opacity: '0' },
         },
         'card-land': {
-          '0%': { opacity: '0', transform: 'translateY(-20px) scale(0.85)' },
-          '50%': { opacity: '1', transform: 'translateY(2px) scale(1.05)' },
-          '100%': { transform: 'translateY(0) scale(1)' },
+          // Starts at ghost's scale with full opacity for seamless handoff.
+          // CSS animation overrides the inline opacity:0 safety net via cascade.
+          '0%': { opacity: '1', transform: 'scale(1.08)' },
+          '40%': { transform: 'scale(0.97)' },
+          '70%': { transform: 'scale(1.02)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'card-settle': {
+          // Swap slide: card stays fully visible while sliding from old position.
+          // No opacity fade — that caused a 175ms "disappearance" after the ghost vanished.
+          '0%': {
+            transform:
+              'translateX(calc(var(--settle-slots, 0) * var(--slot-stride, 88px)))',
+          },
+          '70%': { transform: 'translateX(0) scale(1.02)' },
+          '90%': { transform: 'scale(0.99)' },
+          '100%': { transform: 'scale(1)' },
+        },
+        'card-exit': {
+          '0%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.6', transform: 'scale(0.85)' },
+          '100%': { opacity: '0', transform: 'scale(0.7) translateY(8px)' },
         },
         'battle-continue': {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
@@ -116,10 +135,43 @@ export default {
           '60%': { opacity: '1', transform: 'translateY(-2px) scale(1.05)' },
           '100%': { transform: 'translateY(0) scale(1)' },
         },
+        'result-slam': {
+          '0%': { opacity: '0', transform: 'translateY(-20px) scale(0.6)' },
+          '40%': { opacity: '1', transform: 'translateY(2px) scale(1.08)' },
+          '65%': { transform: 'translateY(-1px) scale(0.98)' },
+          '80%': { transform: 'translateY(0) scale(1.02)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        'result-glow': {
+          '0%, 100%': { textShadow: '0 0 20px var(--glow-color, rgba(212,168,67,0.4))' },
+          '50%': { textShadow: '0 0 40px var(--glow-color, rgba(212,168,67,0.7)), 0 0 80px var(--glow-color, rgba(212,168,67,0.3))' },
+        },
+        'impact-line': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'burst-expand': {
+          '0%': { opacity: '0.8', transform: 'scale(0)' },
+          '50%': { opacity: '0.4', transform: 'scale(1)' },
+          '100%': { opacity: '0', transform: 'scale(1.5)' },
+        },
+        'pip-fill': {
+          '0%': { opacity: '0', transform: 'scale(0)' },
+          '60%': { opacity: '1', transform: 'scale(1.3)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'glow-breathe': {
+          '0%, 100%': { opacity: '0.4' },
+          '50%': { opacity: '1' },
+        },
+        'vignette-creep': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
       },
       animation: {
         'idle-wobble': 'idle-wobble 3.5s ease-in-out infinite',
-        'card-entrance': 'card-entrance 0.5s var(--spring-bounce) forwards',
+        'card-entrance': 'card-entrance 0.5s var(--spring-bounce) both',
         'scale-bounce': 'scale-bounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'death-shrink': 'death-shrink 0.6s ease-out forwards',
         'phase-splash': 'phase-splash 1.5s ease-out forwards',
@@ -128,9 +180,18 @@ export default {
         'number-pop': 'number-pop 0.8s ease-out forwards',
         'stagger-fade-in': 'stagger-fade-in 0.5s ease-out forwards',
         'color-flash': 'color-flash 0.3s ease-out forwards',
-        'card-land': 'card-land 0.35s var(--spring-bounce) forwards',
+        'card-land': 'card-land 0.3s var(--spring-snappy) both',
+        'card-settle': 'card-settle 0.35s var(--spring-snappy) both',
+        'card-exit': 'card-exit 0.3s ease-out forwards',
         'battle-continue': 'battle-continue 0.8s ease-out forwards',
         'stat-count-up': 'stat-count-up 0.5s var(--spring-bounce) forwards',
+        'result-slam': 'result-slam 0.45s var(--spring-bounce) both',
+        'result-glow': 'result-glow 2s ease-in-out infinite',
+        'impact-line': 'impact-line 0.4s ease-out forwards',
+        'burst-expand': 'burst-expand 0.8s ease-out forwards',
+        'pip-fill': 'pip-fill 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+        'glow-breathe': 'glow-breathe 2.5s ease-in-out infinite',
+        'vignette-creep': 'vignette-creep 1.5s ease-out forwards',
       },
     },
   },

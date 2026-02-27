@@ -1,22 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { TrophyIcon, SkullIcon } from './Icons';
+import { TrophyIcon, SkullIcon, StarIcon, HeartIcon, HourglassIcon } from './Icons';
 
 export function GameOverScreen() {
   const { view, newRun, winsToVictory } = useGameStore();
 
+  const [showTitle, setShowTitle] = useState(false);
+  const [showSubtitle, setShowSubtitle] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showPips, setShowPips] = useState(false);
   const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
+    setShowTitle(false);
+    setShowSubtitle(false);
     setShowStats(false);
+    setShowPips(false);
     setShowButton(false);
-    const statsTimer = setTimeout(() => setShowStats(true), 400);
-    const buttonTimer = setTimeout(() => setShowButton(true), 900);
-    return () => {
-      clearTimeout(statsTimer);
-      clearTimeout(buttonTimer);
-    };
+
+    const timers = [
+      setTimeout(() => setShowTitle(true), 100),
+      setTimeout(() => setShowSubtitle(true), 400),
+      setTimeout(() => setShowStats(true), 700),
+      setTimeout(() => setShowPips(true), 1000),
+      setTimeout(() => setShowButton(true), 1300),
+    ];
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   if (!view) return null;
@@ -24,65 +33,165 @@ export function GameOverScreen() {
   const isVictory = view.phase === 'victory';
 
   const stats = [
-    { value: view.wins, label: 'Wins', color: 'text-gold' },
-    { value: view.round, label: 'Round', color: 'text-warm-200' },
-    { value: view.lives, label: 'Lives Left', color: 'text-red-400' },
+    {
+      value: view.wins,
+      label: 'Wins',
+      color: 'text-gold',
+      icon: <StarIcon className="w-4 h-4 lg:w-5 lg:h-5 text-gold" />,
+    },
+    {
+      value: view.round,
+      label: 'Round',
+      color: 'text-warm-200',
+      icon: <HourglassIcon className="w-4 h-4 lg:w-5 lg:h-5 text-warm-300" />,
+    },
+    {
+      value: view.lives,
+      label: 'Lives Left',
+      color: 'text-red-400',
+      icon: <HeartIcon className="w-4 h-4 lg:w-5 lg:h-5 text-red-400" />,
+    },
   ];
 
-  return (
-    <div className="h-full flex items-center justify-center bg-board-bg p-4">
-      <div
-        className={`
-          p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm lg:max-w-none
-          ${isVictory ? 'bg-green-900/30 border-2 border-green-500' : 'bg-red-900/30 border-2 border-red-500'}
-        `}
-      >
-        {/* Title */}
-        <h1
-          className={`
-            text-3xl lg:text-6xl font-bold mb-2 lg:mb-4 animate-scale-bounce
-            ${isVictory ? 'text-green-400' : 'text-red-400'}
-          `}
-        >
-          {isVictory ? (
-            <span className="flex items-center justify-center gap-3">
-              <TrophyIcon className="w-8 h-8 lg:w-12 lg:h-12 text-yellow-400" /> VICTORY!{' '}
-              <TrophyIcon className="w-8 h-8 lg:w-12 lg:h-12 text-yellow-400" />
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-3">
-              <SkullIcon className="w-8 h-8 lg:w-12 lg:h-12 text-red-400" /> DEFEAT{' '}
-              <SkullIcon className="w-8 h-8 lg:w-12 lg:h-12 text-red-400" />
-            </span>
-          )}
-        </h1>
+  // Build pip data: wins and losses for each round played
+  const totalRounds = winsToVictory || 10;
+  const roundsPlayed = view.round;
+  const pips: ('win' | 'loss' | 'unplayed')[] = [];
+  // We know final wins and total rounds played.
+  // Losses = roundsPlayed - wins (since each round is either a win, loss, or draw — but draws don't change score)
+  // For a simple representation: first N rounds, mark wins as green, rest as losses
+  // Since we don't have per-round results, approximate: wins first then losses
+  const losses = roundsPlayed - view.wins;
+  for (let i = 0; i < totalRounds; i++) {
+    if (i < view.wins) pips.push('win');
+    else if (i < view.wins + losses) pips.push('loss');
+    else pips.push('unplayed');
+  }
 
-        {/* Message */}
-        <p className="text-sm lg:text-xl text-warm-200 mb-4 lg:mb-8">
+  return (
+    <div className="h-full flex items-center justify-center relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-board-bg" />
+
+      {/* Atmospheric overlay */}
+      <div
+        className={`game-over-atmosphere ${
+          isVictory ? 'game-over-atmosphere-victory' : 'game-over-atmosphere-defeat'
+        } animate-vignette-creep`}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center gap-3 lg:gap-6 p-4 lg:p-6 max-w-md lg:max-w-lg w-full">
+
+        {/* Title with glow */}
+        <div className="relative">
+          {/* Glow behind title */}
+          {showTitle && (
+            <div
+              className={`game-over-title-glow ${
+                isVictory ? 'game-over-title-glow-victory' : 'game-over-title-glow-defeat'
+              }`}
+            />
+          )}
+          <h1
+            className={`relative text-2xl lg:text-7xl font-title font-bold tracking-wider uppercase ${
+              showTitle ? 'animate-result-slam' : 'opacity-0'
+            } ${isVictory ? 'text-green-300' : 'text-red-300'}`}
+            style={{
+              textShadow: isVictory
+                ? '0 2px 12px rgba(74, 140, 58, 0.5), 0 0 40px rgba(74, 140, 58, 0.2)'
+                : '0 2px 12px rgba(168, 58, 42, 0.5), 0 0 40px rgba(168, 58, 42, 0.2)',
+            }}
+          >
+            <span className="flex items-center justify-center gap-3 lg:gap-5">
+              {isVictory ? (
+                <>
+                  <TrophyIcon className="w-8 h-8 lg:w-12 lg:h-12 text-yellow-400" />
+                  Victory
+                  <TrophyIcon className="w-8 h-8 lg:w-12 lg:h-12 text-yellow-400" />
+                </>
+              ) : (
+                <>
+                  <SkullIcon className="w-8 h-8 lg:w-12 lg:h-12 text-red-400" />
+                  Defeat
+                  <SkullIcon className="w-8 h-8 lg:w-12 lg:h-12 text-red-400" />
+                </>
+              )}
+            </span>
+          </h1>
+        </div>
+
+        {/* Subtitle */}
+        <p
+          className={`text-sm lg:text-lg font-body ${
+            showSubtitle ? 'animate-stagger-fade-in' : 'opacity-0'
+          } ${isVictory ? 'text-warm-200' : 'text-warm-300/80'}`}
+          style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+        >
           {isVictory
-            ? `Congratulations! You won ${winsToVictory === 10 ? 'all 10 rounds' : 'the match'}!`
-            : 'Your forces have been overwhelmed. Try again!'}
+            ? 'Your army is undefeated!'
+            : 'Your forces have fallen...'}
         </p>
 
-        {/* Stats */}
-        <div className={`flex justify-center gap-6 lg:gap-12 mb-4 lg:mb-8 transition-opacity duration-300 ${showStats ? 'opacity-100' : 'opacity-0'}`}>
-          {stats.map((stat, i) => (
+        {/* Stats panel */}
+        <div
+          className={`w-full bg-black/40 border border-warm-700/50 rounded-xl px-3 lg:px-8 py-3 lg:py-6 ${
+            showStats ? 'animate-stagger-fade-in' : 'opacity-0'
+          }`}
+          style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+        >
+          <div className="flex justify-around items-center">
+            {stats.map((stat, i) => (
+              <div key={stat.label} className="flex flex-col items-center gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  {stat.icon}
+                  <span className="text-[0.6rem] lg:text-xs text-warm-400 uppercase tracking-wider font-heading">
+                    {stat.label}
+                  </span>
+                </div>
+                <div
+                  className={`text-xl lg:text-4xl font-bold font-stat ${stat.color} ${
+                    showStats ? 'animate-stat-count-up' : 'opacity-0'
+                  }`}
+                  style={{ animationDelay: `${300 + i * 200}ms`, animationFillMode: 'both' }}
+                >
+                  {stat.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Win/loss pip bar */}
+        <div
+          className={`flex items-center gap-1.5 lg:gap-2 ${
+            showPips ? 'opacity-100' : 'opacity-0'
+          } transition-opacity duration-300`}
+        >
+          {pips.map((pip, i) => (
             <div
-              key={stat.label}
-              className={`text-center ${showStats ? 'animate-stat-count-up' : 'opacity-0'}`}
-              style={{ animationDelay: `${i * 120}ms`, animationFillMode: 'both' }}
-            >
-              <div className={`text-2xl lg:text-4xl font-bold font-stat ${stat.color}`}>{stat.value}</div>
-              <div className="text-xs lg:text-base text-warm-400">{stat.label}</div>
-            </div>
+              key={i}
+              className={`run-pip ${
+                pip === 'win' ? 'run-pip-win' : pip === 'loss' ? 'run-pip-loss' : ''
+              } ${showPips && pip !== 'unplayed' ? 'animate-pip-fill' : ''}`}
+              style={
+                showPips && pip !== 'unplayed'
+                  ? { animationDelay: `${i * 80}ms`, animationFillMode: 'both' }
+                  : undefined
+              }
+            />
           ))}
         </div>
 
-        {/* New Run Button */}
-        <div className={`transition-all duration-500 ${showButton ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        {/* New Run button */}
+        <div
+          className={`transition-all duration-500 ${
+            showButton ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          }`}
+        >
           <button
             onClick={newRun}
-            className="btn btn-primary text-base lg:text-xl px-8 lg:px-12 py-3 lg:py-4"
+            className="battle-btn font-heading font-bold text-sm lg:text-xl px-8 lg:px-14 py-2.5 lg:py-4 rounded-xl tracking-wider uppercase"
           >
             New Run
           </button>

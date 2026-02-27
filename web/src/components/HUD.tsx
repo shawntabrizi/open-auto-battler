@@ -12,9 +12,9 @@ import {
   SpeakerIcon,
   SpeakerMutedIcon,
   HourglassIcon,
-  WarningIcon,
-  SwordIcon,
+  WarningIcon
 } from './Icons';
+import battleSwordIcon from '../../battle-sword.svg';
 
 const BATTLE_TIMER_SECONDS = 20;
 
@@ -121,7 +121,7 @@ interface HUDProps {
 }
 
 export function HUD() {
-  const { view, setShowBag, showBag, selection, startingLives, winsToVictory } = useGameStore();
+  const { view, setShowBag, showBag, selection, startingLives, winsToVictory, mobileTab, setMobileTab } = useGameStore();
   const playerAvatar = useCustomizationStore((s) => s.selections.playerAvatar);
 
   // Keyboard shortcut for Bag view
@@ -139,31 +139,103 @@ export function HUD() {
 
   if (!view) return null;
 
-  // Check if card panel is visible (same logic as GameLayout)
+  // Responsive panel margin — no mobile sidebar during shop phase (both tabs), desktop during shop phase
   const showCardPanel = view?.phase === 'shop' || selection?.type === 'board' || showBag;
+  const hasSelection = selection !== null || showBag;
+  const isShopMobile = view?.phase === 'shop'; // Both hand and board tabs hide sidebar on mobile
+  const hudMargin = `${hasSelection && !isShopMobile ? 'ml-44' : ''} ${showCardPanel ? 'lg:ml-80' : ''}`;
+
+  const isShopPhase = view.phase === 'shop';
 
   return (
     <div
-      className={`hud h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-2 lg:px-6 relative z-20 ${showCardPanel ? 'show-card-panel' : ''}`}
+      className={`hud h-9 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-1.5 lg:px-6 relative z-20 ${hudMargin}`}
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
     >
-      {/* Left: Lives */}
-      <div className="flex items-center gap-1 lg:gap-2">
-        {playerAvatar && (
-          <div className="w-6 h-6 lg:w-10 lg:h-10 rounded-full overflow-hidden border-2 border-yellow-500/50 flex-shrink-0">
-            <img src={playerAvatar.imageUrl} alt="avatar" className="w-full h-full object-cover" />
+      {/* === MOBILE: single consolidated bar === */}
+      <div className="flex lg:hidden items-center w-full gap-1.5">
+        {/* Tab toggle — left side for thumb reach */}
+        {isShopPhase ? (
+          <div className="flex items-center bg-warm-800/80 rounded-full p-0.5 flex-shrink-0">
+            <button
+              onClick={() => setMobileTab('hand')}
+              className={`px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wide transition-colors ${
+                mobileTab === 'hand'
+                  ? 'bg-gold/90 text-warm-950'
+                  : 'text-warm-400 hover:text-warm-200'
+              }`}
+            >
+              Hand
+            </button>
+            <button
+              onClick={() => setMobileTab('board')}
+              className={`px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wide transition-colors ${
+                mobileTab === 'board'
+                  ? 'bg-gold/90 text-warm-950'
+                  : 'text-warm-400 hover:text-warm-200'
+              }`}
+            >
+              Board
+            </button>
+          </div>
+        ) : (
+          <span className="text-sm font-bold text-gold flex-shrink-0">{view.round}</span>
+        )}
+
+        {/* Segmented mana bar — center */}
+        {isShopPhase && (
+          <div className="flex items-center gap-0.5 flex-1 justify-center">
+            <svg className="w-3.5 h-3.5 text-mana-blue flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+            </svg>
+            <div className="flex gap-[3px]">
+              {Array.from({ length: view.mana_limit }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-4 h-[0.6rem] rounded-sm transition-colors ${
+                    i < view.mana
+                      ? 'bg-mana-blue shadow-[0_0_4px_rgba(91,143,170,0.5)]'
+                      : 'bg-warm-800 border border-warm-700/50'
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-[0.6rem] font-bold text-mana-blue/80 ml-0.5 flex-shrink-0">
+              {view.mana}
+            </span>
           </div>
         )}
-        <span className="text-warm-400 hidden lg:inline">Lives:</span>
-        {/* Mobile: compact numeric */}
-        <div className="flex lg:hidden items-center gap-1">
-          <HeartIcon className="w-5 h-5 text-red-500" />
-          <span className="font-bold text-sm">
+        {!isShopPhase && <div className="flex-1" />}
+
+        {/* Lives */}
+        <div className="flex items-center gap-0.5 flex-shrink-0">
+          <HeartIcon className="w-3.5 h-3.5 text-red-500" />
+          <span className="font-bold text-[0.7rem]">
             <AnimatedValue value={view.lives} />/{startingLives}
           </span>
         </div>
-        {/* Desktop: full hearts */}
-        <div className="hidden lg:flex gap-1">
+
+        {/* Wins */}
+        <div className="flex items-center gap-0.5 flex-shrink-0">
+          <StarIcon className="w-3.5 h-3.5 text-gold" />
+          <span className="font-bold text-[0.7rem]">
+            <AnimatedValue value={view.wins} />/{winsToVictory}
+          </span>
+        </div>
+
+        <AudioControls />
+      </div>
+
+      {/* === DESKTOP: original full layout === */}
+      {/* Left: Lives */}
+      <div className="hidden lg:flex items-center gap-2">
+        {playerAvatar && (
+          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-yellow-500/50 flex-shrink-0">
+            <img src={playerAvatar.imageUrl} alt="avatar" className="w-full h-full object-cover" />
+          </div>
+        )}
+        <span className="text-warm-400">Lives:</span>
+        <div className="flex gap-1">
           {Array.from({ length: startingLives }).map((_, i) =>
             i < view.lives ? (
               <HeartIcon key={i} className="w-5 h-5 text-red-500" />
@@ -175,35 +247,27 @@ export function HUD() {
       </div>
 
       {/* Center: Round + Bag */}
-      <div className="flex items-center gap-2 lg:gap-3">
+      <div className="hidden lg:flex items-center gap-3">
         <div className="text-center">
-          <div className="text-xs lg:text-sm text-warm-400">Round</div>
-          <div className="text-lg lg:text-2xl font-bold text-gold">{view.round}</div>
+          <div className="text-sm text-warm-400">Round</div>
+          <div className="text-2xl font-bold text-gold">{view.round}</div>
         </div>
         {view.phase === 'shop' && (
           <button
             onClick={() => setShowBag(true)}
-            className="btn bg-warm-800 hover:bg-warm-700 text-warm-100 border-warm-600 flex items-center gap-1 lg:gap-2 px-2 lg:px-4"
+            className="flex btn bg-warm-800 hover:bg-warm-700 text-warm-100 border-warm-600 items-center gap-2 px-4"
             title="View your draw pool"
           >
-            <BagIcon className="w-5 h-5 lg:w-6 lg:h-6 text-amber-400" />
-            <span className="font-bold text-sm lg:text-base">{view.bag_count}</span>
+            <BagIcon className="w-6 h-6 text-amber-400" />
+            <span className="font-bold text-base">{view.bag_count}</span>
           </button>
         )}
       </div>
 
       {/* Right: Wins + Audio */}
-      <div className="flex items-center gap-1 lg:gap-2">
-        <span className="text-warm-400 hidden lg:inline">Wins:</span>
-        {/* Mobile: compact numeric */}
-        <div className="flex lg:hidden items-center gap-1">
-          <StarIcon className="w-5 h-5 text-gold" />
-          <span className="font-bold text-sm">
-            <AnimatedValue value={view.wins} />/{winsToVictory}
-          </span>
-        </div>
-        {/* Desktop: full stars */}
-        <div className="hidden lg:flex gap-1">
+      <div className="hidden lg:flex items-center gap-2">
+        <span className="text-warm-400">Wins:</span>
+        <div className="flex gap-1">
           {Array.from({ length: winsToVictory }).map((_, i) =>
             i < view.wins ? (
               <StarIcon key={i} className="w-5 h-5 text-gold" />
@@ -222,9 +286,11 @@ export function HUD() {
 export function BattleAction({
   hideEndTurn,
   customAction,
+  compact = false,
 }: {
   hideEndTurn?: boolean;
   customAction?: HUDProps['customAction'];
+  compact?: boolean;
 }) {
   const { view, endTurn, engine } = useGameStore();
   const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } =
@@ -273,8 +339,58 @@ export function BattleAction({
   const opponentWaiting = status === 'in-game' && !isReady && opponentReady;
   const displayTimer = isWaiting ? waitingTimer : opponentWaiting ? battleTimer : null;
 
+  // Compact mode: thin vertical column button for mobile board tab
+  if (compact) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-1.5 w-full h-full pointer-events-auto px-1.5 py-1">
+        {!hideEndTurn && (
+          <button
+            onClick={handleEndTurn}
+            disabled={isWaiting}
+            className={`flex-1 w-full flex flex-col items-center justify-center rounded-lg border transition-colors ${
+              isWaiting
+                ? 'bg-warm-800 border-warm-700 opacity-50 cursor-not-allowed'
+                : 'battle-btn border-amber-500/60 active:scale-95'
+            }`}
+          >
+            {isWaiting ? (
+              <>
+                <span className="font-bold text-xs text-warm-400">Wait</span>
+                {displayTimer !== null && (
+                  <span className={`font-bold text-sm ${displayTimer <= 5 ? 'text-yellow-300' : 'text-white'}`}>
+                    {displayTimer}s
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <span className="text-lg font-bold leading-none">&#9876;</span>
+                <span className="text-[0.55rem] font-bold uppercase tracking-wide mt-0.5">Battle</span>
+              </>
+            )}
+          </button>
+        )}
+        {customAction && (
+          <button
+            onClick={customAction.onClick}
+            disabled={customAction.disabled}
+            className={`w-full rounded-lg text-[0.55rem] px-1 py-2 transition-all font-bold uppercase tracking-wide border ${
+              customAction.disabled
+                ? 'bg-warm-800 border-warm-700 opacity-50 cursor-not-allowed text-warm-500'
+                : customAction.variant === 'chain'
+                  ? 'bg-gradient-to-b from-yellow-400 to-orange-500 border-orange-400/60 text-warm-900'
+                  : 'btn-primary border-amber-500/60'
+            }`}
+          >
+            {customAction.label}
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex justify-center pt-3 lg:pt-5 pb-1 z-30 pointer-events-none">
+    <div className="flex justify-center pt-1 lg:pt-5 pb-0.5 lg:pb-1 z-30 pointer-events-none">
       <div className="flex items-center gap-3 pointer-events-auto">
         {!hideEndTurn && (
           <>
@@ -309,16 +425,23 @@ export function BattleAction({
             <button
               onClick={handleEndTurn}
               disabled={isWaiting}
-              className={`battle-btn btn-primary rounded-xl text-base lg:text-2xl px-6 lg:px-12 py-2.5 lg:py-4 font-bold tracking-wide transition-all flex items-center gap-2 lg:gap-3 ${
+              className={`battle-btn rounded-xl transition-all flex items-center justify-center ${
                 isWaiting
-                  ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
+                  ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed px-4 lg:px-12 py-1.5 lg:py-4'
                   : opponentWaiting && displayTimer !== null && displayTimer <= 5
-                    ? 'animate-pulse bg-red-500 hover:bg-red-400'
-                    : ''
+                    ? 'animate-pulse bg-red-500 hover:bg-red-400 px-2 lg:px-4 py-0.5 lg:py-1'
+                    : 'px-2 lg:px-4 py-0.5 lg:py-1'
               }`}
             >
-              <SwordIcon className="w-5 h-5 lg:w-6 lg:h-6" />
-              {isWaiting ? 'Waiting...' : 'Battle!'}
+              {isWaiting ? (
+                <span className="font-bold tracking-wide text-base lg:text-2xl">Waiting...</span>
+              ) : (
+                <img
+                  src={battleSwordIcon}
+                  alt="Battle"
+                  className="h-16 lg:h-28"
+                />
+              )}
             </button>
           </>
         )}

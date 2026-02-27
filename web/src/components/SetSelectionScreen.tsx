@@ -32,7 +32,7 @@ export function SetSelectionScreen() {
 
       {/* Set tiles — fill remaining space */}
       {sortedSets.length > 0 ? (
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full max-w-6xl flex-1 min-h-0 items-stretch justify-center pb-2 lg:pb-4">
+        <div className="flex flex-col landscape:flex-row lg:flex-row gap-4 lg:gap-8 w-full max-w-6xl flex-1 min-h-0 items-stretch justify-center pb-2 lg:pb-4">
           {sortedSets.map((meta, i) => {
             const cards = setPreviewCards[meta.id] || [];
             const fanCards = [...cards].sort((a, b) => b.play_cost - a.play_cost).slice(0, 5);

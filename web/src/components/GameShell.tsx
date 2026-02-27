@@ -1,4 +1,3 @@
-import { DndContext, DragOverlay } from '@dnd-kit/core';
 import { HUD, BattleAction } from './HUD';
 import { Arena } from './Arena';
 import { ManaBar } from './ManaBar';
@@ -6,10 +5,9 @@ import { Shop } from './Shop';
 import { CardDetailPanel, type BlockchainAccount } from './CardDetailPanel';
 import { BattleOverlay } from './BattleOverlay';
 import { BagOverlay } from './BagOverlay';
-import { UnitCard } from './UnitCard';
 import { RotatePrompt } from './RotatePrompt';
 import { useGameStore } from '../store/gameStore';
-import { useDragAndDrop } from '../hooks';
+import { DragProvider, useDragContext } from '../hooks/useDragAndDrop';
 
 // Re-export for convenience
 export type { BlockchainAccount };
@@ -36,7 +34,15 @@ export interface GameShellProps {
   className?: string;
 }
 
-export function GameShell({
+export function GameShell(props: GameShellProps) {
+  return (
+    <DragProvider>
+      <GameShellInner {...props} />
+    </DragProvider>
+  );
+}
+
+function GameShellInner({
   hideEndTurn = false,
   customAction,
   cardPanelTopOffset = '4rem',
@@ -47,20 +53,13 @@ export function GameShell({
   onSelectAccount,
   className = '',
 }: GameShellProps) {
-  const { view, bag, cardSet, selection, showBag } = useGameStore();
+  const { view, bag, cardSet, selection, showBag, mobileTab } = useGameStore();
+  const { containerRef } = useDragContext();
 
-  const {
-    activeId,
-    sensors,
-    restrictToContainer,
-    containerRef,
-    handleDragStart,
-    handleDragEnd,
-    getActiveCard,
-  } = useDragAndDrop();
-
-  // Card panel is visible during shop phase or when a board unit is selected
+  // Desktop: panel visible during shop phase (always) or board selection or bag
   const showCardPanel = view?.phase === 'shop' || selection?.type === 'board' || showBag;
+  // Mobile: panel only visible when something is actively selected
+  const hasSelection = selection !== null || showBag;
 
   // Determine which card to show in the panel
   const selectedCard =
@@ -77,50 +76,59 @@ export function GameShell({
       : null;
 
   const cardToShow = selectedCard || selectedBoardUnit;
-  const activeCard = getActiveCard();
 
-  // Margin class for the content area when card panel is visible
-  const contentMargin = showCardPanel ? 'ml-44 lg:ml-80' : '';
+  // Mobile tab visibility (only matters during shop phase, below lg breakpoint)
+  const isShopPhase = view?.phase === 'shop';
+  const mHand = isShopPhase && mobileTab === 'hand';
+  const mBoard = isShopPhase && mobileTab === 'board';
+
+  // Mobile margin: only when something is selected AND not on hand or board tab (both have no sidebar now);
+  // desktop margin during shop phase
+  const mobileNoSidebar = mHand || mBoard;
+  const contentMargin = `${hasSelection && !mobileNoSidebar ? 'ml-44' : ''} ${showCardPanel ? 'lg:ml-80' : ''}`;
 
   return (
-    <DndContext
-      sensors={sensors}
-      modifiers={[restrictToContainer]}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      autoScroll={false}
+    <div
+      ref={containerRef}
+      className={`game-layout h-screen flex flex-col bg-board-bg ${className}`}
     >
+      {/* Zone 1: Top HUD */}
+      <HUD />
+
+      {/* Zone 2: Arena (Board) — hidden on mobile when hand tab is active */}
       <div
-        ref={containerRef}
-        className={`game-layout h-screen flex flex-col bg-board-bg ${className}`}
+        className={`game-main flex-1 flex ${mBoard ? 'flex-row' : 'flex-col'} lg:flex-col overflow-hidden min-h-0 ${contentMargin} ${mHand ? 'hidden lg:flex' : ''}`}
       >
-        {/* Zone 1: Top HUD */}
-        <HUD />
-
-        {/* Zone 2: Arena (Board) with left panel */}
-        <div
-          className={`game-main flex-1 flex flex-col overflow-hidden min-h-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
-        >
+        {/* Desktop BattleAction above arena — hidden on mobile board tab */}
+        <div className={mBoard ? 'hidden lg:block' : ''}>
           <BattleAction hideEndTurn={hideEndTurn} customAction={customAction} />
-          <Arena />
         </div>
+        <Arena />
+        {/* Mobile board tab: battle button as right column */}
+        {mBoard && (
+          <div className="lg:hidden flex-shrink-0 w-20 border-l border-warm-800/60">
+            <BattleAction hideEndTurn={hideEndTurn} customAction={customAction} compact />
+          </div>
+        )}
+      </div>
 
-        {/* Zone 3: Mana Bar (gateway between board and hand) */}
-        <div className={`flex-shrink-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}>
-          <ManaBar />
-        </div>
+      {/* Zone 3: Mana Bar — hidden on mobile (mana shown in HUD), visible on desktop */}
+      <div className={`flex-shrink-0 hidden lg:block ${contentMargin}`}>
+        <ManaBar />
+      </div>
 
-        {/* Zone 4: Command Deck (Shop) */}
-        <div
-          className={`game-shop flex-shrink-0 mt-auto ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
-        >
-          <Shop />
-        </div>
+      {/* Zone 4: Shop (Hand) — hidden on mobile when board tab is active, expands on hand tab */}
+      <div
+        className={`game-shop ${mHand ? 'flex-1 min-h-0' : 'flex-shrink-0'} lg:flex-shrink-0 ${contentMargin} ${mBoard ? 'hidden lg:block' : ''}`}
+      >
+        <Shop expandMobile={mHand} />
+      </div>
 
-        {/* Card Detail Panel */}
+      {/* Card Detail Panel — hidden on mobile during shop phase (both tabs), shown for board selections outside shop */}
+      <div className={mobileNoSidebar || (showCardPanel && !hasSelection) ? 'hidden lg:block' : ''}>
         <CardDetailPanel
           card={cardToShow}
-          isVisible={showCardPanel}
+          isVisible={showCardPanel || hasSelection}
           topOffset={cardPanelTopOffset}
           blockchainMode={blockchainMode}
           blockNumber={blockNumber}
@@ -128,28 +136,13 @@ export function GameShell({
           selectedAccount={selectedAccount}
           onSelectAccount={onSelectAccount}
         />
-
-        {/* Battle Overlay */}
-        <BattleOverlay />
-        <BagOverlay />
-
-        <RotatePrompt />
       </div>
 
-      {/* Drag overlay - shows the card being dragged */}
-      <DragOverlay>
-        {activeCard ? (
-          <div className="drag-ghost">
-            <UnitCard
-              card={activeCard}
-              showCost={activeId?.startsWith('hand')}
-              showPitch={true}
-              enableTilt={false}
-              enableWobble={false}
-            />
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+      {/* Battle Overlay */}
+      <BattleOverlay />
+      <BagOverlay />
+
+      <RotatePrompt />
+    </div>
   );
 }

@@ -190,6 +190,7 @@ export function UnitCard({
 interface EmptySlotProps {
   onClick?: () => void;
   isTarget?: boolean;
+  isHovered?: boolean;
   label?: string;
   sizeVariant?: CardSizeVariant;
   onDragOver?: (e: React.DragEvent) => void;
@@ -199,6 +200,7 @@ interface EmptySlotProps {
 export function EmptySlot({
   onClick,
   isTarget = false,
+  isHovered = false,
   label,
   sizeVariant = 'standard',
   onDragOver,
@@ -213,7 +215,7 @@ export function EmptySlot({
       onDrop={onDrop}
       className={`
         empty-slot board-slot-engraved relative ${sizes.tw} cursor-pointer rounded-lg flex items-center justify-center transition-all duration-200
-        ${isTarget ? 'border-amber-400/60 bg-amber-400/5' : ''}
+        ${isHovered ? 'slot-drop-target' : isTarget ? 'slot-available' : ''}
       `}
     >
       {label && (

@@ -1,7 +1,6 @@
-import React from 'react';
-import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
-import { UnitCard, EmptySlot } from './UnitCard';
+import React, { useEffect, useRef } from 'react';
+import { useDragContext } from '../hooks/useDragAndDrop';
+import { UnitCard } from './UnitCard';
 import type { CardView, BoardUnitView } from '../types';
 import type { CardSizeVariant } from '../constants/cardSizes';
 
@@ -16,6 +15,7 @@ interface DraggableCardProps {
   sizeVariant?: CardSizeVariant;
   can_afford?: boolean;
   disabled?: boolean;
+  enableWobble?: boolean;
 }
 
 export function DraggableCard({
@@ -28,21 +28,26 @@ export function DraggableCard({
   sizeVariant = 'standard',
   can_afford = true,
   disabled = false,
+  enableWobble = true,
 }: DraggableCardProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id,
-    disabled,
-    data: { type: id.split('-')[0], index: parseInt(id.split('-')[1]) },
-  });
+  const { activeId, handlePointerDown } = useDragContext();
+  const isDragging = activeId === id;
+
+  const [type, indexStr] = id.split('-');
+  const data = { type, index: parseInt(indexStr) };
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (disabled) return;
+    handlePointerDown(e, id, data);
+  };
 
   const style: React.CSSProperties = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0 : 1,
     touchAction: 'none',
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+    <div onPointerDown={onPointerDown} style={style}>
       <UnitCard
         card={card}
         isSelected={isSelected}
@@ -52,7 +57,8 @@ export function DraggableCard({
         sizeVariant={sizeVariant}
         can_afford={can_afford}
         enableTilt={!isDragging}
-        draggable={false} // Disable native drag since @dnd-kit handles it
+        enableWobble={enableWobble && !isDragging}
+        draggable={false}
       />
     </div>
   );
@@ -61,56 +67,24 @@ export function DraggableCard({
 // Droppable wrapper for board slots (can contain a card or be empty)
 interface DroppableBoardSlotProps {
   id: string;
-  children: React.ReactNode;
-  isOver?: boolean;
+  children: (props: { isOver: boolean }) => React.ReactNode;
 }
 
 export function DroppableBoardSlot({ id, children }: DroppableBoardSlotProps) {
-  const { isOver, setNodeRef } = useDroppable({
-    id,
-    data: { type: 'board-slot', index: parseInt(id.split('-')[2]) },
-  });
+  const { registerDropZone, unregisterDropZone, hoveredZoneId } = useDragContext();
+  const ref = useRef<HTMLDivElement>(null);
+  const isOver = hoveredZoneId === id;
+
+  useEffect(() => {
+    if (ref.current) {
+      registerDropZone(id, ref.current, { type: 'board-slot', index: parseInt(id.split('-')[2]) });
+    }
+    return () => unregisterDropZone(id);
+  }, [id, registerDropZone, unregisterDropZone]);
 
   return (
-    <div
-      ref={setNodeRef}
-      className={`transition-all duration-150 rounded-lg ${
-        isOver
-          ? 'scale-105 ring-2 ring-amber-400/70 shadow-[0_0_12px_rgba(212,168,67,0.3)]'
-          : ''
-      }`}
-    >
-      {children}
-    </div>
-  );
-}
-
-// Droppable empty slot component
-interface DroppableEmptySlotProps {
-  id: string;
-  onClick?: () => void;
-  isTarget?: boolean;
-  label?: string;
-}
-
-export function DroppableEmptySlot({
-  id,
-  onClick,
-  isTarget = false,
-  label,
-}: DroppableEmptySlotProps) {
-  const { isOver, setNodeRef } = useDroppable({
-    id,
-    data: { type: 'board-slot', index: parseInt(id.split('-')[2]) },
-  });
-
-  return (
-    <div ref={setNodeRef}>
-      <EmptySlot
-        onClick={onClick}
-        isTarget={isTarget || isOver}
-        label={label}
-      />
+    <div ref={ref} className="rounded-lg">
+      {children({ isOver })}
     </div>
   );
 }
@@ -122,19 +96,20 @@ interface DroppableAshPileProps {
 }
 
 export function DroppableAshPile({ children, onHoverChange }: DroppableAshPileProps) {
-  const { isOver, setNodeRef } = useDroppable({
-    id: 'ash-pile',
-    data: { type: 'ash-pile' },
-  });
+  const { registerDropZone, unregisterDropZone, hoveredZoneId } = useDragContext();
+  const ref = useRef<HTMLDivElement>(null);
+  const isOver = hoveredZoneId === 'ash-pile';
 
-  // Sync isOver state with parent
-  React.useEffect(() => {
+  useEffect(() => {
+    if (ref.current) {
+      registerDropZone('ash-pile', ref.current, { type: 'ash-pile' });
+    }
+    return () => unregisterDropZone('ash-pile');
+  }, [registerDropZone, unregisterDropZone]);
+
+  useEffect(() => {
     onHoverChange(isOver);
   }, [isOver, onHoverChange]);
 
-  return (
-    <div ref={setNodeRef}>
-      {children}
-    </div>
-  );
+  return <div ref={ref}>{children}</div>;
 }

@@ -73,10 +73,19 @@ const StatChangeNumber = ({
 const AbilityToast = ({ name, onAnimationEnd }: { name: string; onAnimationEnd: () => void }) => {
   return (
     <div
-      className="absolute -top-8 lg:-top-12 left-1/2 -translate-x-1/2 px-1.5 lg:px-3 py-0.5 lg:py-1 bg-yellow-500 text-black text-[10px] lg:text-sm font-bold rounded lg:rounded-lg shadow-lg animate-fade-in-out whitespace-nowrap z-20"
+      className="ability-toast absolute -top-9 lg:-top-14 left-1/2 z-30"
       onAnimationEnd={onAnimationEnd}
     >
-      {name}
+      <div className="ability-toast-inner px-2.5 lg:px-4 py-1 lg:py-1.5 whitespace-nowrap flex items-center gap-1 lg:gap-1.5">
+        <svg
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="ability-toast-icon w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0"
+        >
+          <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+        </svg>
+        <span className="text-[10px] lg:text-sm font-bold tracking-wide">{name}</span>
+      </div>
     </div>
   );
 };
@@ -250,7 +259,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
         setAbilityToasts((prev) => new Map(prev).set(source_instance_id, ability_name));
         setSourceGlowIds((prev) => new Set(prev).add(source_instance_id));
         setTimeout(() => {
-          setSourceGlowIds((prev) => { const next = new Set(prev); next.delete(source_instance_id); return next; });
+          setSourceGlowIds((prev) => {
+            const next = new Set(prev);
+            next.delete(source_instance_id);
+            return next;
+          });
         }, 800);
         playSfx('ability-trigger');
         break;
@@ -279,7 +292,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
 
         setTargetHighlightIds((prev) => new Set(prev).add(target_instance_id));
         setTimeout(() => {
-          setTargetHighlightIds((prev) => { const next = new Set(prev); next.delete(target_instance_id); return next; });
+          setTargetHighlightIds((prev) => {
+            const next = new Set(prev);
+            next.delete(target_instance_id);
+            return next;
+          });
         }, 600);
 
         const updateBoard = (board: UnitView[]) =>
@@ -366,8 +383,16 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
         setTargetHighlightIds((prev) => new Set(prev).add(target_instance_id));
         setSourceGlowIds((prev) => new Set(prev).add(event.payload.source_instance_id));
         setTimeout(() => {
-          setTargetHighlightIds((prev) => { const next = new Set(prev); next.delete(target_instance_id); return next; });
-          setSourceGlowIds((prev) => { const next = new Set(prev); next.delete(event.payload.source_instance_id); return next; });
+          setTargetHighlightIds((prev) => {
+            const next = new Set(prev);
+            next.delete(target_instance_id);
+            return next;
+          });
+          setSourceGlowIds((prev) => {
+            const next = new Set(prev);
+            next.delete(event.payload.source_instance_id);
+            return next;
+          });
         }, 600);
 
         const updateBoard = (board: UnitView[]) =>
@@ -395,7 +420,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
 
         setTargetHighlightIds((prev) => new Set(prev).add(statsTarget));
         setTimeout(() => {
-          setTargetHighlightIds((prev) => { const next = new Set(prev); next.delete(statsTarget); return next; });
+          setTargetHighlightIds((prev) => {
+            const next = new Set(prev);
+            next.delete(statsTarget);
+            return next;
+          });
         }, 600);
 
         const updateBoard = (board: UnitView[]) =>
@@ -442,7 +471,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
 
         setTargetHighlightIds((prev) => new Set(prev).add(statsTarget));
         setTimeout(() => {
-          setTargetHighlightIds((prev) => { const next = new Set(prev); next.delete(statsTarget); return next; });
+          setTargetHighlightIds((prev) => {
+            const next = new Set(prev);
+            next.delete(statsTarget);
+            return next;
+          });
         }, 600);
 
         const updateBoard = (board: UnitView[]) =>
@@ -721,8 +754,8 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
           </button>
         </div>
 
-        {/* Speed controls */}
-        <div className="flex items-center bg-warm-900/60 rounded-lg border border-warm-700/50 p-0.5 lg:p-1 gap-0.5">
+        {/* Speed controls — desktop only */}
+        <div className="hidden lg:flex items-center bg-warm-900/60 rounded-lg border border-warm-700/50 p-0.5 lg:p-1 gap-0.5">
           {speedOptions.map((option) => (
             <button
               key={option.value}
@@ -741,25 +774,34 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
       </div>
 
       {/* Battle field — teams face off */}
-      <div className="flex items-center justify-center gap-4 lg:gap-12 w-full">
+      <div className="flex items-center justify-center gap-1.5 lg:gap-12 w-full">
         {/* Player side (left) */}
-        <div className="flex flex-col items-center gap-2 lg:gap-3">
-          <span className="text-xs lg:text-sm text-accent-emerald font-heading uppercase tracking-[0.15em]">Your Team</span>
-          <div className="flex gap-0.5 lg:gap-3 px-2 lg:px-6 py-2 lg:py-4 rounded-xl team-zone-player">
+        <div className="flex flex-col items-center gap-1 lg:gap-3">
+          <span className="text-[0.6rem] lg:text-sm text-accent-emerald font-heading uppercase tracking-[0.15em]">
+            Your Team
+          </span>
+          <div className="flex gap-0.5 lg:gap-3 px-1 lg:px-6 py-1 lg:py-4 rounded-xl team-zone-player">
             {Array.from({ length: 5 }).map((_, i) =>
               renderUnit((playerBoard || [])[4 - i], 'player', 4 - i)
             )}
           </div>
         </div>
 
-        <div className="flex flex-col items-center gap-1">
-          <div className="text-2xl lg:text-5xl font-title font-bold text-gold" style={{ textShadow: '0 0 20px rgba(212, 168, 67, 0.4)' }}>VS</div>
+        <div className="flex flex-col items-center">
+          <div
+            className="text-lg lg:text-5xl font-title font-bold text-gold"
+            style={{ textShadow: '0 0 20px rgba(212, 168, 67, 0.4)' }}
+          >
+            VS
+          </div>
         </div>
 
         {/* Enemy side (right) */}
-        <div className="flex flex-col items-center gap-2 lg:gap-3">
-          <span className="text-xs lg:text-sm text-pitch-red font-heading uppercase tracking-[0.15em]">Enemy</span>
-          <div className="flex gap-0.5 lg:gap-3 px-2 lg:px-6 py-2 lg:py-4 rounded-xl team-zone-enemy">
+        <div className="flex flex-col items-center gap-1 lg:gap-3">
+          <span className="text-[0.6rem] lg:text-sm text-pitch-red font-heading uppercase tracking-[0.15em]">
+            Enemy
+          </span>
+          <div className="flex gap-0.5 lg:gap-3 px-1 lg:px-6 py-1 lg:py-4 rounded-xl team-zone-enemy">
             {Array.from({ length: 5 }).map((_, i) => renderUnit((enemyBoard || [])[i], 'enemy', i))}
           </div>
         </div>

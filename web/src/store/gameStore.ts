@@ -99,6 +99,10 @@ interface GameStore {
   fetchBag: () => void; // Fetch bag IDs on demand
   getCommitAction: () => any;
 
+  // Mobile tab state (hand/board toggle during shop phase)
+  mobileTab: 'hand' | 'board';
+  setMobileTab: (tab: 'hand' | 'board') => void;
+
   startMultiplayerGame: (seed: number, lives?: number) => void;
   resolveMultiplayerBattle: (opponentBoard: any, seed: number) => void;
   // Blockchain mode: optional callback override for "Continue" after battle
@@ -125,6 +129,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startingLives: 3,
   winsToVictory: 10,
   afterBattleCallback: null,
+  mobileTab: 'hand' as const,
 
   // Set selection state
   setMetas: [],
@@ -310,7 +315,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       engine.play_hand_card(handIndex, boardSlot);
-      set({ view: engine.get_view(), selection: { type: 'board', index: boardSlot } });
+      set({ view: engine.get_view(), selection: { type: 'board', index: boardSlot }, mobileTab: 'board' });
     } catch (err) {
       toast.error('Not enough mana!');
       console.error(err);
@@ -377,7 +382,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       } else {
         // Local/P2P mode: advance round locally
         engine.continue_after_battle();
-        set({ view: engine.get_view(), showBattleOverlay: false, battleOutput: null });
+        set({ view: engine.get_view(), showBattleOverlay: false, battleOutput: null, mobileTab: 'hand' });
       }
     } catch (err) {
       console.error(err);
@@ -398,6 +403,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         gameStarted: false,
         startingLives: 3,
         winsToVictory: 10,
+        mobileTab: 'hand',
       });
     } catch (err) {
       console.error(err);
@@ -448,6 +454,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       console.error(err);
     }
   },
+
+  setMobileTab: (tab: 'hand' | 'board') => set({ mobileTab: tab }),
 
   setSelection: (selection: Selection | null) => {
     set({ selection });

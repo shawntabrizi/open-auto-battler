@@ -1,12 +1,11 @@
-import { DndContext, DragOverlay } from '@dnd-kit/core';
 import { useSearchParams } from 'react-router-dom';
 import { Arena } from '../../components/Arena';
 import { ManaBar } from '../../components/ManaBar';
 import { Shop } from '../../components/Shop';
 import { BattleOverlay } from '../../components/BattleOverlay';
-import { UnitCard } from '../../components/UnitCard';
 import { useGameStore } from '../../store/gameStore';
-import { useInitGuard, useDragAndDrop } from '../../hooks';
+import { useInitGuard } from '../../hooks';
+import { DragProvider, useDragContext } from '../../hooks/useDragAndDrop';
 
 /**
  * Minimal game page designed to be embedded in an iframe.
@@ -26,16 +25,6 @@ export default function EmbedPage() {
     void init(seed);
   }, [init]);
 
-  const {
-    activeId,
-    sensors,
-    restrictToContainer,
-    containerRef,
-    handleDragStart,
-    handleDragEnd,
-    getActiveCard,
-  } = useDragAndDrop();
-
   if (isLoading || !view) {
     return (
       <div className="h-screen flex items-center justify-center bg-board-bg">
@@ -44,42 +33,34 @@ export default function EmbedPage() {
     );
   }
 
-  const activeCard = getActiveCard();
+  return (
+    <DragProvider>
+      <EmbedPageInner />
+    </DragProvider>
+  );
+}
+
+function EmbedPageInner() {
+  const { containerRef } = useDragContext();
 
   return (
-    <DndContext
-      sensors={sensors}
-      modifiers={[restrictToContainer]}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      autoScroll={false}
-    >
-      <div ref={containerRef} className="game-layout h-screen flex flex-col bg-board-bg">
-        {/* Board */}
-        <div className="game-main flex-1 flex flex-col overflow-hidden min-h-0">
-          <Arena />
-        </div>
-
-        {/* Mana Bar */}
-        <div className="flex-shrink-0">
-          <ManaBar />
-        </div>
-
-        {/* Hand */}
-        <div className="game-shop flex-shrink-0 mt-auto">
-          <Shop />
-        </div>
-
-        <BattleOverlay />
+    <div ref={containerRef} className="game-layout h-screen flex flex-col bg-board-bg">
+      {/* Board */}
+      <div className="game-main flex-1 flex flex-col overflow-hidden min-h-0">
+        <Arena />
       </div>
 
-      <DragOverlay>
-        {activeCard ? (
-          <div className="drag-ghost">
-            <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showPitch={true} enableTilt={false} enableWobble={false} />
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+      {/* Mana Bar */}
+      <div className="flex-shrink-0">
+        <ManaBar />
+      </div>
+
+      {/* Hand */}
+      <div className="game-shop flex-shrink-0 mt-auto">
+        <Shop />
+      </div>
+
+      <BattleOverlay />
+    </div>
   );
 }

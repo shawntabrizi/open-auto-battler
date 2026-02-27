@@ -151,17 +151,26 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
   }
 
   const result = battleOutput.events[battleOutput.events.length - 1];
-  let resultBgColor = 'bg-yellow-900/50 text-yellow-400';
   let resultText = 'DRAW';
+  let resultKey: 'victory' | 'defeat' | 'draw' = 'draw';
+  let impactText = '';
+  let impactColor = 'text-amber-400/80';
+  let flashColor = 'rgba(212, 168, 67, 0.25)';
 
   if (result?.type === 'BattleEnd') {
     const res = result.payload.result;
     if (res === 'Victory') {
-      resultBgColor = 'bg-green-900/50 text-green-400';
       resultText = 'VICTORY!';
+      resultKey = 'victory';
+      impactText = '+1 Win';
+      impactColor = 'text-green-400/90';
+      flashColor = 'rgba(74, 140, 58, 0.3)';
     } else if (res === 'Defeat') {
-      resultBgColor = 'bg-red-900/50 text-red-400';
       resultText = 'DEFEAT';
+      resultKey = 'defeat';
+      impactText = '-1 Life';
+      impactColor = 'text-red-400/90';
+      flashColor = 'rgba(168, 58, 42, 0.3)';
     }
   }
 
@@ -194,7 +203,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
       )}
 
       {/* Top bar — title + close */}
-      <div className="relative z-10 flex items-center justify-between px-4 lg:px-8 py-2.5 lg:py-4">
+      <div className="relative z-10 flex items-center justify-between px-4 lg:px-8 py-1.5 lg:py-4">
         <div className="w-8" /> {/* spacer */}
         <h2 className="text-sm lg:text-xl font-heading font-bold text-warm-300/80 tracking-widest uppercase">
           {title}
@@ -221,19 +230,32 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
         {/* Result overlay — centered over the battle field */}
         {battleFinished && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none">
+            {/* Screen flash */}
+            <div className="result-flash" style={{ background: flashColor }} />
+
             {/* Dim scrim behind result */}
             <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
 
-            <div className="relative flex flex-col items-center gap-4 lg:gap-6 pointer-events-auto">
+            <div className="relative flex flex-col items-center gap-3 lg:gap-5 pointer-events-auto">
+              {/* Radial burst behind banner */}
+              <div className={`result-burst result-burst-${resultKey}`} />
+
               {/* Result banner */}
               <div
-                className={`battle-result-banner px-8 lg:px-16 py-3 lg:py-5 rounded-xl text-center text-3xl lg:text-5xl font-title font-bold tracking-wide ${resultBgColor} animate-scale-bounce`}
-                style={{
-                  textShadow: '0 2px 8px rgba(0,0,0,0.6)',
-                }}
+                className={`battle-result-banner battle-result-${resultKey} px-8 lg:px-16 py-3 lg:py-5 rounded-xl text-center text-3xl lg:text-5xl font-title font-bold tracking-wider uppercase animate-result-slam`}
               >
                 {resultText}
               </div>
+
+              {/* Impact line — what changed */}
+              {impactText && (
+                <div
+                  className={`${impactColor} font-heading text-sm lg:text-lg tracking-widest uppercase animate-impact-line`}
+                  style={{ animationDelay: '200ms', animationFillMode: 'both' }}
+                >
+                  {impactText}
+                </div>
+              )}
 
               {/* Continue button */}
               {showContinue && (

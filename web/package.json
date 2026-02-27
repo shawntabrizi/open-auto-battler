@@ -8,7 +8,7 @@
     "update-types": "papi update",
     "dev": "vite",
     "dev:blockchain": "papi update && vite",
-    "build": "tsc -b && vite build",
+    "build": "rm -rf public/presentations; mkdir -p public/presentations && tsc -b && vite build",
     "build:blockchain": "papi && tsc -b && vite build",
     "build-wasm": "../build-wasm.sh",
     "postinstall": "papi generate || true",
@@ -23,9 +23,6 @@
     "desktop:build": "../build-wasm.sh && tauri build"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/modifiers": "^9.0.0",
-    "@dnd-kit/utilities": "^3.2.2",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
     "@polkadot-api/metadata-builders": "^0.13.9",
     "@polkadot-api/substrate-bindings": "^0.17.0",

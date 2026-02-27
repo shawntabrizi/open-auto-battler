@@ -64,6 +64,7 @@ export function CardDetailPanel({
     pitchHandCard,
     pitchBoardUnit,
     setSelection,
+    setMobileTab,
     showRawJson,
     toggleShowRawJson,
   } = useGameStore();
@@ -284,6 +285,13 @@ export function CardDetailPanel({
             ) : (
               // Hand card actions
               <>
+                <button
+                  onClick={() => setMobileTab('board')}
+                  disabled={selectedHandIndex >= 0 && view ? !view.can_afford[selectedHandIndex] : true}
+                  className="w-full btn btn-primary text-[10px] lg:text-sm py-1.5 lg:py-2 lg:hidden"
+                >
+                  Deploy to Board
+                </button>
                 <button
                   onClick={() => {
                     if (selectedHandIndex >= 0) {
