@@ -68,6 +68,7 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
             name: u.name.clone(),
             attack: u.attack,
             health: u.health,
+            statuses: u.active_statuses(),
             battle_abilities: u.abilities.clone(),
         })
         .collect();
@@ -81,6 +82,7 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
             name: u.name.clone(),
             attack: u.attack,
             health: u.health,
+            statuses: u.active_statuses(),
             battle_abilities: u.abilities.clone(),
         })
         .collect();

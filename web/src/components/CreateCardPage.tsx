@@ -15,6 +15,7 @@ import {
   type ShopTarget,
   type ShopScope,
   type StatType,
+  type Status,
 } from '../types';
 
 import EmojiPicker, { Theme } from 'emoji-picker-react';
@@ -48,6 +49,8 @@ const BATTLE_SCOPES: BattleScope[] = [
 const SHOP_SCOPES: ShopScope[] = ['SelfUnit', 'Allies', 'All', 'AlliesOther', 'TriggerSource'];
 
 const STATS: StatType[] = ['Health', 'Attack', 'Mana'];
+const STATUSES: Status[] = ['Shield', 'Poison', 'Guard'];
+const EMPTY_STATUS_MASK = Array(32).fill(0);
 
 export const CreateCardPage: React.FC = () => {
   const { isConnected, connect, submitCard } = useBlockchainStore();
@@ -85,6 +88,7 @@ export const CreateCardPage: React.FC = () => {
     description: '',
     shop_abilities: [] as ShopAbility[],
     battle_abilities: [] as BattleAbility[],
+    base_statuses: EMPTY_STATUS_MASK,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,6 +117,7 @@ export const CreateCardPage: React.FC = () => {
         {
           stats: { attack: cardForm.attack, health: cardForm.health },
           economy: { play_cost: cardForm.play_cost, pitch_value: cardForm.pitch_value },
+          base_statuses: cardForm.base_statuses,
           shop_abilities: cardForm.shop_abilities,
           battle_abilities: cardForm.battle_abilities,
         },
@@ -134,6 +139,7 @@ export const CreateCardPage: React.FC = () => {
         description: '',
         shop_abilities: [],
         battle_abilities: [],
+        base_statuses: EMPTY_STATUS_MASK,
       });
     } catch (err) {
       toast.error('Failed to submit card');
@@ -208,6 +214,21 @@ export const CreateCardPage: React.FC = () => {
           ...(newAbility as BattleAbility),
           effect: { type: 'GainMana', amount: 1 },
         });
+      } else if (type === 'GrantStatusThisBattle') {
+        setNewAbility({
+          ...(newAbility as BattleAbility),
+          effect: { type: 'GrantStatusThisBattle', status: 'Shield', target },
+        });
+      } else if (type === 'GrantStatusPermanent') {
+        setNewAbility({
+          ...(newAbility as BattleAbility),
+          effect: { type: 'GrantStatusPermanent', status: 'Shield', target },
+        });
+      } else if (type === 'RemoveStatusPermanent') {
+        setNewAbility({
+          ...(newAbility as BattleAbility),
+          effect: { type: 'RemoveStatusPermanent', status: 'Shield', target },
+        });
       }
     } else {
       const target: ShopTarget = { type: 'All', data: { scope: 'SelfUnit' } };
@@ -225,6 +246,16 @@ export const CreateCardPage: React.FC = () => {
         setNewAbility({ ...(newAbility as ShopAbility), effect: { type: 'Destroy', target } });
       } else if (type === 'GainMana') {
         setNewAbility({ ...(newAbility as ShopAbility), effect: { type: 'GainMana', amount: 1 } });
+      } else if (type === 'GrantStatusPermanent') {
+        setNewAbility({
+          ...(newAbility as ShopAbility),
+          effect: { type: 'GrantStatusPermanent', status: 'Shield', target },
+        });
+      } else if (type === 'RemoveStatusPermanent') {
+        setNewAbility({
+          ...(newAbility as ShopAbility),
+          effect: { type: 'RemoveStatusPermanent', status: 'Shield', target },
+        });
       }
     }
   };
@@ -288,6 +319,7 @@ export const CreateCardPage: React.FC = () => {
     {
       stats: { attack: cardForm.attack, health: cardForm.health },
       economy: { play_cost: cardForm.play_cost, pitch_value: cardForm.pitch_value },
+      base_statuses: cardForm.base_statuses,
       shop_abilities: cardForm.shop_abilities,
       battle_abilities: cardForm.battle_abilities,
       metadata: {
@@ -634,8 +666,18 @@ export const CreateCardPage: React.FC = () => {
                           'SpawnUnit',
                           'Destroy',
                           'GainMana',
+                          'GrantStatusThisBattle',
+                          'GrantStatusPermanent',
+                          'RemoveStatusPermanent',
                         ]
-                      : ['ModifyStatsPermanent', 'SpawnUnit', 'Destroy', 'GainMana']
+                      : [
+                          'ModifyStatsPermanent',
+                          'SpawnUnit',
+                          'Destroy',
+                          'GainMana',
+                          'GrantStatusPermanent',
+                          'RemoveStatusPermanent',
+                        ]
                     ).map((type) => (
                       <button
                         key={type}
@@ -797,6 +839,35 @@ export const CreateCardPage: React.FC = () => {
                         }
                         className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                       />
+                    </div>
+                  )}
+
+                  {(newAbility.effect.type === 'GrantStatusThisBattle' ||
+                    newAbility.effect.type === 'GrantStatusPermanent' ||
+                    newAbility.effect.type === 'RemoveStatusPermanent') && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                        Status
+                      </label>
+                      <select
+                        value={(newAbility.effect as any).status || 'Shield'}
+                        onChange={(e) =>
+                          setNewAbility({
+                            ...newAbility,
+                            effect: {
+                              ...(newAbility.effect as any),
+                              status: e.target.value,
+                            } as any,
+                          })
+                        }
+                        className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                      >
+                        {STATUSES.map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   )}
 

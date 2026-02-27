@@ -34,7 +34,7 @@ pub mod pallet {
         BoundedLocalGameState as CoreBoundedLocalGameState,
         BoundedShopAbility as CoreBoundedShopAbility, MatchmakingBracket,
     };
-    use oab_core::types::{EconomyStats, UnitStats};
+    use oab_core::types::{EconomyStats, StatusMask, UnitStats};
     use oab_core::{get_opponent_for_round, BattleResult, CardSet, CombatUnit, GamePhase};
 
     #[pallet::pallet]
@@ -153,6 +153,8 @@ pub mod pallet {
         pub stats: UnitStats,
         /// Economy stats (play_cost, pitch_value)
         pub economy: EconomyStats,
+        /// Base statuses on the card.
+        pub base_statuses: StatusMask,
         /// Card shop-phase abilities
         pub shop_abilities: BoundedVec<BoundedShopAbility<T>, T::MaxAbilities>,
         /// Card battle-phase abilities
@@ -618,6 +620,7 @@ pub mod pallet {
                 let data = UserCardData::<T> {
                     stats: card.stats.clone(),
                     economy: card.economy.clone(),
+                    base_statuses: card.base_statuses,
                     shop_abilities: BoundedVec::truncate_from(
                         card.shop_abilities
                             .iter()

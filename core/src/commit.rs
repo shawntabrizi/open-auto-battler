@@ -356,6 +356,36 @@ fn apply_shop_effect<R: BattleRng>(
                 .saturating_add(*amount)
                 .clamp(0, state.mana_limit);
         }
+        ShopEffect::GrantStatusPermanent { status, target } => {
+            let targets = resolve_shop_targets(
+                state,
+                target,
+                source_slot,
+                source_on_board,
+                trigger_source_slot,
+                rng,
+            );
+            for slot in targets {
+                if let Some(unit) = state.board.get_mut(slot).and_then(|s| s.as_mut()) {
+                    unit.perm_statuses.insert(*status);
+                }
+            }
+        }
+        ShopEffect::RemoveStatusPermanent { status, target } => {
+            let targets = resolve_shop_targets(
+                state,
+                target,
+                source_slot,
+                source_on_board,
+                trigger_source_slot,
+                rng,
+            );
+            for slot in targets {
+                if let Some(unit) = state.board.get_mut(slot).and_then(|s| s.as_mut()) {
+                    unit.perm_statuses.remove(*status);
+                }
+            }
+        }
     }
 }
 

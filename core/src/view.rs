@@ -23,6 +23,7 @@ pub struct CardView {
     pub health: i32,
     pub play_cost: i32,
     pub pitch_value: i32,
+    pub base_statuses: crate::types::StatusMask,
     pub shop_abilities: Vec<crate::types::ShopAbility>,
     pub battle_abilities: Vec<crate::types::Ability>,
 }
@@ -36,6 +37,7 @@ impl From<&UnitCard> for CardView {
             health: card.stats.health,
             play_cost: card.economy.play_cost,
             pitch_value: card.economy.pitch_value,
+            base_statuses: card.base_statuses,
             shop_abilities: card.shop_abilities.clone(),
             battle_abilities: card.battle_abilities.clone(),
         }
@@ -52,6 +54,9 @@ pub struct BoardUnitView {
     pub health: i32,
     pub play_cost: i32,
     pub pitch_value: i32,
+    pub base_statuses: crate::types::StatusMask,
+    pub perm_statuses: crate::types::StatusMask,
+    pub active_statuses: crate::types::StatusMask,
     pub shop_abilities: Vec<crate::types::ShopAbility>,
     pub battle_abilities: Vec<crate::types::Ability>,
 }
@@ -132,6 +137,9 @@ impl GameView {
                                 health: card.stats.health.saturating_add(unit.perm_health),
                                 play_cost: card.economy.play_cost,
                                 pitch_value: card.economy.pitch_value,
+                                base_statuses: card.base_statuses,
+                                perm_statuses: unit.perm_statuses,
+                                active_statuses: card.base_statuses | unit.perm_statuses,
                                 shop_abilities: card.shop_abilities.clone(),
                                 battle_abilities: card.battle_abilities.clone(),
                             })

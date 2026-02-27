@@ -9,8 +9,8 @@ use std::vec::Vec;
 
 use bounded_collections::ConstU32;
 use oab_core::battle::{
-    player_permanent_stat_deltas_from_events, player_shop_mana_delta_from_events, resolve_battle,
-    CombatEvent, CombatUnit, UnitId, UnitView,
+    player_permanent_stat_deltas_from_events, player_permanent_status_deltas_from_events,
+    player_shop_mana_delta_from_events, resolve_battle, CombatEvent, CombatUnit, UnitId, UnitView,
 };
 use oab_core::bounded::{BoundedCardSet, BoundedLocalGameState};
 use oab_core::commit::{
@@ -20,7 +20,7 @@ use oab_core::log;
 use oab_core::opponents::get_opponent_for_round;
 use oab_core::rng::XorShiftRng;
 use oab_core::state::*;
-use oab_core::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
+use oab_core::types::{BoardUnit, CardId, CommitTurnAction, StatusMask, TurnAction, UnitCard};
 use oab_core::view::{CardView, GameView};
 use parity_scale_codec::Decode;
 use parity_scale_codec::Encode;
@@ -668,6 +668,7 @@ impl GameEngine {
                 cu.attack_buff = u.perm_attack;
                 cu.health_buff = u.perm_health;
                 cu.health = cu.health.saturating_add(u.perm_health).max(0);
+                cu.permanent_statuses = u.perm_statuses;
                 cu
             })
             .collect();
@@ -682,6 +683,7 @@ impl GameEngine {
                 cu.attack_buff = u.perm_attack;
                 cu.health_buff = u.perm_health;
                 cu.health = cu.health.saturating_add(u.perm_health).max(0);
+                cu.permanent_statuses = u.perm_statuses;
                 cu
             })
             .collect();
@@ -708,6 +710,7 @@ impl GameEngine {
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),
                     health: card.stats.health.saturating_add(u.perm_health),
+                    statuses: card.base_statuses | u.perm_statuses,
                     battle_abilities: card.battle_abilities.clone(),
                 }
             })
@@ -725,6 +728,7 @@ impl GameEngine {
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),
                     health: card.stats.health.saturating_add(u.perm_health),
+                    statuses: card.base_statuses | u.perm_statuses,
                     battle_abilities: card.battle_abilities.clone(),
                 }
             })
@@ -742,6 +746,8 @@ impl GameEngine {
         self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
         let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
         self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);
+        let permanent_status_deltas = player_permanent_status_deltas_from_events(&events);
+        self.apply_player_permanent_status_deltas(&player_slots, &permanent_status_deltas);
 
         // Note: Round advancement happens when continue_after_battle() is called
         // This keeps P2P flow consistent with single-player flow
@@ -948,6 +954,25 @@ impl GameEngine {
         }
     }
 
+    fn apply_player_permanent_status_deltas(
+        &mut self,
+        player_slots: &[usize],
+        deltas: &std::collections::BTreeMap<UnitId, (StatusMask, StatusMask)>,
+    ) {
+        for (unit_id, (grant_mask, remove_mask)) in deltas {
+            let unit_index = unit_id.raw() as usize;
+            if unit_index == 0 || unit_index > player_slots.len() {
+                continue;
+            }
+
+            let slot = player_slots[unit_index - 1];
+            if let Some(board_unit) = self.state.board.get_mut(slot).and_then(|s| s.as_mut()) {
+                board_unit.perm_statuses |= *grant_mask;
+                board_unit.perm_statuses = board_unit.perm_statuses.difference(*remove_mask);
+            }
+        }
+    }
+
     fn run_battle(&mut self) {
         log::info("=== BATTLE START ===");
         let board_before_battle = self.state.board.clone();
@@ -966,6 +991,7 @@ impl GameEngine {
                 cu.attack_buff = u.perm_attack;
                 cu.health_buff = u.perm_health;
                 cu.health = cu.health.saturating_add(u.perm_health).max(0);
+                cu.permanent_statuses = u.perm_statuses;
                 Some(cu)
             })
             .collect();
@@ -980,6 +1006,8 @@ impl GameEngine {
         self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
         let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
         self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);
+        let permanent_status_deltas = player_permanent_status_deltas_from_events(&events);
+        self.apply_player_permanent_status_deltas(&player_slots, &permanent_status_deltas);
 
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {
@@ -1003,6 +1031,7 @@ impl GameEngine {
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),
                     health: card.stats.health.saturating_add(u.perm_health),
+                    statuses: card.base_statuses | u.perm_statuses,
                     battle_abilities: card.battle_abilities.clone(),
                 }
             })
@@ -1013,13 +1042,17 @@ impl GameEngine {
             get_opponent_for_round(self.state.round, battle_seed + 999, &self.state.card_pool)
                 .unwrap()
                 .into_iter()
-                .map(|cu| UnitView {
-                    instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
-                    card_id: cu.card_id,
-                    name: cu.name,
-                    attack: cu.attack,
-                    health: cu.health,
-                    battle_abilities: cu.abilities,
+                .map(|cu| {
+                    let statuses = cu.active_statuses();
+                    UnitView {
+                        instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
+                        card_id: cu.card_id,
+                        name: cu.name,
+                        attack: cu.attack,
+                        health: cu.health,
+                        statuses,
+                        battle_abilities: cu.abilities,
+                    }
                 })
                 .collect();
 

@@ -59,6 +59,7 @@ impl<T: Config> Pallet<T> {
             name: alloc::string::String::new(),
             stats: data.stats,
             economy: data.economy,
+            base_statuses: data.base_statuses,
             shop_abilities: data.shop_abilities.into_iter().map(|a| a.into()).collect(),
             battle_abilities: data
                 .battle_abilities
@@ -94,6 +95,7 @@ impl<T: Config> Pallet<T> {
                     combat_unit.attack_buff = unit.perm_attack;
                     combat_unit.health_buff = unit.perm_health;
                     combat_unit.health = combat_unit.health.saturating_add(unit.perm_health);
+                    combat_unit.permanent_statuses = unit.perm_statuses;
                     combat_unit
                 })
             })
@@ -111,6 +113,7 @@ impl<T: Config> Pallet<T> {
                 card_id: board_unit.card_id,
                 perm_attack: board_unit.perm_attack,
                 perm_health: board_unit.perm_health,
+                perm_statuses: board_unit.perm_statuses,
             })
             .collect();
 
@@ -157,6 +160,30 @@ impl<T: Config> Pallet<T> {
 
             if should_remove {
                 core_state.local_state.board[slot] = None;
+            }
+        }
+    }
+
+    /// Apply permanent status deltas from battle events to the player's board.
+    pub(crate) fn apply_player_permanent_status_deltas(
+        core_state: &mut GameState,
+        player_slots: &[usize],
+        deltas: &BTreeMap<oab_core::battle::UnitId, (oab_core::StatusMask, oab_core::StatusMask)>,
+    ) {
+        for (unit_id, (grant_mask, remove_mask)) in deltas {
+            let unit_index = unit_id.raw() as usize;
+            if unit_index == 0 || unit_index > player_slots.len() {
+                continue;
+            }
+            let slot = player_slots[unit_index - 1];
+            if let Some(board_unit) = core_state
+                .local_state
+                .board
+                .get_mut(slot)
+                .and_then(|s| s.as_mut())
+            {
+                board_unit.perm_statuses |= *grant_mask;
+                board_unit.perm_statuses = board_unit.perm_statuses.difference(*remove_mask);
             }
         }
     }
@@ -244,6 +271,7 @@ impl<T: Config> Pallet<T> {
                     cu.attack_buff = board_unit.perm_attack;
                     cu.health_buff = board_unit.perm_health;
                     cu.health = cu.health.saturating_add(board_unit.perm_health).max(0);
+                    cu.permanent_statuses = board_unit.perm_statuses;
                     cu
                 })
             })
@@ -282,6 +310,7 @@ impl<T: Config> Pallet<T> {
                     card_id: cu.card_id,
                     perm_attack: cu.attack_buff,
                     perm_health: cu.health_buff,
+                    perm_statuses: cu.permanent_statuses,
                 })
                 .collect();
             CoreBoundedGhostBoard {
@@ -307,6 +336,13 @@ impl<T: Config> Pallet<T> {
             &mut battle.core_state,
             &battle.player_slots,
             &permanent_deltas,
+        );
+        let permanent_status_deltas =
+            oab_core::battle::player_permanent_status_deltas_from_events(&events);
+        Self::apply_player_permanent_status_deltas(
+            &mut battle.core_state,
+            &battle.player_slots,
+            &permanent_status_deltas,
         );
 
         let result = events

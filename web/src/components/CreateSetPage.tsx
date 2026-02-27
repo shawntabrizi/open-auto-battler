@@ -40,6 +40,7 @@ export const CreateSetPage: React.FC = () => {
       health: card.data.stats.health,
       play_cost: card.data.economy.play_cost,
       pitch_value: card.data.economy.pitch_value,
+      base_statuses: card.data.base_statuses || [],
       shop_abilities: (card.data.shop_abilities || []).map((a: any) => ({
         ...a,
         name: a.name.asText ? a.name.asText() : a.name,

@@ -143,6 +143,7 @@ pub struct GhostBoardUnitSimple {
     pub card_id: CardId,
     pub perm_attack: i32,
     pub perm_health: i32,
+    pub perm_statuses: crate::types::StatusMask,
 }
 
 /// Matchmaking bracket for ghost generation (simple version).
@@ -220,6 +221,7 @@ pub fn generate_genesis_ghosts(
                                     card_id: ghost_card_id,
                                     perm_attack: 0,
                                     perm_health: 0,
+                                    perm_statuses: crate::types::StatusMask::empty(),
                                 }
                             })
                         })

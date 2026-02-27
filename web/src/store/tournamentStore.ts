@@ -211,6 +211,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
                 play_cost: card.data.economy.play_cost,
                 pitch_value: card.data.economy.pitch_value,
               },
+              base_statuses: toStatusMask(card.data.base_statuses),
               shop_abilities: shopAbilities,
               battle_abilities: battleAbilities,
             });
@@ -387,6 +388,27 @@ function binaryToStr(v: any): string {
   return v?.asText?.() || '';
 }
 
+function toStatusMask(v: any): number[] {
+  if (Array.isArray(v)) {
+    return v.map((x) => Number(x) & 0xff);
+  }
+  if (typeof v === 'number') {
+    const out = new Array(32).fill(0);
+    out[0] = v & 0xff;
+    out[1] = (v >> 8) & 0xff;
+    return out;
+  }
+  if (v && typeof v === 'object') {
+    if (Array.isArray(v.value)) {
+      return v.value.map((x: any) => Number(x) & 0xff);
+    }
+    if (Array.isArray(v.asBytes)) {
+      return v.asBytes.map((x: any) => Number(x) & 0xff);
+    }
+  }
+  return new Array(32).fill(0);
+}
+
 function convertEffect(v: any): any {
   if (!v) return v;
   const result: any = { type: papiEnumStr(v) };
@@ -397,6 +419,8 @@ function convertEffect(v: any): any {
         result[key] = convertTarget(val);
       } else if (key === 'card_id') {
         result[key] = typeof val === 'number' ? val : Number(val);
+      } else if (key === 'status') {
+        result[key] = papiEnumStr(val);
       } else {
         result[key] = val;
       }

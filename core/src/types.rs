@@ -144,6 +144,124 @@ pub enum CompareOp {
     LessThanOrEqual,
 }
 
+/// Unit status/status flags.
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Encode,
+    Decode,
+    DecodeWithMemTracking,
+    TypeInfo,
+    MaxEncodedLen,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[repr(u8)]
+pub enum Status {
+    Shield,
+    Poison,
+    Guard,
+}
+
+/// Compact bitmask for status storage.
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Encode,
+    Decode,
+    DecodeWithMemTracking,
+    TypeInfo,
+    MaxEncodedLen,
+    Default,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "std", serde(transparent))]
+pub struct StatusMask(pub [u8; 32]);
+
+impl Status {
+    pub const fn index(self) -> u8 {
+        self as u8
+    }
+}
+
+impl StatusMask {
+    pub const fn empty() -> Self {
+        Self([0; 32])
+    }
+
+    pub fn from_statuses(statuses: &[Status]) -> Self {
+        let mut mask = Self::empty();
+        for status in statuses {
+            mask.insert(*status);
+        }
+        mask
+    }
+
+    pub fn contains(self, status: Status) -> bool {
+        let idx = status.index() as usize;
+        let byte = idx / 8;
+        let bit = idx % 8;
+        (self.0[byte] & (1u8 << bit)) != 0
+    }
+
+    pub fn insert(&mut self, status: Status) {
+        let idx = status.index() as usize;
+        let byte = idx / 8;
+        let bit = idx % 8;
+        self.0[byte] |= 1u8 << bit;
+    }
+
+    pub fn remove(&mut self, status: Status) {
+        let idx = status.index() as usize;
+        let byte = idx / 8;
+        let bit = idx % 8;
+        self.0[byte] &= !(1u8 << bit);
+    }
+
+    pub fn union(self, rhs: Self) -> Self {
+        let mut out = [0u8; 32];
+        let mut i = 0usize;
+        while i < 32 {
+            out[i] = self.0[i] | rhs.0[i];
+            i += 1;
+        }
+        Self(out)
+    }
+
+    pub fn difference(self, rhs: Self) -> Self {
+        let mut out = [0u8; 32];
+        let mut i = 0usize;
+        while i < 32 {
+            out[i] = self.0[i] & !rhs.0[i];
+            i += 1;
+        }
+        Self(out)
+    }
+}
+
+impl core::ops::BitOr for StatusMask {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        self.union(rhs)
+    }
+}
+
+impl core::ops::BitOrAssign for StatusMask {
+    fn bitor_assign(&mut self, rhs: Self) {
+        let mut i = 0usize;
+        while i < 32 {
+            self.0[i] |= rhs.0[i];
+            i += 1;
+        }
+    }
+}
+
 /// Battle matchers that must be met for an ability to activate.
 #[derive(
     Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
@@ -282,6 +400,21 @@ pub enum AbilityEffect {
     Destroy { target: AbilityTarget },
     /// Add mana for next shop via battle event processing.
     GainMana { amount: i32 },
+    /// Grant a status for this battle only.
+    GrantStatusThisBattle {
+        status: Status,
+        target: AbilityTarget,
+    },
+    /// Permanently grant a status to board units (until sold/removed).
+    GrantStatusPermanent {
+        status: Status,
+        target: AbilityTarget,
+    },
+    /// Permanently remove a status from board units.
+    RemoveStatusPermanent {
+        status: Status,
+        target: AbilityTarget,
+    },
 }
 
 /// Shop ability effect types.
@@ -301,6 +434,10 @@ pub enum ShopEffect {
     Destroy { target: ShopTarget },
     /// Modify current shop mana.
     GainMana { amount: i32 },
+    /// Permanently grant a status to board units (until sold/removed).
+    GrantStatusPermanent { status: Status, target: ShopTarget },
+    /// Permanently remove a status from board units.
+    RemoveStatusPermanent { status: Status, target: ShopTarget },
 }
 
 /// Battle ability target specifications.
@@ -414,6 +551,8 @@ pub struct UnitCard {
     pub stats: UnitStats,
     pub economy: EconomyStats,
     #[cfg_attr(feature = "std", serde(default))]
+    pub base_statuses: StatusMask,
+    #[cfg_attr(feature = "std", serde(default))]
     pub shop_abilities: Vec<ShopAbility>,
     #[cfg_attr(feature = "std", serde(default))]
     pub battle_abilities: Vec<Ability>,
@@ -436,9 +575,15 @@ impl UnitCard {
                 play_cost,
                 pitch_value,
             },
+            base_statuses: StatusMask::empty(),
             shop_abilities: vec![],
             battle_abilities: vec![],
         }
+    }
+
+    pub fn with_base_statuses(mut self, statuses: StatusMask) -> Self {
+        self.base_statuses = statuses;
+        self
     }
 
     pub fn with_shop_abilities(mut self, abilities: Vec<ShopAbility>) -> Self {
@@ -471,6 +616,8 @@ pub struct BoardUnit {
     pub perm_attack: i32,
     /// Permanent health change applied to this unit while on board
     pub perm_health: i32,
+    /// Permanent statuses applied while on board
+    pub perm_statuses: StatusMask,
 }
 
 impl BoardUnit {
@@ -479,6 +626,7 @@ impl BoardUnit {
             card_id,
             perm_attack: 0,
             perm_health: 0,
+            perm_statuses: StatusMask::empty(),
         }
     }
 }

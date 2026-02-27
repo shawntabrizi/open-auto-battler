@@ -15,7 +15,7 @@ use alloc::collections::BTreeMap;
 
 use crate::types::{
     Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CardId, CompareOp, Condition, Matcher,
-    SortOrder, StatType, TargetScope, UnitCard,
+    SortOrder, StatType, Status, StatusMask, TargetScope, UnitCard,
 };
 
 #[cfg(feature = "std")]
@@ -81,6 +81,7 @@ pub struct UnitView {
     pub name: String,
     pub attack: i32,
     pub health: i32,
+    pub statuses: StatusMask,
     pub battle_abilities: Vec<Ability>,
 }
 
@@ -152,6 +153,20 @@ pub enum CombatEvent {
         team: Team,
         amount: i32,
     },
+    StatusApplied {
+        target_instance_id: UnitInstanceId,
+        status: Status,
+        permanent: bool,
+    },
+    StatusRemoved {
+        target_instance_id: UnitInstanceId,
+        status: Status,
+        permanent: bool,
+    },
+    StatusConsumed {
+        target_instance_id: UnitInstanceId,
+        status: Status,
+    },
     UnitSpawn {
         team: Team,
         spawned_unit: UnitView,
@@ -222,6 +237,10 @@ pub struct CombatUnit {
     pub abilities: Vec<Ability>,
     pub card_id: crate::types::CardId,
     pub name: String,
+    pub base_statuses: StatusMask,
+    pub permanent_statuses: StatusMask,
+    pub battle_statuses: StatusMask,
+    pub consumed_statuses: StatusMask,
     pub attack_buff: i32,
     pub health_buff: i32,
     pub play_cost: i32,
@@ -240,6 +259,10 @@ impl CombatUnit {
             abilities: card.battle_abilities,
             card_id: card.id,
             name: card.name,
+            base_statuses: card.base_statuses,
+            permanent_statuses: StatusMask::empty(),
+            battle_statuses: StatusMask::empty(),
+            consumed_statuses: StatusMask::empty(),
             attack_buff: 0,
             health_buff: 0,
             play_cost: card.economy.play_cost,
@@ -254,6 +277,7 @@ impl CombatUnit {
             name: self.name.clone(),
             attack: self.effective_attack(),
             health: self.effective_health(),
+            statuses: self.active_statuses(),
             battle_abilities: self.abilities.clone(),
         }
     }
@@ -268,6 +292,49 @@ impl CombatUnit {
 
     pub fn is_alive(&self) -> bool {
         self.health > 0
+    }
+
+    pub fn active_statuses(&self) -> StatusMask {
+        (self.base_statuses | self.permanent_statuses | self.battle_statuses)
+            .difference(self.consumed_statuses)
+    }
+
+    pub fn has_status(&self, status: Status) -> bool {
+        self.active_statuses().contains(status)
+    }
+
+    pub fn grant_battle_status(&mut self, status: Status) -> bool {
+        if self.battle_statuses.contains(status) && !self.consumed_statuses.contains(status) {
+            return false;
+        }
+        self.battle_statuses.insert(status);
+        self.consumed_statuses.remove(status);
+        true
+    }
+
+    pub fn grant_permanent_status(&mut self, status: Status) -> bool {
+        if self.permanent_statuses.contains(status) && !self.consumed_statuses.contains(status) {
+            return false;
+        }
+        self.permanent_statuses.insert(status);
+        self.consumed_statuses.remove(status);
+        true
+    }
+
+    pub fn remove_permanent_status(&mut self, status: Status) -> bool {
+        if !self.permanent_statuses.contains(status) {
+            return false;
+        }
+        self.permanent_statuses.remove(status);
+        true
+    }
+
+    pub fn consume_status(&mut self, status: Status) -> bool {
+        if !self.has_status(status) {
+            return false;
+        }
+        self.consumed_statuses.insert(status);
+        true
     }
 
     pub fn take_damage(&mut self, amount: i32) {
@@ -446,6 +513,55 @@ pub fn player_permanent_stat_deltas_from_events(
     permanent_stat_deltas_from_events(events, Team::Player)
 }
 
+/// Extract permanent status deltas for a team's units from battle events.
+///
+/// Returns (grant_mask, remove_mask) per unit. If a status is granted then removed
+/// in the same battle, the later operation wins.
+pub fn permanent_status_deltas_from_events(
+    events: &[CombatEvent],
+    team: Team,
+) -> BTreeMap<UnitId, (StatusMask, StatusMask)> {
+    let mut deltas: BTreeMap<UnitId, (StatusMask, StatusMask)> = BTreeMap::new();
+    for event in events {
+        let (target_instance_id, status, apply) = match event {
+            CombatEvent::StatusApplied {
+                target_instance_id,
+                status,
+                permanent: true,
+            } => (*target_instance_id, *status, true),
+            CombatEvent::StatusRemoved {
+                target_instance_id,
+                status,
+                permanent: true,
+            } => (*target_instance_id, *status, false),
+            _ => continue,
+        };
+
+        if target_instance_id.is_player() != (team == Team::Player) {
+            continue;
+        }
+
+        let entry = deltas
+            .entry(target_instance_id)
+            .or_insert((StatusMask::empty(), StatusMask::empty()));
+        if apply {
+            entry.0.insert(status);
+            entry.1.remove(status);
+        } else {
+            entry.1.insert(status);
+            entry.0.remove(status);
+        }
+    }
+    deltas
+}
+
+/// Convenience helper for permanent status deltas applied to the local player's board.
+pub fn player_permanent_status_deltas_from_events(
+    events: &[CombatEvent],
+) -> BTreeMap<UnitId, (StatusMask, StatusMask)> {
+    permanent_status_deltas_from_events(events, Team::Player)
+}
+
 fn finalize_with_limit_exceeded(
     events: &mut Vec<CombatEvent>,
     limits: &BattleLimits,
@@ -569,6 +685,10 @@ fn resolve_trigger_queue<R: BattleRng>(
                     abilities: vec![],
                     card_id: crate::types::CardId(0),
                     name: String::new(),
+                    base_statuses: StatusMask::empty(),
+                    permanent_statuses: StatusMask::empty(),
+                    battle_statuses: StatusMask::empty(),
+                    consumed_statuses: StatusMask::empty(),
                     attack_buff: 0,
                     health_buff: 0,
                     play_cost: 0,
@@ -847,12 +967,21 @@ fn apply_ability_effect<R: BattleRng>(
                     if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
                         let actual_damage = (*amount).max(0);
                         if actual_damage > 0 {
-                            unit.health = unit.health.saturating_sub(actual_damage);
-                            damaged_units.push(target_id);
+                            let dealt = if unit.consume_status(Status::Shield) {
+                                events.push(CombatEvent::StatusConsumed {
+                                    target_instance_id: target_id,
+                                    status: Status::Shield,
+                                });
+                                0
+                            } else {
+                                unit.health = unit.health.saturating_sub(actual_damage);
+                                damaged_units.push(target_id);
+                                actual_damage
+                            };
                             events.push(CombatEvent::AbilityDamage {
                                 source_instance_id,
                                 target_instance_id: target_id,
-                                damage: actual_damage,
+                                damage: dealt,
                                 remaining_hp: unit.health,
                             });
                         }
@@ -1119,6 +1248,78 @@ fn apply_ability_effect<R: BattleRng>(
                 });
                 Ok(damaged_units)
             }
+            AbilityEffect::GrantStatusThisBattle { status, target } => {
+                let targets = get_targets(
+                    source_instance_id,
+                    source_team,
+                    target,
+                    player_units,
+                    enemy_units,
+                    rng,
+                    trigger_target_id,
+                    spawn_index_override,
+                );
+                for target_id in targets {
+                    if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
+                        if unit.grant_battle_status(*status) {
+                            events.push(CombatEvent::StatusApplied {
+                                target_instance_id: target_id,
+                                status: *status,
+                                permanent: false,
+                            });
+                        }
+                    }
+                }
+                Ok(damaged_units)
+            }
+            AbilityEffect::GrantStatusPermanent { status, target } => {
+                let targets = get_targets(
+                    source_instance_id,
+                    source_team,
+                    target,
+                    player_units,
+                    enemy_units,
+                    rng,
+                    trigger_target_id,
+                    spawn_index_override,
+                );
+                for target_id in targets {
+                    if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
+                        if unit.grant_permanent_status(*status) {
+                            events.push(CombatEvent::StatusApplied {
+                                target_instance_id: target_id,
+                                status: *status,
+                                permanent: true,
+                            });
+                        }
+                    }
+                }
+                Ok(damaged_units)
+            }
+            AbilityEffect::RemoveStatusPermanent { status, target } => {
+                let targets = get_targets(
+                    source_instance_id,
+                    source_team,
+                    target,
+                    player_units,
+                    enemy_units,
+                    rng,
+                    trigger_target_id,
+                    spawn_index_override,
+                );
+                for target_id in targets {
+                    if let Some(unit) = find_unit_mut(target_id, player_units, enemy_units) {
+                        if unit.remove_permanent_status(*status) {
+                            events.push(CombatEvent::StatusRemoved {
+                                target_instance_id: target_id,
+                                status: *status,
+                                permanent: true,
+                            });
+                        }
+                    }
+                }
+                Ok(damaged_units)
+            }
         }
     })();
 
@@ -1170,9 +1371,17 @@ fn execute_phase<R: BattleRng>(
             )?;
         }
         BattlePhase::Attack => {
-            execute_attack_clash(player_units, enemy_units, events);
+            let clash_outcome = execute_attack_clash(player_units, enemy_units, events);
             // After clash, people might be dead or hurt. Resolve loop.
-            resolve_hurt_and_faint_loop(player_units, enemy_units, events, rng, limits, card_pool)?;
+            resolve_hurt_and_faint_loop(
+                player_units,
+                enemy_units,
+                clash_outcome,
+                events,
+                rng,
+                limits,
+                card_pool,
+            )?;
         }
         BattlePhase::AfterAttack => {
             collect_and_resolve_triggers(
@@ -1267,28 +1476,75 @@ fn collect_and_resolve_triggers<R: BattleRng>(
     )
 }
 
+#[derive(Debug, Clone, Copy)]
+struct ClashOutcome {
+    player_id: Option<UnitInstanceId>,
+    enemy_id: Option<UnitInstanceId>,
+    player_hurt: bool,
+    enemy_hurt: bool,
+}
+
 fn execute_attack_clash(
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
-) {
+) -> ClashOutcome {
+    let mut outcome = ClashOutcome {
+        player_id: None,
+        enemy_id: None,
+        player_hurt: false,
+        enemy_hurt: false,
+    };
+
     if player_units.is_empty() || enemy_units.is_empty() {
-        return;
+        return outcome;
     }
 
     let p = &player_units[0];
     let e = &enemy_units[0];
     let p_dmg = p.effective_attack();
     let e_dmg = e.effective_attack();
+    let p_poison = p.has_status(Status::Poison);
+    let e_poison = e.has_status(Status::Poison);
 
     events.push(CombatEvent::Clash { p_dmg, e_dmg });
 
     let p_id = p.instance_id;
     let e_id = e.instance_id;
+    outcome.player_id = Some(p_id);
+    outcome.enemy_id = Some(e_id);
 
-    // Apply Dmg
-    player_units[0].health = player_units[0].health.saturating_sub(e_dmg);
-    enemy_units[0].health = enemy_units[0].health.saturating_sub(p_dmg);
+    // Enemy hits player front.
+    if e_dmg > 0 {
+        if player_units[0].consume_status(Status::Shield) {
+            events.push(CombatEvent::StatusConsumed {
+                target_instance_id: p_id,
+                status: Status::Shield,
+            });
+        } else {
+            player_units[0].health = player_units[0].health.saturating_sub(e_dmg);
+            outcome.player_hurt = true;
+            if e_poison {
+                player_units[0].health = 0;
+            }
+        }
+    }
+
+    // Player hits enemy front.
+    if p_dmg > 0 {
+        if enemy_units[0].consume_status(Status::Shield) {
+            events.push(CombatEvent::StatusConsumed {
+                target_instance_id: e_id,
+                status: Status::Shield,
+            });
+        } else {
+            enemy_units[0].health = enemy_units[0].health.saturating_sub(p_dmg);
+            outcome.enemy_hurt = true;
+            if p_poison {
+                enemy_units[0].health = 0;
+            }
+        }
+    }
 
     events.push(CombatEvent::DamageTaken {
         target_instance_id: p_id,
@@ -1300,6 +1556,8 @@ fn execute_attack_clash(
         team: Team::Enemy,
         remaining_hp: enemy_units[0].health,
     });
+
+    outcome
 }
 
 /// Returns a tuple of (Index, Unit) for dead units
@@ -1351,14 +1609,15 @@ fn execute_death_check_phase(
 fn resolve_hurt_and_faint_loop<R: BattleRng>(
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
+    clash_outcome: ClashOutcome,
     events: &mut Vec<CombatEvent>,
     rng: &mut R,
     limits: &mut BattleLimits,
     card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> Result<(), ()> {
     // CAPTURE clashing unit IDs before they potentially die or board slides
-    let clashing_p_id = player_units.first().map(|u| u.instance_id);
-    let clashing_e_id = enemy_units.first().map(|u| u.instance_id);
+    let clashing_p_id = clash_outcome.player_id;
+    let clashing_e_id = clash_outcome.enemy_id;
 
     let (dead_player, dead_enemy) = execute_death_check_phase(player_units, enemy_units, events);
 
@@ -1367,10 +1626,14 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
 
     // Check for OnHurt for the clashing units
     let mut check_clash_damage = |id: Option<UnitInstanceId>,
+                                  was_hurt: bool,
                                   dealer_id: Option<UnitInstanceId>,
                                   team: Team,
                                   units: &[CombatUnit],
                                   dead: &[(usize, CombatUnit)]| {
+        if !was_hurt {
+            return;
+        }
         if let Some(target_id) = id {
             // Find unit in survivors OR dead
             let unit_opt = units
@@ -1425,6 +1688,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
 
     check_clash_damage(
         clashing_p_id,
+        clash_outcome.player_hurt,
         clashing_e_id,
         Team::Player,
         player_units,
@@ -1432,6 +1696,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
     );
     check_clash_damage(
         clashing_e_id,
+        clash_outcome.enemy_hurt,
         clashing_p_id,
         Team::Enemy,
         enemy_units,
@@ -1589,6 +1854,24 @@ fn get_targets<R: BattleRng>(
                     enemy_units,
                     source_position_override,
                 )
+            } else if *scope == TargetScope::Enemies {
+                let candidates = resolve_scope_ids(
+                    *scope,
+                    source_instance_id,
+                    source_team,
+                    player_units,
+                    enemy_units,
+                    trigger_target_id,
+                );
+                select_position_from_candidates(
+                    apply_guard_filter_for_enemy_scope(
+                        candidates,
+                        source_team,
+                        player_units,
+                        enemy_units,
+                    ),
+                    *index,
+                )
             } else {
                 resolve_absolute_position(*scope, source_team, *index, player_units, enemy_units)
             }
@@ -1598,7 +1881,7 @@ fn get_targets<R: BattleRng>(
             vec![]
         }
         AbilityTarget::Random { scope, count } => {
-            let candidates = resolve_scope_ids(
+            let mut candidates = resolve_scope_ids(
                 *scope,
                 source_instance_id,
                 source_team,
@@ -1606,6 +1889,14 @@ fn get_targets<R: BattleRng>(
                 enemy_units,
                 trigger_target_id,
             );
+            if *scope == TargetScope::Enemies {
+                candidates = apply_guard_filter_for_enemy_scope(
+                    candidates,
+                    source_team,
+                    player_units,
+                    enemy_units,
+                );
+            }
             if candidates.is_empty() {
                 return vec![];
             }
@@ -1665,6 +1956,57 @@ fn resolve_scope_ids(
     .iter()
     .map(|u| u.instance_id)
     .collect()
+}
+
+fn select_position_from_candidates(
+    candidates: Vec<UnitInstanceId>,
+    index: i32,
+) -> Vec<UnitInstanceId> {
+    if candidates.is_empty() {
+        return vec![];
+    }
+
+    let idx = if index == -1 {
+        candidates.len().saturating_sub(1)
+    } else if index >= 0 {
+        index as usize
+    } else {
+        return vec![];
+    };
+
+    candidates
+        .get(idx)
+        .copied()
+        .map(|id| vec![id])
+        .unwrap_or_default()
+}
+
+fn apply_guard_filter_for_enemy_scope(
+    candidate_ids: Vec<UnitInstanceId>,
+    source_team: Team,
+    player_units: &[CombatUnit],
+    enemy_units: &[CombatUnit],
+) -> Vec<UnitInstanceId> {
+    let opposing_board = match source_team {
+        Team::Player => enemy_units,
+        Team::Enemy => player_units,
+    };
+
+    let has_guard = opposing_board
+        .iter()
+        .any(|unit| unit.has_status(Status::Guard));
+    if !has_guard {
+        return candidate_ids;
+    }
+
+    candidate_ids
+        .into_iter()
+        .filter(|target_id| {
+            find_unit_in_slices(*target_id, player_units, enemy_units)
+                .map(|u| u.has_status(Status::Guard))
+                .unwrap_or(false)
+        })
+        .collect()
 }
 
 fn resolve_scope_units<'a>(
@@ -1842,6 +2184,10 @@ fn resolve_stat_based(
     );
     if units.is_empty() {
         return vec![];
+    }
+
+    if scope == TargetScope::Enemies && units.iter().any(|u| u.has_status(Status::Guard)) {
+        units.retain(|u| u.has_status(Status::Guard));
     }
 
     units.sort_by(|a, b| {

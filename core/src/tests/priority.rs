@@ -528,6 +528,7 @@ fn test_priority_interruption_kill() {
             play_cost: 0,
             pitch_value: 0,
         },
+        base_statuses: StatusMask::empty(),
         shop_abilities: vec![],
         battle_abilities: vec![killer_ability],
     };
@@ -543,6 +544,7 @@ fn test_priority_interruption_kill() {
             play_cost: 0,
             pitch_value: 0,
         },
+        base_statuses: StatusMask::empty(),
         shop_abilities: vec![],
         battle_abilities: vec![slow_ability],
     };
@@ -559,6 +561,7 @@ fn test_priority_interruption_kill() {
             play_cost: 0,
             pitch_value: 0,
         },
+        base_statuses: StatusMask::empty(),
         shop_abilities: vec![],
         battle_abilities: vec![],
     };

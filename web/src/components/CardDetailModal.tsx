@@ -78,6 +78,12 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         return `Destroy ${getTargetDescription(data.target)}`;
       case 'GainMana':
         return `Gain ${data.amount || 0} mana`;
+      case 'GrantStatusThisBattle':
+        return `Give ${data.status || 'status'} this battle to ${getTargetDescription(data.target)}`;
+      case 'GrantStatusPermanent':
+        return `Give ${data.status || 'status'} permanently to ${getTargetDescription(data.target)}`;
+      case 'RemoveStatusPermanent':
+        return `Remove ${data.status || 'status'} permanently from ${getTargetDescription(data.target)}`;
       default:
         return `Effect: ${type}`;
     }

@@ -20,6 +20,8 @@ struct JsonCard {
     stats: JsonStats,
     economy: JsonEconomy,
     #[serde(default)]
+    base_statuses: Vec<String>,
+    #[serde(default)]
     shop_abilities: Vec<JsonAbility>,
     #[serde(default)]
     battle_abilities: Vec<JsonAbility>,
@@ -61,6 +63,8 @@ struct JsonEffect {
     attack: Option<i32>,
     // Damage, ModifyStats, Destroy
     target: Option<JsonTarget>,
+    // Status-based effects
+    status: Option<String>,
 }
 
 #[derive(Deserialize, Clone)]
@@ -137,6 +141,28 @@ fn extract_scope(data: &serde_json::Value, card_id: u32, ability_name: &str) -> 
             panic!("Card {card_id} ability '{ability_name}' target/matcher missing scope")
         })
         .to_string()
+}
+
+fn validate_status(status: &str, card_id: u32, ability_name: &str, context: &str) {
+    match status {
+        "Shield" | "Poison" | "Guard" => {}
+        other => panic!(
+            "Card {card_id} ability '{ability_name}' has unknown status '{other}' in {context}"
+        ),
+    }
+}
+
+fn require_status<'a>(
+    value: &'a Option<String>,
+    card_id: u32,
+    ability_name: &str,
+    effect_type: &str,
+) -> &'a str {
+    let status = value.as_deref().unwrap_or_else(|| {
+        panic!("Card {card_id} ability '{ability_name}' effect '{effect_type}' missing status")
+    });
+    validate_status(status, card_id, ability_name, effect_type);
+    status
 }
 
 fn validate_shop_scope(scope: &str, card_id: u32, ability_name: &str, context: &str) {
@@ -304,6 +330,27 @@ fn normalize_shop_ability(
         "GainMana" => {
             let _ = require_i32(ability.effect.amount, card_id, &ability.name, "amount");
         }
+        "GrantStatusPermanent" | "RemoveStatusPermanent" => {
+            let _ = require_status(
+                &ability.effect.status,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+            let target = require_target(
+                &ability.effect.target,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+            validate_target(
+                target,
+                AbilityLane::Shop,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+        }
         other => panic!(
             "Card {card_id} ability '{}' uses shop-incompatible effect '{other}'",
             ability.name
@@ -403,6 +450,27 @@ fn normalize_battle_ability(
         "GainMana" => {
             let _ = require_i32(ability.effect.amount, card_id, &ability.name, "amount");
         }
+        "GrantStatusThisBattle" | "GrantStatusPermanent" | "RemoveStatusPermanent" => {
+            let _ = require_status(
+                &ability.effect.status,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+            let target = require_target(
+                &ability.effect.target,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+            validate_target(
+                target,
+                AbilityLane::Battle,
+                card_id,
+                &ability.name,
+                &ability.effect.effect_type,
+            );
+        }
         other => panic!(
             "Card {card_id} ability '{}' has unsupported battle effect '{other}'",
             ability.name
@@ -441,6 +509,10 @@ fn gen_battle_trigger(trigger: &str) -> String {
 
 fn gen_shop_trigger(trigger: &str) -> String {
     format!("ShopTrigger::{trigger}")
+}
+
+fn gen_status(status: &str) -> String {
+    format!("Status::{status}")
 }
 
 fn gen_battle_target(target: &JsonTarget) -> String {
@@ -540,6 +612,21 @@ fn gen_battle_effect(effect: &JsonEffect) -> String {
             let target = gen_battle_target(effect.target.as_ref().unwrap());
             format!("AbilityEffect::Destroy {{ target: {target} }}")
         }
+        "GrantStatusThisBattle" => {
+            let status = gen_status(effect.status.as_deref().unwrap());
+            let target = gen_battle_target(effect.target.as_ref().unwrap());
+            format!("AbilityEffect::GrantStatusThisBattle {{ status: {status}, target: {target} }}")
+        }
+        "GrantStatusPermanent" => {
+            let status = gen_status(effect.status.as_deref().unwrap());
+            let target = gen_battle_target(effect.target.as_ref().unwrap());
+            format!("AbilityEffect::GrantStatusPermanent {{ status: {status}, target: {target} }}")
+        }
+        "RemoveStatusPermanent" => {
+            let status = gen_status(effect.status.as_deref().unwrap());
+            let target = gen_battle_target(effect.target.as_ref().unwrap());
+            format!("AbilityEffect::RemoveStatusPermanent {{ status: {status}, target: {target} }}")
+        }
         other => panic!("Unknown battle effect type: {other}"),
     }
 }
@@ -565,6 +652,16 @@ fn gen_shop_effect(effect: &JsonEffect) -> String {
         "Destroy" => {
             let target = gen_shop_target(effect.target.as_ref().unwrap());
             format!("ShopEffect::Destroy {{ target: {target} }}")
+        }
+        "GrantStatusPermanent" => {
+            let status = gen_status(effect.status.as_deref().unwrap());
+            let target = gen_shop_target(effect.target.as_ref().unwrap());
+            format!("ShopEffect::GrantStatusPermanent {{ status: {status}, target: {target} }}")
+        }
+        "RemoveStatusPermanent" => {
+            let status = gen_status(effect.status.as_deref().unwrap());
+            let target = gen_shop_target(effect.target.as_ref().unwrap());
+            format!("ShopEffect::RemoveStatusPermanent {{ status: {status}, target: {target} }}")
         }
         other => panic!("Unknown shop effect type: {other}"),
     }
@@ -750,6 +847,17 @@ fn gen_card(
     let hp = card.stats.health;
     let cost = card.economy.play_cost;
     let pitch = card.economy.pitch_value;
+    let base_statuses_str = if card.base_statuses.is_empty() {
+        "StatusMask::empty()".to_string()
+    } else {
+        let statuses = card
+            .base_statuses
+            .iter()
+            .map(|k| gen_status(k))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!("StatusMask::from_statuses(&[{statuses}])")
+    };
 
     let shop_entries: Vec<String> = shop_abilities.iter().map(gen_shop_ability).collect();
     let shop_abilities_str = if shop_entries.is_empty() {
@@ -777,6 +885,7 @@ fn gen_card(
             name: String::from("{name}"),
             stats: UnitStats {{ attack: {atk}, health: {hp} }},
             economy: EconomyStats {{ play_cost: {cost}, pitch_value: {pitch} }},
+            base_statuses: {base_statuses_str},
             shop_abilities: {shop_abilities_str},
             battle_abilities: {battle_abilities_str},
         }}"#
@@ -824,6 +933,11 @@ fn main() {
     }
 
     let card_id_set: BTreeSet<u32> = cards.iter().map(|c| c.id).collect();
+    for card in &cards {
+        for status in &card.base_statuses {
+            validate_status(status, card.id, &card.name, "base_statuses");
+        }
+    }
     // Validate all set references up front.
     for set in &sets {
         for entry in &set.cards {

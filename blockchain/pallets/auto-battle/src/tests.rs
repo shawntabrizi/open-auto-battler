@@ -187,6 +187,7 @@ fn test_submit_card_and_metadata() {
                 play_cost: 1,
                 pitch_value: 1,
             },
+            base_statuses: oab_core::types::StatusMask::empty(),
             shop_abilities: BoundedVec::try_from(vec![]).unwrap(),
             battle_abilities: BoundedVec::try_from(vec![]).unwrap(),
         };
@@ -240,6 +241,7 @@ fn test_submit_card_and_metadata() {
                 play_cost: 2,
                 pitch_value: 2,
             },
+            base_statuses: oab_core::types::StatusMask::empty(),
             shop_abilities: BoundedVec::try_from(vec![]).unwrap(),
             battle_abilities: BoundedVec::try_from(vec![]).unwrap(),
         };

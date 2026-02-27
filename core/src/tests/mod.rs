@@ -73,6 +73,7 @@ fn create_tester_unit(
             play_cost: 1,
             pitch_value: 1,
         },
+        base_statuses: StatusMask::empty(),
         shop_abilities: vec![],
         battle_abilities: vec![ability],
     };
@@ -92,6 +93,7 @@ fn create_dummy_enemy() -> CombatUnit {
             play_cost: 0,
             pitch_value: 0,
         },
+        base_statuses: StatusMask::empty(),
         shop_abilities: vec![],
         battle_abilities: vec![],
     };
