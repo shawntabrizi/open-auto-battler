@@ -5,6 +5,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 OUTPUT_DIR="${OUTPUT_DIR:-$REPO_ROOT/target/coverage/oab-core}"
 FAIL_UNDER_LINES="${FAIL_UNDER_LINES:-0}"
+ENGINE_FAIL_UNDER_LINES="${ENGINE_FAIL_UNDER_LINES:-0}"
+ENGINE_IGNORE_REGEX="${ENGINE_IGNORE_REGEX:-(core/src/(log|opponents|units|view|rng|types)\\.rs)$}"
 
 if ! cargo llvm-cov --version >/dev/null 2>&1; then
     echo "cargo-llvm-cov is required."
@@ -32,6 +34,14 @@ if [[ "$FAIL_UNDER_LINES" != "0" ]]; then
     SUMMARY_ARGS+=(--fail-under-lines "$FAIL_UNDER_LINES")
 fi
 cargo "${SUMMARY_ARGS[@]}"
+
+if [[ "$ENGINE_FAIL_UNDER_LINES" != "0" ]]; then
+    echo "--- Engine-critical coverage gate ---"
+    cargo llvm-cov report \
+        --summary-only \
+        --ignore-filename-regex "$ENGINE_IGNORE_REGEX" \
+        --fail-under-lines "$ENGINE_FAIL_UNDER_LINES"
+fi
 
 echo "--- Writing coverage reports ---"
 rm -rf "$OUTPUT_DIR/html"

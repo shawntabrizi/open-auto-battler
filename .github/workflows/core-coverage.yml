@@ -34,6 +34,9 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Generate core coverage reports
+        env:
+          FAIL_UNDER_LINES: "85"
+          ENGINE_FAIL_UNDER_LINES: "85"
         run: ./core/coverage.sh
 
       - name: Upload coverage artifact

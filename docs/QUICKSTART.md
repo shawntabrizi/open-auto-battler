@@ -142,6 +142,15 @@ Optional minimum line coverage gate:
 FAIL_UNDER_LINES=85 ./core/coverage.sh
 ```
 
+Optional engine-critical gate (focuses on `battle/commit/state/limits` by ignoring
+`log/opponents/units/view/rng/types`):
+
+```bash
+FAIL_UNDER_LINES=85 ENGINE_FAIL_UNDER_LINES=85 ./core/coverage.sh
+```
+
+CI currently enforces both gates at `85%` line coverage.
+
 ## Debugging
 
 ### Browser Console
