@@ -7684,6 +7684,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "oab"
+version = "0.1.0"
+dependencies = [
+ "oab-core",
+]
+
+[[package]]
 name = "oab-client"
 version = "0.1.0"
 dependencies = [
@@ -7702,7 +7709,7 @@ dependencies = [
 
 [[package]]
 name = "oab-core"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "bounded-collections",
  "log",

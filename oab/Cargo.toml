@@ -1,0 +1,17 @@
+[package]
+name = "oab"
+version = "0.1.0"
+description = "Open Auto Battler - a deterministic auto-battler game engine"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[features]
+default = ["std"]
+std = ["oab-core/std"]
+bounded = ["oab-core/bounded"]
+
+[dependencies]
+oab-core = { workspace = true }

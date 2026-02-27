@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "oab",
     "core",
     "client",
     "blockchain/pallets/auto-battle",
