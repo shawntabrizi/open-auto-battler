@@ -4,6 +4,24 @@ import { useGameStore } from '../store/gameStore';
 import type { CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 
+const STATUS_MASK_KEYS = new Set(['base_statuses', 'perm_statuses', 'active_statuses', 'statuses']);
+
+function stringifyWithCompactStatusMasks(value: unknown): string {
+  const encoded = JSON.stringify(
+    value,
+    (key, currentValue) => {
+      if (STATUS_MASK_KEYS.has(key) && Array.isArray(currentValue)) {
+        const normalized = currentValue.map((x) => Number(x) & 0xff);
+        return `__STATUS_MASK__${JSON.stringify(normalized)}`;
+      }
+      return currentValue;
+    },
+    2
+  );
+
+  return (encoded ?? 'null').replace(/"__STATUS_MASK__(\[[^"]*\])"/g, '$1');
+}
+
 // Blockchain account type
 export interface BlockchainAccount {
   address: string;
@@ -52,6 +70,8 @@ export function CardDetailPanel({
   } = useGameStore();
 
   const resolvedMode: CardDetailPanelMode = mode ?? { type: 'standard' };
+  const cardRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(card), [card]);
+  const gameViewRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(view), [view]);
 
   if (!isVisible) return null;
 
@@ -352,14 +372,14 @@ export function CardDetailPanel({
             <div className="text-[10px] text-gray-500 mb-1 flex justify-between items-center">
               <span>CARD_DATA.JSON</span>
               <button
-                onClick={() => navigator.clipboard.writeText(JSON.stringify(card, null, 2))}
+                onClick={() => navigator.clipboard.writeText(cardRawJson)}
                 className="text-blue-500 hover:text-blue-400 font-mono text-[9px]"
               >
                 Copy
               </button>
             </div>
             <pre className="text-[9px] text-blue-400/80 custom-scrollbar max-h-48 overflow-auto">
-              {JSON.stringify(card, null, 2)}
+              {cardRawJson}
             </pre>
           </div>
         )}
@@ -551,14 +571,14 @@ export function CardDetailPanel({
             <div className="text-[10px] text-gray-500 mb-1 flex justify-between items-center">
               <span>GAME_VIEW.JSON</span>
               <button
-                onClick={() => navigator.clipboard.writeText(JSON.stringify(view, null, 2))}
+                onClick={() => navigator.clipboard.writeText(gameViewRawJson)}
                 className="text-blue-500 hover:text-blue-400"
               >
                 Copy
               </button>
             </div>
             <pre className="text-[9px] text-green-500/80 custom-scrollbar max-h-64 overflow-auto">
-              {JSON.stringify(view, null, 2)}
+              {gameViewRawJson}
             </pre>
           </div>
         )}

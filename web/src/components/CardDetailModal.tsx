@@ -2,6 +2,24 @@ import React from 'react';
 import type { CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 
+const STATUS_MASK_KEYS = new Set(['base_statuses', 'perm_statuses', 'active_statuses', 'statuses']);
+
+function stringifyWithCompactStatusMasks(value: unknown): string {
+  const encoded = JSON.stringify(
+    value,
+    (key, currentValue) => {
+      if (STATUS_MASK_KEYS.has(key) && Array.isArray(currentValue)) {
+        const normalized = currentValue.map((x) => Number(x) & 0xff);
+        return `__STATUS_MASK__${JSON.stringify(normalized)}`;
+      }
+      return currentValue;
+    },
+    2
+  );
+
+  return (encoded ?? 'null').replace(/"__STATUS_MASK__(\[[^"]*\])"/g, '$1');
+}
+
 interface CardDetailModalProps {
   card: CardView;
   isOpen: boolean;
@@ -10,6 +28,7 @@ interface CardDetailModalProps {
 
 export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps) {
   const [showRaw, setShowRaw] = React.useState(false);
+  const rawJson = React.useMemo(() => stringifyWithCompactStatusMasks(card), [card]);
   const allAbilities = [...card.shop_abilities, ...card.battle_abilities];
 
   if (!isOpen) return null;
@@ -260,7 +279,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         {showRaw && (
           <div className="mt-4 p-3 bg-gray-900 rounded border border-gray-700">
             <pre className="text-xs text-gray-300 overflow-x-auto whitespace-pre-wrap">
-              {JSON.stringify(card, null, 2)}
+              {rawJson}
             </pre>
           </div>
         )}

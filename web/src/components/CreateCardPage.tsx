@@ -320,7 +320,7 @@ export const CreateCardPage: React.FC = () => {
     })),
   ];
 
-  const rawJson = JSON.stringify(
+  const rawJsonPretty = JSON.stringify(
     {
       stats: { attack: cardForm.attack, health: cardForm.health },
       economy: { play_cost: cardForm.play_cost, pitch_value: cardForm.pitch_value },
@@ -335,6 +335,10 @@ export const CreateCardPage: React.FC = () => {
     },
     null,
     2
+  );
+  const rawJson = rawJsonPretty.replace(
+    /"base_statuses": \[[\s\S]*?\]/,
+    `"base_statuses": ${JSON.stringify(cardForm.base_statuses)}`
   );
 
   const baseStatuses = statusesFromMask(cardForm.base_statuses);
