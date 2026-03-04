@@ -440,7 +440,9 @@ function convertMatcher(v: any): any {
   if (data && typeof data === 'object') {
     const converted: any = {};
     for (const [key, val] of Object.entries(data)) {
-      if (
+      if (key === 'target') {
+        converted[key] = convertTarget(val);
+      } else if (
         ['scope', 'target_scope', 'stat', 'source_stat', 'target_stat', 'order', 'op'].includes(key)
       ) {
         converted[key] = papiEnumStr(val);

@@ -277,6 +277,14 @@ pub enum Matcher {
         value: i32,
     },
 
+    /// Compare explicit ability target unit(s) stat to a constant value.
+    TargetStatValueCompare {
+        target: AbilityTarget,
+        stat: StatType,
+        op: CompareOp,
+        value: i32,
+    },
+
     /// Compare one unit's stat to another unit's stat
     StatStatCompare {
         source_stat: StatType,

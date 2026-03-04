@@ -1933,6 +1933,102 @@ fn get_targets<R: BattleRng>(
     }
 }
 
+fn get_condition_targets(
+    source_instance_id: UnitInstanceId,
+    source_team: Team,
+    target: &AbilityTarget,
+    player_units: &[CombatUnit],
+    enemy_units: &[CombatUnit],
+    trigger_target_id: Option<UnitInstanceId>,
+) -> Vec<UnitInstanceId> {
+    match target {
+        AbilityTarget::Position { scope, index } => {
+            if *scope == TargetScope::SelfUnit {
+                resolve_relative_position(
+                    source_instance_id,
+                    source_team,
+                    *index,
+                    player_units,
+                    enemy_units,
+                    None,
+                )
+            } else if *scope == TargetScope::Enemies {
+                let candidates = resolve_scope_ids(
+                    *scope,
+                    source_instance_id,
+                    source_team,
+                    player_units,
+                    enemy_units,
+                    trigger_target_id,
+                );
+                select_position_from_candidates(
+                    apply_guard_filter_for_enemy_scope(
+                        candidates,
+                        source_team,
+                        player_units,
+                        enemy_units,
+                    ),
+                    *index,
+                )
+            } else {
+                resolve_absolute_position(*scope, source_team, *index, player_units, enemy_units)
+            }
+        }
+        AbilityTarget::Adjacent { scope: _ } => {
+            // Stub implementation as per instructions
+            vec![]
+        }
+        AbilityTarget::Random { scope, count } => {
+            let mut candidates = resolve_scope_ids(
+                *scope,
+                source_instance_id,
+                source_team,
+                player_units,
+                enemy_units,
+                trigger_target_id,
+            );
+            if *scope == TargetScope::Enemies {
+                candidates = apply_guard_filter_for_enemy_scope(
+                    candidates,
+                    source_team,
+                    player_units,
+                    enemy_units,
+                );
+            }
+            if candidates.is_empty() {
+                return vec![];
+            }
+            let actual_count = (*count as usize).min(candidates.len());
+            candidates.truncate(actual_count);
+            candidates
+        }
+        AbilityTarget::Standard {
+            scope,
+            stat,
+            order,
+            count,
+        } => resolve_stat_based(
+            *scope,
+            source_instance_id,
+            source_team,
+            *stat,
+            *order,
+            *count,
+            player_units,
+            enemy_units,
+            trigger_target_id,
+        ),
+        AbilityTarget::All { scope } => resolve_scope_ids(
+            *scope,
+            source_instance_id,
+            source_team,
+            player_units,
+            enemy_units,
+            trigger_target_id,
+        ),
+    }
+}
+
 // ==========================================
 // TARGETING HELPERS
 // ==========================================
@@ -2294,6 +2390,30 @@ fn evaluate_matcher(
             scoped_targets
                 .iter()
                 .any(|unit| compare_i32(get_stat_value(unit, *stat), *op, *value))
+        }
+        Matcher::TargetStatValueCompare {
+            target,
+            stat,
+            op,
+            value,
+        } => {
+            let target_ids = get_condition_targets(
+                ctx.source.instance_id,
+                ctx.source.team,
+                target,
+                player_units,
+                enemy_units,
+                trigger_target_id,
+            );
+            if target_ids.is_empty() {
+                return false;
+            }
+
+            target_ids.iter().any(|target_id| {
+                find_unit_in_slices(*target_id, player_units, enemy_units)
+                    .map(|unit| compare_i32(get_stat_value(unit, *stat), *op, *value))
+                    .unwrap_or(false)
+            })
         }
         Matcher::StatStatCompare {
             source_stat,

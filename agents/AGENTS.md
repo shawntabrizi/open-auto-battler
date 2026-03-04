@@ -22,6 +22,7 @@ Read the following documents when relevant:
 - **WASM Bridge**: The project relies on a SCALE-encoded bridge between the Substrate chain and the browser WASM engine. Any changes to data structures must be reflected in both `core/` and the frontend formatting logic.
 - **Named Arguments**: Never use positional arguments for extrinsics.
 - **Bounded Complexity**: Respect the limits defined in the Pallet's `Config`.
+- **No Engine Panics**: Core engine/runtime code must not use `panic!`, `unwrap()`, or `expect()` for normal control flow. Use explicit error handling or deterministic no-op behavior instead.
 - **Formatting**: After making changes, always run `cargo fmt` (Rust) and `prettier` (web/client) on affected files.
 
 ## Workflow Expectations

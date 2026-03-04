@@ -210,9 +210,15 @@
           {
             "type": "Is",
             "data": {
-              "type": "StatValueCompare",
+              "type": "TargetStatValueCompare",
               "data": {
-                "scope": "Allies",
+                "target": {
+                  "type": "Position",
+                  "data": {
+                    "scope": "Allies",
+                    "index": 0
+                  }
+                },
                 "stat": "Health",
                 "op": "LessThanOrEqual",
                 "value": 6

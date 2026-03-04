@@ -26,6 +26,10 @@ export type BattleMatcher =
       data: { scope: BattleScope; stat: StatType; op: CompareOp; value: number };
     }
   | {
+      type: 'TargetStatValueCompare';
+      data: { target: BattleTarget; stat: StatType; op: CompareOp; value: number };
+    }
+  | {
       type: 'StatStatCompare';
       data: {
         source_stat: StatType;

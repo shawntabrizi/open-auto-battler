@@ -216,6 +216,20 @@ fn validate_matcher(
                 validate_shop_scope(&scope, card_id, ability_name, "matcher");
             }
         }
+        "TargetStatValueCompare" => {
+            if lane == AbilityLane::Shop {
+                return;
+            }
+            if let Ok(target) = serde_json::from_value::<JsonTarget>(data["target"].clone()) {
+                validate_target(
+                    &target,
+                    lane,
+                    card_id,
+                    ability_name,
+                    "TargetStatValueCompare",
+                );
+            }
+        }
         "StatStatCompare" => {
             if lane == AbilityLane::Shop {
                 panic!(
@@ -678,6 +692,21 @@ fn gen_battle_matcher(val: &serde_json::Value) -> String {
             let value = data["value"].as_i64().unwrap();
             format!(
                 "Matcher::StatValueCompare {{ scope: TargetScope::{scope}, stat: StatType::{stat}, op: CompareOp::{op}, value: {value} }}"
+            )
+        }
+        "TargetStatValueCompare" => {
+            let target = serde_json::from_value::<JsonTarget>(data["target"].clone()).unwrap_or(
+                JsonTarget {
+                    target_type: "All".to_string(),
+                    data: serde_json::json!({ "scope": "SelfUnit" }),
+                },
+            );
+            let target_expr = gen_battle_target(&target);
+            let stat = data["stat"].as_str().unwrap();
+            let op = data["op"].as_str().unwrap();
+            let value = data["value"].as_i64().unwrap();
+            format!(
+                "Matcher::TargetStatValueCompare {{ target: {target_expr}, stat: StatType::{stat}, op: CompareOp::{op}, value: {value} }}"
             )
         }
         "UnitCount" => {
