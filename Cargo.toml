@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "core",
     "client",
+    "sim",
     "blockchain/pallets/auto-battle",
     "blockchain/runtime",
     "web/src-tauri",

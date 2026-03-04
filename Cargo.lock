@@ -8698,6 +8698,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "oab-sim"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "oab-core",
+ "rayon",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "objc2"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
