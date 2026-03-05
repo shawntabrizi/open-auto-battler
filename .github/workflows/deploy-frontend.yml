@@ -35,7 +35,7 @@ jobs:
       cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Compute source hash
         id: source-hash
@@ -56,7 +56,7 @@ jobs:
     name: Build
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup node
         uses: actions/setup-node@v4
@@ -84,7 +84,7 @@ jobs:
           VITE_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-build
           path: web/dist
