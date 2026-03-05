@@ -125,14 +125,14 @@ export function SettingsPage() {
         {/* Connect button */}
         <button
           onClick={handleConnect}
-          disabled={!canConnect || isConnecting}
+          disabled={!canConnect}
           className={`w-full p-3 lg:p-4 rounded-xl font-bold text-sm lg:text-base transition-all ${
-            canConnect && !isConnecting
+            canConnect
               ? 'bg-yellow-500 hover:bg-yellow-400 text-black active:scale-[0.98]'
               : 'bg-slate-800 text-slate-500 cursor-not-allowed'
           }`}
         >
-          {isConnecting ? 'Connecting...' : isCurrentEndpoint && isConnected ? 'Reconnect' : 'Connect'}
+          {isCurrentEndpoint && isConnected ? 'Reconnect' : 'Connect'}
         </button>
 
         {/* Connection status */}
