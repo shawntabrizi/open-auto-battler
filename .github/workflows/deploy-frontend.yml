@@ -107,7 +107,7 @@ jobs:
     name: Deploy
     uses: paritytech/dotns-sdk/.github/workflows/deploy.yml@main
     with:
-      basename: ${{ github.ref == 'refs/heads/production' && 'oab' || 'dev-oab' }}
+      basename: ${{ github.ref == 'refs/heads/production' && 'open-auto-battler00' || 'dev-open-auto-battler00' }}
       mode: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
       subname-format: pr-number
       artifact-name: frontend-build
