@@ -16,6 +16,7 @@ import { CustomizePage } from './components/CustomizePage.tsx';
 import { MintNftPage } from './components/MintNftPage.tsx';
 import { CreatorHubPage } from './components/CreatorHubPage.tsx';
 import { TournamentPage } from './components/TournamentPage.tsx';
+import { SettingsPage } from './components/SettingsPage.tsx';
 
 // Lazy-loaded features (code-split, no impact on main bundle)
 import { PresentationsPage, PresentationViewer, EmbedPage } from './features/presentations';
@@ -40,6 +41,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/multiplayer/game" element={<MultiplayerGame />} />
         <Route path="/blockchain" element={<BlockchainPage />} />
         <Route path="/tournament" element={<TournamentPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/blockchain/creator" element={<CreatorHubPage />} />
         <Route path="/blockchain/create-card" element={<CreateCardPage />} />
         <Route path="/blockchain/create-set" element={<CreateSetPage />} />

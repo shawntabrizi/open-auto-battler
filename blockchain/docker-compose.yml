@@ -1,0 +1,25 @@
+services:
+  node:
+    image: oab-chain:latest
+    container_name: oab-chain
+    restart: unless-stopped
+    ports:
+      - "9944:9944"
+      - "30333:30333"
+    volumes:
+      - chain-data:/data
+    command:
+      - "--chain=/chain/chain_spec.json"
+      - "--base-path=/data"
+      - "--alice"
+      - "--validator"
+      - "--force-authoring"
+      - "--rpc-external"
+      - "--rpc-methods=unsafe"
+      - "--rpc-cors=all"
+      - "--rpc-port=9944"
+      - "--unsafe-force-node-key-generation"
+      - "--dev-block-time=6000"
+
+volumes:
+  chain-data:

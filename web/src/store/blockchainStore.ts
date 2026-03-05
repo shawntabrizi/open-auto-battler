@@ -13,6 +13,7 @@ import { createCallArgCoercer } from '../utils/papiCoercion';
 import { initEmojiMap } from '../utils/emoji';
 import { submitTx } from '../utils/tx';
 import { decodeStatusMask } from '../utils/status';
+import { useSettingsStore } from './settingsStore';
 
 // ============================================================================
 // PAPI-to-serde conversion helpers
@@ -171,6 +172,7 @@ interface BlockchainStore {
   availableSets: any[];
 
   // Actions
+  disconnect: () => void;
   connect: () => Promise<void>;
   selectAccount: (account: any) => Promise<void>;
   startGame: (set_id?: number) => Promise<void>;
@@ -225,15 +227,35 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   isRefreshing: false,
   lastRefresh: 0,
 
+  disconnect: () => {
+    const { client } = get();
+    if (client) {
+      client.destroy();
+    }
+    set({
+      client: null,
+      api: null,
+      codecs: null,
+      isConnected: false,
+      isConnecting: false,
+      blockNumber: null,
+      chainState: null,
+      allCards: [],
+      availableSets: [],
+    });
+  },
+
   connect: async () => {
+    get().disconnect();
     set({ isConnecting: true });
     try {
-      const client = createClient(withPolkadotSdkCompat(getWsProvider('ws://127.0.0.1:9944')));
+      const wsEndpoint = useSettingsStore.getState().endpoint;
+      const client = createClient(withPolkadotSdkCompat(getWsProvider(wsEndpoint)));
 
-      // Subscribe to best blocks to show block number
+      // Subscribe to best blocks — first block confirms connection is live
       client.bestBlocks$.subscribe((blocks) => {
         if (blocks.length > 0) {
-          set({ blockNumber: blocks[0].number });
+          set({ blockNumber: blocks[0].number, isConnected: true, isConnecting: false });
         }
       });
 
@@ -253,8 +275,6 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         client,
         api,
         codecs,
-        isConnected: true,
-        isConnecting: false,
         accounts: allAccounts,
         selectedAccount: allAccounts[0],
         cardDataCoercer,
