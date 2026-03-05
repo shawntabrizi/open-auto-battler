@@ -14,7 +14,7 @@ function getOptionFromEndpoint(endpoint: string): EndpointOption {
 
 export function SettingsPage() {
   const { endpoint, setEndpoint } = useSettingsStore();
-  const { connect, isConnecting, isConnected, blockNumber } = useBlockchainStore();
+  const { connect, isConnected, blockNumber } = useBlockchainStore();
 
 
   const [selected, setSelected] = useState<EndpointOption>(getOptionFromEndpoint(endpoint));
