@@ -1,0 +1,120 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - production
+      - master
+  pull_request:
+    branches:
+      - production
+      - master
+  workflow_dispatch:
+    inputs:
+      skip-cache:
+        description: 'Skip deployment cache and force redeploy'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  statuses: write
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: deploy-frontend-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    name: Check for changes
+    outputs:
+      source-hash: ${{ steps.source-hash.outputs.hash }}
+      cache-hit: ${{ steps.cache-check.outputs.cache-hit }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Compute source hash
+        id: source-hash
+        run: echo "hash=$(git ls-files web/ .github/workflows/deploy-frontend.yml | xargs sha256sum | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Check deployment cache
+        id: cache-check
+        uses: actions/cache@v5
+        with:
+          path: .deployment-marker
+          key: deployment-${{ steps.source-hash.outputs.hash }}
+          lookup-only: true
+
+  build:
+    needs: check
+    if: needs.check.outputs.cache-hit != 'true' || inputs.skip-cache
+    runs-on: ubuntu-latest
+    name: Build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: web
+
+      - name: Cache build
+        id: cache-build
+        uses: actions/cache@v5
+        with:
+          path: web/dist
+          key: build-${{ needs.check.outputs.source-hash }}
+
+      - name: Build app
+        if: steps.cache-build.outputs.cache-hit != 'true'
+        run: npm run build
+        working-directory: web
+        env:
+          VITE_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: frontend-build
+          path: web/dist
+          retention-days: 1
+
+  deploy:
+    needs: [check, build]
+    if: needs.check.outputs.cache-hit != 'true' || inputs.skip-cache
+    name: Deploy
+    uses: paritytech/product-infrastructure/.github/workflows/deploy-to-triangle.yml@829ee12c14be6d2116ee98d59450f23cbc41495b
+    with:
+      dotns-domain: ${{ github.ref == 'refs/heads/production' && 'hackme3.dot' || github.ref == 'refs/heads/master' && 'dev-hackme3.dot' || format('{0}-{1}00.dot', github.event.repository.name, github.event.pull_request.head.ref || github.ref_name) }}
+      artifact-name: frontend-build
+      skip-cache: ${{ inputs.skip-cache || false }}
+      comment-on-pr: true
+      max-retries: 3
+    secrets:
+      mnemonic: ${{ secrets.MNEMONIC || 'bottom drive obey lake curtain smoke basket hold race lonely fit walk' }}
+
+  post-deploy:
+    needs: [check, deploy]
+    if: needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    name: Mark as deployed
+    steps:
+      - name: Create deployment marker
+        run: echo "deployed" > .deployment-marker
+
+      - name: Cache deployment marker
+        uses: actions/cache/save@v5
+        with:
+          path: .deployment-marker
+          key: deployment-${{ needs.check.outputs.source-hash }}
