@@ -43,7 +43,7 @@ jobs:
 
       - name: Check deployment cache
         id: cache-check
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: .deployment-marker
           key: deployment-${{ steps.source-hash.outputs.hash }}
@@ -71,7 +71,7 @@ jobs:
 
       - name: Cache build
         id: cache-build
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: web/dist
           key: build-${{ needs.check.outputs.source-hash }}
@@ -94,15 +94,17 @@ jobs:
     needs: [check, build]
     if: needs.check.outputs.cache-hit != 'true' || inputs.skip-cache
     name: Deploy
-    uses: paritytech/product-infrastructure/.github/workflows/deploy-to-triangle.yml@829ee12c14be6d2116ee98d59450f23cbc41495b
+    uses: paritytech/dotns-sdk/.github/workflows/deploy.yml@main
     with:
-      dotns-domain: ${{ github.ref == 'refs/heads/production' && 'hackme3.dot' || github.ref == 'refs/heads/master' && 'dev-hackme3.dot' || format('{0}-{1}00.dot', github.event.repository.name, github.event.pull_request.head.ref || github.ref_name) }}
+      basename: ${{ github.ref == 'refs/heads/production' && 'oab' || 'dev-oab' }}
+      mode: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
+      subname-format: pr-number
       artifact-name: frontend-build
+      register-base: true
       skip-cache: ${{ inputs.skip-cache || false }}
-      comment-on-pr: true
       max-retries: 3
     secrets:
-      mnemonic: ${{ secrets.MNEMONIC || 'bottom drive obey lake curtain smoke basket hold race lonely fit walk' }}
+      dotns-mnemonic: ${{ secrets.DOTNS_MNEMONIC || 'bottom drive obey lake curtain smoke basket hold race lonely fit walk' }}
 
   post-deploy:
     needs: [check, deploy]
@@ -114,7 +116,7 @@ jobs:
         run: echo "deployed" > .deployment-marker
 
       - name: Cache deployment marker
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v4
         with:
           path: .deployment-marker
           key: deployment-${{ needs.check.outputs.source-hash }}
