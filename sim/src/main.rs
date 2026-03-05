@@ -25,7 +25,7 @@ struct Args {
     #[arg(short = 'n', long, default_value_t = 10_000)]
     runs: u32,
 
-    /// Auto-play strategy: greedy, random, heuristic
+    /// Auto-play strategy: greedy, random, heuristic, tactician
     #[arg(short, long, default_value = "greedy")]
     strategy: String,
 
@@ -58,9 +58,10 @@ fn main() {
         "greedy" => StrategyKind::Greedy,
         "random" => StrategyKind::Random,
         "heuristic" => StrategyKind::Heuristic,
+        "tactician" => StrategyKind::Tactician,
         other => {
             eprintln!(
-                "Unknown strategy: '{}'. Available: greedy, random, heuristic",
+                "Unknown strategy: '{}'. Available: greedy, random, heuristic, tactician",
                 other
             );
             std::process::exit(1);
