@@ -9,15 +9,7 @@ Start here:
 
 ## Other Documentation
 
-Located in the project root:
-
-| Document | Description |
-|----------|-------------|
-| [RULEBOOK.md](../RULEBOOK.md) | Game rules and mechanics |
-| [CARD_SCHEMA.md](../CARD_SCHEMA.md) | Card data structure and abilities |
-| [BUILD.md](../BUILD.md) | Detailed build instructions |
-| [PALLET_PLAN.md](../PALLET_PLAN.md) | Blockchain pallet design |
-| [UI.md](../UI.md) | UI/UX design notes |
+For detailed agent and architecture docs, see the [agents/](../agents/) folder.
 
 ## Architecture Highlights
 

@@ -1,7 +1,7 @@
 # Agent Instructions (Canonical)
 
 This folder is the single source of truth for AI agent guidance.
-The top-level files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`) are pointers only.
+The top-level files (`AGENTS.md`, `CLAUDE.md`) are pointers only.
 
 ## Start Here
 Read the following documents when relevant:
