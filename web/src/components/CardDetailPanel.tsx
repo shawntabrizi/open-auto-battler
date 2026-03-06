@@ -87,8 +87,8 @@ export function CardDetailPanel({
       return (
         <div className="flex flex-col items-center justify-center py-6 lg:py-12 text-center">
           <div className="text-2xl lg:text-4xl mb-2 lg:mb-4">👆</div>
-          <h3 className="text-sm lg:text-lg font-bold text-gray-300 mb-1 lg:mb-2">Select a Card</h3>
-          <p className="text-[10px] lg:text-sm text-gray-400">Tap any card to view details.</p>
+          <h3 className="text-sm lg:text-lg font-bold text-warm-300 mb-1 lg:mb-2">Select a Card</h3>
+          <p className="text-[10px] lg:text-sm text-warm-400">Tap any card to view details.</p>
         </div>
       );
     }
@@ -297,7 +297,7 @@ export function CardDetailPanel({
 
         {/* Card Basic Info */}
         <div className="card-info flex items-center gap-2 lg:gap-4 mb-3 lg:mb-6">
-          <div className="card-emoji w-12 h-12 lg:w-20 lg:h-20 bg-gray-800 rounded-lg lg:rounded-xl border-2 border-gray-700 flex items-center justify-center text-2xl lg:text-4xl shadow-inner flex-shrink-0">
+          <div className="card-emoji w-12 h-12 lg:w-20 lg:h-20 bg-warm-800 rounded-lg lg:rounded-xl border-2 border-warm-700 flex items-center justify-center text-2xl lg:text-4xl shadow-inner flex-shrink-0">
             {getCardEmoji(card.id)}
           </div>
           <div className="card-stats min-w-0">
@@ -321,12 +321,12 @@ export function CardDetailPanel({
             {allAbilities.map((ability, index) => (
               <div
                 key={index}
-                className="mb-2 lg:mb-4 p-2 lg:p-3 bg-gray-800/50 rounded-lg border border-gray-700"
+                className="mb-2 lg:mb-4 p-2 lg:p-3 bg-warm-800/50 rounded-lg border border-warm-700"
               >
                 <h3 className="text-xs lg:text-md font-bold text-yellow-400 mb-1 lg:mb-2">
                   {ability.name}
                 </h3>
-                <div className="text-[10px] lg:text-xs text-gray-300 mb-1 lg:mb-2">
+                <div className="text-[10px] lg:text-xs text-warm-300 mb-1 lg:mb-2">
                   <strong>Trigger:</strong> {getTriggerDescription(ability.trigger)}
                 </div>
                 {ability.max_triggers && (
@@ -334,7 +334,7 @@ export function CardDetailPanel({
                     <strong>Max:</strong> {ability.max_triggers}
                   </div>
                 )}
-                <div className="text-[10px] lg:text-sm text-gray-200 bg-gray-900/50 p-1.5 lg:p-2 rounded border border-gray-700/50 italic">
+                <div className="text-[10px] lg:text-sm text-warm-200 bg-warm-950/50 p-1.5 lg:p-2 rounded border border-warm-700/50 italic">
                   "{ability.description}"
                 </div>
                 <div className="mt-1 lg:mt-2 text-[10px] lg:text-xs text-blue-400 font-semibold">
@@ -367,14 +367,14 @@ export function CardDetailPanel({
         </div>
 
         {/* Metadata */}
-        <div className="text-[10px] text-gray-500 font-mono flex flex-col gap-1 border-t border-gray-800 pt-4">
+        <div className="text-[10px] text-warm-500 font-mono flex flex-col gap-1 border-t border-warm-800 pt-4">
           <div>CARD_ID: {card.id}</div>
         </div>
 
         {/* Card Raw JSON */}
         {showRawJson && (
-          <div className="mt-4 p-2 bg-black/50 rounded border border-gray-800">
-            <div className="text-[10px] text-gray-500 mb-1 flex justify-between items-center">
+          <div className="mt-4 p-2 bg-black/50 rounded border border-warm-800">
+            <div className="text-[10px] text-warm-500 mb-1 flex justify-between items-center">
               <span>CARD_DATA.JSON</span>
               <button
                 onClick={() => navigator.clipboard.writeText(cardRawJson)}
@@ -394,9 +394,9 @@ export function CardDetailPanel({
 
   const renderRulesTab = () => {
     return (
-      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6 text-sm text-gray-300 pb-4">
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6 text-sm text-warm-300 pb-4">
         <section>
-          <h3 className="font-bold text-white mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+          <h3 className="font-bold text-white mb-2 border-b border-warm-700 pb-1 flex items-center gap-2">
             <span className="text-blue-400">01.</span> Planning Phase
           </h3>
           <p className="leading-relaxed">
@@ -404,13 +404,13 @@ export function CardDetailPanel({
             from your Bag. The selection is deterministic based on your game seed and the current
             round.
           </p>
-          <p className="mt-2 text-gray-400 italic">
+          <p className="mt-2 text-warm-400 italic">
             Unused hand cards return to your Bag. The Bag only shrinks when you play or pitch cards.
           </p>
         </section>
 
         <section>
-          <h3 className="font-bold text-white mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+          <h3 className="font-bold text-white mb-2 border-b border-warm-700 pb-1 flex items-center gap-2">
             <span className="text-blue-400">02.</span> Mana & Economy
           </h3>
           <p className="leading-relaxed">
@@ -435,39 +435,39 @@ export function CardDetailPanel({
         </section>
 
         <section>
-          <h3 className="font-bold text-white mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+          <h3 className="font-bold text-white mb-2 border-b border-warm-700 pb-1 flex items-center gap-2">
             <span className="text-blue-400">03.</span> Priority System
           </h3>
           <p className="mb-2 leading-relaxed text-xs">
             When multiple units share a trigger (e.g. "Battle Start"), the game uses a{' '}
             <strong className="text-white">Priority Queue</strong> to decide who goes first:
           </p>
-          <div className="bg-black/30 p-3 rounded-lg border border-gray-800 font-mono text-[11px] space-y-2">
+          <div className="bg-black/30 p-3 rounded-lg border border-warm-800 font-mono text-[11px] space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-gray-500">1. Higher Power</span>
+              <span className="text-warm-500">1. Higher Power</span>
               <span className="text-red-400">ATTACK</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-500">2. Higher Vitality</span>
+              <span className="text-warm-500">2. Higher Vitality</span>
               <span className="text-green-400">HEALTH</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-500">3. Default Team</span>
+              <span className="text-warm-500">3. Default Team</span>
               <span className="text-blue-400">PLAYER</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-500">4. Physical Lead</span>
+              <span className="text-warm-500">4. Physical Lead</span>
               <span className="text-yellow-400">FRONT-MOST</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-500">5. Internal Logic</span>
+              <span className="text-warm-500">5. Internal Logic</span>
               <span className="text-purple-400">TOP-ABILITY</span>
             </div>
           </div>
         </section>
 
         <section>
-          <h3 className="font-bold text-white mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+          <h3 className="font-bold text-white mb-2 border-b border-warm-700 pb-1 flex items-center gap-2">
             <span className="text-blue-400">04.</span> Recursive Logic
           </h3>
           <p className="leading-relaxed">
@@ -476,14 +476,14 @@ export function CardDetailPanel({
             <strong className="text-yellow-500">immediately</strong>—even if it interrupts the
             current priority queue.
           </p>
-          <p className="mt-2 text-xs text-gray-400 leading-relaxed">
+          <p className="mt-2 text-xs text-warm-400 leading-relaxed">
             Example: If a fast sniper kills a unit with "On Death: Damage", that damage fires before
             the next unit in the sniper's original phase acts.
           </p>
         </section>
 
         <section>
-          <h3 className="font-bold text-white mb-2 border-b border-gray-700 pb-1 flex items-center gap-2">
+          <h3 className="font-bold text-white mb-2 border-b border-warm-700 pb-1 flex items-center gap-2">
             <span className="text-blue-400">05.</span> Victory
           </h3>
           <p className="leading-relaxed text-xs">
@@ -503,15 +503,15 @@ export function CardDetailPanel({
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
         {/* Blockchain Connection Status - only shown in blockchain mode */}
         {isBlockchain && (
-          <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+          <div className="p-4 bg-warm-800/50 rounded-lg border border-warm-700">
             <h3 className="font-bold text-white mb-3">Chain Connection</h3>
 
             {/* Connection Status */}
-            <div className="flex items-center gap-2 mb-3 p-2 bg-slate-900 rounded border border-white/5">
+            <div className="flex items-center gap-2 mb-3 p-2 bg-warm-900 rounded border border-white/5">
               <div
                 className={`w-2 h-2 rounded-full ${resolvedMode.blockNumber != null ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
               />
-              <span className="text-xs font-mono text-slate-400">
+              <span className="text-xs font-mono text-warm-400">
                 {resolvedMode.blockNumber != null
                   ? `Block #${resolvedMode.blockNumber.toLocaleString()}`
                   : 'Offline'}
@@ -521,14 +521,14 @@ export function CardDetailPanel({
             {/* Account Selector */}
             {resolvedMode.accounts.length > 0 && (
               <div className="space-y-2">
-                <label className="text-[10px] text-gray-500 uppercase font-bold">Account</label>
+                <label className="text-[10px] text-warm-500 uppercase font-bold">Account</label>
                 <select
                   value={resolvedMode.selectedAccount?.address || ''}
                   onChange={(e) => {
                     const account = resolvedMode.accounts.find((a) => a.address === e.target.value);
                     resolvedMode.onSelectAccount?.(account);
                   }}
-                  className="w-full bg-slate-800 border border-white/10 rounded px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50"
+                  className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50"
                 >
                   {resolvedMode.accounts.map((acc) => (
                     <option key={acc.address} value={acc.address}>
@@ -542,7 +542,7 @@ export function CardDetailPanel({
           </div>
         )}
 
-        <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+        <div className="p-4 bg-warm-800/50 rounded-lg border border-warm-700">
           <div className="space-y-3">
             <button
               onClick={() => navigate('/blockchain/customize')}
@@ -552,14 +552,14 @@ export function CardDetailPanel({
             </button>
             <button
               onClick={() => navigate('/')}
-              className="w-full btn bg-slate-700/50 hover:bg-slate-600 text-slate-300 border border-slate-600 text-xs py-2"
+              className="w-full btn bg-warm-700/50 hover:bg-warm-600 text-warm-300 border border-warm-600 text-xs py-2"
             >
               Exit to Menu
             </button>
           </div>
         </div>
 
-        <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+        <div className="p-4 bg-warm-800/50 rounded-lg border border-warm-700">
           <h3 className="font-bold text-white mb-2">Debug Tools</h3>
           <div className="space-y-3">
             <button
@@ -572,8 +572,8 @@ export function CardDetailPanel({
         </div>
 
         {showRawJson && view && (
-          <div className="mt-4 p-2 bg-black/50 rounded border border-gray-800">
-            <div className="text-[10px] text-gray-500 mb-1 flex justify-between items-center">
+          <div className="mt-4 p-2 bg-black/50 rounded border border-warm-800">
+            <div className="text-[10px] text-warm-500 mb-1 flex justify-between items-center">
               <span>GAME_VIEW.JSON</span>
               <button
                 onClick={() => navigator.clipboard.writeText(gameViewRawJson)}
@@ -593,16 +593,16 @@ export function CardDetailPanel({
 
   return (
     <div
-      className="card-detail-panel fixed top-0 left-0 bottom-0 w-44 lg:w-80 bg-gray-900 border-r border-gray-700 shadow-2xl flex flex-col z-30"
+      className="card-detail-panel fixed top-0 left-0 bottom-0 w-44 lg:w-80 bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30"
     >
       {/* Tabs */}
-      <div className="flex border-b border-gray-800">
+      <div className="flex border-b border-warm-800">
         <button
           onClick={() => setActiveTab('card')}
           className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
             activeTab === 'card'
-              ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-gray-500 hover:text-gray-300'
+              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+              : 'text-warm-500 hover:text-warm-300'
           }`}
         >
           <span className="lg:hidden text-base">🃏</span>
@@ -612,8 +612,8 @@ export function CardDetailPanel({
           onClick={() => setActiveTab('rules')}
           className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
             activeTab === 'rules'
-              ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-gray-500 hover:text-gray-300'
+              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+              : 'text-warm-500 hover:text-warm-300'
           }`}
         >
           <span className="lg:hidden text-base">📖</span>
@@ -623,8 +623,8 @@ export function CardDetailPanel({
           onClick={() => setActiveTab('mode')}
           className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
             activeTab === 'mode'
-              ? 'bg-gray-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-gray-500 hover:text-gray-300'
+              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+              : 'text-warm-500 hover:text-warm-300'
           }`}
         >
           <span className="lg:hidden text-base">⚙️</span>
@@ -640,7 +640,7 @@ export function CardDetailPanel({
       </div>
 
       {/* Footer */}
-      <div className="p-1 lg:p-4 border-t border-gray-800 bg-black/20 text-[6px] lg:text-[10px] text-gray-600 text-center uppercase tracking-tighter">
+      <div className="p-1 lg:p-4 border-t border-warm-800 bg-black/20 text-[6px] lg:text-[10px] text-warm-600 text-center uppercase tracking-tighter">
         Open Auto Battler Engine v0.2.0
       </div>
     </div>
