@@ -204,7 +204,7 @@ export function Arena() {
                           <EmptySlot isTarget={false} />
                         </div>
                         <div
-                          className={`relative ${animClass} ${isOver && !animClass ? 'swap-target' : ''}`}
+                          className={`relative z-10 ${animClass} ${isOver && !animClass ? 'swap-target' : ''}`}
                           style={animStyle}
                         >
                           <DraggableCard

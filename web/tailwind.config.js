@@ -108,15 +108,11 @@ export default {
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
         'card-settle': {
-          // Swap slide: card stays fully visible while sliding from old position.
-          // No opacity fade — that caused a 175ms "disappearance" after the ghost vanished.
           '0%': {
             transform:
               'translateX(calc(var(--settle-slots, 0) * var(--slot-stride, 88px)))',
           },
-          '70%': { transform: 'translateX(0) scale(1.02)' },
-          '90%': { transform: 'scale(0.99)' },
-          '100%': { transform: 'scale(1)' },
+          '100%': { transform: 'translateX(0)' },
         },
         'card-exit': {
           '0%': { opacity: '1', transform: 'scale(1)' },
@@ -186,7 +182,7 @@ export default {
         'stagger-fade-in': 'stagger-fade-in 0.5s ease-out forwards',
         'color-flash': 'color-flash 0.3s ease-out forwards',
         'card-land': 'card-land 0.3s var(--spring-snappy) both',
-        'card-settle': 'card-settle 0.35s var(--spring-snappy) both',
+        'card-settle': 'card-settle 0.4s ease-out both',
         'card-exit': 'card-exit 0.3s ease-out forwards',
         'battle-continue': 'battle-continue 0.8s ease-out forwards',
         'stat-count-up': 'stat-count-up 0.5s var(--spring-bounce) forwards',
