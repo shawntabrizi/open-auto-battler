@@ -69,10 +69,12 @@ interface GameStore {
   gameStarted: boolean;
   previewCards: CardView[] | null;
   showSetPreview: boolean;
+  setPreviewCards: Record<number, CardView[]>;
 
   // Two-phase init
   initEngine: () => Promise<void>;
   startGame: (setId: number) => void;
+  loadSetPreviews: () => void;
 
   // One-shot init (loads engine + starts game immediately)
   init: (seed?: bigint) => Promise<void>;
@@ -132,6 +134,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   gameStarted: false,
   previewCards: null,
   showSetPreview: false,
+  setPreviewCards: {},
 
   // Phase 1: Load WASM, create engine, init emoji map, fetch set metas
   initEngine: async () => {
@@ -274,6 +277,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   closePreview: () => {
     set({ showSetPreview: false, previewCards: null });
+  },
+
+  loadSetPreviews: () => {
+    const { engine, setMetas } = get();
+    if (!engine || setMetas.length === 0) return;
+    const previews: Record<number, CardView[]> = {};
+    for (const meta of setMetas) {
+      try {
+        previews[meta.id] = engine.get_set_cards(meta.id);
+      } catch {
+        // skip failed sets
+      }
+    }
+    set({ setPreviewCards: previews });
   },
 
   pitchHandCard: (index: number) => {

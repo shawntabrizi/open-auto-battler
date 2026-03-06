@@ -1,60 +1,203 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
+import { getCardEmoji } from '../utils/emoji';
+import type { CardView } from '../types';
 
-export function SetSelectionScreen() {
-  const { setMetas, startGame, previewSet } = useGameStore();
-  const [selectedId, setSelectedId] = useState(setMetas[0]?.id ?? 0);
+/** Fan positions for up to 5 cards */
+const FAN_POSITIONS = [
+  { x: '-4.5rem', rot: '-12deg', arc: '0.8rem' },
+  { x: '-2.2rem', rot: '-6deg', arc: '0.2rem' },
+  { x: '0rem', rot: '0deg', arc: '0rem' },
+  { x: '2.2rem', rot: '6deg', arc: '0.2rem' },
+  { x: '4.5rem', rot: '12deg', arc: '0.8rem' },
+];
+
+function CardFan({ cards }: { cards: CardView[] }) {
+  const display = cards.slice(0, 5);
+  const startIdx = Math.floor((5 - display.length) / 2);
 
   return (
-    <div className="h-full flex items-center justify-center">
-      <div className="text-center bg-slate-900 p-6 lg:p-10 rounded-2xl lg:rounded-3xl border border-white/5 shadow-2xl w-full max-w-md lg:max-w-lg">
-        <h2 className="text-2xl lg:text-3xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 mb-2">
-          SELECT A SET
+    <div className="set-card-fan mx-auto">
+      {display.map((card, i) => {
+        const pos = FAN_POSITIONS[startIdx + i];
+        return (
+          <div
+            key={card.id}
+            className="set-card-fan-card"
+            style={{
+              '--fan-x': pos.x,
+              '--fan-rot': pos.rot,
+              '--fan-arc': pos.arc,
+              zIndex: i,
+            } as React.CSSProperties}
+          >
+            {getCardEmoji(card.id)}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AllSetsView({
+  onBack,
+  onSelect,
+}: {
+  onBack: () => void;
+  onSelect: (id: number) => void;
+}) {
+  const { setMetas, setPreviewCards, previewSet } = useGameStore();
+  const sorted = [...setMetas].sort((a, b) => a.id - b.id);
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-3 lg:px-8 py-3 lg:py-4 border-b border-warm-800/60">
+        <button
+          onClick={onBack}
+          className="text-warm-400 hover:text-warm-200 transition-colors text-sm"
+        >
+          &larr; Back
+        </button>
+        <h2 className="text-base lg:text-xl font-heading text-warm-100 tracking-wide">
+          All Card Sets
         </h2>
-        <p className="text-slate-500 text-sm mb-6 lg:mb-8">
-          Choose a card set to play with.
+      </div>
+
+      {/* Scrollable grid */}
+      <div className="flex-1 overflow-y-auto px-3 lg:px-8 py-4 lg:py-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 lg:gap-4 max-w-5xl mx-auto">
+          {sorted.map((meta) => {
+            const cards = setPreviewCards[meta.id];
+            return (
+              <div
+                key={meta.id}
+                className="bg-warm-900/80 border border-warm-700/40 rounded-lg lg:rounded-xl p-2.5 lg:p-4"
+              >
+                {/* Mini card preview — emojis */}
+                <div className="flex justify-center gap-0.5 lg:gap-1 mb-2 lg:mb-3 text-lg lg:text-2xl">
+                  {cards
+                    ? cards.slice(0, 5).map((c) => (
+                        <span key={c.id}>{getCardEmoji(c.id)}</span>
+                      ))
+                    : <span className="text-warm-600">...</span>}
+                </div>
+                <div className="text-center">
+                  <div className="text-xs lg:text-base font-heading text-warm-100 truncate">
+                    {meta.name}
+                  </div>
+                  <div className="text-[0.65rem] lg:text-xs text-warm-500 mt-0.5">
+                    {cards ? `${cards.length} cards` : `Set #${meta.id}`}
+                  </div>
+                </div>
+                <div className="flex gap-1.5 lg:gap-2 mt-2 lg:mt-3">
+                  <button
+                    onClick={() => previewSet(meta.id)}
+                    className="flex-1 text-center text-[0.65rem] lg:text-xs py-1 border border-warm-600/40 text-warm-400 hover:text-warm-200 hover:border-warm-500 rounded transition-colors"
+                  >
+                    Preview
+                  </button>
+                  <button
+                    onClick={() => onSelect(meta.id)}
+                    className="flex-1 text-center text-[0.65rem] lg:text-xs py-1 bg-gold/20 text-gold hover:bg-gold/30 rounded transition-colors"
+                  >
+                    Play
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SetSelectionScreen() {
+  const { setMetas, startGame, previewSet, loadSetPreviews, setPreviewCards } = useGameStore();
+  const [showAllSets, setShowAllSets] = useState(false);
+
+  useEffect(() => {
+    loadSetPreviews();
+  }, [loadSetPreviews]);
+
+  const featuredMeta = setMetas.length > 0 ? [...setMetas].sort((a, b) => a.id - b.id)[0] : null;
+  const featuredCards = featuredMeta ? setPreviewCards[featuredMeta.id] : null;
+
+  if (showAllSets) {
+    return (
+      <AllSetsView
+        onBack={() => setShowAllSets(false)}
+        onSelect={(id) => startGame(id)}
+      />
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center px-4 py-6 overflow-y-auto">
+      <div className="text-center w-full max-w-md lg:max-w-lg">
+        <h2 className="text-xl lg:text-3xl font-heading font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-0.5 lg:mb-1">
+          Choose Your Deck
+        </h2>
+        <p className="text-warm-500 text-xs lg:text-sm mb-4 lg:mb-6">
+          Select a card set and begin your run.
         </p>
 
-        {setMetas.length > 0 ? (
-          <div className="flex flex-col gap-4 max-w-sm mx-auto">
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedId}
-                onChange={(e) => setSelectedId(Number(e.target.value))}
-                className="flex-1 bg-slate-800 border border-white/10 text-white text-sm rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500/50 cursor-pointer"
-              >
-                {[...setMetas].sort((a, b) => a.id - b.id).map((meta) => (
-                  <option key={meta.id} value={meta.id}>
-                    {meta.name} (#{meta.id})
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={() => previewSet(selectedId)}
-                className="px-3 py-3 text-xs font-bold border border-slate-600 text-slate-300 hover:text-white hover:border-slate-400 rounded-lg transition-all shrink-0"
-              >
-                PREVIEW
-              </button>
+        {featuredMeta && featuredCards ? (
+          <div className="bg-warm-900/60 border border-warm-700/40 rounded-xl lg:rounded-2xl p-3 lg:p-6 mb-3 lg:mb-5 flex flex-col items-center max-h-[50vh] lg:max-h-none">
+            <div className="text-[0.65rem] lg:text-xs text-gold/70 uppercase tracking-widest font-heading">
+              Featured Set &mdash; {featuredMeta.name}
+            </div>
+            <div className="text-[0.65rem] lg:text-xs text-warm-500 mb-1 lg:mb-3">
+              {featuredCards.length} cards
             </div>
 
-            <button
-              onClick={() => startGame(selectedId)}
-              className="bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black px-8 py-3 rounded-full text-sm transition-all transform hover:scale-105 shadow-lg shadow-yellow-500/20"
-            >
-              PLAY
-            </button>
+            <div className="relative flex-1 min-h-0 flex items-center justify-center w-full">
+              <CardFan cards={featuredCards} />
+              <div className="absolute inset-0 flex items-end justify-center pb-2 lg:pb-4 z-10">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => previewSet(featuredMeta.id)}
+                    className="px-4 lg:px-5 py-1.5 lg:py-2 text-xs lg:text-sm font-bold border border-warm-600 text-warm-300 hover:text-warm-100 hover:border-warm-400 rounded-lg transition-all bg-warm-900/80 backdrop-blur-sm"
+                  >
+                    Preview
+                  </button>
+                  <button
+                    onClick={() => startGame(featuredMeta.id)}
+                    className="px-6 lg:px-8 py-1.5 lg:py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-warm-950 font-bold rounded-lg text-xs lg:text-sm transition-all transform hover:scale-105 shadow-lg shadow-yellow-500/20"
+                  >
+                    Play
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : featuredMeta ? (
+          <div className="bg-warm-900/60 border border-warm-700/40 rounded-xl p-6 lg:p-8 mb-4 lg:mb-6">
+            <div className="text-warm-500 animate-pulse">Loading...</div>
           </div>
         ) : (
-          <div className="text-slate-600 italic py-8">No sets available</div>
+          <div className="text-warm-600 italic py-6 lg:py-8 mb-4 lg:mb-6">No sets available</div>
         )}
 
-        <Link
-          to="/"
-          className="inline-block mt-6 text-sm text-slate-500 hover:text-slate-300 transition-colors"
-        >
-          &larr; Back to Main Menu
-        </Link>
+        {setMetas.length > 1 && (
+          <button
+            onClick={() => setShowAllSets(true)}
+            className="text-warm-400 hover:text-gold text-xs lg:text-sm transition-colors font-heading tracking-wide"
+          >
+            See All Sets ({setMetas.length}) &rarr;
+          </button>
+        )}
+
+        <div className="mt-3 lg:mt-4">
+          <Link
+            to="/"
+            className="text-xs lg:text-sm text-warm-500 hover:text-warm-300 transition-colors"
+          >
+            &larr; Back to Main Menu
+          </Link>
+        </div>
       </div>
     </div>
   );
