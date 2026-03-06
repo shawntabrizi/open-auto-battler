@@ -3,6 +3,7 @@ import { createClient, Binary, getTypedCodecs } from 'polkadot-api';
 import { getWsProvider } from 'polkadot-api/ws-provider';
 import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
 import { getInjectedExtensions, connectInjectedExtension } from 'polkadot-api/pjs-signer';
+import { injectSpektrExtension } from '@novasamatech/product-sdk';
 import { auto_battle } from '@polkadot-api/descriptors';
 import { useGameStore } from './gameStore';
 import { sr25519CreateDerive } from '@polkadot-labs/hdkd';
@@ -280,19 +281,29 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         cardDataCoercer,
       });
 
-      // Try to connect wallet extension (non-blocking)
+      // Inject Spektr (Polkadot Desktop) extension, then connect all wallet extensions
+      try {
+        await injectSpektrExtension();
+      } catch (e) {
+        console.warn('Spektr extension not available:', e);
+      }
+
       try {
         const extensions = getInjectedExtensions();
-        if (extensions && extensions.length > 0) {
-          const pjs = await connectInjectedExtension(extensions[0]);
-          const pjsAccounts = pjs.getAccounts();
-          allAccounts = [...allAccounts, ...pjsAccounts];
-          set({
-            accounts: allAccounts,
-          });
+        for (const ext of extensions) {
+          try {
+            const pjs = await connectInjectedExtension(ext);
+            const pjsAccounts = pjs.getAccounts();
+            allAccounts = [...allAccounts, ...pjsAccounts];
+          } catch (extErr) {
+            console.warn(`Failed to connect extension "${ext}":`, extErr);
+          }
+        }
+        if (allAccounts.length > devAccounts.length) {
+          set({ accounts: allAccounts });
         }
       } catch (walletErr) {
-        console.warn('Wallet extension not available:', walletErr);
+        console.warn('Wallet extensions not available:', walletErr);
       }
 
       // Fetch available sets and cards
