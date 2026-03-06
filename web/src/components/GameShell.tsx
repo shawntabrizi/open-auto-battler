@@ -29,8 +29,6 @@ export interface GameShellProps {
   // HUD customization
   hideEndTurn?: boolean;
   customAction?: CustomActionConfig;
-  // CardDetailPanel customization
-  cardPanelTopOffset?: string;
   blockchainMode?: boolean;
   blockNumber?: number | null;
   accounts?: BlockchainAccount[];
@@ -43,7 +41,6 @@ export interface GameShellProps {
 export function GameShell({
   hideEndTurn = false,
   customAction,
-  cardPanelTopOffset = '4rem',
   blockchainMode = false,
   blockNumber,
   accounts = [],
@@ -133,7 +130,6 @@ export function GameShell({
         <CardDetailPanel
           card={cardToShow}
           isVisible={showCardPanel}
-          topOffset={cardPanelTopOffset}
           mode={cardPanelMode}
         />
 

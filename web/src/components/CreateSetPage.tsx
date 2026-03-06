@@ -99,7 +99,6 @@ export const CreateSetPage: React.FC = () => {
         card={detailCard}
         isVisible={true}
         mode={{ type: 'readOnly' }}
-        topOffset="0"
       />
 
       <div className="p-8 ml-80 transition-all duration-300">

@@ -166,6 +166,13 @@ export function HomePage() {
           >
             Presentations
           </Link>
+          <span className="text-warm-700">|</span>
+          <Link
+            to="/settings"
+            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
+          >
+            Settings
+          </Link>
         </div>
 
         {/* Version */}

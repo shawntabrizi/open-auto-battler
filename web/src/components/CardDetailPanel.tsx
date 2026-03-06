@@ -46,7 +46,6 @@ export interface CardDetailPanelProps {
   card: CardView | null;
   isVisible: boolean;
   mode?: CardDetailPanelMode;
-  topOffset?: string;
 }
 
 type TabType = 'card' | 'rules' | 'mode';

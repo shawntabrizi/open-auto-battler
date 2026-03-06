@@ -21,7 +21,6 @@ export function SetPreviewOverlay() {
         card={selectedCard}
         isVisible={true}
         mode={{ type: 'readOnly' }}
-        topOffset="0"
       />
 
       {/* Card grid - offset to the right of the sidebar */}
