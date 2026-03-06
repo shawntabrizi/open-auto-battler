@@ -55,7 +55,6 @@ export function CardDetailPanel({
   card,
   isVisible,
   mode,
-  topOffset = '4rem',
 }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
   const navigate = useNavigate();
@@ -594,8 +593,7 @@ export function CardDetailPanel({
 
   return (
     <div
-      className="card-detail-panel fixed left-0 bottom-0 w-44 lg:w-80 bg-gray-900 border-r border-gray-700 shadow-2xl flex flex-col z-10"
-      style={{ top: topOffset }}
+      className="card-detail-panel fixed left-0 bottom-0 w-44 lg:w-80 bg-gray-900 border-r border-gray-700 shadow-2xl flex flex-col z-10 top-12 lg:top-16"
     >
       {/* Tabs */}
       <div className="flex border-b border-gray-800">

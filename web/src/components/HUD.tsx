@@ -132,7 +132,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
 }
 
 export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
-  const { view, setShowBag, showBag, selection, startingLives, winsToVictory } = useGameStore();
+  const { view, setShowBag, showBag, startingLives, winsToVictory } = useGameStore();
   const playerAvatar = useCustomizationStore((s) => s.selections.playerAvatar);
 
   // Keyboard shortcut for Bag view
@@ -150,11 +150,8 @@ export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
 
   if (!view) return null;
 
-  // Check if card panel is visible (same logic as GameShell)
-  const showCardPanel = view?.phase === 'shop' || selection?.type === 'board' || showBag;
-
   return (
-    <div className={`hud h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-2 lg:px-6 relative z-20 ${showCardPanel ? 'show-card-panel' : ''}`}
+    <div className="hud h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-2 lg:px-6 relative z-20"
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
     >
       {/* Left: Lives */}
