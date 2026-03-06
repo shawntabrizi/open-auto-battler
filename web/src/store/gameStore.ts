@@ -69,10 +69,12 @@ interface GameStore {
   gameStarted: boolean;
   previewCards: CardView[] | null;
   showSetPreview: boolean;
+  setPreviewCards: Record<number, CardView[]>;
 
   // Two-phase init
   initEngine: () => Promise<void>;
   startGame: (setId: number) => void;
+  loadSetPreviews: () => void;
 
   // One-shot init (loads engine + starts game immediately)
   init: (seed?: bigint) => Promise<void>;
@@ -101,6 +103,8 @@ interface GameStore {
   // Blockchain mode: optional callback override for "Continue" after battle
   afterBattleCallback: (() => void) | null;
   setAfterBattleCallback: (cb: (() => void) | null) => void;
+  mobileTab: 'hand' | 'board';
+  setMobileTab: (tab: 'hand' | 'board') => void;
 }
 
 let wasmInitialized = false;
@@ -122,6 +126,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startingLives: 3,
   winsToVictory: 10,
   afterBattleCallback: null,
+  mobileTab: 'hand' as const,
 
   // Set selection state
   setMetas: [],
@@ -129,6 +134,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   gameStarted: false,
   previewCards: null,
   showSetPreview: false,
+  setPreviewCards: {},
 
   // Phase 1: Load WASM, create engine, init emoji map, fetch set metas
   initEngine: async () => {
@@ -273,6 +279,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ showSetPreview: false, previewCards: null });
   },
 
+  loadSetPreviews: () => {
+    const { engine, setMetas } = get();
+    if (!engine || setMetas.length === 0) return;
+    const previews: Record<number, CardView[]> = {};
+    for (const meta of setMetas) {
+      try {
+        previews[meta.id] = engine.get_set_cards(meta.id);
+      } catch {
+        // skip failed sets
+      }
+    }
+    set({ setPreviewCards: previews });
+  },
+
   pitchHandCard: (index: number) => {
     const { engine } = get();
     if (!engine) return;
@@ -289,7 +309,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       engine.play_hand_card(handIndex, boardSlot);
-      set({ view: engine.get_view(), selection: { type: 'board', index: boardSlot } });
+      set({ view: engine.get_view(), selection: { type: 'board', index: boardSlot }, mobileTab: 'board' });
     } catch (err) {
       toast.error('Not enough mana!');
       console.error(err);
@@ -459,6 +479,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setAfterBattleCallback: (cb: (() => void) | null) => {
     set({ afterBattleCallback: cb });
   },
+  setMobileTab: (tab: 'hand' | 'board') => set({ mobileTab: tab }),
 
   toggleShowRawJson: () => {
     set((state) => {

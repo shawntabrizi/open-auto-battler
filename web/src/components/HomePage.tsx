@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import { useBlockchainStore } from '../store/blockchainStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { RotatePrompt } from './RotatePrompt';
+import { ParticleBackground } from './ParticleBackground';
 import { useInitGuard } from '../hooks';
+
+const blockchainEnabled = import.meta.env.VITE_ENABLE_BLOCKCHAIN === 'true';
 
 const formatBalance = (raw: bigint, decimals = 12) =>
   (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
@@ -15,19 +18,15 @@ export function HomePage() {
   const { blockNumber, connect, isConnecting, isConnected } = useBlockchainStore();
   const { activeTournament, fetchActiveTournament } = useTournamentStore();
 
-  // Try to connect to blockchain on mount to check availability
+  // Only attempt blockchain connection when explicitly enabled
   useInitGuard(() => {
-    if (isConnected) return;
-    // Silently try to connect - if it fails, blockNumber stays null
-    connect().catch(() => {
-      // Blockchain not available - that's okay
-    });
+    if (!blockchainEnabled || isConnected) return;
+    connect().catch(() => {});
   }, [connect, isConnected]);
 
-  const isBlockchainAvailable = blockNumber !== null;
-  const isChecking = isConnecting && !isConnected;
+  const isBlockchainAvailable = blockchainEnabled && blockNumber !== null;
+  const isChecking = blockchainEnabled && isConnecting && !isConnected;
 
-  // Fetch active tournament when blockchain is connected
   useEffect(() => {
     if (isBlockchainAvailable) {
       void fetchActiveTournament();
@@ -35,96 +34,153 @@ export function HomePage() {
   }, [isBlockchainAvailable, fetchActiveTournament]);
 
   return (
-    <div className="min-h-screen min-h-svh bg-slate-950 flex flex-col items-center justify-center p-3 lg:p-4 text-white overflow-hidden">
-      {/* Mobile Landscape Layout */}
-      <div className="flex flex-col lg:flex-col items-center justify-center w-full max-w-sm lg:max-w-md">
-        {/* Logo/Title */}
-        <div className="mb-4 lg:mb-12 text-center">
-          <h1 className="text-3xl lg:text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 mb-1 lg:mb-2">
+    <div className="min-h-screen min-h-svh bg-surface-dark flex flex-col items-center justify-center p-3 lg:p-4 text-white overflow-hidden relative">
+      {/* Atmospheric background */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background:
+            'radial-gradient(ellipse at 50% 30%, rgba(196, 138, 42, 0.08), transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(184, 92, 74, 0.06), transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(91, 143, 170, 0.05), transparent 50%)',
+        }}
+      />
+      <ParticleBackground />
+
+      {/* Main content */}
+      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-sm lg:max-w-md">
+        {/* Title */}
+        <div
+          className="mb-6 lg:mb-10 text-center opacity-0 animate-stagger-fade-in stagger-1"
+          style={{ animationFillMode: 'forwards' }}
+        >
+          <h1 className="font-title text-3xl lg:text-5xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 mb-1 lg:mb-2">
             OPEN AUTO BATTLER
           </h1>
-          <p className="text-slate-500 text-xs lg:text-base">Auto-Battler Card Game</p>
+          <p className="font-heading text-warm-400 text-xs lg:text-sm tracking-widest uppercase">
+            Roguelike Deck-Building Auto-Battler
+          </p>
         </div>
 
         {/* Main Options */}
-        <div className="flex flex-col gap-2 lg:gap-4 w-full">
-          {/* Play Online - Primary */}
+        <div className="flex flex-col gap-3 lg:gap-4 w-full">
+          {/* PLAY - Primary CTA */}
           <Link
-            to={isBlockchainAvailable ? "/blockchain" : "#"}
-            onClick={(e) => !isBlockchainAvailable && e.preventDefault()}
-            className={`relative group block w-full p-4 lg:p-8 rounded-xl lg:rounded-2xl border-2 transition-all text-center ${
-              isBlockchainAvailable
-                ? 'bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/50 hover:border-yellow-400 active:scale-[0.98] cursor-pointer'
-                : 'bg-slate-900/50 border-slate-700 cursor-not-allowed opacity-60'
-            }`}
+            to="/local"
+            className="opacity-0 animate-stagger-fade-in stagger-2 group block w-full p-4 lg:p-6 rounded-xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-orange-600/5 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] active:scale-[0.98] transition-all text-center"
+            style={{ animationFillMode: 'forwards' }}
           >
-            <div className="flex items-center justify-center gap-3 lg:flex-col lg:gap-2">
-              <div className="text-2xl lg:text-3xl">🌐</div>
-              <div className="text-left lg:text-center">
-                <h2 className="text-lg lg:text-2xl font-bold text-white">Play Online</h2>
-                <p className="text-slate-400 text-xs lg:text-sm">
-                  {isChecking
-                    ? 'Checking connection...'
-                    : isBlockchainAvailable
-                      ? 'Substrate blockchain'
-                      : 'Blockchain unavailable'}
-                </p>
-              </div>
-            </div>
-
-            {/* Connection status indicator */}
-            <div className="absolute top-2 right-2 lg:top-3 lg:right-3 flex items-center gap-1">
-              <div className={`w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full ${
-                isChecking ? 'bg-yellow-500 animate-pulse' : isBlockchainAvailable ? 'bg-green-500 animate-pulse' : 'bg-red-500'
-              }`} />
-              <span className="text-[8px] lg:text-[10px] text-slate-500 font-mono">
-                {isChecking ? '...' : isBlockchainAvailable ? `#${blockNumber?.toLocaleString()}` : 'offline'}
-              </span>
-            </div>
+            <h2 className="font-heading text-2xl lg:text-3xl font-bold text-white tracking-wide">
+              PLAY
+            </h2>
+            <p className="text-warm-400 text-xs lg:text-sm mt-1">Single player, offline</p>
           </Link>
 
-          {/* Tournament - Conditional */}
-          {activeTournament && isBlockchainAvailable && (
+          {/* PLAY ONLINE - only when blockchain is enabled */}
+          {blockchainEnabled && (
             <Link
-              to="/tournament"
-              className="relative group block w-full p-3 lg:p-6 rounded-xl lg:rounded-2xl border-2 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/50 hover:border-purple-400 active:scale-[0.98] transition-all text-center"
+              to={isBlockchainAvailable ? '/blockchain' : '#'}
+              onClick={(e) => !isBlockchainAvailable && e.preventDefault()}
+              className={`opacity-0 animate-stagger-fade-in stagger-3 relative group block w-full p-3 lg:p-5 rounded-xl border transition-all text-center ${
+                isBlockchainAvailable
+                  ? 'border-accent-violet/40 bg-gradient-to-br from-accent-violet/10 to-purple-900/5 hover:border-accent-violet hover:shadow-[0_0_20px_rgba(139,92,246,0.12)] active:scale-[0.98] cursor-pointer'
+                  : 'border-warm-700/50 bg-warm-900/30 cursor-not-allowed opacity-50'
+              }`}
+              style={{ animationFillMode: 'forwards' }}
             >
               <div className="flex items-center justify-center gap-3 lg:flex-col lg:gap-1">
-                <div className="text-xl lg:text-2xl">🏆</div>
                 <div className="text-left lg:text-center">
-                  <h2 className="text-base lg:text-xl font-bold text-white">Tournament Live!</h2>
-                  <p className="text-purple-300 text-[10px] lg:text-sm">
-                    Entry: {formatBalance(activeTournament.config.entry_fee)} | Pool: {formatBalance(activeTournament.state.total_pot)}
+                  <h2 className="font-heading text-lg lg:text-xl font-bold text-white">
+                    PLAY ONLINE
+                  </h2>
+                  <p className="text-warm-400 text-[10px] lg:text-sm">
+                    {isChecking
+                      ? 'Connecting to blockchain...'
+                      : isBlockchainAvailable
+                        ? 'Substrate blockchain'
+                        : 'Waiting for node...'}
                   </p>
                 </div>
+              </div>
+
+              {/* Connection status dot */}
+              <div className="absolute top-2 right-2 lg:top-3 lg:right-3 flex items-center gap-1">
+                <div
+                  className={`w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full ${
+                    isChecking
+                      ? 'bg-yellow-500 animate-pulse'
+                      : isBlockchainAvailable
+                        ? 'bg-green-500 animate-pulse'
+                        : 'bg-red-500'
+                  }`}
+                />
+                <span className="text-[8px] lg:text-[10px] text-warm-500 font-mono">
+                  {isChecking
+                    ? '...'
+                    : isBlockchainAvailable
+                      ? `#${blockNumber?.toLocaleString()}`
+                      : 'offline'}
+                </span>
               </div>
             </Link>
           )}
 
-          {/* Play Locally - Secondary */}
+          {/* Tournament */}
+          {activeTournament && isBlockchainAvailable && (
+            <Link
+              to="/tournament"
+              className="opacity-0 animate-stagger-fade-in stagger-4 relative group block w-full p-3 lg:p-4 rounded-xl border border-purple-500/40 bg-gradient-to-br from-purple-500/10 to-pink-500/5 hover:border-purple-400 active:scale-[0.98] transition-all text-center"
+              style={{ animationFillMode: 'forwards' }}
+            >
+              <h2 className="font-heading text-base lg:text-lg font-bold text-white">
+                TOURNAMENT LIVE
+              </h2>
+              <p className="text-purple-300 text-[10px] lg:text-sm">
+                Entry: {formatBalance(activeTournament.config.entry_fee)} | Pool:{' '}
+                {formatBalance(activeTournament.state.total_pot)}
+              </p>
+            </Link>
+          )}
+        </div>
+
+        {/* Secondary Links */}
+        <div
+          className="mt-6 lg:mt-10 flex flex-wrap justify-center gap-3 lg:gap-5 text-[10px] lg:text-xs text-warm-500 opacity-0 animate-stagger-fade-in stagger-5"
+          style={{ animationFillMode: 'forwards' }}
+        >
           <Link
-            to="/local"
-            className="block w-full p-3 lg:p-6 rounded-xl border border-slate-700 bg-slate-900/30 hover:bg-slate-800/50 hover:border-slate-600 active:scale-[0.98] transition-all text-center"
+            to="/sandbox"
+            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
           >
-            <div className="flex items-center justify-center gap-3 lg:flex-col lg:gap-1">
-              <div className="text-xl lg:text-2xl">💻</div>
-              <div className="text-left lg:text-center">
-                <h2 className="text-base lg:text-xl font-bold text-slate-300">Play Locally</h2>
-                <p className="text-slate-500 text-[10px] lg:text-sm">Single player, no blockchain</p>
-              </div>
-            </div>
+            Sandbox
+          </Link>
+          <span className="text-warm-700">|</span>
+          <Link
+            to="/multiplayer"
+            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
+          >
+            P2P
+          </Link>
+          <span className="text-warm-700">|</span>
+          <Link
+            to="/presentations"
+            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
+          >
+            Presentations
+          </Link>
+          <span className="text-warm-700">|</span>
+          <Link
+            to="/settings"
+            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
+          >
+            Settings
           </Link>
         </div>
 
-        {/* Footer Links */}
-        <div className="mt-4 lg:mt-12 flex gap-3 lg:gap-4 text-[10px] lg:text-xs text-slate-600">
-          <Link to="/sandbox" className="hover:text-slate-400 active:text-slate-300 transition-colors">Sandbox</Link>
-          <span>•</span>
-          <Link to="/multiplayer" className="hover:text-slate-400 active:text-slate-300 transition-colors">P2P Multiplayer</Link>
-          <span>•</span>
-          <Link to="/presentations" className="hover:text-slate-400 active:text-slate-300 transition-colors">Presentations</Link>
-          <span>•</span>
-          <Link to="/settings" className="hover:text-slate-400 active:text-slate-300 transition-colors">Settings</Link>
+        {/* Version */}
+        <div
+          className="mt-4 text-[9px] lg:text-[10px] text-warm-600 font-mono opacity-0 animate-stagger-fade-in stagger-6"
+          style={{ animationFillMode: 'forwards' }}
+        >
+          v0.1.0
         </div>
       </div>
 
