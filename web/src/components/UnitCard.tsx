@@ -11,8 +11,7 @@ import { CARD_SIZES, CARD_TEXT, type CardSizeVariant } from '../constants/cardSi
 /** Derive a visual rarity tier from play_cost + ability count. */
 export function getRarityTier(card: CardView | BoardUnitView): 'common' | 'uncommon' | 'rare' | 'legendary' {
   const cost = card.play_cost;
-  const abilityCount = ((card as any).abilities?.length ?? 0) +
-    ((card as any).shop_abilities?.length ?? 0) +
+  const abilityCount = ((card as any).shop_abilities?.length ?? 0) +
     ((card as any).battle_abilities?.length ?? 0);
   if (cost >= 5 || (cost >= 4 && abilityCount >= 2)) return 'legendary';
   if (cost >= 4 || (cost >= 3 && abilityCount >= 2)) return 'rare';
@@ -138,7 +137,7 @@ export function UnitCard({
 
         {/* Ability badge */}
         {(() => {
-          const abils = (card as any).abilities ?? [...((card as any).shop_abilities ?? []), ...((card as any).battle_abilities ?? [])];
+          const abils = [...((card as any).shop_abilities ?? []), ...((card as any).battle_abilities ?? [])];
           return abils.length > 0 ? (
             <div className={`absolute bottom-5 right-0.5 lg:bottom-7 lg:right-1 z-[3] bg-yellow-500 rounded-full ${text.abilityBadge} flex items-center justify-center text-[0.5rem] lg:text-[0.55rem] font-bold border border-yellow-300 shadow`}>
               {abils.length > 1 ? (

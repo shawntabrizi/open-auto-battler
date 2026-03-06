@@ -633,7 +633,9 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
               health: unit.health,
               play_cost: 0,
               pitch_value: 0,
-              abilities: unit.abilities,
+              base_statuses: unit.statuses,
+              shop_abilities: [],
+              battle_abilities: unit.battle_abilities,
             }}
             showCost={false}
             showPitch={false}
