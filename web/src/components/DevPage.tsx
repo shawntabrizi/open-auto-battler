@@ -1,0 +1,178 @@
+import { useState, useRef, useCallback } from 'react';
+
+const PAGES: Record<string, string> = {
+  Home: '/',
+  'Local Game': '/local',
+  Sandbox: '/sandbox',
+  Settings: '/settings',
+  'Creator Hub': '/blockchain/creator',
+  'Create Card': '/blockchain/create-card',
+  'Create Set': '/blockchain/create-set',
+  Customize: '/blockchain/customize',
+};
+
+const PRESETS = {
+  'iPhone SE': { w: 667, h: 375 },
+  'iPhone 14': { w: 852, h: 393 },
+  'iPhone 14 Pro Max': { w: 932, h: 430 },
+  'iPad Mini': { w: 1024, h: 768 },
+  'iPad Pro 11"': { w: 1194, h: 834 },
+  'Desktop 1080p': { w: 1920, h: 1080 },
+  'Desktop 1440p': { w: 2560, h: 1440 },
+};
+
+type PresetName = keyof typeof PRESETS;
+
+interface ViewportConfig {
+  preset: PresetName;
+}
+
+function IframeViewport({
+  width,
+  height,
+  label,
+  route,
+}: {
+  width: number;
+  height: number;
+  label: string;
+  route: string;
+}) {
+  const maxH = window.innerHeight * 0.85;
+  const scale = Math.min(1, maxH / height);
+  const src = `${window.location.origin}${window.location.pathname}#${route}`;
+
+  return (
+    <div className="flex flex-col items-center gap-1 flex-shrink-0">
+      <div className="text-xs text-gray-400 font-mono">
+        {label} ({width}x{height}) {scale < 1 && `@ ${Math.round(scale * 100)}%`}
+      </div>
+      <div
+        style={{
+          width: width * scale,
+          height: height * scale,
+          overflow: 'hidden',
+          borderRadius: 8,
+        }}
+        className="border border-gray-600 shadow-lg"
+      >
+        <iframe
+          src={src}
+          style={{
+            width,
+            height,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            border: 'none',
+          }}
+          title={label}
+        />
+      </div>
+    </div>
+  );
+}
+
+export function DevPage() {
+  // Prevent recursive iframes
+  if (window !== window.top) {
+    return null;
+  }
+
+  const [activePage, setActivePage] = useState('Local Game');
+  const [viewports, setViewports] = useState<ViewportConfig[]>([
+    { preset: 'iPhone SE' },
+    { preset: 'iPad Pro 11"' },
+  ]);
+  const [routeVersion, setRouteVersion] = useState(0);
+
+  const handlePageChange = useCallback((page: string) => {
+    setActivePage(page);
+    setRouteVersion((v) => v + 1);
+  }, []);
+
+  const updateViewport = (index: number, preset: PresetName) => {
+    setViewports((prev) => prev.map((v, i) => (i === index ? { ...v, preset } : v)));
+  };
+
+  const addViewport = () => {
+    setViewports((prev) => [...prev, { preset: 'iPad Mini' }]);
+  };
+
+  const removeViewport = (index: number) => {
+    if (viewports.length <= 1) return;
+    setViewports((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const route = PAGES[activePage] ?? '/';
+
+  return (
+    <div className="h-screen flex flex-col bg-gray-950 text-white overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex-shrink-0 flex items-center gap-4 px-4 py-2 bg-gray-900 border-b border-gray-700">
+        <span className="text-sm font-bold text-amber-400 mr-2">DEV</span>
+
+        <label className="text-xs text-gray-400">Page:</label>
+        <select
+          value={activePage}
+          onChange={(e) => handlePageChange(e.target.value)}
+          className="bg-gray-800 text-white text-sm rounded px-2 py-1 border border-gray-600"
+        >
+          {Object.keys(PAGES).map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+
+        <div className="w-px h-5 bg-gray-700" />
+
+        {viewports.map((vp, i) => (
+          <div key={i} className="flex items-center gap-1">
+            <select
+              value={vp.preset}
+              onChange={(e) => updateViewport(i, e.target.value as PresetName)}
+              className="bg-gray-800 text-white text-xs rounded px-2 py-1 border border-gray-600"
+            >
+              {Object.keys(PRESETS).map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            {viewports.length > 1 && (
+              <button
+                onClick={() => removeViewport(i)}
+                className="text-gray-500 hover:text-red-400 text-xs px-1"
+              >
+                x
+              </button>
+            )}
+          </div>
+        ))}
+
+        <button
+          onClick={addViewport}
+          className="text-xs text-gray-400 hover:text-white border border-gray-600 rounded px-2 py-1"
+        >
+          + Add
+        </button>
+      </div>
+
+      {/* Viewports */}
+      <div className="flex-1 flex items-start justify-center gap-6 p-4 overflow-x-auto overflow-y-hidden">
+        {viewports.map((vp, i) => {
+          const size = PRESETS[vp.preset];
+          return (
+            <IframeViewport
+              key={`${i}-${routeVersion}`}
+              width={size.w}
+              height={size.h}
+              label={vp.preset}
+              route={route}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
