@@ -4,11 +4,15 @@ const PAGES: Record<string, string> = {
   Home: '/',
   'Local Game': '/local',
   Sandbox: '/sandbox',
+  Multiplayer: '/multiplayer',
+  Blockchain: '/blockchain',
+  Tournament: '/tournament',
   Settings: '/settings',
   'Creator Hub': '/blockchain/creator',
   'Create Card': '/blockchain/create-card',
   'Create Set': '/blockchain/create-set',
   Customize: '/blockchain/customize',
+  'Mint NFT': '/blockchain/mint-nft',
 };
 
 const PRESETS = {
@@ -44,7 +48,7 @@ function IframeViewport({
 
   return (
     <div className="flex flex-col items-center gap-1 flex-shrink-0">
-      <div className="text-xs text-gray-400 font-mono">
+      <div className="text-xs text-warm-400 font-mono">
         {label} ({width}x{height}) {scale < 1 && `@ ${Math.round(scale * 100)}%`}
       </div>
       <div
@@ -54,7 +58,7 @@ function IframeViewport({
           overflow: 'hidden',
           borderRadius: 8,
         }}
-        className="border border-gray-600 shadow-lg"
+        className="border border-warm-600 shadow-lg"
       >
         <iframe
           src={src}
@@ -106,16 +110,16 @@ export function DevPage() {
   const route = PAGES[activePage] ?? '/';
 
   return (
-    <div className="h-screen flex flex-col bg-gray-950 text-white overflow-hidden">
+    <div className="h-screen flex flex-col bg-warm-950 text-white overflow-hidden">
       {/* Toolbar */}
-      <div className="flex-shrink-0 flex items-center gap-4 px-4 py-2 bg-gray-900 border-b border-gray-700">
+      <div className="flex-shrink-0 flex items-center gap-4 px-4 py-2 bg-warm-900 border-b border-warm-700">
         <span className="text-sm font-bold text-amber-400 mr-2">DEV</span>
 
-        <label className="text-xs text-gray-400">Page:</label>
+        <label className="text-xs text-warm-400">Page:</label>
         <select
           value={activePage}
           onChange={(e) => handlePageChange(e.target.value)}
-          className="bg-gray-800 text-white text-sm rounded px-2 py-1 border border-gray-600"
+          className="bg-warm-800 text-white text-sm rounded px-2 py-1 border border-warm-600"
         >
           {Object.keys(PAGES).map((name) => (
             <option key={name} value={name}>
@@ -124,14 +128,14 @@ export function DevPage() {
           ))}
         </select>
 
-        <div className="w-px h-5 bg-gray-700" />
+        <div className="w-px h-5 bg-warm-700" />
 
         {viewports.map((vp, i) => (
           <div key={i} className="flex items-center gap-1">
             <select
               value={vp.preset}
               onChange={(e) => updateViewport(i, e.target.value as PresetName)}
-              className="bg-gray-800 text-white text-xs rounded px-2 py-1 border border-gray-600"
+              className="bg-warm-800 text-white text-xs rounded px-2 py-1 border border-warm-600"
             >
               {Object.keys(PRESETS).map((name) => (
                 <option key={name} value={name}>
@@ -142,7 +146,7 @@ export function DevPage() {
             {viewports.length > 1 && (
               <button
                 onClick={() => removeViewport(i)}
-                className="text-gray-500 hover:text-red-400 text-xs px-1"
+                className="text-warm-500 hover:text-red-400 text-xs px-1"
               >
                 x
               </button>
@@ -152,7 +156,7 @@ export function DevPage() {
 
         <button
           onClick={addViewport}
-          className="text-xs text-gray-400 hover:text-white border border-gray-600 rounded px-2 py-1"
+          className="text-xs text-warm-400 hover:text-white border border-warm-600 rounded px-2 py-1"
         >
           + Add
         </button>

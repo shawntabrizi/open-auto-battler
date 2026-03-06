@@ -92,13 +92,13 @@ export function MultiplayerPage() {
       {/* Header - smaller on mobile */}
       <div className="mb-2 lg:mb-8 text-center flex-shrink-0">
         <h1 className="text-lg lg:text-4xl font-bold text-white">P2P Multiplayer</h1>
-        <p className="text-gray-400 text-[10px] lg:text-base hidden lg:block">WebRTC Battle Sync</p>
+        <p className="text-warm-400 text-[10px] lg:text-base hidden lg:block">WebRTC Battle Sync</p>
       </div>
 
-      <div className="bg-gray-800 p-3 lg:p-8 rounded-lg w-full max-w-2xl text-white relative border-2 border-gray-700 shadow-2xl flex-shrink overflow-y-auto">
+      <div className="bg-warm-800 p-3 lg:p-8 rounded-lg w-full max-w-2xl text-white relative border-2 border-warm-700 shadow-2xl flex-shrink overflow-y-auto">
         <button
           onClick={() => navigate('/')}
-          className="absolute top-2 right-2 lg:top-4 lg:right-4 text-gray-400 hover:text-white z-10"
+          className="absolute top-2 right-2 lg:top-4 lg:right-4 text-warm-400 hover:text-white z-10"
           title="Back to Game"
         >
           ✕
@@ -112,13 +112,13 @@ export function MultiplayerPage() {
             <h2 className="text-lg lg:text-2xl font-bold text-green-400 mb-1 lg:mb-2">
               Connected!
             </h2>
-            <p className="mb-3 lg:mb-6 text-gray-300 text-xs lg:text-base">
+            <p className="mb-3 lg:mb-6 text-warm-300 text-xs lg:text-base">
               Opponent:{' '}
               <span className="font-mono text-yellow-300 break-all">{opponentPeerId}</span>
             </p>
             {isHost && status === 'connected' && (
               <div className="mb-3 lg:mb-6">
-                <label className="block text-xs lg:text-sm text-gray-400 mb-1 lg:mb-2">Lives</label>
+                <label className="block text-xs lg:text-sm text-warm-400 mb-1 lg:mb-2">Lives</label>
                 <div className="flex justify-center gap-2">
                   {[1, 3, 5, 7].map((n) => (
                     <button
@@ -127,7 +127,7 @@ export function MultiplayerPage() {
                       className={`px-3 lg:px-4 py-1.5 lg:py-2 rounded font-bold text-sm lg:text-base transition-colors ${
                         lives === n
                           ? 'bg-red-500 text-white'
-                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          : 'bg-warm-700 text-warm-300 hover:bg-warm-600'
                       }`}
                     >
                       {n}
@@ -151,7 +151,7 @@ export function MultiplayerPage() {
                 <div className="text-center py-6 lg:py-8">
                   <div className="w-12 h-12 lg:w-16 lg:h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3 lg:mb-4"></div>
                   <h3 className="text-base lg:text-xl font-bold text-white mb-2">Connecting...</h3>
-                  <p className="text-[10px] lg:text-sm text-gray-400">
+                  <p className="text-[10px] lg:text-sm text-warm-400">
                     Joining game:{' '}
                     <span className="font-mono text-yellow-400">
                       {joinIdFromUrl.slice(0, 12)}...
@@ -175,7 +175,7 @@ export function MultiplayerPage() {
                       'Initialize Network'
                     )}
                   </button>
-                  <p className="text-[10px] lg:text-sm text-gray-400 mt-2 lg:mt-4">
+                  <p className="text-[10px] lg:text-sm text-warm-400 mt-2 lg:mt-4">
                     Generate your ID to host or join a game.
                   </p>
                 </div>
@@ -185,8 +185,8 @@ export function MultiplayerPage() {
                 {/* Left side on mobile: QR Code + Your ID */}
                 <div className="flex flex-col gap-2 lg:gap-4 flex-shrink-0">
                   {/* QR Code Section */}
-                  <div className="bg-gray-900 p-2 lg:p-5 rounded-xl border border-gray-700 text-center">
-                    <div className="text-[8px] lg:text-xs text-gray-500 uppercase tracking-widest mb-1 lg:mb-3">
+                  <div className="bg-warm-900 p-2 lg:p-5 rounded-xl border border-warm-700 text-center">
+                    <div className="text-[8px] lg:text-xs text-warm-500 uppercase tracking-widest mb-1 lg:mb-3">
                       Scan to Join
                     </div>
                     <div className="flex justify-center mb-1 lg:mb-3">
@@ -213,8 +213,8 @@ export function MultiplayerPage() {
                   </div>
 
                   {/* Peer ID Display */}
-                  <div className="bg-gray-900 p-2 lg:p-4 rounded-xl border border-gray-700 text-center">
-                    <div className="text-[8px] lg:text-xs text-gray-500 uppercase tracking-widest mb-0.5 lg:mb-1">
+                  <div className="bg-warm-900 p-2 lg:p-4 rounded-xl border border-warm-700 text-center">
+                    <div className="text-[8px] lg:text-xs text-warm-500 uppercase tracking-widest mb-0.5 lg:mb-1">
                       Your ID
                     </div>
                     <div className="text-[10px] lg:text-lg font-mono text-yellow-400 select-all break-all leading-tight">
@@ -232,8 +232,8 @@ export function MultiplayerPage() {
                 {/* Right side on mobile: Manual Join + Status */}
                 <div className="flex-1 flex flex-col justify-center">
                   {/* Manual Join Section */}
-                  <div className="lg:border-t lg:border-gray-700 lg:pt-6">
-                    <label className="block text-[10px] lg:text-sm font-medium mb-1.5 lg:mb-3 text-gray-300">
+                  <div className="lg:border-t lg:border-warm-700 lg:pt-6">
+                    <label className="block text-[10px] lg:text-sm font-medium mb-1.5 lg:mb-3 text-warm-300">
                       Or Enter Opponent ID
                     </label>
                     <div className="flex gap-1.5 lg:gap-2">
@@ -242,7 +242,7 @@ export function MultiplayerPage() {
                         value={targetId}
                         onChange={(e) => setTargetId(e.target.value)}
                         placeholder="Opponent ID"
-                        className="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded-lg px-2 lg:px-4 py-1.5 lg:py-2 font-mono text-[10px] lg:text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="flex-1 min-w-0 bg-warm-700 border border-warm-600 rounded-lg px-2 lg:px-4 py-1.5 lg:py-2 font-mono text-[10px] lg:text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                       />
                       <button
                         onClick={handleJoin}
@@ -261,21 +261,21 @@ export function MultiplayerPage() {
                   )}
 
                   {/* Logs - inline on mobile */}
-                  <div className="mt-3 lg:mt-6 pt-2 lg:pt-4 border-t border-gray-700">
+                  <div className="mt-3 lg:mt-6 pt-2 lg:pt-4 border-t border-warm-700">
                     <button
                       onClick={() => setShowLogs(!showLogs)}
-                      className="text-[8px] lg:text-xs text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1"
+                      className="text-[8px] lg:text-xs text-warm-500 hover:text-warm-300 transition-colors flex items-center gap-1"
                     >
                       {showLogs ? '▼' : '▶'} Logs
                     </button>
                     {showLogs && (
-                      <div className="mt-1 lg:mt-2 h-16 lg:h-32 overflow-y-auto bg-black/50 p-1.5 lg:p-3 text-[7px] lg:text-[10px] font-mono text-gray-400 rounded-lg border border-gray-800">
+                      <div className="mt-1 lg:mt-2 h-16 lg:h-32 overflow-y-auto bg-black/50 p-1.5 lg:p-3 text-[7px] lg:text-[10px] font-mono text-warm-400 rounded-lg border border-warm-800">
                         {logs.map((l, i) => (
                           <div
                             key={i}
-                            className="mb-0.5 lg:mb-1 border-b border-gray-900 pb-0.5 lg:pb-1 last:border-0"
+                            className="mb-0.5 lg:mb-1 border-b border-warm-900 pb-0.5 lg:pb-1 last:border-0"
                           >
-                            <span className="text-gray-600">
+                            <span className="text-warm-600">
                               [{new Date(l.timestamp).toLocaleTimeString()}]
                             </span>{' '}
                             {l.message}
@@ -293,7 +293,7 @@ export function MultiplayerPage() {
 
       <button
         onClick={() => navigate('/')}
-        className="mt-2 lg:mt-8 text-gray-500 hover:text-white underline text-[10px] lg:text-sm flex-shrink-0"
+        className="mt-2 lg:mt-8 text-warm-500 hover:text-white underline text-[10px] lg:text-sm flex-shrink-0"
       >
         ← Back to Menu
       </button>
@@ -306,7 +306,7 @@ export function MultiplayerPage() {
         >
           <div className="bg-white p-4 lg:p-6 rounded-2xl" onClick={(e) => e.stopPropagation()}>
             <QRCodeSVG value={joinUrl} size={250} level="M" />
-            <p className="text-center text-gray-600 text-sm mt-3">Tap outside to close</p>
+            <p className="text-center text-warm-600 text-sm mt-3">Tap outside to close</p>
           </div>
         </div>
       )}
