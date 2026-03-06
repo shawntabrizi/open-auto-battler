@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 const PAGES: Record<string, string> = {
   Home: '/',
