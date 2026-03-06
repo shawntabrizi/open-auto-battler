@@ -43,7 +43,7 @@ if [ "$BLOCKCHAIN" = true ]; then
   # Start Web App with blockchain enabled
   echo "--- Starting Web App (blockchain enabled) ---"
   cd "$SCRIPT_DIR/web"
-  VITE_ENABLE_BLOCKCHAIN=true npm run dev:blockchain &
+  npm run dev:blockchain &
   WEB_PID=$!
   cd "$SCRIPT_DIR"
 

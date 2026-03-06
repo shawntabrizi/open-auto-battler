@@ -6,8 +6,6 @@ import { RotatePrompt } from './RotatePrompt';
 import { ParticleBackground } from './ParticleBackground';
 import { useInitGuard } from '../hooks';
 
-const blockchainEnabled = import.meta.env.VITE_ENABLE_BLOCKCHAIN === 'true';
-
 const formatBalance = (raw: bigint, decimals = 12) =>
   (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
     minimumFractionDigits: 0,
@@ -18,14 +16,13 @@ export function HomePage() {
   const { blockNumber, connect, isConnecting, isConnected } = useBlockchainStore();
   const { activeTournament, fetchActiveTournament } = useTournamentStore();
 
-  // Only attempt blockchain connection when explicitly enabled
   useInitGuard(() => {
-    if (!blockchainEnabled || isConnected) return;
+    if (isConnected) return;
     connect().catch(() => {});
   }, [connect, isConnected]);
 
-  const isBlockchainAvailable = blockchainEnabled && blockNumber !== null;
-  const isChecking = blockchainEnabled && isConnecting && !isConnected;
+  const isBlockchainAvailable = blockNumber !== null;
+  const isChecking = isConnecting && !isConnected;
 
   useEffect(() => {
     if (isBlockchainAvailable) {
@@ -74,9 +71,8 @@ export function HomePage() {
             <p className="text-warm-400 text-xs lg:text-sm mt-1">Single player, offline</p>
           </Link>
 
-          {/* PLAY ONLINE - only when blockchain is enabled */}
-          {blockchainEnabled && (
-            <Link
+          {/* PLAY ONLINE */}
+          <Link
               to={isBlockchainAvailable ? '/blockchain' : '#'}
               onClick={(e) => !isBlockchainAvailable && e.preventDefault()}
               className={`opacity-0 animate-stagger-fade-in stagger-3 relative group block w-full p-3 lg:p-5 rounded-xl border transition-all text-center ${
@@ -121,7 +117,6 @@ export function HomePage() {
                 </span>
               </div>
             </Link>
-          )}
 
           {/* Tournament */}
           {activeTournament && isBlockchainAvailable && (
