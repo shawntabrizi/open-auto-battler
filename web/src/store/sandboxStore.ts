@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { BattleOutput, SandboxUnit, CardView } from '../types';
+import { initEmojiMap } from '../utils/emoji';
 
 interface WasmModule {
   default: () => Promise<void>;
@@ -9,6 +10,9 @@ interface WasmModule {
     enemyUnits: SandboxUnit[],
     seed: bigint
   ) => BattleOutput;
+  GameEngine: new (seed?: bigint | null) => {
+    get_card_metas: () => Array<{ id: number; name: string; emoji: string }>;
+  };
 }
 
 let wasmModule: WasmModule | null = null;
@@ -69,6 +73,12 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
       }
 
       wasmModule = wasm;
+
+      // Ensure emoji map covers sandbox templates
+      // (needed when sandbox loads in isolation, e.g. DevPage iframes)
+      const tempEngine = new wasm.GameEngine(undefined);
+      initEmojiMap(tempEngine.get_card_metas());
+
       const templates = wasm.get_unit_templates();
 
       set({

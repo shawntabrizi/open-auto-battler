@@ -49,10 +49,10 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/blockchain/create-set" element={<CreateSetPage />} />
         <Route path="/blockchain/customize" element={<CustomizePage />} />
         <Route path="/blockchain/mint-nft" element={<MintNftPage />} />
-        <Route path="/embed" element={<Suspense fallback={<div className="min-h-screen bg-gray-900" />}><EmbedPage /></Suspense>} />
-        <Route path="/presentations" element={<Suspense fallback={<div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading...</div>}><PresentationsPage /></Suspense>} />
-        <Route path="/presentations/:id" element={<Suspense fallback={<div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading...</div>}><PresentationViewer /></Suspense>} />
-        <Route path="/presentations/:id/:slideNum" element={<Suspense fallback={<div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading...</div>}><PresentationViewer /></Suspense>} />
+        <Route path="/embed" element={<Suspense fallback={<div className="min-h-screen bg-warm-900" />}><EmbedPage /></Suspense>} />
+        <Route path="/presentations" element={<Suspense fallback={<div className="min-h-screen bg-warm-900 text-white flex items-center justify-center">Loading...</div>}><PresentationsPage /></Suspense>} />
+        <Route path="/presentations/:id" element={<Suspense fallback={<div className="min-h-screen bg-warm-900 text-white flex items-center justify-center">Loading...</div>}><PresentationViewer /></Suspense>} />
+        <Route path="/presentations/:id/:slideNum" element={<Suspense fallback={<div className="min-h-screen bg-warm-900 text-white flex items-center justify-center">Loading...</div>}><PresentationViewer /></Suspense>} />
       </Routes>
       </App>
     </HashRouter>
