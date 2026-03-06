@@ -1,10 +1,9 @@
-import { useState, useLayoutEffect, useRef, useReducer } from 'react';
+import { useLayoutEffect, useRef, useReducer } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useCustomizationStore } from '../store/customizationStore';
 import { DraggableCard, DroppableBoardSlot } from './DndComponents';
 import { UnitCard, EmptySlot } from './UnitCard';
 import { CARD_SIZES } from '../constants/cardSizes';
-import ashpileIcon from '../../ashpile.svg';
 import type { BoardUnitView } from '../types';
 
 type SlotAnim = 'placed' | { type: 'swapped'; fromIndex: number };
@@ -49,13 +48,8 @@ function detectBoardChanges(
   return anims.size > 0 || exits.size > 0 ? { anims, exits } : null;
 }
 
-/** Get abilities array from a unit, handling both master and branch card shapes */
-function getAbilities(unit: any): any[] {
-  return unit?.abilities ?? [...(unit?.shop_abilities ?? []), ...(unit?.battle_abilities ?? [])];
-}
-
 export function Arena() {
-  const { view, selection, setSelection, playHandCard, swapBoardPositions, pitchBoardUnit, undo } = useGameStore();
+  const { view, selection, setSelection, playHandCard, swapBoardPositions } = useGameStore();
   const boardBg = useCustomizationStore((s) => s.selections.boardBackground);
 
   // --- Board change detection (ref-only, zero extra re-renders) ---
@@ -103,16 +97,6 @@ export function Arena() {
 
   const unitCount = view.board.filter(Boolean).length;
   const hasHandSelection = selection?.type === 'hand';
-  const selectedBoardUnit = selection?.type === 'board' ? view.board[selection.index] : null;
-
-  // Ability cycling for mobile bottom bar
-  const [abilityIdx, setAbilityIdx] = useState(0);
-  const prevSelKey = useRef<string | null>(null);
-  const boardSelKey = selectedBoardUnit ? `${selectedBoardUnit.id}-${selection?.index}` : null;
-  if (boardSelKey !== prevSelKey.current) {
-    prevSelKey.current = boardSelKey;
-    if (abilityIdx !== 0) setAbilityIdx(0);
-  }
 
   const handleBoardSlotClick = (index: number) => {
     const unit = view.board[index];
@@ -262,77 +246,6 @@ export function Arena() {
         </div>
       </div>
 
-      {/* Mobile board tab: ability info + pitch + undo */}
-      <div className="lg:hidden flex-shrink-0 flex items-center gap-2 safe-area-lr py-1 bg-warm-900/95 border-t border-warm-700/50 w-full">
-        <div
-          className="flex-1 min-w-0 mr-2 cursor-pointer"
-          onClick={() => {
-            if (selectedBoardUnit && getAbilities(selectedBoardUnit).length > 1) {
-              setAbilityIdx((i) => (i + 1) % getAbilities(selectedBoardUnit).length);
-            }
-          }}
-        >
-          {selectedBoardUnit && getAbilities(selectedBoardUnit).length > 0 ? (
-            <div className="flex items-center gap-1.5">
-              <p className="text-xs text-warm-300 italic truncate flex-1 min-w-0">
-                <span className="text-amber-400 font-bold not-italic">{getAbilities(selectedBoardUnit)[abilityIdx % getAbilities(selectedBoardUnit).length].name}:</span>{' '}
-                {getAbilities(selectedBoardUnit)[abilityIdx % getAbilities(selectedBoardUnit).length].description}
-              </p>
-              {getAbilities(selectedBoardUnit).length > 1 && (
-                <div className="flex-shrink-0 flex items-center gap-0.5">
-                  {getAbilities(selectedBoardUnit).map((_, i) => (
-                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === abilityIdx % getAbilities(selectedBoardUnit).length ? 'bg-amber-400' : 'bg-warm-600'}`} />
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : selectedBoardUnit ? (
-            <p className="text-xs text-warm-500 italic">No abilities</p>
-          ) : (
-            <p className="text-xs text-warm-500 italic">Tap a unit to see details</p>
-          )}
-        </div>
-        {/* Pitch button — drop-zone style */}
-        <button
-          onClick={() => {
-            if (selection?.type === 'board') {
-              pitchBoardUnit(selection.index);
-              setSelection(null);
-            }
-          }}
-          disabled={!selectedBoardUnit}
-          className={`flex-shrink-0 h-10 px-5 rounded-none flex items-center gap-2 border-2 border-dashed transition-colors ${
-            selectedBoardUnit
-              ? 'bg-warm-800/80 border-warm-500/40 active:bg-warm-700/80'
-              : 'bg-warm-800/50 border-warm-700/30 opacity-40 cursor-not-allowed'
-          }`}
-          title="Pitch unit"
-        >
-          <img src={ashpileIcon} alt="Pitch" className={`w-6 h-6 ${selectedBoardUnit ? 'opacity-90' : 'opacity-40'}`} />
-          <span className={`text-[0.6rem] font-bold uppercase ${selectedBoardUnit ? 'text-red-400' : 'text-warm-600'}`}>
-            Pitch
-          </span>
-        </button>
-        {/* Undo button */}
-        <button
-          onClick={undo}
-          disabled={!view.can_undo}
-          className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-            view.can_undo
-              ? 'bg-warm-700 text-warm-200 active:bg-warm-600'
-              : 'bg-warm-800 text-warm-600 cursor-not-allowed'
-          }`}
-          title="Undo"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-            <path
-              fillRule="evenodd"
-              d="M9.53 2.47a.75.75 0 0 1 0 1.06L4.81 8.25H15a6.75 6.75 0 0 1 0 13.5h-3a.75.75 0 0 1 0-1.5h3a5.25 5.25 0 1 0 0-10.5H4.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
-      </div>
     </div>
   );
 }
