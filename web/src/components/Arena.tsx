@@ -199,19 +199,24 @@ export function Arena() {
                     )}
                     {/* Current slot state */}
                     {unit ? (
-                      <div
-                        className={`${animClass} ${isOver && !animClass ? 'swap-target' : ''}`}
-                        style={animStyle}
-                      >
-                        <DraggableCard
-                          id={`board-${arrayIndex}`}
-                          card={unit}
-                          showCost={false}
-                          showPitch={true}
-                          isSelected={selection?.type === 'board' && selection.index === arrayIndex}
-                          onClick={() => handleBoardSlotClick(arrayIndex)}
-                          enableWobble={false}
-                        />
+                      <div className="relative">
+                        <div className="absolute inset-0">
+                          <EmptySlot isTarget={false} />
+                        </div>
+                        <div
+                          className={`relative ${animClass} ${isOver && !animClass ? 'swap-target' : ''}`}
+                          style={animStyle}
+                        >
+                          <DraggableCard
+                            id={`board-${arrayIndex}`}
+                            card={unit}
+                            showCost={false}
+                            showPitch={true}
+                            isSelected={selection?.type === 'board' && selection.index === arrayIndex}
+                            onClick={() => handleBoardSlotClick(arrayIndex)}
+                            enableWobble={false}
+                          />
+                        </div>
                       </div>
                     ) : (
                       <EmptySlot
