@@ -8,8 +8,6 @@ import {
   StarIcon,
   StarOutlineIcon,
   BagIcon,
-  SpeakerIcon,
-  SpeakerMutedIcon,
   HourglassIcon,
   WarningIcon,
   CardIcon,
@@ -52,6 +50,112 @@ interface HUDProps {
     disabled?: boolean;
     variant?: 'primary' | 'chain';
   };
+}
+
+/** Inline battle / custom-action buttons that sit inside the HUD bar */
+function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
+  const { view, endTurn, engine } = useGameStore();
+  const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } =
+    useMultiplayerStore();
+  const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
+  const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (status === 'in-game' && isReady && !opponentReady && view?.phase === 'shop') {
+      setWaitingTimer(BATTLE_TIMER_SECONDS);
+      waitingTimerRef.current = setInterval(() => {
+        setWaitingTimer((prev) => (prev !== null && prev > 1 ? prev - 1 : prev));
+      }, 1000);
+    }
+    if (!isReady || opponentReady) {
+      if (waitingTimerRef.current) {
+        clearInterval(waitingTimerRef.current);
+        waitingTimerRef.current = null;
+      }
+      setWaitingTimer(null);
+    }
+    return () => {
+      if (waitingTimerRef.current) clearInterval(waitingTimerRef.current);
+    };
+  }, [isReady, opponentReady, status, view?.phase]);
+
+  if (!view || view.phase !== 'shop') return null;
+  if (hideEndTurn && !customAction) return null;
+
+  const handleEndTurn = () => {
+    if (status === 'in-game') {
+      const board = engine?.get_board();
+      setIsReady(true);
+      sendMessage({ type: 'END_TURN_READY', board });
+    } else {
+      endTurn();
+    }
+  };
+
+  const isWaiting = status === 'in-game' && isReady && !opponentReady;
+  const opponentWaiting = status === 'in-game' && !isReady && opponentReady;
+  const displayTimer = isWaiting ? waitingTimer : opponentWaiting ? battleTimer : null;
+
+  return (
+    <div className="hidden lg:flex items-center gap-3">
+      {!hideEndTurn && (
+        <>
+          {displayTimer !== null && (
+            <div
+              className={`flex items-center gap-2 px-3 py-1 rounded-lg ${
+                opponentWaiting
+                  ? displayTimer <= 5
+                    ? 'bg-red-600 animate-pulse'
+                    : 'bg-orange-600'
+                  : 'bg-blue-600'
+              }`}
+            >
+              <span className="text-white text-sm font-bold flex items-center gap-1">
+                {opponentWaiting ? (
+                  <><WarningIcon className="w-4 h-4" /> Submit in:</>
+                ) : (
+                  <><HourglassIcon className="w-4 h-4" /> Waiting:</>
+                )}
+              </span>
+              <span
+                className={`text-white text-lg font-bold ${displayTimer <= 5 ? 'text-yellow-300' : ''}`}
+              >
+                {displayTimer}s
+              </span>
+            </div>
+          )}
+          <button
+            onClick={handleEndTurn}
+            disabled={isWaiting}
+            className={`battle-btn rounded-lg text-sm lg:text-base px-4 lg:px-6 py-1.5 lg:py-2 transition-all font-bold ${
+              isWaiting
+                ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
+                : opponentWaiting && displayTimer !== null && displayTimer <= 5
+                  ? 'animate-pulse bg-red-500 hover:bg-red-400'
+                  : ''
+            }`}
+          >
+            {isWaiting ? 'Waiting...' : 'Battle!'}
+          </button>
+        </>
+      )}
+      {customAction && (
+        <button
+          onClick={customAction.onClick}
+          disabled={customAction.disabled}
+          className={`rounded-lg text-sm lg:text-base px-4 lg:px-6 py-1.5 lg:py-2 transition-all font-bold ${
+            customAction.disabled
+              ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
+              : customAction.variant === 'chain'
+                ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900'
+                : 'battle-btn'
+          }`}
+        >
+          {customAction.label}
+        </button>
+      )}
+    </div>
+  );
 }
 
 export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
@@ -212,6 +316,9 @@ export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
         )}
       </div>
 
+      {/* Center: Battle button — inline in HUD */}
+      <InlineEndTurn hideEndTurn={hideEndTurn} customAction={customAction} />
+
       {/* Right: Wins + Audio */}
       <div className="hidden lg:flex items-center gap-2">
         <span className="text-warm-400">Wins:</span>
@@ -226,9 +333,6 @@ export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
         </div>
         <AudioControls />
       </div>
-
-      {/* Battle action */}
-      <BattleAction hideEndTurn={hideEndTurn} customAction={customAction} />
     </div>
   );
 }
