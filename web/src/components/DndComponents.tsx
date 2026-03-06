@@ -3,6 +3,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { UnitCard, EmptySlot } from './UnitCard';
 import type { CardView, BoardUnitView } from '../types';
+import type { CardSizeVariant } from '../constants/cardSizes';
 
 // Draggable wrapper for UnitCard
 interface DraggableCardProps {
@@ -14,6 +15,9 @@ interface DraggableCardProps {
   showPitch?: boolean;
   can_afford?: boolean;
   disabled?: boolean;
+  enableWobble?: boolean;
+  enableTilt?: boolean;
+  sizeVariant?: CardSizeVariant;
 }
 
 export function DraggableCard({
@@ -25,6 +29,9 @@ export function DraggableCard({
   showPitch = true,
   can_afford = true,
   disabled = false,
+  enableWobble,
+  enableTilt,
+  sizeVariant,
 }: DraggableCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id,
@@ -48,6 +55,9 @@ export function DraggableCard({
         showPitch={showPitch}
         can_afford={can_afford}
         draggable={false} // Disable native drag since @dnd-kit handles it
+        enableWobble={enableWobble}
+        enableTilt={enableTilt}
+        sizeVariant={sizeVariant}
       />
     </div>
   );
@@ -56,8 +66,7 @@ export function DraggableCard({
 // Droppable wrapper for board slots (can contain a card or be empty)
 interface DroppableBoardSlotProps {
   id: string;
-  children: React.ReactNode;
-  isOver?: boolean;
+  children: React.ReactNode | ((props: { isOver: boolean }) => React.ReactNode);
 }
 
 export function DroppableBoardSlot({ id, children }: DroppableBoardSlotProps) {
@@ -71,7 +80,7 @@ export function DroppableBoardSlot({ id, children }: DroppableBoardSlotProps) {
       ref={setNodeRef}
       className={`transition-all duration-150 ${isOver ? 'scale-105' : ''}`}
     >
-      {children}
+      {typeof children === 'function' ? children({ isOver }) : children}
     </div>
   );
 }
