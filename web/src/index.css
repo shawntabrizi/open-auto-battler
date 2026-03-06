@@ -1107,6 +1107,11 @@ body {
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  /* Card panel stays on left — shift content right */
+  .show-card-panel {
+    margin-left: 11rem !important;
+  }
+
   .hud {
     height: 2.25rem;
     padding-left: max(0.5rem, env(safe-area-inset-left));

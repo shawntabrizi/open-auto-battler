@@ -132,7 +132,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
 }
 
 export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
-  const { view, setShowBag, showBag, startingLives, winsToVictory } = useGameStore();
+  const { view, setShowBag, showBag, selection, startingLives, winsToVictory } = useGameStore();
   const playerAvatar = useCustomizationStore((s) => s.selections.playerAvatar);
 
   // Keyboard shortcut for Bag view
@@ -150,8 +150,10 @@ export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
 
   if (!view) return null;
 
+  const showCardPanel = view?.phase === 'shop' || selection?.type === 'board' || showBag;
+
   return (
-    <div className="hud h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-2 lg:px-6 relative z-20"
+    <div className={`hud h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-2 lg:px-6 relative z-20 overflow-hidden ${showCardPanel ? 'show-card-panel' : ''}`}
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
     >
       {/* Left: Lives */}
@@ -181,9 +183,9 @@ export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
 
       {/* Center: Round & End Turn */}
       <div className="flex items-center gap-2 lg:gap-4">
-        <div className="text-center">
-          <div className="text-xs lg:text-sm text-warm-400">Round</div>
-          <div className="text-lg lg:text-2xl font-bold text-gold">{view.round}</div>
+        <div className="flex items-center gap-1 lg:block lg:text-center">
+          <span className="text-xs lg:text-sm text-warm-400">Round</span>
+          <span className="text-sm lg:text-2xl font-bold text-gold">{view.round}</span>
         </div>
 
         {view.phase === 'shop' && (
