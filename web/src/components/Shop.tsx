@@ -75,11 +75,11 @@ export function Shop() {
       {handBg && <div className="absolute inset-0 bg-shop-bg/50" />}
       <div className="flex h-full relative z-10">
         {/* Left: Undo Button */}
-        <div className="shop-side w-20 lg:w-32 h-full flex flex-col items-center justify-center border-r border-warm-700/50">
+        <div className="shop-side w-14 lg:w-32 h-full flex flex-col items-center justify-center border-r border-warm-700/50">
             <button
               onClick={undo}
               disabled={!view.can_undo}
-              className={`action-circle w-16 h-16 rounded-full flex items-center justify-center transition-all border-2 ${
+              className={`action-circle w-10 h-10 lg:w-16 lg:h-16 rounded-full flex items-center justify-center transition-all border-2 ${
                 view.can_undo
                   ? 'bg-gradient-to-br from-warm-600 to-warm-700 border-warm-400/50 text-warm-100 hover:from-warm-500 hover:to-warm-600 cursor-pointer shadow-elevation-rest hover:shadow-elevation-hover'
                   : 'bg-warm-800 border-warm-700 text-warm-600 cursor-not-allowed'
@@ -90,7 +90,7 @@ export function Shop() {
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                className="w-8 h-8"
+                className="w-5 h-5 lg:w-8 lg:h-8"
               >
                 <path
                   fillRule="evenodd"
@@ -99,7 +99,7 @@ export function Shop() {
                 />
               </svg>
             </button>
-            <div className="text-[10px] text-warm-500 mt-2">Undo</div>
+            <div className="hidden lg:block text-[10px] text-warm-500 mt-2">Undo</div>
           </div>
 
           {/* Center: Hand */}
@@ -146,7 +146,7 @@ export function Shop() {
           {/* Right: Ash Pile */}
           <DroppableAshPile onHoverChange={setIsAshHovered}>
             <div
-              className={`shop-side w-20 lg:w-32 h-full flex flex-col items-center justify-center border-l border-warm-700/50 transition-all duration-200 cursor-pointer ${isAshHovered ? 'bg-red-900/20' : ''}`}
+              className={`shop-side w-14 lg:w-32 h-full flex flex-col items-center justify-center border-l border-warm-700/50 transition-all duration-200 cursor-pointer ${isAshHovered ? 'bg-red-900/20' : ''}`}
               onClick={handleAshClick}
             >
               <img
@@ -158,7 +158,7 @@ export function Shop() {
                     : 'opacity-80 hover:opacity-100 hover:scale-105'
                 }`}
               />
-              <div className={`ash-hint text-[10px] mt-1 text-center px-2 ${isAshHovered ? 'text-orange-400 font-bold' : 'text-warm-500'}`}>
+              <div className={`ash-hint hidden lg:block text-[10px] mt-1 text-center px-2 ${isAshHovered ? 'text-orange-400 font-bold' : 'text-warm-500'}`}>
                 {isAshHovered ? 'BURN IT!' : 'Ash Pile'}
               </div>
             </div>
