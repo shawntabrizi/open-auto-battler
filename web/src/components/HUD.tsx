@@ -10,37 +10,10 @@ import {
   BagIcon,
   HourglassIcon,
   WarningIcon,
-  CardIcon,
-  SwordIcon,
-  AbilityIcon,
 } from './Icons';
 import battleSwordIcon from '../../battle-sword.svg';
 
 const BATTLE_TIMER_SECONDS = 20;
-
-function AudioControls() {
-  return null;
-}
-
-function AnimatedValue({ value, className }: { value: number; className?: string }) {
-  const [bouncing, setBouncing] = useState(false);
-  const prevRef = useRef(value);
-
-  useEffect(() => {
-    if (value !== prevRef.current) {
-      prevRef.current = value;
-      setBouncing(true);
-      const timer = setTimeout(() => setBouncing(false), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [value]);
-
-  return (
-    <span className={`${className || ''} ${bouncing ? 'animate-scale-bounce inline-block' : ''}`}>
-      {value}
-    </span>
-  );
-}
 
 interface HUDProps {
   hideEndTurn?: boolean;
@@ -97,7 +70,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
   const displayTimer = isWaiting ? waitingTimer : opponentWaiting ? battleTimer : null;
 
   return (
-    <div className="hidden lg:flex items-center gap-3">
+    <div className="flex items-center gap-2 lg:gap-3">
       {!hideEndTurn && (
         <>
           {displayTimer !== null && (
@@ -159,9 +132,8 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
 }
 
 export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
-  const { view, setShowBag, showBag, selection, startingLives, winsToVictory, mobileTab, setMobileTab } = useGameStore();
+  const { view, setShowBag, showBag, selection, startingLives, winsToVictory } = useGameStore();
   const playerAvatar = useCustomizationStore((s) => s.selections.playerAvatar);
-  const [showRules, setShowRules] = useState(false);
 
   // Keyboard shortcut for Bag view
   useEffect(() => {
@@ -178,151 +150,70 @@ export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
 
   if (!view) return null;
 
-  // Mobile sidebar margin — only when selection is active outside shop phase
-  const hasSelection = selection !== null || showBag;
-  const isShopMobile = view?.phase === 'shop';
-  const hudMarginMobile = hasSelection && !isShopMobile ? 'ml-44' : '';
-
-  const isShopPhase = view.phase === 'shop';
+  // Check if card panel is visible (same logic as GameShell)
+  const showCardPanel = view?.phase === 'shop' || selection?.type === 'board' || showBag;
 
   return (
-    <div
-      className={`hud h-9 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-1.5 lg:px-6 relative z-20 ${hudMarginMobile} lg:ml-0`}
+    <div className={`hud h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-2 lg:px-6 relative z-20 ${showCardPanel ? 'show-card-panel' : ''}`}
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
     >
-      {/* === MOBILE: single consolidated bar === */}
-      <div className="flex lg:hidden items-center w-full gap-1.5">
-        {/* Tab toggle — left side for thumb reach */}
-        {isShopPhase ? (
-          <div className="flex items-center bg-warm-800/80 rounded-full p-0.5 flex-shrink-0">
-            <button
-              onClick={() => setMobileTab('hand')}
-              className={`px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wide transition-colors ${
-                mobileTab === 'hand'
-                  ? 'bg-gold/90 text-warm-950'
-                  : 'text-warm-400 hover:text-warm-200'
-              }`}
-            >
-              Hand
-            </button>
-            <button
-              onClick={() => setMobileTab('board')}
-              className={`px-2.5 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wide transition-colors ${
-                mobileTab === 'board'
-                  ? 'bg-gold/90 text-warm-950'
-                  : 'text-warm-400 hover:text-warm-200'
-              }`}
-            >
-              Board
-            </button>
-          </div>
-        ) : (
-          <span className="text-sm font-bold text-gold flex-shrink-0">{view.round}</span>
-        )}
-
-        {/* Segmented mana bar — center */}
-        {isShopPhase && (
-          <div className="flex items-center gap-0.5 flex-1 justify-center">
-            <svg className="w-3.5 h-3.5 text-mana-blue flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-            </svg>
-            <div className="flex gap-[3px]">
-              {Array.from({ length: view.mana_limit }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-4 h-[0.6rem] rounded-sm transition-colors ${
-                    i < view.mana
-                      ? 'bg-mana-blue shadow-[0_0_4px_rgba(91,143,170,0.5)]'
-                      : 'bg-warm-800 border border-warm-700/50'
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="text-[0.6rem] font-bold text-mana-blue/80 ml-0.5 flex-shrink-0">
-              {view.mana}
-            </span>
-          </div>
-        )}
-        {!isShopPhase && <div className="flex-1" />}
-
-        {/* Lives, Wins, Info, Audio — evenly spaced */}
-        <div className="flex items-center gap-2.5 flex-shrink-0">
-          <div className="flex items-center gap-0.5">
-            <HeartIcon className="w-3.5 h-3.5 text-red-500" />
-            <span className="font-bold text-[0.7rem]">
-              <AnimatedValue value={view.lives} />/{startingLives}
-            </span>
-          </div>
-          <div className="flex items-center gap-0.5">
-            <StarIcon className="w-3.5 h-3.5 text-gold" />
-            <span className="font-bold text-[0.7rem]">
-              <AnimatedValue value={view.wins} />/{winsToVictory}
-            </span>
-          </div>
-          <button
-            onClick={() => setShowRules(true)}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-warm-800 hover:bg-warm-700 text-warm-400 hover:text-warm-100 transition-colors"
-            title="Rules"
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
-            </svg>
-          </button>
-          <AudioControls />
-        </div>
-      </div>
-
-      {/* Mobile rules overlay */}
-      {showRules && <RulesOverlay onClose={() => setShowRules(false)} />}
-
-      {/* === DESKTOP: original full layout === */}
-      {/* Left: Lives + Round + Bag */}
-      <div className="hidden lg:flex items-center gap-5">
+      {/* Left: Lives */}
+      <div className="flex items-center gap-1 lg:gap-2">
         {playerAvatar && (
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-yellow-500/50 flex-shrink-0">
+          <div className="w-6 h-6 lg:w-10 lg:h-10 rounded-full overflow-hidden border-2 border-yellow-500/50 flex-shrink-0">
             <img src={playerAvatar.imageUrl} alt="avatar" className="w-full h-full object-cover" />
           </div>
         )}
-        <div className="flex items-center gap-1.5">
-          <span className="text-warm-400 text-sm">Lives</span>
-          <div className="flex gap-1">
-            {Array.from({ length: startingLives }).map((_, i) =>
-              i < view.lives ? (
-                <HeartIcon key={i} className="w-5 h-5 text-red-500" />
-              ) : (
-                <HeartOutlineIcon key={i} className="w-5 h-5 text-warm-600" />
-              )
-            )}
-          </div>
+        <span className="text-warm-400 hidden lg:inline">Lives:</span>
+        {/* Mobile: compact numeric */}
+        <div className="flex lg:hidden items-center gap-1">
+          <HeartIcon className="w-4 h-4 text-red-500" />
+          <span className="font-bold text-sm">{view.lives}/{startingLives}</span>
         </div>
-        <div className="w-px h-6 bg-warm-700/60" />
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm text-warm-400">Round</span>
-          <span className="text-lg font-bold text-gold">{view.round}</span>
+        {/* Desktop: full hearts */}
+        <div className="hidden lg:flex gap-1">
+          {Array.from({ length: startingLives }).map((_, i) =>
+            i < view.lives ? (
+              <HeartIcon key={i} className="w-5 h-5 text-red-500" />
+            ) : (
+              <HeartOutlineIcon key={i} className="w-5 h-5 text-warm-600" />
+            )
+          )}
         </div>
+      </div>
+
+      {/* Center: Round & End Turn */}
+      <div className="flex items-center gap-2 lg:gap-4">
+        <div className="text-center">
+          <div className="text-xs lg:text-sm text-warm-400">Round</div>
+          <div className="text-lg lg:text-2xl font-bold text-gold">{view.round}</div>
+        </div>
+
         {view.phase === 'shop' && (
-          <>
-            <div className="w-px h-6 bg-warm-700/60" />
+          <div className="flex items-center gap-2 lg:gap-3">
             <button
               onClick={() => setShowBag(true)}
-              className="flex items-center gap-1.5 hover:bg-warm-800/60 rounded-lg px-2 py-1 transition-colors"
-              title="View your draw bag (B)"
+              className="bg-warm-800 hover:bg-warm-700 text-warm-100 border border-warm-700 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-4 py-1"
+              title="View your draw pool (B)"
             >
-              <BagIcon className="w-5 h-5 text-amber-400" />
-              <span className="font-bold text-base text-warm-100">{view.bag_count}</span>
-              <span className="text-xs text-warm-500">cards</span>
+              <BagIcon className="w-4 h-4 lg:w-5 lg:h-5 text-amber-400" />
+              <span className="font-bold text-sm lg:text-base">{view.bag_count}</span>
             </button>
-          </>
+            <InlineEndTurn hideEndTurn={hideEndTurn} customAction={customAction} />
+          </div>
         )}
       </div>
 
-      {/* Center: Battle button — inline in HUD */}
-      <InlineEndTurn hideEndTurn={hideEndTurn} customAction={customAction} />
-
-      {/* Right: Wins + Audio */}
-      <div className="hidden lg:flex items-center gap-2">
-        <span className="text-warm-400">Wins:</span>
-        <div className="flex gap-1">
+      {/* Right: Wins */}
+      <div className="flex items-center gap-1 lg:gap-2">
+        <span className="text-warm-400 hidden lg:inline">Wins:</span>
+        {/* Mobile: compact numeric */}
+        <div className="flex lg:hidden items-center gap-1">
+          <StarIcon className="w-4 h-4 text-gold" />
+          <span className="font-bold text-sm">{view.wins}/{winsToVictory}</span>
+        </div>
+        {/* Desktop: full stars */}
+        <div className="hidden lg:flex gap-1">
           {Array.from({ length: winsToVictory }).map((_, i) =>
             i < view.wins ? (
               <StarIcon key={i} className="w-5 h-5 text-gold" />
@@ -331,179 +222,6 @@ export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
             )
           )}
         </div>
-        <AudioControls />
-      </div>
-    </div>
-  );
-}
-
-function RulesOverlay({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 bg-warm-950/95 flex flex-col safe-area-pad">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-warm-700/50">
-        <h2 className="text-lg font-bold text-gold">How to Play</h2>
-        <button
-          onClick={onClose}
-          className="w-8 h-8 rounded-full bg-warm-800 text-warm-300 flex items-center justify-center active:bg-warm-700"
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-        {/* Card Anatomy Legend */}
-        <section>
-          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
-            <CardIcon className="w-5 h-5" />
-            Reading a Card
-          </h3>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="cost-badge w-7 h-7 rounded-lg flex items-center justify-center font-stat font-bold text-white text-xs flex-shrink-0">
-                3
-              </div>
-              <span className="text-warm-300">Mana Cost</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="pitch-badge w-7 h-7 rounded-lg flex items-center justify-center font-stat font-bold text-xs flex-shrink-0">
-                2
-              </div>
-              <span className="text-warm-300">Pitch Value</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded bg-warm-800 border border-warm-700 flex items-center justify-center flex-shrink-0">
-                <SwordIcon className="w-3.5 h-3.5 text-red-400" />
-              </div>
-              <span className="text-warm-300">Attack</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded bg-warm-800 border border-warm-700 flex items-center justify-center flex-shrink-0">
-                <HeartIcon className="w-3.5 h-3.5 text-green-400" />
-              </div>
-              <span className="text-warm-300">Health</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-yellow-500 border border-yellow-300 flex items-center justify-center flex-shrink-0">
-                <AbilityIcon className="w-3 h-3" />
-              </div>
-              <span className="text-warm-300">Has Ability</span>
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-warm-500 leading-relaxed">
-            Blue = mana spent to play. Gold = mana gained when pitched. Yellow circle = has an ability.
-          </p>
-        </section>
-
-        <section>
-          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
-            <BagIcon className="w-5 h-5" />
-            Your Cards
-          </h3>
-          <p className="text-sm text-warm-300 leading-relaxed">
-            You start with a <strong className="text-white">Bag</strong> full of cards. Each round,
-            you draw <strong className="text-white">5 cards</strong> into your hand. Cards you don't
-            use go back into your Bag for next time.
-          </p>
-          <p className="mt-2 text-sm text-warm-400 leading-relaxed">
-            But any card you play or pitch is gone from your Bag for good — so think carefully about
-            what you spend!
-          </p>
-        </section>
-
-        <section>
-          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
-            <CardIcon className="w-5 h-5" />
-            Playing & Pitching
-          </h3>
-          <p className="text-sm text-warm-300 leading-relaxed">
-            Every card can be <strong className="text-blue-400">Played</strong> onto your board (up
-            to <strong className="text-white">5 slots</strong>) to fight, or{' '}
-            <strong className="text-amber-400">Pitched</strong> to gain Mana. You need Mana to play
-            cards, so you'll always be making tough choices about what to keep and what to
-            sacrifice.
-          </p>
-          <p className="mt-2 text-sm text-warm-400 leading-relaxed">
-            You can also pitch units already on your board if you need to make room or need more
-            Mana.
-          </p>
-        </section>
-
-        <section>
-          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
-            <span className="w-5 h-5 rounded-full bg-mana-blue/40 border border-mana-blue/60 inline-block flex-shrink-0" />
-            Mana
-          </h3>
-          <ul className="space-y-2 text-sm text-warm-300">
-            <li className="flex items-start gap-2">
-              <span className="text-blue-400 font-bold mt-0.5">*</span>
-              <span>
-                You start each turn with <strong className="text-blue-400">0 Mana</strong> — pitch
-                cards to fill up.
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-400 font-bold mt-0.5">*</span>
-              <span>
-                Your Mana tank starts at <strong className="text-white">3</strong> capacity and
-                grows by +1 each round, up to 10.
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-400 font-bold mt-0.5">*</span>
-              <span>
-                You can pitch, spend, then pitch again in the same turn — just can't go over your
-                max.
-              </span>
-            </li>
-          </ul>
-        </section>
-
-        <section>
-          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
-            <SwordIcon className="w-5 h-5" />
-            Battle
-          </h3>
-          <p className="text-sm text-warm-300 leading-relaxed">
-            When you end your turn, your units fight automatically! The two front units clash{' '}
-            <strong className="text-white">at the same time</strong>, dealing damage to each other
-            simultaneously. When a unit falls, the next one steps up. The team that loses all its
-            units first takes a loss.
-          </p>
-          <p className="mt-2 text-sm text-warm-400 leading-relaxed">
-            Many units have special <strong className="text-yellow-400">abilities</strong> that
-            trigger during battle — like buffing allies, damaging enemies, or spawning new units
-            when they die. When multiple abilities trigger at once, stronger units go first.
-          </p>
-        </section>
-
-        <section>
-          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
-            <AbilityIcon className="w-5 h-5" />
-            Chain Reactions
-          </h3>
-          <p className="text-sm text-warm-300 leading-relaxed">
-            Abilities can cause <strong className="text-yellow-500">chain reactions</strong>. If a
-            unit dies and its death triggers a new effect, that happens right away — even in the
-            middle of another ability resolving. This is where clever combos come to life!
-          </p>
-        </section>
-
-        <section>
-          <h3 className="text-base font-bold text-amber-400 mb-2 border-b border-warm-700 pb-1 flex items-center gap-1.5">
-            <StarIcon className="w-5 h-5" />
-            Winning
-          </h3>
-          <p className="text-sm text-warm-300 leading-relaxed">
-            Win battles to earn <strong className="text-yellow-500">Stars</strong>. Collect{' '}
-            <strong className="text-yellow-500">10 Stars</strong> and you win the run! But be
-            careful — you start with just <strong className="text-red-400">3 lives</strong>. Lose
-            them all and it's game over.
-          </p>
-        </section>
       </div>
     </div>
   );
