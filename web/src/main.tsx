@@ -18,6 +18,7 @@ import { CreatorHubPage } from './components/CreatorHubPage.tsx';
 import { TournamentPage } from './components/TournamentPage.tsx';
 import { SettingsPage } from './components/SettingsPage.tsx';
 import { DevPage } from './components/DevPage.tsx';
+import { GameOverPreview } from './components/GameOverPreview.tsx';
 
 // Lazy-loaded features (code-split, no impact on main bundle)
 import { PresentationsPage, PresentationViewer, EmbedPage } from './features/presentations';
@@ -44,6 +45,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/tournament" element={<TournamentPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/dev" element={<DevPage />} />
+        <Route path="/dev/game-over" element={<GameOverPreview />} />
         <Route path="/blockchain/creator" element={<CreatorHubPage />} />
         <Route path="/blockchain/create-card" element={<CreateCardPage />} />
         <Route path="/blockchain/create-set" element={<CreateSetPage />} />

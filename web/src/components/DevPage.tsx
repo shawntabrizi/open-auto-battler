@@ -13,6 +13,8 @@ const PAGES: Record<string, string> = {
   'Create Set': '/blockchain/create-set',
   Customize: '/blockchain/customize',
   'Mint NFT': '/blockchain/mint-nft',
+  'Game Over (Victory)': '/dev/game-over?phase=victory',
+  'Game Over (Defeat)': '/dev/game-over?phase=defeat',
 };
 
 const PRESETS = {
