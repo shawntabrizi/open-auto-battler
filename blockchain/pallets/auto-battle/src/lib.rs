@@ -125,10 +125,10 @@ pub mod pallet {
 
     /// Type alias for bounded ability using pallet config.
     pub type BoundedBattleAbility<T> =
-        CoreBoundedBattleAbility<<T as Config>::MaxStringLen, <T as Config>::MaxConditions>;
+        CoreBoundedBattleAbility<<T as Config>::MaxConditions>;
     /// Type alias for bounded shop ability using pallet config.
     pub type BoundedShopAbility<T> =
-        CoreBoundedShopAbility<<T as Config>::MaxStringLen, <T as Config>::MaxConditions>;
+        CoreBoundedShopAbility<<T as Config>::MaxConditions>;
 
     /// Type alias for the balance type from the configured Currency.
     pub type BalanceOf<T> = <<T as Config>::Currency as fungible::Inspect<
