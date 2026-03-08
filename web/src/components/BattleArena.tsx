@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useGameStore } from '../store/gameStore';
 import { UnitCard, EmptySlot } from './UnitCard';
 import type { BattleOutput, UnitView, CombatEvent } from '../types';
 import { formatAbilitySummary } from '../utils/abilityText';
@@ -111,10 +112,13 @@ function buildUnitMap(output: BattleOutput): Map<number, UnitView> {
 function formatTriggeredAbility(
   unitMap: Map<number, UnitView>,
   sourceInstanceId: number,
-  abilityIndex: number
+  abilityIndex: number,
+  resolveCardName: (cardId: number) => string | undefined
 ): string {
   const ability = unitMap.get(sourceInstanceId)?.battle_abilities?.[abilityIndex];
-  return ability ? formatAbilitySummary(ability) : `Ability ${abilityIndex + 1}`;
+  return ability
+    ? formatAbilitySummary(ability, { resolveCardName })
+    : `Ability ${abilityIndex + 1}`;
 }
 
 // Compute board state by replaying events from the start up to a given index
@@ -231,7 +235,9 @@ interface BattleArenaProps {
 }
 
 export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: BattleArenaProps) {
+  const cardNameMap = useGameStore((state) => state.cardNameMap);
   const unitMap = useMemo(() => buildUnitMap(battleOutput), [battleOutput]);
+  const resolveCardName = useMemo(() => (cardId: number) => cardNameMap[cardId], [cardNameMap]);
   const [playerBoard, setPlayerBoard] = useState<UnitView[]>(
     battleOutput.initial_player_units || []
   );
@@ -283,7 +289,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
         setAbilityToasts((prev) =>
           new Map(prev).set(
             source_instance_id,
-            formatTriggeredAbility(unitMap, source_instance_id, ability_index)
+            formatTriggeredAbility(unitMap, source_instance_id, ability_index, resolveCardName)
           )
         );
         setSourceGlowIds((prev) => new Set(prev).add(source_instance_id));

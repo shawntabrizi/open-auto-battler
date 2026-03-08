@@ -32,15 +32,19 @@ function buildUnitNameMap(
 function getTriggeredAbilityText(
   unitMap: Map<number, { name: string; team: string; battle_abilities: BattleAbility[] }>,
   sourceInstanceId: number,
-  abilityIndex: number
+  abilityIndex: number,
+  resolveCardName: (cardId: number) => string | undefined
 ): string {
   const ability = unitMap.get(sourceInstanceId)?.battle_abilities?.[abilityIndex];
-  return ability ? formatAbilitySummary(ability) : `Ability ${abilityIndex + 1}`;
+  return ability
+    ? formatAbilitySummary(ability, { resolveCardName })
+    : `Ability ${abilityIndex + 1}`;
 }
 
 function formatEvent(
   event: CombatEvent,
-  unitMap: Map<number, { name: string; team: string; battle_abilities: BattleAbility[] }>
+  unitMap: Map<number, { name: string; team: string; battle_abilities: BattleAbility[] }>,
+  resolveCardName: (cardId: number) => string | undefined
 ): { text: string; color: string } | null {
   const getName = (id: number) => unitMap.get(id)?.name || `Unit #${id}`;
 
@@ -64,7 +68,8 @@ function formatEvent(
         text: `${getName(event.payload.source_instance_id)}'s ${getTriggeredAbilityText(
           unitMap,
           event.payload.source_instance_id,
-          event.payload.ability_index
+          event.payload.ability_index,
+          resolveCardName
         )}`,
         color: 'text-yellow-400',
       };
@@ -120,6 +125,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
   const gameBattleOutput = useGameStore((state) => state.battleOutput);
   const gameShowOverlay = useGameStore((state) => state.showBattleOverlay);
   const gameContinue = useGameStore((state) => state.continueAfterBattle);
+  const cardNameMap = useGameStore((state) => state.cardNameMap);
 
   const sandboxBattleOutput = useSandboxStore((state) => state.battleOutput);
   const sandboxShowOverlay = useSandboxStore((state) => state.isBattling);
@@ -153,6 +159,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
   const handleEventProcessed = useCallback((idx: number) => {
     setLastEventIndex(idx);
   }, []);
+  const resolveCardName = useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
 
   // Auto-scroll log to bottom
   useEffect(() => {
@@ -331,7 +338,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
           >
             {battleOutput && lastEventIndex >= 0 ? (
               battleOutput.events.slice(0, lastEventIndex + 1).map((event, i) => {
-                const formatted = formatEvent(event, unitNameMap);
+                const formatted = formatEvent(event, unitNameMap, resolveCardName);
                 if (!formatted) return null;
                 return (
                   <div key={i} className={`${formatted.color} truncate`}>

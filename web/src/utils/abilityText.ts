@@ -15,6 +15,10 @@ import type {
   ShopTarget,
 } from '../types';
 
+export interface AbilityTextOptions {
+  resolveCardName?: (cardId: number) => string | undefined;
+}
+
 function formatCompareOp(op: CompareOp): string {
   switch (op) {
     case 'GreaterThan':
@@ -146,7 +150,10 @@ export function formatAbilityTarget(target: BattleTarget | ShopTarget): string {
   }
 }
 
-export function formatAbilityEffect(effect: BattleEffect | ShopEffect): string {
+export function formatAbilityEffect(
+  effect: BattleEffect | ShopEffect,
+  options: AbilityTextOptions = {}
+): string {
   switch (effect.type) {
     case 'Damage':
       return `Deal ${effect.amount} damage to ${formatAbilityTarget(effect.target)}`;
@@ -155,7 +162,7 @@ export function formatAbilityEffect(effect: BattleEffect | ShopEffect): string {
     case 'ModifyStatsPermanent':
       return `Give ${effect.attack >= 0 ? '+' : ''}${effect.attack}/${effect.health >= 0 ? '+' : ''}${effect.health} permanently to ${formatAbilityTarget(effect.target)}`;
     case 'SpawnUnit':
-      return `Spawn card #${effect.card_id}`;
+      return `Spawn ${options.resolveCardName?.(effect.card_id) ?? `card #${effect.card_id}`}`;
     case 'Destroy':
       return `Destroy ${formatAbilityTarget(effect.target)}`;
     case 'GainMana':
@@ -215,8 +222,11 @@ function formatShopCondition(condition: ShopCondition): string {
   return condition.data.map(formatShopMatcher).join(' or ');
 }
 
-export function formatAbilitySummary(ability: AnyAbility): string {
-  const effect = formatAbilityEffect(ability.effect as BattleEffect | ShopEffect);
+export function formatAbilitySummary(
+  ability: AnyAbility,
+  options: AbilityTextOptions = {}
+): string {
+  const effect = formatAbilityEffect(ability.effect as BattleEffect | ShopEffect, options);
   const conditionText =
     ability.conditions.length === 0
       ? ''
@@ -238,6 +248,9 @@ export function formatAbilitySummary(ability: AnyAbility): string {
   return `${effect}${conditionText}.${triggerLimit}`.trim();
 }
 
-export function formatNamedAbility(ability: BattleAbility | ShopAbility): string {
-  return formatAbilitySummary(ability);
+export function formatNamedAbility(
+  ability: BattleAbility | ShopAbility,
+  options: AbilityTextOptions = {}
+): string {
+  return formatAbilitySummary(ability, options);
 }

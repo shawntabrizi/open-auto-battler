@@ -53,6 +53,7 @@ interface GameStore {
   view: GameView | null;
   battleOutput: BattleOutput | null;
   cardSet: CardView[] | null; // Full set of unique cards (fetched once)
+  cardNameMap: Record<number, string>;
   bag: number[] | null; // Bag as a list of Card IDs
   isLoading: boolean;
   error: string | null;
@@ -111,11 +112,16 @@ let wasmInitialized = false;
 let initPromise: Promise<void> | null = null;
 let initEnginePromise: Promise<void> | null = null;
 
+function buildCardNameMap(metas: Array<{ id: number; name: string }>): Record<number, string> {
+  return Object.fromEntries(metas.map((meta) => [meta.id, meta.name]));
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   engine: null,
   view: null,
   battleOutput: null,
   cardSet: null,
+  cardNameMap: {},
   bag: null,
   isLoading: true,
   error: null,
@@ -174,6 +180,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({
           engine,
           setMetas,
+          cardNameMap: buildCardNameMap(metas),
           engineReady: true,
           gameStarted: false,
           isLoading: false,
@@ -250,6 +257,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           gameStarted: true,
           view: engine.get_view(),
           cardSet: engine.get_card_set(), // Fetch card set once on init
+          cardNameMap: buildCardNameMap(metas),
           isLoading: false,
         });
       } catch (err) {
@@ -309,7 +317,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return;
     try {
       engine.play_hand_card(handIndex, boardSlot);
-      set({ view: engine.get_view(), selection: { type: 'board', index: boardSlot }, mobileTab: 'board' });
+      set({
+        view: engine.get_view(),
+        selection: { type: 'board', index: boardSlot },
+        mobileTab: 'board',
+      });
     } catch (err) {
       toast.error('Not enough mana!');
       console.error(err);

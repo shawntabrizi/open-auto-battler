@@ -1,3 +1,4 @@
+import { useGameStore } from '../../store/gameStore';
 import { getCardEmoji } from '../../utils/emoji';
 import type { CardView } from '../../types';
 import { formatAbilitySummary, formatAbilityTrigger } from '../../utils/abilityText';
@@ -8,6 +9,8 @@ import { formatAbilitySummary, formatAbilityTrigger } from '../../utils/abilityT
  * the game store or router.
  */
 export function CardBreakdownComponent({ card }: { card: CardView }) {
+  const cardNameMap = useGameStore((state) => state.cardNameMap);
+  const resolveCardName = (cardId: number) => cardNameMap[cardId];
   const allAbilities = [...card.shop_abilities, ...card.battle_abilities];
   return (
     <div className="w-80 bg-gray-900 rounded-xl border border-gray-700 shadow-2xl p-5 text-left">
@@ -35,7 +38,7 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
             <strong>Trigger:</strong> {formatAbilityTrigger(ability.trigger)}
           </div>
           <div className="text-sm text-gray-200 bg-gray-900/50 p-2 rounded border border-gray-700/50 italic">
-            "{formatAbilitySummary(ability)}"
+            "{formatAbilitySummary(ability, { resolveCardName })}"
           </div>
         </div>
       ))}

@@ -245,7 +245,15 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
         const view = engine.get_view();
         const cardSet = engine.get_card_set();
-        useGameStore.setState({ view, cardSet });
+        const existingNames = useGameStore.getState().cardNameMap;
+        useGameStore.setState({
+          view,
+          cardSet,
+          cardNameMap: {
+            ...existingNames,
+            ...buildBlockchainCardNameMap(allCards),
+          },
+        });
 
         console.log('Tournament game synced via SCALE bytes.');
       } else {
@@ -469,4 +477,10 @@ function convertAbility(a: any): any {
     conditions: (a.conditions || []).map(convertCondition),
     max_triggers: a.max_triggers ?? null,
   };
+}
+
+function buildBlockchainCardNameMap(cards: any[]): Record<number, string> {
+  return Object.fromEntries(
+    cards.map((card) => [card.id, card.metadata?.name || `Card #${card.id}`])
+  );
 }

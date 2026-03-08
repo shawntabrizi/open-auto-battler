@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useBlockchainStore } from '../store/blockchainStore';
+import { useGameStore } from '../store/gameStore';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import {
@@ -67,6 +68,8 @@ const STATS: StatType[] = ['Health', 'Attack', 'Mana'];
 
 export const CreateCardPage: React.FC = () => {
   const { isConnected, connect, submitCard } = useBlockchainStore();
+  const cardNameMap = useGameStore((state) => state.cardNameMap);
+  const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
 
   const defaultBattleAbility = (): BattleAbility => ({
     trigger: 'OnStart',
@@ -624,7 +627,7 @@ export const CreateCardPage: React.FC = () => {
                         {formatAbilityTrigger(ability.trigger)}
                       </div>
                       <div className="text-xs text-warm-300 mt-1">
-                        {formatAbilitySummary(ability)}
+                        {formatAbilitySummary(ability, { resolveCardName })}
                       </div>
                     </div>
                     <button
@@ -694,7 +697,7 @@ export const CreateCardPage: React.FC = () => {
                 </div>
 
                 <div className="rounded-lg border border-yellow-500/10 bg-yellow-500/5 px-3 py-2 text-xs text-warm-300">
-                  {formatAbilitySummary(newAbility)}
+                  {formatAbilitySummary(newAbility, { resolveCardName })}
                 </div>
 
                 <div>

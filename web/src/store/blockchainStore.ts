@@ -144,6 +144,12 @@ function convertAbility(a: any): any {
   };
 }
 
+function buildBlockchainCardNameMap(cards: any[]): Record<number, string> {
+  return Object.fromEntries(
+    cards.map((card) => [card.id, card.metadata?.name || `Card #${card.id}`])
+  );
+}
+
 interface BlockchainStore {
   // Connection state
   client: any;
@@ -400,7 +406,15 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
             const cardSet = engine.get_card_set();
 
             console.log('WASM engine synced successfully via SCALE bytes. View:', view);
-            useGameStore.setState({ view, cardSet });
+            const existingNames = useGameStore.getState().cardNameMap;
+            useGameStore.setState({
+              view,
+              cardSet,
+              cardNameMap: {
+                ...existingNames,
+                ...buildBlockchainCardNameMap(allCards),
+              },
+            });
           } catch (e) {
             console.error('Failed to sync engine with chain state via SCALE:', e);
           }

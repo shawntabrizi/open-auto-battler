@@ -1,4 +1,5 @@
 import React from 'react';
+import { useGameStore } from '../store/gameStore';
 import type { CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import {
@@ -32,7 +33,9 @@ interface CardDetailModalProps {
 }
 
 export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps) {
+  const cardNameMap = useGameStore((state) => state.cardNameMap);
   const [showRaw, setShowRaw] = React.useState(false);
+  const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
   const rawJson = React.useMemo(() => stringifyWithCompactStatusMasks(card), [card]);
   const allAbilities = [...card.shop_abilities, ...card.battle_abilities];
 
@@ -97,9 +100,11 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
                 <div className="text-sm text-warm-300 mb-2">
                   <strong>Trigger:</strong> {formatAbilityTrigger(ability.trigger)}
                 </div>
-                <div className="text-sm text-white">{formatAbilitySummary(ability)}</div>
+                <div className="text-sm text-white">
+                  {formatAbilitySummary(ability, { resolveCardName })}
+                </div>
                 <div className="text-xs text-warm-400 mt-2 italic">
-                  {formatAbilityEffect(ability.effect)}
+                  {formatAbilityEffect(ability.effect, { resolveCardName })}
                 </div>
               </div>
             ))}

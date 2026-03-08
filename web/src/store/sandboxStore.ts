@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { BattleOutput, SandboxUnit, CardView } from '../types';
 import { initEmojiMap } from '../utils/emoji';
+import { useGameStore } from './gameStore';
 
 interface WasmModule {
   default: () => Promise<void>;
@@ -16,6 +17,10 @@ interface WasmModule {
 }
 
 let wasmModule: WasmModule | null = null;
+
+function buildCardNameMap(metas: Array<{ id: number; name: string }>): Record<number, string> {
+  return Object.fromEntries(metas.map((meta) => [meta.id, meta.name]));
+}
 
 interface SandboxStore {
   // State
@@ -65,7 +70,7 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
     try {
       set({ isLoading: true });
 
-      const wasm = await import('oab-client') as unknown as WasmModule;
+      const wasm = (await import('oab-client')) as unknown as WasmModule;
 
       if (!wasmInitialized) {
         await wasm.default();
@@ -77,7 +82,15 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
       // Ensure emoji map covers sandbox templates
       // (needed when sandbox loads in isolation, e.g. DevPage iframes)
       const tempEngine = new wasm.GameEngine(undefined);
-      initEmojiMap(tempEngine.get_card_metas());
+      const metas = tempEngine.get_card_metas();
+      initEmojiMap(metas);
+      const existingNames = useGameStore.getState().cardNameMap;
+      useGameStore.setState({
+        cardNameMap: {
+          ...existingNames,
+          ...buildCardNameMap(metas),
+        },
+      });
 
       const templates = wasm.get_unit_templates();
 
@@ -160,11 +173,7 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
     }
 
     try {
-      const output = wasmModule.run_sandbox_battle(
-        playerUnits,
-        enemyUnits,
-        BigInt(battleSeed)
-      );
+      const output = wasmModule.run_sandbox_battle(playerUnits, enemyUnits, BigInt(battleSeed));
       set({ battleOutput: output, isBattling: true });
     } catch (err) {
       console.error('Failed to run sandbox battle:', err);

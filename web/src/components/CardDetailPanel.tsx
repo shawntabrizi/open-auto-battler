@@ -60,6 +60,7 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
   const navigate = useNavigate();
   const {
     view,
+    cardNameMap,
     selection,
     pitchHandCard,
     pitchBoardUnit,
@@ -69,6 +70,10 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
   } = useGameStore();
 
   const resolvedMode: CardDetailPanelMode = mode ?? { type: 'standard' };
+  const resolveCardName = React.useCallback(
+    (cardId: number) => cardNameMap[cardId],
+    [cardNameMap]
+  );
   const cardRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(card), [card]);
   const gameViewRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(view), [view]);
 
@@ -172,10 +177,10 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
                   </div>
                 )}
                 <div className="text-[10px] lg:text-sm text-warm-200 bg-warm-950/50 p-1.5 lg:p-2 rounded border border-warm-700/50 italic">
-                  "{formatAbilitySummary(ability)}"
+                  "{formatAbilitySummary(ability, { resolveCardName })}"
                 </div>
                 <div className="mt-1 lg:mt-2 text-[10px] lg:text-xs text-blue-400 font-semibold">
-                  {formatAbilityEffect(ability.effect)}
+                  {formatAbilityEffect(ability.effect, { resolveCardName })}
                 </div>
               </div>
             ))}
