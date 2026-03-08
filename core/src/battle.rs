@@ -108,7 +108,7 @@ pub enum CombatEvent {
     },
     AbilityTrigger {
         source_instance_id: UnitInstanceId,
-        ability_name: String,
+        ability_index: u32,
     },
     Clash {
         p_dmg: i32,
@@ -216,7 +216,6 @@ struct PendingTrigger {
     source_id: UnitInstanceId,
     team: Team,
     effect: AbilityEffect,
-    ability_name: String,
     priority: TriggerPriority,
     is_from_dead: bool,
     spawn_index_override: Option<usize>,
@@ -720,7 +719,7 @@ fn resolve_trigger_queue<R: BattleRng>(
         limits.record_trigger(trigger.team)?;
         events.push(CombatEvent::AbilityTrigger {
             source_instance_id: trigger.source_id,
-            ability_name: trigger.ability_name,
+            ability_index: trigger.ability_index as u32,
         });
 
         // E. Increment trigger count for this ability (if unit is still alive)
@@ -783,7 +782,6 @@ fn resolve_trigger_queue<R: BattleRng>(
                             source_id: unit_id,
                             team,
                             effect: ability.effect.clone(),
-                            ability_name: ability.name.clone(),
                             priority: TriggerPriority {
                                 attack: unit.effective_attack(),
                                 health: unit.effective_health(),
@@ -828,7 +826,6 @@ fn resolve_trigger_queue<R: BattleRng>(
                             source_id: dead_unit.instance_id,
                             team,
                             effect: ability.effect.clone(),
-                            ability_name: ability.name.clone(),
                             priority: TriggerPriority {
                                 attack: dead_unit.effective_attack(),
                                 health: dead_unit.effective_health(),
@@ -859,7 +856,6 @@ fn resolve_trigger_queue<R: BattleRng>(
                             source_id: survivor.instance_id,
                             team: Team::Player,
                             effect: ability.effect.clone(),
-                            ability_name: ability.name.clone(),
                             priority: TriggerPriority {
                                 attack: survivor.effective_attack(),
                                 health: survivor.effective_health(),
@@ -890,7 +886,6 @@ fn resolve_trigger_queue<R: BattleRng>(
                             source_id: survivor.instance_id,
                             team: Team::Enemy,
                             effect: ability.effect.clone(),
-                            ability_name: ability.name.clone(),
                             priority: TriggerPriority {
                                 attack: survivor.effective_attack(),
                                 health: survivor.effective_health(),
@@ -1114,7 +1109,6 @@ fn apply_ability_effect<R: BattleRng>(
                                 source_id: spawned_id,
                                 team: source_team,
                                 effect: ability.effect.clone(),
-                                ability_name: ability.name.clone(),
                                 priority: TriggerPriority {
                                     attack: my_board[safe_idx].effective_attack(),
                                     health: my_board[safe_idx].effective_health(),
@@ -1143,7 +1137,6 @@ fn apply_ability_effect<R: BattleRng>(
                                     source_id: unit.instance_id,
                                     team: source_team,
                                     effect: ability.effect.clone(),
-                                    ability_name: ability.name.clone(),
                                     priority: TriggerPriority {
                                         attack: unit.effective_attack(),
                                         health: unit.effective_health(),
@@ -1179,7 +1172,6 @@ fn apply_ability_effect<R: BattleRng>(
                                     source_id: unit.instance_id,
                                     team: opposing_team,
                                     effect: ability.effect.clone(),
-                                    ability_name: ability.name.clone(),
                                     priority: TriggerPriority {
                                         attack: unit.effective_attack(),
                                         health: unit.effective_health(),
@@ -1442,7 +1434,6 @@ fn collect_and_resolve_triggers<R: BattleRng>(
                         source_id: u.instance_id,
                         team,
                         effect: ability.effect.clone(),
-                        ability_name: ability.name.clone(),
                         priority: TriggerPriority {
                             attack: u.effective_attack(),
                             health: u.effective_health(),
@@ -1665,7 +1656,6 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                             source_id: target_id,
                             team,
                             effect: a.effect.clone(),
-                            ability_name: a.name.clone(),
                             priority: TriggerPriority {
                                 attack: u.effective_attack(),
                                 health: u.effective_health(),
@@ -1720,7 +1710,6 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                     source_id: u.instance_id,
                     team: Team::Player,
                     effect: a.effect.clone(),
-                    ability_name: a.name.clone(),
                     priority: TriggerPriority {
                         attack: u.effective_attack(),
                         health: u.effective_health(),
@@ -1745,7 +1734,6 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                         source_id: survivor.instance_id,
                         team: Team::Player,
                         effect: ability.effect.clone(),
-                        ability_name: ability.name.clone(),
                         priority: TriggerPriority {
                             attack: survivor.effective_attack(),
                             health: survivor.effective_health(),
@@ -1777,7 +1765,6 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                     source_id: u.instance_id,
                     team: Team::Enemy,
                     effect: a.effect.clone(),
-                    ability_name: a.name.clone(),
                     priority: TriggerPriority {
                         attack: u.effective_attack(),
                         health: u.effective_health(),
@@ -1802,7 +1789,6 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                         source_id: survivor.instance_id,
                         team: Team::Enemy,
                         effect: ability.effect.clone(),
-                        ability_name: ability.name.clone(),
                         priority: TriggerPriority {
                             attack: survivor.effective_attack(),
                             health: survivor.effective_health(),

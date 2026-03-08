@@ -503,8 +503,6 @@ pub enum ShopTarget {
 pub struct Ability {
     pub trigger: AbilityTrigger,
     pub effect: AbilityEffect,
-    pub name: String,
-    pub description: String,
     /// The list of conditions implies "AND".
     /// If empty, it always triggers.
     #[cfg_attr(feature = "std", serde(default))]
@@ -521,8 +519,6 @@ pub struct Ability {
 pub struct ShopAbility {
     pub trigger: ShopTrigger,
     pub effect: ShopEffect,
-    pub name: String,
-    pub description: String,
     /// The list of conditions implies "AND".
     /// If empty, it always triggers.
     #[cfg_attr(feature = "std", serde(default))]

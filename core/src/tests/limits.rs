@@ -1,5 +1,5 @@
 use super::*;
-use crate::battle::CombatEvent;
+use crate::battle::{CombatEvent, UnitId};
 use crate::types::*;
 
 #[test]
@@ -15,8 +15,6 @@ fn test_max_triggers_unlimited() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            name: "Unlimited Rage".to_string(),
-            description: "Gain +1 attack when hurt (unlimited)".to_string(),
             conditions: vec![],
             max_triggers: None,
         }];
@@ -34,11 +32,13 @@ fn test_max_triggers_unlimited() {
     let trigger_count = events
         .iter()
         .filter(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                ability_name == "Unlimited Rage"
-            } else {
-                false
-            }
+            matches!(
+                e,
+                CombatEvent::AbilityTrigger {
+                    source_instance_id,
+                    ability_index,
+                } if *source_instance_id == UnitId::player(1) && *ability_index == 0
+            )
         })
         .count();
 
@@ -62,8 +62,6 @@ fn test_max_triggers_not_exceeded_on_death() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            name: "Limited Buff".to_string(),
-            description: "Gain +1 attack when hurt (max 2 times)".to_string(),
             conditions: vec![],
             max_triggers: Some(2),
         }];
@@ -81,11 +79,13 @@ fn test_max_triggers_not_exceeded_on_death() {
     let trigger_count = events
         .iter()
         .filter(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                ability_name == "Limited Buff"
-            } else {
-                false
-            }
+            matches!(
+                e,
+                CombatEvent::AbilityTrigger {
+                    source_instance_id,
+                    ability_index,
+                } if *source_instance_id == UnitId::player(1) && *ability_index == 0
+            )
         })
         .count();
 
@@ -109,8 +109,6 @@ fn test_max_triggers_limit() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            name: "Limited Rage".to_string(),
-            description: "Gain +1 attack when hurt (max 2 times)".to_string(),
             conditions: vec![],
             max_triggers: Some(2),
         }];
@@ -128,11 +126,13 @@ fn test_max_triggers_limit() {
     let trigger_count = events
         .iter()
         .filter(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                ability_name == "Limited Rage"
-            } else {
-                false
-            }
+            matches!(
+                e,
+                CombatEvent::AbilityTrigger {
+                    source_instance_id,
+                    ability_index,
+                } if *source_instance_id == UnitId::player(1) && *ability_index == 0
+            )
         })
         .count();
 

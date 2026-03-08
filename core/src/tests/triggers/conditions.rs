@@ -1,4 +1,4 @@
-use crate::battle::CombatEvent;
+use crate::battle::UnitId;
 use crate::tests::*;
 use crate::types::*;
 
@@ -15,8 +15,6 @@ fn test_condition_target_health_threshold() {
                     index: -1,
                 },
             },
-            name: "Emergency Heal".to_string(),
-            description: "Heal ally ahead if HP <= 6".to_string(),
             conditions: vec![Condition::Is(Matcher::StatValueCompare {
                 scope: TargetScope::AlliesOther,
                 stat: StatType::Health,
@@ -37,13 +35,7 @@ fn test_condition_target_health_threshold() {
 
         let events = run_battle(&p_board, &e_board, 123);
 
-        let heal_triggered = events.iter().any(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                ability_name == "Emergency Heal"
-            } else {
-                false
-            }
-        });
+        let heal_triggered = has_ability_trigger(&events, UnitId::player(2), 0);
 
         assert!(heal_triggered, "Nurse should heal ally with HP <= 6");
     }
@@ -58,13 +50,7 @@ fn test_condition_target_health_threshold() {
 
         let events = run_battle(&p_board, &e_board, 456);
 
-        let heal_triggered = events.iter().any(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                ability_name == "Emergency Heal"
-            } else {
-                false
-            }
-        });
+        let heal_triggered = has_ability_trigger(&events, UnitId::player(2), 0);
 
         assert!(!heal_triggered, "Nurse should NOT heal ally with HP > 6");
     }
@@ -82,8 +68,6 @@ fn test_condition_ally_count() {
                     scope: TargetScope::Allies,
                 },
             },
-            name: "Pack Tactics".to_string(),
-            description: "Buff all allies if 3+ allies".to_string(),
             conditions: vec![Condition::Is(Matcher::UnitCount {
                 scope: TargetScope::Allies,
                 op: CompareOp::GreaterThanOrEqual,
@@ -108,13 +92,7 @@ fn test_condition_ally_count() {
 
         let events = run_battle(&p_board, &e_board, 789);
 
-        let buff_triggered = events.iter().any(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                ability_name == "Pack Tactics"
-            } else {
-                false
-            }
-        });
+        let buff_triggered = has_ability_trigger(&events, UnitId::player(1), 0);
 
         assert!(buff_triggered, "Pack Leader should buff when 3+ allies");
     }
@@ -129,13 +107,7 @@ fn test_condition_ally_count() {
 
         let events = run_battle(&p_board, &e_board, 101112);
 
-        let buff_triggered = events.iter().any(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                ability_name == "Pack Tactics"
-            } else {
-                false
-            }
-        });
+        let buff_triggered = has_ability_trigger(&events, UnitId::player(1), 0);
 
         assert!(
             !buff_triggered,
@@ -156,8 +128,6 @@ fn test_condition_last_stand() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            name: "Last Stand".to_string(),
-            description: "Gain +5 attack if alone".to_string(),
             conditions: vec![Condition::Is(Matcher::UnitCount {
                 scope: TargetScope::Allies,
                 op: CompareOp::LessThanOrEqual,
@@ -176,13 +146,7 @@ fn test_condition_last_stand() {
 
         let events = run_battle(&p_board, &e_board, 1313);
 
-        let buff_triggered = events.iter().any(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                ability_name == "Last Stand"
-            } else {
-                false
-            }
-        });
+        let buff_triggered = has_ability_trigger(&events, UnitId::player(1), 0);
 
         assert!(
             buff_triggered,
@@ -200,13 +164,7 @@ fn test_condition_last_stand() {
 
         let events = run_battle(&p_board, &e_board, 1414);
 
-        let buff_triggered = events.iter().any(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                ability_name == "Last Stand"
-            } else {
-                false
-            }
-        });
+        let buff_triggered = has_ability_trigger(&events, UnitId::player(1), 0);
 
         assert!(
             !buff_triggered,
@@ -227,8 +185,6 @@ fn test_condition_logic_gates() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            name: "Complex Condition".to_string(),
-            description: "Buff if HP <= 5 AND 2+ allies".to_string(),
             conditions: vec![
                 Condition::Is(Matcher::StatValueCompare {
                     scope: TargetScope::SelfUnit,
@@ -256,13 +212,7 @@ fn test_condition_logic_gates() {
 
         let events = run_battle(&p_board, &e_board, 1515);
 
-        let triggered = events.iter().any(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                ability_name == "Complex Condition"
-            } else {
-                false
-            }
-        });
+        let triggered = has_ability_trigger(&events, UnitId::player(1), 0);
 
         assert!(triggered, "Should trigger when both AND conditions are met");
     }
@@ -276,13 +226,7 @@ fn test_condition_logic_gates() {
 
         let events = run_battle(&p_board, &e_board, 1616);
 
-        let triggered = events.iter().any(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                ability_name == "Complex Condition"
-            } else {
-                false
-            }
-        });
+        let triggered = has_ability_trigger(&events, UnitId::player(1), 0);
 
         assert!(
             !triggered,
@@ -303,8 +247,6 @@ fn test_condition_stat_value_compare_uses_matcher_scope() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            name: "Enemy Health Check".to_string(),
-            description: "Trigger if any enemy has health >= 5".to_string(),
             conditions: vec![Condition::Is(Matcher::StatValueCompare {
                 scope: TargetScope::Enemies,
                 stat: StatType::Health,
@@ -324,12 +266,7 @@ fn test_condition_stat_value_compare_uses_matcher_scope() {
             2020,
         );
 
-        let triggered = events.iter().any(|e| {
-            matches!(
-                e,
-                CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Enemy Health Check"
-            )
-        });
+        let triggered = has_ability_trigger(&events, UnitId::player(1), 0);
         assert!(
             triggered,
             "Should trigger when enemy scope satisfies condition"
@@ -345,12 +282,7 @@ fn test_condition_stat_value_compare_uses_matcher_scope() {
             2021,
         );
 
-        let triggered = events.iter().any(|e| {
-            matches!(
-                e,
-                CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Enemy Health Check"
-            )
-        });
+        let triggered = has_ability_trigger(&events, UnitId::player(1), 0);
         assert!(
             !triggered,
             "Should not trigger when enemy scope does not satisfy condition"
@@ -370,8 +302,6 @@ fn test_condition_stat_stat_compare_uses_target_scope() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            name: "Enemy Stat Compare".to_string(),
-            description: "Trigger if source attack is less than enemy health".to_string(),
             conditions: vec![Condition::Is(Matcher::StatStatCompare {
                 source_stat: StatType::Attack,
                 op: CompareOp::LessThan,
@@ -391,12 +321,7 @@ fn test_condition_stat_stat_compare_uses_target_scope() {
             3030,
         );
 
-        let triggered = events.iter().any(|e| {
-            matches!(
-                e,
-                CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Enemy Stat Compare"
-            )
-        });
+        let triggered = has_ability_trigger(&events, UnitId::player(1), 0);
         assert!(
             triggered,
             "Should trigger when enemy scope satisfies comparison"
@@ -412,12 +337,7 @@ fn test_condition_stat_stat_compare_uses_target_scope() {
             3031,
         );
 
-        let triggered = events.iter().any(|e| {
-            matches!(
-                e,
-                CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Enemy Stat Compare"
-            )
-        });
+        let triggered = has_ability_trigger(&events, UnitId::player(1), 0);
         assert!(
             !triggered,
             "Should not trigger when enemy scope fails comparison"
@@ -436,8 +356,6 @@ fn test_condition_is_position_uses_matcher_scope() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        name: "Enemy Position Check".to_string(),
-        description: "Should fail because source is not in enemy scope".to_string(),
         conditions: vec![Condition::Is(Matcher::IsPosition {
             scope: TargetScope::Enemies,
             index: 0,
@@ -454,8 +372,6 @@ fn test_condition_is_position_uses_matcher_scope() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        name: "Ally Position Check".to_string(),
-        description: "Should pass when source is front ally".to_string(),
         conditions: vec![Condition::Is(Matcher::IsPosition {
             scope: TargetScope::Allies,
             index: 0,
@@ -470,12 +386,7 @@ fn test_condition_is_position_uses_matcher_scope() {
         &[CombatUnit::from_card(enemy.clone())],
         4040,
     );
-    let enemy_scope_triggered = enemy_scope_events.iter().any(|e| {
-        matches!(
-            e,
-            CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Enemy Position Check"
-        )
-    });
+    let enemy_scope_triggered = has_ability_trigger(&enemy_scope_events, UnitId::player(1), 0);
     assert!(
         !enemy_scope_triggered,
         "Enemy-scoped position check should not trigger for the source unit"
@@ -486,12 +397,7 @@ fn test_condition_is_position_uses_matcher_scope() {
         &[CombatUnit::from_card(enemy)],
         4041,
     );
-    let ally_scope_triggered = ally_scope_events.iter().any(|e| {
-        matches!(
-            e,
-            CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Ally Position Check"
-        )
-    });
+    let ally_scope_triggered = has_ability_trigger(&ally_scope_events, UnitId::player(1), 0);
     assert!(
         ally_scope_triggered,
         "Ally-scoped position check should trigger for a front source unit"

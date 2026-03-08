@@ -49,9 +49,6 @@ fn test_nurse_goblin_heals_only_when_ally_hp_is_six_or_less() {
                     index: 0,
                 },
             },
-            name: "Emergency Heal".to_string(),
-            description: "Before any attack: heal front ally for 2 if it has 6 or less health"
-                .to_string(),
             conditions: vec![Condition::Is(Matcher::TargetStatValueCompare {
                 target: AbilityTarget::Position {
                     scope: TargetScope::Allies,
@@ -80,12 +77,7 @@ fn test_nurse_goblin_heals_only_when_ally_hp_is_six_or_less() {
         let e_board = vec![CombatUnit::from_card(enemy)];
         let events = run_battle(&p_board, &e_board, 2001);
 
-        let heal_triggered = events.iter().any(|e| {
-            matches!(
-                e,
-                CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Emergency Heal"
-            )
-        });
+        let heal_triggered = has_ability_trigger(&events, UnitId::player(2), 0);
         assert!(
             !heal_triggered,
             "Nurse Goblin should not trigger when the heal target (front ally) has HP > 6"
@@ -121,12 +113,7 @@ fn test_nurse_goblin_heals_only_when_ally_hp_is_six_or_less() {
         let e_board = vec![CombatUnit::from_card(enemy)];
         let events = run_battle(&p_board, &e_board, 2002);
 
-        let heal_triggered = events.iter().any(|e| {
-            matches!(
-                e,
-                CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Emergency Heal"
-            )
-        });
+        let heal_triggered = has_ability_trigger(&events, UnitId::player(2), 0);
         assert!(
             heal_triggered,
             "Nurse Goblin should trigger heal when ally HP <= 6"

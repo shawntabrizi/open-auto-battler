@@ -2,64 +2,108 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useSandboxStore } from '../store/sandboxStore';
 import { BattleArena } from './BattleArena';
-import type { BattleOutput, CombatEvent } from '../types';
+import type { BattleAbility, BattleOutput, CombatEvent } from '../types';
+import { formatAbilitySummary } from '../utils/abilityText';
 
 // --- Battle Log Helpers ---
 
 function buildUnitNameMap(
   output: BattleOutput
-): Map<number, { name: string; team: string }> {
-  const map = new Map<number, { name: string; team: string }>();
+): Map<number, { name: string; team: string; battle_abilities: BattleAbility[] }> {
+  const map = new Map<number, { name: string; team: string; battle_abilities: BattleAbility[] }>();
   for (const u of output.initial_player_units) {
-    map.set(u.instance_id, { name: u.name, team: 'Player' });
+    map.set(u.instance_id, { name: u.name, team: 'Player', battle_abilities: u.battle_abilities });
   }
   for (const u of output.initial_enemy_units) {
-    map.set(u.instance_id, { name: u.name, team: 'Enemy' });
+    map.set(u.instance_id, { name: u.name, team: 'Enemy', battle_abilities: u.battle_abilities });
   }
   for (const event of output.events) {
     if (event.type === 'UnitSpawn') {
       map.set(event.payload.spawned_unit.instance_id, {
         name: event.payload.spawned_unit.name,
         team: String(event.payload.team),
+        battle_abilities: event.payload.spawned_unit.battle_abilities,
       });
     }
   }
   return map;
 }
 
+function getTriggeredAbilityText(
+  unitMap: Map<number, { name: string; team: string; battle_abilities: BattleAbility[] }>,
+  sourceInstanceId: number,
+  abilityIndex: number
+): string {
+  const ability = unitMap.get(sourceInstanceId)?.battle_abilities?.[abilityIndex];
+  return ability ? formatAbilitySummary(ability) : `Ability ${abilityIndex + 1}`;
+}
+
 function formatEvent(
   event: CombatEvent,
-  unitMap: Map<number, { name: string; team: string }>
+  unitMap: Map<number, { name: string; team: string; battle_abilities: BattleAbility[] }>
 ): { text: string; color: string } | null {
   const getName = (id: number) => unitMap.get(id)?.name || `Unit #${id}`;
 
   switch (event.type) {
     case 'Clash':
-      return { text: `Clash! (${event.payload.p_dmg} / ${event.payload.e_dmg} dmg)`, color: 'text-amber-400' };
+      return {
+        text: `Clash! (${event.payload.p_dmg} / ${event.payload.e_dmg} dmg)`,
+        color: 'text-amber-400',
+      };
     case 'DamageTaken':
-      return { text: `${getName(event.payload.target_instance_id)} hit (${event.payload.remaining_hp} HP left)`, color: 'text-red-400' };
+      return {
+        text: `${getName(event.payload.target_instance_id)} hit (${event.payload.remaining_hp} HP left)`,
+        color: 'text-red-400',
+      };
     case 'UnitDeath': {
       const team = String(event.payload.team);
       return { text: `${team} unit falls`, color: 'text-red-300' };
     }
     case 'AbilityTrigger':
-      return { text: `${getName(event.payload.source_instance_id)}'s ${event.payload.ability_name}`, color: 'text-yellow-400' };
+      return {
+        text: `${getName(event.payload.source_instance_id)}'s ${getTriggeredAbilityText(
+          unitMap,
+          event.payload.source_instance_id,
+          event.payload.ability_index
+        )}`,
+        color: 'text-yellow-400',
+      };
     case 'AbilityDamage':
-      return { text: `${getName(event.payload.source_instance_id)} deals ${event.payload.damage} to ${getName(event.payload.target_instance_id)}`, color: 'text-orange-400' };
+      return {
+        text: `${getName(event.payload.source_instance_id)} deals ${event.payload.damage} to ${getName(event.payload.target_instance_id)}`,
+        color: 'text-orange-400',
+      };
     case 'AbilityModifyStats':
     case 'AbilityModifyStatsPermanent': {
       const { attack_change, health_change } = event.payload;
       const parts: string[] = [];
       if (attack_change) parts.push(`${attack_change > 0 ? '+' : ''}${attack_change} ATK`);
       if (health_change) parts.push(`${health_change > 0 ? '+' : ''}${health_change} HP`);
-      return { text: `${getName(event.payload.target_instance_id)} ${parts.join(', ')}`, color: 'text-green-400' };
+      return {
+        text: `${getName(event.payload.target_instance_id)} ${parts.join(', ')}`,
+        color: 'text-green-400',
+      };
     }
     case 'AbilityGainMana':
-      return { text: `${getName(event.payload.source_instance_id)} +${event.payload.amount} mana`, color: 'text-blue-400' };
+      return {
+        text: `${getName(event.payload.source_instance_id)} +${event.payload.amount} mana`,
+        color: 'text-blue-400',
+      };
     case 'UnitSpawn':
-      return { text: `${event.payload.spawned_unit.name} spawns (${event.payload.team})`, color: 'text-cyan-400' };
+      return {
+        text: `${event.payload.spawned_unit.name} spawns (${event.payload.team})`,
+        color: 'text-cyan-400',
+      };
     case 'BattleEnd':
-      return { text: `Battle ends: ${event.payload.result}`, color: event.payload.result === 'Victory' ? 'text-green-400' : event.payload.result === 'Defeat' ? 'text-red-400' : 'text-yellow-400' };
+      return {
+        text: `Battle ends: ${event.payload.result}`,
+        color:
+          event.payload.result === 'Victory'
+            ? 'text-green-400'
+            : event.payload.result === 'Defeat'
+              ? 'text-red-400'
+              : 'text-yellow-400',
+      };
     default:
       return null;
   }
@@ -99,7 +143,10 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
 
   // Build unit name map once per battle output
   const unitNameMap = useMemo(
-    () => (battleOutput ? buildUnitNameMap(battleOutput) : new Map<number, { name: string; team: string }>()),
+    () =>
+      battleOutput
+        ? buildUnitNameMap(battleOutput)
+        : new Map<number, { name: string; team: string; battle_abilities: BattleAbility[] }>(),
     [battleOutput]
   );
 
@@ -225,7 +272,11 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
 
       {/* Main battle area + result overlay */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center min-h-0 px-2 lg:px-8">
-        <BattleArena battleOutput={battleOutput} onBattleEnd={() => setBattleFinished(true)} onEventProcessed={handleEventProcessed} />
+        <BattleArena
+          battleOutput={battleOutput}
+          onBattleEnd={() => setBattleFinished(true)}
+          onEventProcessed={handleEventProcessed}
+        />
 
         {/* Result overlay — centered over the battle field */}
         {battleFinished && (

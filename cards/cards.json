@@ -19,8 +19,6 @@
           "type": "SpawnUnit",
           "card_id": 40
         },
-        "name": "Infestation",
-        "description": "Spawn a Rat Token when killed",
         "conditions": [],
         "max_triggers": 1
       }
@@ -84,8 +82,6 @@
             }
           }
         },
-        "name": "Hiss",
-        "description": "Give the ally behind +2 Health at start",
         "conditions": [],
         "max_triggers": null
       }
@@ -119,8 +115,6 @@
             }
           }
         },
-        "name": "Command",
-        "description": "Give a random other ally +2/+2 at start",
         "conditions": [],
         "max_triggers": null
       }
@@ -169,8 +163,6 @@
             }
           }
         },
-        "name": "Shield Wall",
-        "description": "Heal front ally for 2 at start",
         "conditions": [],
         "max_triggers": null
       }
@@ -204,8 +196,6 @@
             }
           }
         },
-        "name": "Emergency Heal",
-        "description": "Heal front ally for 2 if its health is <= 6",
         "conditions": [
           {
             "type": "Is",
@@ -257,8 +247,6 @@
             }
           }
         },
-        "name": "Dying Bite",
-        "description": "Deal 2 damage to front enemy on death",
         "conditions": [],
         "max_triggers": null
       }
@@ -292,8 +280,6 @@
             }
           }
         },
-        "name": "Last Stand",
-        "description": "Give the ally behind +2/+2 on death",
         "conditions": [],
         "max_triggers": 1
       }
@@ -325,8 +311,6 @@
             }
           }
         },
-        "name": "Abyssal Blast",
-        "description": "Deal 3 damage to ALL units on death",
         "conditions": [],
         "max_triggers": null
       }
@@ -359,8 +343,6 @@
             }
           }
         },
-        "name": "Long Shot",
-        "description": "Deal 1 damage to the back enemy at start",
         "conditions": [],
         "max_triggers": null
       }
@@ -393,8 +375,6 @@
             }
           }
         },
-        "name": "Assassinate",
-        "description": "Deal 2 damage to the back enemy at start",
         "conditions": [],
         "max_triggers": null
       }
@@ -427,8 +407,6 @@
             }
           }
         },
-        "name": "Bone Arrow",
-        "description": "Deal 2 damage to a random enemy at start",
         "conditions": [],
         "max_triggers": null
       }
@@ -461,8 +439,6 @@
             }
           }
         },
-        "name": "Brace",
-        "description": "Gain +2 health before attacking",
         "conditions": [],
         "max_triggers": 3
       },
@@ -479,8 +455,6 @@
             }
           }
         },
-        "name": "Adrenaline",
-        "description": "Gain +2 attack after attacking",
         "conditions": [],
         "max_triggers": 3
       }
@@ -513,8 +487,6 @@
             }
           }
         },
-        "name": "Last Stand",
-        "description": "Gain +5 attack if you are the only ally",
         "conditions": [
           {
             "type": "Is",
@@ -559,8 +531,6 @@
             }
           }
         },
-        "name": "Strength in Numbers",
-        "description": "Give all allies +1/+1 if you have 3+ allies",
         "conditions": [
           {
             "type": "Is",
@@ -604,8 +574,6 @@
             }
           }
         },
-        "name": "Spines",
-        "description": "Deal 1 damage to the attacker when hurt",
         "conditions": [],
         "max_triggers": 3
       }
@@ -638,8 +606,6 @@
             }
           }
         },
-        "name": "Lifesteal",
-        "description": "Heal 2 health after attacking",
         "conditions": [],
         "max_triggers": 3
       }
@@ -672,8 +638,6 @@
             }
           }
         },
-        "name": "Berserk",
-        "description": "Gain +2 attack when hurt",
         "conditions": [],
         "max_triggers": 3
       }
@@ -699,8 +663,6 @@
           "type": "SpawnUnit",
           "card_id": 41
         },
-        "name": "Undead Call",
-        "description": "Spawn a Zombie Soldier on death",
         "conditions": [],
         "max_triggers": null
       }
@@ -733,8 +695,6 @@
             }
           }
         },
-        "name": "Spawn Boost",
-        "description": "Give +2 attack to any spawned unit",
         "conditions": [],
         "max_triggers": 3
       }
@@ -769,8 +729,6 @@
             }
           }
         },
-        "name": "Assassinate",
-        "description": "Deal 5 damage to the enemy with the lowest health",
         "conditions": [],
         "max_triggers": null
       }
@@ -805,8 +763,6 @@
             }
           }
         },
-        "name": "Weak Point",
-        "description": "Deal 3 damage to the enemy with the highest attack",
         "conditions": [],
         "max_triggers": null
       }
@@ -840,8 +796,6 @@
             }
           }
         },
-        "name": "Squire's Aegis",
-        "description": "Give unit in front +2 health before every clash",
         "conditions": [],
         "max_triggers": 3
       }
@@ -873,8 +827,6 @@
             }
           }
         },
-        "name": "Seal Fate",
-        "description": "Deal 1 damage to any enemy that spawns",
         "conditions": [],
         "max_triggers": 3
       }
@@ -907,8 +859,6 @@
             }
           }
         },
-        "name": "Artillery Strike",
-        "description": "Deal 5 damage to enemy in 3rd slot (pos 2) at start",
         "conditions": [],
         "max_triggers": null
       }
@@ -942,8 +892,6 @@
             }
           }
         },
-        "name": "Supply Line",
-        "description": "Give unit in 5th slot (pos 4) +3/+3 at start",
         "conditions": [],
         "max_triggers": null
       }
@@ -975,8 +923,6 @@
             }
           }
         },
-        "name": "Death Nova",
-        "description": "Deal 3 damage to all enemies on death",
         "conditions": [],
         "max_triggers": null
       }
@@ -1008,8 +954,6 @@
             }
           }
         },
-        "name": "Ritual",
-        "description": "Sacrifice the ally in front...",
         "conditions": [],
         "max_triggers": null
       },
@@ -1019,8 +963,6 @@
           "type": "SpawnUnit",
           "card_id": 42
         },
-        "name": "...Raise Golem",
-        "description": "...to spawn a 5/5 Golem",
         "conditions": [],
         "max_triggers": null
       }
@@ -1052,8 +994,6 @@
             }
           }
         },
-        "name": "Execute",
-        "description": "Destroy front enemy if its health is <= 10",
         "conditions": [
           {
             "type": "Is",
@@ -1099,8 +1039,6 @@
             }
           }
         },
-        "name": "Spark",
-        "description": "Deal 2 damage to a random enemy after attacking",
         "conditions": [],
         "max_triggers": 3
       }
@@ -1133,8 +1071,6 @@
             }
           }
         },
-        "name": "Crushing Blow",
-        "description": "Gain +3 attack at battle start",
         "conditions": [],
         "max_triggers": null
       }
@@ -1160,8 +1096,6 @@
           "type": "SpawnUnit",
           "card_id": 43
         },
-        "name": "Rebirth",
-        "description": "Spawn a Phoenix Egg on death",
         "conditions": [],
         "max_triggers": null
       }
@@ -1194,8 +1128,6 @@
             }
           }
         },
-        "name": "Guardian's Aura",
-        "description": "Give ALL allies +3 health before every clash",
         "conditions": [],
         "max_triggers": 3
       }
@@ -1228,8 +1160,6 @@
             }
           }
         },
-        "name": "Leech",
-        "description": "Steal 2 attack from the front enemy at start",
         "conditions": [],
         "max_triggers": null
       },
@@ -1247,8 +1177,6 @@
             }
           }
         },
-        "name": "Void Touch",
-        "description": " (Steal Effect Continued)",
         "conditions": [],
         "max_triggers": null
       }
@@ -1282,8 +1210,6 @@
             }
           }
         },
-        "name": "Harvest the Rich",
-        "description": "Destroy the highest mana cost enemy",
         "conditions": [],
         "max_triggers": null
       },
@@ -1301,8 +1227,6 @@
             }
           }
         },
-        "name": "Cull the Weak",
-        "description": "Destroy the lowest mana cost enemy",
         "conditions": [],
         "max_triggers": null
       }
@@ -1335,8 +1259,6 @@
             }
           }
         },
-        "name": "Earthshaker",
-        "description": "Deal 4 damage to front enemy at start",
         "conditions": [],
         "max_triggers": null
       }
@@ -1383,8 +1305,6 @@
             }
           }
         },
-        "name": "Dragon Breath",
-        "description": "Deal 3 damage to all enemies at start",
         "conditions": [],
         "max_triggers": null
       }
@@ -1455,8 +1375,6 @@
           "type": "SpawnUnit",
           "card_id": 33
         },
-        "name": "Hatch",
-        "description": "Respawn the Phoenix at start of battle",
         "conditions": [],
         "max_triggers": null
       }
@@ -1535,8 +1453,6 @@
             }
           }
         },
-        "name": "Team Spirit",
-        "description": "Faint: Give a random other ally +1/+1",
         "conditions": [],
         "max_triggers": null
       }
@@ -1569,8 +1485,6 @@
             }
           }
         },
-        "name": "Builder",
-        "description": "Sell: Give 2 random allies +1 attack permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -1597,8 +1511,6 @@
           "type": "SpawnUnit",
           "card_id": 44
         },
-        "name": "Undead Chirp",
-        "description": "Faint: Summon a 1/1 Zombie Cricket",
         "conditions": [],
         "max_triggers": null
       }
@@ -1630,8 +1542,6 @@
             }
           }
         },
-        "name": "Shop Quack",
-        "description": "Sell: Give allies +1 health permanently (shop-pet buff approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -1665,8 +1575,6 @@
             }
           }
         },
-        "name": "Schooling",
-        "description": "Buy: Give 2 random other allies +1/+1 permanently (level-up approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -1700,8 +1608,6 @@
             }
           }
         },
-        "name": "Neigh",
-        "description": "Friend summoned: Give it +1 attack",
         "conditions": [],
         "max_triggers": null
       }
@@ -1734,8 +1640,6 @@
             }
           }
         },
-        "name": "Buzz",
-        "description": "Start of battle: Deal 1 damage to a random enemy",
         "conditions": [],
         "max_triggers": null
       }
@@ -1760,8 +1664,6 @@
           "type": "GainMana",
           "amount": 1
         },
-        "name": "Scrap",
-        "description": "Sell: Gain 1 mana (free-apple stock approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -1795,8 +1697,6 @@
             }
           }
         },
-        "name": "Helpful Nudge",
-        "description": "Buy: Give a random other ally +1 health permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -1822,8 +1722,6 @@
           "type": "GainMana",
           "amount": 1
         },
-        "name": "Coin Pouch",
-        "description": "Sell: Gain 1 mana",
         "conditions": [],
         "max_triggers": null
       }
@@ -1857,8 +1755,6 @@
             }
           }
         },
-        "name": "Shell Copy",
-        "description": "Start of battle: Gain +2 health (copy-health approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -1892,8 +1788,6 @@
             }
           }
         },
-        "name": "Parting Gift",
-        "description": "Faint: Give 2 random other allies +1/+1",
         "conditions": [],
         "max_triggers": null
       }
@@ -1925,8 +1819,6 @@
             }
           }
         },
-        "name": "Needle Burst",
-        "description": "Faint: Deal 2 damage to all units",
         "conditions": [],
         "max_triggers": null
       }
@@ -1959,8 +1851,6 @@
             }
           }
         },
-        "name": "Pouch Power",
-        "description": "Before attack: Gain +1/+1 (friend-ahead trigger approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -1993,8 +1883,6 @@
             }
           }
         },
-        "name": "Proud Plumage",
-        "description": "Hurt: Gain +4 attack",
         "conditions": [],
         "max_triggers": null
       }
@@ -2020,8 +1908,6 @@
           "type": "SpawnUnit",
           "card_id": 40
         },
-        "name": "Dirty Rat",
-        "description": "Faint: Summon a 1/1 Dirty Rat (opponent-side summon approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2053,8 +1939,6 @@
             }
           }
         },
-        "name": "Slow Support",
-        "description": "After loss: Give allies +1 health permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -2081,8 +1965,6 @@
           "type": "SpawnUnit",
           "card_id": 46
         },
-        "name": "Web Cocoon",
-        "description": "Faint: Summon a Spiderling (random tier summon approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2107,8 +1989,6 @@
           "type": "GainMana",
           "amount": 1
         },
-        "name": "Graceful Income",
-        "description": "Shop start: Gain 1 mana",
         "conditions": [],
         "max_triggers": null
       }
@@ -2141,8 +2021,6 @@
             }
           }
         },
-        "name": "Apple Habit",
-        "description": "Buy: Gain +1/+1 permanently (food-stock mechanic approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2175,8 +2053,6 @@
             }
           }
         },
-        "name": "Final Swipe",
-        "description": "Faint: Deal 3 damage to adjacent units (attack-scaling approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2210,8 +2086,6 @@
             }
           }
         },
-        "name": "Desert Guard",
-        "description": "Hurt: Give the nearest ally behind +2/+2",
         "conditions": [],
         "max_triggers": null
       }
@@ -2245,8 +2119,6 @@
             }
           }
         },
-        "name": "Wingman",
-        "description": "Start of battle: Give ally ahead +2 attack (percentage transfer approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2279,8 +2151,6 @@
             }
           }
         },
-        "name": "Pack Instinct",
-        "description": "Friend summoned: Gain +2/+1",
         "conditions": [],
         "max_triggers": null
       }
@@ -2315,8 +2185,6 @@
             }
           }
         },
-        "name": "Precision Strike",
-        "description": "Start of battle: Deal 3 damage to lowest-health enemy",
         "conditions": [],
         "max_triggers": null
       }
@@ -2334,7 +2202,9 @@
       "play_cost": 3,
       "pitch_value": 2
     },
-    "base_statuses": ["Guard"],
+    "base_statuses": [
+      "Guard"
+    ],
     "shop_abilities": [],
     "battle_abilities": [
       {
@@ -2350,8 +2220,6 @@
             }
           }
         },
-        "name": "Trample",
-        "description": "After attack: Deal 1 damage to nearest ally behind",
         "conditions": [],
         "max_triggers": null
       }
@@ -2384,8 +2252,6 @@
             }
           }
         },
-        "name": "Long Reach",
-        "description": "Shop start: Give nearest ally ahead +1/+1 permanently (end-turn approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2419,8 +2285,6 @@
             }
           }
         },
-        "name": "Enrage",
-        "description": "Ally faints: Gain +1 attack",
         "conditions": [],
         "max_triggers": null
       },
@@ -2436,8 +2300,6 @@
             }
           }
         },
-        "name": "Melon Hide",
-        "description": "Ally faints: Gain Shield for this battle",
         "conditions": [],
         "max_triggers": null
       }
@@ -2469,8 +2331,6 @@
             }
           }
         },
-        "name": "Carrot Diet",
-        "description": "Buy a unit: Give it +1 health permanently (food trigger approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2497,8 +2357,6 @@
           "type": "SpawnUnit",
           "card_id": 45
         },
-        "name": "Split Herd I",
-        "description": "Faint: Summon a 2/2 Ram",
         "conditions": [],
         "max_triggers": null
       },
@@ -2508,8 +2366,6 @@
           "type": "SpawnUnit",
           "card_id": 45
         },
-        "name": "Split Herd II",
-        "description": "Faint: Summon another 2/2 Ram",
         "conditions": [],
         "max_triggers": null
       }
@@ -2541,8 +2397,6 @@
             }
           }
         },
-        "name": "Heavy Growth",
-        "description": "Shop start: Gain +1/+2 permanently (level-3 friend condition approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2576,8 +2430,6 @@
             }
           }
         },
-        "name": "Spit Shot",
-        "description": "Hurt: Deal 3 damage to a random enemy",
         "conditions": [],
         "max_triggers": null
       }
@@ -2603,8 +2455,6 @@
           "type": "SpawnUnit",
           "card_id": 107
         },
-        "name": "Bus Crash",
-        "description": "Faint: Summon a Bus (chili perk unsupported)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2637,8 +2487,6 @@
             }
           }
         },
-        "name": "Rampage",
-        "description": "After attack: Gain +3/+3 (knockout trigger approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2672,8 +2520,6 @@
             }
           }
         },
-        "name": "Echo",
-        "description": "Start of battle: Buff ally ahead +1/+1 (ability-copy approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2706,8 +2552,6 @@
             }
           }
         },
-        "name": "Coach",
-        "description": "Shop start: Give 2 random allies +1/+1 permanently (level-condition approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2743,8 +2587,6 @@
             }
           }
         },
-        "name": "Stink Bomb",
-        "description": "Start of battle: Hit highest-health enemy for 3 (percent reduction approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2769,8 +2611,6 @@
           "type": "GainMana",
           "amount": 1
         },
-        "name": "Coupon",
-        "description": "Shop start: Gain 1 mana (food-discount mechanic approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2804,8 +2644,6 @@
             }
           }
         },
-        "name": "Shell Legacy",
-        "description": "Faint: Give nearest ally behind Shield permanently",
         "conditions": [],
         "max_triggers": null
       }
@@ -2837,8 +2675,6 @@
             }
           }
         },
-        "name": "Swallow",
-        "description": "Start of battle: Remove nearest ally ahead (resummon logic unsupported)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2871,8 +2707,6 @@
             }
           }
         },
-        "name": "Armor Wave",
-        "description": "Start of battle: Give all units +8 health",
         "conditions": [],
         "max_triggers": null
       }
@@ -2904,8 +2738,6 @@
             }
           }
         },
-        "name": "Dairy Supply",
-        "description": "Buy: Give allies +1/+2 permanently (milk-stock approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -2939,8 +2771,6 @@
             }
           }
         },
-        "name": "Backline Snap",
-        "description": "Start of battle: Deal 8 damage to the last enemy",
         "conditions": [],
         "max_triggers": null
       }
@@ -2973,8 +2803,6 @@
             }
           }
         },
-        "name": "Mentor",
-        "description": "Shop start: Give a random ally +2/+3 permanently (right-most targeting approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -3008,8 +2836,6 @@
             }
           }
         },
-        "name": "Trample Shot",
-        "description": "After attack: Deal 4 damage to front enemy (knockout condition approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -3035,8 +2861,6 @@
           "type": "SpawnUnit",
           "card_id": 108
         },
-        "name": "Last Crow",
-        "description": "Faint: Summon a Chick (count/attack-scaling approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -3054,7 +2878,9 @@
       "play_cost": 5,
       "pitch_value": 3
     },
-    "base_statuses": ["Poison"],
+    "base_statuses": [
+      "Poison"
+    ],
     "shop_abilities": [],
     "battle_abilities": []
   },
@@ -3085,8 +2911,6 @@
             }
           }
         },
-        "name": "Feeding Frenzy",
-        "description": "Buy: Give 3 random allies +1 attack permanently (food trigger approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -3120,8 +2944,6 @@
             }
           }
         },
-        "name": "Blood Scent",
-        "description": "Ally faints: Gain +1/+2",
         "conditions": [],
         "max_triggers": null
       }
@@ -3154,8 +2976,6 @@
             }
           }
         },
-        "name": "Feast Call",
-        "description": "Friend summoned: Give it +2/+3",
         "conditions": [],
         "max_triggers": null
       }
@@ -3188,8 +3008,6 @@
             }
           }
         },
-        "name": "Raging Charge",
-        "description": "Before attack: Gain +4/+2",
         "conditions": [],
         "max_triggers": null
       }
@@ -3214,8 +3032,6 @@
           "type": "GainMana",
           "amount": 1
         },
-        "name": "Kitchen Expert",
-        "description": "Shop start: Gain 1 mana (food-multiplier unsupported)",
         "conditions": [],
         "max_triggers": null
       }
@@ -3248,8 +3064,6 @@
             }
           }
         },
-        "name": "Ancient Wisdom",
-        "description": "Buy a unit: Give allies +1/+1 permanently (tier-1-only condition approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -3276,8 +3090,6 @@
           "type": "SpawnUnit",
           "card_id": 109
         },
-        "name": "Infestation",
-        "description": "Ally faints: Summon a Zombie Fly",
         "conditions": [],
         "max_triggers": 3
       }
@@ -3309,8 +3121,6 @@
             }
           }
         },
-        "name": "Coconut Skin",
-        "description": "Hurt: Gain Shield for this battle",
         "conditions": [],
         "max_triggers": null
       }
@@ -3343,8 +3153,6 @@
             }
           }
         },
-        "name": "Pounce",
-        "description": "Start of battle: Deal 5 damage to a random enemy (percentage/multi-target approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -3377,8 +3185,6 @@
             }
           }
         },
-        "name": "Ancient Roar",
-        "description": "Faint: Give all other allies +2/+2",
         "conditions": [],
         "max_triggers": null
       }
@@ -3411,8 +3217,6 @@
             }
           }
         },
-        "name": "Ambush",
-        "description": "Any attack: Deal 5 damage to a random enemy (friend-ahead condition approximated)",
         "conditions": [],
         "max_triggers": null
       }
@@ -3446,8 +3250,6 @@
             }
           }
         },
-        "name": "Pack Echo",
-        "description": "Start of battle: Buff ally ahead +2/+2 (repeat-ability mechanic unsupported)",
         "conditions": [],
         "max_triggers": null
       }
@@ -3480,8 +3282,6 @@
             }
           }
         },
-        "name": "Rending Aura",
-        "description": "Start of battle: Give adjacent allies +3 attack (ability-damage boost approximated)",
         "conditions": [],
         "max_triggers": null
       }

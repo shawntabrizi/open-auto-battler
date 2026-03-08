@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import type { CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
+import {
+  formatAbilityEffect,
+  formatAbilitySummary,
+  formatAbilityTrigger,
+} from '../utils/abilityText';
 
 const STATUS_MASK_KEYS = new Set(['base_statuses', 'perm_statuses', 'active_statuses', 'statuses']);
 
@@ -50,11 +55,7 @@ export interface CardDetailPanelProps {
 
 type TabType = 'card' | 'rules' | 'mode';
 
-export function CardDetailPanel({
-  card,
-  isVisible,
-  mode,
-}: CardDetailPanelProps) {
+export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
   const navigate = useNavigate();
   const {
@@ -93,169 +94,6 @@ export function CardDetailPanel({
     }
 
     const allAbilities = [...card.shop_abilities, ...card.battle_abilities];
-
-    const getTriggerDescription = (trigger: any): string => {
-      const type = typeof trigger === 'string' ? trigger : trigger?.type;
-
-      switch (type) {
-        case 'OnStart':
-          return 'Battle Start';
-        case 'OnFaint':
-          return 'When Dies';
-        case 'OnAllyFaint':
-          return 'When Ally Dies';
-        case 'OnHurt':
-          return 'When Hurt';
-        case 'OnBuy':
-          return 'On Buy';
-        case 'OnSell':
-          return 'On Sell';
-        case 'OnShopStart':
-          return 'Shop Start';
-        case 'AfterLoss':
-          return 'After Loss';
-        case 'AfterWin':
-          return 'After Win';
-        case 'AfterDraw':
-          return 'After Draw';
-        case 'OnSpawn':
-          return 'On Spawn';
-        case 'OnAllySpawn':
-          return 'Ally Spawned';
-        case 'OnEnemySpawn':
-          return 'Enemy Spawned';
-        case 'BeforeUnitAttack':
-          return 'Before Attacking';
-        case 'AfterUnitAttack':
-          return 'After Attacking';
-        case 'BeforeAnyAttack':
-          return 'Before Any Attack';
-        case 'AfterAnyAttack':
-          return 'After Any Attack';
-        default:
-          return typeof type === 'string' ? type : 'Unknown';
-      }
-    };
-
-    const getEffectDescription = (effect: any): string => {
-      if (!effect || typeof effect !== 'object') {
-        return 'Unknown effect';
-      }
-
-      const type = effect.type;
-      const data = effect.value || effect;
-
-      switch (type) {
-        case 'Damage':
-          return `Deal ${data.amount || 0} damage to ${getTargetDescription(data.target)}`;
-        case 'ModifyStats': {
-          const h = data.health || 0;
-          const a = data.attack || 0;
-          return `Give ${a >= 0 ? '+' : ''}${a}/${h >= 0 ? '+' : ''}${h} to ${getTargetDescription(data.target)}`;
-        }
-        case 'ModifyStatsPermanent': {
-          const h = data.health || 0;
-          const a = data.attack || 0;
-          return `Give ${a >= 0 ? '+' : ''}${a}/${h >= 0 ? '+' : ''}${h} permanently to ${getTargetDescription(data.target)}`;
-        }
-        case 'SpawnUnit':
-          return `Spawn unit (card #${data.card_id ?? '?'})`;
-        case 'Destroy':
-          return `Destroy ${getTargetDescription(data.target)}`;
-        case 'GainMana':
-          return `Gain ${data.amount || 0} mana`;
-        case 'GrantStatusThisBattle':
-          return `Give ${data.status || 'status'} this battle to ${getTargetDescription(data.target)}`;
-        case 'GrantStatusPermanent':
-          return `Give ${data.status || 'status'} permanently to ${getTargetDescription(data.target)}`;
-        case 'RemoveStatusPermanent':
-          return `Remove ${data.status || 'status'} permanently from ${getTargetDescription(data.target)}`;
-        default:
-          return `Effect: ${type}`;
-      }
-    };
-
-    const getTargetDescription = (target: any): string => {
-      if (!target || typeof target !== 'object') return 'unknown target';
-
-      const type = target.type;
-      const data = target.value || target.data || target;
-
-      const describeScope = (scope: any) => {
-        const s = typeof scope === 'string' ? scope : scope?.type || 'unknown';
-        switch (s) {
-          case 'SelfUnit':
-            return 'this unit';
-          case 'Allies':
-            return 'all allies';
-          case 'Enemies':
-            return 'all enemies';
-          case 'All':
-            return 'all units';
-          case 'AlliesOther':
-            return 'all other allies';
-          case 'TriggerSource':
-            return 'the target';
-          case 'Aggressor':
-            return 'the attacker';
-          default:
-            return s;
-        }
-      };
-
-      const describeScopeSingular = (scope: any) => {
-        const s = typeof scope === 'string' ? scope : scope?.type || 'unknown';
-        switch (s) {
-          case 'SelfUnit':
-            return 'this unit';
-          case 'Allies':
-            return 'ally';
-          case 'Enemies':
-            return 'enemy';
-          case 'All':
-            return 'unit';
-          case 'AlliesOther':
-            return 'other ally';
-          case 'TriggerSource':
-            return 'target';
-          case 'Aggressor':
-            return 'attacker';
-          default:
-            return s;
-        }
-      };
-
-      switch (type) {
-        case 'All':
-          return describeScope(data.scope);
-        case 'Position': {
-          const { scope, index } = data;
-          const s = typeof scope === 'string' ? scope : scope?.type || 'unknown';
-          if (s === 'SelfUnit') {
-            if (index === -1) return 'the unit ahead';
-            if (index === 1) return 'the unit behind';
-            return 'this unit';
-          }
-          const posName = index === 0 ? 'front' : index === -1 ? 'back' : `slot ${index + 1}`;
-          return `the ${posName} ${describeScopeSingular(scope)}`;
-        }
-        case 'Random':
-          return `a random ${describeScopeSingular(data.scope)}`;
-        case 'Standard': {
-          const { stat, order, count } = data;
-          const orderName =
-            (typeof order === 'string' ? order : order?.type) === 'Ascending'
-              ? 'lowest'
-              : 'highest';
-          const countStr = count === 1 ? 'the' : `the ${count}`;
-          return `${countStr} ${orderName} ${typeof stat === 'string' ? stat : stat?.type} ${describeScopeSingular(data.scope)}`;
-        }
-        case 'Adjacent':
-          return `units adjacent to ${describeScope(data.scope)}`;
-        default:
-          return `Target: ${type}`;
-      }
-    };
 
     return (
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -323,10 +161,10 @@ export function CardDetailPanel({
                 className="mb-2 lg:mb-4 p-2 lg:p-3 bg-warm-800/50 rounded-lg border border-warm-700"
               >
                 <h3 className="text-xs lg:text-md font-bold text-yellow-400 mb-1 lg:mb-2">
-                  {ability.name}
+                  Ability {index + 1}
                 </h3>
                 <div className="text-[10px] lg:text-xs text-warm-300 mb-1 lg:mb-2">
-                  <strong>Trigger:</strong> {getTriggerDescription(ability.trigger)}
+                  <strong>Trigger:</strong> {formatAbilityTrigger(ability.trigger)}
                 </div>
                 {ability.max_triggers && (
                   <div className="text-[10px] lg:text-xs text-orange-400 mb-1 lg:mb-2">
@@ -334,10 +172,10 @@ export function CardDetailPanel({
                   </div>
                 )}
                 <div className="text-[10px] lg:text-sm text-warm-200 bg-warm-950/50 p-1.5 lg:p-2 rounded border border-warm-700/50 italic">
-                  "{ability.description}"
+                  "{formatAbilitySummary(ability)}"
                 </div>
                 <div className="mt-1 lg:mt-2 text-[10px] lg:text-xs text-blue-400 font-semibold">
-                  {getEffectDescription(ability.effect)}
+                  {formatAbilityEffect(ability.effect)}
                 </div>
               </div>
             ))}
@@ -591,9 +429,7 @@ export function CardDetailPanel({
   };
 
   return (
-    <div
-      className="card-detail-panel fixed top-0 left-0 bottom-0 w-44 lg:w-80 bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30"
-    >
+    <div className="card-detail-panel fixed top-0 left-0 bottom-0 w-44 lg:w-80 bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30">
       {/* Tabs */}
       <div className="flex border-b border-warm-800">
         <button

@@ -1,5 +1,6 @@
 import { getCardEmoji } from '../../utils/emoji';
 import type { CardView } from '../../types';
+import { formatAbilitySummary, formatAbilityTrigger } from '../../utils/abilityText';
 
 /**
  * A self-contained card detail breakdown for presentations.
@@ -10,7 +11,6 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
   const allAbilities = [...card.shop_abilities, ...card.battle_abilities];
   return (
     <div className="w-80 bg-gray-900 rounded-xl border border-gray-700 shadow-2xl p-5 text-left">
-      {/* Card Basic Info */}
       <div className="flex items-center gap-4 mb-4">
         <div className="w-16 h-16 bg-gray-800 rounded-xl border-2 border-gray-700 flex items-center justify-center text-3xl shadow-inner flex-shrink-0">
           {getCardEmoji(card.id)}
@@ -28,20 +28,18 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
         </div>
       </div>
 
-      {/* Abilities */}
       {allAbilities.map((ability, index) => (
         <div key={index} className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-sm font-bold text-yellow-400 mb-1">{ability.name}</h3>
+          <h3 className="text-sm font-bold text-yellow-400 mb-1">Ability {index + 1}</h3>
           <div className="text-xs text-gray-300 mb-1">
-            <strong>Trigger:</strong> {formatTrigger(ability.trigger)}
+            <strong>Trigger:</strong> {formatAbilityTrigger(ability.trigger)}
           </div>
           <div className="text-sm text-gray-200 bg-gray-900/50 p-2 rounded border border-gray-700/50 italic">
-            "{ability.description}"
+            "{formatAbilitySummary(ability)}"
           </div>
         </div>
       ))}
 
-      {/* Economy */}
       <div className="grid grid-cols-2 gap-3">
         <div className="p-3 bg-blue-900/20 border border-blue-800/50 rounded-lg">
           <div className="text-[10px] text-blue-400 uppercase font-bold mb-1">Cost</div>
@@ -58,41 +56,4 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
       </div>
     </div>
   );
-}
-
-function formatTrigger(trigger: string): string {
-  switch (trigger) {
-    case 'OnStart':
-      return 'Battle Start';
-    case 'OnFaint':
-      return 'When Dies';
-    case 'OnAllyFaint':
-      return 'When Ally Dies';
-    case 'OnHurt':
-      return 'When Hurt';
-    case 'OnBuy':
-      return 'On Buy';
-    case 'OnSell':
-      return 'On Sell';
-    case 'OnShopStart':
-      return 'Shop Start';
-    case 'AfterLoss':
-      return 'After Loss';
-    case 'AfterWin':
-      return 'After Win';
-    case 'AfterDraw':
-      return 'After Draw';
-    case 'OnSpawn':
-      return 'On Spawn';
-    case 'BeforeUnitAttack':
-      return 'Before Attacking';
-    case 'AfterUnitAttack':
-      return 'After Attacking';
-    case 'BeforeAnyAttack':
-      return 'Before Any Attack';
-    case 'AfterAnyAttack':
-      return 'After Any Attack';
-    default:
-      return trigger;
-  }
 }

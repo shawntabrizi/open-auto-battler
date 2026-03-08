@@ -14,8 +14,6 @@ fn test_ally_behind_on_faint_buffs_correctly() {
                 index: 1,
             },
         },
-        name: "Last Stand".to_string(),
-        description: "Give the ally behind +2/+2 on death".to_string(),
         conditions: vec![],
         max_triggers: Some(1),
     });
@@ -31,8 +29,14 @@ fn test_ally_behind_on_faint_buffs_correctly() {
     let events = run_battle(&p_board, &e_board, 42);
 
     let trigger_event = events.iter().find(|e| {
-            matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Last Stand")
-        });
+        matches!(
+            e,
+            CombatEvent::AbilityTrigger {
+                source_instance_id,
+                ability_index,
+            } if *source_instance_id == UnitId::player(1) && *ability_index == 0
+        )
+    });
     assert!(
         trigger_event.is_some(),
         "Last Stand should trigger on Martyr's death"
@@ -69,8 +73,6 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
                 index: 1,
             },
         },
-        name: "Last Stand".to_string(),
-        description: "Give the ally behind +2/+2 on death".to_string(),
         conditions: vec![],
         max_triggers: Some(1),
     };
@@ -87,8 +89,6 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
                     index: -1,
                 },
             },
-            name: "Ritual".to_string(),
-            description: "Sacrifice the ally in front".to_string(),
             conditions: vec![],
             max_triggers: None,
         },
@@ -97,8 +97,6 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
             effect: AbilityEffect::SpawnUnit {
                 card_id: CardId(43), // golem
             },
-            name: "Raise Golem".to_string(),
-            description: "Spawn a 5/5 Golem".to_string(),
             conditions: vec![],
             max_triggers: None,
         },
@@ -116,8 +114,6 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
                     index: -1,
                 },
             },
-            name: "Ritual".to_string(),
-            description: "Sacrifice the ally in front".to_string(),
             conditions: vec![],
             max_triggers: None,
         },
@@ -126,8 +122,6 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
             effect: AbilityEffect::SpawnUnit {
                 card_id: CardId(43), // golem
             },
-            name: "Raise Golem".to_string(),
-            description: "Spawn a 5/5 Golem".to_string(),
             conditions: vec![],
             max_triggers: None,
         },
@@ -150,15 +144,13 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
     let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
     let mk3_trigger = events.iter().find(|e| {
-        if let CombatEvent::AbilityTrigger {
-            source_instance_id,
-            ability_name,
-        } = e
-        {
-            *source_instance_id == UnitId::player(3) && ability_name == "Last Stand"
-        } else {
-            false
-        }
+        matches!(
+            e,
+            CombatEvent::AbilityTrigger {
+                source_instance_id,
+                ability_index,
+            } if *source_instance_id == UnitId::player(3) && *ability_index == 0
+        )
     });
     assert!(
         mk3_trigger.is_some(),
@@ -193,8 +185,6 @@ fn test_on_faint_gain_mana_carries_to_next_shop_pool() {
     let martyr = create_dummy_card(1, "Martyr", 1, 1).with_battle_ability(Ability {
         trigger: AbilityTrigger::OnFaint,
         effect: AbilityEffect::GainMana { amount: 1 },
-        name: "Last Coin".to_string(),
-        description: "Gain 1 mana next shop when this faints".to_string(),
         conditions: vec![],
         max_triggers: Some(1),
     });

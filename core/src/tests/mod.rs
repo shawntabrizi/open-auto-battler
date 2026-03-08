@@ -15,7 +15,7 @@ mod turns;
 mod units;
 mod view;
 
-use crate::battle::{resolve_battle, CombatEvent, CombatUnit};
+use crate::battle::{resolve_battle, CombatEvent, CombatUnit, UnitId};
 use crate::rng::XorShiftRng;
 use crate::types::*;
 use alloc::collections::BTreeMap;
@@ -32,12 +32,10 @@ fn create_board_unit(id: u32, name: &str, atk: i32, hp: i32) -> CombatUnit {
     CombatUnit::from_card(create_dummy_card(id, name, atk, hp))
 }
 
-fn create_ability(trigger: AbilityTrigger, effect: AbilityEffect, name: &str) -> Ability {
+fn create_ability(trigger: AbilityTrigger, effect: AbilityEffect, _name: &str) -> Ability {
     Ability {
         trigger,
         effect,
-        name: name.to_string(),
-        description: "Test Ability".to_string(),
         conditions: vec![],
         max_triggers: None,
     }
@@ -48,7 +46,7 @@ fn create_tester_unit(
     name: &str,
     attack: i32,
     health: i32,
-    ability_name: &str,
+    _ability_name: &str,
 ) -> CombatUnit {
     let ability = Ability {
         trigger: AbilityTrigger::OnStart,
@@ -60,8 +58,6 @@ fn create_tester_unit(
                 scope: TargetScope::SelfUnit,
             },
         },
-        name: ability_name.to_string(),
-        description: "Priority Test Ability".to_string(),
         conditions: vec![],
         max_triggers: None,
     };
@@ -162,4 +158,57 @@ fn run_battle_with_pool(
         &mut rng,
         card_pool,
     )
+}
+
+fn has_ability_trigger(events: &[CombatEvent], source_id: UnitId, ability_index: u32) -> bool {
+    events.iter().any(|event| {
+        matches!(
+            event,
+            CombatEvent::AbilityTrigger {
+                source_instance_id,
+                ability_index: idx,
+            } if *source_instance_id == source_id && *idx == ability_index
+        )
+    })
+}
+
+fn count_ability_triggers(events: &[CombatEvent], source_id: UnitId, ability_index: u32) -> usize {
+    events
+        .iter()
+        .filter(|event| {
+            matches!(
+                event,
+                CombatEvent::AbilityTrigger {
+                    source_instance_id,
+                    ability_index: idx,
+                } if *source_instance_id == source_id && *idx == ability_index
+            )
+        })
+        .count()
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct AbilityTriggerRef {
+    source_id: UnitId,
+    ability_index: u32,
+}
+
+fn collect_ability_triggers(events: &[CombatEvent]) -> Vec<AbilityTriggerRef> {
+    events
+        .iter()
+        .filter_map(|event| {
+            if let CombatEvent::AbilityTrigger {
+                source_instance_id,
+                ability_index,
+            } = event
+            {
+                Some(AbilityTriggerRef {
+                    source_id: *source_instance_id,
+                    ability_index: *ability_index,
+                })
+            } else {
+                None
+            }
+        })
+        .collect()
 }

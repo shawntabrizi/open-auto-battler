@@ -1,4 +1,4 @@
-use crate::battle::CombatEvent;
+use crate::battle::UnitId;
 use crate::tests::*;
 use crate::types::*;
 
@@ -50,21 +50,24 @@ fn test_attack_trigger_scopes() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    let triggers: Vec<String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
+    let triggers = collect_ability_triggers(&events);
+    let front_trigger = AbilityTriggerRef {
+        source_id: UnitId::player(1),
+        ability_index: 0,
+    };
+    let support_any_trigger = AbilityTriggerRef {
+        source_id: UnitId::player(2),
+        ability_index: 1,
+    };
+    let support_unit_trigger = AbilityTriggerRef {
+        source_id: UnitId::player(2),
+        ability_index: 0,
+    };
 
-    assert!(triggers.contains(&"FrontUnitTrigger".to_string()));
-    assert!(triggers.contains(&"SupportAnyTrigger".to_string()));
+    assert!(triggers.contains(&front_trigger));
+    assert!(triggers.contains(&support_any_trigger));
     assert!(
-        !triggers.contains(&"SupportUnitTrigger".to_string()),
+        !triggers.contains(&support_unit_trigger),
         "Support unit should not fire BeforeUnitAttack triggers"
     );
 }
@@ -117,21 +120,24 @@ fn test_after_attack_trigger_scopes() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    let triggers: Vec<String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
+    let triggers = collect_ability_triggers(&events);
+    let front_trigger = AbilityTriggerRef {
+        source_id: UnitId::player(1),
+        ability_index: 0,
+    };
+    let support_any_trigger = AbilityTriggerRef {
+        source_id: UnitId::player(2),
+        ability_index: 1,
+    };
+    let support_unit_trigger = AbilityTriggerRef {
+        source_id: UnitId::player(2),
+        ability_index: 0,
+    };
 
-    assert!(triggers.contains(&"FrontAfterUnit".to_string()));
-    assert!(triggers.contains(&"SupportAfterAny".to_string()));
+    assert!(triggers.contains(&front_trigger));
+    assert!(triggers.contains(&support_any_trigger));
     assert!(
-        !triggers.contains(&"SupportAfterUnit".to_string()),
+        !triggers.contains(&support_unit_trigger),
         "Support unit should not fire AfterUnitAttack triggers"
     );
 }

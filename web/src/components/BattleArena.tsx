@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { UnitCard, EmptySlot } from './UnitCard';
 import type { BattleOutput, UnitView, CombatEvent } from '../types';
-
+import { formatAbilitySummary } from '../utils/abilityText';
 
 // --- Helper Components ---
 
@@ -91,6 +91,31 @@ const AbilityToast = ({ name, onAnimationEnd }: { name: string; onAnimationEnd: 
 };
 
 // --- Helper Functions ---
+
+function buildUnitMap(output: BattleOutput): Map<number, UnitView> {
+  const map = new Map<number, UnitView>();
+  for (const unit of output.initial_player_units || []) {
+    map.set(unit.instance_id, unit);
+  }
+  for (const unit of output.initial_enemy_units || []) {
+    map.set(unit.instance_id, unit);
+  }
+  for (const event of output.events || []) {
+    if (event.type === 'UnitSpawn') {
+      map.set(event.payload.spawned_unit.instance_id, event.payload.spawned_unit);
+    }
+  }
+  return map;
+}
+
+function formatTriggeredAbility(
+  unitMap: Map<number, UnitView>,
+  sourceInstanceId: number,
+  abilityIndex: number
+): string {
+  const ability = unitMap.get(sourceInstanceId)?.battle_abilities?.[abilityIndex];
+  return ability ? formatAbilitySummary(ability) : `Ability ${abilityIndex + 1}`;
+}
 
 // Compute board state by replaying events from the start up to a given index
 function computeBoardState(
@@ -206,6 +231,7 @@ interface BattleArenaProps {
 }
 
 export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: BattleArenaProps) {
+  const unitMap = useMemo(() => buildUnitMap(battleOutput), [battleOutput]);
   const [playerBoard, setPlayerBoard] = useState<UnitView[]>(
     battleOutput.initial_player_units || []
   );
@@ -253,8 +279,13 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
 
     switch (event.type) {
       case 'AbilityTrigger': {
-        const { source_instance_id, ability_name } = event.payload;
-        setAbilityToasts((prev) => new Map(prev).set(source_instance_id, ability_name));
+        const { source_instance_id, ability_index } = event.payload;
+        setAbilityToasts((prev) =>
+          new Map(prev).set(
+            source_instance_id,
+            formatTriggeredAbility(unitMap, source_instance_id, ability_index)
+          )
+        );
         setSourceGlowIds((prev) => new Set(prev).add(source_instance_id));
         setTimeout(() => {
           setSourceGlowIds((prev) => {
@@ -268,7 +299,6 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
       }
 
       case 'Clash': {
-
         setShakeActive(true);
         setTimeout(() => setShakeActive(false), 250);
         setPlayerBoard((prevPlayer) => {
@@ -285,7 +315,6 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
       }
 
       case 'DamageTaken': {
-
         const { target_instance_id, remaining_hp } = event.payload;
 
         setTargetHighlightIds((prev) => new Set(prev).add(target_instance_id));
@@ -327,7 +356,6 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
       }
 
       case 'UnitDeath': {
-
         const { team, new_board_state } = event.payload;
         const isPlayerTeam = String(team).toUpperCase() === 'PLAYER';
         const newIds = new Set((new_board_state || []).map((u) => u.instance_id));
@@ -524,7 +552,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
         break;
       }
     }
-  }, [eventIndex, battleOutput]);
+  }, [eventIndex, battleOutput, onEventProcessed, unitMap]);
 
   // Auto-advance timer (only in auto mode)
   useEffect(() => {

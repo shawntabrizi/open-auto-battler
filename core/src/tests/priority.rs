@@ -1,115 +1,62 @@
 use super::*;
-use crate::battle::{CombatEvent, CombatUnit, UnitId};
+use crate::battle::{CombatUnit, UnitId};
 use crate::types::*;
+
+fn trigger_ref(source_id: UnitId, ability_index: u32) -> AbilityTriggerRef {
+    AbilityTriggerRef {
+        source_id,
+        ability_index,
+    }
+}
+
+fn position_of(triggers: &[AbilityTriggerRef], target: AbilityTriggerRef) -> usize {
+    triggers
+        .iter()
+        .position(|entry| *entry == target)
+        .expect("trigger missing")
+}
 
 #[test]
 fn test_ability_priority_by_attack() {
-    // SCENARIO:
-    // We have two units on the Player's team.
-    // 1. "Slow Unit": 1 Attack. Placed at Index 0 (Front).
-    // 2. "Fast Unit": 10 Attack. Placed at Index 1 (Back).
-    //
-    // EXPECTATION:
-    // Even though "Slow Unit" is at the front of the array, "Fast Unit" has higher attack.
-    // Therefore, "Fast Unit" must trigger its ability FIRST.
-
     let slow_unit = create_tester_unit(1, "SlowPoke", 1, 10, "SlowTrigger");
     let fast_unit = create_tester_unit(2, "Speedster", 10, 10, "FastTrigger");
 
-    // Put Slow Unit first in the vector to prove array order doesn't dictate execution order
     let player_board = vec![slow_unit, fast_unit];
     let enemy_board = vec![create_dummy_enemy()];
 
-    // Run the engine
     let events = run_battle(&player_board, &enemy_board, 12345);
+    let triggers = collect_ability_triggers(&events);
 
-    // Filter the log to find our specific triggers
-    let triggers: Vec<String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    // Debug output to see what happened if test fails
-    println!("Trigger Order: {:?}", triggers);
-
-    // ASSERTIONS
     assert!(triggers.len() >= 2, "Both abilities should have triggered");
-
-    let fast_index = triggers
-        .iter()
-        .position(|n| n == "FastTrigger")
-        .expect("FastTrigger missing");
-    let slow_index = triggers
-        .iter()
-        .position(|n| n == "SlowTrigger")
-        .expect("SlowTrigger missing");
-
-    // The Core Check: Fast must appear in the list before Slow
     assert!(
-        fast_index < slow_index,
-        "Priority Failure: High Attack unit (10) triggered after Low Attack unit (1).\nLog: {:?}",
+        position_of(&triggers, trigger_ref(UnitId::player(2), 0))
+            < position_of(&triggers, trigger_ref(UnitId::player(1), 0)),
+        "High attack unit should trigger before low attack unit: {:?}",
         triggers
     );
 }
 
 #[test]
 fn test_priority_tiebreaker_health() {
-    // SCENARIO: Same Attack (5), different Health.
-    // Unit A: 10 HP (Healthy)
-    // Unit B: 1 HP (Fragile)
-    // Expectation: High HP triggers first.
-
     let healthy_unit = create_tester_unit(1, "Healthy", 5, 10, "HighHP");
     let fragile_unit = create_tester_unit(2, "Fragile", 5, 1, "LowHP");
 
-    // Put fragile first in the array to ensure sorting reorders them
     let player_board = vec![fragile_unit, healthy_unit];
     let enemy_board = vec![create_dummy_enemy()];
 
     let events = run_battle(&player_board, &enemy_board, 42);
-
-    let triggers: Vec<String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    let high_idx = triggers
-        .iter()
-        .position(|n| n == "HighHP")
-        .expect("HighHP missing");
-    let low_idx = triggers
-        .iter()
-        .position(|n| n == "LowHP")
-        .expect("LowHP missing");
+    let triggers = collect_ability_triggers(&events);
 
     assert!(
-        high_idx < low_idx,
-        "High HP (10) should trigger before Low HP (1) when Attack is tied"
+        position_of(&triggers, trigger_ref(UnitId::player(2), 0))
+            < position_of(&triggers, trigger_ref(UnitId::player(1), 0)),
+        "High HP unit should trigger before low HP unit when attack is tied"
     );
 }
 
 #[test]
 fn test_priority_tiebreaker_team() {
-    // SCENARIO: Mirror Match with per-trigger random tiebreaker.
-    // Player Unit: 5 Atk, 5 HP
-    // Enemy Unit:  5 Atk, 5 HP
-    // Expectation: When stats are tied, a random tiebreaker (from seed) determines order.
-    // This ensures both players in a P2P game see the same outcome, and neither
-    // side has a consistent advantage across all ties.
-
-    let ability = Ability {
+    let enemy_ability = Ability {
         trigger: AbilityTrigger::OnStart,
         effect: AbilityEffect::ModifyStats {
             health: 1,
@@ -118,15 +65,12 @@ fn test_priority_tiebreaker_team() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        name: "EnemyTrigger".to_string(),
-        description: "Test".to_string(),
         conditions: vec![],
         max_triggers: None,
     };
-    let e_card = UnitCard::new(CardId(2), "Enemy", 5, 5, 0, 0).with_battle_ability(ability);
+    let e_card = UnitCard::new(CardId(2), "Enemy", 5, 5, 0, 0).with_battle_ability(enemy_ability);
     let e_unit = CombatUnit::from_card(e_card);
 
-    // Run the same battle with two different seeds and verify they can produce different orders
     let mut player_first_count = 0;
     let mut enemy_first_count = 0;
 
@@ -136,26 +80,10 @@ fn test_priority_tiebreaker_team() {
         let e_board = vec![e_unit.clone()];
 
         let events = run_battle(&p_board, &e_board, seed);
+        let triggers = collect_ability_triggers(&events);
 
-        let triggers: Vec<String> = events
-            .iter()
-            .filter_map(|e| {
-                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                    Some(ability_name.clone())
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        let p_idx = triggers
-            .iter()
-            .position(|n| n == "PlayerTrigger")
-            .expect("Player missing");
-        let e_idx = triggers
-            .iter()
-            .position(|n| n == "EnemyTrigger")
-            .expect("Enemy missing");
+        let p_idx = position_of(&triggers, trigger_ref(UnitId::player(1), 0));
+        let e_idx = position_of(&triggers, trigger_ref(UnitId::enemy(1), 0));
 
         if p_idx < e_idx {
             player_first_count += 1;
@@ -164,8 +92,6 @@ fn test_priority_tiebreaker_team() {
         }
     }
 
-    // With random tiebreakers, we should see both outcomes across different seeds
-    // (statistically extremely unlikely to get all same outcome with 10 trials)
     assert!(
         player_first_count > 0 && enemy_first_count > 0,
         "Random tiebreaker should produce varied outcomes: player_first={}, enemy_first={}",
@@ -176,53 +102,24 @@ fn test_priority_tiebreaker_team() {
 
 #[test]
 fn test_priority_tiebreaker_index() {
-    // SCENARIO: Absolute Tie (Stats & Team).
-    // Player Unit A: 5/5, Index 0 (Front)
-    // Player Unit B: 5/5, Index 1 (Back)
-    // Expectation: Front Unit triggers before Back Unit.
-
     let front_unit = create_tester_unit(1, "Front", 5, 5, "FrontTrigger");
     let back_unit = create_tester_unit(2, "Back", 5, 5, "BackTrigger");
 
-    // Setup board order explicitly: [Front, Back]
     let player_board = vec![front_unit, back_unit];
     let enemy_board = vec![create_dummy_enemy()];
 
     let events = run_battle(&player_board, &enemy_board, 42);
-
-    let triggers: Vec<String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    let front_idx = triggers
-        .iter()
-        .position(|n| n == "FrontTrigger")
-        .expect("Front missing");
-    let back_idx = triggers
-        .iter()
-        .position(|n| n == "BackTrigger")
-        .expect("Back missing");
+    let triggers = collect_ability_triggers(&events);
 
     assert!(
-        front_idx < back_idx,
-        "Front unit (Index 0) should trigger before Back unit (Index 1)"
+        position_of(&triggers, trigger_ref(UnitId::player(1), 0))
+            < position_of(&triggers, trigger_ref(UnitId::player(2), 0)),
+        "Front unit should trigger before back unit when attack and health are tied"
     );
 }
 
 #[test]
 fn test_priority_tiebreaker_ability_order() {
-    // SCENARIO: Single unit with multiple abilities.
-    // Ability A: Defined first.
-    // Ability B: Defined second.
-    // Expectation: Ability A triggers before Ability B.
-
     let ability_a = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStats {
@@ -252,48 +149,18 @@ fn test_priority_tiebreaker_ability_order() {
             .with_battle_abilities(vec![ability_a, ability_b]),
     );
 
-    let p_board = vec![unit];
-    let e_board = vec![create_dummy_enemy()];
-
-    let events = run_battle(&p_board, &e_board, 42);
-
-    let triggers: Vec<String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    let a_idx = triggers
-        .iter()
-        .position(|n| n == "AbilityA")
-        .expect("AbilityA missing");
-
-    let b_idx = triggers
-        .iter()
-        .position(|n| n == "AbilityB")
-        .expect("AbilityB missing");
+    let events = run_battle(&[unit], &[create_dummy_enemy()], 42);
+    let triggers = collect_ability_triggers(&events);
 
     assert!(
-        a_idx < b_idx,
-        "Ability A (defined first) should trigger before Ability B (defined second)"
+        position_of(&triggers, trigger_ref(UnitId::player(1), 0))
+            < position_of(&triggers, trigger_ref(UnitId::player(1), 1)),
+        "Earlier ability definitions should trigger first"
     );
 }
 
 #[test]
 fn test_priority_full_hierarchy_with_ability_order() {
-    // HIERARCHY CHECK:
-    // 1. Attack (Highest First)
-    // 2. Health (Highest First)
-    // 3. Position (Front First)
-    // 4. Ability Order (Defined First)
-    // 5. Random Tiebreaker (for cross-team ties)
-
-    // U1: 10 Atk (Priority 1)
     let u1 = CombatUnit::from_card(
         UnitCard::new(CardId(1), "U1", 10, 1, 0, 0).with_battle_ability(create_ability(
             AbilityTrigger::OnStart,
@@ -307,14 +174,8 @@ fn test_priority_full_hierarchy_with_ability_order() {
             "U1",
         )),
     );
-
-    // U2: 5 Atk, 10 HP (Priority 2)
     let u2 = create_tester_unit(2, "U2", 5, 10, "U2");
-
-    // U3: 5 Atk, 5 HP, Player Team, Position 2 (Priority 4 - after U4 due to position)
     let u3 = create_tester_unit(3, "U3", 5, 5, "U3");
-
-    // U4: 5 Atk, 5 HP, Enemy Team, Position 0 (Priority 3 - front position wins)
     let u4 = CombatUnit::from_card(
         UnitCard::new(CardId(4), "U4", 5, 5, 0, 0).with_battle_ability(create_ability(
             AbilityTrigger::OnStart,
@@ -328,8 +189,6 @@ fn test_priority_full_hierarchy_with_ability_order() {
             "U4",
         )),
     );
-
-    // U5: 1 Atk, 1 HP, Index 0 (Priority 5 & 6)
     let ability_u5_a = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStats {
@@ -341,7 +200,6 @@ fn test_priority_full_hierarchy_with_ability_order() {
         },
         "U5-A",
     );
-
     let ability_u5_b = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStats {
@@ -353,56 +211,34 @@ fn test_priority_full_hierarchy_with_ability_order() {
         },
         "U5-B",
     );
-
     let u5 = CombatUnit::from_card(
         UnitCard::new(CardId(5), "U5", 1, 1, 0, 0)
             .with_battle_abilities(vec![ability_u5_a, ability_u5_b]),
     );
-
-    // U6: 1 Atk, 1 HP, Index 1 (Priority 7)
     let u6 = create_tester_unit(6, "U6", 1, 1, "U6");
 
-    // Board Construction
-    // Player: [U5, U2, U3, U6] (Positions 0, 1, 2, 3)
-    // Enemy:  [U1, U4]         (Positions 0, 1)
     let p_board = vec![u5, u2, u3, u6];
     let e_board = vec![u1, u4];
 
     let events = run_battle(&p_board, &e_board, 42);
+    let triggers = collect_ability_triggers(&events);
 
-    let triggers: Vec<String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    // EXPECTED ORDER:
-    // 1. U1 (10 Atk)
-    // 2. U2 (5 Atk, 10 HP)
-    // 3. U4 (5 Atk, 5 HP, Position 0 - front of enemy board)
-    // 4. U3 (5 Atk, 5 HP, Position 2 - back of player board)
-    // 5. U5-A (1 Atk, 1 HP, Pos 0, Ability 0)
-    // 6. U5-B (1 Atk, 1 HP, Pos 0, Ability 1)
-    // 7. U6 (1 Atk, 1 HP, Pos 3)
-    assert_eq!(triggers, vec!["U1", "U2", "U4", "U3", "U5-A", "U5-B", "U6"]);
+    assert_eq!(
+        triggers,
+        vec![
+            trigger_ref(UnitId::enemy(1), 0),
+            trigger_ref(UnitId::player(2), 0),
+            trigger_ref(UnitId::enemy(2), 0),
+            trigger_ref(UnitId::player(3), 0),
+            trigger_ref(UnitId::player(1), 0),
+            trigger_ref(UnitId::player(1), 1),
+            trigger_ref(UnitId::player(4), 0),
+        ]
+    );
 }
 
 #[test]
 fn test_priority_full_hierarchy() {
-    // HIERARCHY CHECK:
-    // 1. Attack (Highest)
-    // 2. Health (Highest)
-    // 3. Position (Front > Back)
-    // 4. Ability Order (First > Second)
-    // 5. Random Tiebreaker (from seed)
-
-    // --- 1. Attack Winner (Enemy) ---
-    // U1: 10 Atk.
     let ability_u1 = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStats {
@@ -417,13 +253,7 @@ fn test_priority_full_hierarchy() {
     let u1 = CombatUnit::from_card(
         UnitCard::new(CardId(1), "U1", 10, 1, 0, 0).with_battle_ability(ability_u1),
     );
-
-    // --- 2. Health Winner (Player) ---
-    // U2: 5 Atk, 10 HP.
     let u2 = create_tester_unit(2, "U2", 5, 10, "U2");
-
-    // --- 3. Position Winner (Enemy at front) ---
-    // U4: 5 Atk, 5 HP, Position 0 in enemy board (front)
     let ability_u4 = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStats {
@@ -438,430 +268,96 @@ fn test_priority_full_hierarchy() {
     let u4 = CombatUnit::from_card(
         UnitCard::new(CardId(4), "U4", 5, 5, 0, 0).with_battle_ability(ability_u4),
     );
-
-    // --- 4. Position Loser (Player at back) ---
-    // U3: 5 Atk, 5 HP, Position 1 in player board (behind U2)
     let u3 = create_tester_unit(3, "U3", 5, 5, "U3");
-
-    // --- 5 & 6. Index Tiebreaker (Player) ---
-    // U5: 1 Atk, 1 HP. Index 2 (Front relative to U6).
-    // U6: 1 Atk, 1 HP. Index 3 (Back).
     let u5 = create_tester_unit(5, "U5", 1, 1, "U5");
     let u6 = create_tester_unit(6, "U6", 1, 1, "U6");
 
-    // Board Construction
-    // Player: [U2, U3, U5, U6] -> Indices 0, 1, 2, 3
-    // Enemy:  [U1, U4]         -> Indices 0, 1
     let p_board = vec![u2, u3, u5, u6];
     let e_board = vec![u1, u4];
 
     let events = run_battle(&p_board, &e_board, 42);
-
-    let triggers: Vec<String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    // ASSERTION:
-    // U1 (10 atk)
-    // U2 (5 atk, 10 hp)
-    // U4 (5 atk, 5 hp, Position 0 - front of enemy board)
-    // U3 (5 atk, 5 hp, Position 1 - back in player board)
-    // U5 (1 atk, 1 hp, Index 2)
-    // U6 (1 atk, 1 hp, Index 3)
-    assert_eq!(triggers, vec!["U1", "U2", "U4", "U3", "U5", "U6"]);
-}
-
-#[test]
-fn test_priority_interruption_kill() {
-    // SCENARIO: "The Kill Steal"
-    // Unit A (10 Atk) and Unit B (1 Atk) both try to hit the Front Enemy.
-    // Front Enemy has 1 HP.
-    // Unit A should go first, Kill the enemy.
-    // Unit B should trigger, but fail to find a target (or hit nothing), resulting in NO Damage Event.
-
-    let killer_ability = Ability {
-        trigger: AbilityTrigger::OnStart,
-        effect: AbilityEffect::Damage {
-            amount: 5,
-            target: AbilityTarget::Position {
-                scope: TargetScope::Enemies,
-                index: 0,
-            },
-        },
-        name: "KillShot".to_string(),
-        description: "Deals 5 damage".to_string(),
-        conditions: vec![],
-        max_triggers: None,
-    };
-
-    let slow_ability = Ability {
-        trigger: AbilityTrigger::OnStart,
-        effect: AbilityEffect::Damage {
-            amount: 5,
-            target: AbilityTarget::Position {
-                scope: TargetScope::Enemies,
-                index: 0,
-            },
-        },
-        name: "LateShot".to_string(),
-        description: "Deals 5 damage".to_string(),
-        conditions: vec![],
-        max_triggers: None,
-    };
-
-    // Construct Card A (Fast)
-    let card_a = UnitCard {
-        id: CardId(1),
-        name: "Killer".to_string(),
-        stats: UnitStats {
-            attack: 10,
-            health: 10,
-        },
-        economy: EconomyStats {
-            play_cost: 0,
-            pitch_value: 0,
-        },
-        base_statuses: StatusMask::empty(),
-        shop_abilities: vec![],
-        battle_abilities: vec![killer_ability],
-    };
-    // Construct Card B (Slow)
-    let card_b = UnitCard {
-        id: CardId(2),
-        name: "Looter".to_string(),
-        stats: UnitStats {
-            attack: 1,
-            health: 10,
-        },
-        economy: EconomyStats {
-            play_cost: 0,
-            pitch_value: 0,
-        },
-        base_statuses: StatusMask::empty(),
-        shop_abilities: vec![],
-        battle_abilities: vec![slow_ability],
-    };
-
-    // Enemy (Weak)
-    let card_e = UnitCard {
-        id: CardId(3),
-        name: "Victim".to_string(),
-        stats: UnitStats {
-            attack: 0,
-            health: 1,
-        },
-        economy: EconomyStats {
-            play_cost: 0,
-            pitch_value: 0,
-        },
-        base_statuses: StatusMask::empty(),
-        shop_abilities: vec![],
-        battle_abilities: vec![],
-    };
-
-    let p_board = vec![CombatUnit::from_card(card_a), CombatUnit::from_card(card_b)];
-    let e_board = vec![CombatUnit::from_card(card_e)];
-
-    let events = run_battle(&p_board, &e_board, 42);
-
-    // 1. Verify Trigger Order
-    let triggers: Vec<&String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name)
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    assert_eq!(triggers[0], "KillShot");
-    assert_eq!(triggers[1], "LateShot");
-
-    // 2. Verify Damage Events
-    // We expect exactly 1 damage event (from KillShot). LateShot should misfire because target is dead.
-    let damage_events: Vec<&CombatEvent> = events
-        .iter()
-        .filter(|e| matches!(e, CombatEvent::AbilityDamage { .. }))
-        .collect();
+    let triggers = collect_ability_triggers(&events);
 
     assert_eq!(
-        damage_events.len(),
-        1,
-        "There should be only 1 damage event because the victim died"
+        triggers,
+        vec![
+            trigger_ref(UnitId::enemy(1), 0),
+            trigger_ref(UnitId::player(1), 0),
+            trigger_ref(UnitId::enemy(2), 0),
+            trigger_ref(UnitId::player(2), 0),
+            trigger_ref(UnitId::player(3), 0),
+            trigger_ref(UnitId::player(4), 0),
+        ]
     );
-
-    if let CombatEvent::AbilityDamage { damage, .. } = damage_events[0] {
-        assert_eq!(*damage, 5); // From KillShot
-    }
-
-    // 3. Verify Death
-    let deaths = events
-        .iter()
-        .filter(|e| matches!(e, CombatEvent::UnitDeath { .. }))
-        .count();
-    assert!(deaths >= 1, "Victim should have died");
 }
 
-// ==========================================
-// 3. COMPLEX SCENARIO: "THE DOLPHIN & CRICKET"
-// ==========================================
-// This tests the Recursive Interrupt Logic.
-// P: [Sniper1, Sniper2]. E: [Spawner].
-// 1. Sniper1 shoots Spawner.
-// 2. Spawner dies.
-// 3. Spawner spawns Token. (MUST HAPPEN BEFORE SNIPER 2)
-// 4. Sniper2 shoots. Must hit Token, not whiff or hit behind.
-
 #[test]
-fn test_recursive_interrupt_timing() {
-    let snipe_ability = create_ability(
+fn test_priority_keeps_same_unit_abilities_consecutive() {
+    let ability_a = create_ability(
         AbilityTrigger::OnStart,
-        AbilityEffect::Damage {
-            amount: 5,
-            target: AbilityTarget::Position {
-                scope: TargetScope::Enemies,
-                index: 0,
-            },
-        },
-        "Snipe",
-    );
-
-    let spawn_ability = create_ability(
-        AbilityTrigger::OnFaint,
-        AbilityEffect::SpawnUnit {
-            card_id: CardId(42), // zombie_spawn
-        },
-        "Spawn",
-    );
-
-    let sniper1 = create_dummy_card(1, "Sniper1", 1, 2).with_battle_ability(snipe_ability.clone());
-    let sniper2 = create_dummy_card(2, "Sniper2", 1, 2).with_battle_ability(snipe_ability);
-    let spawner = create_dummy_card(3, "Spawner", 1, 1).with_battle_ability(spawn_ability); // 1 HP, dies to snipe
-
-    let p_board = vec![
-        CombatUnit::from_card(sniper1),
-        CombatUnit::from_card(sniper2),
-    ];
-    let e_board = vec![CombatUnit::from_card(spawner)];
-
-    let card_pool = spawn_test_card_pool();
-    let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
-
-    // Analyze Event Stream
-    let triggers: Vec<&String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name)
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    // Sequence must be: Snipe -> Spawn -> Snipe
-    // If it is Snipe -> Snipe -> Spawn, the engine failed to interrupt.
-    let first_snipe = triggers.iter().position(|&n| n == "Snipe").unwrap();
-    let spawn = triggers.iter().position(|&n| n == "Spawn").unwrap();
-    let last_snipe = triggers.iter().rposition(|&n| n == "Snipe").unwrap();
-
-    assert!(first_snipe < spawn, "First snipe must occur before spawn");
-    assert!(spawn < last_snipe, "Spawn must resolve before second snipe");
-
-    // Verify the target of the second snipe
-    let damage_events: Vec<&CombatEvent> = events
-        .iter()
-        .filter(|e| matches!(e, CombatEvent::AbilityDamage { .. }))
-        .collect();
-
-    let second_dmg_event = damage_events.last().unwrap();
-    if let CombatEvent::AbilityDamage {
-        target_instance_id, ..
-    } = second_dmg_event
-    {
-        // The instance ID of a spawned unit should be the next enemy ID (e-2)
-        assert!(
-            *target_instance_id == UnitId::enemy(2),
-            "Second snipe should hit the new unit"
-        );
-    }
-}
-
-#[test]
-fn test_unified_priority_cross_triggers() {
-    // SCENARIO: Verify that UnitAttack and AnyAttack triggers are prioritized together.
-    // P: [HighAtkFront (10 Atk), LowAtkBack (1 Atk)]
-    // HighAtkFront: BeforeUnitAttack
-    // LowAtkBack: BeforeAnyAttack
-
-    let high_atk_front = CombatUnit::from_card(
-        UnitCard::new(CardId(1), "High", 10, 10, 0, 0).with_battle_ability(create_ability(
-            AbilityTrigger::BeforeUnitAttack,
-            AbilityEffect::ModifyStats {
-                health: 0,
-                attack: 1,
-                target: AbilityTarget::All {
-                    scope: TargetScope::SelfUnit,
-                },
-            },
-            "HighUnitTrigger",
-        )),
-    );
-
-    let low_atk_back = CombatUnit::from_card(
-        UnitCard::new(CardId(2), "Low", 1, 10, 0, 0).with_battle_ability(create_ability(
-            AbilityTrigger::BeforeAnyAttack,
-            AbilityEffect::ModifyStats {
-                health: 0,
-                attack: 1,
-                target: AbilityTarget::All {
-                    scope: TargetScope::SelfUnit,
-                },
-            },
-            "LowAnyTrigger",
-        )),
-    );
-
-    let p_board = vec![high_atk_front, low_atk_back];
-    let e_board = vec![create_dummy_enemy()];
-
-    let events = run_battle(&p_board, &e_board, 42);
-
-    let triggers: Vec<String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    let high_idx = triggers
-        .iter()
-        .position(|n| n == "HighUnitTrigger")
-        .unwrap();
-    let low_idx = triggers.iter().position(|n| n == "LowAnyTrigger").unwrap();
-
-    assert!(high_idx < low_idx, "High Attack unit should trigger its 'Unit' ability before Low Attack unit triggers its 'Any' ability.");
-}
-
-#[test]
-fn test_multi_ability_no_interleaving() {
-    // SCENARIO: Verify that a unit with multiple abilities resolves ALL of them
-    // before another unit's abilities, even when they have the same stats/position.
-    //
-    // Player Unit: 5 Atk, 5 HP, Position 0, has [AbilityA, AbilityB]
-    // Enemy Unit:  5 Atk, 5 HP, Position 0, has [AbilityC]
-    //
-    // Valid orderings: [A, B, C] or [C, A, B]
-    // Invalid (interleaved): [A, C, B] or [C, A, B] with any other interleaving
-
-    let ability_a = Ability {
-        trigger: AbilityTrigger::OnStart,
-        effect: AbilityEffect::ModifyStats {
+        AbilityEffect::ModifyStats {
             health: 1,
             attack: 0,
             target: AbilityTarget::All {
                 scope: TargetScope::SelfUnit,
             },
         },
-        name: "AbilityA".to_string(),
-        description: "First ability".to_string(),
-        conditions: vec![],
-        max_triggers: None,
-    };
-
-    let ability_b = Ability {
-        trigger: AbilityTrigger::OnStart,
-        effect: AbilityEffect::ModifyStats {
+        "AbilityA",
+    );
+    let ability_b = create_ability(
+        AbilityTrigger::OnStart,
+        AbilityEffect::ModifyStats {
             health: 1,
             attack: 0,
             target: AbilityTarget::All {
                 scope: TargetScope::SelfUnit,
             },
         },
-        name: "AbilityB".to_string(),
-        description: "Second ability".to_string(),
-        conditions: vec![],
-        max_triggers: None,
-    };
-
-    let ability_c = Ability {
-        trigger: AbilityTrigger::OnStart,
-        effect: AbilityEffect::ModifyStats {
+        "AbilityB",
+    );
+    let ability_c = create_ability(
+        AbilityTrigger::OnStart,
+        AbilityEffect::ModifyStats {
             health: 1,
             attack: 0,
             target: AbilityTarget::All {
                 scope: TargetScope::SelfUnit,
             },
         },
-        name: "AbilityC".to_string(),
-        description: "Enemy ability".to_string(),
-        conditions: vec![],
-        max_triggers: None,
-    };
+        "AbilityC",
+    );
 
     let p_card = UnitCard::new(CardId(1), "Player", 5, 5, 0, 0)
         .with_battle_abilities(vec![ability_a, ability_b]);
     let e_card = UnitCard::new(CardId(2), "Enemy", 5, 5, 0, 0).with_battle_ability(ability_c);
 
-    // Test across multiple seeds to verify no interleaving ever occurs
     for seed in [1u64, 42, 123, 456, 789, 1000, 9999, 123456] {
-        let p_board = vec![CombatUnit::from_card(p_card.clone())];
-        let e_board = vec![CombatUnit::from_card(e_card.clone())];
-
-        let events = run_battle(&p_board, &e_board, seed);
-
-        let triggers: Vec<String> = events
-            .iter()
-            .filter_map(|e| {
-                if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                    Some(ability_name.clone())
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let events = run_battle(
+            &[CombatUnit::from_card(p_card.clone())],
+            &[CombatUnit::from_card(e_card.clone())],
+            seed,
+        );
+        let triggers = collect_ability_triggers(&events);
 
         assert_eq!(triggers.len(), 3, "Should have exactly 3 triggers");
 
-        let a_idx = triggers.iter().position(|n| n == "AbilityA").unwrap();
-        let b_idx = triggers.iter().position(|n| n == "AbilityB").unwrap();
-        let c_idx = triggers.iter().position(|n| n == "AbilityC").unwrap();
+        let a_idx = position_of(&triggers, trigger_ref(UnitId::player(1), 0));
+        let b_idx = position_of(&triggers, trigger_ref(UnitId::player(1), 1));
+        let c_idx = position_of(&triggers, trigger_ref(UnitId::enemy(1), 0));
 
-        // AbilityA and AbilityB must be consecutive (no interleaving)
         assert!(
-            (a_idx + 1 == b_idx) || (b_idx + 1 == a_idx),
-            "Seed {}: A and B must be consecutive (no interleaving). Got order: {:?}",
+            a_idx + 1 == b_idx,
+            "Seed {}: same-unit abilities must stay consecutive in definition order. Got {:?}",
             seed,
             triggers
         );
 
-        // Additionally verify A comes before B (ability order within a unit)
-        assert!(
-            a_idx < b_idx,
-            "Seed {}: AbilityA should trigger before AbilityB (ability order). Got: {:?}",
-            seed,
-            triggers
-        );
-
-        // Verify C is either before both A,B or after both A,B
-        let c_between = (a_idx < c_idx && c_idx < b_idx) || (b_idx < c_idx && c_idx < a_idx);
+        let c_between = a_idx < c_idx && c_idx < b_idx;
         assert!(
             !c_between,
-            "Seed {}: AbilityC should not be between A and B. Got: {:?}",
-            seed, triggers
+            "Seed {}: enemy trigger should not be interleaved between same-unit abilities. Got {:?}",
+            seed,
+            triggers
         );
     }
 }

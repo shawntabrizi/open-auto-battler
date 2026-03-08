@@ -38,7 +38,10 @@ fn test_on_spawn_triggers_for_spawned_unit() {
         .find(|event| {
             matches!(
                 event,
-                CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Awaken"
+                CombatEvent::AbilityTrigger {
+                    source_instance_id,
+                    ability_index,
+                } if *source_instance_id != UnitId::player(1) && *ability_index == 0
             )
         })
         .expect("Spawned unit should trigger its OnSpawn ability");

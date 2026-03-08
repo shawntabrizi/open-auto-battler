@@ -24,6 +24,7 @@ import {
   statusesFromMask,
   toggleStatus,
 } from '../utils/status';
+import { formatAbilitySummary, formatAbilityTrigger } from '../utils/abilityText';
 
 import EmojiPicker, { Theme } from 'emoji-picker-react';
 
@@ -68,8 +69,6 @@ export const CreateCardPage: React.FC = () => {
   const { isConnected, connect, submitCard } = useBlockchainStore();
 
   const defaultBattleAbility = (): BattleAbility => ({
-    name: '',
-    description: '',
     trigger: 'OnStart',
     effect: { type: 'Damage', amount: 1, target: { type: 'All', data: { scope: 'Enemies' } } },
     conditions: [],
@@ -77,8 +76,6 @@ export const CreateCardPage: React.FC = () => {
   });
 
   const defaultShopAbility = (): ShopAbility => ({
-    name: '',
-    description: '',
     trigger: 'OnBuy',
     effect: {
       type: 'ModifyStatsPermanent',
@@ -106,7 +103,6 @@ export const CreateCardPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [triedSubmitCard, setTriedSubmitCard] = useState(false);
-  const [triedAddAbility, setTriedAddAbility] = useState(false);
   const [abilityLane, setAbilityLane] = useState<'battle' | 'shop'>('battle');
 
   // New Ability Form State
@@ -161,11 +157,6 @@ export const CreateCardPage: React.FC = () => {
   };
 
   const addAbility = () => {
-    setTriedAddAbility(true);
-    if (!newAbility.name) {
-      toast.error('Ability name is required');
-      return;
-    }
     if (abilityLane === 'battle') {
       setCardForm((prev) => ({
         ...prev,
@@ -178,7 +169,6 @@ export const CreateCardPage: React.FC = () => {
       }));
     }
     // Reset ability form partially
-    setTriedAddAbility(false);
     setNewAbility(abilityLane === 'battle' ? defaultBattleAbility() : defaultShopAbility());
   };
 
@@ -627,10 +617,15 @@ export const CreateCardPage: React.FC = () => {
                   >
                     <div>
                       <div className="text-sm font-bold text-yellow-500">
-                        {ability.name}{' '}
+                        Ability {index + 1}{' '}
                         <span className="text-[10px] uppercase text-warm-400">[{lane}]</span>
                       </div>
-                      <div className="text-xs text-warm-400 italic">{ability.trigger}</div>
+                      <div className="text-xs text-warm-400 italic">
+                        {formatAbilityTrigger(ability.trigger)}
+                      </div>
+                      <div className="text-xs text-warm-300 mt-1">
+                        {formatAbilitySummary(ability)}
+                      </div>
                     </div>
                     <button
                       onClick={() => removeAbility(lane, index)}
@@ -660,24 +655,7 @@ export const CreateCardPage: React.FC = () => {
 
               {/* New Ability Form */}
               <div className="bg-warm-800/30 border border-white/5 p-4 rounded-xl space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
-                      Ability Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={newAbility.name}
-                      onChange={(e) => setNewAbility({ ...newAbility, name: e.target.value })}
-                      className={`w-full bg-warm-900 border rounded px-2 py-1.5 text-sm outline-none focus:border-yellow-500/50 ${triedAddAbility && !newAbility.name ? 'border-red-500' : 'border-white/10'}`}
-                      placeholder="Fireball"
-                    />
-                    {triedAddAbility && !newAbility.name && (
-                      <span className="text-[9px] text-red-500 mt-1 block font-bold uppercase">
-                        Name required
-                      </span>
-                    )}
-                  </div>
+                <div className="grid grid-cols-1 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
                       Ability Lane
@@ -713,6 +691,10 @@ export const CreateCardPage: React.FC = () => {
                       ))}
                     </select>
                   </div>
+                </div>
+
+                <div className="rounded-lg border border-yellow-500/10 bg-yellow-500/5 px-3 py-2 text-xs text-warm-300">
+                  {formatAbilitySummary(newAbility)}
                 </div>
 
                 <div>
@@ -1074,18 +1056,6 @@ export const CreateCardPage: React.FC = () => {
                         )}
                       </div>
                     )}
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
-                    Ability Description
-                  </label>
-                  <textarea
-                    value={newAbility.description}
-                    onChange={(e) => setNewAbility({ ...newAbility, description: e.target.value })}
-                    className="w-full bg-warm-900 border border-white/10 rounded px-2 py-1.5 text-xs outline-none h-12 resize-none"
-                    placeholder="Deals 1 damage to all enemies..."
-                  />
                 </div>
 
                 <button

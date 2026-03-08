@@ -33,8 +33,13 @@ fn test_spined_urchin_retribution() {
     );
 
     let spines_trigger = events.iter().any(|e| {
-        matches!(e, CombatEvent::AbilityTrigger { source_instance_id, ability_name, .. }
-            if *source_instance_id == UnitId::player(1) && ability_name == "Spines")
+        matches!(
+            e,
+            CombatEvent::AbilityTrigger {
+                source_instance_id,
+                ability_index,
+            } if *source_instance_id == UnitId::player(1) && *ability_index == 0
+        )
     });
     assert!(spines_trigger, "Spines should have triggered");
 
@@ -92,8 +97,13 @@ fn test_spined_urchin_self_harm_retribution() {
     assert!(urchin_hit, "Urchin should have taken damage from Bomber");
 
     let spines_trigger = events.iter().any(|e| {
-        matches!(e, CombatEvent::AbilityTrigger { source_instance_id, ability_name, .. }
-            if *source_instance_id == UnitId::player(2) && ability_name == "Spines")
+        matches!(
+            e,
+            CombatEvent::AbilityTrigger {
+                source_instance_id,
+                ability_index,
+            } if *source_instance_id == UnitId::player(2) && *ability_index == 0
+        )
     });
     assert!(spines_trigger, "Spines should have triggered");
 }

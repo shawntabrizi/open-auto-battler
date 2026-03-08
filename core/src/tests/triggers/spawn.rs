@@ -13,8 +13,6 @@ fn test_warder_seal_fate() {
                 scope: TargetScope::TriggerSource,
             },
         },
-        name: "Seal Fate".to_string(),
-        description: "Damage enemies on spawn".to_string(),
         conditions: vec![],
         max_triggers: None,
     });
@@ -24,8 +22,6 @@ fn test_warder_seal_fate() {
         effect: AbilityEffect::SpawnUnit {
             card_id: CardId(40), // rat_token
         },
-        name: "Infestation".to_string(),
-        description: "Spawn token on death".to_string(),
         conditions: vec![],
         max_triggers: None,
     });
@@ -37,8 +33,13 @@ fn test_warder_seal_fate() {
     let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
     let trigger_event = events.iter().find(|e| {
-        matches!(e, CombatEvent::AbilityTrigger { source_instance_id, ability_name }
-                if *source_instance_id == UnitId::player(1) && ability_name == "Seal Fate")
+        matches!(
+            e,
+            CombatEvent::AbilityTrigger {
+                source_instance_id,
+                ability_index,
+            } if *source_instance_id == UnitId::player(1) && *ability_index == 0
+        )
     });
 
     assert!(
@@ -69,8 +70,6 @@ fn test_necromancer_spawn_boost() {
         effect: AbilityEffect::SpawnUnit {
             card_id: CardId(40), // rat_token
         },
-        name: "Infestation".to_string(),
-        description: "Spawn token on death".to_string(),
         conditions: vec![],
         max_triggers: None,
     });
@@ -84,8 +83,6 @@ fn test_necromancer_spawn_boost() {
                 scope: TargetScope::TriggerSource,
             },
         },
-        name: "Spawn Boost".to_string(),
-        description: "Buff spawned units".to_string(),
         conditions: vec![],
         max_triggers: None,
     });
@@ -231,27 +228,16 @@ fn test_sacrifice_combo() {
     let card_pool = spawn_test_card_pool();
     let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
-    let triggers: Vec<&String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name)
-            } else {
-                None
-            }
-        })
-        .collect();
-
     assert!(
-        triggers.contains(&&"Ritual".to_string()),
+        has_ability_trigger(&events, UnitId::player(2), 0),
         "Lich should trigger Ritual"
     );
     assert!(
-        triggers.contains(&&"Raise".to_string()),
+        has_ability_trigger(&events, UnitId::player(2), 1),
         "Lich should trigger Raise"
     );
     assert!(
-        triggers.contains(&&"Scavenge".to_string()),
+        has_ability_trigger(&events, UnitId::player(3), 0),
         "Corpse Cart should trigger Scavenge"
     );
 
@@ -284,15 +270,8 @@ fn test_damage_taken_no_slide_trigger() {
     let card_pool = spawn_test_card_pool();
     let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
 
-    let breed_triggers: Vec<_> = events
-            .iter()
-            .filter(|e| {
-                matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Breed")
-            })
-            .collect();
-
     assert_eq!(
-        breed_triggers.len(),
+        count_ability_triggers(&events, UnitId::player(2), 0),
         0,
         "Breeder should NOT trigger because it just slid forward, it wasn't hit."
     );
@@ -393,12 +372,8 @@ fn test_spawn_limit_logic() {
         .filter(|e| matches!(e, CombatEvent::UnitSpawn { .. }))
         .count();
 
-    let triggers = events
-            .iter()
-            .filter(|e| {
-                matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "MultiSpawn")
-            })
-            .count();
+    let triggers = count_ability_triggers(&events, UnitId::player(1), 0)
+        + count_ability_triggers(&events, UnitId::player(1), 1);
 
     assert_eq!(triggers, 2, "Both abilities should trigger");
     assert_eq!(

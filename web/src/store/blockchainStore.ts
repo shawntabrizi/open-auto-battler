@@ -33,12 +33,6 @@ function papiEnumStr(v: any): string {
   return v?.type ?? String(v);
 }
 
-/** Convert Binary/BoundedVec<u8> to string */
-function binaryToStr(v: any): string {
-  if (typeof v === 'string') return v;
-  return v?.asText?.() || '';
-}
-
 function toStatusMask(v: any): number[] {
   return decodeStatusMask(v);
 }
@@ -145,8 +139,6 @@ function convertAbility(a: any): any {
   return {
     trigger: papiEnumStr(a.trigger),
     effect: convertEffect(a.effect),
-    name: binaryToStr(a.name),
-    description: binaryToStr(a.description),
     conditions: (a.conditions || []).map(convertCondition),
     max_triggers: a.max_triggers ?? null,
   };

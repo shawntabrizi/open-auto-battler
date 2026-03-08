@@ -139,8 +139,6 @@ fn test_on_buy_damage_trigger_source_removes_bought_unit() {
                 scope: ShopScope::TriggerSource,
             },
         },
-        name: "Explosive Welcome".to_string(),
-        description: "Damage the bought unit".to_string(),
         conditions: vec![],
         max_triggers: None,
     });
@@ -183,8 +181,6 @@ fn test_on_buy_destroy_standard_target_selects_highest_attack() {
                     count: 1,
                 },
             },
-            name: "Cull Strongest".to_string(),
-            description: "Destroy strongest ally".to_string(),
             conditions: vec![],
             max_triggers: None,
         });
@@ -231,8 +227,6 @@ fn test_on_sell_self_position_zero_fizzles_when_source_is_removed() {
                 index: 0,
             },
         },
-        name: "Self Buff On Sell".to_string(),
-        description: "Should fizzle because seller is gone".to_string(),
         conditions: vec![],
         max_triggers: None,
     });
@@ -267,8 +261,6 @@ fn test_on_sell_allies_other_targets_survivors_when_source_is_removed() {
                 scope: ShopScope::AlliesOther,
             },
         },
-        name: "Farewell Buff".to_string(),
-        description: "Buff all surviving allies".to_string(),
         conditions: vec![],
         max_triggers: None,
     });
@@ -300,8 +292,6 @@ fn test_shop_condition_gate_can_prevent_effects() {
     let gated = UnitCard::new(gate_id, "Gate", 3, 3, 0, 0).with_shop_ability(ShopAbility {
         trigger: ShopTrigger::OnBuy,
         effect: ShopEffect::GainMana { amount: 2 },
-        name: "UnitCount Gate".to_string(),
-        description: "Should not pass in this scenario".to_string(),
         conditions: vec![ShopCondition::Is(ShopMatcher::UnitCount {
             scope: ShopScope::Allies,
             op: CompareOp::GreaterThan,
@@ -347,8 +337,6 @@ fn test_shop_condition_anyof_path_applies_with_valid_targets() {
                 scope: ShopScope::AlliesOther,
             },
         },
-        name: "AnyOf Buff".to_string(),
-        description: "Covers AnyOf matcher path in shop effects".to_string(),
         conditions: vec![ShopCondition::AnyOf(vec![
             ShopMatcher::UnitCount {
                 scope: ShopScope::Allies,

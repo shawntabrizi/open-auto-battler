@@ -43,8 +43,6 @@ struct JsonEconomy {
 struct JsonAbility {
     trigger: String,
     effect: JsonEffect,
-    name: String,
-    description: String,
     #[serde(default)]
     conditions: Vec<serde_json::Value>,
     max_triggers: Option<u32>,
@@ -111,6 +109,13 @@ struct JsonStyleCollection {
 enum AbilityLane {
     Shop,
     Battle,
+}
+
+fn ability_label(lane: AbilityLane, index: usize) -> String {
+    match lane {
+        AbilityLane::Shop => format!("shop ability #{}", index + 1),
+        AbilityLane::Battle => format!("battle ability #{}", index + 1),
+    }
 }
 
 fn escape_rust_string(s: &str) -> String {
@@ -276,38 +281,39 @@ fn validate_condition(
 fn normalize_shop_ability(
     card_id: u32,
     ability: JsonAbility,
+    ability_label: &str,
     all_card_ids: &BTreeSet<u32>,
 ) -> JsonAbility {
     match ability.trigger.as_str() {
         "OnBuy" | "OnSell" | "OnShopStart" | "AfterLoss" | "AfterWin" | "AfterDraw" => {}
         other => panic!(
             "Card {card_id} ability '{}' uses shop lane with invalid trigger '{other}'",
-            ability.name
+            ability_label
         ),
     }
 
     if ability.effect.effect_type == "ModifyStats" {
         panic!(
             "Card {card_id} ability '{}' uses shop-incompatible effect ModifyStats",
-            ability.name
+            ability_label
         );
     }
 
     match ability.effect.effect_type.as_str() {
         "ModifyStatsPermanent" => {
-            let _ = require_i32(ability.effect.health, card_id, &ability.name, "health");
-            let _ = require_i32(ability.effect.attack, card_id, &ability.name, "attack");
+            let _ = require_i32(ability.effect.health, card_id, ability_label, "health");
+            let _ = require_i32(ability.effect.attack, card_id, ability_label, "attack");
             let target = require_target(
                 &ability.effect.target,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
             validate_target(
                 target,
                 AbilityLane::Shop,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
         }
@@ -315,14 +321,14 @@ fn normalize_shop_ability(
             let spawn_id = ability.effect.card_id.unwrap_or_else(|| {
                 panic!(
                     "Card {card_id} ability '{}' SpawnUnit missing card_id",
-                    ability.name
+                    ability_label
                 )
             });
             assert!(
                 all_card_ids.contains(&spawn_id),
                 "Card {} ability '{}' SpawnUnit references missing card_id {}",
                 card_id,
-                ability.name,
+                ability_label,
                 spawn_id
             );
         }
@@ -330,49 +336,49 @@ fn normalize_shop_ability(
             let target = require_target(
                 &ability.effect.target,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
             validate_target(
                 target,
                 AbilityLane::Shop,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
         }
         "GainMana" => {
-            let _ = require_i32(ability.effect.amount, card_id, &ability.name, "amount");
+            let _ = require_i32(ability.effect.amount, card_id, ability_label, "amount");
         }
         "GrantStatusPermanent" | "RemoveStatusPermanent" => {
             let _ = require_status(
                 &ability.effect.status,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
             let target = require_target(
                 &ability.effect.target,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
             validate_target(
                 target,
                 AbilityLane::Shop,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
         }
         other => panic!(
             "Card {card_id} ability '{}' uses shop-incompatible effect '{other}'",
-            ability.name
+            ability_label
         ),
     }
 
     for condition in &ability.conditions {
-        validate_condition(condition, AbilityLane::Shop, card_id, &ability.name);
+        validate_condition(condition, AbilityLane::Shop, card_id, ability_label);
     }
 
     ability
@@ -381,6 +387,7 @@ fn normalize_shop_ability(
 fn normalize_battle_ability(
     card_id: u32,
     ability: JsonAbility,
+    ability_label: &str,
     all_card_ids: &BTreeSet<u32>,
 ) -> JsonAbility {
     match ability.trigger.as_str() {
@@ -389,45 +396,45 @@ fn normalize_battle_ability(
         | "AfterAnyAttack" => {}
         "OnBuy" | "OnSell" | "OnShopStart" | "AfterLoss" | "AfterWin" | "AfterDraw" => panic!(
             "Card {card_id} ability '{}' uses battle lane with shop trigger '{}'",
-            ability.name, ability.trigger
+            ability_label, ability.trigger
         ),
         _ => panic!(
             "Card {card_id} ability '{}' has unknown trigger '{}'",
-            ability.name, ability.trigger
+            ability_label, ability.trigger
         ),
     }
 
     match ability.effect.effect_type.as_str() {
         "Damage" => {
-            let _ = require_i32(ability.effect.amount, card_id, &ability.name, "amount");
+            let _ = require_i32(ability.effect.amount, card_id, ability_label, "amount");
             let target = require_target(
                 &ability.effect.target,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
             validate_target(
                 target,
                 AbilityLane::Battle,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
         }
         "ModifyStats" | "ModifyStatsPermanent" => {
-            let _ = require_i32(ability.effect.health, card_id, &ability.name, "health");
-            let _ = require_i32(ability.effect.attack, card_id, &ability.name, "attack");
+            let _ = require_i32(ability.effect.health, card_id, ability_label, "health");
+            let _ = require_i32(ability.effect.attack, card_id, ability_label, "attack");
             let target = require_target(
                 &ability.effect.target,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
             validate_target(
                 target,
                 AbilityLane::Battle,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
         }
@@ -435,14 +442,14 @@ fn normalize_battle_ability(
             let target = require_target(
                 &ability.effect.target,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
             validate_target(
                 target,
                 AbilityLane::Battle,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
         }
@@ -450,49 +457,49 @@ fn normalize_battle_ability(
             let spawn_id = ability.effect.card_id.unwrap_or_else(|| {
                 panic!(
                     "Card {card_id} ability '{}' SpawnUnit missing card_id",
-                    ability.name
+                    ability_label
                 )
             });
             assert!(
                 all_card_ids.contains(&spawn_id),
                 "Card {} ability '{}' SpawnUnit references missing card_id {}",
                 card_id,
-                ability.name,
+                ability_label,
                 spawn_id
             );
         }
         "GainMana" => {
-            let _ = require_i32(ability.effect.amount, card_id, &ability.name, "amount");
+            let _ = require_i32(ability.effect.amount, card_id, ability_label, "amount");
         }
         "GrantStatusThisBattle" | "GrantStatusPermanent" | "RemoveStatusPermanent" => {
             let _ = require_status(
                 &ability.effect.status,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
             let target = require_target(
                 &ability.effect.target,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
             validate_target(
                 target,
                 AbilityLane::Battle,
                 card_id,
-                &ability.name,
+                ability_label,
                 &ability.effect.effect_type,
             );
         }
         other => panic!(
             "Card {card_id} ability '{}' has unsupported battle effect '{other}'",
-            ability.name
+            ability_label
         ),
     }
 
     for condition in &ability.conditions {
-        validate_condition(condition, AbilityLane::Battle, card_id, &ability.name);
+        validate_condition(condition, AbilityLane::Battle, card_id, ability_label);
     }
 
     ability
@@ -506,13 +513,21 @@ fn normalize_card_abilities(
         .shop_abilities
         .iter()
         .cloned()
-        .map(|ability| normalize_shop_ability(card.id, ability, all_card_ids))
+        .enumerate()
+        .map(|(index, ability)| {
+            let label = ability_label(AbilityLane::Shop, index);
+            normalize_shop_ability(card.id, ability, &label, all_card_ids)
+        })
         .collect();
     let battle = card
         .battle_abilities
         .iter()
         .cloned()
-        .map(|ability| normalize_battle_ability(card.id, ability, all_card_ids))
+        .enumerate()
+        .map(|(index, ability)| {
+            let label = ability_label(AbilityLane::Battle, index);
+            normalize_battle_ability(card.id, ability, &label, all_card_ids)
+        })
         .collect();
     (shop, battle)
 }
@@ -808,8 +823,6 @@ fn gen_shop_condition(val: &serde_json::Value) -> String {
 fn gen_battle_ability(ability: &JsonAbility) -> String {
     let trigger = gen_battle_trigger(&ability.trigger);
     let effect = gen_battle_effect(&ability.effect);
-    let name = escape_rust_string(&ability.name);
-    let desc = escape_rust_string(&ability.description);
     let conditions: Vec<String> = ability
         .conditions
         .iter()
@@ -829,8 +842,6 @@ fn gen_battle_ability(ability: &JsonAbility) -> String {
         r#"Ability {{
                     trigger: {trigger},
                     effect: {effect},
-                    name: String::from("{name}"),
-                    description: String::from("{desc}"),
                     conditions: {conditions_str},
                     max_triggers: {max_triggers},
                 }}"#
@@ -840,8 +851,6 @@ fn gen_battle_ability(ability: &JsonAbility) -> String {
 fn gen_shop_ability(ability: &JsonAbility) -> String {
     let trigger = gen_shop_trigger(&ability.trigger);
     let effect = gen_shop_effect(&ability.effect);
-    let name = escape_rust_string(&ability.name);
-    let desc = escape_rust_string(&ability.description);
     let conditions: Vec<String> = ability.conditions.iter().map(gen_shop_condition).collect();
     let conditions_str = if conditions.is_empty() {
         "vec![]".to_string()
@@ -857,8 +866,6 @@ fn gen_shop_ability(ability: &JsonAbility) -> String {
         r#"ShopAbility {{
                     trigger: {trigger},
                     effect: {effect},
-                    name: String::from("{name}"),
-                    description: String::from("{desc}"),
                     conditions: {conditions_str},
                     max_triggers: {max_triggers},
                 }}"#

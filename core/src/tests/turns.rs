@@ -271,8 +271,6 @@ fn test_on_buy_trigger_applies_in_shop() {
                     scope: ShopScope::SelfUnit,
                 },
             },
-            name: "Shop Cheer".to_string(),
-            description: "Gain +2 health when a unit is bought".to_string(),
             conditions: vec![],
             max_triggers: None,
         });
@@ -322,8 +320,6 @@ fn test_on_sell_trigger_applies_in_shop() {
                     index: 1,
                 },
             },
-            name: "Parting Gift".to_string(),
-            description: "Give the ally behind +3 health when sold".to_string(),
             conditions: vec![],
             max_triggers: None,
         });
@@ -365,8 +361,6 @@ fn test_on_buy_gain_mana_enables_extra_play() {
         UnitCard::new(booster_id, "Booster", 1, 2, 1, 1).with_shop_ability(ShopAbility {
             trigger: ShopTrigger::OnBuy,
             effect: ShopEffect::GainMana { amount: 1 },
-            name: "Cashback".to_string(),
-            description: "Gain 1 mana when a unit is bought".to_string(),
             conditions: vec![],
             max_triggers: None,
         });
@@ -418,8 +412,6 @@ fn test_on_sell_gain_mana_enables_extra_play() {
         UnitCard::new(seller_id, "Seller", 1, 2, 1, 1).with_shop_ability(ShopAbility {
             trigger: ShopTrigger::OnSell,
             effect: ShopEffect::GainMana { amount: 1 },
-            name: "Sell Bonus".to_string(),
-            description: "Gain 1 mana when sold".to_string(),
             conditions: vec![],
             max_triggers: None,
         });
@@ -473,8 +465,6 @@ fn test_on_shop_start_random_is_deterministic_with_seed() {
                         count: 1,
                     },
                 },
-                name: "Morning Buff".to_string(),
-                description: "Buff one random ally at shop start".to_string(),
                 conditions: vec![],
                 max_triggers: None,
             });
@@ -532,8 +522,6 @@ fn test_on_shop_start_gain_mana_sets_turn_starting_mana() {
     let starter = UnitCard::new(starter_id, "Starter", 1, 2, 1, 1).with_shop_ability(ShopAbility {
         trigger: ShopTrigger::OnShopStart,
         effect: ShopEffect::GainMana { amount: 1 },
-        name: "Opening Coin".to_string(),
-        description: "Gain 1 mana at shop start".to_string(),
         conditions: vec![],
         max_triggers: None,
     });
@@ -601,8 +589,6 @@ fn test_after_battle_shop_triggers_fire_by_result() {
                         scope: ShopScope::SelfUnit,
                     },
                 },
-                name: "After Loss".to_string(),
-                description: "Gain +1 health after losing".to_string(),
                 conditions: vec![],
                 max_triggers: None,
             },
@@ -615,16 +601,12 @@ fn test_after_battle_shop_triggers_fire_by_result() {
                         scope: ShopScope::SelfUnit,
                     },
                 },
-                name: "After Win".to_string(),
-                description: "Gain +1 attack after winning".to_string(),
                 conditions: vec![],
                 max_triggers: None,
             },
             ShopAbility {
                 trigger: ShopTrigger::AfterDraw,
                 effect: ShopEffect::GainMana { amount: 1 },
-                name: "After Draw".to_string(),
-                description: "Gain 1 mana after drawing".to_string(),
                 conditions: vec![],
                 max_triggers: None,
             },

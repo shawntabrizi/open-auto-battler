@@ -41,16 +41,8 @@ export const CreateSetPage: React.FC = () => {
       play_cost: card.data.economy.play_cost,
       pitch_value: card.data.economy.pitch_value,
       base_statuses: card.data.base_statuses || [],
-      shop_abilities: (card.data.shop_abilities || []).map((a: any) => ({
-        ...a,
-        name: a.name.asText ? a.name.asText() : a.name,
-        description: a.description.asText ? a.description.asText() : a.description,
-      })),
-      battle_abilities: (card.data.battle_abilities || []).map((a: any) => ({
-        ...a,
-        name: a.name.asText ? a.name.asText() : a.name,
-        description: a.description.asText ? a.description.asText() : a.description,
-      })),
+      shop_abilities: card.data.shop_abilities || [],
+      battle_abilities: card.data.battle_abilities || [],
     };
   };
 
@@ -95,11 +87,7 @@ export const CreateSetPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-warm-950 text-warm-200">
       {/* Side Panel Integration - Always Visible */}
-      <CardDetailPanel
-        card={detailCard}
-        isVisible={true}
-        mode={{ type: 'readOnly' }}
-      />
+      <CardDetailPanel card={detailCard} isVisible={true} mode={{ type: 'readOnly' }} />
 
       <div className="p-8 ml-80 transition-all duration-300">
         <div className="max-w-7xl mx-auto">

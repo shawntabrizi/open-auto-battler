@@ -120,8 +120,6 @@ export type ShopEffect =
 export interface BattleAbility {
   trigger: BattleTrigger;
   effect: BattleEffect;
-  name: string;
-  description: string;
   conditions: BattleCondition[];
   max_triggers?: number;
 }
@@ -129,8 +127,6 @@ export interface BattleAbility {
 export interface ShopAbility {
   trigger: ShopTrigger;
   effect: ShopEffect;
-  name: string;
-  description: string;
   conditions: ShopCondition[];
   max_triggers?: number;
 }
@@ -206,7 +202,7 @@ export type LimitReason =
 export type CombatEvent =
   | { type: 'PhaseStart'; payload: { phase: BattlePhase } }
   | { type: 'PhaseEnd'; payload: { phase: BattlePhase } }
-  | { type: 'AbilityTrigger'; payload: { source_instance_id: number; ability_name: string } }
+  | { type: 'AbilityTrigger'; payload: { source_instance_id: number; ability_index: number } }
   | { type: 'Clash'; payload: { p_dmg: number; e_dmg: number } }
   | {
       type: 'DamageTaken';

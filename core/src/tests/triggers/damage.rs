@@ -30,18 +30,17 @@ fn test_fatal_damage_trigger() {
         .count();
     assert!(deaths >= 1, "Martyr should have died");
 
-    let triggers: Vec<&String> = events
-        .iter()
-        .filter_map(|e| {
-            if let CombatEvent::AbilityTrigger { ability_name, .. } = e {
-                Some(ability_name)
-            } else {
-                None
-            }
-        })
-        .collect();
+    let revenge_triggered = events.iter().any(|e| {
+        matches!(
+            e,
+            CombatEvent::AbilityTrigger {
+                source_instance_id,
+                ability_index,
+            } if *source_instance_id == UnitId::player(1) && *ability_index == 0
+        )
+    });
     assert!(
-        triggers.contains(&&"Revenge".to_string()),
+        revenge_triggered,
         "Revenge ability should trigger on fatal damage"
     );
 

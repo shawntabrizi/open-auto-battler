@@ -1,5 +1,5 @@
 use super::*;
-use crate::battle::{BattleResult, CombatEvent};
+use crate::battle::{BattleResult, CombatEvent, UnitId};
 
 #[test]
 fn test_simultaneous_clash_draw() {
@@ -49,12 +49,24 @@ fn test_mutual_destruction_chain() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    let has_nuke = events.iter().any(
-        |e| matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Nuke"),
-    );
+    let has_nuke = events.iter().any(|e| {
+        matches!(
+            e,
+            CombatEvent::AbilityTrigger {
+                source_instance_id,
+                ability_index,
+            } if *source_instance_id == UnitId::player(1) && *ability_index == 0
+        )
+    });
     let has_revenge = events.iter().any(|e| {
-            matches!(e, CombatEvent::AbilityTrigger { ability_name, .. } if ability_name == "Revenge")
-        });
+        matches!(
+            e,
+            CombatEvent::AbilityTrigger {
+                source_instance_id,
+                ability_index,
+            } if *source_instance_id == UnitId::enemy(1) && *ability_index == 0
+        )
+    });
 
     assert!(has_nuke);
     assert!(has_revenge);
