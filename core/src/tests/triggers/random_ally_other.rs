@@ -14,7 +14,6 @@ fn test_random_ally_other_targeting() {
                 count: 1,
             },
         },
-        "Command",
     );
 
     let commander = create_dummy_card(1, "Commander", 2, 3).with_battle_ability(commander_ability);
@@ -61,7 +60,6 @@ fn test_random_ally_other_fizzle() {
                 count: 1,
             },
         },
-        "Command",
     );
 
     let commander = create_dummy_card(1, "Commander", 2, 3).with_battle_ability(commander_ability);

@@ -14,7 +14,6 @@ fn test_attack_trigger_scopes() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            "FrontUnitTrigger",
         )),
     );
 
@@ -29,7 +28,6 @@ fn test_attack_trigger_scopes() {
                         scope: TargetScope::SelfUnit,
                     },
                 },
-                "SupportUnitTrigger",
             ),
             create_ability(
                 AbilityTrigger::BeforeAnyAttack,
@@ -40,7 +38,6 @@ fn test_attack_trigger_scopes() {
                         scope: TargetScope::SelfUnit,
                     },
                 },
-                "SupportAnyTrigger",
             ),
         ]),
     );
@@ -84,7 +81,6 @@ fn test_after_attack_trigger_scopes() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            "FrontAfterUnit",
         )),
     );
 
@@ -99,7 +95,6 @@ fn test_after_attack_trigger_scopes() {
                         scope: TargetScope::SelfUnit,
                     },
                 },
-                "SupportAfterUnit",
             ),
             create_ability(
                 AbilityTrigger::AfterAnyAttack,
@@ -110,7 +105,6 @@ fn test_after_attack_trigger_scopes() {
                         scope: TargetScope::SelfUnit,
                     },
                 },
-                "SupportAfterAny",
             ),
         ]),
     );

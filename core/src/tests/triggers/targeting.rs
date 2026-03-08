@@ -14,7 +14,6 @@ fn test_targeting_logic_front_ally() {
                 index: 0,
             },
         },
-        "Buff",
     );
 
     let front = create_dummy_card(1, "Front", 1, 10);

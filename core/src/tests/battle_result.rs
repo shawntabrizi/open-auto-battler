@@ -27,7 +27,6 @@ fn test_mutual_destruction_chain() {
                 index: 0,
             },
         },
-        "Nuke",
     );
     let faint_nuke = create_ability(
         AbilityTrigger::OnFaint,
@@ -38,7 +37,6 @@ fn test_mutual_destruction_chain() {
                 index: 0,
             },
         },
-        "Revenge",
     );
 
     let p1 = create_dummy_card(1, "P1", 1, 5).with_battle_ability(start_nuke);
@@ -91,7 +89,6 @@ fn test_infinite_battle_draw() {
                 index: -1,
             },
         },
-        "SquireShield",
     ));
 
     let p_board = vec![

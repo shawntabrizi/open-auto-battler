@@ -13,7 +13,6 @@ fn test_berserker_combo() {
                 scope: TargetScope::Allies,
             },
         },
-        "Sharpen",
     );
     let smith_dmg = create_ability(
         AbilityTrigger::OnStart,
@@ -23,7 +22,6 @@ fn test_berserker_combo() {
                 scope: TargetScope::Allies,
             },
         },
-        "Fire",
     );
     let pain_smith =
         create_dummy_card(1, "Smith", 3, 3).with_battle_abilities(vec![smith_buff, smith_dmg]);
@@ -37,7 +35,6 @@ fn test_berserker_combo() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "Berserk",
     );
     let raging_orc = create_dummy_card(2, "Orc", 2, 8).with_battle_ability(orc_rage);
 

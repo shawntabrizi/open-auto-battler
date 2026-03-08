@@ -18,8 +18,8 @@ fn position_of(triggers: &[AbilityTriggerRef], target: AbilityTriggerRef) -> usi
 
 #[test]
 fn test_ability_priority_by_attack() {
-    let slow_unit = create_tester_unit(1, "SlowPoke", 1, 10, "SlowTrigger");
-    let fast_unit = create_tester_unit(2, "Speedster", 10, 10, "FastTrigger");
+    let slow_unit = create_tester_unit(1, "SlowPoke", 1, 10);
+    let fast_unit = create_tester_unit(2, "Speedster", 10, 10);
 
     let player_board = vec![slow_unit, fast_unit];
     let enemy_board = vec![create_dummy_enemy()];
@@ -38,8 +38,8 @@ fn test_ability_priority_by_attack() {
 
 #[test]
 fn test_priority_tiebreaker_health() {
-    let healthy_unit = create_tester_unit(1, "Healthy", 5, 10, "HighHP");
-    let fragile_unit = create_tester_unit(2, "Fragile", 5, 1, "LowHP");
+    let healthy_unit = create_tester_unit(1, "Healthy", 5, 10);
+    let fragile_unit = create_tester_unit(2, "Fragile", 5, 1);
 
     let player_board = vec![fragile_unit, healthy_unit];
     let enemy_board = vec![create_dummy_enemy()];
@@ -75,7 +75,7 @@ fn test_priority_tiebreaker_team() {
     let mut enemy_first_count = 0;
 
     for seed in [42u64, 1, 123, 456, 789, 1000, 2000, 3000, 4000, 5000] {
-        let p_unit = create_tester_unit(1, "Player", 5, 5, "PlayerTrigger");
+        let p_unit = create_tester_unit(1, "Player", 5, 5);
         let p_board = vec![p_unit];
         let e_board = vec![e_unit.clone()];
 
@@ -102,8 +102,8 @@ fn test_priority_tiebreaker_team() {
 
 #[test]
 fn test_priority_tiebreaker_index() {
-    let front_unit = create_tester_unit(1, "Front", 5, 5, "FrontTrigger");
-    let back_unit = create_tester_unit(2, "Back", 5, 5, "BackTrigger");
+    let front_unit = create_tester_unit(1, "Front", 5, 5);
+    let back_unit = create_tester_unit(2, "Back", 5, 5);
 
     let player_board = vec![front_unit, back_unit];
     let enemy_board = vec![create_dummy_enemy()];
@@ -129,7 +129,6 @@ fn test_priority_tiebreaker_ability_order() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "AbilityA",
     );
 
     let ability_b = create_ability(
@@ -141,7 +140,6 @@ fn test_priority_tiebreaker_ability_order() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "AbilityB",
     );
 
     let unit = CombatUnit::from_card(
@@ -171,11 +169,10 @@ fn test_priority_full_hierarchy_with_ability_order() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            "U1",
         )),
     );
-    let u2 = create_tester_unit(2, "U2", 5, 10, "U2");
-    let u3 = create_tester_unit(3, "U3", 5, 5, "U3");
+    let u2 = create_tester_unit(2, "U2", 5, 10);
+    let u3 = create_tester_unit(3, "U3", 5, 5);
     let u4 = CombatUnit::from_card(
         UnitCard::new(CardId(4), "U4", 5, 5, 0, 0).with_battle_ability(create_ability(
             AbilityTrigger::OnStart,
@@ -186,7 +183,6 @@ fn test_priority_full_hierarchy_with_ability_order() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            "U4",
         )),
     );
     let ability_u5_a = create_ability(
@@ -198,7 +194,6 @@ fn test_priority_full_hierarchy_with_ability_order() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "U5-A",
     );
     let ability_u5_b = create_ability(
         AbilityTrigger::OnStart,
@@ -209,13 +204,12 @@ fn test_priority_full_hierarchy_with_ability_order() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "U5-B",
     );
     let u5 = CombatUnit::from_card(
         UnitCard::new(CardId(5), "U5", 1, 1, 0, 0)
             .with_battle_abilities(vec![ability_u5_a, ability_u5_b]),
     );
-    let u6 = create_tester_unit(6, "U6", 1, 1, "U6");
+    let u6 = create_tester_unit(6, "U6", 1, 1);
 
     let p_board = vec![u5, u2, u3, u6];
     let e_board = vec![u1, u4];
@@ -248,12 +242,11 @@ fn test_priority_full_hierarchy() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "U1",
     );
     let u1 = CombatUnit::from_card(
         UnitCard::new(CardId(1), "U1", 10, 1, 0, 0).with_battle_ability(ability_u1),
     );
-    let u2 = create_tester_unit(2, "U2", 5, 10, "U2");
+    let u2 = create_tester_unit(2, "U2", 5, 10);
     let ability_u4 = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStats {
@@ -263,14 +256,13 @@ fn test_priority_full_hierarchy() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "U4",
     );
     let u4 = CombatUnit::from_card(
         UnitCard::new(CardId(4), "U4", 5, 5, 0, 0).with_battle_ability(ability_u4),
     );
-    let u3 = create_tester_unit(3, "U3", 5, 5, "U3");
-    let u5 = create_tester_unit(5, "U5", 1, 1, "U5");
-    let u6 = create_tester_unit(6, "U6", 1, 1, "U6");
+    let u3 = create_tester_unit(3, "U3", 5, 5);
+    let u5 = create_tester_unit(5, "U5", 1, 1);
+    let u6 = create_tester_unit(6, "U6", 1, 1);
 
     let p_board = vec![u2, u3, u5, u6];
     let e_board = vec![u1, u4];
@@ -302,7 +294,6 @@ fn test_priority_keeps_same_unit_abilities_consecutive() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "AbilityA",
     );
     let ability_b = create_ability(
         AbilityTrigger::OnStart,
@@ -313,7 +304,6 @@ fn test_priority_keeps_same_unit_abilities_consecutive() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "AbilityB",
     );
     let ability_c = create_ability(
         AbilityTrigger::OnStart,
@@ -324,7 +314,6 @@ fn test_priority_keeps_same_unit_abilities_consecutive() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "AbilityC",
     );
 
     let p_card = UnitCard::new(CardId(1), "Player", 5, 5, 0, 0)

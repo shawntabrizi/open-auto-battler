@@ -89,7 +89,6 @@ fn test_modify_stats_permanent_effect_emits_expected_delta() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "Fortify",
     ));
 
     let p_board = vec![CombatUnit::from_card(durable)];

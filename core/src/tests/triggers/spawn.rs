@@ -137,7 +137,6 @@ fn test_spawn_index_preservation() {
         AbilityEffect::SpawnUnit {
             card_id: CardId(42), // zombie_spawn
         },
-        "Spawn",
     );
 
     let tank = create_dummy_card(1, "Tank", 5, 10);
@@ -158,7 +157,6 @@ fn test_spawn_index_preservation() {
                 scope: TargetScope::Enemies,
             },
         },
-        "Bomb",
     ));
     let e_board = vec![CombatUnit::from_card(aoe_killer)];
 
@@ -193,14 +191,12 @@ fn test_sacrifice_combo() {
                 index: -1,
             },
         },
-        "Ritual",
     );
     let lich_spawn = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::SpawnUnit {
             card_id: CardId(43), // golem
         },
-        "Raise",
     );
     let lich =
         create_dummy_card(2, "Lich", 3, 3).with_battle_abilities(vec![lich_destroy, lich_spawn]);
@@ -214,7 +210,6 @@ fn test_sacrifice_combo() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "Scavenge",
     );
     let corpse_cart = create_dummy_card(3, "Cart", 0, 4).with_battle_ability(cart_ability);
 
@@ -254,7 +249,6 @@ fn test_damage_taken_no_slide_trigger() {
         AbilityEffect::SpawnUnit {
             card_id: CardId(42), // zombie_spawn
         },
-        "Breed",
     );
 
     let fodder = create_dummy_card(1, "Fodder", 1, 1);
@@ -284,7 +278,6 @@ fn test_spawn_id_uniqueness_and_buffs() {
         AbilityEffect::SpawnUnit {
             card_id: CardId(42), // zombie_spawn
         },
-        "Spawn",
     );
     let spawner = create_dummy_card(1, "Spawner", 10, 10)
         .with_battle_abilities(vec![spawn_ability.clone(), spawn_ability]);
@@ -298,7 +291,6 @@ fn test_spawn_id_uniqueness_and_buffs() {
                 scope: TargetScope::Allies,
             },
         },
-        "BuffAll",
     );
     let buffer = create_dummy_card(2, "Buffer", 5, 10).with_battle_ability(buff_ability);
 
@@ -345,7 +337,6 @@ fn test_spawn_limit_logic() {
         AbilityEffect::SpawnUnit {
             card_id: CardId(42), // zombie_spawn
         },
-        "MultiSpawn",
     );
 
     let captain = create_dummy_card(1, "Captain", 1, 1)
@@ -389,7 +380,6 @@ fn test_missing_spawn_card_fizzles_without_panic() {
         AbilityEffect::SpawnUnit {
             card_id: CardId(999_999),
         },
-        "Broken Spawn",
     ));
 
     let p_board = vec![CombatUnit::from_card(spawner)];
@@ -416,7 +406,6 @@ fn test_full_board_spawn_spam_does_not_leak_recursion_depth() {
         AbilityEffect::SpawnUnit {
             card_id: CardId(42),
         },
-        "SpawnSpam",
     );
 
     let spammer = create_dummy_card(1, "Spawner", 0, 500).with_battle_ability(spawn_spam);

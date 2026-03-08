@@ -13,7 +13,6 @@ fn test_enemy_position_targeting() {
                 index: 2,
             },
         },
-        "ArtilleryStrike",
     );
 
     let mage = create_dummy_card(1, "Artillery Mage", 3, 3).with_battle_ability(mage_ability);
@@ -50,7 +49,6 @@ fn test_enemy_position_fizzle() {
                 index: 2,
             },
         },
-        "ArtilleryStrike",
     );
 
     let mage = create_dummy_card(1, "Artillery Mage", 3, 3).with_battle_ability(mage_ability);
@@ -85,7 +83,6 @@ fn test_ally_position_targeting() {
                 index: 4,
             },
         },
-        "SupplyLine",
     );
 
     let guard = create_dummy_card(1, "Rear Guard", 2, 5).with_battle_ability(guard_ability);
@@ -127,7 +124,6 @@ fn test_ally_position_fizzle() {
                 index: 4,
             },
         },
-        "SupplyLine",
     );
 
     let guard = create_dummy_card(1, "Rear Guard", 2, 5).with_battle_ability(guard_ability);

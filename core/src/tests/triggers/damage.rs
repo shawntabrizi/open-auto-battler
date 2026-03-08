@@ -13,7 +13,6 @@ fn test_fatal_damage_trigger() {
                 index: 0,
             },
         },
-        "Revenge",
     );
 
     let martyr = create_dummy_card(1, "Martyr", 1, 1).with_battle_ability(revenge_shot);
@@ -65,7 +64,6 @@ fn test_destroy_exact_health() {
                 index: 0,
             },
         },
-        "GrimReaper",
     );
 
     let reaper = create_dummy_card(1, "Reaper", 1, 1).with_battle_ability(reaper_ability);

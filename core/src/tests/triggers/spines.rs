@@ -12,7 +12,6 @@ fn test_spined_urchin_retribution() {
                 scope: TargetScope::TriggerSource,
             },
         },
-        "Spines",
     );
 
     let urchin = create_dummy_card(1, "Spined Urchin", 1, 4).with_battle_ability(spines_ability);
@@ -68,7 +67,6 @@ fn test_spined_urchin_self_harm_retribution() {
                 scope: TargetScope::All,
             },
         },
-        "Blast",
     );
     let spines_ability = create_ability(
         AbilityTrigger::OnHurt,
@@ -78,7 +76,6 @@ fn test_spined_urchin_self_harm_retribution() {
                 scope: TargetScope::TriggerSource,
             },
         },
-        "Spines",
     );
 
     let bomber = create_dummy_card(1, "Bomber", 10, 1).with_battle_ability(bomber_ability);

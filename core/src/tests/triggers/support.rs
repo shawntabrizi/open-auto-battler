@@ -14,7 +14,6 @@ fn test_shield_squire_support() {
                 index: -1,
             },
         },
-        "Squire Shield",
     );
 
     let fodder = create_dummy_card(1, "Fodder", 1, 10);

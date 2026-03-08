@@ -15,7 +15,6 @@ fn test_snipe_lowest_health() {
                 count: 1,
             },
         },
-        "SnipeLowest",
     );
 
     let hh = create_dummy_card(1, "Headhunter", 4, 2).with_battle_ability(headhunter_ability);
@@ -64,7 +63,6 @@ fn test_snipe_highest_attack() {
                 count: 1,
             },
         },
-        "SnipeStrongest",
     );
 
     let gs = create_dummy_card(1, "GiantSlayer", 2, 2).with_battle_ability(giantslayer_ability);
@@ -106,7 +104,6 @@ fn test_snipe_highest_health() {
                 count: 1,
             },
         },
-        "SnipeHighestHP",
     );
 
     let sniper = create_dummy_card(1, "Sniper", 1, 1).with_battle_ability(snipe_ability);
@@ -144,7 +141,6 @@ fn test_snipe_lowest_attack() {
                 count: 1,
             },
         },
-        "SnipeLowestAtk",
     );
 
     let sniper = create_dummy_card(1, "Sniper", 1, 1).with_battle_ability(snipe_ability);
@@ -182,7 +178,6 @@ fn test_snipe_highest_mana() {
                 count: 1,
             },
         },
-        "SnipeHighestMana",
     );
 
     let sniper = create_dummy_card(1, "Sniper", 1, 1).with_battle_ability(snipe_ability);
@@ -221,7 +216,6 @@ fn test_snipe_lowest_mana() {
                 count: 1,
             },
         },
-        "SnipeLowestMana",
     );
 
     let sniper = create_dummy_card(1, "Sniper", 1, 1).with_battle_ability(snipe_ability);
@@ -259,7 +253,6 @@ fn test_mana_reaper_dual_kill() {
                 count: 1,
             },
         },
-        "Harvest",
     );
     let reaper_ability_low = create_ability(
         AbilityTrigger::OnStart,
@@ -271,7 +264,6 @@ fn test_mana_reaper_dual_kill() {
                 count: 1,
             },
         },
-        "Cull",
     );
 
     let reaper = create_dummy_card(1, "ManaReaper", 2, 2)

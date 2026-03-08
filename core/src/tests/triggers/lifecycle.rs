@@ -14,7 +14,6 @@ fn test_on_spawn_triggers_for_spawned_unit() {
                     scope: TargetScope::SelfUnit,
                 },
             },
-            "Awaken",
         ));
 
     let mut card_pool = spawn_test_card_pool();
@@ -25,7 +24,6 @@ fn test_on_spawn_triggers_for_spawned_unit() {
         AbilityEffect::SpawnUnit {
             card_id: CardId(120),
         },
-        "Summon Spawnling",
     ));
 
     let p_board = vec![CombatUnit::from_card(summoner)];
@@ -87,7 +85,6 @@ fn test_on_hurt_aggressor_scope_hits_the_attacker() {
                 scope: TargetScope::Aggressor,
             },
         },
-        "Counterstrike",
     ));
 
     let attacker = create_dummy_card(2, "Attacker", 1, 2);

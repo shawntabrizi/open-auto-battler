@@ -30,7 +30,6 @@ fn test_saturating_stat_buffs() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "SuperBuff",
     );
 
     let unit_card = create_dummy_card(1, "Hero", 10, 10).with_battle_ability(buff_ability);
@@ -79,7 +78,6 @@ fn test_negative_attack_prevention() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "Weakness",
     );
 
     let weak_unit = create_dummy_card(1, "Weakling", 5, 10).with_battle_ability(debuff_ability);

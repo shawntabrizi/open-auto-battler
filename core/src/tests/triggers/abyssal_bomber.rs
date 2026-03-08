@@ -12,7 +12,6 @@ fn test_abyssal_bomber_death_nova() {
                 scope: TargetScope::All,
             },
         },
-        "Abyssal Blast",
     );
 
     let bomber = create_dummy_card(1, "Abyssal Bomber", 2, 2).with_battle_ability(bomber_ability);

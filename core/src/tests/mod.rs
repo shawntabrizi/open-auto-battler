@@ -32,7 +32,7 @@ fn create_board_unit(id: u32, name: &str, atk: i32, hp: i32) -> CombatUnit {
     CombatUnit::from_card(create_dummy_card(id, name, atk, hp))
 }
 
-fn create_ability(trigger: AbilityTrigger, effect: AbilityEffect, _name: &str) -> Ability {
+fn create_ability(trigger: AbilityTrigger, effect: AbilityEffect) -> Ability {
     Ability {
         trigger,
         effect,
@@ -41,13 +41,7 @@ fn create_ability(trigger: AbilityTrigger, effect: AbilityEffect, _name: &str) -
     }
 }
 
-fn create_tester_unit(
-    id: u32,
-    name: &str,
-    attack: i32,
-    health: i32,
-    _ability_name: &str,
-) -> CombatUnit {
+fn create_tester_unit(id: u32, name: &str, attack: i32, health: i32) -> CombatUnit {
     let ability = Ability {
         trigger: AbilityTrigger::OnStart,
         // Simple effect that won't kill anyone to keep the log clean

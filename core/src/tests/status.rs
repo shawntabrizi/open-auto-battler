@@ -15,7 +15,6 @@ fn test_shield_blocks_ability_damage_and_consumes_status() {
                 index: 0,
             },
         },
-        "Opening Shot",
     ));
 
     let p_board = vec![CombatUnit::from_card(shielded)];
@@ -86,7 +85,6 @@ fn test_guard_forces_enemy_random_targeting() {
                 count: 1,
             },
         },
-        "Arc Bolt",
     ));
 
     let p_board = vec![
@@ -135,7 +133,6 @@ fn test_permanent_status_deltas_extract_from_events() {
                 scope: TargetScope::SelfUnit,
             },
         },
-        "Grant Shield",
     ));
     let enemy = create_dummy_card(2, "Enemy", 0, 6);
 
