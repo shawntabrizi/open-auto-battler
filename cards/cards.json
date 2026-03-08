@@ -226,7 +226,7 @@
             }
           }
         ],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
@@ -464,7 +464,7 @@
         "name": "Brace",
         "description": "Gain +2 health before attacking",
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       },
       {
         "trigger": "AfterUnitAttack",
@@ -482,7 +482,7 @@
         "name": "Adrenaline",
         "description": "Gain +2 attack after attacking",
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
@@ -528,7 +528,7 @@
             }
           }
         ],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
@@ -607,7 +607,7 @@
         "name": "Spines",
         "description": "Deal 1 damage to the attacker when hurt",
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
@@ -641,7 +641,7 @@
         "name": "Lifesteal",
         "description": "Heal 2 health after attacking",
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
@@ -675,7 +675,7 @@
         "name": "Berserk",
         "description": "Gain +2 attack when hurt",
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
@@ -736,7 +736,7 @@
         "name": "Spawn Boost",
         "description": "Give +2 attack to any spawned unit",
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
@@ -843,7 +843,7 @@
         "name": "Squire's Aegis",
         "description": "Give unit in front +2 health before every clash",
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
@@ -876,7 +876,7 @@
         "name": "Seal Fate",
         "description": "Deal 1 damage to any enemy that spawns",
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
@@ -1102,7 +1102,7 @@
         "name": "Spark",
         "description": "Deal 2 damage to a random enemy after attacking",
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
@@ -1197,7 +1197,7 @@
         "name": "Guardian's Aura",
         "description": "Give ALL allies +3 health before every clash",
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
