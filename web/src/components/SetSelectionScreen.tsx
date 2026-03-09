@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
-import { getCardEmoji } from '../utils/emoji';
+import { getCardArtSm } from '../utils/cardArt';
 import type { CardView } from '../types';
 
 /** Fan positions for up to 5 cards */
@@ -32,7 +32,11 @@ function CardFan({ cards }: { cards: CardView[] }) {
               zIndex: i,
             } as React.CSSProperties}
           >
-            {getCardEmoji(card.id)}
+            <img
+              src={getCardArtSm(card.id)}
+              alt={card.name}
+              className="w-full h-full object-cover object-[center_30%] rounded"
+            />
           </div>
         );
       })}
@@ -75,11 +79,11 @@ function AllSetsView({
                 key={meta.id}
                 className="bg-warm-900/80 border border-warm-700/40 rounded-lg lg:rounded-xl p-2.5 lg:p-4"
               >
-                {/* Mini card preview — emojis */}
-                <div className="flex justify-center gap-0.5 lg:gap-1 mb-2 lg:mb-3 text-lg lg:text-2xl">
+                {/* Mini card preview */}
+                <div className="flex justify-center gap-0.5 lg:gap-1 mb-2 lg:mb-3">
                   {cards
                     ? cards.slice(0, 5).map((c) => (
-                        <span key={c.id}>{getCardEmoji(c.id)}</span>
+                        <img key={c.id} src={getCardArtSm(c.id)} alt="" className="w-6 h-8 lg:w-8 lg:h-11 object-cover object-[center_30%] rounded-sm border border-warm-700/50" />
                       ))
                     : <span className="text-warm-600">...</span>}
                 </div>
