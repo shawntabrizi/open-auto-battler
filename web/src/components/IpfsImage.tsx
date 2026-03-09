@@ -66,7 +66,6 @@ export function IpfsImage({ src, alt, className = '', fallback }: IpfsImageProps
         ref={imgRef}
         src={src}
         alt={alt}
-        loading="lazy"
         className={`${className} ${status !== 'loaded' ? 'hidden' : ''}`}
         onLoad={() => setStatus('loaded')}
         onError={handleError}

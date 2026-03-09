@@ -116,13 +116,20 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
           const validTypes: CustomizationType[] = ['board_bg', 'hand_bg', 'card_style', 'avatar', 'card_art'];
           if (!validTypes.includes(parsed.type)) continue;
 
+          const rawImage = parsed.image || '';
+          const rawCid = rawImage.replace('ipfs://', '');
+          // card_art CIDs point to a directory; use a sample card as the preview
+          const previewImage = parsed.type === 'card_art' && rawCid
+            ? `ipfs://${rawCid}/md/0.webp`
+            : rawImage;
+
           nfts.push({
             collectionId,
             itemId,
             type: parsed.type as CustomizationType,
             name: parsed.name || `Item #${itemId}`,
-            imageUrl: ipfsUrl(parsed.image || ''),
-            ipfsCid: (parsed.image || '').replace('ipfs://', ''),
+            imageUrl: ipfsUrl(previewImage),
+            ipfsCid: rawCid,
             description: parsed.description,
           });
         } catch {

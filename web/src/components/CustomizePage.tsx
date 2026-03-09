@@ -4,13 +4,16 @@ import { useBlockchainStore } from '../store/blockchainStore';
 import { useCustomizationStore, type CustomizationType, type NftItem } from '../store/customizationStore';
 import { CustomizationPreview } from './CustomizationPreview';
 
-const SECTIONS: { type: CustomizationType; label: string; icon: string; description: string; specs: string }[] = [
+type TileShape = 'landscape' | 'wide' | 'card' | 'circle';
+
+const SECTIONS: { type: CustomizationType; label: string; icon: string; description: string; specs: string; shape: TileShape }[] = [
   {
     type: 'board_bg',
     label: 'Background',
     icon: '🖼',
     description: 'Background image for the game arena',
     specs: '16:9 ratio, 1920x1080 recommended, PNG/WebP, max 2 MB',
+    shape: 'landscape',
   },
   {
     type: 'hand_bg',
@@ -18,6 +21,7 @@ const SECTIONS: { type: CustomizationType; label: string; icon: string; descript
     icon: '🃏',
     description: 'Background image for the hand/shop area',
     specs: '5:1 ratio, 1920x384 recommended, PNG/WebP, max 1 MB',
+    shape: 'wide',
   },
   {
     type: 'card_style',
@@ -25,6 +29,7 @@ const SECTIONS: { type: CustomizationType; label: string; icon: string; descript
     icon: '🪟',
     description: 'Overlay frame for all cards',
     specs: '3:4 ratio, 256x352 recommended, PNG with alpha, max 500 KB',
+    shape: 'card',
   },
   {
     type: 'avatar',
@@ -32,6 +37,7 @@ const SECTIONS: { type: CustomizationType; label: string; icon: string; descript
     icon: '👤',
     description: 'Your avatar displayed in the HUD',
     specs: '1:1 ratio, 256x256 recommended, PNG/WebP, max 500 KB',
+    shape: 'circle',
   },
   {
     type: 'card_art',
@@ -39,6 +45,7 @@ const SECTIONS: { type: CustomizationType; label: string; icon: string; descript
     icon: '🎨',
     description: 'Art set for all card illustrations',
     specs: 'IPFS directory with sm/ and md/ WebP images per card',
+    shape: 'card',
   },
 ];
 
@@ -133,6 +140,7 @@ export const CustomizePage: React.FC = () => {
                   onClick={() => handleDeselect(activeSection)}
                   label="Default"
                   placeholder="--"
+                  shape={activeSectionData.shape}
                 />
                 {filteredNfts.map((nft) => (
                   <NftTile
@@ -142,6 +150,7 @@ export const CustomizePage: React.FC = () => {
                     label={nft.name}
                     imageUrl={nft.imageUrl}
                     subtitle={`#${nft.itemId}`}
+                    shape={activeSectionData.shape}
                   />
                 ))}
               </div>
@@ -149,13 +158,14 @@ export const CustomizePage: React.FC = () => {
 
             {/* Desktop: grid with vertical scroll */}
             <div className="hidden lg:block flex-1 overflow-y-auto p-6">
-              <div className="grid grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 max-w-5xl">
+              <div className="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5 max-w-4xl">
                 <NftTile
                   isSelected={selectedNft === null || selectedNft === undefined}
                   onClick={() => handleDeselect(activeSection)}
                   label="Default"
                   placeholder="--"
                   size="lg"
+                  shape={activeSectionData.shape}
                 />
                 {filteredNfts.map((nft) => (
                   <NftTile
@@ -166,6 +176,7 @@ export const CustomizePage: React.FC = () => {
                     imageUrl={nft.imageUrl}
                     subtitle={`#${nft.itemId}`}
                     size="lg"
+                    shape={activeSectionData.shape}
                   />
                 ))}
               </div>
@@ -248,10 +259,19 @@ interface NftTileProps {
   placeholder?: string;
   subtitle?: string;
   size?: 'sm' | 'lg';
+  shape?: TileShape;
 }
 
-function NftTile({ isSelected, onClick, label, imageUrl, placeholder, subtitle, size = 'sm' }: NftTileProps) {
+const SHAPE_CLASSES: Record<TileShape, { sm: string; lg: string; rounded: string }> = {
+  landscape: { sm: 'w-44 h-[6.2rem]', lg: 'w-full aspect-[16/9]', rounded: 'rounded-lg' },
+  wide:      { sm: 'w-44 h-10',       lg: 'w-full aspect-[5/1]',  rounded: 'rounded-lg' },
+  card:      { sm: 'w-32 h-[10.7rem]',lg: 'w-full aspect-[3/4]',  rounded: 'rounded-lg' },
+  circle:    { sm: 'w-32 h-32',       lg: 'w-full aspect-square',  rounded: 'rounded-full' },
+};
+
+function NftTile({ isSelected, onClick, label, imageUrl, placeholder, subtitle, size = 'sm', shape = 'card' }: NftTileProps) {
   const isLg = size === 'lg';
+  const s = SHAPE_CLASSES[shape];
   return (
     <button
       onClick={onClick}
@@ -262,10 +282,10 @@ function NftTile({ isSelected, onClick, label, imageUrl, placeholder, subtitle, 
       }`}
     >
       <div
-        className={`${isLg ? 'w-full aspect-[3/4]' : 'w-24 h-32'} bg-warm-700/50 rounded overflow-hidden ${isLg ? 'mb-2' : 'mb-0.5'} flex items-center justify-center`}
->
+        className={`${isLg ? s.lg : s.sm} bg-warm-700/50 ${s.rounded} overflow-hidden ${isLg ? 'mb-2' : 'mb-0.5'} flex items-center justify-center`}
+      >
         {imageUrl ? (
-          <IpfsImage src={imageUrl} alt={label} className="w-full h-full object-cover" />
+          <IpfsImage src={imageUrl} alt={label} className={`w-full h-full object-cover ${s.rounded}`} />
         ) : (
           <span className={`text-warm-400 ${isLg ? 'text-2xl' : 'text-sm'}`}>{placeholder}</span>
         )}
