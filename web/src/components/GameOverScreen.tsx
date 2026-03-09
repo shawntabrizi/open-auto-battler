@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { TrophyIcon, SkullIcon, StarIcon, HeartIcon, HourglassIcon } from './Icons';
 
@@ -178,9 +179,9 @@ export function GameOverScreen() {
           ))}
         </div>
 
-        {/* New Run button */}
+        {/* Actions */}
         <div
-          className={`transition-all duration-500 ${
+          className={`flex flex-col items-center gap-3 transition-all duration-500 ${
             showButton ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
@@ -190,6 +191,12 @@ export function GameOverScreen() {
           >
             New Run
           </button>
+          <Link
+            to="/"
+            className="text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm"
+          >
+            &larr; Menu
+          </Link>
         </div>
       </div>
     </div>

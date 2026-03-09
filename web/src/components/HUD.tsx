@@ -183,9 +183,9 @@ export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
 
       {/* Center: Round & End Turn */}
       <div className="flex items-center gap-2 lg:gap-4">
-        <div className="flex items-center gap-1 lg:block lg:text-center">
-          <span className="text-xs lg:text-sm text-warm-400">Round</span>
-          <span className="text-sm lg:text-2xl font-bold text-gold">{view.round}</span>
+        <div className="flex items-center gap-1.5 lg:gap-2 bg-warm-900/60 border border-warm-800/60 rounded-lg px-2.5 py-1 lg:px-4 lg:py-1.5">
+          <span className="text-xs lg:text-sm text-warm-400 font-heading uppercase tracking-wider">Round</span>
+          <span className="text-sm lg:text-lg font-bold text-gold font-stat">{view.round}</span>
         </div>
 
         {view.phase === 'shop' && (

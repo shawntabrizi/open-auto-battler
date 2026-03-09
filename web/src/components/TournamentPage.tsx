@@ -5,8 +5,8 @@ import { useGameStore } from '../store/gameStore';
 import { GameShell } from './GameShell';
 import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { RotatePrompt } from './RotatePrompt';
+import { BackLink } from './PageHeader';
 import { useInitGuard } from '../hooks';
-import { Link } from 'react-router-dom';
 import { submitTx } from '../utils/tx';
 
 const formatBalance = (raw: bigint, decimals = 12) =>
@@ -126,50 +126,53 @@ export const TournamentPage: React.FC = () => {
   if (tournamentGameOver) {
     const isPerfect = lastGameWins >= 10;
     return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
-        <div
-          className={`p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm lg:max-w-none ${
-            isPerfect
-              ? 'bg-green-900/30 border-2 border-green-500'
-              : 'bg-red-900/30 border-2 border-red-500'
-          }`}
-        >
-          <h1
-            className={`text-3xl lg:text-5xl font-bold mb-2 lg:mb-4 ${
-              isPerfect ? 'text-green-400' : 'text-red-400'
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
+        <BackLink to="/" label="Menu" />
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div
+            className={`p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm lg:max-w-none ${
+              isPerfect
+                ? 'bg-green-900/30 border-2 border-green-500'
+                : 'bg-red-900/30 border-2 border-red-500'
             }`}
           >
-            {isPerfect ? 'PERFECT RUN!' : 'RUN OVER'}
-          </h1>
-          <p className="text-sm lg:text-xl text-warm-300 mb-4 lg:mb-8">
-            {isPerfect
-              ? 'Amazing! You achieved a perfect 10-win run in the tournament!'
-              : `You finished with ${lastGameWins} win${lastGameWins !== 1 ? 's' : ''}.`}
-          </p>
-
-          <div className="flex justify-center gap-6 lg:gap-12 mb-6 lg:mb-8">
-            <div className="text-center">
-              <div className="text-2xl lg:text-4xl font-bold text-gold">{lastGameWins}</div>
-              <div className="text-xs lg:text-base text-warm-400">Wins</div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            {activeTournament && (
-              <button
-                onClick={handlePlayAgain}
-                disabled={txLoading}
-                className="bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 px-8 rounded-full text-sm transition-all transform hover:scale-105 disabled:opacity-50"
-              >
-                {txLoading ? 'JOINING...' : 'PLAY AGAIN'}
-              </button>
-            )}
-            <button
-              onClick={handleBackToTournament}
-              className="text-warm-400 hover:text-white underline text-sm"
+            <h1
+              className={`text-3xl lg:text-5xl font-bold mb-2 lg:mb-4 ${
+                isPerfect ? 'text-green-400' : 'text-red-400'
+              }`}
             >
-              Back to Tournament
-            </button>
+              {isPerfect ? 'PERFECT RUN!' : 'RUN OVER'}
+            </h1>
+            <p className="text-sm lg:text-xl text-warm-300 mb-4 lg:mb-8">
+              {isPerfect
+                ? 'Amazing! You achieved a perfect 10-win run in the tournament!'
+                : `You finished with ${lastGameWins} win${lastGameWins !== 1 ? 's' : ''}.`}
+            </p>
+
+            <div className="flex justify-center gap-6 lg:gap-12 mb-6 lg:mb-8">
+              <div className="text-center">
+                <div className="text-2xl lg:text-4xl font-bold text-gold">{lastGameWins}</div>
+                <div className="text-xs lg:text-base text-warm-400">Wins</div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {activeTournament && (
+                <button
+                  onClick={handlePlayAgain}
+                  disabled={txLoading}
+                  className="bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 px-8 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
+                >
+                  {txLoading ? 'JOINING...' : 'PLAY AGAIN'}
+                </button>
+              )}
+              <button
+                onClick={handleBackToTournament}
+                className="text-warm-400 hover:text-warm-200 text-sm transition-colors"
+              >
+                &larr; Back to Tournament
+              </button>
+            </div>
           </div>
         </div>
         <RotatePrompt />
@@ -183,30 +186,33 @@ export const TournamentPage: React.FC = () => {
     // but handle it gracefully
     const isVictory = view.phase === 'victory';
     return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
-        <div
-          className={`p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm ${
-            isVictory
-              ? 'bg-green-900/30 border-2 border-green-500'
-              : 'bg-red-900/30 border-2 border-red-500'
-          }`}
-        >
-          <h1 className={`text-3xl font-bold mb-4 ${isVictory ? 'text-green-400' : 'text-red-400'}`}>
-            {isVictory ? 'PERFECT RUN!' : 'RUN OVER'}
-          </h1>
-          <div className="flex flex-col gap-3">
-            {activeTournament && (
-              <button
-                onClick={handlePlayAgain}
-                disabled={txLoading}
-                className="bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 px-8 rounded-full text-sm transition-all disabled:opacity-50"
-              >
-                {txLoading ? 'JOINING...' : 'PLAY AGAIN'}
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
+        <BackLink to="/" label="Menu" />
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div
+            className={`p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm ${
+              isVictory
+                ? 'bg-green-900/30 border-2 border-green-500'
+                : 'bg-red-900/30 border-2 border-red-500'
+            }`}
+          >
+            <h1 className={`text-3xl font-bold mb-4 ${isVictory ? 'text-green-400' : 'text-red-400'}`}>
+              {isVictory ? 'PERFECT RUN!' : 'RUN OVER'}
+            </h1>
+            <div className="flex flex-col gap-3">
+              {activeTournament && (
+                <button
+                  onClick={handlePlayAgain}
+                  disabled={txLoading}
+                  className="bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 px-8 rounded-xl text-sm transition-all disabled:opacity-50"
+                >
+                  {txLoading ? 'JOINING...' : 'PLAY AGAIN'}
+                </button>
+              )}
+              <button onClick={handleBackToTournament} className="text-warm-400 hover:text-warm-200 text-sm transition-colors">
+                &larr; Back to Tournament
               </button>
-            )}
-            <button onClick={handleBackToTournament} className="text-warm-400 hover:text-white underline text-sm">
-              Back to Tournament
-            </button>
+            </div>
           </div>
         </div>
         <RotatePrompt />
@@ -217,20 +223,20 @@ export const TournamentPage: React.FC = () => {
   // ── Not Connected ──
   if (!isConnected) {
     return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
-        <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
-          TOURNAMENT
-        </h1>
-        <button
-          onClick={connect}
-          disabled={isConnecting}
-          className="bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-full text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
-        >
-          {isConnecting ? 'CONNECTING...' : 'CONNECT WALLET'}
-        </button>
-        <Link to="/" className="mt-6 lg:mt-8 text-warm-400 hover:text-white underline text-sm">
-          Back to Menu
-        </Link>
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
+        <BackLink to="/" label="Menu" />
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+            TOURNAMENT
+          </h1>
+          <button
+            onClick={connect}
+            disabled={isConnecting}
+            className="bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
+          >
+            {isConnecting ? 'CONNECTING...' : 'CONNECT WALLET'}
+          </button>
+        </div>
       </div>
     );
   }
@@ -263,8 +269,9 @@ export const TournamentPage: React.FC = () => {
     || `Set #${activeTournament?.config.set_id ?? '?'}`;
 
   return (
-    <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans flex flex-col">
-      <div className="flex-1 flex items-center justify-center bg-warm-950 p-4 overflow-y-auto">
+    <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans flex flex-col p-4">
+      <BackLink to="/" label="Menu" />
+      <div className="flex-1 flex items-center justify-center overflow-y-auto">
         <div className="text-center bg-warm-900 p-3 lg:p-6 rounded-xl lg:rounded-2xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-lg">
           {/* Header */}
           <h3 className="text-lg lg:text-2xl font-black mb-1 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
@@ -436,11 +443,6 @@ export const TournamentPage: React.FC = () => {
                 {txLoading ? 'JOINING...' : 'JOIN TOURNAMENT'}
               </button>
 
-              <div className="mt-2 lg:mt-4">
-                <Link to="/" className="text-warm-500 hover:text-warm-300 text-[10px] lg:text-xs">
-                  Back to Menu
-                </Link>
-              </div>
             </>
           )}
         </div>
@@ -529,9 +531,6 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
         </button>
       </div>
 
-      <Link to="/" className="text-warm-500 hover:text-warm-300 text-xs underline">
-        Back to Menu
-      </Link>
     </div>
   );
 };

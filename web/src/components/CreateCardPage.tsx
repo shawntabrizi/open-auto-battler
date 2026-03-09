@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useBlockchainStore } from '../store/blockchainStore';
 import { useGameStore } from '../store/gameStore';
-import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { BackLink } from './PageHeader';
 import {
   type AnyAbility,
   type BattleAbility,
@@ -345,39 +345,32 @@ export const CreateCardPage: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
-        <h1 className="text-4xl font-black mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase">
-          Card Creator
-        </h1>
-        <button
-          onClick={connect}
-          className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105"
-        >
-          CONNECT WALLET TO START
-        </button>
-        <Link to="/blockchain" className="mt-8 text-warm-400 hover:text-white underline">
-          Back to Dashboard
-        </Link>
+      <div className="min-h-screen bg-warm-900 flex flex-col p-4 text-white">
+        <BackLink to="/blockchain/creator" label="Creator Hub" />
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase">
+            Card Creator
+          </h1>
+          <button
+            onClick={connect}
+            className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105"
+          >
+            CONNECT WALLET TO START
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-warm-950 text-warm-200 p-8">
+    <div className="min-h-screen bg-warm-950 text-warm-200 p-4 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-black italic tracking-tighter text-yellow-500 uppercase">
-              Blockchain Card Creator
-            </h1>
-            <p className="text-warm-500 text-sm">Design custom units with complex abilities</p>
-          </div>
-          <Link
-            to="/blockchain/creator"
-            className="text-warm-400 hover:text-white border border-warm-800 px-4 py-2 rounded-lg transition-colors"
-          >
-            Creator Hub
-          </Link>
+        <div className="mb-4 lg:mb-8">
+          <BackLink to="/blockchain/creator" label="Creator Hub" />
+          <h1 className="text-xl lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase mt-1">
+            Card Creator
+          </h1>
+          <p className="text-warm-500 text-xs lg:text-sm mt-0.5">Design custom units with complex abilities</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

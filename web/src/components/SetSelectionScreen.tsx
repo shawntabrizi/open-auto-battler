@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
+import { BackLink } from './PageHeader';
 import type { CardView } from '../types';
 
 /** Fan positions for up to 5 cards */
@@ -67,9 +67,10 @@ function AllSetsView({
       <div className="flex items-center gap-3 px-3 lg:px-8 py-3 lg:py-4 border-b border-warm-800/60">
         <button
           onClick={onBack}
-          className="text-warm-400 hover:text-warm-200 transition-colors text-sm"
+          className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm shrink-0"
         >
-          &larr; Back
+          <span>&larr;</span>
+          <span>Back</span>
         </button>
         <h2 className="text-base lg:text-xl font-heading text-warm-100 tracking-wide">
           All Card Sets
@@ -153,14 +154,16 @@ export function SetSelectionScreen() {
   }
 
   return (
-    <div className="h-full flex flex-col items-center justify-center px-4 py-6 overflow-y-auto">
-      <div className="text-center w-full max-w-md lg:max-w-lg">
-        <h2 className="text-xl lg:text-3xl font-heading font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-0.5 lg:mb-1">
-          Choose Your Deck
-        </h2>
-        <p className="text-warm-500 text-xs lg:text-sm mb-4 lg:mb-6">
-          Select a card set and begin your run.
-        </p>
+    <div className="h-full flex flex-col px-4 py-4 overflow-y-auto">
+      <BackLink to="/" label="Menu" />
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="text-center w-full max-w-md lg:max-w-lg">
+          <h2 className="text-xl lg:text-3xl font-heading font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-0.5 lg:mb-1">
+            Choose Your Deck
+          </h2>
+          <p className="text-warm-500 text-xs lg:text-sm mb-4 lg:mb-6">
+            Select a card set and begin your run.
+          </p>
 
         {featuredMeta && featuredCards ? (
           <div className="bg-warm-900/60 border border-warm-700/40 rounded-xl lg:rounded-2xl p-3 lg:p-6 mb-3 lg:mb-5 flex flex-col items-center max-h-[50vh] lg:max-h-none">
@@ -199,22 +202,14 @@ export function SetSelectionScreen() {
           <div className="text-warm-600 italic py-6 lg:py-8 mb-4 lg:mb-6">No sets available</div>
         )}
 
-        {setMetas.length > 1 && (
-          <button
-            onClick={() => setShowAllSets(true)}
-            className="text-warm-400 hover:text-gold text-xs lg:text-sm transition-colors font-heading tracking-wide"
-          >
-            See All Sets ({setMetas.length}) &rarr;
-          </button>
-        )}
-
-        <div className="mt-3 lg:mt-4">
-          <Link
-            to="/"
-            className="text-xs lg:text-sm text-warm-500 hover:text-warm-300 transition-colors"
-          >
-            &larr; Back to Main Menu
-          </Link>
+          {setMetas.length > 1 && (
+            <button
+              onClick={() => setShowAllSets(true)}
+              className="text-warm-400 hover:text-gold text-xs lg:text-sm transition-colors font-heading tracking-wide"
+            >
+              See All Sets ({setMetas.length}) &rarr;
+            </button>
+          )}
         </div>
       </div>
     </div>

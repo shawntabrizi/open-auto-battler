@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useBlockchainStore } from '../store/blockchainStore';
 import { useCustomizationStore, type CustomizationType, type NftItem } from '../store/customizationStore';
 import { CustomizationPreview } from './CustomizationPreview';
+import { BackLink } from './PageHeader';
 
 type TileShape = 'landscape' | 'wide' | 'card' | 'circle';
 
@@ -89,12 +90,13 @@ export const CustomizePage: React.FC = () => {
     return (
       <div className="h-screen h-svh bg-warm-950 text-warm-200 flex flex-col overflow-hidden">
         {/* Header bar */}
-        <div className="flex items-center gap-2 p-2 lg:p-4 shrink-0 border-b border-white/5">
+        <div className="flex items-center gap-3 px-3 lg:px-4 py-2 lg:py-3 shrink-0 border-b border-white/5">
           <button
             onClick={() => setActiveSection(null)}
-            className="text-warm-400 hover:text-white text-sm lg:text-base px-2 py-1 rounded hover:bg-warm-800 transition-colors"
+            className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 text-xs lg:text-sm transition-colors shrink-0"
           >
-            &larr;
+            <span>&larr;</span>
+            <span>Back</span>
           </button>
           <div className="flex-1 min-w-0">
             <h2 className="text-sm lg:text-xl font-bold truncate">
@@ -191,21 +193,22 @@ export const CustomizePage: React.FC = () => {
   return (
     <div className="h-screen h-svh bg-warm-950 text-warm-200 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-2 lg:p-6 shrink-0">
-        <div>
-          <h1 className="text-base lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase">
-            Customize
-          </h1>
-          <p className="text-warm-500 text-[9px] lg:text-sm">Select a category to customize</p>
+      <div className="p-3 lg:p-6 shrink-0">
+        <div className="flex items-center justify-between mb-1">
+          <BackLink to={backLink} label={isBlockchainRoute ? 'Creator Hub' : 'Settings'} />
+          {isBlockchainRoute && (
+            <Link
+              to="/blockchain/creator"
+              className="text-warm-400 hover:text-warm-200 border border-warm-800 px-2 py-1 lg:px-3 lg:py-1.5 rounded lg:rounded-lg text-[9px] lg:text-sm transition-colors"
+            >
+              Creator Hub
+            </Link>
+          )}
         </div>
-        {isBlockchainRoute && (
-          <Link
-            to="/blockchain/creator"
-            className="text-warm-400 hover:text-white border border-warm-800 px-2 py-1 lg:px-3 lg:py-2 rounded lg:rounded-lg text-[9px] lg:text-sm transition-colors"
-          >
-            Creator Hub
-          </Link>
-        )}
+        <h1 className="text-base lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase mt-1">
+          Customize
+        </h1>
+        <p className="text-warm-500 text-[9px] lg:text-sm">Select a category to customize</p>
       </div>
 
       {/* Category grid */}
@@ -237,12 +240,6 @@ export const CustomizePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="text-center pb-2 lg:pb-6 shrink-0">
-        <Link to={backLink} className="text-warm-600 hover:text-warm-400 text-[9px] lg:text-xs">
-          {isBlockchainRoute ? 'Back to Creator Hub' : 'Back to Settings'}
-        </Link>
-      </div>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { CardDetailPanel } from './CardDetailPanel';
 import { UnitCard } from './UnitCard';
+import { BackLink } from './PageHeader';
 import { type CardView } from '../types';
 
 export const CreateSetPage: React.FC = () => {
@@ -67,19 +68,19 @@ export const CreateSetPage: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
-        <h1 className="text-4xl font-black mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase">
-          Set Creator
-        </h1>
-        <button
-          onClick={connect}
-          className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105"
-        >
-          CONNECT WALLET TO START
-        </button>
-        <Link to="/blockchain" className="mt-8 text-warm-400 hover:text-white underline">
-          Back to Blockchain
-        </Link>
+      <div className="min-h-screen bg-warm-900 flex flex-col p-4 text-white">
+        <BackLink to="/blockchain/creator" label="Creator Hub" />
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase">
+            Set Creator
+          </h1>
+          <button
+            onClick={connect}
+            className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105"
+          >
+            CONNECT WALLET TO START
+          </button>
+        </div>
       </div>
     );
   }
@@ -91,27 +92,20 @@ export const CreateSetPage: React.FC = () => {
 
       <div className="p-8 ml-80 transition-all duration-300">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-black italic tracking-tighter text-yellow-500 uppercase">
-                Blockchain Set Creator
-              </h1>
-              <p className="text-warm-500 text-sm">Bundle cards into playable sets</p>
-            </div>
-            <div className="flex gap-4">
+          <div className="mb-4 lg:mb-8">
+            <div className="flex items-center justify-between mb-1">
+              <BackLink to="/blockchain/creator" label="Creator Hub" />
               <Link
                 to="/blockchain/create-card"
-                className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-4 py-2 rounded-lg transition-colors font-bold flex items-center gap-2"
+                className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center gap-1.5 text-xs lg:text-sm"
               >
-                <span className="text-xl">+</span> MINT NEW CARDS
-              </Link>
-              <Link
-                to="/blockchain/creator"
-                className="text-warm-400 hover:text-white border border-warm-800 px-4 py-2 rounded-lg transition-colors flex items-center"
-              >
-                Creator Hub
+                <span>+</span> MINT NEW CARDS
               </Link>
             </div>
+            <h1 className="text-xl lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase mt-1">
+              Set Creator
+            </h1>
+            <p className="text-warm-500 text-xs lg:text-sm mt-0.5">Bundle cards into playable sets</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

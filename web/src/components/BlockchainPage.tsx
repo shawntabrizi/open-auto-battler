@@ -5,6 +5,7 @@ import { GameOverScreen } from './GameOverScreen';
 import { GameShell } from './GameShell';
 import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { RotatePrompt } from './RotatePrompt';
+import { BackLink } from './PageHeader';
 import { useInitGuard } from '../hooks';
 import { Link } from 'react-router-dom';
 
@@ -79,28 +80,34 @@ export const BlockchainPage: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
-        <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600">
-          BLOCKCHAIN MODE
-        </h1>
-        <button
-          onClick={connect}
-          disabled={isConnecting}
-          className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-full text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
-        >
-          {isConnecting ? 'CONNECTING...' : 'CONNECT WALLET'}
-        </button>
-        <Link to="/" className="mt-6 lg:mt-8 text-warm-400 hover:text-white underline text-sm">
-          Back to Menu
-        </Link>
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
+        <BackLink to="/" label="Menu" />
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600">
+            BLOCKCHAIN MODE
+          </h1>
+          <button
+            onClick={connect}
+            disabled={isConnecting}
+            className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
+          >
+            {isConnecting ? 'CONNECTING...' : 'CONNECT WALLET'}
+          </button>
+        </div>
       </div>
     );
   }
 
   if (!chainState) {
     return (
-      <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans selection:bg-yellow-500/30 flex flex-col">
-        <div className="flex-1 flex items-center justify-center bg-warm-950 p-4">
+      <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans selection:bg-yellow-500/30 flex flex-col p-4">
+        <div className="flex items-center justify-between">
+          <BackLink to="/" label="Menu" />
+          <Link to="/blockchain/creator" className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm">
+            Creator Hub &rarr;
+          </Link>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
           <div className="text-center bg-warm-900 p-4 lg:p-8 rounded-2xl lg:rounded-3xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-none lg:w-auto">
             <h3 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 text-white">
               Initialize New Session
@@ -163,14 +170,6 @@ export const BlockchainPage: React.FC = () => {
               {txLoading ? 'TRANSACTING...' : 'START GAME ON-CHAIN'}
             </button>
 
-            <div className="flex items-center justify-center gap-4 mt-4">
-              <Link to="/blockchain/creator" className="text-warm-500 hover:text-warm-300 text-xs">
-                Creator Hub
-              </Link>
-              <Link to="/" className="text-warm-500 hover:text-warm-300 text-xs">
-                Back to Menu
-              </Link>
-            </div>
           </div>
         </div>
         <SetPreviewOverlay />

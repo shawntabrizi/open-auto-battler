@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSettingsStore, PRESET_ENDPOINTS } from '../store/settingsStore';
 import { useBlockchainStore } from '../store/blockchainStore';
+import { PageHeader } from './PageHeader';
 import toast from 'react-hot-toast';
 
 // ── Settings Hub ──
@@ -12,13 +13,7 @@ export function SettingsPage() {
   return (
     <div className="fixed inset-0 bg-warm-950 text-white overflow-y-auto">
       <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[15vh]">
-        {/* Header */}
-        <div className="mb-6 lg:mb-10">
-          <Link to="/" className="text-warm-500 hover:text-warm-300 text-xs lg:text-sm transition-colors">
-            &larr; Back
-          </Link>
-          <h1 className="text-2xl lg:text-4xl font-black mt-1">Settings</h1>
-        </div>
+        <PageHeader backTo="/" backLabel="Menu" title="Settings" />
 
         {/* Options */}
         <div className="flex flex-col gap-3 lg:gap-4">
@@ -135,13 +130,7 @@ export function NetworkPage() {
   return (
     <div className="fixed inset-0 bg-warm-950 text-white overflow-y-auto">
       <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[15vh]">
-        {/* Header */}
-        <div className="mb-4 lg:mb-10">
-          <Link to="/settings" className="text-warm-500 hover:text-warm-300 text-xs lg:text-sm transition-colors">
-            &larr; Settings
-          </Link>
-          <h1 className="text-2xl lg:text-4xl font-black mt-1">Network</h1>
-        </div>
+        <PageHeader backTo="/settings" backLabel="Settings" title="Network" />
 
         {/* Endpoint selection */}
         <div className="mb-4 lg:mb-6">

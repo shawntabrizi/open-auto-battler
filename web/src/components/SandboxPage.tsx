@@ -1,9 +1,9 @@
-import { Link } from 'react-router-dom';
 import { useSandboxStore } from '../store/sandboxStore';
 import { UnitCard, EmptySlot } from './UnitCard';
 import { CardDetailPanel } from './CardDetailPanel';
 import { BattleOverlay } from './BattleOverlay';
 import { RotatePrompt } from './RotatePrompt';
+import { PageHeader } from './PageHeader';
 import { useInitGuard } from '../hooks';
 import type { CardView } from '../types';
 
@@ -75,48 +75,44 @@ function SandboxHeader() {
   const hasUnits = playerBoard.some((u) => u !== null) || enemyBoard.some((u) => u !== null);
 
   return (
-    <div className="flex-shrink-0 bg-warm-900 border-b border-warm-700 px-2 lg:px-3 py-1.5 lg:py-2 flex items-center justify-between">
-      <div className="flex items-center gap-2 lg:gap-3">
-        <Link
-          to="/"
-          className="text-warm-400 hover:text-white transition-colors text-xs lg:text-sm flex items-center gap-1"
-        >
-          <span>&larr;</span> <span className="hidden lg:inline">Back</span>
-        </Link>
-        <h1 className="text-sm lg:text-lg font-bold text-gold">Sandbox</h1>
-      </div>
+    <PageHeader
+      backTo="/"
+      backLabel="Menu"
+      title="Sandbox"
+      variant="toolbar"
+      right={
+        <>
+          <div className="hidden lg:flex items-center gap-1">
+            <label className="text-warm-400 text-xs">Seed:</label>
+            <input
+              type="number"
+              value={battleSeed}
+              onChange={(e) => setBattleSeed(parseInt(e.target.value) || 0)}
+              className="w-16 px-2 py-1 bg-warm-800 border border-warm-600 rounded text-white text-xs"
+            />
+          </div>
 
-      <div className="flex items-center gap-1.5 lg:gap-3">
-        <div className="hidden lg:flex items-center gap-1">
-          <label className="text-warm-400 text-xs">Seed:</label>
-          <input
-            type="number"
-            value={battleSeed}
-            onChange={(e) => setBattleSeed(parseInt(e.target.value) || 0)}
-            className="w-16 px-2 py-1 bg-warm-800 border border-warm-600 rounded text-white text-xs"
-          />
-        </div>
+          <button
+            onClick={clearAllBoards}
+            className="px-2 lg:px-3 py-1 bg-warm-700 hover:bg-warm-600 rounded text-white text-xs lg:text-sm transition-colors"
+          >
+            Clear
+          </button>
 
-        <button
-          onClick={clearAllBoards}
-          className="px-2 lg:px-3 py-1 bg-warm-700 hover:bg-warm-600 rounded text-white text-xs lg:text-sm transition-colors"
-        >
-          Clear
-        </button>
-
-        <button
-          onClick={runBattle}
-          disabled={!hasUnits}
-          className={`px-3 lg:px-4 py-1 rounded font-bold text-xs lg:text-sm transition-colors ${
-            hasUnits
-              ? 'bg-gold text-black hover:bg-yellow-400'
-              : 'bg-warm-600 text-warm-400 cursor-not-allowed'
-          }`}
-        >
-          Battle!
-        </button>
-      </div>
-    </div>
+          <button
+            onClick={runBattle}
+            disabled={!hasUnits}
+            className={`px-3 lg:px-4 py-1 rounded font-bold text-xs lg:text-sm transition-colors ${
+              hasUnits
+                ? 'bg-gold text-black hover:bg-yellow-400'
+                : 'bg-warm-600 text-warm-400 cursor-not-allowed'
+            }`}
+          >
+            Battle!
+          </button>
+        </>
+      }
+    />
   );
 }
 

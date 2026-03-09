@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMultiplayerStore } from '../store/multiplayerStore';
 import { RotatePrompt } from './RotatePrompt';
+import { BackLink } from './PageHeader';
 import { QRCodeSVG } from 'qrcode.react';
 
 export function MultiplayerPage() {
@@ -96,24 +97,18 @@ export function MultiplayerPage() {
 
       <div className="relative z-10 flex flex-col items-center w-full max-w-sm lg:max-w-lg">
         {/* Header */}
-        <div className="mb-4 lg:mb-8 text-center">
-          <h1 className="font-title text-2xl lg:text-4xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+        <div className="w-full mb-4 lg:mb-8">
+          <BackLink to="/" label="Menu" />
+          <h1 className="font-title text-2xl lg:text-4xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mt-1 text-center">
             P2P MULTIPLAYER
           </h1>
-          <p className="font-heading text-warm-400 text-[10px] lg:text-sm tracking-widest uppercase mt-1">
+          <p className="font-heading text-warm-400 text-[10px] lg:text-sm tracking-widest uppercase mt-1 text-center">
             WebRTC Battle Sync
           </p>
         </div>
 
         {/* Main Card */}
         <div className="w-full bg-warm-900/60 border border-warm-700/40 rounded-xl lg:rounded-2xl p-3 lg:p-8 backdrop-blur-sm relative">
-          {/* Close button */}
-          <Link
-            to="/"
-            className="absolute top-2 right-2 lg:top-4 lg:right-4 text-warm-500 hover:text-warm-200 transition-colors text-sm z-10"
-          >
-            &larr; <span className="hidden lg:inline">Back</span>
-          </Link>
 
           {/* Connected State */}
           {status === 'connected' || status === 'in-game' ? (
@@ -307,13 +302,6 @@ export function MultiplayerPage() {
           )}
         </div>
 
-        {/* Back link */}
-        <Link
-          to="/"
-          className="mt-4 lg:mt-8 text-warm-500 hover:text-warm-200 text-[10px] lg:text-sm transition-colors font-heading tracking-wider uppercase"
-        >
-          &larr; Back to Menu
-        </Link>
       </div>
 
       {/* Large QR Modal */}

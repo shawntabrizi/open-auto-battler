@@ -138,36 +138,23 @@ export function HomePage() {
 
         {/* Secondary Links */}
         <div
-          className="mt-6 lg:mt-10 flex flex-wrap justify-center gap-3 lg:gap-5 text-[10px] lg:text-xs text-warm-500 opacity-0 animate-stagger-fade-in stagger-5"
+          className="mt-6 lg:mt-10 flex flex-wrap justify-center gap-2 lg:gap-3 opacity-0 animate-stagger-fade-in stagger-5"
           style={{ animationFillMode: 'forwards' }}
         >
-          <Link
-            to="/sandbox"
-            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
-          >
-            Sandbox
-          </Link>
-          <span className="text-warm-700">|</span>
-          <Link
-            to="/multiplayer"
-            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
-          >
-            P2P
-          </Link>
-          <span className="text-warm-700">|</span>
-          <Link
-            to="/presentations"
-            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
-          >
-            Presentations
-          </Link>
-          <span className="text-warm-700">|</span>
-          <Link
-            to="/settings"
-            className="hover:text-warm-200 transition-colors font-heading tracking-wider uppercase"
-          >
-            Settings
-          </Link>
+          {[
+            { to: '/sandbox', label: 'Sandbox' },
+            { to: '/multiplayer', label: 'P2P' },
+            { to: '/presentations', label: 'Presentations' },
+            { to: '/settings', label: 'Settings' },
+          ].map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg border border-warm-800/60 text-warm-400 hover:text-warm-200 hover:border-warm-600 transition-colors font-heading tracking-wider uppercase text-[10px] lg:text-xs"
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
 
         {/* Version */}
