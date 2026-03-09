@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useBlockchainStore } from '../store/blockchainStore';
 import { useCustomizationStore, type CustomizationType, type NftItem } from '../store/customizationStore';
 import { CustomizationPreview } from './CustomizationPreview';
@@ -51,9 +51,12 @@ const SLOT_MAP: Record<CustomizationType, keyof ReturnType<typeof useCustomizati
 };
 
 export const CustomizePage: React.FC = () => {
-  const { isConnected, connect, api, selectedAccount } = useBlockchainStore();
+  const { isConnected, api, selectedAccount } = useBlockchainStore();
   const { ownedNfts, selections, isLoading, fetchUserNfts, selectCustomization, loadFromStorage } = useCustomizationStore();
   const [activeSection, setActiveSection] = useState<CustomizationType | null>(null);
+  const location = useLocation();
+  const isBlockchainRoute = location.pathname.startsWith('/blockchain');
+  const backLink = isBlockchainRoute ? '/blockchain' : '/settings';
 
   useEffect(() => {
     if (isConnected && api && selectedAccount) {
@@ -69,25 +72,6 @@ export const CustomizePage: React.FC = () => {
   const handleDeselect = (type: CustomizationType) => {
     selectCustomization(type, null, selectedAccount?.address);
   };
-
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col items-center justify-center p-4 text-white">
-        <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase">
-          Customize
-        </h1>
-        <button
-          onClick={connect}
-          className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-full text-sm lg:text-base transition-all transform hover:scale-105"
-        >
-          CONNECT WALLET TO START
-        </button>
-        <Link to="/blockchain" className="mt-6 lg:mt-8 text-warm-400 hover:text-white underline text-sm">
-          Back to Dashboard
-        </Link>
-      </div>
-    );
-  }
 
   const activeSectionData = SECTIONS.find((s) => s.type === activeSection);
   const filteredNfts = activeSection ? ownedNfts.filter((n) => n.type === activeSection) : [];
@@ -121,13 +105,23 @@ export const CustomizePage: React.FC = () => {
           </div>
         ) : filteredNfts.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-warm-500 text-xs lg:text-sm">
-            <p>No {activeSectionData.label.toLowerCase()} NFTs found.</p>
-            <Link
-              to="/blockchain/mint-nft"
-              className="mt-2 text-yellow-500 text-xs hover:underline"
-            >
-              Mint one
-            </Link>
+            <p>{isConnected ? `No ${activeSectionData.label.toLowerCase()} NFTs found.` : 'Connect to a blockchain node to browse NFTs.'}</p>
+            {isConnected && (
+              <Link
+                to="/blockchain/mint-nft"
+                className="mt-2 text-yellow-500 text-xs hover:underline"
+              >
+                Mint one
+              </Link>
+            )}
+            {!isConnected && (
+              <Link
+                to="/settings/network"
+                className="mt-2 text-yellow-500 text-xs hover:underline"
+              >
+                Network Settings
+              </Link>
+            )}
           </div>
         ) : (
           <>
@@ -193,12 +187,14 @@ export const CustomizePage: React.FC = () => {
           </h1>
           <p className="text-warm-500 text-[9px] lg:text-sm">Select a category to customize</p>
         </div>
-        <Link
-          to="/blockchain/creator"
-          className="text-warm-400 hover:text-white border border-warm-800 px-2 py-1 lg:px-3 lg:py-2 rounded lg:rounded-lg text-[9px] lg:text-sm transition-colors"
-        >
-          Creator Hub
-        </Link>
+        {isBlockchainRoute && (
+          <Link
+            to="/blockchain/creator"
+            className="text-warm-400 hover:text-white border border-warm-800 px-2 py-1 lg:px-3 lg:py-2 rounded lg:rounded-lg text-[9px] lg:text-sm transition-colors"
+          >
+            Creator Hub
+          </Link>
+        )}
       </div>
 
       {/* Category grid */}
@@ -232,8 +228,8 @@ export const CustomizePage: React.FC = () => {
 
       {/* Footer */}
       <div className="text-center pb-2 lg:pb-6 shrink-0">
-        <Link to="/blockchain/creator" className="text-warm-600 hover:text-warm-400 text-[9px] lg:text-xs">
-          Back to Creator Hub
+        <Link to={backLink} className="text-warm-600 hover:text-warm-400 text-[9px] lg:text-xs">
+          {isBlockchainRoute ? 'Back to Creator Hub' : 'Back to Settings'}
         </Link>
       </div>
     </div>

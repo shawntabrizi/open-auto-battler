@@ -16,7 +16,7 @@ import { CustomizePage } from './components/CustomizePage.tsx';
 import { MintNftPage } from './components/MintNftPage.tsx';
 import { CreatorHubPage } from './components/CreatorHubPage.tsx';
 import { TournamentPage } from './components/TournamentPage.tsx';
-import { SettingsPage } from './components/SettingsPage.tsx';
+import { SettingsPage, NetworkPage } from './components/SettingsPage.tsx';
 import { DevPage } from './components/DevPage.tsx';
 import { GameOverPreview } from './components/GameOverPreview.tsx';
 
@@ -44,6 +44,8 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/blockchain" element={<BlockchainPage />} />
         <Route path="/tournament" element={<TournamentPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/settings/network" element={<NetworkPage />} />
+        <Route path="/customize" element={<CustomizePage />} />
         <Route path="/dev" element={<DevPage />} />
         <Route path="/dev/game-over" element={<GameOverPreview />} />
         <Route path="/blockchain/creator" element={<CreatorHubPage />} />

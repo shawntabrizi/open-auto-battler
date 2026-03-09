@@ -4,6 +4,76 @@ import { useSettingsStore, PRESET_ENDPOINTS } from '../store/settingsStore';
 import { useBlockchainStore } from '../store/blockchainStore';
 import toast from 'react-hot-toast';
 
+// ── Settings Hub ──
+
+export function SettingsPage() {
+  const { isConnected, blockNumber } = useBlockchainStore();
+
+  return (
+    <div className="fixed inset-0 bg-warm-950 text-white overflow-y-auto">
+      <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[15vh]">
+        {/* Header */}
+        <div className="mb-6 lg:mb-10">
+          <Link to="/" className="text-warm-500 hover:text-warm-300 text-xs lg:text-sm transition-colors">
+            &larr; Back
+          </Link>
+          <h1 className="text-2xl lg:text-4xl font-black mt-1">Settings</h1>
+        </div>
+
+        {/* Options */}
+        <div className="flex flex-col gap-3 lg:gap-4">
+          <Link
+            to="/settings/network"
+            className="w-full text-left p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30 hover:border-warm-600 transition-all group"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-bold text-base lg:text-lg text-white group-hover:text-yellow-400 transition-colors">
+                  Network
+                </div>
+                <div className="text-warm-500 text-xs lg:text-sm mt-0.5">
+                  WebSocket endpoint &amp; connection
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    isConnected ? 'bg-green-500 animate-pulse' : 'bg-warm-600'
+                  }`}
+                />
+                <span className="text-warm-500 text-xs font-mono">
+                  {isConnected
+                    ? `#${blockNumber?.toLocaleString()}`
+                    : 'offline'}
+                </span>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            to="/customize"
+            className="w-full text-left p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30 hover:border-warm-600 transition-all group"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-bold text-base lg:text-lg text-white group-hover:text-yellow-400 transition-colors">
+                  Customize
+                </div>
+                <div className="text-warm-500 text-xs lg:text-sm mt-0.5">
+                  Card art, backgrounds &amp; avatars
+                </div>
+              </div>
+              <span className="text-warm-600 text-lg">&rarr;</span>
+            </div>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Network Settings (sub-page) ──
+
 type EndpointOption = 'local' | 'hosted' | 'custom';
 
 function getOptionFromEndpoint(endpoint: string): EndpointOption {
@@ -12,10 +82,9 @@ function getOptionFromEndpoint(endpoint: string): EndpointOption {
   return 'custom';
 }
 
-export function SettingsPage() {
+export function NetworkPage() {
   const { endpoint, setEndpoint } = useSettingsStore();
   const { connect, isConnected, blockNumber } = useBlockchainStore();
-
 
   const [selected, setSelected] = useState<EndpointOption>(getOptionFromEndpoint(endpoint));
   const [customUrl, setCustomUrl] = useState(
@@ -68,10 +137,10 @@ export function SettingsPage() {
       <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[15vh]">
         {/* Header */}
         <div className="mb-4 lg:mb-10">
-          <Link to="/" className="text-warm-500 hover:text-warm-300 text-xs lg:text-sm transition-colors">
-            ← Back
+          <Link to="/settings" className="text-warm-500 hover:text-warm-300 text-xs lg:text-sm transition-colors">
+            &larr; Settings
           </Link>
-          <h1 className="text-2xl lg:text-4xl font-black mt-1">Settings</h1>
+          <h1 className="text-2xl lg:text-4xl font-black mt-1">Network</h1>
         </div>
 
         {/* Endpoint selection */}
