@@ -60,7 +60,7 @@ pub mod pallet {
         #[pallet::constant]
         type MaxBoardSize: Get<u32>;
 
-        /// Maximum number of cards that can be played/pitched from hand in one turn.
+        /// Maximum number of cards that can be played/burned from hand in one turn.
         #[pallet::constant]
         type MaxHandActions: Get<u32>;
 
@@ -151,7 +151,7 @@ pub mod pallet {
     pub struct UserCardData<T: Config> {
         /// Combat stats (attack, health)
         pub stats: UnitStats,
-        /// Economy stats (play_cost, pitch_value)
+        /// Economy stats (play_cost, burn_value)
         pub economy: EconomyStats,
         /// Base statuses on the card.
         pub base_statuses: StatusMask,

@@ -546,7 +546,7 @@ pub struct UnitStats {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct EconomyStats {
     pub play_cost: i32,
-    pub pitch_value: i32,
+    pub burn_value: i32,
 }
 
 /// A unit card in the game (MVP: units only)
@@ -572,7 +572,7 @@ impl UnitCard {
         attack: i32,
         health: i32,
         play_cost: i32,
-        pitch_value: i32,
+        burn_value: i32,
     ) -> Self {
         Self {
             id,
@@ -580,7 +580,7 @@ impl UnitCard {
             stats: UnitStats { attack, health },
             economy: EconomyStats {
                 play_cost,
-                pitch_value,
+                burn_value,
             },
             base_statuses: StatusMask::empty(),
             shop_abilities: vec![],
@@ -645,12 +645,12 @@ impl BoardUnit {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(tag = "type"))]
 pub enum TurnAction {
-    /// Pitch a card from hand for mana
-    PitchFromHand { hand_index: u32 },
+    /// Burn a card from hand for mana
+    BurnFromHand { hand_index: u32 },
     /// Play a card from hand to a board slot
     PlayFromHand { hand_index: u32, board_slot: u32 },
-    /// Pitch a unit from the board for mana
-    PitchFromBoard { board_slot: u32 },
+    /// Burn a unit from the board for mana
+    BurnFromBoard { board_slot: u32 },
     /// Swap two board positions
     SwapBoard { slot_a: u32, slot_b: u32 },
 }

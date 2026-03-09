@@ -11,8 +11,8 @@ export default {
       },
       colors: {
         'mana-blue': '#5b8faa',
-        'pitch-red': '#b85c4a',
-        'pitch-gold': '#d4a843',
+        'burn-red': '#b85c4a',
+        'burn-gold': '#d4a843',
         gold: '#d4a843',
         'card-bg': '#1e1a14',
         'board-bg': '#161310',

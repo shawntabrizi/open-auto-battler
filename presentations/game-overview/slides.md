@@ -20,7 +20,7 @@ A **deck-building auto-battler** that combines the best elements of:
 
 - **Magic: The Gathering** - Resource management, deck building, card abilities.
 - **Super Auto Pets** - Auto-battling, ghost opponents, board positioning.
-- **Flesh and Blood** - Pitch system, deck control.
+- **Flesh and Blood** - Burn system, deck control.
 
 ---
 
@@ -42,11 +42,11 @@ A **deck-building auto-battler** that combines the best elements of:
 
 <!-- component:shop-demo {} -->
 
-- **Pitch** cards to the ash pile → gain mana (red value).
+- **Burn** cards in the burn area → gain mana (red value).
      - Your total mana is limited, but grows with each turn.
 - **Play** cards to the board → spend mana (blue cost).
 - Remaining cards are shuffled back into the deck.
-     - Choose carefully what cards you pitch and what cards you keep!
+     - Choose carefully what cards you burn and what cards you keep!
 
 ---
 
@@ -57,7 +57,7 @@ A **deck-building auto-battler** that combines the best elements of:
 - Battles happen automatically against the opponent board.
      - All combat and abilities resolve automatically and deterministically.
 - Strategy happens inside the shop phase where users chose:
-     - What cards they want to pitch.
+     - What cards they want to burn.
      - What cards they want to play.
      - What order they want their board.
 
@@ -67,14 +67,14 @@ A **deck-building auto-battler** that combines the best elements of:
 
 <!-- component:two-column-start {} -->
 
-<!-- component:unit-card {"name": "Wolf Rider", "attack": 3, "health": 2, "play_cost": 3, "pitch_value": 1, "template_id": "wolf_rider", "abilities": [{"trigger": "OnFaint", "effect": {"type": "Damage"}, "name": "Dying Bite", "description": "Deal 2 damage to front enemy on death", "conditions": []}]} -->
+<!-- component:unit-card {"name": "Wolf Rider", "attack": 3, "health": 2, "play_cost": 3, "burn_value": 1, "template_id": "wolf_rider", "abilities": [{"trigger": "OnFaint", "effect": {"type": "Damage"}, "name": "Dying Bite", "description": "Deal 2 damage to front enemy on death", "conditions": []}]} -->
 
 <!-- component:column-break {} -->
 
 | Stat | Location | Meaning |
 |------|----------|---------|
 | **Mana Cost** | Top Left (Blue) | Mana required to play |
-| **Pitch Value** | Top Right (Red) | Mana gained when pitched |
+| **Burn Value** | Top Right (Red) | Mana gained when burned |
 | **Attack** | Bottom Left (⚔) | Damage dealt when attacking |
 | **Health** | Bottom Right (❤) | Damage before dying |
 | **Abilities** | Middle Right (✶) | Special effects triggered during battle |
@@ -87,11 +87,11 @@ A **deck-building auto-battler** that combines the best elements of:
 
 <!-- component:two-column-start {} -->
 
-<!-- component:unit-card {"name": "Mana Reaper", "attack": 2, "health": 2, "play_cost": 8, "pitch_value": 2, "template_id": "mana_reaper", "abilities": [{"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Harvest the Rich", "description": "Destroy the highest mana cost enemy", "conditions": []}, {"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Cull the Weak", "description": "Destroy the lowest mana cost enemy", "conditions": []}]} -->
+<!-- component:unit-card {"name": "Mana Reaper", "attack": 2, "health": 2, "play_cost": 8, "burn_value": 2, "template_id": "mana_reaper", "abilities": [{"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Harvest the Rich", "description": "Destroy the highest mana cost enemy", "conditions": []}, {"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Cull the Weak", "description": "Destroy the lowest mana cost enemy", "conditions": []}]} -->
 
 <!-- component:column-break {} -->
 
-<!-- component:card-breakdown {"name": "Mana Reaper", "attack": 2, "health": 2, "play_cost": 8, "pitch_value": 2, "template_id": "mana_reaper", "abilities": [{"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Harvest the Rich", "description": "Destroy the highest mana cost enemy", "conditions": []}, {"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Cull the Weak", "description": "Destroy the lowest mana cost enemy", "conditions": []}]} -->
+<!-- component:card-breakdown {"name": "Mana Reaper", "attack": 2, "health": 2, "play_cost": 8, "burn_value": 2, "template_id": "mana_reaper", "abilities": [{"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Harvest the Rich", "description": "Destroy the highest mana cost enemy", "conditions": []}, {"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Cull the Weak", "description": "Destroy the lowest mana cost enemy", "conditions": []}]} -->
 
 <!-- component:two-column-end {} -->
 
@@ -103,18 +103,18 @@ A **deck-building auto-battler** that combines the best elements of:
 
 # Card Selection
 
-Every card can be **played** and/or **pitched**:
+Every card can be **played** and/or **burned**:
 
 <!-- component:two-column-start {} -->
 
-<!-- component:unit-card {"name": "Dragon Tyrant", "attack": 6, "health": 5, "play_cost": 5, "pitch_value": 3, "template_id": "dragon_tyrant"} -->
+<!-- component:unit-card {"name": "Dragon Tyrant", "attack": 6, "health": 5, "play_cost": 5, "burn_value": 3, "template_id": "dragon_tyrant"} -->
 
 <!-- component:column-break {} -->
 
 - **Play it**: Spend mana to put it on the board.
-- **Pitch it**: Discard it to gain mana for other cards.
-     - You can also pitch cards from your existing board as an additional access to mana.
-- High-cost cards are powerful but require pitching other cards to afford them!
+- **Burn it**: Discard it to gain mana for other cards.
+     - You can also burn cards from your existing board as an additional access to mana.
+- High-cost cards are powerful but require burning other cards to afford them!
 - Some cards may not provide a lot of mana to play other cards, but may be powerful on their own.
 - Cards may synergize with one another using different strategies.
 
@@ -267,7 +267,7 @@ Players ──► Tournaments ──► Rewards
 <!-- component:card-creator {} -->
 
 - Users can design cards:
-     - Stats (Attack, Health, Cost, Pitch)
+     - Stats (Attack, Health, Cost, Burn)
      - Abilities (Fully customizable, see further)
 - Cards are stored on-chain, available to everyone.
      - Cards are given permanent unique identifiers.
@@ -319,7 +319,7 @@ Everyone who contributes value captures value.
 
 <!-- component:two-column-start {} -->
 
-<!-- component:unit-card {"name": "Mana Reaper", "attack": 2, "health": 2, "play_cost": 8, "pitch_value": 2, "template_id": "mana_reaper", "abilities": [{"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Harvest the Rich", "description": "Destroy the highest mana cost enemy", "conditions": []}, {"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Cull the Weak", "description": "Destroy the lowest mana cost enemy", "conditions": []}]} -->
+<!-- component:unit-card {"name": "Mana Reaper", "attack": 2, "health": 2, "play_cost": 8, "burn_value": 2, "template_id": "mana_reaper", "abilities": [{"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Harvest the Rich", "description": "Destroy the highest mana cost enemy", "conditions": []}, {"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Cull the Weak", "description": "Destroy the lowest mana cost enemy", "conditions": []}]} -->
 
 <!-- component:column-break {} -->
 
@@ -328,7 +328,7 @@ Everyone who contributes value captures value.
 The basic stats of a card can already be manipulated to heavily affect the "speed" of gameplay of a card set:
 
 - 🔵 Mana: The lower the mana, the sooner people can play a card.
-- 🔴 Pitch: The higher the pitch cost, the more resources a user has per turn.
+- 🔴 Burn: The higher the burn cost, the more resources a user has per turn.
 - ⚔ Attack: The higher the average attack of a card, the more aggressive a format is.
 - ❤ Health: The higher the health of a card, the more defensive a format is.
 
@@ -341,7 +341,7 @@ Even tweaking one of these stats by one creates a new card with new dynamics.
 
 <!-- component:two-column-start {} -->
 
-<!-- component:card-breakdown {"name": "Mana Reaper", "attack": 2, "health": 2, "play_cost": 8, "pitch_value": 2, "template_id": "mana_reaper", "abilities": [{"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Harvest the Rich", "description": "Destroy the highest mana cost enemy", "conditions": []}, {"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Cull the Weak", "description": "Destroy the lowest mana cost enemy", "conditions": []}]} -->
+<!-- component:card-breakdown {"name": "Mana Reaper", "attack": 2, "health": 2, "play_cost": 8, "burn_value": 2, "template_id": "mana_reaper", "abilities": [{"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Harvest the Rich", "description": "Destroy the highest mana cost enemy", "conditions": []}, {"trigger": "OnStart", "effect": {"type": "Destroy"}, "name": "Cull the Weak", "description": "Destroy the lowest mana cost enemy", "conditions": []}]} -->
 
 <!-- component:column-break {} -->
 

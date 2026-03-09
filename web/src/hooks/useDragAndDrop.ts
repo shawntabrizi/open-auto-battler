@@ -28,7 +28,7 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
   const [activeId, setActiveId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { view, playHandCard, swapBoardPositions, pitchHandCard, pitchBoardUnit, setSelection } =
+  const { view, playHandCard, swapBoardPositions, burnHandCard, burnBoardUnit, setSelection } =
     useGameStore();
 
   // Custom modifier to restrict dragging to the container
@@ -101,12 +101,12 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
       const sourceIndex = activeData.index as number;
       const destType = overData.type as string;
 
-      // Handle dropping on ash pile
-      if (destType === 'ash-pile') {
+      // Handle dropping on burn zone
+      if (destType === 'burn-zone') {
         if (sourceType === 'hand') {
-          pitchHandCard(sourceIndex);
+          burnHandCard(sourceIndex);
         } else if (sourceType === 'board') {
-          pitchBoardUnit(sourceIndex);
+          burnBoardUnit(sourceIndex);
         }
         setSelection(null);
         return;
@@ -126,7 +126,7 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
         setSelection(null);
       }
     },
-    [options, pitchHandCard, pitchBoardUnit, playHandCard, swapBoardPositions, setSelection]
+    [options, burnHandCard, burnBoardUnit, playHandCard, swapBoardPositions, setSelection]
   );
 
   // Prevent body scroll during drag

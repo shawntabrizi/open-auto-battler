@@ -141,7 +141,7 @@ export interface CardView {
   attack: number;
   health: number;
   play_cost: number;
-  pitch_value: number;
+  burn_value: number;
   base_statuses: StatusMask;
   shop_abilities: ShopAbility[];
   battle_abilities: BattleAbility[];
@@ -153,7 +153,7 @@ export interface BoardUnitView {
   attack: number;
   health: number;
   play_cost: number;
-  pitch_value: number;
+  burn_value: number;
   base_statuses: StatusMask;
   perm_statuses: StatusMask;
   active_statuses: StatusMask;

@@ -12,10 +12,10 @@ interface GameEngine {
   // Core methods
   get_view: () => any;
   get_battle_output: () => any;
-  pitch_hand_card: (index: number) => void;
+  burn_hand_card: (index: number) => void;
   play_hand_card: (handIndex: number, boardSlot: number) => void;
   swap_board_positions: (slotA: number, slotB: number) => void;
-  pitch_board_unit: (boardSlot: number) => void;
+  burn_board_unit: (boardSlot: number) => void;
   undo: () => void;
   end_turn: () => void;
   continue_after_battle: () => void;
@@ -84,10 +84,10 @@ interface GameStore {
   previewSet: (setId: number) => void;
   closePreview: () => void;
 
-  pitchHandCard: (index: number) => void;
+  burnHandCard: (index: number) => void;
   playHandCard: (handIndex: number, boardSlot: number) => void;
   swapBoardPositions: (slotA: number, slotB: number) => void;
-  pitchBoardUnit: (boardSlot: number) => void;
+  burnBoardUnit: (boardSlot: number) => void;
   undo: () => void;
   endTurn: () => void;
   continueAfterBattle: () => void;
@@ -301,11 +301,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ setPreviewCards: previews });
   },
 
-  pitchHandCard: (index: number) => {
+  burnHandCard: (index: number) => {
     const { engine } = get();
     if (!engine) return;
     try {
-      engine.pitch_hand_card(index);
+      engine.burn_hand_card(index);
       set({ view: engine.get_view(), selection: null });
     } catch (err) {
       console.error(err);
@@ -339,11 +339,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  pitchBoardUnit: (boardSlot: number) => {
+  burnBoardUnit: (boardSlot: number) => {
     const { engine } = get();
     if (!engine) return;
     try {
-      engine.pitch_board_unit(boardSlot);
+      engine.burn_board_unit(boardSlot);
       set({ view: engine.get_view(), selection: null });
     } catch (err) {
       console.error(err);

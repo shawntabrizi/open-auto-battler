@@ -77,10 +77,10 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
               <span className="text-xs text-warm-400">Play</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-6 h-6 bg-pitch-red rounded-full flex items-center justify-center text-xs font-bold border border-red-300">
-                {card.pitch_value}
+              <div className="w-6 h-6 bg-burn-red rounded-full flex items-center justify-center text-xs font-bold border border-red-300">
+                {card.burn_value}
               </div>
-              <span className="text-xs text-warm-400">Pitch</span>
+              <span className="text-xs text-warm-400">Burn</span>
             </div>
           </div>
         </div>

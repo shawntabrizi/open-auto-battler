@@ -9,7 +9,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -34,7 +34,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -49,7 +49,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -64,7 +64,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -97,7 +97,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -130,7 +130,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -145,7 +145,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -178,7 +178,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -230,7 +230,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -262,7 +262,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -295,7 +295,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -326,7 +326,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -358,7 +358,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -390,7 +390,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -422,7 +422,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -470,7 +470,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -514,7 +514,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -558,7 +558,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -589,7 +589,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -621,7 +621,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -653,7 +653,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -678,7 +678,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -710,7 +710,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -744,7 +744,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -778,7 +778,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -811,7 +811,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -842,7 +842,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -874,7 +874,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -907,7 +907,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -938,7 +938,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -978,7 +978,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1022,7 +1022,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1054,7 +1054,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1086,7 +1086,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1111,7 +1111,7 @@
     },
     "economy": {
       "play_cost": 7,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1143,7 +1143,7 @@
     },
     "economy": {
       "play_cost": 7,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1192,7 +1192,7 @@
     },
     "economy": {
       "play_cost": 8,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1242,7 +1242,7 @@
     },
     "economy": {
       "play_cost": 8,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1274,7 +1274,7 @@
     },
     "economy": {
       "play_cost": 10,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -1289,7 +1289,7 @@
     },
     "economy": {
       "play_cost": 10,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1320,7 +1320,7 @@
     },
     "economy": {
       "play_cost": 0,
-      "pitch_value": 0
+      "burn_value": 0
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -1335,7 +1335,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -1350,7 +1350,7 @@
     },
     "economy": {
       "play_cost": 0,
-      "pitch_value": 0
+      "burn_value": 0
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -1365,7 +1365,7 @@
     },
     "economy": {
       "play_cost": 0,
-      "pitch_value": 0
+      "burn_value": 0
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1390,7 +1390,7 @@
     },
     "economy": {
       "play_cost": 0,
-      "pitch_value": 0
+      "burn_value": 0
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -1405,7 +1405,7 @@
     },
     "economy": {
       "play_cost": 0,
-      "pitch_value": 0
+      "burn_value": 0
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -1420,7 +1420,7 @@
     },
     "economy": {
       "play_cost": 0,
-      "pitch_value": 0
+      "burn_value": 0
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -1435,7 +1435,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1468,7 +1468,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [
       {
@@ -1501,7 +1501,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1526,7 +1526,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [
       {
@@ -1558,7 +1558,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [
       {
@@ -1591,7 +1591,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1623,7 +1623,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1655,7 +1655,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [
       {
@@ -1680,7 +1680,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [
       {
@@ -1713,7 +1713,7 @@
     },
     "economy": {
       "play_cost": 1,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [
       {
@@ -1738,7 +1738,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1770,7 +1770,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1803,7 +1803,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1834,7 +1834,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1866,7 +1866,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1898,7 +1898,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1923,7 +1923,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [
       {
@@ -1955,7 +1955,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -1980,7 +1980,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [
       {
@@ -2005,7 +2005,7 @@
     },
     "economy": {
       "play_cost": 2,
-      "pitch_value": 1
+      "burn_value": 1
     },
     "shop_abilities": [
       {
@@ -2037,7 +2037,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2068,7 +2068,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2101,7 +2101,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2134,7 +2134,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2166,7 +2166,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2200,7 +2200,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "base_statuses": [
       "Guard"
@@ -2235,7 +2235,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [
       {
@@ -2268,7 +2268,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2315,7 +2315,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [
       {
@@ -2347,7 +2347,7 @@
     },
     "economy": {
       "play_cost": 3,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2381,7 +2381,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [
       {
@@ -2413,7 +2413,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2445,7 +2445,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2470,7 +2470,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2502,7 +2502,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2535,7 +2535,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [
       {
@@ -2568,7 +2568,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2602,7 +2602,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [
       {
@@ -2627,7 +2627,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2659,7 +2659,7 @@
     },
     "economy": {
       "play_cost": 4,
-      "pitch_value": 2
+      "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2690,7 +2690,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2722,7 +2722,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [
       {
@@ -2754,7 +2754,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2786,7 +2786,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [
       {
@@ -2819,7 +2819,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2851,7 +2851,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2876,7 +2876,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "base_statuses": [
       "Poison"
@@ -2894,7 +2894,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [
       {
@@ -2927,7 +2927,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2959,7 +2959,7 @@
     },
     "economy": {
       "play_cost": 5,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -2991,7 +2991,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -3023,7 +3023,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [
       {
@@ -3048,7 +3048,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [
       {
@@ -3080,7 +3080,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -3105,7 +3105,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -3136,7 +3136,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -3168,7 +3168,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -3200,7 +3200,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -3232,7 +3232,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -3265,7 +3265,7 @@
     },
     "economy": {
       "play_cost": 6,
-      "pitch_value": 3
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -3297,7 +3297,7 @@
     },
     "economy": {
       "play_cost": 0,
-      "pitch_value": 0
+      "burn_value": 0
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -3312,7 +3312,7 @@
     },
     "economy": {
       "play_cost": 0,
-      "pitch_value": 0
+      "burn_value": 0
     },
     "shop_abilities": [],
     "battle_abilities": []
@@ -3327,7 +3327,7 @@
     },
     "economy": {
       "play_cost": 0,
-      "pitch_value": 0
+      "burn_value": 0
     },
     "shop_abilities": [],
     "battle_abilities": []

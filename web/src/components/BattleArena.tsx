@@ -666,13 +666,13 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
               attack: unit.attack,
               health: unit.health,
               play_cost: 0,
-              pitch_value: 0,
+              burn_value: 0,
               base_statuses: unit.statuses,
               shop_abilities: [],
               battle_abilities: unit.battle_abilities,
             }}
             showCost={false}
-            showPitch={false}
+            showBurn={false}
             sizeVariant="battle"
             isSelected={false}
             enableTilt={false}
@@ -832,7 +832,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
 
         {/* Enemy side (right) */}
         <div className="flex flex-col items-center gap-1 lg:gap-3">
-          <span className="text-[0.6rem] lg:text-sm text-pitch-red font-heading uppercase tracking-[0.15em]">
+          <span className="text-[0.6rem] lg:text-sm text-burn-red font-heading uppercase tracking-[0.15em]">
             Enemy
           </span>
           <div className="flex gap-0.5 lg:gap-3 px-1 lg:px-6 py-1 lg:py-4 rounded-xl team-zone-enemy min-w-0">

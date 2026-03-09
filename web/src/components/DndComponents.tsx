@@ -12,7 +12,7 @@ interface DraggableCardProps {
   isSelected?: boolean;
   onClick?: () => void;
   showCost?: boolean;
-  showPitch?: boolean;
+  showBurn?: boolean;
   can_afford?: boolean;
   disabled?: boolean;
   enableWobble?: boolean;
@@ -26,7 +26,7 @@ export function DraggableCard({
   isSelected = false,
   onClick,
   showCost = true,
-  showPitch = true,
+  showBurn = true,
   can_afford = true,
   disabled = false,
   enableWobble,
@@ -52,7 +52,7 @@ export function DraggableCard({
         isSelected={isSelected}
         onClick={onClick}
         showCost={showCost}
-        showPitch={showPitch}
+        showBurn={showBurn}
         can_afford={can_afford}
         draggable={false} // Disable native drag since @dnd-kit handles it
         enableWobble={enableWobble}
@@ -115,16 +115,16 @@ export function DroppableEmptySlot({
   );
 }
 
-// Droppable area for ash pile
-interface DroppableAshPileProps {
+// Droppable area for burn zone
+interface DroppableBurnZoneProps {
   children: React.ReactNode;
   onHoverChange: (isHovered: boolean) => void;
 }
 
-export function DroppableAshPile({ children, onHoverChange }: DroppableAshPileProps) {
+export function DroppableBurnZone({ children, onHoverChange }: DroppableBurnZoneProps) {
   const { isOver, setNodeRef } = useDroppable({
-    id: 'ash-pile',
-    data: { type: 'ash-pile' },
+    id: 'burn-zone',
+    data: { type: 'burn-zone' },
   });
 
   // Sync isOver state with parent

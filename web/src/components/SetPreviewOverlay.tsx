@@ -56,7 +56,7 @@ export function SetPreviewOverlay() {
                   <UnitCard
                     card={card}
                     showCost={true}
-                    showPitch={true}
+                    showBurn={true}
                     draggable={false}
                     isSelected={selectedCard?.id === card.id}
                     onClick={() => setSelectedCard(selectedCard?.id === card.id ? null : card)}

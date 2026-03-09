@@ -19,11 +19,11 @@ fn test_verify_and_apply_turn() {
     let hand_size = state.hand.len();
     let bag_len_before = state.bag.len();
 
-    // Pitch hand card 0 for mana, play hand card 1 to board slot 0
+    // Burn hand card 0 for mana, play hand card 1 to board slot 0
     // Using the new sequential action format
     let action = CommitTurnAction {
         actions: vec![
-            TurnAction::PitchFromHand { hand_index: 0 },
+            TurnAction::BurnFromHand { hand_index: 0 },
             TurnAction::PlayFromHand {
                 hand_index: 1,
                 board_slot: 0,
@@ -50,7 +50,7 @@ fn test_verify_and_apply_turn_with_refill() {
     let mut state = GameState::new(42);
     state.mana_limit = 4; // Capacity is 4
 
-    // Add cards with cost 4 and pitch 4
+    // Add cards with cost 4 and burn 4
     for _ in 0..10 {
         let id = state.generate_card_id();
         let card = UnitCard::new(id, "Test", 2, 2, 4, 4);
@@ -60,9 +60,9 @@ fn test_verify_and_apply_turn_with_refill() {
     state.draw_hand();
 
     // Scenario:
-    // 1. Pitch hand[0] (value 4). Current mana = 4.
+    // 1. Burn hand[0] (value 4). Current mana = 4.
     // 2. Play hand[1] (cost 4). Current mana = 0.
-    // 3. Pitch hand[2] (value 4). Current mana = 4.
+    // 3. Burn hand[2] (value 4). Current mana = 4.
     // 4. Play hand[3] (cost 4). Current mana = 0.
     // Total spent = 8. Total earned = 8. Limit = 4.
     // This should be LEGAL because each card is <= limit and total spend <= total earned.
@@ -70,12 +70,12 @@ fn test_verify_and_apply_turn_with_refill() {
     // Using the new sequential action format - order matters!
     let action = CommitTurnAction {
         actions: vec![
-            TurnAction::PitchFromHand { hand_index: 0 },
+            TurnAction::BurnFromHand { hand_index: 0 },
             TurnAction::PlayFromHand {
                 hand_index: 1,
                 board_slot: 0,
             },
-            TurnAction::PitchFromHand { hand_index: 2 },
+            TurnAction::BurnFromHand { hand_index: 2 },
             TurnAction::PlayFromHand {
                 hand_index: 3,
                 board_slot: 1,
@@ -102,7 +102,7 @@ fn test_sequential_order_matters() {
     let mut state = GameState::new(42);
     state.mana_limit = 4;
 
-    // Add cards with cost 4 and pitch 4
+    // Add cards with cost 4 and burn 4
     for _ in 0..10 {
         let id = state.generate_card_id();
         let card = UnitCard::new(id, "Test", 2, 2, 4, 4);
@@ -111,7 +111,7 @@ fn test_sequential_order_matters() {
     }
     state.draw_hand();
 
-    // Try to play before pitching - should fail because no mana
+    // Try to play before burning - should fail because no mana
     let action = CommitTurnAction {
         actions: vec![TurnAction::PlayFromHand {
             hand_index: 0,
@@ -124,7 +124,7 @@ fn test_sequential_order_matters() {
 }
 
 #[test]
-fn test_pitch_then_pitch_same_card_fails() {
+fn test_burn_then_burn_same_card_fails() {
     use crate::commit::verify_and_apply_turn;
 
     let mut state = GameState::new(42);
@@ -139,16 +139,16 @@ fn test_pitch_then_pitch_same_card_fails() {
     }
     state.draw_hand();
 
-    // Try to pitch the same card twice - should fail
+    // Try to burn the same card twice - should fail
     let action = CommitTurnAction {
         actions: vec![
-            TurnAction::PitchFromHand { hand_index: 0 },
-            TurnAction::PitchFromHand { hand_index: 0 }, // Same card!
+            TurnAction::BurnFromHand { hand_index: 0 },
+            TurnAction::BurnFromHand { hand_index: 0 }, // Same card!
         ],
     };
 
     let result = verify_and_apply_turn(&mut state, &action);
-    assert!(result.is_err(), "Pitching same card twice should fail");
+    assert!(result.is_err(), "Burning same card twice should fail");
 }
 
 #[test]
@@ -170,12 +170,12 @@ fn test_swap_board_positions() {
     // Play two cards, then swap them
     let action = CommitTurnAction {
         actions: vec![
-            TurnAction::PitchFromHand { hand_index: 0 },
+            TurnAction::BurnFromHand { hand_index: 0 },
             TurnAction::PlayFromHand {
                 hand_index: 1,
                 board_slot: 0,
             },
-            TurnAction::PitchFromHand { hand_index: 2 },
+            TurnAction::BurnFromHand { hand_index: 2 },
             TurnAction::PlayFromHand {
                 hand_index: 3,
                 board_slot: 1,
@@ -205,7 +205,7 @@ fn test_swap_board_positions() {
 }
 
 #[test]
-fn test_pitch_from_board() {
+fn test_burn_from_board() {
     use crate::commit::verify_and_apply_turn;
 
     let mut state = GameState::new(42);
@@ -228,10 +228,10 @@ fn test_pitch_from_board() {
         .insert(pre_placed_id, pre_placed_card.clone());
     state.board[0] = Some(BoardUnit::new(pre_placed_id));
 
-    // Pitch from board, then play a card to that slot
+    // Burn from board, then play a card to that slot
     let action = CommitTurnAction {
         actions: vec![
-            TurnAction::PitchFromBoard { board_slot: 0 },
+            TurnAction::BurnFromBoard { board_slot: 0 },
             TurnAction::PlayFromHand {
                 hand_index: 0,
                 board_slot: 0,
@@ -242,7 +242,7 @@ fn test_pitch_from_board() {
     let result = verify_and_apply_turn(&mut state, &action);
     assert!(
         result.is_ok(),
-        "Pitching from board and playing should succeed: {:?}",
+        "Burning from board and playing should succeed: {:?}",
         result
     );
 
@@ -332,7 +332,7 @@ fn test_on_sell_trigger_applies_in_shop() {
     state.board[1] = Some(BoardUnit::new(ally_id));
 
     let action = CommitTurnAction {
-        actions: vec![TurnAction::PitchFromBoard { board_slot: 0 }],
+        actions: vec![TurnAction::BurnFromBoard { board_slot: 0 }],
     };
 
     let result = verify_and_apply_turn(&mut state, &action);
@@ -426,7 +426,7 @@ fn test_on_sell_gain_mana_enables_extra_play() {
     // Without OnSell GainMana, this play would fail (no mana after the sell itself).
     let action = CommitTurnAction {
         actions: vec![
-            TurnAction::PitchFromBoard { board_slot: 0 },
+            TurnAction::BurnFromBoard { board_slot: 0 },
             TurnAction::PlayFromHand {
                 hand_index: 0,
                 board_slot: 0,

@@ -97,7 +97,7 @@ pub fn apply_on_sell_triggers(
 ///
 /// This function executes actions sequentially in order:
 /// 1. Validates each action as it's processed
-/// 2. Tracks mana changes (earned from pitches, spent on plays)
+/// 2. Tracks mana changes (earned from burns, spent on plays)
 /// 3. Ensures mana never goes negative and respects mana_limit
 /// 4. Updates board state as actions are applied
 /// 5. Removes used hand cards at the end
@@ -111,7 +111,7 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
     // Process each action in order
     for (action_index, turn_action) in action.actions.iter().enumerate() {
         match turn_action {
-            TurnAction::PitchFromHand { hand_index } => {
+            TurnAction::BurnFromHand { hand_index } => {
                 let hi = *hand_index as usize;
 
                 // Validate index
@@ -124,15 +124,15 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
                     return Err(GameError::CardAlreadyUsed { index: *hand_index });
                 }
 
-                // Get pitch value and add mana (capped at mana_limit)
+                // Get burn value and add mana (capped at mana_limit)
                 let card_id = state.hand[hi];
-                let pitch_value = state
+                let burn_value = state
                     .card_pool
                     .get(&card_id)
-                    .map(|c| c.economy.pitch_value)
+                    .map(|c| c.economy.burn_value)
                     .unwrap_or(0);
 
-                current_mana = (current_mana + pitch_value).min(state.mana_limit);
+                current_mana = (current_mana + burn_value).min(state.mana_limit);
                 hand_used[hi] = true;
             }
 
@@ -189,27 +189,27 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
                 current_mana = state.shop_mana;
             }
 
-            TurnAction::PitchFromBoard { board_slot } => {
+            TurnAction::BurnFromBoard { board_slot } => {
                 let bs = *board_slot as usize;
 
                 // Validate board slot
                 if bs >= BOARD_SIZE {
-                    return Err(GameError::InvalidBoardPitch { index: *board_slot });
+                    return Err(GameError::InvalidBoardBurn { index: *board_slot });
                 }
 
                 // Check slot has a unit
                 let sold_unit = state.board[bs]
                     .take()
-                    .ok_or(GameError::InvalidBoardPitch { index: *board_slot })?;
+                    .ok_or(GameError::InvalidBoardBurn { index: *board_slot })?;
 
-                // Get pitch value and add mana (capped at mana_limit)
-                let pitch_value = state
+                // Get burn value and add mana (capped at mana_limit)
+                let burn_value = state
                     .card_pool
                     .get(&sold_unit.card_id)
-                    .map(|c| c.economy.pitch_value)
+                    .map(|c| c.economy.burn_value)
                     .unwrap_or(0);
 
-                current_mana = (current_mana + pitch_value).min(state.mana_limit);
+                current_mana = (current_mana + burn_value).min(state.mana_limit);
 
                 state.shop_mana = current_mana;
                 apply_on_sell_triggers(state, action_index, sold_unit.card_id, bs);

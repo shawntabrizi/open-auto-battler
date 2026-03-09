@@ -49,7 +49,7 @@ export function BagOverlay() {
                   <UnitCard
                     card={card}
                     showCost={true}
-                    showPitch={true}
+                    showBurn={true}
                     draggable={false}
                     isSelected={selection?.type === 'bag' && selection.index === bagIndex}
                     onClick={() => {

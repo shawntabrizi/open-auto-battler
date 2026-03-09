@@ -143,7 +143,7 @@ export function GameShell({
       {/* Drag overlay - shows the card being dragged */}
       <DragOverlay>
         {activeCard ? (
-          <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showPitch={true} />
+          <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showBurn={true} />
         ) : null}
       </DragOverlay>
     </DndContext>

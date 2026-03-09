@@ -158,7 +158,7 @@ function SandboxArena() {
           className="relative group cursor-pointer sandbox-slot"
           onClick={onClick}
         >
-          <UnitCard card={unit} showCost={false} showPitch={false} />
+          <UnitCard card={unit} showCost={false} showBurn={false} />
           <div className="absolute -top-1.5 lg:-top-2 left-1/2 -tranwarm-x-1/2 text-[8px] lg:text-xs text-warm-400 pointer-events-none">
             {displayIndex}
           </div>

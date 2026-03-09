@@ -50,9 +50,9 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
           </div>
         </div>
         <div className="p-3 bg-orange-900/20 border border-orange-800/50 rounded-lg">
-          <div className="text-[10px] text-orange-400 uppercase font-bold mb-1">Pitch</div>
+          <div className="text-[10px] text-orange-400 uppercase font-bold mb-1">Burn</div>
           <div className="text-lg font-bold text-white flex items-center gap-1">
-            +{card.pitch_value} <span className="text-orange-400 text-sm">Mana</span>
+            +{card.burn_value} <span className="text-orange-400 text-sm">Mana</span>
           </div>
         </div>
       </div>

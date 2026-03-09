@@ -40,7 +40,7 @@ export const CreateSetPage: React.FC = () => {
       attack: card.data.stats.attack,
       health: card.data.stats.health,
       play_cost: card.data.economy.play_cost,
-      pitch_value: card.data.economy.pitch_value,
+      burn_value: card.data.economy.burn_value,
       base_statuses: card.data.base_statuses || [],
       shop_abilities: card.data.shop_abilities || [],
       battle_abilities: card.data.battle_abilities || [],

@@ -123,13 +123,13 @@ Why SCALE for chain communication?
 ```
                         SHOP PHASE (Browser)
                               │
-    User plays cards, pitches, rearranges board
+    User plays cards, burns, rearranges board
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  WASM Engine tracks actions in action_log: Vec<TurnAction>  │
 │                                                             │
-│  TurnAction::PitchFromHand { hand_index: 2 }               │
+│  TurnAction::BurnFromHand { hand_index: 2 }               │
 │  TurnAction::PlayFromHand { hand_index: 0, board_slot: 1 } │
 │  TurnAction::SwapBoard { slot_a: 0, slot_b: 1 }            │
 └─────────────────────────────────────────────────────────────┘
@@ -312,7 +312,7 @@ CardTemplate {
     template_id: "goblin_grunt",
     name: "Goblin Grunt",
     attack: 2, health: 2,
-    play_cost: 2, pitch_value: 1,
+    play_cost: 2, burn_value: 1,
     abilities: vec![],  // Pure stats, no tricks
 }
 ```
@@ -323,7 +323,7 @@ CardTemplate {
     template_id: "rat_swarm",
     name: "Rat Swarm",
     attack: 1, health: 1,
-    play_cost: 1, pitch_value: 1,
+    play_cost: 1, burn_value: 1,
     abilities: vec![Ability {
         trigger: AbilityTrigger::OnFaint,
         effect: AbilityEffect::SpawnUnit {
@@ -341,7 +341,7 @@ CardTemplate {
     template_id: "scaredy_cat",
     name: "Scaredy Cat",
     attack: 1, health: 3,
-    play_cost: 1, pitch_value: 2,
+    play_cost: 1, burn_value: 2,
     abilities: vec![Ability {
         trigger: AbilityTrigger::OnStart,
         effect: AbilityEffect::ModifyStats {
@@ -363,7 +363,7 @@ CardTemplate {
     template_id: "nurse_goblin",
     name: "Nurse Goblin",
     attack: 1, health: 3,
-    play_cost: 2, pitch_value: 2,
+    play_cost: 2, burn_value: 2,
     abilities: vec![Ability {
         trigger: AbilityTrigger::BeforeAnyAttack,
         effect: AbilityEffect::ModifyStats {
@@ -390,7 +390,7 @@ CardTemplate {
     template_id: "abyssal_bomber",
     name: "Abyssal Bomber",
     attack: 2, health: 2,
-    play_cost: 4, pitch_value: 2,
+    play_cost: 4, burn_value: 2,
     abilities: vec![Ability {
         trigger: AbilityTrigger::OnFaint,
         effect: AbilityEffect::Damage {
@@ -411,7 +411,7 @@ CardTemplate {
     template_id: "archer",
     name: "Archer",
     attack: 1, health: 3,
-    play_cost: 3, pitch_value: 2,
+    play_cost: 3, burn_value: 2,
     abilities: vec![Ability {
         trigger: AbilityTrigger::OnStart,
         effect: AbilityEffect::Damage {
@@ -501,7 +501,7 @@ auto-battle/
 2. SHOP PHASE (Browser - Local)
    ┌─────────────────────────────────────────┐
    │  User interacts with WASM engine:       │
-   │  - Pitch cards for mana                 │
+   │  - Burn cards for mana                 │
    │  - Play units to board                  │
    │  - Rearrange board positions            │
    │                                         │

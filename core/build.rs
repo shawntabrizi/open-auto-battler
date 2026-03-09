@@ -36,7 +36,7 @@ struct JsonStats {
 #[derive(Deserialize)]
 struct JsonEconomy {
     play_cost: i32,
-    pitch_value: i32,
+    burn_value: i32,
 }
 
 #[derive(Deserialize, Clone)]
@@ -882,7 +882,7 @@ fn gen_card(
     let atk = card.stats.attack;
     let hp = card.stats.health;
     let cost = card.economy.play_cost;
-    let pitch = card.economy.pitch_value;
+    let burn = card.economy.burn_value;
     let base_statuses_str = if card.base_statuses.is_empty() {
         "StatusMask::empty()".to_string()
     } else {
@@ -920,7 +920,7 @@ fn gen_card(
             id: CardId({id}),
             name: String::from("{name}"),
             stats: UnitStats {{ attack: {atk}, health: {hp} }},
-            economy: EconomyStats {{ play_cost: {cost}, pitch_value: {pitch} }},
+            economy: EconomyStats {{ play_cost: {cost}, burn_value: {burn} }},
             base_statuses: {base_statuses_str},
             shop_abilities: {shop_abilities_str},
             battle_abilities: {battle_abilities_str},

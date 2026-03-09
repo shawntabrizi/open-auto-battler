@@ -96,7 +96,7 @@ export const CreateCardPage: React.FC = () => {
     attack: 1,
     health: 1,
     play_cost: 1,
-    pitch_value: 1,
+    burn_value: 1,
     description: '',
     shop_abilities: [] as ShopAbility[],
     battle_abilities: [] as BattleAbility[],
@@ -127,7 +127,7 @@ export const CreateCardPage: React.FC = () => {
       await submitCard(
         {
           stats: { attack: cardForm.attack, health: cardForm.health },
-          economy: { play_cost: cardForm.play_cost, pitch_value: cardForm.pitch_value },
+          economy: { play_cost: cardForm.play_cost, burn_value: cardForm.burn_value },
           base_statuses: cardForm.base_statuses,
           shop_abilities: cardForm.shop_abilities,
           battle_abilities: cardForm.battle_abilities,
@@ -146,7 +146,7 @@ export const CreateCardPage: React.FC = () => {
         attack: 1,
         health: 1,
         play_cost: 1,
-        pitch_value: 1,
+        burn_value: 1,
         description: '',
         shop_abilities: [],
         battle_abilities: [],
@@ -323,7 +323,7 @@ export const CreateCardPage: React.FC = () => {
   const rawJsonPretty = JSON.stringify(
     {
       stats: { attack: cardForm.attack, health: cardForm.health },
-      economy: { play_cost: cardForm.play_cost, pitch_value: cardForm.pitch_value },
+      economy: { play_cost: cardForm.play_cost, burn_value: cardForm.burn_value },
       base_statuses: cardForm.base_statuses,
       shop_abilities: cardForm.shop_abilities,
       battle_abilities: cardForm.battle_abilities,
@@ -486,13 +486,13 @@ export const CreateCardPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
-                      Pitch Value
+                      Burn Value
                     </label>
                     <input
                       type="number"
-                      value={cardForm.pitch_value}
+                      value={cardForm.burn_value}
                       onChange={(e) =>
-                        setCardForm({ ...cardForm, pitch_value: parseInt(e.target.value) || 0 })
+                        setCardForm({ ...cardForm, burn_value: parseInt(e.target.value) || 0 })
                       }
                       className="w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-yellow-500/50"
                       min="0"
@@ -582,7 +582,7 @@ export const CreateCardPage: React.FC = () => {
                     {cardForm.play_cost}
                   </div>
                   <div className="absolute -top-2 -right-2 w-7 h-7 bg-red-600 rounded-full flex items-center justify-center text-xs font-bold border-2 border-red-400">
-                    {cardForm.pitch_value}
+                    {cardForm.burn_value}
                   </div>
                 </div>
               </div>

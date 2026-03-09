@@ -9,23 +9,23 @@ fn add_card(
     attack: i32,
     health: i32,
     play_cost: i32,
-    pitch_value: i32,
+    burn_value: i32,
 ) -> CardId {
     let id = state.generate_card_id();
-    let card = UnitCard::new(id, name, attack, health, play_cost, pitch_value);
+    let card = UnitCard::new(id, name, attack, health, play_cost, burn_value);
     state.card_pool.insert(id, card);
     id
 }
 
 #[test]
-fn test_turn_error_invalid_hand_index_pitch_and_play() {
+fn test_turn_error_invalid_hand_index_burn_and_play() {
     let mut state = GameState::new(1);
 
-    let pitch = CommitTurnAction {
-        actions: vec![TurnAction::PitchFromHand { hand_index: 0 }],
+    let burn = CommitTurnAction {
+        actions: vec![TurnAction::BurnFromHand { hand_index: 0 }],
     };
     assert_eq!(
-        verify_and_apply_turn(&mut state, &pitch),
+        verify_and_apply_turn(&mut state, &burn),
         Err(GameError::InvalidHandIndex { index: 0 })
     );
 
@@ -88,23 +88,23 @@ fn test_turn_error_not_enough_mana() {
 }
 
 #[test]
-fn test_turn_error_invalid_board_pitch_paths() {
+fn test_turn_error_invalid_board_burn_paths() {
     let mut state = GameState::new(4);
 
     let out_of_bounds = CommitTurnAction {
-        actions: vec![TurnAction::PitchFromBoard { board_slot: 5 }],
+        actions: vec![TurnAction::BurnFromBoard { board_slot: 5 }],
     };
     assert_eq!(
         verify_and_apply_turn(&mut state, &out_of_bounds),
-        Err(GameError::InvalidBoardPitch { index: 5 })
+        Err(GameError::InvalidBoardBurn { index: 5 })
     );
 
     let empty_slot = CommitTurnAction {
-        actions: vec![TurnAction::PitchFromBoard { board_slot: 0 }],
+        actions: vec![TurnAction::BurnFromBoard { board_slot: 0 }],
     };
     assert_eq!(
         verify_and_apply_turn(&mut state, &empty_slot),
-        Err(GameError::InvalidBoardPitch { index: 0 })
+        Err(GameError::InvalidBoardBurn { index: 0 })
     );
 }
 
@@ -236,7 +236,7 @@ fn test_on_sell_self_position_zero_fizzles_when_source_is_removed() {
     state.board[1] = Some(BoardUnit::new(ally_id));
 
     let action = CommitTurnAction {
-        actions: vec![TurnAction::PitchFromBoard { board_slot: 0 }],
+        actions: vec![TurnAction::BurnFromBoard { board_slot: 0 }],
     };
 
     let result = verify_and_apply_turn(&mut state, &action);
@@ -271,7 +271,7 @@ fn test_on_sell_allies_other_targets_survivors_when_source_is_removed() {
     state.board[2] = Some(BoardUnit::new(ally_b_id));
 
     let action = CommitTurnAction {
-        actions: vec![TurnAction::PitchFromBoard { board_slot: 0 }],
+        actions: vec![TurnAction::BurnFromBoard { board_slot: 0 }],
     };
 
     let result = verify_and_apply_turn(&mut state, &action);

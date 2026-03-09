@@ -9,7 +9,7 @@ This document describes how the Rust engine is exposed to JavaScript.
 ## Public JS API (from `client/src/engine.rs`)
 - Constructor: `GameEngine::new(seed: Option<u64>)`.
 - State and view: `get_view`, `get_battle_output`, `get_card_set`, `get_bag`.
-- Turn actions: `pitch_hand_card`, `play_hand_card`, `swap_board_positions`, `pitch_board_unit`, `end_turn`, `continue_after_battle`, `new_run`.
+- Turn actions: `burn_hand_card`, `play_hand_card`, `swap_board_positions`, `burn_board_unit`, `end_turn`, `continue_after_battle`, `new_run`.
 - Commitment API: `get_commit_action` and `get_commit_action_scale`.
 - SCALE init: `init_from_scale` for session restoration.
 

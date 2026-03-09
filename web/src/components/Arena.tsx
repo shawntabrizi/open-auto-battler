@@ -33,7 +33,7 @@ function detectBoardChanges(
         anims.set(i, 'placed');
       }
     } else if (prevUnit && !currUnit) {
-      // Only show exit animation if the unit actually left the board (pitched).
+      // Only show exit animation if the unit actually left the board (burned).
       // If it just moved to another slot, no phantom needed.
       const stillOnBoard = curr.some((c) => c && c.id === prevUnit.id);
       if (!stillOnBoard) {
@@ -191,7 +191,7 @@ export function Arena() {
                         <UnitCard
                           card={exitingCards.get(arrayIndex)!}
                           showCost={false}
-                          showPitch={false}
+                          showBurn={false}
                           enableTilt={false}
                           enableWobble={false}
                         />
@@ -211,7 +211,7 @@ export function Arena() {
                             id={`board-${arrayIndex}`}
                             card={unit}
                             showCost={false}
-                            showPitch={true}
+                            showBurn={true}
                             isSelected={selection?.type === 'board' && selection.index === arrayIndex}
                             onClick={() => handleBoardSlotClick(arrayIndex)}
                             enableWobble={false}

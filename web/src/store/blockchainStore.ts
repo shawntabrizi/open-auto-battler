@@ -373,7 +373,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
                   },
                   economy: {
                     play_cost: card.data.economy.play_cost,
-                    pitch_value: card.data.economy.pitch_value,
+                    burn_value: card.data.economy.burn_value,
                   },
                   base_statuses: toStatusMask(card.data.base_statuses),
                   shop_abilities: shopAbilities,

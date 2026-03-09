@@ -34,8 +34,8 @@ pub enum GameError {
     InvalidHandIndex { index: u32 },
     /// Card was already used this turn (double-use of same hand index)
     CardAlreadyUsed { index: u32 },
-    /// Invalid board slot pitched (empty or out of bounds)
-    InvalidBoardPitch { index: u32 },
+    /// Invalid board slot burned (empty or out of bounds)
+    InvalidBoardBurn { index: u32 },
     /// Board state mismatch: a unit in new_board doesn't match any valid source
     BoardMismatch,
     /// Wrong board size submitted

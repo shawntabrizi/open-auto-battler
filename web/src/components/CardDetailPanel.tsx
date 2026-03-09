@@ -102,8 +102,8 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
     view,
     cardNameMap,
     selection,
-    pitchHandCard,
-    pitchBoardUnit,
+    burnHandCard,
+    burnBoardUnit,
     setSelection,
     showRawJson,
     toggleShowRawJson,
@@ -147,13 +147,13 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
               <button
                 onClick={() => {
                   if (selectedBoardIndex >= 0) {
-                    pitchBoardUnit(selectedBoardIndex);
-                    setSelection(null); // Clear selection after pitching
+                    burnBoardUnit(selectedBoardIndex);
+                    setSelection(null);
                   }
                 }}
                 className="w-full btn btn-danger text-[10px] lg:text-sm py-1.5 lg:py-2"
               >
-                Pitch (+{card.pitch_value})
+                Burn (+{card.burn_value})
               </button>
             ) : (
               // Hand card actions
@@ -161,13 +161,13 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
                 <button
                   onClick={() => {
                     if (selectedHandIndex >= 0) {
-                      pitchHandCard(selectedHandIndex);
-                      setSelection(null); // Clear selection after pitching
+                      burnHandCard(selectedHandIndex);
+                      setSelection(null);
                     }
                   }}
                   className="w-full btn btn-danger text-[10px] lg:text-sm py-1.5 lg:py-2"
                 >
-                  Pitch (+{card.pitch_value})
+                  Burn (+{card.burn_value})
                 </button>
               </>
             )}
@@ -210,10 +210,10 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
           </div>
           <div className="p-1.5 lg:p-3 bg-orange-900/20 border border-orange-800/50 rounded-lg">
             <div className="text-[8px] lg:text-[10px] text-orange-400 uppercase font-bold mb-0.5 lg:mb-1">
-              Pitch
+              Burn
             </div>
             <div className="text-sm lg:text-xl font-bold text-white flex items-center gap-0.5 lg:gap-1">
-              +{card.pitch_value}{' '}
+              +{card.burn_value}{' '}
               <span className="text-orange-400 text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
@@ -258,7 +258,7 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
             round.
           </p>
           <p className="mt-2 text-warm-400 italic">
-            Unused hand cards return to your Bag. The Bag only shrinks when you play or pitch cards.
+            Unused hand cards return to your Bag. The Bag only shrinks when you play or burn cards.
           </p>
         </section>
 
@@ -268,7 +268,7 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
           </h3>
           <p className="leading-relaxed">
             You start each turn with <strong className="text-blue-400">0 Mana</strong>. Gain mana by{' '}
-            <strong className="text-orange-400">Pitching</strong> cards from your hand or units
+            <strong className="text-orange-400">burning</strong> cards from your hand or units
             already on your board.
           </p>
           <ul className="mt-2 space-y-1 list-disc list-inside text-xs">
@@ -277,7 +277,7 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
               round (Max 10).
             </li>
             <li>
-              <strong className="text-white">Refilling:</strong> You can pitch, spend, and pitch
+              <strong className="text-white">Refilling:</strong> You can burn, spend, and burn
               again in one turn.
             </li>
             <li>

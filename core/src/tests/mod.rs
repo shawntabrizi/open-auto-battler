@@ -62,7 +62,7 @@ fn create_tester_unit(id: u32, name: &str, attack: i32, health: i32) -> CombatUn
         stats: UnitStats { attack, health },
         economy: EconomyStats {
             play_cost: 1,
-            pitch_value: 1,
+            burn_value: 1,
         },
         base_statuses: StatusMask::empty(),
         shop_abilities: vec![],
@@ -82,7 +82,7 @@ fn create_dummy_enemy() -> CombatUnit {
         },
         economy: EconomyStats {
             play_cost: 0,
-            pitch_value: 0,
+            burn_value: 0,
         },
         base_statuses: StatusMask::empty(),
         shop_abilities: vec![],

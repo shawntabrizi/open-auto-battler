@@ -44,7 +44,7 @@ interface UnitCardProps {
   isSelected?: boolean;
   onClick?: () => void;
   showCost?: boolean;
-  showPitch?: boolean;
+  showBurn?: boolean;
   sizeVariant?: CardSizeVariant;
   enableWobble?: boolean;
   enableTilt?: boolean;
@@ -60,7 +60,7 @@ export function UnitCard({
   isSelected = false,
   onClick,
   showCost = true,
-  showPitch = true,
+  showBurn = true,
   sizeVariant = 'standard',
   enableWobble = true,
   enableTilt = true,
@@ -178,12 +178,12 @@ export function UnitCard({
           </div>
         )}
 
-        {/* Pitch value badge (top right) — gold flame */}
-        {showPitch && (
+        {/* Burn value badge (top right) — gold flame */}
+        {showBurn && (
           <div
-            className={`card-pitch-badge absolute -top-0.5 -right-0.5 lg:-top-1 lg:-right-1 z-10 ${text.badge} pitch-badge rounded-lg flex items-center justify-center font-stat font-bold`}
+            className={`card-burn-badge absolute -top-0.5 -right-0.5 lg:-top-1 lg:-right-1 z-10 ${text.badge} burn-badge rounded-lg flex items-center justify-center font-stat font-bold`}
           >
-            {card.pitch_value}
+            {card.burn_value}
           </div>
         )}
 

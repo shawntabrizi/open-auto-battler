@@ -114,7 +114,7 @@ export default function PresentationViewer() {
             attack: props.attack ?? 2,
             health: props.health ?? 3,
             play_cost: props.play_cost ?? 2,
-            pitch_value: props.pitch_value ?? 1,
+            burn_value: props.burn_value ?? 1,
             base_statuses: props.base_statuses || [],
             shop_abilities: props.shop_abilities || [],
             battle_abilities: props.battle_abilities || [],
@@ -124,7 +124,7 @@ export default function PresentationViewer() {
               <UnitCard
                 card={cardData}
                 showCost={props.showCost !== false}
-                showPitch={props.showPitch !== false}
+                showBurn={props.showBurn !== false}
               />
             </div>
           );
@@ -135,7 +135,7 @@ export default function PresentationViewer() {
             attack: props.attack ?? 2,
             health: props.health ?? 3,
             play_cost: props.play_cost ?? 2,
-            pitch_value: props.pitch_value ?? 1,
+            burn_value: props.burn_value ?? 1,
             base_statuses: props.base_statuses || [],
             shop_abilities: props.shop_abilities || [],
             battle_abilities: props.battle_abilities || [],

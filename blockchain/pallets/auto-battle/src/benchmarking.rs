@@ -118,7 +118,7 @@ mod benchmarks {
             },
             economy: EconomyStats {
                 play_cost: 1,
-                pitch_value: 1,
+                burn_value: 1,
             },
             base_statuses: oab_core::StatusMask::empty(),
             shop_abilities: max_shop_abilities::<T>(),
@@ -230,7 +230,7 @@ mod benchmarks {
             },
             economy: EconomyStats {
                 play_cost: 1,
-                pitch_value: 1,
+                burn_value: 1,
             },
             base_statuses: oab_core::StatusMask::empty(),
             shop_abilities: max_shop_abilities::<T>(),

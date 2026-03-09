@@ -62,7 +62,7 @@ pub struct GameEngine {
     starting_lives: i32,
     wins_to_victory: i32,
     // Per-turn local tracking (transient, not persisted)
-    hand_used: Vec<bool>,                // true = pitched or played
+    hand_used: Vec<bool>,                // true = burned or played
     action_log: Vec<TurnAction>,         // Ordered list of actions taken this turn
     start_board: Vec<Option<BoardUnit>>, // board state at the start of the turn
     start_shop_mana: i32,                // mana state at the start of the turn
@@ -316,11 +316,11 @@ impl GameEngine {
         }
     }
 
-    /// Pitch a card from the hand to generate mana
+    /// Burn a card from the hand to generate mana
     #[wasm_bindgen]
-    pub fn pitch_hand_card(&mut self, hand_index: usize) -> Result<(), String> {
+    pub fn burn_hand_card(&mut self, hand_index: usize) -> Result<(), String> {
         log::action(
-            "pitch_hand_card",
+            "burn_hand_card",
             &format!(
                 "hand_index={}, hand_used_len={}",
                 hand_index,
@@ -328,7 +328,7 @@ impl GameEngine {
             ),
         );
         if self.state.phase != GamePhase::Shop {
-            return Err("Can only pitch during shop phase".to_string());
+            return Err("Can only burn during shop phase".to_string());
         }
 
         let card_id = self
@@ -341,12 +341,12 @@ impl GameEngine {
             return Err("Card already used this turn".to_string());
         }
 
-        let pitch_value = self.get_card(*card_id).economy.pitch_value;
+        let burn_value = self.get_card(*card_id).economy.burn_value;
 
         self.save_snapshot();
-        self.state.shop_mana = (self.state.shop_mana + pitch_value).min(self.state.mana_limit);
+        self.state.shop_mana = (self.state.shop_mana + burn_value).min(self.state.mana_limit);
         self.hand_used[hand_index] = true;
-        self.action_log.push(TurnAction::PitchFromHand {
+        self.action_log.push(TurnAction::BurnFromHand {
             hand_index: hand_index as u32,
         });
 
@@ -436,12 +436,12 @@ impl GameEngine {
         Ok(())
     }
 
-    /// Pitch a unit from the board
+    /// Burn a unit from the board
     #[wasm_bindgen]
-    pub fn pitch_board_unit(&mut self, board_slot: usize) -> Result<(), String> {
-        log::action("pitch_board_unit", &format!("slot={}", board_slot));
+    pub fn burn_board_unit(&mut self, board_slot: usize) -> Result<(), String> {
+        log::action("burn_board_unit", &format!("slot={}", board_slot));
         if self.state.phase != GamePhase::Shop {
-            return Err("Can only pitch during shop phase".to_string());
+            return Err("Can only burn during shop phase".to_string());
         }
 
         // Check slot is occupied before saving snapshot
@@ -465,9 +465,9 @@ impl GameEngine {
             .expect("Board slot should be occupied");
 
         let card_id = unit.card_id;
-        let pitch_value = self.get_card(card_id).economy.pitch_value;
-        self.state.shop_mana = (self.state.shop_mana + pitch_value).min(self.state.mana_limit);
-        self.action_log.push(TurnAction::PitchFromBoard {
+        let burn_value = self.get_card(card_id).economy.burn_value;
+        self.state.shop_mana = (self.state.shop_mana + burn_value).min(self.state.mana_limit);
+        self.action_log.push(TurnAction::BurnFromBoard {
             board_slot: board_slot as u32,
         });
         let action_index = self.action_log.len().saturating_sub(1);

@@ -1,14 +1,14 @@
 import { useGameStore } from '../store/gameStore';
 import { useCustomizationStore } from '../store/customizationStore';
 import React, { useRef } from 'react';
-import { DraggableCard, DroppableAshPile } from './DndComponents';
+import { DraggableCard, DroppableBurnZone } from './DndComponents';
 import { CARD_SIZES } from '../constants/cardSizes';
-import ashpileIcon from '../../ashpile.svg';
+import burnIcon from '../../burn.svg';
 
 export function Shop() {
-  const { view, selection, setSelection, pitchHandCard, pitchBoardUnit, undo } = useGameStore();
+  const { view, selection, setSelection, burnHandCard, burnBoardUnit, undo } = useGameStore();
   const handBg = useCustomizationStore((s) => s.selections.handBackground);
-  const [isAshHovered, setIsAshHovered] = React.useState(false);
+  const [isBurnHovered, setIsBurnHovered] = React.useState(false);
   const [isNewRound, setIsNewRound] = React.useState(false);
   const prevRoundRef = useRef(view?.round);
 
@@ -47,14 +47,14 @@ export function Shop() {
     }
   };
 
-  const handleAshClick = () => {
+  const handleBurnClick = () => {
     if (selection?.type === 'hand') {
 
-      pitchHandCard(selection.index);
+      burnHandCard(selection.index);
       setSelection(null);
     } else if (selection?.type === 'board') {
 
-      pitchBoardUnit(selection.index);
+      burnBoardUnit(selection.index);
       setSelection(null);
     }
   };
@@ -125,7 +125,7 @@ export function Shop() {
                       id={`hand-${i}`}
                       card={card}
                       showCost={true}
-                      showPitch={true}
+                      showBurn={true}
                       can_afford={view.can_afford[i]}
                       isSelected={selection?.type === 'hand' && selection.index === i}
                       onClick={() => handleHandSlotClick(i)}
@@ -143,26 +143,26 @@ export function Shop() {
             </div>
           </div>
 
-          {/* Right: Ash Pile */}
-          <DroppableAshPile onHoverChange={setIsAshHovered}>
+          {/* Right: Burn Zone */}
+          <DroppableBurnZone onHoverChange={setIsBurnHovered}>
             <div
-              className={`shop-side w-14 lg:w-32 h-full flex flex-col items-center justify-center border-l border-warm-700/50 transition-all duration-200 cursor-pointer ${isAshHovered ? 'bg-red-900/20' : ''}`}
-              onClick={handleAshClick}
+              className={`shop-side w-14 lg:w-32 h-full flex flex-col items-center justify-center border-l border-warm-700/50 transition-all duration-200 cursor-pointer ${isBurnHovered ? 'bg-red-900/20' : ''}`}
+              onClick={handleBurnClick}
             >
               <img
-                src={ashpileIcon}
-                alt="Ash Pile"
-                className={`ash-circle w-10 h-10 lg:w-20 lg:h-20 transition-all duration-200 ${
-                  isAshHovered
+                src={burnIcon}
+                alt="Burn Card"
+                className={`burn-circle w-10 h-10 lg:w-20 lg:h-20 transition-all duration-200 ${
+                  isBurnHovered
                     ? 'scale-115 drop-shadow-[0_0_12px_rgba(234,88,12,0.4)]'
                     : 'opacity-80 hover:opacity-100 hover:scale-105'
                 }`}
               />
-              <div className={`ash-hint hidden lg:block text-[10px] mt-1 text-center px-2 ${isAshHovered ? 'text-orange-400 font-bold' : 'text-warm-500'}`}>
-                {isAshHovered ? 'BURN IT!' : 'Ash Pile'}
+              <div className={`burn-hint hidden lg:block text-[10px] mt-1 text-center px-2 ${isBurnHovered ? 'text-orange-400 font-bold' : 'text-warm-500'}`}>
+                {isBurnHovered ? 'BURN IT!' : 'Burn Card'}
               </div>
             </div>
-          </DroppableAshPile>
+          </DroppableBurnZone>
       </div>
     </div>
   );

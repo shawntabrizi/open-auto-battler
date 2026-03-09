@@ -49,7 +49,7 @@ export function StarOutlineIcon({ className = 'w-4 h-4' }: IconProps) {
   );
 }
 
-/** Stylized flame — ash pile / burn */
+/** Stylized flame — burn card */
 /** Mana bolt — cost indicator */
 export function BoltIcon({ className = 'w-4 h-4' }: IconProps) {
   return (
