@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { ipfsUrl } from '../utils/ipfs';
 
-export type CustomizationType = 'board_bg' | 'hand_bg' | 'card_style' | 'avatar';
+export type CustomizationType = 'board_bg' | 'hand_bg' | 'card_style' | 'avatar' | 'card_art';
 
 export interface NftItem {
   collectionId: number;
@@ -18,6 +18,7 @@ export interface CustomizationSelections {
   handBackground: NftItem | null;
   cardStyle: NftItem | null;
   playerAvatar: NftItem | null;
+  cardArt: NftItem | null;
 }
 
 interface CustomizationStore {
@@ -71,6 +72,7 @@ const emptySelections: CustomizationSelections = {
   handBackground: null,
   cardStyle: null,
   playerAvatar: null,
+  cardArt: null,
 };
 
 const SLOT_MAP: Record<CustomizationType, keyof CustomizationSelections> = {
@@ -78,6 +80,7 @@ const SLOT_MAP: Record<CustomizationType, keyof CustomizationSelections> = {
   hand_bg: 'handBackground',
   card_style: 'cardStyle',
   avatar: 'playerAvatar',
+  card_art: 'cardArt',
 };
 
 export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
@@ -110,7 +113,7 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
           if (!metadataStr) continue;
 
           const parsed = JSON.parse(metadataStr);
-          const validTypes: CustomizationType[] = ['board_bg', 'hand_bg', 'card_style', 'avatar'];
+          const validTypes: CustomizationType[] = ['board_bg', 'hand_bg', 'card_style', 'avatar', 'card_art'];
           if (!validTypes.includes(parsed.type)) continue;
 
           nfts.push({

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Auto Battle game supports purely aesthetic NFT-based customizations via `pallet-nfts`. Players own NFTs that represent cosmetic assets for four customization slots. No gameplay logic is affected. Customizations persist via localStorage so they work across all game modes once selected in blockchain mode.
+The Auto Battle game supports purely aesthetic NFT-based customizations via `pallet-nfts`. Players own NFTs that represent cosmetic assets for five customization slots. No gameplay logic is affected. Customizations persist via localStorage so they work across all game modes once selected in blockchain mode.
 
 ## Collection Structure
 
@@ -23,7 +23,7 @@ JSON string stored via `set_metadata`:
 }
 ```
 
-- `type`: one of `board_bg`, `hand_bg`, `card_style`, `avatar`
+- `type`: one of `board_bg`, `hand_bg`, `card_style`, `avatar`, `card_art`
 - `image`: IPFS CID URL pointing to the image
 - Must fit within 256 bytes (StringLimit)
 
@@ -80,6 +80,32 @@ Circular avatar displayed in the HUD next to the Lives section.
 | Format | PNG/WebP |
 | Alpha | Optional |
 | Max File Size | 500 KB |
+
+### Card Art Set (`card_art`)
+
+A complete set of card illustrations. The `image` field points to an IPFS directory CID containing WebP images for every card in the set. The UI resolves individual card images by appending the size and card ID to the directory path.
+
+| Property | Value |
+|----------|-------|
+| IPFS Structure | Directory with `sm/` and `md/` subdirectories |
+| Small Size | 256x340 per card (`sm/{cardId}.webp`) |
+| Medium Size | 464x616 per card (`md/{cardId}.webp`) |
+| Format | WebP |
+| Fallback | Emoji (when no set selected or image fails to load) |
+
+**IPFS Directory Layout:**
+
+```
+<directory CID>/
+  sm/0.webp
+  sm/1.webp
+  ...
+  md/0.webp
+  md/1.webp
+  ...
+```
+
+Art is uploaded as a complete set (one directory per set) rather than per-card. Use `ipfs add -r` or Pinata directory upload to get a single directory CID.
 
 ## Minting Flow
 

@@ -33,6 +33,13 @@ const SECTIONS: { type: CustomizationType; label: string; icon: string; descript
     description: 'Your avatar displayed in the HUD',
     specs: '1:1 ratio, 256x256 recommended, PNG/WebP, max 500 KB',
   },
+  {
+    type: 'card_art',
+    label: 'Card Art',
+    icon: '🎨',
+    description: 'Art set for all card illustrations',
+    specs: 'IPFS directory with sm/ and md/ WebP images per card',
+  },
 ];
 
 const SLOT_MAP: Record<CustomizationType, keyof ReturnType<typeof useCustomizationStore.getState>['selections']> = {
@@ -40,6 +47,7 @@ const SLOT_MAP: Record<CustomizationType, keyof ReturnType<typeof useCustomizati
   hand_bg: 'handBackground',
   card_style: 'cardStyle',
   avatar: 'playerAvatar',
+  card_art: 'cardArt',
 };
 
 export const CustomizePage: React.FC = () => {

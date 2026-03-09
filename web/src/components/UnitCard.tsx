@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { CardView, BoardUnitView } from '../types';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
@@ -77,6 +77,8 @@ export function UnitCard({
   });
 
   const artSrc = getCardArtSm(card.id);
+  const [artFailed, setArtFailed] = useState(false);
+  const showArt = artSrc && !artFailed;
   const sizes = CARD_SIZES[sizeVariant];
   const text = CARD_TEXT[sizeVariant];
   const rarity = getRarityTier(card);
@@ -104,7 +106,7 @@ export function UnitCard({
           : undefined
       }
     >
-        {artSrc ? (
+        {showArt ? (
           <>
             {/* Full-bleed card art — brightness boost for vibrancy */}
             <img
@@ -113,6 +115,7 @@ export function UnitCard({
               className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
               style={{ filter: 'brightness(1.15) saturate(1.1)' }}
               loading="lazy"
+              onError={() => setArtFailed(true)}
             />
             {/* Gradient overlay — lighter than before for brighter art */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />

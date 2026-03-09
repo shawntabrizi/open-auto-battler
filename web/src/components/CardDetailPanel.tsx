@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import type { CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
+import { getCardArtMd } from '../utils/cardArt';
 import { formatAbilitySentence } from '../utils/abilityText';
 
 const STATUS_MASK_KEYS = new Set(['base_statuses', 'perm_statuses', 'active_statuses', 'statuses']);
@@ -132,8 +133,26 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
 
         {/* Card Basic Info */}
         <div className="card-info flex items-center gap-2 lg:gap-4 mb-3 lg:mb-6">
-          <div className="card-emoji w-12 h-12 lg:w-20 lg:h-20 bg-warm-800 rounded-lg lg:rounded-xl border-2 border-warm-700 flex items-center justify-center text-2xl lg:text-4xl shadow-inner flex-shrink-0">
-            {getCardEmoji(card.id)}
+          <div className="card-emoji w-12 h-12 lg:w-20 lg:h-20 bg-warm-800 rounded-lg lg:rounded-xl border-2 border-warm-700 flex items-center justify-center text-2xl lg:text-4xl shadow-inner flex-shrink-0 overflow-hidden">
+            {(() => {
+              const mdSrc = getCardArtMd(card.id);
+              if (!mdSrc) return getCardEmoji(card.id);
+              return (
+                <img
+                  src={mdSrc}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Replace with emoji on load failure
+                    const parent = (e.target as HTMLElement).parentElement;
+                    if (parent) {
+                      (e.target as HTMLElement).remove();
+                      parent.textContent = getCardEmoji(card.id);
+                    }
+                  }}
+                />
+              );
+            })()}
           </div>
           <div className="card-stats min-w-0">
             <h2 className="card-name text-base lg:text-2xl font-bold text-white leading-tight truncate">
