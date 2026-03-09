@@ -8,7 +8,8 @@ import { formatAbilitySentence } from '../utils/abilityText';
 
 /** Card art image with loading state — remount via key={card.id} to reset on card change. */
 function CardArtImage({ card }: { card: CardView }) {
-  const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>('loading');
+  const artSrc = getCardArtMd(card.id);
+  const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>(artSrc ? 'loading' : 'error');
 
   return (
     <div className="relative w-full aspect-[3/4] bg-warm-800 rounded-lg lg:rounded-xl border-2 border-warm-700 overflow-hidden shadow-inner">
@@ -20,9 +21,9 @@ function CardArtImage({ card }: { card: CardView }) {
           </span>
         </div>
       )}
-      {status !== 'error' && (
+      {artSrc && status !== 'error' && (
         <img
-          src={getCardArtMd(card.id)}
+          src={artSrc}
           alt={card.name}
           className={`w-full h-full object-cover object-[center_30%] ${status !== 'loaded' ? 'opacity-0' : ''}`}
           style={{ filter: 'brightness(1.1) saturate(1.1)' }}

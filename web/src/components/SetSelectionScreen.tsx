@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { getCardArtSm } from '../utils/cardArt';
+import { getCardEmoji } from '../utils/emoji';
 import type { CardView } from '../types';
 
 /** Fan positions for up to 5 cards */
@@ -32,11 +33,17 @@ function CardFan({ cards }: { cards: CardView[] }) {
               zIndex: i,
             } as React.CSSProperties}
           >
-            <img
-              src={getCardArtSm(card.id)}
-              alt={card.name}
-              className="w-full h-full object-cover object-[center_30%] rounded"
-            />
+            {getCardArtSm(card.id) ? (
+              <img
+                src={getCardArtSm(card.id)!}
+                alt={card.name}
+                className="w-full h-full object-cover object-[center_30%] rounded"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-warm-800 rounded text-2xl">
+                {getCardEmoji(card.id)}
+              </div>
+            )}
           </div>
         );
       })}
@@ -82,9 +89,16 @@ function AllSetsView({
                 {/* Mini card preview */}
                 <div className="flex justify-center gap-0.5 lg:gap-1 mb-2 lg:mb-3">
                   {cards
-                    ? cards.slice(0, 5).map((c) => (
-                        <img key={c.id} src={getCardArtSm(c.id)} alt="" className="w-6 h-8 lg:w-8 lg:h-11 object-cover object-[center_30%] rounded-sm border border-warm-700/50" />
-                      ))
+                    ? cards.slice(0, 5).map((c) => {
+                        const art = getCardArtSm(c.id);
+                        return art ? (
+                          <img key={c.id} src={art} alt="" className="w-6 h-8 lg:w-8 lg:h-11 object-cover object-[center_30%] rounded-sm border border-warm-700/50" />
+                        ) : (
+                          <div key={c.id} className="w-6 h-8 lg:w-8 lg:h-11 flex items-center justify-center bg-warm-800 rounded-sm border border-warm-700/50 text-xs">
+                            {getCardEmoji(c.id)}
+                          </div>
+                        );
+                      })
                     : <span className="text-warm-600">...</span>}
                 </div>
                 <div className="text-center">

@@ -110,7 +110,7 @@ export function UnitCard({
           <>
             {/* Full-bleed card art — brightness boost for vibrancy */}
             <img
-              src={artSrc}
+              src={artSrc!}
               alt=""
               className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
               style={{ filter: 'brightness(1.15) saturate(1.1)' }}
