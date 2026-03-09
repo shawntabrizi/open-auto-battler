@@ -6,6 +6,48 @@ import { getCardEmoji } from '../utils/emoji';
 import { getCardArtMd } from '../utils/cardArt';
 import { formatAbilitySentence } from '../utils/abilityText';
 
+/** Card art image with loading state — remount via key={card.id} to reset on card change. */
+function CardArtImage({ card }: { card: CardView }) {
+  const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>('loading');
+
+  return (
+    <div className="relative w-full aspect-[3/4] bg-warm-800 rounded-lg lg:rounded-xl border-2 border-warm-700 overflow-hidden shadow-inner">
+      {/* Emoji shown while loading or on error */}
+      {status !== 'loaded' && (
+        <div className="absolute inset-0 flex items-center justify-center bg-warm-800">
+          <span className={`text-5xl ${status === 'loading' ? 'animate-pulse' : ''}`}>
+            {getCardEmoji(card.id)}
+          </span>
+        </div>
+      )}
+      {status !== 'error' && (
+        <img
+          src={getCardArtMd(card.id)}
+          alt={card.name}
+          className={`w-full h-full object-cover object-[center_30%] ${status !== 'loaded' ? 'opacity-0' : ''}`}
+          style={{ filter: 'brightness(1.1) saturate(1.1)' }}
+          onLoad={() => setStatus('loaded')}
+          onError={() => setStatus('error')}
+        />
+      )}
+      {/* Name overlay at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 lg:p-3">
+        <h2 className="text-sm lg:text-xl font-bold text-white leading-tight truncate" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+          {card.name}
+        </h2>
+        <div className="flex gap-1.5 mt-1">
+          <span className="px-1.5 py-0.5 bg-red-900/60 text-red-400 border border-red-800/50 rounded text-[10px] lg:text-xs font-bold">
+            ATK: {card.attack}
+          </span>
+          <span className="px-1.5 py-0.5 bg-green-900/60 text-green-400 border border-green-800/50 rounded text-[10px] lg:text-xs font-bold">
+            HP: {card.health}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const STATUS_MASK_KEYS = new Set(['base_statuses', 'perm_statuses', 'active_statuses', 'statuses']);
 
 function stringifyWithCompactStatusMasks(value: unknown): string {
@@ -131,42 +173,9 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
           </div>
         )}
 
-        {/* Card Basic Info */}
-        <div className="card-info flex items-center gap-2 lg:gap-4 mb-3 lg:mb-6">
-          <div className="card-emoji w-12 h-12 lg:w-20 lg:h-20 bg-warm-800 rounded-lg lg:rounded-xl border-2 border-warm-700 flex items-center justify-center text-2xl lg:text-4xl shadow-inner flex-shrink-0 overflow-hidden">
-            {(() => {
-              const mdSrc = getCardArtMd(card.id);
-              if (!mdSrc) return getCardEmoji(card.id);
-              return (
-                <img
-                  src={mdSrc}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Replace with emoji on load failure
-                    const parent = (e.target as HTMLElement).parentElement;
-                    if (parent) {
-                      (e.target as HTMLElement).remove();
-                      parent.textContent = getCardEmoji(card.id);
-                    }
-                  }}
-                />
-              );
-            })()}
-          </div>
-          <div className="card-stats min-w-0">
-            <h2 className="card-name text-base lg:text-2xl font-bold text-white leading-tight truncate">
-              {card.name}
-            </h2>
-            <div className="flex gap-1 lg:gap-2 mt-1">
-              <span className="px-1.5 lg:px-2 py-0.5 bg-red-900/50 text-red-400 border border-red-800 rounded text-[10px] lg:text-xs font-bold">
-                ATK: {card.attack}
-              </span>
-              <span className="px-1.5 lg:px-2 py-0.5 bg-green-900/50 text-green-400 border border-green-800 rounded text-[10px] lg:text-xs font-bold">
-                HP: {card.health}
-              </span>
-            </div>
-          </div>
+        {/* Card Art — full width */}
+        <div className="mb-3 lg:mb-6">
+          <CardArtImage key={card.id} card={card} />
         </div>
 
         {/* Ability Section */}

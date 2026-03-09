@@ -1,8 +1,9 @@
 export const IPFS_GATEWAYS = [
-  'https://gateway.pinata.cloud/ipfs/',
+  'https://w3s.link/ipfs/',
+  'https://dweb.link/ipfs/',
   'https://ipfs.io/ipfs/',
   'https://flk-ipfs.xyz/ipfs/',
-  'https://w3s.link/ipfs/',
+  'https://gateway.pinata.cloud/ipfs/',
 ];
 
 const DEFAULT_GATEWAY = IPFS_GATEWAYS[0];
