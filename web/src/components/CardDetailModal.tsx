@@ -2,11 +2,7 @@ import React from 'react';
 import { useGameStore } from '../store/gameStore';
 import type { CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
-import {
-  formatAbilityEffect,
-  formatAbilitySummary,
-  formatAbilityTrigger,
-} from '../utils/abilityText';
+import { formatAbilitySentence } from '../utils/abilityText';
 
 const STATUS_MASK_KEYS = new Set(['base_statuses', 'perm_statuses', 'active_statuses', 'statuses']);
 
@@ -96,15 +92,11 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
                 key={index}
                 className="mb-4 p-4 bg-warm-800/50 rounded-lg border border-warm-700"
               >
-                <h3 className="text-lg font-bold text-yellow-400 mb-2">Ability {index + 1}</h3>
-                <div className="text-sm text-warm-300 mb-2">
-                  <strong>Trigger:</strong> {formatAbilityTrigger(ability.trigger)}
-                </div>
+                <h3 className="text-lg font-bold text-yellow-400 mb-2">
+                  {allAbilities.length > 1 ? `Ability ${index + 1}` : 'Ability'}
+                </h3>
                 <div className="text-sm text-white">
-                  {formatAbilitySummary(ability, { resolveCardName })}
-                </div>
-                <div className="text-xs text-warm-400 mt-2 italic">
-                  {formatAbilityEffect(ability.effect, { resolveCardName })}
+                  {formatAbilitySentence(ability, { resolveCardName })}
                 </div>
               </div>
             ))}

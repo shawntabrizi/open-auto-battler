@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import type { CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
-import {
-  formatAbilityEffect,
-  formatAbilitySummary,
-  formatAbilityTrigger,
-} from '../utils/abilityText';
+import { formatAbilitySentence } from '../utils/abilityText';
 
 const STATUS_MASK_KEYS = new Set(['base_statuses', 'perm_statuses', 'active_statuses', 'statuses']);
 
@@ -70,10 +66,7 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
   } = useGameStore();
 
   const resolvedMode: CardDetailPanelMode = mode ?? { type: 'standard' };
-  const resolveCardName = React.useCallback(
-    (cardId: number) => cardNameMap[cardId],
-    [cardNameMap]
-  );
+  const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
   const cardRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(card), [card]);
   const gameViewRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(view), [view]);
 
@@ -166,21 +159,10 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
                 className="mb-2 lg:mb-4 p-2 lg:p-3 bg-warm-800/50 rounded-lg border border-warm-700"
               >
                 <h3 className="text-xs lg:text-md font-bold text-yellow-400 mb-1 lg:mb-2">
-                  Ability {index + 1}
+                  {allAbilities.length > 1 ? `Ability ${index + 1}` : 'Ability'}
                 </h3>
-                <div className="text-[10px] lg:text-xs text-warm-300 mb-1 lg:mb-2">
-                  <strong>Trigger:</strong> {formatAbilityTrigger(ability.trigger)}
-                </div>
-                {ability.max_triggers && (
-                  <div className="text-[10px] lg:text-xs text-orange-400 mb-1 lg:mb-2">
-                    <strong>Max:</strong> {ability.max_triggers}
-                  </div>
-                )}
                 <div className="text-[10px] lg:text-sm text-warm-200 bg-warm-950/50 p-1.5 lg:p-2 rounded border border-warm-700/50 italic">
-                  "{formatAbilitySummary(ability, { resolveCardName })}"
-                </div>
-                <div className="mt-1 lg:mt-2 text-[10px] lg:text-xs text-blue-400 font-semibold">
-                  {formatAbilityEffect(ability.effect, { resolveCardName })}
+                  {formatAbilitySentence(ability, { resolveCardName })}
                 </div>
               </div>
             ))}

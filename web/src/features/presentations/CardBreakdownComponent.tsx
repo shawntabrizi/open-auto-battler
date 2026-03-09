@@ -1,7 +1,7 @@
 import { useGameStore } from '../../store/gameStore';
 import { getCardEmoji } from '../../utils/emoji';
 import type { CardView } from '../../types';
-import { formatAbilitySummary, formatAbilityTrigger } from '../../utils/abilityText';
+import { formatAbilitySentence } from '../../utils/abilityText';
 
 /**
  * A self-contained card detail breakdown for presentations.
@@ -33,12 +33,11 @@ export function CardBreakdownComponent({ card }: { card: CardView }) {
 
       {allAbilities.map((ability, index) => (
         <div key={index} className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-          <h3 className="text-sm font-bold text-yellow-400 mb-1">Ability {index + 1}</h3>
-          <div className="text-xs text-gray-300 mb-1">
-            <strong>Trigger:</strong> {formatAbilityTrigger(ability.trigger)}
-          </div>
+          <h3 className="text-sm font-bold text-yellow-400 mb-1">
+            {allAbilities.length > 1 ? `Ability ${index + 1}` : 'Ability'}
+          </h3>
           <div className="text-sm text-gray-200 bg-gray-900/50 p-2 rounded border border-gray-700/50 italic">
-            "{formatAbilitySummary(ability, { resolveCardName })}"
+            {formatAbilitySentence(ability, { resolveCardName })}
           </div>
         </div>
       ))}

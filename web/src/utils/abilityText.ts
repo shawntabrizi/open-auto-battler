@@ -19,6 +19,11 @@ export interface AbilityTextOptions {
   resolveCardName?: (cardId: number) => string | undefined;
 }
 
+function lowercaseFirst(text: string): string {
+  if (!text) return text;
+  return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
 function formatCompareOp(op: CompareOp): string {
   switch (op) {
     case 'GreaterThan':
@@ -222,30 +227,94 @@ function formatShopCondition(condition: ShopCondition): string {
   return condition.data.map(formatShopMatcher).join(' or ');
 }
 
+function formatAbilityConditions(ability: AnyAbility): string {
+  if (ability.conditions.length === 0) {
+    return '';
+  }
+
+  const text =
+    'trigger' in ability &&
+    (ability.trigger === 'OnBuy' ||
+      ability.trigger === 'OnSell' ||
+      ability.trigger === 'OnShopStart' ||
+      ability.trigger === 'AfterLoss' ||
+      ability.trigger === 'AfterWin' ||
+      ability.trigger === 'AfterDraw')
+      ? (ability.conditions as ShopCondition[]).map(formatShopCondition).join(' and ')
+      : (ability.conditions as BattleCondition[]).map(formatBattleCondition).join(' and ');
+
+  return ` if ${text}`;
+}
+
+function formatTriggerClause(trigger: string): string {
+  switch (trigger) {
+    case 'OnStart':
+      return 'At battle start';
+    case 'OnFaint':
+      return 'When this dies';
+    case 'OnAllyFaint':
+      return 'When a friendly unit dies';
+    case 'OnHurt':
+      return 'When this is hurt';
+    case 'OnBuy':
+      return 'When bought';
+    case 'OnSell':
+      return 'When sold';
+    case 'OnShopStart':
+      return 'At shop start';
+    case 'AfterLoss':
+      return 'After a loss';
+    case 'AfterWin':
+      return 'After a win';
+    case 'AfterDraw':
+      return 'After a draw';
+    case 'OnSpawn':
+      return 'When this is spawned';
+    case 'OnAllySpawn':
+      return 'When a friendly unit is spawned';
+    case 'OnEnemySpawn':
+      return 'When an enemy is spawned';
+    case 'BeforeUnitAttack':
+      return 'Before attacking';
+    case 'AfterUnitAttack':
+      return 'After attacking';
+    case 'BeforeAnyAttack':
+      return 'Before any attack';
+    case 'AfterAnyAttack':
+      return 'After any attack';
+    default:
+      return formatAbilityTrigger(trigger);
+  }
+}
+
 export function formatAbilitySummary(
   ability: AnyAbility,
   options: AbilityTextOptions = {}
 ): string {
   const effect = formatAbilityEffect(ability.effect as BattleEffect | ShopEffect, options);
-  const conditionText =
-    ability.conditions.length === 0
-      ? ''
-      : ` if ${
-          'trigger' in ability &&
-          (ability.trigger === 'OnBuy' ||
-            ability.trigger === 'OnSell' ||
-            ability.trigger === 'OnShopStart' ||
-            ability.trigger === 'AfterLoss' ||
-            ability.trigger === 'AfterWin' ||
-            ability.trigger === 'AfterDraw')
-            ? (ability.conditions as ShopCondition[]).map(formatShopCondition).join(' and ')
-            : (ability.conditions as BattleCondition[]).map(formatBattleCondition).join(' and ')
-        }`;
+  const conditionText = formatAbilityConditions(ability);
   const triggerLimit =
     ability.max_triggers == null
       ? ''
       : ` Max ${ability.max_triggers} trigger${ability.max_triggers === 1 ? '' : 's'}.`;
   return `${effect}${conditionText}.${triggerLimit}`.trim();
+}
+
+export function formatAbilitySentence(
+  ability: AnyAbility,
+  options: AbilityTextOptions = {}
+): string {
+  const trigger = formatTriggerClause(ability.trigger);
+  const effect = lowercaseFirst(
+    formatAbilityEffect(ability.effect as BattleEffect | ShopEffect, options)
+  );
+  const conditionText = formatAbilityConditions(ability);
+  const triggerLimit =
+    ability.max_triggers == null
+      ? ''
+      : ` (up to ${ability.max_triggers} trigger${ability.max_triggers === 1 ? '' : 's'})`;
+
+  return `${trigger}, ${effect}${conditionText}${triggerLimit}.`;
 }
 
 export function formatNamedAbility(
