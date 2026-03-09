@@ -153,7 +153,7 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
                 }}
                 className="w-full btn btn-danger text-[10px] lg:text-sm py-1.5 lg:py-2"
               >
-                Burn (+{card.burn_value})
+                Burn (+{card.burn_value} Mana)
               </button>
             ) : (
               // Hand card actions
@@ -167,7 +167,7 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
                   }}
                   className="w-full btn btn-danger text-[10px] lg:text-sm py-1.5 lg:py-2"
                 >
-                  Burn (+{card.burn_value})
+                  Burn (+{card.burn_value} Mana)
                 </button>
               </>
             )}
