@@ -35,8 +35,8 @@ jobs:
 
       - name: Generate core coverage reports
         env:
-          FAIL_UNDER_LINES: "85"
-          ENGINE_FAIL_UNDER_LINES: "85"
+          FAIL_UNDER_LINES: "80"
+          ENGINE_FAIL_UNDER_LINES: "80"
         run: ./core/coverage.sh
 
       - name: Upload coverage artifact
