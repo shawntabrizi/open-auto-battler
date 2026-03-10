@@ -131,7 +131,6 @@ fn test_start_game() {
 
         // Verify game exists in storage
         let session = ActiveGame::<Test>::get(account_id).unwrap();
-        assert_eq!(session.owner, account_id);
         assert_eq!(session.state.round, 1);
         assert_eq!(session.state.phase, GamePhase::Shop);
         assert_eq!(session.state.hand.len(), 5); // HAND_SIZE cards drawn from bag

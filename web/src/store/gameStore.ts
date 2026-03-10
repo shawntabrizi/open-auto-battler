@@ -8,7 +8,7 @@ interface SetMeta {
   name: string;
 }
 
-interface LocalSessionSnapshot {
+interface GameSessionSnapshot {
   state: {
     bag: number[];
     hand: number[];
@@ -27,7 +27,7 @@ interface LocalSessionSnapshot {
 
 interface PersistedLocalSession {
   version: 1;
-  session: LocalSessionSnapshot;
+  session: GameSessionSnapshot;
   savedAt: number;
 }
 
@@ -44,7 +44,7 @@ interface GameEngine {
   continue_after_battle: () => void;
   new_run: (seed: bigint) => void;
   get_state: () => any;
-  get_local_session: () => LocalSessionSnapshot;
+  get_local_session: () => GameSessionSnapshot;
   get_board: () => any;
   resolve_battle_p2p: (player_board: any, enemy_board: any, seed: bigint) => any;
   get_commit_action: () => any;
@@ -64,7 +64,7 @@ interface GameEngine {
   // Universal Bridge methods
   // Note: seed is bigint because wasm-bindgen binds Rust u64 to JS BigInt
   init_from_scale: (session: Uint8Array, cardSet: Uint8Array) => void;
-  restore_local_session: (session: LocalSessionSnapshot) => void;
+  restore_local_session: (session: GameSessionSnapshot) => void;
 }
 
 interface WasmModule {
@@ -181,7 +181,7 @@ function loadPersistedLocalSession(): PersistedLocalSession | null {
   }
 }
 
-function savePersistedLocalSession(session: LocalSessionSnapshot) {
+function savePersistedLocalSession(session: GameSessionSnapshot) {
   const payload: PersistedLocalSession = {
     version: 1,
     session,

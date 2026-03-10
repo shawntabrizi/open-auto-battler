@@ -88,6 +88,14 @@ pub struct LocalGameState {
     pub game_seed: u64,
 }
 
+/// A resumable game session.
+#[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, PartialEq)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct GameSession {
+    pub state: LocalGameState,
+    pub set_id: u32,
+}
+
 /// The complete game state
 #[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, PartialEq)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]

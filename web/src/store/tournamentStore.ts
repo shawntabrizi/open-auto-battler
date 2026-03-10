@@ -237,11 +237,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
         const gameRaw = Binary.fromHex(gameRawHex).asBytes();
         const cardSetRaw = Binary.fromHex(cardSetRawHex).asBytes();
 
-        // Trim trailing 4 bytes (tournament_id: u32) from TournamentGameSession
-        // to make it compatible with GameSession SCALE layout
-        const trimmedGameRaw = gameRaw.slice(0, gameRaw.length - 4);
-
-        engine.init_from_scale(trimmedGameRaw, cardSetRaw);
+        engine.init_from_scale(gameRaw, cardSetRaw);
 
         const view = engine.get_view();
         const cardSet = engine.get_card_set();

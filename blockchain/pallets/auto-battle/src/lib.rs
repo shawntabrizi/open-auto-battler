@@ -30,7 +30,8 @@ pub mod pallet {
     use oab_core::bounded::{
         BoundedBattleAbility as CoreBoundedBattleAbility, BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
-        BoundedGameState as CoreBoundedGameState, BoundedGhostBoard as CoreBoundedGhostBoard,
+        BoundedGameSession as CoreBoundedGameSession, BoundedGameState as CoreBoundedGameState,
+        BoundedGhostBoard as CoreBoundedGhostBoard,
         BoundedLocalGameState as CoreBoundedLocalGameState,
         BoundedShopAbility as CoreBoundedShopAbility, GhostBoardUnit as CoreGhostBoardUnit,
         MatchmakingBracket,
@@ -108,6 +109,13 @@ pub mod pallet {
 
     /// Type alias for the bounded local game state using pallet config.
     pub type BoundedLocalGameState<T> = CoreBoundedLocalGameState<
+        <T as Config>::MaxBagSize,
+        <T as Config>::MaxBoardSize,
+        <T as Config>::MaxHandActions,
+    >;
+
+    /// Type alias for the bounded game session using pallet config.
+    pub type BoundedGameSession<T> = CoreBoundedGameSession<
         <T as Config>::MaxBagSize,
         <T as Config>::MaxBoardSize,
         <T as Config>::MaxHandActions,
@@ -221,15 +229,6 @@ pub mod pallet {
         pub creator: T::AccountId,
     }
 
-    /// A game session stored on-chain.
-    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
-    #[scale_info(skip_type_params(T))]
-    pub struct GameSession<T: Config> {
-        pub state: BoundedLocalGameState<T>,
-        pub set_id: u32,
-        pub owner: T::AccountId,
-    }
-
     /// A ghost entry that includes the owner who created the board.
     /// Used for matchmaking storage.
     #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
@@ -322,20 +321,21 @@ pub mod pallet {
         pub total_games: u32,
     }
 
-    /// A tournament game session (separate from regular GameSession).
+    /// A tournament game session extends the normal session payload with tournament metadata.
+    /// The field order intentionally starts with the shared game session prefix so the browser
+    /// WASM engine can decode the normal session fields and ignore the trailing tournament ID.
     #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
     #[scale_info(skip_type_params(T))]
     pub struct TournamentGameSession<T: Config> {
         pub state: BoundedLocalGameState<T>,
         pub set_id: u32,
-        pub owner: T::AccountId,
         pub tournament_id: u32,
     }
 
     /// Map of Active Games: AccountId -> GameSession
     #[pallet::storage]
     pub type ActiveGame<T: Config> =
-        StorageMap<_, Blake2_128Concat, T::AccountId, GameSession<T>, OptionQuery>;
+        StorageMap<_, Blake2_128Concat, T::AccountId, BoundedGameSession<T>, OptionQuery>;
 
     /// Map of Card Sets: u32 -> CardSet
     #[pallet::storage]
@@ -708,11 +708,7 @@ pub mod pallet {
 
             let (state, seed) = Self::initialize_game_state(&who, set_id, b"start_game")?;
 
-            let session = GameSession {
-                state,
-                set_id,
-                owner: who.clone(),
-            };
+            let session = BoundedGameSession::<T> { state, set_id };
 
             ActiveGame::<T>::insert(&who, session);
             Self::deposit_event(Event::GameStarted { owner: who, seed });
@@ -1049,10 +1045,9 @@ pub mod pallet {
             let (state, seed) =
                 Self::initialize_game_state(&who, config.set_id, b"tournament_start")?;
 
-            let session = TournamentGameSession {
+            let session = TournamentGameSession::<T> {
                 state,
                 set_id: config.set_id,
-                owner: who.clone(),
                 tournament_id,
             };
 
