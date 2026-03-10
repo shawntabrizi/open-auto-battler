@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 interface PageHeaderProps {
   /** Route to navigate back to */
   backTo: string;
+  /** Optional router state passed with the back link */
+  backState?: unknown;
   /** Label for the back link (e.g., "Menu", "Settings") */
   backLabel?: string;
   /** Page title */
@@ -26,6 +28,7 @@ interface PageHeaderProps {
  */
 export function PageHeader({
   backTo,
+  backState,
   backLabel = 'Menu',
   title,
   subtitle,
@@ -36,6 +39,7 @@ export function PageHeader({
   const backElement = (
     <Link
       to={backTo}
+      state={backState}
       className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm shrink-0"
     >
       <span>&larr;</span>
@@ -76,9 +80,7 @@ export function PageHeader({
       >
         {title}
       </h1>
-      {subtitle && (
-        <p className="text-warm-500 text-xs lg:text-sm mt-0.5">{subtitle}</p>
-      )}
+      {subtitle && <p className="text-warm-500 text-xs lg:text-sm mt-0.5">{subtitle}</p>}
       {right && <div className="mt-2 flex items-center gap-3">{right}</div>}
     </div>
   );
@@ -89,14 +91,17 @@ export function PageHeader({
  */
 export function BackLink({
   to,
+  state,
   label = 'Menu',
 }: {
   to: string;
+  state?: unknown;
   label?: string;
 }) {
   return (
     <Link
       to={to}
+      state={state}
       className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm"
     >
       <span>&larr;</span>

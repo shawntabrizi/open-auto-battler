@@ -80,6 +80,7 @@ export const CustomizePage: React.FC = () => {
   const location = useLocation();
   const isBlockchainRoute = location.pathname.startsWith('/blockchain');
   const backLink = isBlockchainRoute ? '/blockchain' : '/settings';
+  const backState = isBlockchainRoute ? undefined : location.state;
 
   useEffect(() => {
     if (isConnected && api && selectedAccount) {
@@ -146,7 +147,11 @@ export const CustomizePage: React.FC = () => {
               </Link>
             )}
             {!isConnected && (
-              <Link to="/settings/network" className="mt-2 text-yellow-500 text-xs hover:underline">
+              <Link
+                to="/settings/network"
+                state={location.state}
+                className="mt-2 text-yellow-500 text-xs hover:underline"
+              >
                 Network Settings
               </Link>
             )}
@@ -214,7 +219,11 @@ export const CustomizePage: React.FC = () => {
       {/* Header */}
       <div className="p-3 lg:p-6 shrink-0">
         <div className="flex items-center justify-between mb-1">
-          <BackLink to={backLink} label={isBlockchainRoute ? 'Creator Hub' : 'Settings'} />
+          <BackLink
+            to={backLink}
+            state={backState}
+            label={isBlockchainRoute ? 'Creator Hub' : 'Settings'}
+          />
           {isBlockchainRoute && (
             <Link
               to="/blockchain/creator"

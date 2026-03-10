@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import type { BoardUnitView, CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
@@ -104,6 +104,7 @@ type TabType = 'card' | 'rules' | 'mode';
 export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     view,
     cardNameMap,
@@ -407,10 +408,14 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
         <div className="p-4 bg-warm-800/50 rounded-lg border border-warm-700">
           <div className="space-y-3">
             <button
-              onClick={() => navigate('/blockchain/customize')}
+              onClick={() =>
+                navigate('/settings', {
+                  state: { returnTo: `${location.pathname}${location.search}` },
+                })
+              }
               className="w-full btn bg-yellow-900/50 hover:bg-yellow-800 text-yellow-200 border border-yellow-700 text-xs py-2"
             >
-              Customize
+              Settings
             </button>
             <button
               onClick={() => navigate('/')}
