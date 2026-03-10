@@ -376,150 +376,160 @@ export function GhostBrowserPage() {
   }
 
   return (
-    <div className="min-h-screen min-h-svh bg-warm-950 text-white overflow-y-auto">
-      <CardDetailPanel card={detailCard} isVisible={true} mode={{ type: 'readOnly' }} />
+    <div className="h-screen h-svh bg-warm-950 text-white overflow-hidden flex">
+      <CardDetailPanel
+        card={detailCard}
+        isVisible={true}
+        mode={{ type: 'readOnly' }}
+        layout="contained"
+      />
 
-      <div className="ml-44 lg:ml-80">
-        <div className="w-full max-w-6xl mx-auto p-3 lg:p-4">
+      <div className="flex-1 min-w-0 h-full overflow-y-auto">
+        <div className="sticky top-0 z-20 border-b border-warm-900/80 bg-warm-950/95 backdrop-blur-sm">
           <PageHeader
             backTo="/blockchain/creator"
             backLabel="Creator Hub"
             title="Ghost Browser"
-            subtitle="Active ghost opponents only. Click any ghost card to inspect it in the side panel."
+            variant="toolbar"
             right={
               <button
                 onClick={() => setRefreshNonce((value) => value + 1)}
                 disabled={isLoadingGhosts || selectedSetId === null}
-                className="rounded-lg border border-warm-600 px-3 py-1.5 text-xs font-bold text-warm-200 transition-colors hover:border-warm-400 hover:text-white disabled:cursor-not-allowed disabled:border-warm-800 disabled:text-warm-600"
+                className="rounded-lg border border-warm-600 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-warm-200 transition-colors hover:border-warm-400 hover:text-white disabled:cursor-not-allowed disabled:border-warm-800 disabled:text-warm-600 lg:px-3 lg:py-1.5 lg:text-xs"
               >
                 {isLoadingGhosts ? 'Refreshing...' : 'Refresh'}
               </button>
             }
           />
 
-          <div className="rounded-2xl border border-warm-800 bg-warm-900/40 p-3 lg:p-4">
-            <div className="flex flex-wrap items-center gap-2 text-[10px] lg:text-xs text-warm-400 uppercase tracking-[0.25em]">
-              <span>Live Ghost Pool</span>
-              <span className="text-warm-700">•</span>
-              <span>
-                {blockNumber !== null ? `Block #${blockNumber.toLocaleString()}` : 'Connected'}
-              </span>
-              {selectedSet && (
-                <>
-                  <span className="text-warm-700">•</span>
-                  <span>
-                    {selectedSet.name} (
-                    {Array.isArray(selectedSet.cards) ? selectedSet.cards.length : 0} cards)
+          <div className="px-2 pb-2 lg:px-4 lg:pb-3">
+            <div className="rounded-2xl border border-warm-800 bg-warm-900/40 p-2 lg:p-3">
+              <div className="flex flex-wrap items-center gap-1.5 text-[9px] text-warm-400 uppercase tracking-[0.18em] lg:gap-2 lg:text-[11px] lg:tracking-[0.25em]">
+                <span>Live Ghost Pool</span>
+                <span className="text-warm-700">•</span>
+                <span>
+                  {blockNumber !== null ? `Block #${blockNumber.toLocaleString()}` : 'Connected'}
+                </span>
+                {selectedSet && (
+                  <>
+                    <span className="text-warm-700">•</span>
+                    <span>
+                      {selectedSet.name} (
+                      {Array.isArray(selectedSet.cards) ? selectedSet.cards.length : 0} cards)
+                    </span>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-2 grid grid-cols-4 gap-1 lg:mt-3 lg:gap-2">
+                <label className="flex min-w-0 flex-col gap-1 lg:gap-2">
+                  <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-warm-500 lg:text-[11px] lg:tracking-[0.2em]">
+                    <span className="lg:hidden">Set</span>
+                    <span className="hidden lg:inline">Set</span>
                   </span>
-                </>
-              )}
-            </div>
+                  <select
+                    value={selectedSetId ?? ''}
+                    onChange={(event) => setSelectedSetId(Number(event.target.value))}
+                    disabled={sortedSets.length === 0}
+                    className="min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-yellow-500/50 disabled:cursor-not-allowed disabled:text-warm-600 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                  >
+                    {sortedSets.length === 0 ? (
+                      <option value="">No sets available</option>
+                    ) : (
+                      sortedSets.map((set) => (
+                        <option key={set.id} value={set.id}>
+                          {set.name} (#{set.id})
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </label>
 
-            <div className="mt-4 grid gap-3 lg:grid-cols-4">
-              <label className="flex flex-col gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-500">
-                  Set
-                </span>
-                <select
-                  value={selectedSetId ?? ''}
-                  onChange={(event) => setSelectedSetId(Number(event.target.value))}
-                  disabled={sortedSets.length === 0}
-                  className="rounded-xl border border-warm-700 bg-warm-950/70 px-3 py-3 text-sm text-white outline-none transition-colors focus:border-yellow-500/50 disabled:cursor-not-allowed disabled:text-warm-600"
-                >
-                  {sortedSets.length === 0 ? (
-                    <option value="">No sets available</option>
-                  ) : (
-                    sortedSets.map((set) => (
-                      <option key={set.id} value={set.id}>
-                        {set.name} (#{set.id})
+                <label className="flex min-w-0 flex-col gap-1 lg:gap-2">
+                  <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-warm-500 lg:text-[11px] lg:tracking-[0.2em]">
+                    Round
+                  </span>
+                  <select
+                    value={roundFilter}
+                    onChange={(event) => setRoundFilter(event.target.value)}
+                    className="min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-yellow-500/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                  >
+                    <option value={ALL_FILTER}>All rounds</option>
+                    {filterOptions.rounds.map((round) => (
+                      <option key={round} value={round}>
+                        Round {round}
                       </option>
-                    ))
-                  )}
-                </select>
-              </label>
+                    ))}
+                  </select>
+                </label>
 
-              <label className="flex flex-col gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-500">
-                  Round
+                <label className="flex min-w-0 flex-col gap-1 lg:gap-2">
+                  <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-warm-500 lg:text-[11px] lg:tracking-[0.2em]">
+                    Wins
+                  </span>
+                  <select
+                    value={winsFilter}
+                    onChange={(event) => setWinsFilter(event.target.value)}
+                    className="min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-yellow-500/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                  >
+                    <option value={ALL_FILTER}>All wins</option>
+                    {filterOptions.wins.map((wins) => (
+                      <option key={wins} value={wins}>
+                        {wins} wins
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="flex min-w-0 flex-col gap-1 lg:gap-2">
+                  <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-warm-500 lg:text-[11px] lg:tracking-[0.2em]">
+                    Lives
+                  </span>
+                  <select
+                    value={livesFilter}
+                    onChange={(event) => setLivesFilter(event.target.value)}
+                    className="min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-yellow-500/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                  >
+                    <option value={ALL_FILTER}>All lives</option>
+                    {filterOptions.lives.map((lives) => (
+                      <option key={lives} value={lives}>
+                        {lives} lives
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="mt-2 flex flex-wrap items-center gap-1 text-[9px] text-warm-300 lg:mt-3 lg:gap-2 lg:text-xs">
+                <span className="rounded-full border border-warm-700 bg-warm-950/70 px-2 py-1 lg:px-3 lg:py-1.5">
+                  {filteredGhosts.length} shown
                 </span>
-                <select
-                  value={roundFilter}
-                  onChange={(event) => setRoundFilter(event.target.value)}
-                  className="rounded-xl border border-warm-700 bg-warm-950/70 px-3 py-3 text-sm text-white outline-none transition-colors focus:border-yellow-500/50"
-                >
-                  <option value={ALL_FILTER}>All rounds</option>
-                  {filterOptions.rounds.map((round) => (
-                    <option key={round} value={round}>
-                      Round {round}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-500">
-                  Wins
+                <span className="rounded-full border border-warm-700 bg-warm-950/70 px-2 py-1 lg:px-3 lg:py-1.5">
+                  {bracketGroups.length} brackets
                 </span>
-                <select
-                  value={winsFilter}
-                  onChange={(event) => setWinsFilter(event.target.value)}
-                  className="rounded-xl border border-warm-700 bg-warm-950/70 px-3 py-3 text-sm text-white outline-none transition-colors focus:border-yellow-500/50"
-                >
-                  <option value={ALL_FILTER}>All wins</option>
-                  {filterOptions.wins.map((wins) => (
-                    <option key={wins} value={wins}>
-                      {wins} wins
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-500">
-                  Lives
+                <span className="hidden sm:inline-flex rounded-full border border-warm-700 bg-warm-950/70 px-2 py-1 lg:px-3 lg:py-1.5">
+                  {ghosts.length} in set
                 </span>
-                <select
-                  value={livesFilter}
-                  onChange={(event) => setLivesFilter(event.target.value)}
-                  className="rounded-xl border border-warm-700 bg-warm-950/70 px-3 py-3 text-sm text-white outline-none transition-colors focus:border-yellow-500/50"
-                >
-                  <option value={ALL_FILTER}>All lives</option>
-                  {filterOptions.lives.map((lives) => (
-                    <option key={lives} value={lives}>
-                      {lives} lives
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-warm-300">
-              <span className="rounded-full border border-warm-700 bg-warm-950/70 px-3 py-1.5">
-                {filteredGhosts.length} active boards shown
-              </span>
-              <span className="rounded-full border border-warm-700 bg-warm-950/70 px-3 py-1.5">
-                {bracketGroups.length} brackets shown
-              </span>
-              <span className="rounded-full border border-warm-700 bg-warm-950/70 px-3 py-1.5">
-                {ghosts.length} active boards in set
-              </span>
-              <span className="rounded-full border border-warm-700 bg-warm-950/70 px-3 py-1.5">
-                {totalBracketCount} brackets in set
-              </span>
-              <span className="rounded-full border border-yellow-500/30 bg-yellow-500/10 px-3 py-1.5 text-yellow-100">
-                Tap cards for full details
-              </span>
+                <span className="hidden lg:inline-flex rounded-full border border-warm-700 bg-warm-950/70 px-3 py-1.5">
+                  {totalBracketCount} set brackets
+                </span>
+                <span className="rounded-full border border-yellow-500/30 bg-yellow-500/10 px-2 py-1 text-yellow-100 lg:px-3 lg:py-1.5">
+                  Inspect left
+                </span>
+              </div>
             </div>
           </div>
+        </div>
 
+        <div className="w-full max-w-none lg:max-w-6xl mx-auto p-2 lg:p-4 pb-6">
           {ghostError && (
-            <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
               {ghostError}
             </div>
           )}
 
           {!ghostError && sortedSets.length === 0 && (
-            <div className="mt-4 rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
+            <div className="rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
               <div className="text-sm font-bold text-white">No blockchain sets found</div>
               <p className="mt-2 text-sm text-warm-400">
                 Create or sync a set on-chain before browsing active ghosts.
@@ -528,7 +538,7 @@ export function GhostBrowserPage() {
           )}
 
           {!ghostError && sortedSets.length > 0 && isLoadingGhosts && ghosts.length === 0 && (
-            <div className="mt-4 rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center text-warm-400">
+            <div className="rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center text-warm-400">
               Loading active ghost opponents...
             </div>
           )}
@@ -538,7 +548,7 @@ export function GhostBrowserPage() {
             !isLoadingGhosts &&
             bracketGroups.length === 0 &&
             selectedSetId !== null && (
-              <div className="mt-4 rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
+              <div className="rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
                 <div className="text-sm font-bold text-white">
                   No active ghosts match these filters
                 </div>
@@ -549,13 +559,13 @@ export function GhostBrowserPage() {
               </div>
             )}
 
-          <div className="mt-4 flex flex-col gap-4 pb-6">
+          <div className="mt-3 flex flex-col gap-3 pb-6 lg:mt-4 lg:gap-4">
             {bracketGroups.map((group) => (
               <section
                 key={group.key}
-                className="rounded-3xl border border-warm-800 bg-gradient-to-br from-warm-900/70 to-warm-950/70 p-4 lg:p-5"
+                className="rounded-2xl border border-warm-800 bg-gradient-to-br from-warm-900/70 to-warm-950/70 p-2.5 lg:rounded-3xl lg:p-5"
               >
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <div className="text-[10px] font-heading uppercase tracking-[0.35em] text-warm-500">
                       Matchmaking Bracket
@@ -584,9 +594,9 @@ export function GhostBrowserPage() {
                     return (
                       <article
                         key={ghost.id}
-                        className="rounded-2xl border border-white/5 bg-warm-950/60 p-3 lg:p-4"
+                        className="rounded-2xl border border-white/5 bg-warm-950/60 p-2 lg:p-4"
                       >
-                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
                           <div className="min-w-0">
                             <div className="text-[10px] font-heading uppercase tracking-[0.3em] text-warm-500">
                               Pool Slot {ghost.poolIndex + 1}
@@ -611,8 +621,11 @@ export function GhostBrowserPage() {
                           </div>
                         </div>
 
-                        <div className="mt-4 overflow-x-auto pb-2">
-                          <div className="flex min-w-max gap-3 snap-x snap-mandatory">
+                        <div
+                          className="mt-2.5 overflow-x-auto pb-2 lg:mt-4"
+                          style={{ WebkitOverflowScrolling: 'touch' }}
+                        >
+                          <div className="flex min-w-max gap-2 lg:gap-3 snap-x snap-mandatory">
                             {paddedBoard(ghost.board).map((unit, index) => {
                               if (!unit) {
                                 return (

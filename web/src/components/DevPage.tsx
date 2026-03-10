@@ -13,6 +13,7 @@ const PAGES: Record<string, string> = {
   'Create Set': '/blockchain/create-set',
   Customize: '/blockchain/customize',
   'Mint NFT': '/blockchain/mint-nft',
+  'Ghost Browser': '/blockchain/ghosts',
   'Game Over (Victory)': '/dev/game-over?phase=victory',
   'Game Over (Defeat)': '/dev/game-over?phase=defeat',
 };
@@ -45,7 +46,9 @@ function IframeViewport({
   route: string;
 }) {
   const maxH = window.innerHeight * 0.85;
-  const scale = Math.min(1, maxH / height);
+  const desiredScale = Math.min(1, maxH / height);
+  const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+  const scale = isFirefox ? 1 : desiredScale;
   const src = `${window.location.origin}${window.location.pathname}#${route}`;
 
   return (
@@ -67,8 +70,8 @@ function IframeViewport({
           style={{
             width,
             height,
-            transform: `scale(${scale})`,
-            transformOrigin: 'top left',
+            transform: scale === 1 ? undefined : `scale(${scale})`,
+            transformOrigin: scale === 1 ? undefined : 'top left',
             border: 'none',
           }}
           title={label}
@@ -165,7 +168,7 @@ export function DevPage() {
       </div>
 
       {/* Viewports */}
-      <div className="flex-1 flex items-start justify-center gap-6 p-4 overflow-x-auto overflow-y-hidden">
+      <div className="flex-1 flex items-start justify-center gap-6 p-4 overflow-auto">
         {viewports.map((vp, i) => {
           const size = PRESETS[vp.preset];
           return (

@@ -96,11 +96,12 @@ export interface CardDetailPanelProps {
   card: CardView | BoardUnitView | null;
   isVisible: boolean;
   mode?: CardDetailPanelMode;
+  layout?: 'fixed' | 'contained';
 }
 
 type TabType = 'card' | 'rules' | 'mode';
 
-export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps) {
+export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
   const navigate = useNavigate();
   const {
@@ -120,6 +121,11 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
   const gameViewRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(view), [view]);
 
   if (!isVisible) return null;
+
+  const containerClassName =
+    layout === 'contained'
+      ? 'relative h-full min-h-0 w-40 sm:w-44 lg:w-80 shrink-0'
+      : 'fixed top-0 left-0 bottom-0 w-44 lg:w-80';
 
   // Get the selected hand/board index for actions
   const selectedHandIndex = selection?.type === 'hand' ? selection.index : -1;
@@ -448,7 +454,9 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
   };
 
   return (
-    <div className="card-detail-panel fixed top-0 left-0 bottom-0 w-44 lg:w-80 bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30">
+    <div
+      className={`card-detail-panel ${containerClassName} bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30`}
+    >
       {/* Tabs */}
       <div className="flex border-b border-warm-800">
         <button
