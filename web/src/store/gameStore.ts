@@ -8,6 +8,29 @@ interface SetMeta {
   name: string;
 }
 
+interface LocalSessionSnapshot {
+  state: {
+    bag: number[];
+    hand: number[];
+    board: Array<any | null>;
+    mana_limit: number;
+    shop_mana: number;
+    round: number;
+    lives: number;
+    wins: number;
+    phase: string;
+    next_card_id: number;
+    game_seed: bigint | number | string;
+  };
+  set_id: number;
+}
+
+interface PersistedLocalSession {
+  version: 1;
+  session: LocalSessionSnapshot;
+  savedAt: number;
+}
+
 interface GameEngine {
   // Core methods
   get_view: () => any;
@@ -21,6 +44,7 @@ interface GameEngine {
   continue_after_battle: () => void;
   new_run: (seed: bigint) => void;
   get_state: () => any;
+  get_local_session: () => LocalSessionSnapshot;
   get_board: () => any;
   resolve_battle_p2p: (player_board: any, enemy_board: any, seed: bigint) => any;
   get_commit_action: () => any;
@@ -40,6 +64,7 @@ interface GameEngine {
   // Universal Bridge methods
   // Note: seed is bigint because wasm-bindgen binds Rust u64 to JS BigInt
   init_from_scale: (session: Uint8Array, cardSet: Uint8Array) => void;
+  restore_local_session: (session: LocalSessionSnapshot) => void;
 }
 
 interface WasmModule {
@@ -107,14 +132,69 @@ interface GameStore {
   setAfterBattleCallback: (cb: (() => void) | null) => void;
   mobileTab: 'hand' | 'board';
   setMobileTab: (tab: 'hand' | 'board') => void;
+  saveLocalResumePoint: () => void;
+  restoreLocalResumePoint: () => boolean;
+  clearLocalResumePoint: () => void;
 }
 
 let wasmInitialized = false;
 let initPromise: Promise<void> | null = null;
 let initEnginePromise: Promise<void> | null = null;
+const LOCAL_SESSION_STORAGE_KEY = 'localGameSessionV1';
 
 function buildCardNameMap(metas: Array<{ id: number; name: string }>): Record<number, string> {
   return Object.fromEntries(metas.map((meta) => [meta.id, meta.name]));
+}
+
+function localSessionJsonReplacer(_key: string, value: unknown): unknown {
+  if (typeof value === 'bigint') {
+    return { __bigint__: value.toString() };
+  }
+  return value;
+}
+
+function localSessionJsonReviver(_key: string, value: unknown): unknown {
+  if (
+    value &&
+    typeof value === 'object' &&
+    '__bigint__' in value &&
+    typeof (value as { __bigint__?: unknown }).__bigint__ === 'string'
+  ) {
+    return BigInt((value as { __bigint__: string }).__bigint__);
+  }
+  return value;
+}
+
+function loadPersistedLocalSession(): PersistedLocalSession | null {
+  try {
+    const raw = localStorage.getItem(LOCAL_SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw, localSessionJsonReviver) as PersistedLocalSession;
+    if (parsed?.version !== 1 || !parsed.session || typeof parsed.session.set_id !== 'number') {
+      localStorage.removeItem(LOCAL_SESSION_STORAGE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    localStorage.removeItem(LOCAL_SESSION_STORAGE_KEY);
+    return null;
+  }
+}
+
+function savePersistedLocalSession(session: LocalSessionSnapshot) {
+  const payload: PersistedLocalSession = {
+    version: 1,
+    session,
+    savedAt: Date.now(),
+  };
+  localStorage.setItem(
+    LOCAL_SESSION_STORAGE_KEY,
+    JSON.stringify(payload, localSessionJsonReplacer)
+  );
+}
+
+function clearPersistedLocalSession() {
+  localStorage.removeItem(LOCAL_SESSION_STORAGE_KEY);
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -216,6 +296,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         showSetPreview: false,
         previewCards: null,
       });
+      get().saveLocalResumePoint();
     } catch (err) {
       console.error('Failed to start game:', err);
       set({ error: String(err) });
@@ -393,7 +474,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       } else {
         // Local/P2P mode: advance round locally
         engine.continue_after_battle();
-        set({ view: engine.get_view(), showBattleOverlay: false, battleOutput: null });
+        const nextView = engine.get_view();
+        set({ view: nextView, showBattleOverlay: false, battleOutput: null });
+        if (nextView?.phase === 'victory' || nextView?.phase === 'defeat') {
+          clearPersistedLocalSession();
+        } else {
+          get().saveLocalResumePoint();
+        }
       }
     } catch (err) {
       console.error(err);
@@ -404,6 +491,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { engine } = get();
     if (!engine) return;
     try {
+      clearPersistedLocalSession();
       // Return to set selection screen
       set({
         view: null,
@@ -498,6 +586,60 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ afterBattleCallback: cb });
   },
   setMobileTab: (tab: 'hand' | 'board') => set({ mobileTab: tab }),
+  saveLocalResumePoint: () => {
+    const { engine, gameStarted, currentSetId } = get();
+    if (!engine || !gameStarted || currentSetId === null) {
+      clearPersistedLocalSession();
+      return;
+    }
+
+    try {
+      const session = engine.get_local_session();
+      if (!session?.state || session.state.phase !== 'Shop') {
+        clearPersistedLocalSession();
+        return;
+      }
+      savePersistedLocalSession(session);
+    } catch (err) {
+      console.error('Failed to save local resume point:', err);
+    }
+  },
+  restoreLocalResumePoint: () => {
+    const { engine } = get();
+    if (!engine) return false;
+
+    const persisted = loadPersistedLocalSession();
+    if (!persisted) return false;
+
+    try {
+      engine.load_card_set(persisted.session.set_id);
+      engine.restore_local_session(persisted.session);
+      set({
+        view: engine.get_view(),
+        cardSet: engine.get_card_set(),
+        battleOutput: null,
+        selection: null,
+        showBattleOverlay: false,
+        currentSetId: persisted.session.set_id,
+        gameStarted: true,
+        isLoading: false,
+        error: null,
+        showSetPreview: false,
+        previewCards: null,
+        startingLives: engine.get_starting_lives(),
+        winsToVictory: engine.get_wins_to_victory(),
+        mobileTab: 'hand',
+      });
+      return true;
+    } catch (err) {
+      console.error('Failed to restore local resume point:', err);
+      clearPersistedLocalSession();
+      return false;
+    }
+  },
+  clearLocalResumePoint: () => {
+    clearPersistedLocalSession();
+  },
 
   toggleShowRawJson: () => {
     set((state) => {

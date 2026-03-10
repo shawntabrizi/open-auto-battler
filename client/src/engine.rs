@@ -43,6 +43,13 @@ pub struct BattleOutput {
     pub round: u32, // The round this battle was for (for display during animation)
 }
 
+/// Local turn-start session snapshot, mirroring the on-chain session shape.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalSessionSnapshot {
+    pub state: LocalGameState,
+    pub set_id: u32,
+}
+
 /// Snapshot of turn state for undo functionality
 #[derive(Clone)]
 struct TurnSnapshot {
@@ -625,6 +632,23 @@ impl GameEngine {
         }
     }
 
+    /// Get the resumable local session payload (similar to the on-chain GameSession).
+    #[wasm_bindgen]
+    pub fn get_local_session(&self) -> JsValue {
+        let snapshot = LocalSessionSnapshot {
+            state: self.state.local_state.clone(),
+            set_id: self.state.set_id,
+        };
+
+        match serde_wasm_bindgen::to_value(&snapshot) {
+            Ok(val) => val,
+            Err(e) => {
+                log::error(&format!("get_local_session serialization failed: {:?}", e));
+                JsValue::NULL
+            }
+        }
+    }
+
     /// Get just the board state as JSON (for P2P battle sync)
     #[wasm_bindgen]
     pub fn get_board(&self) -> JsValue {
@@ -871,6 +895,27 @@ impl GameEngine {
         self.start_planning_phase();
 
         log::info("init_from_scale completed successfully");
+        Ok(())
+    }
+
+    /// Restore a local resumable session at the start of a player turn.
+    #[wasm_bindgen]
+    pub fn restore_local_session(&mut self, session_js: JsValue) -> Result<(), String> {
+        let session: LocalSessionSnapshot = serde_wasm_bindgen::from_value(session_js)
+            .map_err(|e| format!("Failed to parse local session: {:?}", e))?;
+
+        if session.state.phase != GamePhase::Shop {
+            return Err("Local session resume requires a shop-phase turn start".to_string());
+        }
+
+        let card_pool = std::mem::take(&mut self.state.card_pool);
+        self.state = GameState::reconstruct(card_pool, session.set_id, session.state);
+        self.set_id = self.state.set_id;
+        self.last_battle_output = None;
+        self.starting_lives = STARTING_LIVES;
+        self.wins_to_victory = WINS_TO_VICTORY;
+        self.start_planning_phase();
+
         Ok(())
     }
 }

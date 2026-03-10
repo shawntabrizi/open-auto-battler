@@ -34,9 +34,12 @@ export function LocalGamePage() {
     view,
     currentSetId,
     resolveMultiplayerBattle,
+    restoreLocalResumePoint,
   } = useGameStore();
 
   const [battleLoading, setBattleLoading] = useState(false);
+  const [resumeAttempted, setResumeAttempted] = useState(false);
+  const chainContentReady = allCards.length > 0 && availableSets.length > 0;
 
   useInitGuard(() => {
     void initEngine();
@@ -59,6 +62,23 @@ export function LocalGamePage() {
     if (!isConnected || !engine) return;
     hydrateGameEngineFromChainData();
   }, [allCards, availableSets, engine, hydrateGameEngineFromChainData, isConnected]);
+
+  useEffect(() => {
+    if (!engine || !engineReady || !chainContentReady || gameStarted || resumeAttempted) return;
+
+    const resumed = restoreLocalResumePoint();
+    if (resumed) {
+      toast.success('Resumed local run.');
+    }
+    setResumeAttempted(true);
+  }, [
+    chainContentReady,
+    engine,
+    engineReady,
+    gameStarted,
+    restoreLocalResumePoint,
+    resumeAttempted,
+  ]);
 
   const handleBattle = async () => {
     if (!view || currentSetId === null) {
@@ -85,8 +105,6 @@ export function LocalGamePage() {
       setBattleLoading(false);
     }
   };
-
-  const chainContentReady = allCards.length > 0 && availableSets.length > 0;
 
   if (!isConnected) {
     return (
