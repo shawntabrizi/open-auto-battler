@@ -14,6 +14,60 @@ fn bounded_set_name(name: &[u8]) -> BoundedVec<u8, <Test as crate::Config>::MaxS
     BoundedVec::try_from(name.to_vec()).unwrap()
 }
 
+fn sample_card_data(attack: i32, health: i32) -> crate::UserCardData<Test> {
+    crate::UserCardData::<Test> {
+        stats: oab_core::types::UnitStats { attack, health },
+        economy: oab_core::types::EconomyStats {
+            play_cost: 1,
+            burn_value: 1,
+        },
+        base_statuses: oab_core::types::StatusMask::empty(),
+        shop_abilities: BoundedVec::try_from(vec![]).unwrap(),
+        battle_abilities: BoundedVec::try_from(vec![]).unwrap(),
+    }
+}
+
+fn bounded_ghost_board(
+    units: Vec<oab_core::bounded::GhostBoardUnit>,
+) -> BoundedVec<oab_core::bounded::GhostBoardUnit, <Test as crate::Config>::MaxBoardSize> {
+    BoundedVec::try_from(units).unwrap()
+}
+
+fn ghost_unit(card_id: u32) -> oab_core::bounded::GhostBoardUnit {
+    oab_core::bounded::GhostBoardUnit {
+        card_id: oab_core::types::CardId(card_id),
+        perm_attack: 0,
+        perm_health: 0,
+        perm_statuses: oab_core::types::StatusMask::empty(),
+    }
+}
+
+fn create_custom_set(creator: u64, card_stats: &[(i32, i32)], name: &[u8]) -> (u32, Vec<u32>) {
+    let mut entries = Vec::new();
+    let mut card_ids = Vec::new();
+
+    for (attack, health) in card_stats.iter().copied() {
+        assert_ok!(AutoBattle::submit_card(
+            RuntimeOrigin::signed(creator),
+            sample_card_data(attack, health)
+        ));
+        let card_id = crate::NextUserCardId::<Test>::get() - 1;
+        card_ids.push(card_id);
+        entries.push(crate::CardSetEntryInput {
+            card_id,
+            rarity: 10,
+        });
+    }
+
+    assert_ok!(AutoBattle::create_card_set(
+        RuntimeOrigin::signed(creator),
+        bounded_set_entries(entries),
+        bounded_set_name(name)
+    ));
+
+    (crate::NextSetId::<Test>::get() - 1, card_ids)
+}
+
 #[test]
 fn test_apply_player_permanent_status_deltas_updates_board_statuses() {
     new_test_ext().execute_with(|| {
@@ -905,6 +959,156 @@ fn test_tournament_ghost_isolation() {
         // Check that tournament ghosts don't appear in regular storage and vice versa
         // With empty boards, ghosts won't be stored at all (store_ghost skips empty boards)
         // The important thing is the code paths are separate - validated by compilation
+    });
+}
+
+#[test]
+fn test_backfill_ghost_board_requires_admin_origin_and_existing_set() {
+    new_test_ext().execute_with(|| {
+        let board = bounded_ghost_board(vec![ghost_unit(1)]);
+
+        assert_noop!(
+            AutoBattle::backfill_ghost_board(RuntimeOrigin::signed(1), 0, 1, 0, 3, board.clone()),
+            BadOrigin
+        );
+
+        assert_noop!(
+            AutoBattle::backfill_ghost_board(RuntimeOrigin::root(), 999, 1, 0, 3, board),
+            Error::<Test>::CardSetNotFound
+        );
+    });
+}
+
+#[test]
+fn test_backfill_ghost_board_validates_bracket_and_board() {
+    new_test_ext().execute_with(|| {
+        let board = bounded_ghost_board(vec![ghost_unit(1)]);
+
+        assert_noop!(
+            AutoBattle::backfill_ghost_board(RuntimeOrigin::root(), 0, 0, 0, 3, board.clone()),
+            Error::<Test>::InvalidGhostBracket
+        );
+        assert_noop!(
+            AutoBattle::backfill_ghost_board(RuntimeOrigin::root(), 0, 1, -1, 3, board.clone()),
+            Error::<Test>::InvalidGhostBracket
+        );
+        assert_noop!(
+            AutoBattle::backfill_ghost_board(RuntimeOrigin::root(), 0, 1, 0, 0, board.clone()),
+            Error::<Test>::InvalidGhostBracket
+        );
+        assert_noop!(
+            AutoBattle::backfill_ghost_board(
+                RuntimeOrigin::root(),
+                0,
+                1,
+                0,
+                3,
+                bounded_ghost_board(vec![])
+            ),
+            Error::<Test>::EmptyGhostBoard
+        );
+    });
+}
+
+#[test]
+fn test_backfill_ghost_board_rejects_cards_outside_set() {
+    new_test_ext().execute_with(|| {
+        let (set_id, _) = create_custom_set(1, &[(3, 4), (5, 6)], b"Manual Ghost Set");
+
+        assert_noop!(
+            AutoBattle::backfill_ghost_board(
+                RuntimeOrigin::root(),
+                set_id,
+                2,
+                1,
+                3,
+                bounded_ghost_board(vec![ghost_unit(1)])
+            ),
+            Error::<Test>::GhostCardNotInSet
+        );
+    });
+}
+
+#[test]
+fn test_backfill_ghost_board_appends_and_archives_same_bracket() {
+    new_test_ext().execute_with(|| {
+        let (set_id, card_ids) = create_custom_set(1, &[(3, 4), (5, 6)], b"Archive Ghost Set");
+        let archive_before = crate::NextGhostArchiveId::<Test>::get();
+
+        let mut first_unit = ghost_unit(card_ids[0]);
+        first_unit.perm_attack = 2;
+        let mut second_unit = ghost_unit(card_ids[1]);
+        second_unit.perm_health = 3;
+
+        assert_ok!(AutoBattle::backfill_ghost_board(
+            RuntimeOrigin::root(),
+            set_id,
+            2,
+            1,
+            2,
+            bounded_ghost_board(vec![first_unit.clone()])
+        ));
+        assert_ok!(AutoBattle::backfill_ghost_board(
+            RuntimeOrigin::root(),
+            set_id,
+            2,
+            1,
+            2,
+            bounded_ghost_board(vec![second_unit.clone()])
+        ));
+
+        let ghosts = crate::GhostOpponents::<Test>::get((set_id, 2, 1, 2));
+        assert_eq!(ghosts.len(), 2);
+        assert_eq!(ghosts[0].owner, AutoBattle::pallet_account_id());
+        assert_eq!(ghosts[0].board.units[0], first_unit);
+        assert_eq!(ghosts[1].owner, AutoBattle::pallet_account_id());
+        assert_eq!(ghosts[1].board.units[0], second_unit);
+
+        assert_eq!(crate::NextGhostArchiveId::<Test>::get(), archive_before + 2);
+        assert_eq!(
+            crate::GhostArchive::<Test>::get((set_id, 2, 1, 2, archive_before))
+                .unwrap()
+                .board
+                .units[0],
+            ghosts[0].board.units[0]
+        );
+        assert_eq!(
+            crate::GhostArchive::<Test>::get((set_id, 2, 1, 2, archive_before + 1))
+                .unwrap()
+                .board
+                .units[0],
+            ghosts[1].board.units[0]
+        );
+    });
+}
+
+#[test]
+fn test_backfill_ghost_board_rotates_when_pool_is_full() {
+    new_test_ext().execute_with(|| {
+        let (set_id, card_ids) = create_custom_set(1, &[(3, 4)], b"Rotation Ghost Set");
+        let archive_before = crate::NextGhostArchiveId::<Test>::get();
+
+        for perm_attack in 0..12 {
+            let mut unit = ghost_unit(card_ids[0]);
+            unit.perm_attack = perm_attack;
+            assert_ok!(AutoBattle::backfill_ghost_board(
+                RuntimeOrigin::root(),
+                set_id,
+                1,
+                0,
+                3,
+                bounded_ghost_board(vec![unit])
+            ));
+        }
+
+        let ghosts = crate::GhostOpponents::<Test>::get((set_id, 1, 0, 3));
+        assert_eq!(ghosts.len(), 10);
+        assert_eq!(ghosts[0].board.units[0].perm_attack, 2);
+        assert_eq!(ghosts[9].board.units[0].perm_attack, 11);
+        assert_eq!(
+            crate::NextGhostArchiveId::<Test>::get(),
+            archive_before + 12
+        );
     });
 }
 
