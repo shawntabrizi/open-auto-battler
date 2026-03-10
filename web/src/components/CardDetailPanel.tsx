@@ -9,7 +9,9 @@ import { formatAbilitySentence } from '../utils/abilityText';
 /** Card art image with loading state — remount via key={card.id} to reset on card change. */
 function CardArtImage({ card }: { card: CardView }) {
   const artSrc = getCardArtMd(card.id);
-  const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>(artSrc ? 'loading' : 'error');
+  const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>(
+    artSrc ? 'loading' : 'error'
+  );
 
   return (
     <div className="relative w-full aspect-[3/4] bg-warm-800 rounded-lg lg:rounded-xl border-2 border-warm-700 overflow-hidden shadow-inner">
@@ -33,7 +35,10 @@ function CardArtImage({ card }: { card: CardView }) {
       )}
       {/* Name overlay at bottom */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 lg:p-3">
-        <h2 className="text-sm lg:text-xl font-bold text-white leading-tight truncate" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+        <h2
+          className="text-sm lg:text-xl font-bold text-white leading-tight truncate"
+          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+        >
           {card.name}
         </h2>
         <div className="flex gap-1.5 mt-1">
@@ -277,8 +282,8 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
               round (Max 10).
             </li>
             <li>
-              <strong className="text-white">Refilling:</strong> You can burn, spend, and burn
-              again in one turn.
+              <strong className="text-white">Refilling:</strong> You can burn, spend, and burn again
+              in one turn.
             </li>
             <li>
               <strong className="text-white">Hard Limit:</strong> You cannot hold more than your
@@ -361,13 +366,11 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
 
             {/* Connection Status */}
             <div className="flex items-center gap-2 mb-3 p-2 bg-warm-900 rounded border border-white/5">
-              <div
-                className={`w-2 h-2 rounded-full ${resolvedMode.blockNumber != null ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
-              />
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-xs font-mono text-warm-400">
                 {resolvedMode.blockNumber != null
                   ? `Block #${resolvedMode.blockNumber.toLocaleString()}`
-                  : 'Offline'}
+                  : 'Connected'}
               </span>
             </div>
 

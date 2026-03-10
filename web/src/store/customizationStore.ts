@@ -27,44 +27,8 @@ interface CustomizationStore {
   isLoading: boolean;
 
   fetchUserNfts: (api: any, accountAddress: string) => Promise<void>;
-  selectCustomization: (type: CustomizationType, nft: NftItem | null, accountAddress?: string) => void;
-  loadFromStorage: (accountAddress?: string) => void;
-  clearSelections: (accountAddress?: string) => void;
-}
-
-const STORAGE_PREFIX = 'oab_customize_';
-
-function getStorageKey(accountAddress?: string): string {
-  return accountAddress ? `${STORAGE_PREFIX}${accountAddress}` : `${STORAGE_PREFIX}default`;
-}
-
-function saveToLocalStorage(selections: CustomizationSelections, accountAddress?: string) {
-  try {
-    const key = getStorageKey(accountAddress);
-    localStorage.setItem(key, JSON.stringify(selections));
-    // Also save to the default key so other modes can read it
-    if (accountAddress) {
-      localStorage.setItem(`${STORAGE_PREFIX}default`, JSON.stringify(selections));
-    }
-  } catch {
-    // localStorage may be unavailable
-  }
-}
-
-function loadFromLocalStorage(accountAddress?: string): CustomizationSelections | null {
-  try {
-    const key = getStorageKey(accountAddress);
-    const data = localStorage.getItem(key);
-    if (data) return JSON.parse(data);
-    // Fallback to default key
-    if (accountAddress) {
-      const fallback = localStorage.getItem(`${STORAGE_PREFIX}default`);
-      if (fallback) return JSON.parse(fallback);
-    }
-  } catch {
-    // localStorage may be unavailable
-  }
-  return null;
+  selectCustomization: (type: CustomizationType, nft: NftItem | null) => void;
+  clearSelections: () => void;
 }
 
 const emptySelections: CustomizationSelections = {
@@ -82,6 +46,30 @@ const SLOT_MAP: Record<CustomizationType, keyof CustomizationSelections> = {
   avatar: 'playerAvatar',
   card_art: 'cardArt',
 };
+
+function nftKey(nft: NftItem | null): string | null {
+  if (!nft) return null;
+  return `${nft.collectionId}-${nft.itemId}`;
+}
+
+function filterSelectionsByOwnership(
+  selections: CustomizationSelections,
+  ownedNfts: NftItem[]
+): CustomizationSelections {
+  const ownedKeys = new Set(ownedNfts.map((nft) => nftKey(nft)));
+
+  return {
+    boardBackground: ownedKeys.has(nftKey(selections.boardBackground))
+      ? selections.boardBackground
+      : null,
+    handBackground: ownedKeys.has(nftKey(selections.handBackground))
+      ? selections.handBackground
+      : null,
+    cardStyle: ownedKeys.has(nftKey(selections.cardStyle)) ? selections.cardStyle : null,
+    playerAvatar: ownedKeys.has(nftKey(selections.playerAvatar)) ? selections.playerAvatar : null,
+    cardArt: ownedKeys.has(nftKey(selections.cardArt)) ? selections.cardArt : null,
+  };
+}
 
 export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
   ownedNfts: [],
@@ -106,22 +94,26 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
           const metadata = await api.query.Nfts.ItemMetadataOf.getValue(collectionId, itemId);
           if (!metadata) continue;
 
-          const metadataStr = typeof metadata.data === 'string'
-            ? metadata.data
-            : metadata.data?.asText?.() || '';
+          const metadataStr =
+            typeof metadata.data === 'string' ? metadata.data : metadata.data?.asText?.() || '';
 
           if (!metadataStr) continue;
 
           const parsed = JSON.parse(metadataStr);
-          const validTypes: CustomizationType[] = ['board_bg', 'hand_bg', 'card_style', 'avatar', 'card_art'];
+          const validTypes: CustomizationType[] = [
+            'board_bg',
+            'hand_bg',
+            'card_style',
+            'avatar',
+            'card_art',
+          ];
           if (!validTypes.includes(parsed.type)) continue;
 
           const rawImage = parsed.image || '';
           const rawCid = rawImage.replace('ipfs://', '');
           // card_art CIDs point to a directory; use a sample card as the preview
-          const previewImage = parsed.type === 'card_art' && rawCid
-            ? `ipfs://${rawCid}/md/0.webp`
-            : rawImage;
+          const previewImage =
+            parsed.type === 'card_art' && rawCid ? `ipfs://${rawCid}/md/0.webp` : rawImage;
 
           nfts.push({
             collectionId,
@@ -137,29 +129,24 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
         }
       }
 
-      set({ ownedNfts: nfts, isLoading: false });
+      set({
+        ownedNfts: nfts,
+        selections: filterSelectionsByOwnership(get().selections, nfts),
+        isLoading: false,
+      });
     } catch (err) {
       console.error('Failed to fetch user NFTs:', err);
       set({ isLoading: false });
     }
   },
 
-  selectCustomization: (type, nft, accountAddress) => {
+  selectCustomization: (type, nft) => {
     const slotKey = SLOT_MAP[type];
     const selections = { ...get().selections, [slotKey]: nft };
     set({ selections });
-    saveToLocalStorage(selections, accountAddress);
   },
 
-  loadFromStorage: (accountAddress) => {
-    const saved = loadFromLocalStorage(accountAddress);
-    if (saved) {
-      set({ selections: saved });
-    }
-  },
-
-  clearSelections: (accountAddress) => {
+  clearSelections: () => {
     set({ selections: { ...emptySelections } });
-    saveToLocalStorage({ ...emptySelections }, accountAddress);
   },
 }));

@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 // ── Settings Hub ──
 
 export function SettingsPage() {
-  const { isConnected, blockNumber } = useBlockchainStore();
+  const { isConnected, blockNumber, connectionError } = useBlockchainStore();
 
   return (
     <div className="fixed inset-0 bg-warm-950 text-white overflow-y-auto">
@@ -38,11 +38,16 @@ export function SettingsPage() {
                 />
                 <span className="text-warm-500 text-xs font-mono">
                   {isConnected
-                    ? `#${blockNumber?.toLocaleString()}`
+                    ? blockNumber !== null
+                      ? `#${blockNumber.toLocaleString()}`
+                      : 'connected'
                     : 'offline'}
                 </span>
               </div>
             </div>
+            {connectionError && (
+              <div className="mt-2 text-[10px] lg:text-xs text-red-300">{connectionError}</div>
+            )}
           </Link>
 
           <Link
@@ -79,7 +84,7 @@ function getOptionFromEndpoint(endpoint: string): EndpointOption {
 
 export function NetworkPage() {
   const { endpoint, setEndpoint } = useSettingsStore();
-  const { connect, isConnected, blockNumber } = useBlockchainStore();
+  const { connect, isConnected, blockNumber, connectionError } = useBlockchainStore();
 
   const [selected, setSelected] = useState<EndpointOption>(getOptionFromEndpoint(endpoint));
   const [customUrl, setCustomUrl] = useState(
@@ -99,10 +104,10 @@ export function NetworkPage() {
   const handleConnect = async () => {
     if (!canConnect) return;
     setEndpoint(resolvedUrl);
-    try {
-      await connect();
+    const connected = await connect();
+    if (connected) {
       toast.success('Connected to ' + resolvedUrl);
-    } catch {
+    } else {
       toast.error('Failed to connect');
     }
   };
@@ -134,7 +139,9 @@ export function NetworkPage() {
 
         {/* Endpoint selection */}
         <div className="mb-4 lg:mb-6">
-          <h2 className="text-sm lg:text-base font-semibold text-warm-300 mb-2 lg:mb-3">WebSocket Endpoint</h2>
+          <h2 className="text-sm lg:text-base font-semibold text-warm-300 mb-2 lg:mb-3">
+            WebSocket Endpoint
+          </h2>
           <div className="flex flex-col gap-2">
             {options.map((opt) => (
               <button
@@ -156,13 +163,13 @@ export function NetworkPage() {
                       selected === opt.key ? 'border-yellow-500' : 'border-warm-600'
                     }`}
                   >
-                    {selected === opt.key && (
-                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                    )}
+                    {selected === opt.key && <div className="w-2 h-2 rounded-full bg-yellow-500" />}
                   </div>
                 </div>
                 {opt.url && selected === opt.key && (
-                  <div className="mt-2 text-[10px] lg:text-xs font-mono text-warm-500">{opt.url}</div>
+                  <div className="mt-2 text-[10px] lg:text-xs font-mono text-warm-500">
+                    {opt.url}
+                  </div>
                 )}
               </button>
             ))}
@@ -201,15 +208,16 @@ export function NetworkPage() {
                 isConnected ? 'bg-green-500 animate-pulse' : 'bg-warm-600'
               }`}
             />
-            <span className="text-warm-400">
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
+            <span className="text-warm-400">{isConnected ? 'Connected' : 'Disconnected'}</span>
             {isConnected && blockNumber !== null && (
               <span className="text-warm-600 font-mono ml-auto">
                 Block #{blockNumber.toLocaleString()}
               </span>
             )}
           </div>
+          {connectionError && (
+            <div className="mt-2 text-[10px] lg:text-xs text-red-300">{connectionError}</div>
+          )}
           {isConnected && (
             <div className="mt-1 text-[10px] lg:text-xs font-mono text-warm-600 truncate">
               {endpoint}

@@ -1,13 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useBlockchainStore } from '../store/blockchainStore';
-import { useCustomizationStore, type CustomizationType, type NftItem } from '../store/customizationStore';
+import {
+  useCustomizationStore,
+  type CustomizationType,
+  type NftItem,
+} from '../store/customizationStore';
 import { CustomizationPreview } from './CustomizationPreview';
 import { BackLink } from './PageHeader';
 
 type TileShape = 'landscape' | 'wide' | 'card' | 'circle';
 
-const SECTIONS: { type: CustomizationType; label: string; icon: string; description: string; specs: string; shape: TileShape }[] = [
+const SECTIONS: {
+  type: CustomizationType;
+  label: string;
+  icon: string;
+  description: string;
+  specs: string;
+  shape: TileShape;
+}[] = [
   {
     type: 'board_bg',
     label: 'Background',
@@ -50,7 +61,10 @@ const SECTIONS: { type: CustomizationType; label: string; icon: string; descript
   },
 ];
 
-const SLOT_MAP: Record<CustomizationType, keyof ReturnType<typeof useCustomizationStore.getState>['selections']> = {
+const SLOT_MAP: Record<
+  CustomizationType,
+  keyof ReturnType<typeof useCustomizationStore.getState>['selections']
+> = {
   board_bg: 'boardBackground',
   hand_bg: 'handBackground',
   card_style: 'cardStyle',
@@ -60,7 +74,8 @@ const SLOT_MAP: Record<CustomizationType, keyof ReturnType<typeof useCustomizati
 
 export const CustomizePage: React.FC = () => {
   const { isConnected, api, selectedAccount } = useBlockchainStore();
-  const { ownedNfts, selections, isLoading, fetchUserNfts, selectCustomization, loadFromStorage } = useCustomizationStore();
+  const { ownedNfts, selections, isLoading, fetchUserNfts, selectCustomization } =
+    useCustomizationStore();
   const [activeSection, setActiveSection] = useState<CustomizationType | null>(null);
   const location = useLocation();
   const isBlockchainRoute = location.pathname.startsWith('/blockchain');
@@ -69,16 +84,15 @@ export const CustomizePage: React.FC = () => {
   useEffect(() => {
     if (isConnected && api && selectedAccount) {
       void fetchUserNfts(api, selectedAccount.address);
-      loadFromStorage(selectedAccount.address);
     }
-  }, [isConnected, api, selectedAccount, fetchUserNfts, loadFromStorage]);
+  }, [isConnected, api, selectedAccount, fetchUserNfts]);
 
   const handleSelect = (type: CustomizationType, nft: NftItem) => {
-    selectCustomization(type, nft, selectedAccount?.address);
+    selectCustomization(type, nft);
   };
 
   const handleDeselect = (type: CustomizationType) => {
-    selectCustomization(type, null, selectedAccount?.address);
+    selectCustomization(type, null);
   };
 
   const activeSectionData = SECTIONS.find((s) => s.type === activeSection);
@@ -102,9 +116,13 @@ export const CustomizePage: React.FC = () => {
             <h2 className="text-sm lg:text-xl font-bold truncate">
               {activeSectionData.icon} {activeSectionData.label}
             </h2>
-            <p className="text-[9px] lg:text-xs text-warm-500 truncate">{activeSectionData.description}</p>
+            <p className="text-[9px] lg:text-xs text-warm-500 truncate">
+              {activeSectionData.description}
+            </p>
           </div>
-          <p className="text-[8px] lg:text-[10px] text-warm-600 hidden lg:block shrink-0">{activeSectionData.specs}</p>
+          <p className="text-[8px] lg:text-[10px] text-warm-600 hidden lg:block shrink-0">
+            {activeSectionData.specs}
+          </p>
         </div>
 
         {/* NFT selection area */}
@@ -114,7 +132,11 @@ export const CustomizePage: React.FC = () => {
           </div>
         ) : filteredNfts.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-warm-500 text-xs lg:text-sm">
-            <p>{isConnected ? `No ${activeSectionData.label.toLowerCase()} NFTs found.` : 'Connect to a blockchain node to browse NFTs.'}</p>
+            <p>
+              {isConnected
+                ? `No ${activeSectionData.label.toLowerCase()} NFTs found.`
+                : 'Connect to a blockchain node to browse NFTs.'}
+            </p>
             {isConnected && (
               <Link
                 to="/blockchain/mint-nft"
@@ -124,10 +146,7 @@ export const CustomizePage: React.FC = () => {
               </Link>
             )}
             {!isConnected && (
-              <Link
-                to="/settings/network"
-                className="mt-2 text-yellow-500 text-xs hover:underline"
-              >
+              <Link to="/settings/network" className="mt-2 text-yellow-500 text-xs hover:underline">
                 Network Settings
               </Link>
             )}
@@ -239,7 +258,6 @@ export const CustomizePage: React.FC = () => {
           <CustomizationPreview />
         </div>
       </div>
-
     </div>
   );
 };
@@ -261,12 +279,21 @@ interface NftTileProps {
 
 const SHAPE_CLASSES: Record<TileShape, { sm: string; lg: string; rounded: string }> = {
   landscape: { sm: 'w-44 h-[6.2rem]', lg: 'w-full aspect-[16/9]', rounded: 'rounded-lg' },
-  wide:      { sm: 'w-44 h-10',       lg: 'w-full aspect-[5/1]',  rounded: 'rounded-lg' },
-  card:      { sm: 'w-32 h-[10.7rem]',lg: 'w-full aspect-[3/4]',  rounded: 'rounded-lg' },
-  circle:    { sm: 'w-32 h-32',       lg: 'w-full aspect-square',  rounded: 'rounded-full' },
+  wide: { sm: 'w-44 h-10', lg: 'w-full aspect-[5/1]', rounded: 'rounded-lg' },
+  card: { sm: 'w-32 h-[10.7rem]', lg: 'w-full aspect-[3/4]', rounded: 'rounded-lg' },
+  circle: { sm: 'w-32 h-32', lg: 'w-full aspect-square', rounded: 'rounded-full' },
 };
 
-function NftTile({ isSelected, onClick, label, imageUrl, placeholder, subtitle, size = 'sm', shape = 'card' }: NftTileProps) {
+function NftTile({
+  isSelected,
+  onClick,
+  label,
+  imageUrl,
+  placeholder,
+  subtitle,
+  size = 'sm',
+  shape = 'card',
+}: NftTileProps) {
   const isLg = size === 'lg';
   const s = SHAPE_CLASSES[shape];
   return (
@@ -282,14 +309,24 @@ function NftTile({ isSelected, onClick, label, imageUrl, placeholder, subtitle, 
         className={`${isLg ? s.lg : s.sm} bg-warm-700/50 ${s.rounded} overflow-hidden ${isLg ? 'mb-2' : 'mb-0.5'} flex items-center justify-center`}
       >
         {imageUrl ? (
-          <IpfsImage src={imageUrl} alt={label} className={`w-full h-full object-cover ${s.rounded}`} />
+          <IpfsImage
+            src={imageUrl}
+            alt={label}
+            className={`w-full h-full object-cover ${s.rounded}`}
+          />
         ) : (
           <span className={`text-warm-400 ${isLg ? 'text-2xl' : 'text-sm'}`}>{placeholder}</span>
         )}
       </div>
-      <div className={`font-bold truncate ${isLg ? 'text-xs max-w-none' : 'text-[10px] max-w-[6rem]'}`}>{label}</div>
+      <div
+        className={`font-bold truncate ${isLg ? 'text-xs max-w-none' : 'text-[10px] max-w-[6rem]'}`}
+      >
+        {label}
+      </div>
       {subtitle && (
-        <div className={`text-warm-500 ${isLg ? 'text-[10px]' : 'text-[7px] hidden'}`}>{subtitle}</div>
+        <div className={`text-warm-500 ${isLg ? 'text-[10px]' : 'text-[7px] hidden'}`}>
+          {subtitle}
+        </div>
       )}
     </button>
   );

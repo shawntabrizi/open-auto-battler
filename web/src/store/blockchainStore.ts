@@ -150,6 +150,132 @@ function buildBlockchainCardNameMap(cards: any[]): Record<number, string> {
   );
 }
 
+function blockchainCardToEngineCard(card: any) {
+  const shopAbilities = (card.data.shop_abilities || []).map(convertAbility);
+  const battleAbilities = (card.data.battle_abilities || []).map(convertAbility);
+
+  return {
+    id: card.id,
+    name: card.metadata?.name || `Card #${card.id}`,
+    stats: {
+      attack: card.data.stats.attack,
+      health: card.data.stats.health,
+    },
+    economy: {
+      play_cost: card.data.economy.play_cost,
+      burn_value: card.data.economy.burn_value,
+    },
+    base_statuses: toStatusMask(card.data.base_statuses),
+    shop_abilities: shopAbilities,
+    battle_abilities: battleAbilities,
+  };
+}
+
+function injectCardsIntoEngine(engine: any, cards: any[]) {
+  for (const card of cards) {
+    try {
+      engine.add_card(blockchainCardToEngineCard(card));
+    } catch (e) {
+      console.warn(`Failed to inject card ${card.id} into engine:`, e);
+    }
+  }
+}
+
+function injectSetsIntoEngine(engine: any, sets: any[]) {
+  for (const setData of sets) {
+    try {
+      const entries = setData.cards.map((card: any) => ({
+        card_id:
+          typeof card.card_id === 'object' ? (card.card_id.value ?? card.card_id[0]) : card.card_id,
+        rarity: card.rarity,
+      }));
+      engine.add_set(setData.id, entries);
+    } catch (e) {
+      console.warn(`Failed to inject set ${setData.id} into engine:`, e);
+    }
+  }
+}
+
+function syncGameStoreWithBlockchainContent(cards: any[], sets: any[]) {
+  const existingNames = useGameStore.getState().cardNameMap;
+  useGameStore.setState({
+    setMetas: sets.map((setData) => ({ id: setData.id, name: setData.name })),
+    cardNameMap: {
+      ...existingNames,
+      ...buildBlockchainCardNameMap(cards),
+    },
+  });
+
+  const { engine } = useGameStore.getState();
+  if (!engine) return;
+
+  injectCardsIntoEngine(engine, cards);
+  injectSetsIntoEngine(engine, sets);
+}
+
+function deriveLocalBattleSeed(
+  blockNumber: number | null,
+  setId: number,
+  round: number,
+  wins: number,
+  lives: number
+): number {
+  const seed = ((blockNumber ?? 1) ^ (setId << 16) ^ (round << 8) ^ (wins << 4) ^ lives) >>> 0;
+  return seed === 0 ? 1 : seed;
+}
+
+function nextXorShift32(seed: number): number {
+  let x = seed >>> 0;
+  if (x === 0) x = 1;
+  x ^= x << 13;
+  x ^= x >>> 17;
+  x ^= x << 5;
+  return x >>> 0;
+}
+
+function bracketDistance(
+  candidate: { round: number; wins: number; lives: number },
+  target: { round: number; wins: number; lives: number }
+): number {
+  return (
+    Math.abs(candidate.round - target.round) * 100 +
+    Math.abs(candidate.wins - target.wins) * 10 +
+    Math.abs(candidate.lives - target.lives) * 5
+  );
+}
+
+function normalizeGhostBoard(ghost: any): any[] {
+  const board = ghost?.board ?? ghost;
+  const rawUnits = Array.isArray(board) ? board : board?.units || [];
+
+  return rawUnits.map((unit: any) => ({
+    card_id:
+      typeof unit.card_id === 'number' ? unit.card_id : Number(unit.card_id?.value ?? unit.card_id),
+    perm_attack:
+      typeof unit.perm_attack === 'number' ? unit.perm_attack : Number(unit.perm_attack || 0),
+    perm_health:
+      typeof unit.perm_health === 'number' ? unit.perm_health : Number(unit.perm_health || 0),
+    perm_statuses: toStatusMask(unit.perm_statuses),
+  }));
+}
+
+function collectGhostCandidates(entries: any[], setId: number) {
+  return entries
+    .map((entry: any) => {
+      const [entrySetId, round, wins, lives] = entry.keyArgs.map((value: any) => Number(value));
+      const ghosts = Array.isArray(entry.value) ? entry.value : entry.value ? [entry.value] : [];
+
+      return {
+        setId: entrySetId,
+        round,
+        wins,
+        lives,
+        ghosts,
+      };
+    })
+    .filter((entry: any) => entry.setId === setId && entry.ghosts.length > 0);
+}
+
 interface BlockchainStore {
   // Connection state
   client: any;
@@ -157,6 +283,7 @@ interface BlockchainStore {
   codecs: any;
   isConnected: boolean;
   isConnecting: boolean;
+  connectionError: string | null;
 
   // Account state
   accounts: any[];
@@ -172,7 +299,7 @@ interface BlockchainStore {
 
   // Actions
   disconnect: () => void;
-  connect: () => Promise<void>;
+  connect: () => Promise<boolean>;
   selectAccount: (account: any) => Promise<void>;
   startGame: (set_id?: number) => Promise<void>;
   refreshGameState: (force?: boolean) => Promise<void>;
@@ -180,6 +307,13 @@ interface BlockchainStore {
   fetchDeck: () => any[];
   fetchCards: () => Promise<void>;
   fetchSets: () => Promise<void>;
+  hydrateGameEngineFromChainData: () => void;
+  getLocalBattleOpponent: (
+    setId: number,
+    round: number,
+    wins: number,
+    lives: number
+  ) => Promise<{ board: any[]; seed: number } | null>;
   submitCard: (cardData: any, metadata: any) => Promise<void>;
   createCardSet: (cards: { card_id: number; rarity: number }[], name?: string) => Promise<void>;
 
@@ -215,6 +349,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   codecs: null,
   isConnected: false,
   isConnecting: false,
+  connectionError: null,
 
   // Account state
   accounts: [],
@@ -237,6 +372,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       codecs: null,
       isConnected: false,
       isConnecting: false,
+      connectionError: null,
       blockNumber: null,
       chainState: null,
       allCards: [],
@@ -246,15 +382,23 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
 
   connect: async () => {
     get().disconnect();
-    set({ isConnecting: true });
+    set({ isConnecting: true, connectionError: null });
+
+    let client: any = null;
+
     try {
       const wsEndpoint = useSettingsStore.getState().endpoint;
-      const client = createClient(withPolkadotSdkCompat(getWsProvider(wsEndpoint)));
+      client = createClient(withPolkadotSdkCompat(getWsProvider(wsEndpoint)));
 
       // Subscribe to best blocks — first block confirms connection is live
-      client.bestBlocks$.subscribe((blocks) => {
+      client.bestBlocks$.subscribe((blocks: any[]) => {
         if (blocks.length > 0) {
-          set({ blockNumber: blocks[0].number, isConnected: true, isConnecting: false });
+          set({
+            blockNumber: blocks[0].number,
+            isConnected: true,
+            isConnecting: false,
+            connectionError: null,
+          });
         }
       });
 
@@ -306,13 +450,29 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
 
       // Fetch available sets and cards
       await Promise.all([get().fetchSets(), get().fetchCards()]);
+      get().hydrateGameEngineFromChainData();
+      set({ isConnected: true, isConnecting: false, connectionError: null });
 
       if (get().selectedAccount) {
         await get().refreshGameState();
       }
+      return true;
     } catch (err) {
       console.error('Blockchain connection failed:', err);
-      set({ isConnecting: false });
+      client?.destroy?.();
+      set({
+        client: null,
+        api: null,
+        codecs: null,
+        isConnected: false,
+        isConnecting: false,
+        blockNumber: null,
+        chainState: null,
+        allCards: [],
+        availableSets: [],
+        connectionError: err instanceof Error ? err.message : String(err),
+      });
+      return false;
     }
   },
 
@@ -356,33 +516,8 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         if (engine) {
           console.log('On-chain game found. Syncing WASM engine via SCALE bytes...');
           try {
-            // 1. Inject ALL cards from blockchain into the engine's card pool.
-            //    This replaces any static genesis cards with the authoritative
-            //    blockchain versions and adds any custom user-created cards.
             const { allCards } = get();
-            for (const card of allCards) {
-              try {
-                const shopAbilities = (card.data.shop_abilities || []).map(convertAbility);
-                const battleAbilities = (card.data.battle_abilities || []).map(convertAbility);
-                engine.add_card({
-                  id: card.id,
-                  name: card.metadata?.name || `Card #${card.id}`,
-                  stats: {
-                    attack: card.data.stats.attack,
-                    health: card.data.stats.health,
-                  },
-                  economy: {
-                    play_cost: card.data.economy.play_cost,
-                    burn_value: card.data.economy.burn_value,
-                  },
-                  base_statuses: toStatusMask(card.data.base_statuses),
-                  shop_abilities: shopAbilities,
-                  battle_abilities: battleAbilities,
-                });
-              } catch (e) {
-                console.warn(`Failed to inject card ${card.id} into engine:`, e);
-              }
-            }
+            injectCardsIntoEngine(engine, allCards);
 
             // 2. Fetch raw SCALE bytes from the blockchain
             const gameKey = await api.query.AutoBattle.ActiveGame.getKey(selectedAccount.address);
@@ -410,6 +545,8 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
             useGameStore.setState({
               view,
               cardSet,
+              currentSetId: Number(game.set_id),
+              gameStarted: true,
               cardNameMap: {
                 ...existingNames,
                 ...buildBlockchainCardNameMap(allCards),
@@ -582,6 +719,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
 
       // Update emoji map from blockchain metadata (source of truth)
       initEmojiMap(cards.map((c: any) => ({ id: c.id, emoji: c.metadata.emoji })));
+      syncGameStoreWithBlockchainContent(cards, get().availableSets);
     } catch (err) {
       console.error('Failed to fetch cards:', err);
     }
@@ -614,25 +752,65 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         };
       });
       set({ availableSets: sets });
-
-      // Inject sets into the WASM engine so preview/load works for blockchain sets
-      const { engine } = useGameStore.getState();
-      if (engine) {
-        for (const s of sets) {
-          try {
-            const entries = s.cards.map((c: any) => ({
-              card_id:
-                typeof c.card_id === 'object' ? (c.card_id.value ?? c.card_id[0]) : c.card_id,
-              rarity: c.rarity,
-            }));
-            engine.add_set(s.id, entries);
-          } catch (e) {
-            console.warn(`Failed to inject set ${s.id} into engine:`, e);
-          }
-        }
-      }
+      syncGameStoreWithBlockchainContent(get().allCards, sets);
     } catch (err) {
       console.error('Failed to fetch sets:', err);
+    }
+  },
+
+  hydrateGameEngineFromChainData: () => {
+    syncGameStoreWithBlockchainContent(get().allCards, get().availableSets);
+  },
+
+  getLocalBattleOpponent: async (setId, round, wins, lives) => {
+    const { api, blockNumber } = get();
+    if (!api) return null;
+
+    const targetBracket = { round, wins, lives };
+    try {
+      let poolEntries: any[] = [];
+      try {
+        poolEntries = await api.query.AutoBattle.GhostOpponents.getEntries(setId);
+      } catch {
+        poolEntries = await api.query.AutoBattle.GhostOpponents.getEntries();
+      }
+
+      let candidates = collectGhostCandidates(poolEntries, setId);
+
+      if (candidates.length === 0) {
+        try {
+          let archiveEntries: any[] = [];
+          try {
+            archiveEntries = await api.query.AutoBattle.GhostArchive.getEntries(setId);
+          } catch {
+            archiveEntries = await api.query.AutoBattle.GhostArchive.getEntries();
+          }
+          candidates = collectGhostCandidates(archiveEntries, setId);
+        } catch {
+          // Ghost archive support is optional for local opponent selection.
+        }
+      }
+
+      const selectedBracket = [...candidates].sort(
+        (a, b) => bracketDistance(a, targetBracket) - bracketDistance(b, targetBracket)
+      )[0];
+
+      if (!selectedBracket) {
+        return null;
+      }
+
+      const seed = deriveLocalBattleSeed(blockNumber, setId, round, wins, lives);
+      const index = nextXorShift32(seed) % selectedBracket.ghosts.length;
+      const board = normalizeGhostBoard(selectedBracket.ghosts[index]);
+
+      if (board.length === 0) {
+        return null;
+      }
+
+      return { board, seed };
+    } catch (err) {
+      console.error('Failed to fetch blockchain-controlled local opponent:', err);
+      return null;
     }
   },
 

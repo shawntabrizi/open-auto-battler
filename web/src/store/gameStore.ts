@@ -54,6 +54,7 @@ interface GameStore {
   battleOutput: BattleOutput | null;
   cardSet: CardView[] | null; // Full set of unique cards (fetched once)
   cardNameMap: Record<number, string>;
+  currentSetId: number | null;
   bag: number[] | null; // Bag as a list of Card IDs
   isLoading: boolean;
   error: string | null;
@@ -122,6 +123,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   battleOutput: null,
   cardSet: null,
   cardNameMap: {},
+  currentSetId: null,
   bag: null,
   isLoading: true,
   error: null,
@@ -181,6 +183,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           engine,
           setMetas,
           cardNameMap: buildCardNameMap(metas),
+          currentSetId: null,
           engineReady: true,
           gameStarted: false,
           isLoading: false,
@@ -207,6 +210,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({
         view: engine.get_view(),
         cardSet: engine.get_card_set(),
+        currentSetId: setId,
         gameStarted: true,
         isLoading: false,
         showSetPreview: false,
@@ -258,6 +262,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           view: engine.get_view(),
           cardSet: engine.get_card_set(), // Fetch card set once on init
           cardNameMap: buildCardNameMap(metas),
+          currentSetId: 1,
           isLoading: false,
         });
       } catch (err) {
@@ -407,6 +412,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         selection: null,
         showBattleOverlay: false,
         gameStarted: false,
+        currentSetId: null,
         startingLives: 3,
         winsToVictory: 10,
       });
