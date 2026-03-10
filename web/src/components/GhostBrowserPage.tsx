@@ -1,0 +1,672 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useInitGuard } from '../hooks';
+import { useBlockchainStore } from '../store/blockchainStore';
+import type { BoardUnitView, CardView } from '../types';
+import { blockchainCardToCardView } from '../utils/blockchainCards';
+import { decodeStatusMask } from '../utils/status';
+import { CardDetailPanel } from './CardDetailPanel';
+import { PageHeader } from './PageHeader';
+import { RotatePrompt } from './RotatePrompt';
+import { EmptySlot, UnitCard } from './UnitCard';
+
+const ALL_FILTER = 'all';
+const BOARD_SIZE = 5;
+
+type GhostBoardUnitView = {
+  cardId: number;
+  permAttack: number;
+  permHealth: number;
+  permStatuses: number[];
+};
+
+type GhostCatalogCard = CardView;
+
+type ActiveGhostBoardView = {
+  id: string;
+  setId: number;
+  round: number;
+  wins: number;
+  lives: number;
+  poolIndex: number;
+  owner: string;
+  board: GhostBoardUnitView[];
+};
+
+type GhostBracketView = {
+  key: string;
+  round: number;
+  wins: number;
+  lives: number;
+  ghosts: ActiveGhostBoardView[];
+};
+
+function shortAddress(address: string): string {
+  if (address.length <= 12) return address;
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function normalizeOwner(owner: unknown): string {
+  if (typeof owner === 'string') return owner;
+  if (owner && typeof owner === 'object' && 'toString' in owner) {
+    const value = owner.toString();
+    if (value) return value;
+  }
+  return String(owner);
+}
+
+function normalizeGhostBoard(ghost: any): GhostBoardUnitView[] {
+  const board = ghost?.board ?? ghost;
+  const rawUnits = Array.isArray(board) ? board : board?.units || [];
+
+  return rawUnits.map((unit: any) => ({
+    cardId:
+      typeof unit.card_id === 'number' ? unit.card_id : Number(unit.card_id?.value ?? unit.card_id),
+    permAttack:
+      typeof unit.perm_attack === 'number' ? unit.perm_attack : Number(unit.perm_attack || 0),
+    permHealth:
+      typeof unit.perm_health === 'number' ? unit.perm_health : Number(unit.perm_health || 0),
+    permStatuses: decodeStatusMask(unit.perm_statuses),
+  }));
+}
+
+function compareGhostBoards(a: ActiveGhostBoardView, b: ActiveGhostBoardView): number {
+  return (
+    a.round - b.round ||
+    a.wins - b.wins ||
+    b.lives - a.lives ||
+    a.poolIndex - b.poolIndex ||
+    a.owner.localeCompare(b.owner)
+  );
+}
+
+function matchesFilter(value: number, filter: string): boolean {
+  return filter === ALL_FILTER || value === Number(filter);
+}
+
+function describeOwner(owner: string, accounts: any[]): { label: string; address: string } {
+  const knownAccount = accounts.find((account) => account.address === owner);
+  if (!knownAccount) {
+    return {
+      label: shortAddress(owner),
+      address: owner,
+    };
+  }
+
+  return {
+    label: knownAccount.source === 'dev' ? `${knownAccount.name} (dev)` : knownAccount.name,
+    address: owner,
+  };
+}
+
+function paddedBoard(board: GhostBoardUnitView[]): Array<GhostBoardUnitView | null> {
+  return Array.from({ length: BOARD_SIZE }, (_, index) => board[index] ?? null);
+}
+
+function buildCatalogCard(card: any): GhostCatalogCard {
+  return blockchainCardToCardView(card);
+}
+
+function buildGhostBoardUnitCard(
+  unit: GhostBoardUnitView,
+  cardLookup: Map<number, GhostCatalogCard>
+): BoardUnitView {
+  const baseCard = cardLookup.get(unit.cardId);
+  const baseAttack = baseCard?.attack ?? 0;
+  const baseHealth = baseCard?.health ?? 0;
+
+  return {
+    id: unit.cardId,
+    name: baseCard?.name || `Card #${unit.cardId}`,
+    attack: baseAttack + unit.permAttack,
+    health: baseHealth + unit.permHealth,
+    play_cost: baseCard?.play_cost ?? 0,
+    burn_value: baseCard?.burn_value ?? 0,
+    base_statuses: baseCard?.base_statuses || [],
+    perm_statuses: unit.permStatuses,
+    active_statuses: [],
+    shop_abilities: baseCard?.shop_abilities || [],
+    battle_abilities: baseCard?.battle_abilities || [],
+  };
+}
+
+export function GhostBrowserPage() {
+  const {
+    api,
+    isConnected,
+    isConnecting,
+    connectionError,
+    connect,
+    fetchCards,
+    fetchSets,
+    allCards,
+    availableSets,
+    accounts,
+    blockNumber,
+  } = useBlockchainStore();
+
+  const [selectedSetId, setSelectedSetId] = useState<number | null>(null);
+  const [roundFilter, setRoundFilter] = useState(ALL_FILTER);
+  const [winsFilter, setWinsFilter] = useState(ALL_FILTER);
+  const [livesFilter, setLivesFilter] = useState(ALL_FILTER);
+  const [ghosts, setGhosts] = useState<ActiveGhostBoardView[]>([]);
+  const [isLoadingGhosts, setIsLoadingGhosts] = useState(false);
+  const [ghostError, setGhostError] = useState<string | null>(null);
+  const [refreshNonce, setRefreshNonce] = useState(0);
+  const [detailCard, setDetailCard] = useState<BoardUnitView | null>(null);
+  const [selectedCardKey, setSelectedCardKey] = useState<string | null>(null);
+
+  useInitGuard(() => {
+    if (isConnected) return;
+    void connect();
+  }, [connect, isConnected]);
+
+  useEffect(() => {
+    if (!isConnected) return;
+    if (allCards.length === 0) {
+      void fetchCards();
+    }
+    if (availableSets.length === 0) {
+      void fetchSets();
+    }
+  }, [allCards.length, availableSets.length, fetchCards, fetchSets, isConnected]);
+
+  const sortedSets = useMemo(() => [...availableSets].sort((a, b) => a.id - b.id), [availableSets]);
+
+  useEffect(() => {
+    if (sortedSets.length === 0) {
+      setSelectedSetId(null);
+      return;
+    }
+
+    if (selectedSetId !== null && sortedSets.some((set) => set.id === selectedSetId)) {
+      return;
+    }
+
+    const preferredSetId = sortedSets.find((set) => set.id === 0)?.id ?? sortedSets[0].id;
+    setSelectedSetId(preferredSetId);
+  }, [selectedSetId, sortedSets]);
+
+  useEffect(() => {
+    setRoundFilter(ALL_FILTER);
+    setWinsFilter(ALL_FILTER);
+    setLivesFilter(ALL_FILTER);
+    setDetailCard(null);
+    setSelectedCardKey(null);
+  }, [selectedSetId]);
+
+  useEffect(() => {
+    if (!isConnected || !api || selectedSetId === null) return;
+
+    let cancelled = false;
+
+    const loadGhosts = async () => {
+      setIsLoadingGhosts(true);
+      setGhostError(null);
+      setGhosts([]);
+
+      try {
+        let entries: any[] = [];
+        try {
+          entries = await api.query.AutoBattle.GhostOpponents.getEntries(selectedSetId);
+        } catch {
+          entries = await api.query.AutoBattle.GhostOpponents.getEntries();
+        }
+
+        if (cancelled) return;
+
+        const nextGhosts = entries
+          .flatMap((entry: any) => {
+            const [entrySetId, round, wins, lives] = entry.keyArgs.map((value: any) =>
+              Number(value)
+            );
+
+            if (entrySetId !== selectedSetId) {
+              return [];
+            }
+
+            const pool = Array.isArray(entry.value)
+              ? entry.value
+              : entry.value
+                ? [entry.value]
+                : [];
+
+            return pool
+              .map((ghost: any, poolIndex: number) => {
+                const owner = normalizeOwner(ghost?.owner);
+                const board = normalizeGhostBoard(ghost);
+
+                return {
+                  id: `${entrySetId}-${round}-${wins}-${lives}-${poolIndex}-${owner}`,
+                  setId: entrySetId,
+                  round,
+                  wins,
+                  lives,
+                  poolIndex,
+                  owner,
+                  board,
+                };
+              })
+              .filter((ghost: ActiveGhostBoardView) => ghost.board.length > 0);
+          })
+          .sort(compareGhostBoards);
+
+        setGhosts(nextGhosts);
+      } catch (error) {
+        console.error('Failed to load active ghost opponents:', error);
+        if (!cancelled) {
+          setGhosts([]);
+          setGhostError('Failed to load active ghost opponents from the blockchain.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingGhosts(false);
+        }
+      }
+    };
+
+    void loadGhosts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [api, isConnected, refreshNonce, selectedSetId]);
+
+  const cardLookup = useMemo(() => {
+    return new Map(allCards.map((card) => [card.id, buildCatalogCard(card)]));
+  }, [allCards]);
+
+  const selectedSet = useMemo(
+    () => sortedSets.find((set) => set.id === selectedSetId) ?? null,
+    [selectedSetId, sortedSets]
+  );
+
+  const filterOptions = useMemo(() => {
+    const rounds = [...new Set(ghosts.map((ghost) => ghost.round))].sort((a, b) => a - b);
+    const wins = [...new Set(ghosts.map((ghost) => ghost.wins))].sort((a, b) => a - b);
+    const lives = [...new Set(ghosts.map((ghost) => ghost.lives))].sort((a, b) => b - a);
+    return { rounds, wins, lives };
+  }, [ghosts]);
+
+  const filteredGhosts = useMemo(() => {
+    return ghosts.filter(
+      (ghost) =>
+        matchesFilter(ghost.round, roundFilter) &&
+        matchesFilter(ghost.wins, winsFilter) &&
+        matchesFilter(ghost.lives, livesFilter)
+    );
+  }, [ghosts, livesFilter, roundFilter, winsFilter]);
+
+  const bracketGroups = useMemo(() => {
+    const groups = new Map<string, GhostBracketView>();
+
+    for (const ghost of filteredGhosts) {
+      const key = `${ghost.round}-${ghost.wins}-${ghost.lives}`;
+      const existing = groups.get(key);
+
+      if (existing) {
+        existing.ghosts.push(ghost);
+        continue;
+      }
+
+      groups.set(key, {
+        key,
+        round: ghost.round,
+        wins: ghost.wins,
+        lives: ghost.lives,
+        ghosts: [ghost],
+      });
+    }
+
+    return [...groups.values()].sort(
+      (a, b) => a.round - b.round || a.wins - b.wins || b.lives - a.lives
+    );
+  }, [filteredGhosts]);
+
+  const totalBracketCount = useMemo(
+    () => new Set(ghosts.map((ghost) => `${ghost.round}-${ghost.wins}-${ghost.lives}`)).size,
+    [ghosts]
+  );
+
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen min-h-svh bg-warm-950 text-white flex flex-col p-4">
+        <PageHeader
+          backTo="/blockchain/creator"
+          backLabel="Creator Hub"
+          title="Ghost Browser"
+          subtitle="Active ghost opponents require a live chain connection."
+        />
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="w-full max-w-md rounded-3xl border border-warm-800 bg-warm-900/70 p-6 lg:p-8 text-center">
+            <div className="text-[10px] lg:text-xs font-heading tracking-[0.35em] text-warm-500 uppercase">
+              Ghost Opponents
+            </div>
+            <h1 className="mt-2 text-2xl lg:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500">
+              Blockchain Required
+            </h1>
+            <p className="mt-3 text-sm lg:text-base text-warm-300">
+              This view reads the active ghost pool directly from the blockchain.
+            </p>
+            {connectionError && (
+              <p className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                {connectionError}
+              </p>
+            )}
+            <div className="mt-5 flex flex-col gap-3">
+              <button
+                onClick={() => void connect()}
+                disabled={isConnecting}
+                className="rounded-xl bg-yellow-500 px-4 py-3 text-sm font-bold text-warm-950 transition-colors hover:bg-yellow-400 disabled:cursor-not-allowed disabled:bg-warm-700 disabled:text-warm-400"
+              >
+                {isConnecting ? 'CONNECTING...' : 'RETRY CONNECTION'}
+              </button>
+              <Link
+                to="/settings/network"
+                className="rounded-xl border border-warm-700 px-4 py-3 text-sm font-bold text-warm-200 transition-colors hover:border-warm-500 hover:text-white"
+              >
+                NETWORK SETTINGS
+              </Link>
+            </div>
+          </div>
+        </div>
+        <RotatePrompt />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen min-h-svh bg-warm-950 text-white overflow-y-auto">
+      <CardDetailPanel card={detailCard} isVisible={true} mode={{ type: 'readOnly' }} />
+
+      <div className="ml-44 lg:ml-80">
+        <div className="w-full max-w-6xl mx-auto p-3 lg:p-4">
+          <PageHeader
+            backTo="/blockchain/creator"
+            backLabel="Creator Hub"
+            title="Ghost Browser"
+            subtitle="Active ghost opponents only. Click any ghost card to inspect it in the side panel."
+            right={
+              <button
+                onClick={() => setRefreshNonce((value) => value + 1)}
+                disabled={isLoadingGhosts || selectedSetId === null}
+                className="rounded-lg border border-warm-600 px-3 py-1.5 text-xs font-bold text-warm-200 transition-colors hover:border-warm-400 hover:text-white disabled:cursor-not-allowed disabled:border-warm-800 disabled:text-warm-600"
+              >
+                {isLoadingGhosts ? 'Refreshing...' : 'Refresh'}
+              </button>
+            }
+          />
+
+          <div className="rounded-2xl border border-warm-800 bg-warm-900/40 p-3 lg:p-4">
+            <div className="flex flex-wrap items-center gap-2 text-[10px] lg:text-xs text-warm-400 uppercase tracking-[0.25em]">
+              <span>Live Ghost Pool</span>
+              <span className="text-warm-700">•</span>
+              <span>
+                {blockNumber !== null ? `Block #${blockNumber.toLocaleString()}` : 'Connected'}
+              </span>
+              {selectedSet && (
+                <>
+                  <span className="text-warm-700">•</span>
+                  <span>
+                    {selectedSet.name} (
+                    {Array.isArray(selectedSet.cards) ? selectedSet.cards.length : 0} cards)
+                  </span>
+                </>
+              )}
+            </div>
+
+            <div className="mt-4 grid gap-3 lg:grid-cols-4">
+              <label className="flex flex-col gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-500">
+                  Set
+                </span>
+                <select
+                  value={selectedSetId ?? ''}
+                  onChange={(event) => setSelectedSetId(Number(event.target.value))}
+                  disabled={sortedSets.length === 0}
+                  className="rounded-xl border border-warm-700 bg-warm-950/70 px-3 py-3 text-sm text-white outline-none transition-colors focus:border-yellow-500/50 disabled:cursor-not-allowed disabled:text-warm-600"
+                >
+                  {sortedSets.length === 0 ? (
+                    <option value="">No sets available</option>
+                  ) : (
+                    sortedSets.map((set) => (
+                      <option key={set.id} value={set.id}>
+                        {set.name} (#{set.id})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </label>
+
+              <label className="flex flex-col gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-500">
+                  Round
+                </span>
+                <select
+                  value={roundFilter}
+                  onChange={(event) => setRoundFilter(event.target.value)}
+                  className="rounded-xl border border-warm-700 bg-warm-950/70 px-3 py-3 text-sm text-white outline-none transition-colors focus:border-yellow-500/50"
+                >
+                  <option value={ALL_FILTER}>All rounds</option>
+                  {filterOptions.rounds.map((round) => (
+                    <option key={round} value={round}>
+                      Round {round}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex flex-col gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-500">
+                  Wins
+                </span>
+                <select
+                  value={winsFilter}
+                  onChange={(event) => setWinsFilter(event.target.value)}
+                  className="rounded-xl border border-warm-700 bg-warm-950/70 px-3 py-3 text-sm text-white outline-none transition-colors focus:border-yellow-500/50"
+                >
+                  <option value={ALL_FILTER}>All wins</option>
+                  {filterOptions.wins.map((wins) => (
+                    <option key={wins} value={wins}>
+                      {wins} wins
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex flex-col gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-500">
+                  Lives
+                </span>
+                <select
+                  value={livesFilter}
+                  onChange={(event) => setLivesFilter(event.target.value)}
+                  className="rounded-xl border border-warm-700 bg-warm-950/70 px-3 py-3 text-sm text-white outline-none transition-colors focus:border-yellow-500/50"
+                >
+                  <option value={ALL_FILTER}>All lives</option>
+                  {filterOptions.lives.map((lives) => (
+                    <option key={lives} value={lives}>
+                      {lives} lives
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-warm-300">
+              <span className="rounded-full border border-warm-700 bg-warm-950/70 px-3 py-1.5">
+                {filteredGhosts.length} active boards shown
+              </span>
+              <span className="rounded-full border border-warm-700 bg-warm-950/70 px-3 py-1.5">
+                {bracketGroups.length} brackets shown
+              </span>
+              <span className="rounded-full border border-warm-700 bg-warm-950/70 px-3 py-1.5">
+                {ghosts.length} active boards in set
+              </span>
+              <span className="rounded-full border border-warm-700 bg-warm-950/70 px-3 py-1.5">
+                {totalBracketCount} brackets in set
+              </span>
+              <span className="rounded-full border border-yellow-500/30 bg-yellow-500/10 px-3 py-1.5 text-yellow-100">
+                Tap cards for full details
+              </span>
+            </div>
+          </div>
+
+          {ghostError && (
+            <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              {ghostError}
+            </div>
+          )}
+
+          {!ghostError && sortedSets.length === 0 && (
+            <div className="mt-4 rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
+              <div className="text-sm font-bold text-white">No blockchain sets found</div>
+              <p className="mt-2 text-sm text-warm-400">
+                Create or sync a set on-chain before browsing active ghosts.
+              </p>
+            </div>
+          )}
+
+          {!ghostError && sortedSets.length > 0 && isLoadingGhosts && ghosts.length === 0 && (
+            <div className="mt-4 rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center text-warm-400">
+              Loading active ghost opponents...
+            </div>
+          )}
+
+          {!ghostError &&
+            sortedSets.length > 0 &&
+            !isLoadingGhosts &&
+            bracketGroups.length === 0 &&
+            selectedSetId !== null && (
+              <div className="mt-4 rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
+                <div className="text-sm font-bold text-white">
+                  No active ghosts match these filters
+                </div>
+                <p className="mt-2 text-sm text-warm-400">
+                  Set #{selectedSetId} has no active ghost boards for the current round, wins, and
+                  lives filter combination.
+                </p>
+              </div>
+            )}
+
+          <div className="mt-4 flex flex-col gap-4 pb-6">
+            {bracketGroups.map((group) => (
+              <section
+                key={group.key}
+                className="rounded-3xl border border-warm-800 bg-gradient-to-br from-warm-900/70 to-warm-950/70 p-4 lg:p-5"
+              >
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <div className="text-[10px] font-heading uppercase tracking-[0.35em] text-warm-500">
+                      Matchmaking Bracket
+                    </div>
+                    <h2 className="mt-1 text-lg lg:text-2xl font-black text-white">
+                      Round {group.round}
+                    </h2>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-200">
+                      {group.wins} wins
+                    </span>
+                    <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-bold text-rose-200">
+                      {group.lives} lives
+                    </span>
+                    <span className="rounded-full border border-warm-700 bg-warm-950/60 px-3 py-1 text-xs font-bold text-warm-300">
+                      {group.ghosts.length} active boards
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3">
+                  {group.ghosts.map((ghost) => {
+                    const owner = describeOwner(ghost.owner, accounts);
+
+                    return (
+                      <article
+                        key={ghost.id}
+                        className="rounded-2xl border border-white/5 bg-warm-950/60 p-3 lg:p-4"
+                      >
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="min-w-0">
+                            <div className="text-[10px] font-heading uppercase tracking-[0.3em] text-warm-500">
+                              Pool Slot {ghost.poolIndex + 1}
+                            </div>
+                            <div className="mt-1 text-sm lg:text-base font-bold text-white">
+                              {owner.label}
+                            </div>
+                            <div className="mt-1 break-all font-mono text-[11px] text-warm-500">
+                              {owner.address}
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            <span className="rounded-full border border-warm-700 bg-warm-900/70 px-3 py-1 text-warm-300">
+                              Set #{ghost.setId}
+                            </span>
+                            <span className="rounded-full border border-warm-700 bg-warm-900/70 px-3 py-1 text-warm-300">
+                              Round {ghost.round}
+                            </span>
+                            <span className="rounded-full border border-warm-700 bg-warm-900/70 px-3 py-1 text-warm-300">
+                              {ghost.wins} wins / {ghost.lives} lives
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 overflow-x-auto pb-2">
+                          <div className="flex min-w-max gap-3 snap-x snap-mandatory">
+                            {paddedBoard(ghost.board).map((unit, index) => {
+                              if (!unit) {
+                                return (
+                                  <div
+                                    key={`${ghost.id}-empty-${index}`}
+                                    className="shrink-0 snap-start"
+                                  >
+                                    <EmptySlot sizeVariant="compact" label={`Slot ${index + 1}`} />
+                                  </div>
+                                );
+                              }
+
+                              const boardCard = buildGhostBoardUnitCard(unit, cardLookup);
+                              const cardKey = `${ghost.id}-${index}-${unit.cardId}`;
+
+                              return (
+                                <div key={cardKey} className="shrink-0 snap-start">
+                                  <UnitCard
+                                    card={boardCard}
+                                    sizeVariant="compact"
+                                    showCost={true}
+                                    showBurn={true}
+                                    draggable={false}
+                                    isSelected={selectedCardKey === cardKey}
+                                    onClick={() => {
+                                      setDetailCard(boardCard);
+                                      setSelectedCardKey(cardKey);
+                                    }}
+                                  />
+                                  <div className="mt-2 w-20 lg:w-28 rounded-xl border border-warm-800 bg-warm-900/70 px-2 py-1.5 text-center text-[10px] lg:text-[11px] text-warm-300">
+                                    <div className="font-bold text-white">
+                                      {boardCard.attack}/{boardCard.health}
+                                    </div>
+                                    <div className="mt-0.5 text-warm-500">
+                                      {unit.permAttack >= 0 ? '+' : ''}
+                                      {unit.permAttack} ATK, {unit.permHealth >= 0 ? '+' : ''}
+                                      {unit.permHealth} HP
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        </div>
+      </div>
+      <RotatePrompt />
+    </div>
+  );
+}

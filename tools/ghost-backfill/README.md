@@ -8,6 +8,7 @@ Standalone tooling for seeding blockchain ghost brackets from a checked-in JSON 
 - Stores the dataset under set `0` for now
 - Emits no board statuses; all submitted `perm_statuses` masks are empty
 - Submits `AutoBattle.backfill_ghost_board` calls wrapped in `Sudo.sudo(...)`
+- Groups submissions into `Utility.batch_all(...)` calls for faster backfills
 
 The JSON uses `losses`, not `lives`. The submitter converts `losses` into `lives` with:
 
@@ -32,7 +33,7 @@ That keeps the same JSON reusable even if the exact card IDs in the set change.
 cd tools/ghost-backfill
 npm install
 npm run generate
-npm run backfill -- --ws ws://127.0.0.1:9944 --set-id 0
+npm run backfill -- --ws ws://127.0.0.1:9944 --set-id 0 --batch-size 10
 ```
 
 Optional flags for `backfill-boards.ts`:
@@ -43,6 +44,7 @@ Optional flags for `backfill-boards.ts`:
 - `--account <name>`: dev derivation path, default `Alice`
 - `--mnemonic "<phrase>"`: override the mnemonic, default `DEV_PHRASE`
 - `--limit <n>`: only submit the first `n` boards
+- `--batch-size <n>`: number of backfills per `Utility.batch_all`, default `10`
 - `--dry-run`: validate and print what would be submitted without sending transactions
 
 ## Dataset shape

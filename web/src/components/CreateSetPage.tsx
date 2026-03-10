@@ -6,6 +6,7 @@ import { CardDetailPanel } from './CardDetailPanel';
 import { UnitCard } from './UnitCard';
 import { BackLink } from './PageHeader';
 import { type CardView } from '../types';
+import { blockchainCardToCardView } from '../utils/blockchainCards';
 
 export const CreateSetPage: React.FC = () => {
   const { isConnected, connect, allCards, fetchCards, createCardSet } = useBlockchainStore();
@@ -34,17 +35,7 @@ export const CreateSetPage: React.FC = () => {
   };
 
   const mapToCardView = (card: any): CardView => {
-    return {
-      id: card.id,
-      name: card.metadata.name,
-      attack: card.data.stats.attack,
-      health: card.data.stats.health,
-      play_cost: card.data.economy.play_cost,
-      burn_value: card.data.economy.burn_value,
-      base_statuses: card.data.base_statuses || [],
-      shop_abilities: card.data.shop_abilities || [],
-      battle_abilities: card.data.battle_abilities || [],
-    };
+    return blockchainCardToCardView(card);
   };
 
   const handleCreateSet = async () => {
@@ -105,7 +96,9 @@ export const CreateSetPage: React.FC = () => {
             <h1 className="text-xl lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase mt-1">
               Set Creator
             </h1>
-            <p className="text-warm-500 text-xs lg:text-sm mt-0.5">Bundle cards into playable sets</p>
+            <p className="text-warm-500 text-xs lg:text-sm mt-0.5">
+              Bundle cards into playable sets
+            </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

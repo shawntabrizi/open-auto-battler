@@ -166,6 +166,7 @@ export function HomePage() {
           {[
             { to: '/sandbox', label: 'Sandbox' },
             { to: '/multiplayer', label: 'P2P' },
+            { to: '/blockchain/ghosts', label: 'Ghosts' },
             { to: '/presentations', label: 'Presentations' },
             { to: '/settings', label: 'Settings' },
           ].map((link) => (

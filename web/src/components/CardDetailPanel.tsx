@@ -1,13 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
-import type { CardView } from '../types';
+import type { BoardUnitView, CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import { getCardArtMd } from '../utils/cardArt';
 import { formatAbilitySentence } from '../utils/abilityText';
 
 /** Card art image with loading state — remount via key={card.id} to reset on card change. */
-function CardArtImage({ card }: { card: CardView }) {
+function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
   const artSrc = getCardArtMd(card.id);
   const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>(
     artSrc ? 'loading' : 'error'
@@ -93,7 +93,7 @@ export type CardDetailPanelMode =
     };
 
 export interface CardDetailPanelProps {
-  card: CardView | null;
+  card: CardView | BoardUnitView | null;
   isVisible: boolean;
   mode?: CardDetailPanelMode;
 }

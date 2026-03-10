@@ -43,6 +43,7 @@ interface CliOptions {
   account: string;
   mnemonic: string;
   dryRun: boolean;
+  batchSize: number;
   limit?: number;
 }
 
@@ -52,6 +53,12 @@ interface WorkItem {
   wins: number;
   losses: number;
   board: DatasetBoard;
+}
+
+interface PreparedWorkItem extends WorkItem {
+  lives: number;
+  label: string;
+  resolvedBoard: ReturnType<typeof resolveBoardUnits>;
 }
 
 function parseArgs(argv: string[]): CliOptions {
@@ -65,6 +72,10 @@ function parseArgs(argv: string[]): CliOptions {
     account: process.env.GHOST_BACKFILL_ACCOUNT || "Alice",
     mnemonic: process.env.SUDO_MNEMONIC || DEV_PHRASE,
     dryRun: false,
+    batchSize:
+      process.env.GHOST_BACKFILL_BATCH_SIZE === undefined
+        ? 10
+        : Number.parseInt(process.env.GHOST_BACKFILL_BATCH_SIZE, 10),
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -105,6 +116,11 @@ function parseArgs(argv: string[]): CliOptions {
       continue;
     }
 
+    if (arg === "--batch-size") {
+      options.batchSize = Number.parseInt(argv[++index] ?? "", 10);
+      continue;
+    }
+
     throw new Error(`Unknown argument: ${arg}`);
   }
 
@@ -117,6 +133,10 @@ function parseArgs(argv: string[]): CliOptions {
     (!Number.isInteger(options.limit) || options.limit <= 0)
   ) {
     throw new Error(`Invalid --limit value: ${options.limit}`);
+  }
+
+  if (!Number.isInteger(options.batchSize) || options.batchSize <= 0) {
+    throw new Error(`Invalid --batch-size value: ${options.batchSize}`);
   }
 
   if (!options.ws) {
@@ -257,6 +277,40 @@ function flattenWorkItems(setEntry: DatasetSet): WorkItem[] {
   return items;
 }
 
+function prepareWorkItems(
+  items: WorkItem[],
+  setCardIds: number[],
+  startingLives: number,
+): PreparedWorkItem[] {
+  return items.map((item, index) => {
+    const lives = startingLives - item.losses;
+    if (lives <= 0) {
+      throw new Error(
+        `Invalid lives computed for round=${item.round} wins=${item.wins} losses=${item.losses}.`,
+      );
+    }
+
+    return {
+      ...item,
+      lives,
+      resolvedBoard: resolveBoardUnits(item.board, setCardIds),
+      label:
+        `${index + 1}/${items.length} ` +
+        `set=${item.set_id} round=${item.round} wins=${item.wins} losses=${item.losses} board=${item.board.name}`,
+    };
+  });
+}
+
+function chunkItems<T>(items: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += chunkSize) {
+    chunks.push(items.slice(index, index + chunkSize));
+  }
+
+  return chunks;
+}
+
 function formatDispatchError(dispatchError: unknown): string {
   if (!dispatchError) return "Unknown dispatch error";
   if (typeof dispatchError === "string") return dispatchError;
@@ -319,22 +373,107 @@ async function submitTx(
     throw new Error(`${label}: ${formatDispatchError(dispatchError)}`);
   }
 
-  const backfillEvent = result.events.find(
+  return result.events;
+}
+
+function resolveUtilityBatch(api: any): {
+  kind: "batch_all" | "batch";
+  create: (calls: any[]) => any;
+} {
+  const utility = api?.tx?.Utility;
+
+  if (!utility) {
+    throw new Error(
+      "Runtime metadata does not expose Utility. Restart the chain with the updated runtime and refresh the PAPI descriptors first.",
+    );
+  }
+
+  if (typeof utility.batch_all === "function") {
+    return {
+      kind: "batch_all",
+      create: (calls) => utility.batch_all({ calls }),
+    };
+  }
+
+  if (typeof utility.batchAll === "function") {
+    return {
+      kind: "batch_all",
+      create: (calls) => utility.batchAll({ calls }),
+    };
+  }
+
+  if (typeof utility.batch === "function") {
+    return {
+      kind: "batch",
+      create: (calls) => utility.batch({ calls }),
+    };
+  }
+
+  throw new Error(
+    "Utility pallet is present, but neither batch_all nor batch is available in the generated descriptors.",
+  );
+}
+
+function extractBackfillEvents(
+  events: Array<{ type: string; value?: { type?: string; value?: any } }>,
+) {
+  return events.filter(
     (event) =>
       event.type === "AutoBattle" &&
       event.value?.type === "GhostBoardBackfilled",
   );
+}
 
-  if (!backfillEvent) {
-    const sudoEvent = result.events.find(
-      (event) => event.type === "Sudo" && event.value?.type === "Sudid",
-    );
+function describeBatchFailure(
+  events: Array<{ type: string; value?: { type?: string; value?: any } }>,
+): string {
+  const sudoEvent = events.find(
+    (event) => event.type === "Sudo" && event.value?.type === "Sudid",
+  );
+  const utilityEvent = events.find((event) => event.type === "Utility");
+
+  if (sudoEvent || utilityEvent) {
+    return [sudoEvent, utilityEvent]
+      .filter(Boolean)
+      .map(
+        (event) =>
+          `${event?.type}.${event?.value?.type}: ${JSON.stringify(event?.value?.value)}`,
+      )
+      .join(" | ");
+  }
+
+  return "No Sudo/Utility failure details were emitted.";
+}
+
+function formatBatchLabel(
+  batchIndex: number,
+  batchCount: number,
+  batch: PreparedWorkItem[],
+) {
+  const first = batch[0];
+  const last = batch[batch.length - 1];
+
+  return (
+    `${batchIndex + 1}/${batchCount} ` +
+    `size=${batch.length} ` +
+    `items=${first.label.split(" ")[0]}..${last.label.split(" ")[0]}`
+  );
+}
+
+function assertBatchSucceeded(
+  events: Array<{ type: string; value?: { type?: string; value?: any } }>,
+  batch: PreparedWorkItem[],
+  label: string,
+) {
+  const backfillEvents = extractBackfillEvents(events);
+
+  if (backfillEvents.length !== batch.length) {
     throw new Error(
-      `${label}: finalized without GhostBoardBackfilled event${sudoEvent ? ` (${JSON.stringify(sudoEvent.value?.value)})` : ""}`,
+      `${label}: expected ${batch.length} GhostBoardBackfilled events, got ${backfillEvents.length}. ${describeBatchFailure(events)}`,
     );
   }
 
-  return backfillEvent.value?.value;
+  return backfillEvents.map((event) => event.value?.value);
 }
 
 async function main(): Promise<void> {
@@ -372,47 +511,59 @@ async function main(): Promise<void> {
       throw new Error(`On-chain set ${options.setId} has no cards.`);
     }
 
+    const preparedWorkItems = prepareWorkItems(
+      limitedWorkItems,
+      setCardIds,
+      dataset.starting_lives,
+    );
+    const batches = chunkItems(preparedWorkItems, options.batchSize);
+    const utilityBatch = options.dryRun
+      ? null
+      : resolveUtilityBatch(api as any);
+
     console.log(
       `Connected to ${options.ws} as ${address} using //${options.account}. Sudo key: ${sudoKey ?? "none"}`,
     );
     console.log(
-      `Preparing ${limitedWorkItems.length} backfills for set ${options.setId} with ${setCardIds.length} set cards.`,
+      `Preparing ${preparedWorkItems.length} backfills for set ${options.setId} with ${setCardIds.length} set cards in ${batches.length} batches of up to ${options.batchSize}${utilityBatch ? ` using Utility.${utilityBatch.kind}` : ""}.`,
     );
 
-    for (let index = 0; index < limitedWorkItems.length; index += 1) {
-      const item = limitedWorkItems[index];
-      const lives = dataset.starting_lives - item.losses;
-      if (lives <= 0) {
-        throw new Error(
-          `Invalid lives computed for round=${item.round} wins=${item.wins} losses=${item.losses}.`,
-        );
-      }
-
-      const board = resolveBoardUnits(item.board, setCardIds);
-      const label =
-        `${index + 1}/${limitedWorkItems.length} ` +
-        `set=${item.set_id} round=${item.round} wins=${item.wins} losses=${item.losses} board=${item.board.name}`;
-
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex += 1) {
+      const batch = batches[batchIndex];
+      const batchLabel = formatBatchLabel(batchIndex, batches.length, batch);
       if (options.dryRun) {
-        console.log(`[dry-run] ${label}`, board);
+        console.log(
+          `[dry-run] batch ${batchLabel}`,
+          batch.map((item) => item.label),
+        );
         continue;
       }
 
-      const innerTx = api.tx.AutoBattle.backfill_ghost_board({
-        set_id: item.set_id,
-        round: item.round,
-        wins: item.wins,
-        lives,
-        board,
-      });
+      const innerCalls = batch.map(
+        (item) =>
+          api.tx.AutoBattle.backfill_ghost_board({
+            set_id: item.set_id,
+            round: item.round,
+            wins: item.wins,
+            lives: item.lives,
+            board: item.resolvedBoard,
+          }).decodedCall,
+      );
 
+      const batchedTx = utilityBatch!.create(innerCalls);
       const sudoTx = api.tx.Sudo.sudo({
-        call: innerTx.decodedCall,
+        call: batchedTx.decodedCall,
       });
 
-      const event = await submitTx(sudoTx, signer, label);
+      const events = await submitTx(sudoTx, signer, `batch ${batchLabel}`);
+      const results = assertBatchSucceeded(
+        events,
+        batch,
+        `batch ${batchLabel}`,
+      );
+
       console.log(
-        `[tx] ok ${label} -> pool_size=${event?.pool_size ?? "unknown"} lives=${event?.lives ?? lives}`,
+        `[tx] ok batch ${batchLabel} -> ${results.length} GhostBoardBackfilled events`,
       );
     }
   } finally {

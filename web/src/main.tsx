@@ -14,6 +14,7 @@ import { CreateCardPage } from './components/CreateCardPage.tsx';
 import { CustomizePage } from './components/CustomizePage.tsx';
 import { MintNftPage } from './components/MintNftPage.tsx';
 import { CreatorHubPage } from './components/CreatorHubPage.tsx';
+import { GhostBrowserPage } from './components/GhostBrowserPage.tsx';
 import { TournamentPage } from './components/TournamentPage.tsx';
 import { SettingsPage, NetworkPage } from './components/SettingsPage.tsx';
 import { DevPage } from './components/DevPage.tsx';
@@ -44,6 +45,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/blockchain/create-set" element={<CreateSetPage />} />
         <Route path="/blockchain/customize" element={<CustomizePage />} />
         <Route path="/blockchain/mint-nft" element={<MintNftPage />} />
+        <Route path="/blockchain/ghosts" element={<GhostBrowserPage />} />
         <Route
           path="/embed"
           element={
