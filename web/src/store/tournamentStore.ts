@@ -312,11 +312,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           ? opponent_board
           : opponent_board?.units || [];
         const opponentUnits = rawUnits.map((u: any) => ({
-          card_id: typeof u.card_id === 'number' ? u.card_id : Number(u.card_id),
+          card_id:
+            typeof u.card_id === 'number' ? u.card_id : Number(u.card_id?.value ?? u.card_id),
           perm_attack:
             typeof u.perm_attack === 'number' ? u.perm_attack : Number(u.perm_attack || 0),
           perm_health:
             typeof u.perm_health === 'number' ? u.perm_health : Number(u.perm_health || 0),
+          perm_statuses: toStatusMask(u.perm_statuses),
         }));
 
         const battleOutput = engine.resolve_battle_p2p(
