@@ -135,20 +135,6 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
   const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
   const cardRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(card), [card]);
   const gameViewRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(view), [view]);
-
-  if (!isVisible) return null;
-
-  const containerClassName =
-    layout === 'contained'
-      ? 'relative h-full min-h-0 w-40 sm:w-44 lg:w-80 shrink-0'
-      : 'fixed top-0 left-0 bottom-0 w-44 lg:w-80';
-
-  // Get the selected hand/board index for actions
-  const selectedHandIndex = selection?.type === 'hand' ? selection.index : -1;
-  const selectedBoardIndex = selection?.type === 'board' ? selection.index : -1;
-  const isBoardUnit = selection?.type === 'board';
-
-  // Check if actions should be disabled
   const isActionDisabled = resolvedMode.type === 'sandbox' || resolvedMode.type === 'readOnly';
   const isChainBackedMode =
     resolvedMode.type === 'blockchain' || resolvedMode.type === 'tournament';
@@ -210,6 +196,18 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
     resolvedMode.type,
     setSelection,
   ]);
+
+  if (!isVisible) return null;
+
+  const containerClassName =
+    layout === 'contained'
+      ? 'relative h-full min-h-0 w-40 sm:w-44 lg:w-80 shrink-0'
+      : 'fixed top-0 left-0 bottom-0 w-44 lg:w-80';
+
+  // Get the selected hand/board index for actions
+  const selectedHandIndex = selection?.type === 'hand' ? selection.index : -1;
+  const selectedBoardIndex = selection?.type === 'board' ? selection.index : -1;
+  const isBoardUnit = selection?.type === 'board';
 
   const renderCardTab = () => {
     if (!card) {
@@ -612,8 +610,7 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
               <h2
                 className="font-title text-3xl lg:text-4xl font-bold tracking-wide uppercase text-red-300"
                 style={{
-                  textShadow:
-                    '0 2px 12px rgba(168, 58, 42, 0.5), 0 0 40px rgba(168, 58, 42, 0.2)',
+                  textShadow: '0 2px 12px rgba(168, 58, 42, 0.5), 0 0 40px rgba(168, 58, 42, 0.2)',
                 }}
               >
                 {forfeitContext.title}
