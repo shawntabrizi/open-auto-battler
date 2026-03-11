@@ -132,6 +132,7 @@ interface GameStore {
   setAfterBattleCallback: (cb: (() => void) | null) => void;
   mobileTab: 'hand' | 'board';
   setMobileTab: (tab: 'hand' | 'board') => void;
+  resetActiveSessionView: () => void;
   saveLocalResumePoint: () => void;
   restoreLocalResumePoint: () => boolean;
   clearLocalResumePoint: () => void;
@@ -488,22 +489,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   newRun: () => {
-    const { engine } = get();
+    const { engine, resetActiveSessionView } = get();
     if (!engine) return;
     try {
       clearPersistedLocalSession();
-      // Return to set selection screen
-      set({
-        view: null,
-        cardSet: null,
-        battleOutput: null,
-        selection: null,
-        showBattleOverlay: false,
-        gameStarted: false,
-        currentSetId: null,
-        startingLives: 3,
-        winsToVictory: 10,
-      });
+      resetActiveSessionView();
     } catch (err) {
       console.error(err);
     }
@@ -586,6 +576,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ afterBattleCallback: cb });
   },
   setMobileTab: (tab: 'hand' | 'board') => set({ mobileTab: tab }),
+  resetActiveSessionView: () => {
+    set({
+      view: null,
+      cardSet: null,
+      battleOutput: null,
+      selection: null,
+      showBattleOverlay: false,
+      gameStarted: false,
+      currentSetId: null,
+      startingLives: 3,
+      winsToVictory: 10,
+      afterBattleCallback: null,
+      showBag: false,
+      bag: null,
+      mobileTab: 'hand',
+      showSetPreview: false,
+      previewCards: null,
+    });
+  },
   saveLocalResumePoint: () => {
     const { engine, gameStarted, currentSetId } = get();
     if (!engine || !gameStarted || currentSetId === null) {

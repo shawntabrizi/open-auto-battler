@@ -1,6 +1,9 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { useGameStore } from '../store/gameStore';
+import { useBlockchainStore } from '../store/blockchainStore';
+import { useTournamentStore } from '../store/tournamentStore';
 import type { BoardUnitView, CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import { getCardArtMd } from '../utils/cardArt';
@@ -90,6 +93,13 @@ export type CardDetailPanelMode =
       accounts: BlockchainAccount[];
       selectedAccount?: BlockchainAccount;
       onSelectAccount?: (account: BlockchainAccount | undefined) => void;
+    }
+  | {
+      type: 'tournament';
+      blockNumber: number | null;
+      accounts: BlockchainAccount[];
+      selectedAccount?: BlockchainAccount;
+      onSelectAccount?: (account: BlockchainAccount | undefined) => void;
     };
 
 export interface CardDetailPanelProps {
@@ -103,6 +113,7 @@ type TabType = 'card' | 'rules' | 'mode';
 
 export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
+  const [forfeitPending, setForfeitPending] = React.useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const {
@@ -114,7 +125,10 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
     setSelection,
     showRawJson,
     toggleShowRawJson,
+    newRun,
   } = useGameStore();
+  const abandonGame = useBlockchainStore((state) => state.abandonGame);
+  const abandonTournament = useTournamentStore((state) => state.abandonTournament);
 
   const resolvedMode: CardDetailPanelMode = mode ?? { type: 'standard' };
   const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
@@ -135,6 +149,38 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
 
   // Check if actions should be disabled
   const isActionDisabled = resolvedMode.type === 'sandbox' || resolvedMode.type === 'readOnly';
+  const isChainBackedMode =
+    resolvedMode.type === 'blockchain' || resolvedMode.type === 'tournament';
+
+  const handleForfeit = React.useCallback(async () => {
+    const isTournament = resolvedMode.type === 'tournament';
+    const confirmed = window.confirm(
+      isTournament
+        ? 'Forfeit this tournament run? This will abandon your current tournament game.'
+        : 'Forfeit this run? Your current progress will be lost.'
+    );
+    if (!confirmed) return;
+
+    setForfeitPending(true);
+    try {
+      if (resolvedMode.type === 'blockchain') {
+        await abandonGame();
+        toast.success('On-chain run forfeited.');
+      } else if (resolvedMode.type === 'tournament') {
+        await abandonTournament();
+        toast.success('Tournament run forfeited.');
+      } else {
+        newRun();
+        toast.success('Local run forfeited.');
+      }
+      setSelection(null);
+      setActiveTab('card');
+    } catch (err) {
+      console.error('Forfeit failed:', err);
+    } finally {
+      setForfeitPending(false);
+    }
+  }, [abandonGame, abandonTournament, newRun, resolvedMode.type, setSelection]);
 
   const renderCardTab = () => {
     if (!card) {
@@ -362,7 +408,10 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
   };
 
   const renderModeTab = () => {
-    const isBlockchain = resolvedMode.type === 'blockchain';
+    const isBlockchain = isChainBackedMode;
+    const forfeitLabel =
+      resolvedMode.type === 'tournament' ? 'Forfeit Tournament Run' : 'Forfeit Run';
+    const forfeitButtonLabel = forfeitPending ? 'Forfeiting...' : forfeitLabel;
 
     return (
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
@@ -416,6 +465,13 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
               className="w-full btn bg-yellow-900/50 hover:bg-yellow-800 text-yellow-200 border border-yellow-700 text-xs py-2"
             >
               Settings
+            </button>
+            <button
+              onClick={() => void handleForfeit()}
+              disabled={forfeitPending}
+              className="w-full btn bg-red-900/50 hover:bg-red-800 text-red-200 border border-red-700 text-xs py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {forfeitButtonLabel}
             </button>
             <button
               onClick={() => navigate('/')}

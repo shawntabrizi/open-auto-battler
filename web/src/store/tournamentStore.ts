@@ -359,14 +359,23 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
   abandonTournament: async () => {
     const { api, selectedAccount } = useBlockchainStore.getState();
-    if (!api || !selectedAccount) return;
+    if (!api || !selectedAccount) {
+      throw new Error('Blockchain account is not ready');
+    }
 
     try {
       const tx = api.tx.AutoBattle.abandon_tournament({});
       await submitTx(tx, selectedAccount.polkadotSigner, 'AutoBattle.abandon_tournament');
       set({ hasActiveTournamentGame: false });
+      useGameStore.getState().resetActiveSessionView();
+      await get().fetchPlayerStats();
+      if (get().activeTournament) {
+        await get().fetchAllPlayerStats(get().activeTournament!.id);
+      }
+      await get().fetchActiveTournament();
     } catch (err) {
       console.error('Abandon tournament failed:', err);
+      throw err;
     }
   },
 

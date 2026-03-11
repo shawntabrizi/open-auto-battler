@@ -30,6 +30,7 @@ export interface GameShellProps {
   hideEndTurn?: boolean;
   customAction?: CustomActionConfig;
   blockchainMode?: boolean;
+  detailMode?: 'standard' | 'blockchain' | 'tournament';
   blockNumber?: number | null;
   accounts?: BlockchainAccount[];
   selectedAccount?: BlockchainAccount;
@@ -42,6 +43,7 @@ export function GameShell({
   hideEndTurn = false,
   customAction,
   blockchainMode = false,
+  detailMode,
   blockNumber,
   accounts = [],
   selectedAccount,
@@ -79,15 +81,17 @@ export function GameShell({
 
   const cardToShow = selectedCard || selectedBoardUnit;
   const activeCard = getActiveCard();
-  const cardPanelMode: CardDetailPanelMode = blockchainMode
-    ? {
-        type: 'blockchain',
-        blockNumber: blockNumber ?? null,
-        accounts,
-        selectedAccount,
-        onSelectAccount,
-      }
-    : { type: 'standard' };
+  const resolvedDetailMode = detailMode ?? (blockchainMode ? 'blockchain' : 'standard');
+  const cardPanelMode: CardDetailPanelMode =
+    resolvedDetailMode === 'blockchain' || resolvedDetailMode === 'tournament'
+      ? {
+          type: resolvedDetailMode,
+          blockNumber: blockNumber ?? null,
+          accounts,
+          selectedAccount,
+          onSelectAccount,
+        }
+      : { type: 'standard' };
 
   // Margin class for the content area when card panel is visible
   const contentMargin = showCardPanel ? 'ml-44 lg:ml-80' : '';
@@ -127,11 +131,7 @@ export function GameShell({
         </div>
 
         {/* Card Detail Panel */}
-        <CardDetailPanel
-          card={cardToShow}
-          isVisible={showCardPanel}
-          mode={cardPanelMode}
-        />
+        <CardDetailPanel card={cardToShow} isVisible={showCardPanel} mode={cardPanelMode} />
 
         {/* Battle Overlay */}
         <BattleOverlay />

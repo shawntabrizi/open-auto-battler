@@ -304,6 +304,7 @@ interface BlockchainStore {
   startGame: (set_id?: number) => Promise<void>;
   refreshGameState: (force?: boolean) => Promise<void>;
   submitTurnOnChain: () => Promise<void>;
+  abandonGame: () => Promise<void>;
   fetchDeck: () => any[];
   fetchCards: () => Promise<void>;
   fetchSets: () => Promise<void>;
@@ -656,6 +657,23 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       }
     } catch (err) {
       console.error('Submit turn failed:', err);
+    }
+  },
+
+  abandonGame: async () => {
+    const { api, selectedAccount } = get();
+    if (!api || !selectedAccount) {
+      throw new Error('Blockchain account is not ready');
+    }
+
+    try {
+      const tx = api.tx.AutoBattle.abandon_game({});
+      await submitTx(tx, selectedAccount.polkadotSigner, 'AutoBattle.abandon_game');
+      set({ chainState: null });
+      useGameStore.getState().resetActiveSessionView();
+    } catch (err) {
+      console.error('Abandon game failed:', err);
+      throw err;
     }
   },
 

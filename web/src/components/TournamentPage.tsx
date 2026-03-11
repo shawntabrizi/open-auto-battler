@@ -279,6 +279,7 @@ export const TournamentPage: React.FC = () => {
             variant: 'chain',
           }}
           blockchainMode={true}
+          detailMode="tournament"
           blockNumber={blockNumber}
           accounts={accounts}
           selectedAccount={selectedAccount}
