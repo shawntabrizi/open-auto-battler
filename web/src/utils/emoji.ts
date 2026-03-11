@@ -1,8 +1,7 @@
 /**
  * Centralized utility for card emojis.
  * This is the single source of truth for all unit card representations in the UI.
- * In blockchain mode, emoji data comes from on-chain CardMetadataStore.
- * In local mode, it's initialized from WASM engine's static card metadata.
+ * Chain metadata should override any baked-in defaults as soon as it is available.
  */
 
 // Dynamic emoji map built from card data, indexed by card ID
@@ -10,7 +9,7 @@ let emojiMap: Record<number, string> = {};
 
 /**
  * Initialize the emoji map from card data.
- * Call this once when cards are loaded (from blockchain or JSON fallback).
+ * Call this whenever authoritative card metadata changes.
  */
 export function initEmojiMap(cards: Array<{ id: number; emoji: string }>) {
   emojiMap = {};

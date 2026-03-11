@@ -12,7 +12,7 @@ use oab_core::battle::{
     player_permanent_stat_deltas_from_events, player_permanent_status_deltas_from_events,
     player_shop_mana_delta_from_events, resolve_battle, CombatEvent, CombatUnit, UnitId, UnitView,
 };
-use oab_core::bounded::{BoundedCardSet, BoundedLocalGameState};
+use oab_core::bounded::{BoundedCardSet, BoundedGameSession};
 use oab_core::commit::{
     apply_on_buy_triggers, apply_on_sell_triggers, apply_shop_start_triggers,
     apply_shop_start_triggers_with_result, verify_and_apply_turn,
@@ -625,6 +625,23 @@ impl GameEngine {
         }
     }
 
+    /// Get the resumable local session payload (similar to the on-chain GameSession).
+    #[wasm_bindgen]
+    pub fn get_local_session(&self) -> JsValue {
+        let snapshot = GameSession {
+            state: self.state.local_state.clone(),
+            set_id: self.state.set_id,
+        };
+
+        match serde_wasm_bindgen::to_value(&snapshot) {
+            Ok(val) => val,
+            Err(e) => {
+                log::error(&format!("get_local_session serialization failed: {:?}", e));
+                JsValue::NULL
+            }
+        }
+    }
+
     /// Get just the board state as JSON (for P2P battle sync)
     #[wasm_bindgen]
     pub fn get_board(&self) -> JsValue {
@@ -813,20 +830,12 @@ impl GameEngine {
         // Step-by-step decoding for debugging
         let mut session_slice = &session_scale[..];
 
-        log::debug("init_from_scale", "Decoding BoundedLocalGameState...");
-        let state_bounded =
-            BoundedLocalGameState::<WasmMaxBagSize, WasmMaxBoardSize, WasmMaxHandActions>::decode(
+        log::debug("init_from_scale", "Decoding BoundedGameSession...");
+        let session_bounded =
+            BoundedGameSession::<WasmMaxBagSize, WasmMaxBoardSize, WasmMaxHandActions>::decode(
                 &mut session_slice,
             )
-            .map_err(|e| format!("Failed to decode BoundedLocalGameState: {:?}", e))?;
-
-        log::debug("init_from_scale", "Decoding set_id...");
-        let set_id = u32::decode(&mut session_slice)
-            .map_err(|e| format!("Failed to decode set_id: {:?}", e))?;
-
-        log::debug("init_from_scale", "Decoding owner...");
-        let _owner = <[u8; 32]>::decode(&mut session_slice)
-            .map_err(|e| format!("Failed to decode owner: {:?}", e))?;
+            .map_err(|e| format!("Failed to decode BoundedGameSession: {:?}", e))?;
 
         // Check for trailing bytes
         if !session_slice.is_empty() {
@@ -848,13 +857,13 @@ impl GameEngine {
             "Converting bounded types to core types...",
         );
         let _card_set: oab_core::state::CardSet = card_set_bounded.into();
-        let local_state: oab_core::state::LocalGameState = state_bounded.into();
+        let session: GameSession = session_bounded.into();
 
         log::debug("init_from_scale", "Reconstructing GameState...");
         // Use the card pool already loaded via load_card_set()
         let card_pool = std::mem::take(&mut self.state.card_pool);
 
-        let state = GameState::reconstruct(card_pool, set_id, local_state);
+        let state = GameState::reconstruct(card_pool, session.set_id, session.state);
 
         log::debug("init_from_scale", "Reconstructing done...");
 
@@ -871,6 +880,27 @@ impl GameEngine {
         self.start_planning_phase();
 
         log::info("init_from_scale completed successfully");
+        Ok(())
+    }
+
+    /// Restore a local resumable session at the start of a player turn.
+    #[wasm_bindgen]
+    pub fn restore_local_session(&mut self, session_js: JsValue) -> Result<(), String> {
+        let session: GameSession = serde_wasm_bindgen::from_value(session_js)
+            .map_err(|e| format!("Failed to parse local session: {:?}", e))?;
+
+        if session.state.phase != GamePhase::Shop {
+            return Err("Local session resume requires a shop-phase turn start".to_string());
+        }
+
+        let card_pool = std::mem::take(&mut self.state.card_pool);
+        self.state = GameState::reconstruct(card_pool, session.set_id, session.state);
+        self.set_id = self.state.set_id;
+        self.last_battle_output = None;
+        self.starting_lives = STARTING_LIVES;
+        self.wins_to_victory = WINS_TO_VICTORY;
+        self.start_planning_phase();
+
         Ok(())
     }
 }

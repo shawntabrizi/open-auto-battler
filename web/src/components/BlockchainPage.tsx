@@ -23,6 +23,9 @@ export const BlockchainPage: React.FC = () => {
     refreshGameState,
     availableSets,
     fetchSets,
+    fetchCards,
+    hydrateGameEngineFromChainData,
+    connectionError,
   } = useBlockchainStore();
 
   const { init, engine, view, previewSet } = useGameStore();
@@ -40,8 +43,14 @@ export const BlockchainPage: React.FC = () => {
     void init();
     if (isConnected) {
       void fetchSets();
+      void fetchCards();
     }
-  }, [init, isConnected, fetchSets]);
+  }, [fetchCards, fetchSets, init, isConnected]);
+
+  useEffect(() => {
+    if (!engine || !isConnected) return;
+    hydrateGameEngineFromChainData();
+  }, [engine, hydrateGameEngineFromChainData, isConnected]);
 
   // Sync chain state whenever engine or account changes
   useEffect(() => {
@@ -87,12 +96,23 @@ export const BlockchainPage: React.FC = () => {
             BLOCKCHAIN MODE
           </h1>
           <button
-            onClick={connect}
+            onClick={() => void connect()}
             disabled={isConnecting}
             className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
           >
-            {isConnecting ? 'CONNECTING...' : 'CONNECT WALLET'}
+            {isConnecting ? 'CONNECTING...' : 'RETRY CONNECTION'}
           </button>
+          <Link
+            to="/settings/network"
+            className="mt-3 text-sm text-warm-400 hover:text-warm-200 transition-colors"
+          >
+            Network Settings
+          </Link>
+          {connectionError && (
+            <p className="mt-3 max-w-md rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-center text-xs text-red-200">
+              {connectionError}
+            </p>
+          )}
         </div>
       </div>
     );
@@ -103,7 +123,10 @@ export const BlockchainPage: React.FC = () => {
       <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans selection:bg-yellow-500/30 flex flex-col p-4">
         <div className="flex items-center justify-between">
           <BackLink to="/" label="Menu" />
-          <Link to="/blockchain/creator" className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm">
+          <Link
+            to="/blockchain/creator"
+            className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm"
+          >
             Creator Hub &rarr;
           </Link>
         </div>
@@ -116,11 +139,9 @@ export const BlockchainPage: React.FC = () => {
             {/* Connection Status & Account */}
             <div className="flex items-center justify-center gap-3 mb-6 lg:mb-8">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-warm-800 rounded-lg border border-white/5">
-                <div
-                  className={`w-2 h-2 rounded-full ${blockNumber !== null ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
-                />
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 <span className="text-xs font-mono text-warm-400">
-                  {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'Offline'}
+                  {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'Connected'}
                 </span>
               </div>
               <select
@@ -147,11 +168,13 @@ export const BlockchainPage: React.FC = () => {
                   onChange={(e) => setSelectedSetId(Number(e.target.value))}
                   className="flex-1 bg-warm-800 border border-white/10 text-white text-sm rounded-lg px-4 py-3 focus:outline-none focus:border-yellow-500/50 cursor-pointer"
                 >
-                  {[...availableSets].sort((a, b) => a.id - b.id).map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} (#{s.id}) &middot; {s.cards.length} cards
-                    </option>
-                  ))}
+                  {[...availableSets]
+                    .sort((a, b) => a.id - b.id)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} (#{s.id}) &middot; {s.cards.length} cards
+                      </option>
+                    ))}
                 </select>
                 <button
                   onClick={() => previewSet(selectedSetId)}
@@ -169,7 +192,6 @@ export const BlockchainPage: React.FC = () => {
             >
               {txLoading ? 'TRANSACTING...' : 'START GAME ON-CHAIN'}
             </button>
-
           </div>
         </div>
         <SetPreviewOverlay />

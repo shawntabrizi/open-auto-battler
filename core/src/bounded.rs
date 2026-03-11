@@ -976,6 +976,99 @@ where
     }
 }
 
+#[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxBagSize, MaxBoardSize, MaxHandActions))]
+pub struct BoundedGameSession<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    pub state: BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>,
+    pub set_id: u32,
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions> Clone
+    for BoundedGameSession<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    fn clone(&self) -> Self {
+        Self {
+            state: self.state.clone(),
+            set_id: self.set_id,
+        }
+    }
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions> PartialEq
+    for BoundedGameSession<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.state == other.state && self.set_id == other.set_id
+    }
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions> Eq
+    for BoundedGameSession<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions> Debug
+    for BoundedGameSession<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("BoundedGameSession")
+            .field("state", &self.state)
+            .field("set_id", &self.set_id)
+            .finish()
+    }
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions> From<crate::state::GameSession>
+    for BoundedGameSession<MaxBagSize, MaxBoardSize, MaxHandActions>
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    fn from(session: crate::state::GameSession) -> Self {
+        Self {
+            state: session.state.into(),
+            set_id: session.set_id,
+        }
+    }
+}
+
+impl<MaxBagSize, MaxBoardSize, MaxHandActions>
+    From<BoundedGameSession<MaxBagSize, MaxBoardSize, MaxHandActions>> for crate::state::GameSession
+where
+    MaxBagSize: Get<u32>,
+    MaxBoardSize: Get<u32>,
+    MaxHandActions: Get<u32>,
+{
+    fn from(session: BoundedGameSession<MaxBagSize, MaxBoardSize, MaxHandActions>) -> Self {
+        Self {
+            state: session.state.into(),
+            set_id: session.set_id,
+        }
+    }
+}
+
 // --- Bounded Game State ---
 
 #[derive(Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]

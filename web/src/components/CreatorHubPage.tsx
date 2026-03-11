@@ -27,6 +27,12 @@ const TOOLS = [
     description: 'Upload images and mint them as on-chain NFTs',
     icon: '🖼️',
   },
+  {
+    to: '/blockchain/ghosts',
+    title: 'Ghost Browser',
+    description: 'Inspect active ghost pools by set, bracket, and owner',
+    icon: '👻',
+  },
 ];
 
 export const CreatorHubPage: React.FC = () => {
@@ -38,7 +44,9 @@ export const CreatorHubPage: React.FC = () => {
         <h1 className="text-2xl lg:text-4xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase mb-1 lg:mb-2">
           Creator Hub
         </h1>
-        <p className="text-warm-500 text-xs lg:text-sm mb-6 lg:mb-10">Build, mint, and customize on-chain content</p>
+        <p className="text-warm-500 text-xs lg:text-sm mb-6 lg:mb-10">
+          Build, mint, and inspect on-chain content
+        </p>
 
         <div className="grid grid-cols-2 gap-3 lg:gap-4 w-full max-w-2xl">
           {TOOLS.map((tool) => (
@@ -53,7 +61,9 @@ export const CreatorHubPage: React.FC = () => {
                   {tool.title}
                 </h2>
               </div>
-              <p className="text-warm-500 text-xs lg:text-sm hidden lg:block mt-1">{tool.description}</p>
+              <p className="text-warm-500 text-xs lg:text-sm hidden lg:block mt-1">
+                {tool.description}
+              </p>
             </Link>
           ))}
         </div>

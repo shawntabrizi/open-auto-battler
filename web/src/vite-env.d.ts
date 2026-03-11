@@ -11,6 +11,7 @@ declare module 'oab-client' {
     get_card_set(): any;
     get_board(): any;
     get_state(): any;
+    get_local_session(): any;
     get_commit_action(): any;
     get_commit_action_scale(): Uint8Array;
     burn_hand_card(index: number): void;
@@ -24,6 +25,7 @@ declare module 'oab-client' {
     submit_turn(action: any): void;
     resolve_battle_p2p(playerBoard: any, enemyBoard: any, seed: bigint): any;
     init_from_scale(session: Uint8Array, cardSet: Uint8Array): void;
+    restore_local_session(session: any): void;
     load_card_set(setId: number): void;
     get_card_metas(): Array<{ id: number; name: string; emoji: string }>;
     add_card(card: any): void;

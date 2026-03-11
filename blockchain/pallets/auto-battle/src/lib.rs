@@ -30,9 +30,11 @@ pub mod pallet {
     use oab_core::bounded::{
         BoundedBattleAbility as CoreBoundedBattleAbility, BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
-        BoundedGameState as CoreBoundedGameState, BoundedGhostBoard as CoreBoundedGhostBoard,
+        BoundedGameSession as CoreBoundedGameSession, BoundedGameState as CoreBoundedGameState,
+        BoundedGhostBoard as CoreBoundedGhostBoard,
         BoundedLocalGameState as CoreBoundedLocalGameState,
-        BoundedShopAbility as CoreBoundedShopAbility, MatchmakingBracket,
+        BoundedShopAbility as CoreBoundedShopAbility, GhostBoardUnit as CoreGhostBoardUnit,
+        MatchmakingBracket,
     };
     use oab_core::types::{EconomyStats, StatusMask, UnitStats};
     use oab_core::{get_opponent_for_round, BattleResult, CardSet, CombatUnit, GamePhase};
@@ -112,6 +114,13 @@ pub mod pallet {
         <T as Config>::MaxHandActions,
     >;
 
+    /// Type alias for the bounded game session using pallet config.
+    pub type BoundedGameSession<T> = CoreBoundedGameSession<
+        <T as Config>::MaxBagSize,
+        <T as Config>::MaxBoardSize,
+        <T as Config>::MaxHandActions,
+    >;
+
     /// Type alias for the bounded card set using pallet config.
     pub type BoundedCardSet<T> = CoreBoundedCardSet<<T as Config>::MaxSetSize>;
 
@@ -124,11 +133,9 @@ pub mod pallet {
     pub type BoundedGhostBoard<T> = CoreBoundedGhostBoard<<T as Config>::MaxBoardSize>;
 
     /// Type alias for bounded ability using pallet config.
-    pub type BoundedBattleAbility<T> =
-        CoreBoundedBattleAbility<<T as Config>::MaxConditions>;
+    pub type BoundedBattleAbility<T> = CoreBoundedBattleAbility<<T as Config>::MaxConditions>;
     /// Type alias for bounded shop ability using pallet config.
-    pub type BoundedShopAbility<T> =
-        CoreBoundedShopAbility<<T as Config>::MaxConditions>;
+    pub type BoundedShopAbility<T> = CoreBoundedShopAbility<<T as Config>::MaxConditions>;
 
     /// Type alias for the balance type from the configured Currency.
     pub type BalanceOf<T> = <<T as Config>::Currency as fungible::Inspect<
@@ -220,15 +227,6 @@ pub mod pallet {
         pub name: BoundedVec<u8, T::MaxStringLen>,
         /// The creator of this card set
         pub creator: T::AccountId,
-    }
-
-    /// A game session stored on-chain.
-    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
-    #[scale_info(skip_type_params(T))]
-    pub struct GameSession<T: Config> {
-        pub state: BoundedLocalGameState<T>,
-        pub set_id: u32,
-        pub owner: T::AccountId,
     }
 
     /// A ghost entry that includes the owner who created the board.
@@ -323,20 +321,21 @@ pub mod pallet {
         pub total_games: u32,
     }
 
-    /// A tournament game session (separate from regular GameSession).
+    /// A tournament game session extends the normal session payload with tournament metadata.
+    /// The field order intentionally starts with the shared game session prefix so the browser
+    /// WASM engine can decode the normal session fields and ignore the trailing tournament ID.
     #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
     #[scale_info(skip_type_params(T))]
     pub struct TournamentGameSession<T: Config> {
         pub state: BoundedLocalGameState<T>,
         pub set_id: u32,
-        pub owner: T::AccountId,
         pub tournament_id: u32,
     }
 
     /// Map of Active Games: AccountId -> GameSession
     #[pallet::storage]
     pub type ActiveGame<T: Config> =
-        StorageMap<_, Blake2_128Concat, T::AccountId, GameSession<T>, OptionQuery>;
+        StorageMap<_, Blake2_128Concat, T::AccountId, BoundedGameSession<T>, OptionQuery>;
 
     /// Map of Card Sets: u32 -> CardSet
     #[pallet::storage]
@@ -530,6 +529,14 @@ pub mod pallet {
             player: T::AccountId,
             amount: BalanceOf<T>,
         },
+        /// A ghost board has been backfilled into a specific matchmaking bracket.
+        GhostBoardBackfilled {
+            set_id: u32,
+            round: i32,
+            wins: i32,
+            lives: i32,
+            pool_size: u32,
+        },
     }
 
     #[pallet::error]
@@ -558,6 +565,12 @@ pub mod pallet {
         SetAlreadyExists,
         /// The specified tournament does not exist.
         TournamentNotFound,
+        /// The supplied ghost bracket is invalid.
+        InvalidGhostBracket,
+        /// The supplied ghost board cannot be empty.
+        EmptyGhostBoard,
+        /// A card in the supplied ghost board is not part of the target set.
+        GhostCardNotInSet,
         /// The tournament has not started yet.
         TournamentNotStarted,
         /// The tournament has ended (past end_block).
@@ -695,11 +708,7 @@ pub mod pallet {
 
             let (state, seed) = Self::initialize_game_state(&who, set_id, b"start_game")?;
 
-            let session = GameSession {
-                state,
-                set_id,
-                owner: who.clone(),
-            };
+            let session = BoundedGameSession::<T> { state, set_id };
 
             ActiveGame::<T>::insert(&who, session);
             Self::deposit_event(Event::GameStarted { owner: who, seed });
@@ -1036,10 +1045,9 @@ pub mod pallet {
             let (state, seed) =
                 Self::initialize_game_state(&who, config.set_id, b"tournament_start")?;
 
-            let session = TournamentGameSession {
+            let session = TournamentGameSession::<T> {
                 state,
                 set_id: config.set_id,
-                owner: who.clone(),
                 tournament_id,
             };
 
@@ -1298,6 +1306,60 @@ pub mod pallet {
 
             Ok(())
         }
+
+        /// Backfill a ghost board into a specific matchmaking bracket.
+        /// Only callable by TournamentOrigin (e.g. root/sudo).
+        #[pallet::call_index(13)]
+        #[pallet::weight(T::WeightInfo::backfill_ghost_board())]
+        pub fn backfill_ghost_board(
+            origin: OriginFor<T>,
+            set_id: u32,
+            round: i32,
+            wins: i32,
+            lives: i32,
+            board: BoundedVec<CoreGhostBoardUnit, T::MaxBoardSize>,
+        ) -> DispatchResult {
+            T::TournamentOrigin::ensure_origin(origin)?;
+
+            ensure!(
+                round > 0 && wins >= 0 && lives > 0,
+                Error::<T>::InvalidGhostBracket
+            );
+            ensure!(!board.is_empty(), Error::<T>::EmptyGhostBoard);
+
+            let card_set = CardSets::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
+            for unit in board.iter() {
+                ensure!(
+                    card_set
+                        .cards
+                        .iter()
+                        .any(|entry| entry.card_id == unit.card_id),
+                    Error::<T>::GhostCardNotInSet
+                );
+            }
+
+            let bracket = MatchmakingBracket {
+                set_id,
+                round,
+                wins,
+                lives,
+            };
+            let ghost = BoundedGhostBoard::<T> { units: board };
+            let owner = Self::pallet_account_id();
+
+            Self::store_ghost(&owner, &bracket, ghost);
+
+            let pool_size = GhostOpponents::<T>::get((set_id, round, wins, lives)).len() as u32;
+            Self::deposit_event(Event::GhostBoardBackfilled {
+                set_id,
+                round,
+                wins,
+                lives,
+                pool_size,
+            });
+
+            Ok(())
+        }
     }
 
     impl<T: Config> Pallet<T> {
@@ -1334,7 +1396,7 @@ pub mod pallet {
 
         /// Store a ghost board for the given bracket.
         /// Uses FIFO rotation when at capacity, and archives permanently.
-        fn store_ghost(
+        pub(crate) fn store_ghost(
             owner: &T::AccountId,
             bracket: &MatchmakingBracket,
             ghost: BoundedGhostBoard<T>,
@@ -1371,7 +1433,7 @@ pub mod pallet {
         }
 
         /// Store a ghost board in the tournament-specific ghost pool.
-        fn store_tournament_ghost(
+        pub(crate) fn store_tournament_ghost(
             owner: &T::AccountId,
             tournament_id: u32,
             bracket: &MatchmakingBracket,

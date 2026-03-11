@@ -1,15 +1,20 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { useGameStore } from '../store/gameStore';
-import type { CardView } from '../types';
+import { useBlockchainStore } from '../store/blockchainStore';
+import { useTournamentStore } from '../store/tournamentStore';
+import type { BoardUnitView, CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import { getCardArtMd } from '../utils/cardArt';
 import { formatAbilitySentence } from '../utils/abilityText';
 
 /** Card art image with loading state — remount via key={card.id} to reset on card change. */
-function CardArtImage({ card }: { card: CardView }) {
+function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
   const artSrc = getCardArtMd(card.id);
-  const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>(artSrc ? 'loading' : 'error');
+  const [status, setStatus] = React.useState<'loading' | 'loaded' | 'error'>(
+    artSrc ? 'loading' : 'error'
+  );
 
   return (
     <div className="relative w-full aspect-[3/4] bg-warm-800 rounded-lg lg:rounded-xl border-2 border-warm-700 overflow-hidden shadow-inner">
@@ -33,7 +38,10 @@ function CardArtImage({ card }: { card: CardView }) {
       )}
       {/* Name overlay at bottom */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 lg:p-3">
-        <h2 className="text-sm lg:text-xl font-bold text-white leading-tight truncate" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+        <h2
+          className="text-sm lg:text-xl font-bold text-white leading-tight truncate"
+          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+        >
           {card.name}
         </h2>
         <div className="flex gap-1.5 mt-1">
@@ -85,19 +93,30 @@ export type CardDetailPanelMode =
       accounts: BlockchainAccount[];
       selectedAccount?: BlockchainAccount;
       onSelectAccount?: (account: BlockchainAccount | undefined) => void;
+    }
+  | {
+      type: 'tournament';
+      blockNumber: number | null;
+      accounts: BlockchainAccount[];
+      selectedAccount?: BlockchainAccount;
+      onSelectAccount?: (account: BlockchainAccount | undefined) => void;
     };
 
 export interface CardDetailPanelProps {
-  card: CardView | null;
+  card: CardView | BoardUnitView | null;
   isVisible: boolean;
   mode?: CardDetailPanelMode;
+  layout?: 'fixed' | 'contained';
 }
 
 type TabType = 'card' | 'rules' | 'mode';
 
-export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps) {
+export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
+  const [showForfeitConfirm, setShowForfeitConfirm] = React.useState(false);
+  const [forfeitPending, setForfeitPending] = React.useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     view,
     cardNameMap,
@@ -107,22 +126,88 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
     setSelection,
     showRawJson,
     toggleShowRawJson,
+    newRun,
   } = useGameStore();
+  const abandonGame = useBlockchainStore((state) => state.abandonGame);
+  const abandonTournament = useTournamentStore((state) => state.abandonTournament);
 
   const resolvedMode: CardDetailPanelMode = mode ?? { type: 'standard' };
   const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
   const cardRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(card), [card]);
   const gameViewRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(view), [view]);
+  const isActionDisabled = resolvedMode.type === 'sandbox' || resolvedMode.type === 'readOnly';
+  const isChainBackedMode =
+    resolvedMode.type === 'blockchain' || resolvedMode.type === 'tournament';
+  const forfeitContext =
+    resolvedMode.type === 'tournament'
+      ? {
+          title: 'Surrender?',
+          subtitle: 'Your tournament journey ends here.',
+          confirmation: 'All progress will be sealed. There is no returning to this battle.',
+          success: 'You have surrendered.',
+          accent: 'from-fuchsia-500/20 via-red-500/10 to-transparent',
+        }
+      : resolvedMode.type === 'blockchain'
+        ? {
+            title: 'Surrender?',
+            subtitle: 'Your battle record ends here.',
+            confirmation: 'This run will be lost to the chain forever. There is no turning back.',
+            success: 'You have surrendered.',
+            accent: 'from-yellow-500/20 via-red-500/10 to-transparent',
+          }
+        : {
+            title: 'Surrender?',
+            subtitle: 'Your current run will be lost.',
+            confirmation: 'All progress is gone. You will start fresh from the beginning.',
+            success: 'You have surrendered.',
+            accent: 'from-amber-500/20 via-red-500/10 to-transparent',
+          };
+
+  React.useEffect(() => {
+    if (!isVisible && showForfeitConfirm) {
+      setShowForfeitConfirm(false);
+    }
+  }, [isVisible, showForfeitConfirm]);
+
+  const handleForfeit = React.useCallback(async () => {
+    setForfeitPending(true);
+    try {
+      if (resolvedMode.type === 'blockchain') {
+        await abandonGame();
+      } else if (resolvedMode.type === 'tournament') {
+        await abandonTournament();
+      } else {
+        newRun();
+      }
+      toast.success(forfeitContext.success);
+      setShowForfeitConfirm(false);
+      setSelection(null);
+      setActiveTab('card');
+    } catch (err) {
+      console.error('Forfeit failed:', err);
+    } finally {
+      setForfeitPending(false);
+    }
+  }, [
+    abandonGame,
+    abandonTournament,
+    forfeitContext.success,
+    newRun,
+    resolvedMode.type,
+    setSelection,
+  ]);
 
   if (!isVisible) return null;
+
+  const containerClassName =
+    layout === 'contained'
+      ? 'relative h-full min-h-0 w-40 sm:w-44 lg:w-80 shrink-0'
+      : 'fixed top-0 left-0 bottom-0 w-44 lg:w-80';
 
   // Get the selected hand/board index for actions
   const selectedHandIndex = selection?.type === 'hand' ? selection.index : -1;
   const selectedBoardIndex = selection?.type === 'board' ? selection.index : -1;
   const isBoardUnit = selection?.type === 'board';
-
-  // Check if actions should be disabled
-  const isActionDisabled = resolvedMode.type === 'sandbox' || resolvedMode.type === 'readOnly';
 
   const renderCardTab = () => {
     if (!card) {
@@ -277,8 +362,8 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
               round (Max 10).
             </li>
             <li>
-              <strong className="text-white">Refilling:</strong> You can burn, spend, and burn
-              again in one turn.
+              <strong className="text-white">Refilling:</strong> You can burn, spend, and burn again
+              in one turn.
             </li>
             <li>
               <strong className="text-white">Hard Limit:</strong> You cannot hold more than your
@@ -350,7 +435,7 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
   };
 
   const renderModeTab = () => {
-    const isBlockchain = resolvedMode.type === 'blockchain';
+    const isBlockchain = isChainBackedMode;
 
     return (
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
@@ -361,13 +446,11 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
 
             {/* Connection Status */}
             <div className="flex items-center gap-2 mb-3 p-2 bg-warm-900 rounded border border-white/5">
-              <div
-                className={`w-2 h-2 rounded-full ${resolvedMode.blockNumber != null ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
-              />
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-xs font-mono text-warm-400">
                 {resolvedMode.blockNumber != null
                   ? `Block #${resolvedMode.blockNumber.toLocaleString()}`
-                  : 'Offline'}
+                  : 'Connected'}
               </span>
             </div>
 
@@ -398,10 +481,20 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
         <div className="p-4 bg-warm-800/50 rounded-lg border border-warm-700">
           <div className="space-y-3">
             <button
-              onClick={() => navigate('/blockchain/customize')}
+              onClick={() =>
+                navigate('/settings', {
+                  state: { returnTo: `${location.pathname}${location.search}` },
+                })
+              }
               className="w-full btn bg-yellow-900/50 hover:bg-yellow-800 text-yellow-200 border border-yellow-700 text-xs py-2"
             >
-              Customize
+              Settings
+            </button>
+            <button
+              onClick={() => setShowForfeitConfirm(true)}
+              className="w-full btn bg-red-900/50 hover:bg-red-800 text-red-200 border border-red-700 text-xs py-2"
+            >
+              Forfeit
             </button>
             <button
               onClick={() => navigate('/')}
@@ -445,55 +538,111 @@ export function CardDetailPanel({ card, isVisible, mode }: CardDetailPanelProps)
   };
 
   return (
-    <div className="card-detail-panel fixed top-0 left-0 bottom-0 w-44 lg:w-80 bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30">
-      {/* Tabs */}
-      <div className="flex border-b border-warm-800">
-        <button
-          onClick={() => setActiveTab('card')}
-          className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-            activeTab === 'card'
-              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-warm-500 hover:text-warm-300'
-          }`}
-        >
-          <span className="lg:hidden text-base">🃏</span>
-          <span className="hidden lg:inline">Card</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('rules')}
-          className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-            activeTab === 'rules'
-              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-warm-500 hover:text-warm-300'
-          }`}
-        >
-          <span className="lg:hidden text-base">📖</span>
-          <span className="hidden lg:inline">Rules</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('mode')}
-          className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-            activeTab === 'mode'
-              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-warm-500 hover:text-warm-300'
-          }`}
-        >
-          <span className="lg:hidden text-base">⚙️</span>
-          <span className="hidden lg:inline">System</span>
-        </button>
+    <>
+      <div
+        className={`card-detail-panel ${containerClassName} bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30`}
+      >
+        {/* Tabs */}
+        <div className="flex border-b border-warm-800">
+          <button
+            onClick={() => setActiveTab('card')}
+            className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+              activeTab === 'card'
+                ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+                : 'text-warm-500 hover:text-warm-300'
+            }`}
+          >
+            <span className="lg:hidden text-base">🃏</span>
+            <span className="hidden lg:inline">Card</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('rules')}
+            className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+              activeTab === 'rules'
+                ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+                : 'text-warm-500 hover:text-warm-300'
+            }`}
+          >
+            <span className="lg:hidden text-base">📖</span>
+            <span className="hidden lg:inline">Rules</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('mode')}
+            className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+              activeTab === 'mode'
+                ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+                : 'text-warm-500 hover:text-warm-300'
+            }`}
+          >
+            <span className="lg:hidden text-base">⚙️</span>
+            <span className="hidden lg:inline">System</span>
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        <div className="flex-1 p-3 lg:p-5 flex flex-col overflow-hidden">
+          {activeTab === 'card' && renderCardTab()}
+          {activeTab === 'rules' && renderRulesTab()}
+          {activeTab === 'mode' && renderModeTab()}
+        </div>
+
+        {/* Footer */}
+        <div className="p-1 lg:p-4 border-t border-warm-800 bg-black/20 text-[6px] lg:text-[10px] text-warm-600 text-center uppercase tracking-tighter">
+          Open Auto Battler Engine v0.2.0
+        </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 p-3 lg:p-5 flex flex-col overflow-hidden">
-        {activeTab === 'card' && renderCardTab()}
-        {activeTab === 'rules' && renderRulesTab()}
-        {activeTab === 'mode' && renderModeTab()}
-      </div>
+      {showForfeitConfirm && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+          <div
+            className="absolute inset-0"
+            onClick={() => {
+              if (!forfeitPending) {
+                setShowForfeitConfirm(false);
+              }
+            }}
+          />
+          <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-warm-700/60 bg-warm-950 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
+            <div className={`absolute inset-0 bg-gradient-to-br ${forfeitContext.accent}`} />
+            <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-warm-400/30 to-transparent" />
 
-      {/* Footer */}
-      <div className="p-1 lg:p-4 border-t border-warm-800 bg-black/20 text-[6px] lg:text-[10px] text-warm-600 text-center uppercase tracking-tighter">
-        Open Auto Battler Engine v0.2.0
-      </div>
-    </div>
+            <div className="relative p-6 lg:p-7 flex flex-col items-center text-center">
+              <h2
+                className="font-title text-3xl lg:text-4xl font-bold tracking-wide uppercase text-red-300"
+                style={{
+                  textShadow: '0 2px 12px rgba(168, 58, 42, 0.5), 0 0 40px rgba(168, 58, 42, 0.2)',
+                }}
+              >
+                {forfeitContext.title}
+              </h2>
+
+              <p className="mt-4 text-base font-semibold text-warm-200">
+                {forfeitContext.subtitle}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-warm-400">
+                {forfeitContext.confirmation}
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 gap-3 w-full">
+                <button
+                  onClick={() => setShowForfeitConfirm(false)}
+                  disabled={forfeitPending}
+                  className="battle-btn rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Fight On
+                </button>
+                <button
+                  onClick={() => void handleForfeit()}
+                  disabled={forfeitPending}
+                  className="rounded-xl border border-red-800/70 bg-red-950/60 px-4 py-3 text-sm font-bold uppercase tracking-wider text-red-300 transition-all hover:bg-red-900/50 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {forfeitPending ? 'Surrendering...' : 'Surrender'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../store/gameStore';
-import type { CardView } from '../types';
+import type { BoardUnitView, CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import { formatAbilitySentence } from '../utils/abilityText';
 
@@ -23,7 +23,7 @@ function stringifyWithCompactStatusMasks(value: unknown): string {
 }
 
 interface CardDetailModalProps {
-  card: CardView;
+  card: CardView | BoardUnitView;
   isOpen: boolean;
   onClose: () => void;
 }

@@ -237,11 +237,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
         const gameRaw = Binary.fromHex(gameRawHex).asBytes();
         const cardSetRaw = Binary.fromHex(cardSetRawHex).asBytes();
 
-        // Trim trailing 4 bytes (tournament_id: u32) from TournamentGameSession
-        // to make it compatible with GameSession SCALE layout
-        const trimmedGameRaw = gameRaw.slice(0, gameRaw.length - 4);
-
-        engine.init_from_scale(trimmedGameRaw, cardSetRaw);
+        engine.init_from_scale(gameRaw, cardSetRaw);
 
         const view = engine.get_view();
         const cardSet = engine.get_card_set();
@@ -316,11 +312,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           ? opponent_board
           : opponent_board?.units || [];
         const opponentUnits = rawUnits.map((u: any) => ({
-          card_id: typeof u.card_id === 'number' ? u.card_id : Number(u.card_id),
+          card_id:
+            typeof u.card_id === 'number' ? u.card_id : Number(u.card_id?.value ?? u.card_id),
           perm_attack:
             typeof u.perm_attack === 'number' ? u.perm_attack : Number(u.perm_attack || 0),
           perm_health:
             typeof u.perm_health === 'number' ? u.perm_health : Number(u.perm_health || 0),
+          perm_statuses: toStatusMask(u.perm_statuses),
         }));
 
         const battleOutput = engine.resolve_battle_p2p(
@@ -363,14 +361,23 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
   abandonTournament: async () => {
     const { api, selectedAccount } = useBlockchainStore.getState();
-    if (!api || !selectedAccount) return;
+    if (!api || !selectedAccount) {
+      throw new Error('Blockchain account is not ready');
+    }
 
     try {
       const tx = api.tx.AutoBattle.abandon_tournament({});
       await submitTx(tx, selectedAccount.polkadotSigner, 'AutoBattle.abandon_tournament');
       set({ hasActiveTournamentGame: false });
+      useGameStore.getState().resetActiveSessionView();
+      await get().fetchPlayerStats();
+      if (get().activeTournament) {
+        await get().fetchAllPlayerStats(get().activeTournament!.id);
+      }
+      await get().fetchActiveTournament();
     } catch (err) {
       console.error('Abandon tournament failed:', err);
+      throw err;
     }
   },
 
