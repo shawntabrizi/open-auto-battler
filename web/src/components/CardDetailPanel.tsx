@@ -113,6 +113,7 @@ type TabType = 'card' | 'rules' | 'mode';
 
 export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: CardDetailPanelProps) {
   const [activeTab, setActiveTab] = React.useState<TabType>('card');
+  const [showForfeitConfirm, setShowForfeitConfirm] = React.useState(false);
   const [forfeitPending, setForfeitPending] = React.useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -151,28 +152,49 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
   const isActionDisabled = resolvedMode.type === 'sandbox' || resolvedMode.type === 'readOnly';
   const isChainBackedMode =
     resolvedMode.type === 'blockchain' || resolvedMode.type === 'tournament';
+  const forfeitContext =
+    resolvedMode.type === 'tournament'
+      ? {
+          title: 'Surrender?',
+          subtitle: 'Your tournament journey ends here.',
+          confirmation: 'All progress will be sealed. There is no returning to this battle.',
+          success: 'You have surrendered.',
+          accent: 'from-fuchsia-500/20 via-red-500/10 to-transparent',
+        }
+      : resolvedMode.type === 'blockchain'
+        ? {
+            title: 'Surrender?',
+            subtitle: 'Your battle record ends here.',
+            confirmation: 'This run will be lost to the chain forever. There is no turning back.',
+            success: 'You have surrendered.',
+            accent: 'from-yellow-500/20 via-red-500/10 to-transparent',
+          }
+        : {
+            title: 'Surrender?',
+            subtitle: 'Your current run will be lost.',
+            confirmation: 'All progress is gone. You will start fresh from the beginning.',
+            success: 'You have surrendered.',
+            accent: 'from-amber-500/20 via-red-500/10 to-transparent',
+          };
+
+  React.useEffect(() => {
+    if (!isVisible && showForfeitConfirm) {
+      setShowForfeitConfirm(false);
+    }
+  }, [isVisible, showForfeitConfirm]);
 
   const handleForfeit = React.useCallback(async () => {
-    const isTournament = resolvedMode.type === 'tournament';
-    const confirmed = window.confirm(
-      isTournament
-        ? 'Forfeit this tournament run? This will abandon your current tournament game.'
-        : 'Forfeit this run? Your current progress will be lost.'
-    );
-    if (!confirmed) return;
-
     setForfeitPending(true);
     try {
       if (resolvedMode.type === 'blockchain') {
         await abandonGame();
-        toast.success('On-chain run forfeited.');
       } else if (resolvedMode.type === 'tournament') {
         await abandonTournament();
-        toast.success('Tournament run forfeited.');
       } else {
         newRun();
-        toast.success('Local run forfeited.');
       }
+      toast.success(forfeitContext.success);
+      setShowForfeitConfirm(false);
       setSelection(null);
       setActiveTab('card');
     } catch (err) {
@@ -180,7 +202,14 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
     } finally {
       setForfeitPending(false);
     }
-  }, [abandonGame, abandonTournament, newRun, resolvedMode.type, setSelection]);
+  }, [
+    abandonGame,
+    abandonTournament,
+    forfeitContext.success,
+    newRun,
+    resolvedMode.type,
+    setSelection,
+  ]);
 
   const renderCardTab = () => {
     if (!card) {
@@ -409,9 +438,6 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
 
   const renderModeTab = () => {
     const isBlockchain = isChainBackedMode;
-    const forfeitLabel =
-      resolvedMode.type === 'tournament' ? 'Forfeit Tournament Run' : 'Forfeit Run';
-    const forfeitButtonLabel = forfeitPending ? 'Forfeiting...' : forfeitLabel;
 
     return (
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
@@ -467,11 +493,10 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
               Settings
             </button>
             <button
-              onClick={() => void handleForfeit()}
-              disabled={forfeitPending}
-              className="w-full btn bg-red-900/50 hover:bg-red-800 text-red-200 border border-red-700 text-xs py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setShowForfeitConfirm(true)}
+              className="w-full btn bg-red-900/50 hover:bg-red-800 text-red-200 border border-red-700 text-xs py-2"
             >
-              {forfeitButtonLabel}
+              Forfeit
             </button>
             <button
               onClick={() => navigate('/')}
@@ -515,57 +540,112 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
   };
 
   return (
-    <div
-      className={`card-detail-panel ${containerClassName} bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30`}
-    >
-      {/* Tabs */}
-      <div className="flex border-b border-warm-800">
-        <button
-          onClick={() => setActiveTab('card')}
-          className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-            activeTab === 'card'
-              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-warm-500 hover:text-warm-300'
-          }`}
-        >
-          <span className="lg:hidden text-base">🃏</span>
-          <span className="hidden lg:inline">Card</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('rules')}
-          className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-            activeTab === 'rules'
-              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-warm-500 hover:text-warm-300'
-          }`}
-        >
-          <span className="lg:hidden text-base">📖</span>
-          <span className="hidden lg:inline">Rules</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('mode')}
-          className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-            activeTab === 'mode'
-              ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
-              : 'text-warm-500 hover:text-warm-300'
-          }`}
-        >
-          <span className="lg:hidden text-base">⚙️</span>
-          <span className="hidden lg:inline">System</span>
-        </button>
+    <>
+      <div
+        className={`card-detail-panel ${containerClassName} bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30`}
+      >
+        {/* Tabs */}
+        <div className="flex border-b border-warm-800">
+          <button
+            onClick={() => setActiveTab('card')}
+            className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+              activeTab === 'card'
+                ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+                : 'text-warm-500 hover:text-warm-300'
+            }`}
+          >
+            <span className="lg:hidden text-base">🃏</span>
+            <span className="hidden lg:inline">Card</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('rules')}
+            className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+              activeTab === 'rules'
+                ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+                : 'text-warm-500 hover:text-warm-300'
+            }`}
+          >
+            <span className="lg:hidden text-base">📖</span>
+            <span className="hidden lg:inline">Rules</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('mode')}
+            className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+              activeTab === 'mode'
+                ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
+                : 'text-warm-500 hover:text-warm-300'
+            }`}
+          >
+            <span className="lg:hidden text-base">⚙️</span>
+            <span className="hidden lg:inline">System</span>
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        <div className="flex-1 p-3 lg:p-5 flex flex-col overflow-hidden">
+          {activeTab === 'card' && renderCardTab()}
+          {activeTab === 'rules' && renderRulesTab()}
+          {activeTab === 'mode' && renderModeTab()}
+        </div>
+
+        {/* Footer */}
+        <div className="p-1 lg:p-4 border-t border-warm-800 bg-black/20 text-[6px] lg:text-[10px] text-warm-600 text-center uppercase tracking-tighter">
+          Open Auto Battler Engine v0.2.0
+        </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 p-3 lg:p-5 flex flex-col overflow-hidden">
-        {activeTab === 'card' && renderCardTab()}
-        {activeTab === 'rules' && renderRulesTab()}
-        {activeTab === 'mode' && renderModeTab()}
-      </div>
+      {showForfeitConfirm && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+          <div
+            className="absolute inset-0"
+            onClick={() => {
+              if (!forfeitPending) {
+                setShowForfeitConfirm(false);
+              }
+            }}
+          />
+          <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-warm-700/60 bg-warm-950 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
+            <div className={`absolute inset-0 bg-gradient-to-br ${forfeitContext.accent}`} />
+            <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-warm-400/30 to-transparent" />
 
-      {/* Footer */}
-      <div className="p-1 lg:p-4 border-t border-warm-800 bg-black/20 text-[6px] lg:text-[10px] text-warm-600 text-center uppercase tracking-tighter">
-        Open Auto Battler Engine v0.2.0
-      </div>
-    </div>
+            <div className="relative p-6 lg:p-7 flex flex-col items-center text-center">
+              <h2
+                className="font-title text-3xl lg:text-4xl font-bold tracking-wide uppercase text-red-300"
+                style={{
+                  textShadow:
+                    '0 2px 12px rgba(168, 58, 42, 0.5), 0 0 40px rgba(168, 58, 42, 0.2)',
+                }}
+              >
+                {forfeitContext.title}
+              </h2>
+
+              <p className="mt-4 text-base font-semibold text-warm-200">
+                {forfeitContext.subtitle}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-warm-400">
+                {forfeitContext.confirmation}
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 gap-3 w-full">
+                <button
+                  onClick={() => setShowForfeitConfirm(false)}
+                  disabled={forfeitPending}
+                  className="battle-btn rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Fight On
+                </button>
+                <button
+                  onClick={() => void handleForfeit()}
+                  disabled={forfeitPending}
+                  className="rounded-xl border border-red-800/70 bg-red-950/60 px-4 py-3 text-sm font-bold uppercase tracking-wider text-red-300 transition-all hover:bg-red-900/50 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {forfeitPending ? 'Surrendering...' : 'Surrender'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
