@@ -7,7 +7,12 @@ import { injectSpektrExtension } from '@novasamatech/product-sdk';
 import { auto_battle } from '@polkadot-api/descriptors';
 import { useGameStore } from './gameStore';
 import { sr25519CreateDerive } from '@polkadot-labs/hdkd';
-import { DEV_PHRASE, entropyToMiniSecret, mnemonicToEntropy } from '@polkadot-labs/hdkd-helpers';
+import {
+  DEV_PHRASE,
+  entropyToMiniSecret,
+  mnemonicToEntropy,
+  generateMnemonic,
+} from '@polkadot-labs/hdkd-helpers';
 import { getPolkadotSigner } from 'polkadot-api/signer';
 import { AccountId } from '@polkadot-api/substrate-bindings';
 import { createCallArgCoercer } from '../utils/papiCoercion';
@@ -318,10 +323,61 @@ interface BlockchainStore {
   submitCard: (cardData: any, metadata: any) => Promise<void>;
   createCardSet: (cards: { card_id: number; rarity: number }[], name?: string) => Promise<void>;
 
+  // Local account management
+  createLocalAccount: (name: string) => Promise<void>;
+  removeLocalAccount: (address: string) => void;
+
   // Internal helpers
   cardDataCoercer?: ((value: unknown) => any) | null;
 }
 
+const LOCAL_ACCOUNTS_KEY = 'oab-local-accounts';
+
+interface StoredLocalAccount {
+  name: string;
+  mnemonic: string;
+}
+
+function loadStoredLocalAccounts(): StoredLocalAccount[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredLocalAccounts(accounts: StoredLocalAccount[]) {
+  try {
+    localStorage.setItem(LOCAL_ACCOUNTS_KEY, JSON.stringify(accounts));
+  } catch (e) {
+    console.warn('Failed to save local accounts:', e);
+  }
+}
+
+function deriveAccountFromMnemonic(mnemonic: string, name: string) {
+  const miniSecret = entropyToMiniSecret(mnemonicToEntropy(mnemonic));
+  const derive = sr25519CreateDerive(miniSecret);
+  const accountId = AccountId(42);
+  const hdkdKeyPair = derive('//0');
+  const address = accountId.dec(hdkdKeyPair.publicKey);
+  const polkadotSigner = getPolkadotSigner(hdkdKeyPair.publicKey, 'Sr25519', hdkdKeyPair.sign);
+
+  return {
+    address,
+    name,
+    polkadotSigner,
+    source: 'local' as const,
+  };
+}
+
+function getLocalAccounts() {
+  return loadStoredLocalAccounts().map((stored) =>
+    deriveAccountFromMnemonic(stored.mnemonic, stored.name)
+  );
+}
+
+const SHOW_DEV_ACCOUNTS = false;
 const DEV_ACCOUNTS = ['Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Ferdie'];
 
 const getDevAccounts = () => {
@@ -412,8 +468,9 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         'card_data'
       );
 
-      const devAccounts = getDevAccounts();
-      let allAccounts: any[] = [...devAccounts];
+      const devAccounts = SHOW_DEV_ACCOUNTS ? getDevAccounts() : [];
+      const localAccounts = getLocalAccounts();
+      let allAccounts: any[] = [...devAccounts, ...localAccounts];
 
       set({
         client,
@@ -442,9 +499,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
             console.warn(`Failed to connect extension "${ext}":`, extErr);
           }
         }
-        if (allAccounts.length > devAccounts.length) {
-          set({ accounts: allAccounts });
-        }
+        set({ accounts: allAccounts });
       } catch (walletErr) {
         console.warn('Wallet extensions not available:', walletErr);
       }
@@ -886,6 +941,68 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     } catch (err) {
       console.error('Create card set failed:', err);
       throw err;
+    }
+  },
+
+  createLocalAccount: async (name: string) => {
+    const { api, accounts } = get();
+    if (!api) return;
+
+    // Generate new mnemonic and derive account
+    const mnemonic = generateMnemonic();
+    const account = deriveAccountFromMnemonic(mnemonic, name);
+
+    // Persist to localStorage
+    const stored = loadStoredLocalAccounts();
+    stored.push({ name, mnemonic });
+    saveStoredLocalAccounts(stored);
+
+    // Add to accounts list
+    const newAccounts = [...accounts, account];
+    set({ accounts: newAccounts });
+
+    // Fund the account using Alice (sudo) with Balances.force_set_balance
+    try {
+      const alice = getDevAccounts()[0]; // Alice is first dev account
+      const fundAmount = BigInt(10_000_000_000_000); // 10 units
+      const innerCall = api.tx.Balances.force_set_balance({
+        who: { type: 'Id', value: account.address },
+        new_free: fundAmount,
+      });
+      const sudoTx = api.tx.Sudo.sudo({ call: innerCall.decodedCall });
+      await submitTx(sudoTx, alice.polkadotSigner, `Sudo.sudo(fund ${name})`);
+      console.log(`Funded local account ${name} (${account.address}) with 10 units`);
+    } catch (err) {
+      console.error('Failed to fund local account:', err);
+    }
+
+    // Auto-select the new account
+    await get().selectAccount(account);
+  },
+
+  removeLocalAccount: (address: string) => {
+    const { accounts, selectedAccount } = get();
+
+    // Find the account to get its name for localStorage removal
+    const accountToRemove = accounts.find((a) => a.address === address && a.source === 'local');
+    if (!accountToRemove) return;
+
+    // Remove from localStorage
+    const stored = loadStoredLocalAccounts();
+    const updated = stored.filter((s) => {
+      const derived = deriveAccountFromMnemonic(s.mnemonic, s.name);
+      return derived.address !== address;
+    });
+    saveStoredLocalAccounts(updated);
+
+    // Remove from accounts list
+    const newAccounts = accounts.filter((a) => !(a.address === address && a.source === 'local'));
+    set({ accounts: newAccounts });
+
+    // If the removed account was selected, switch to first account
+    if (selectedAccount?.address === address) {
+      const fallback = newAccounts[0] || null;
+      set({ selectedAccount: fallback });
     }
   },
 }));

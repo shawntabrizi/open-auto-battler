@@ -26,6 +26,8 @@ export const BlockchainPage: React.FC = () => {
     fetchCards,
     hydrateGameEngineFromChainData,
     connectionError,
+    createLocalAccount,
+    removeLocalAccount,
   } = useBlockchainStore();
 
   const { init, engine, view, previewSet } = useGameStore();
@@ -34,6 +36,7 @@ export const BlockchainPage: React.FC = () => {
 
   const [txLoading, setTxLoading] = useState(false);
   const [selectedSetId, setSelectedSetId] = useState(0);
+  const [creatingAccount, setCreatingAccount] = useState(false);
 
   // Guard for refresh to prevent double-call
   const refreshCalled = useRef(false);
@@ -66,6 +69,17 @@ export const BlockchainPage: React.FC = () => {
       await startGame(selectedSetId);
     } finally {
       setTxLoading(false);
+    }
+  };
+
+  const handleCreateLocalAccount = async () => {
+    const name = prompt('Enter a name for your new account:');
+    if (!name) return;
+    setCreatingAccount(true);
+    try {
+      await createLocalAccount(name);
+    } finally {
+      setCreatingAccount(false);
     }
   };
 
@@ -137,25 +151,53 @@ export const BlockchainPage: React.FC = () => {
             </h3>
 
             {/* Connection Status & Account */}
-            <div className="flex items-center justify-center gap-3 mb-6 lg:mb-8">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-warm-800 rounded-lg border border-white/5">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-mono text-warm-400">
-                  {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'Connected'}
-                </span>
+            <div className="flex flex-col items-center gap-3 mb-6 lg:mb-8">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-warm-800 rounded-lg border border-white/5">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-xs font-mono text-warm-400">
+                    {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'Connected'}
+                  </span>
+                </div>
+                <select
+                  value={selectedAccount?.address}
+                  onChange={(e) =>
+                    selectAccount(accounts.find((a) => a.address === e.target.value))
+                  }
+                  className="bg-warm-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50"
+                >
+                  {accounts.map((acc) => (
+                    <option key={acc.address} value={acc.address}>
+                      {acc.source === 'dev' ? '[dev] ' : acc.source === 'local' ? '[local] ' : ''}
+                      {acc.name} ({acc.address.slice(0, 6)}...)
+                    </option>
+                  ))}
+                </select>
               </div>
-              <select
-                value={selectedAccount?.address}
-                onChange={(e) => selectAccount(accounts.find((a) => a.address === e.target.value))}
-                className="bg-warm-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50"
-              >
-                {accounts.map((acc) => (
-                  <option key={acc.address} value={acc.address}>
-                    {acc.source === 'dev' ? '🛠️ ' : ''}
-                    {acc.name} ({acc.address.slice(0, 6)}...)
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCreateLocalAccount}
+                  disabled={creatingAccount}
+                  className="text-xs px-3 py-1.5 bg-warm-800 hover:bg-warm-700 border border-white/10 hover:border-white/20 rounded-lg transition-all disabled:opacity-50"
+                >
+                  {creatingAccount ? 'Creating...' : '+ New Account'}
+                </button>
+                {selectedAccount?.source === 'local' && (
+                  <button
+                    onClick={() => {
+                      if (
+                        confirm(
+                          `Remove local account "${selectedAccount.name}"? This cannot be undone.`
+                        )
+                      )
+                        removeLocalAccount(selectedAccount.address);
+                    }}
+                    className="text-xs px-3 py-1.5 bg-red-900/30 hover:bg-red-900/50 border border-red-500/20 hover:border-red-500/40 text-red-300 rounded-lg transition-all"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-col gap-3 max-w-sm mx-auto mb-6 lg:mb-8">
