@@ -28,6 +28,7 @@ export const BlockchainPage: React.FC = () => {
     connectionError,
     createLocalAccount,
     removeLocalAccount,
+    fundSelectedAccount,
   } = useBlockchainStore();
 
   const { init, engine, view, previewSet } = useGameStore();
@@ -37,6 +38,7 @@ export const BlockchainPage: React.FC = () => {
   const [txLoading, setTxLoading] = useState(false);
   const [selectedSetId, setSelectedSetId] = useState(0);
   const [creatingAccount, setCreatingAccount] = useState(false);
+  const [fundingAccount, setFundingAccount] = useState(false);
 
   // Guard for refresh to prevent double-call
   const refreshCalled = useRef(false);
@@ -80,6 +82,15 @@ export const BlockchainPage: React.FC = () => {
       await createLocalAccount(name);
     } finally {
       setCreatingAccount(false);
+    }
+  };
+
+  const handleFundAccount = async () => {
+    setFundingAccount(true);
+    try {
+      await fundSelectedAccount();
+    } finally {
+      setFundingAccount(false);
     }
   };
 
@@ -181,6 +192,13 @@ export const BlockchainPage: React.FC = () => {
                   className="text-xs px-3 py-1.5 bg-warm-800 hover:bg-warm-700 border border-white/10 hover:border-white/20 rounded-lg transition-all disabled:opacity-50"
                 >
                   {creatingAccount ? 'Creating...' : '+ New Account'}
+                </button>
+                <button
+                  onClick={handleFundAccount}
+                  disabled={fundingAccount || !selectedAccount}
+                  className="text-xs px-3 py-1.5 bg-warm-800 hover:bg-warm-700 border border-white/10 hover:border-white/20 rounded-lg transition-all disabled:opacity-50"
+                >
+                  {fundingAccount ? 'Funding...' : 'Fund Account'}
                 </button>
                 {selectedAccount?.source === 'local' && (
                   <button

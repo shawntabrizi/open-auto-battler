@@ -326,6 +326,7 @@ interface BlockchainStore {
   // Local account management
   createLocalAccount: (name: string) => Promise<void>;
   removeLocalAccount: (address: string) => void;
+  fundSelectedAccount: () => Promise<void>;
 
   // Internal helpers
   cardDataCoercer?: ((value: unknown) => any) | null;
@@ -1004,5 +1005,23 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       const fallback = newAccounts[0] || null;
       set({ selectedAccount: fallback });
     }
+  },
+
+  fundSelectedAccount: async () => {
+    const { api, selectedAccount } = get();
+    if (!api || !selectedAccount) return;
+
+    const alice = getDevAccounts()[0];
+    const fundAmount = BigInt(10_000_000_000_000); // 10 units
+    const innerCall = api.tx.Balances.force_set_balance({
+      who: { type: 'Id', value: selectedAccount.address },
+      new_free: fundAmount,
+    });
+    const sudoTx = api.tx.Sudo.sudo({ call: innerCall.decodedCall });
+    await submitTx(
+      sudoTx,
+      alice.polkadotSigner,
+      `Sudo.sudo(fund ${selectedAccount.name ?? selectedAccount.address.slice(0, 6)})`
+    );
   },
 }));
