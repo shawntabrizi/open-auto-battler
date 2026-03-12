@@ -1,13 +1,12 @@
 [package]
 name = "pallet-auto-battle"
-description = "FRAME pallet template for defining custom runtime logic."
+description = "FRAME pallet for the Open Auto Battler on-chain game logic."
 version = "0.1.0"
-license = "Unlicense"
+license.workspace = true
 authors.workspace = true
 homepage.workspace = true
 repository.workspace = true
 edition.workspace = true
-publish = false
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

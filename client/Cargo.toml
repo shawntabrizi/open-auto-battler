@@ -1,6 +1,7 @@
 [package]
 name = "oab-client"
 version = "0.1.0"
+publish = false
 authors.workspace = true
 edition.workspace = true
 license.workspace = true

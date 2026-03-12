@@ -10,15 +10,15 @@ members = [
 
 [workspace.package]
 license = "MIT-0"
-authors = ["Parity Technologies <admin@parity.io>"]
-homepage = "https://paritytech.github.io/polkadot-sdk/"
-repository = "https://github.com/paritytech/polkadot-sdk-auto-battle.git"
+authors = ["Shawn Tabrizi <shawntabrizi@gmail.com>"]
+homepage = "https://github.com/shawntabrizi/auto-battle"
+repository = "https://github.com/shawntabrizi/auto-battle.git"
 edition = "2021"
 
 [workspace.dependencies]
-oab-core = { path = "./core", default-features = false }
+oab-core = { version = "0.1.0", path = "./core", default-features = false }
 auto-battle-runtime = { path = "./blockchain/runtime", default-features = false }
-pallet-auto-battle = { path = "./blockchain/pallets/auto-battle", default-features = false }
+pallet-auto-battle = { version = "0.1.0", path = "./blockchain/pallets/auto-battle", default-features = false }
 docify = { version = "0.2.9" }
 log = { version = "0.4.22", default-features = false }
 polkadot-sdk = { version = "2503.0.1", default-features = false }
