@@ -1,0 +1,15 @@
+[package]
+name = "oab-sim"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "oab-sim"
+path = "src/main.rs"
+
+[dependencies]
+oab-core = { path = "../core", features = ["std"] }
+rayon = "1.10"
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

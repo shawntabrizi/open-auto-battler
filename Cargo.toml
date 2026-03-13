@@ -4,6 +4,7 @@ members = [
     "oab",
     "core",
     "client",
+    "sim",
     "blockchain/pallets/auto-battle",
     "blockchain/runtime",
 ]
