@@ -1,10 +1,7 @@
-export type StatusName = "Guard" | "Poison" | "Shield";
-
 export interface DatasetUnit {
   card_ref: number;
   perm_attack: number;
   perm_health: number;
-  statuses?: StatusName[];
 }
 
 export interface DatasetBoard {

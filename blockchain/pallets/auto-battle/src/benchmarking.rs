@@ -120,7 +120,6 @@ mod benchmarks {
                 play_cost: 1,
                 burn_value: 1,
             },
-            base_statuses: oab_core::StatusMask::empty(),
             shop_abilities: max_shop_abilities::<T>(),
             battle_abilities: max_battle_abilities::<T>(),
         };
@@ -232,7 +231,6 @@ mod benchmarks {
                 play_cost: 1,
                 burn_value: 1,
             },
-            base_statuses: oab_core::StatusMask::empty(),
             shop_abilities: max_shop_abilities::<T>(),
             battle_abilities: max_battle_abilities::<T>(),
         };

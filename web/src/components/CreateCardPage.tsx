@@ -17,14 +17,6 @@ import {
   type ShopScope,
   type StatType,
 } from '../types';
-import {
-  STATUS_ICON,
-  STATUS_ORDER,
-  emptyStatusMask,
-  hasStatus,
-  statusesFromMask,
-  toggleStatus,
-} from '../utils/status';
 import { formatAbilitySummary, formatAbilityTrigger } from '../utils/abilityText';
 
 import EmojiPicker, { Theme } from 'emoji-picker-react';
@@ -100,7 +92,6 @@ export const CreateCardPage: React.FC = () => {
     description: '',
     shop_abilities: [] as ShopAbility[],
     battle_abilities: [] as BattleAbility[],
-    base_statuses: emptyStatusMask(),
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -128,7 +119,6 @@ export const CreateCardPage: React.FC = () => {
         {
           stats: { attack: cardForm.attack, health: cardForm.health },
           economy: { play_cost: cardForm.play_cost, burn_value: cardForm.burn_value },
-          base_statuses: cardForm.base_statuses,
           shop_abilities: cardForm.shop_abilities,
           battle_abilities: cardForm.battle_abilities,
         },
@@ -150,7 +140,6 @@ export const CreateCardPage: React.FC = () => {
         description: '',
         shop_abilities: [],
         battle_abilities: [],
-        base_statuses: emptyStatusMask(),
       });
     } catch (err) {
       toast.error('Failed to submit card');
@@ -219,21 +208,6 @@ export const CreateCardPage: React.FC = () => {
           ...(newAbility as BattleAbility),
           effect: { type: 'GainMana', amount: 1 },
         });
-      } else if (type === 'GrantStatusThisBattle') {
-        setNewAbility({
-          ...(newAbility as BattleAbility),
-          effect: { type: 'GrantStatusThisBattle', status: 'Shield', target },
-        });
-      } else if (type === 'GrantStatusPermanent') {
-        setNewAbility({
-          ...(newAbility as BattleAbility),
-          effect: { type: 'GrantStatusPermanent', status: 'Shield', target },
-        });
-      } else if (type === 'RemoveStatusPermanent') {
-        setNewAbility({
-          ...(newAbility as BattleAbility),
-          effect: { type: 'RemoveStatusPermanent', status: 'Shield', target },
-        });
       }
     } else {
       const target: ShopTarget = { type: 'All', data: { scope: 'SelfUnit' } };
@@ -251,16 +225,6 @@ export const CreateCardPage: React.FC = () => {
         setNewAbility({ ...(newAbility as ShopAbility), effect: { type: 'Destroy', target } });
       } else if (type === 'GainMana') {
         setNewAbility({ ...(newAbility as ShopAbility), effect: { type: 'GainMana', amount: 1 } });
-      } else if (type === 'GrantStatusPermanent') {
-        setNewAbility({
-          ...(newAbility as ShopAbility),
-          effect: { type: 'GrantStatusPermanent', status: 'Shield', target },
-        });
-      } else if (type === 'RemoveStatusPermanent') {
-        setNewAbility({
-          ...(newAbility as ShopAbility),
-          effect: { type: 'RemoveStatusPermanent', status: 'Shield', target },
-        });
       }
     }
   };
@@ -320,11 +284,10 @@ export const CreateCardPage: React.FC = () => {
     })),
   ];
 
-  const rawJsonPretty = JSON.stringify(
+  const rawJson = JSON.stringify(
     {
       stats: { attack: cardForm.attack, health: cardForm.health },
       economy: { play_cost: cardForm.play_cost, burn_value: cardForm.burn_value },
-      base_statuses: cardForm.base_statuses,
       shop_abilities: cardForm.shop_abilities,
       battle_abilities: cardForm.battle_abilities,
       metadata: {
@@ -336,12 +299,6 @@ export const CreateCardPage: React.FC = () => {
     null,
     2
   );
-  const rawJson = rawJsonPretty.replace(
-    /"base_statuses": \[[\s\S]*?\]/,
-    `"base_statuses": ${JSON.stringify(cardForm.base_statuses)}`
-  );
-
-  const baseStatuses = statusesFromMask(cardForm.base_statuses);
 
   if (!isConnected) {
     return (
@@ -370,7 +327,9 @@ export const CreateCardPage: React.FC = () => {
           <h1 className="text-xl lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase mt-1">
             Card Creator
           </h1>
-          <p className="text-warm-500 text-xs lg:text-sm mt-0.5">Design custom units with complex abilities</p>
+          <p className="text-warm-500 text-xs lg:text-sm mt-0.5">
+            Design custom units with complex abilities
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -511,37 +470,6 @@ export const CreateCardPage: React.FC = () => {
                     placeholder="General description of the card..."
                   />
                 </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
-                    Base Statuses
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {STATUS_ORDER.map((status) => {
-                      const active = hasStatus(cardForm.base_statuses, status);
-                      return (
-                        <button
-                          key={status}
-                          type="button"
-                          onClick={() =>
-                            setCardForm({
-                              ...cardForm,
-                              base_statuses: toggleStatus(cardForm.base_statuses, status),
-                            })
-                          }
-                          className={`rounded-lg border px-2 py-1.5 text-xs font-semibold transition-colors ${
-                            active
-                              ? 'border-yellow-500 bg-yellow-500/20 text-yellow-300'
-                              : 'border-white/10 bg-warm-800 text-warm-300 hover:border-white/30'
-                          }`}
-                        >
-                          <span className="mr-1">{STATUS_ICON[status]}</span>
-                          {status}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -555,19 +483,6 @@ export const CreateCardPage: React.FC = () => {
                   <div className="w-full h-20 bg-warm-700/50 rounded-lg flex items-center justify-center text-4xl mb-2">
                     {cardForm.emoji}
                   </div>
-                  {baseStatuses.length > 0 && (
-                    <div className="flex flex-wrap gap-1 justify-center mb-2">
-                      {baseStatuses.map((status) => (
-                        <span
-                          key={status}
-                          className="text-[10px] px-1.5 py-0.5 rounded bg-warm-700 border border-white/10"
-                          title={status}
-                        >
-                          {STATUS_ICON[status]}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-1">
                       <span className="text-red-500 text-sm">⚔️</span>
@@ -706,18 +621,8 @@ export const CreateCardPage: React.FC = () => {
                           'SpawnUnit',
                           'Destroy',
                           'GainMana',
-                          'GrantStatusThisBattle',
-                          'GrantStatusPermanent',
-                          'RemoveStatusPermanent',
                         ]
-                      : [
-                          'ModifyStatsPermanent',
-                          'SpawnUnit',
-                          'Destroy',
-                          'GainMana',
-                          'GrantStatusPermanent',
-                          'RemoveStatusPermanent',
-                        ]
+                      : ['ModifyStatsPermanent', 'SpawnUnit', 'Destroy', 'GainMana']
                     ).map((type) => (
                       <button
                         key={type}
@@ -879,35 +784,6 @@ export const CreateCardPage: React.FC = () => {
                         }
                         className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                       />
-                    </div>
-                  )}
-
-                  {(newAbility.effect.type === 'GrantStatusThisBattle' ||
-                    newAbility.effect.type === 'GrantStatusPermanent' ||
-                    newAbility.effect.type === 'RemoveStatusPermanent') && (
-                    <div>
-                      <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
-                        Status
-                      </label>
-                      <select
-                        value={(newAbility.effect as any).status || 'Shield'}
-                        onChange={(e) =>
-                          setNewAbility({
-                            ...newAbility,
-                            effect: {
-                              ...(newAbility.effect as any),
-                              status: e.target.value,
-                            } as any,
-                          })
-                        }
-                        className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
-                      >
-                        {STATUS_ORDER.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
                     </div>
                   )}
 

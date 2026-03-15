@@ -172,12 +172,6 @@ export function formatAbilityEffect(
       return `Destroy ${formatAbilityTarget(effect.target)}`;
     case 'GainMana':
       return `Gain ${effect.amount} mana`;
-    case 'GrantStatusThisBattle':
-      return `Give ${effect.status} this battle to ${formatAbilityTarget(effect.target)}`;
-    case 'GrantStatusPermanent':
-      return `Give ${effect.status} permanently to ${formatAbilityTarget(effect.target)}`;
-    case 'RemoveStatusPermanent':
-      return `Remove ${effect.status} permanently from ${formatAbilityTarget(effect.target)}`;
     default:
       return 'Unknown effect';
   }

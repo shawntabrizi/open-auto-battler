@@ -57,22 +57,8 @@ function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
   );
 }
 
-const STATUS_MASK_KEYS = new Set(['base_statuses', 'perm_statuses', 'active_statuses', 'statuses']);
-
-function stringifyWithCompactStatusMasks(value: unknown): string {
-  const encoded = JSON.stringify(
-    value,
-    (key, currentValue) => {
-      if (STATUS_MASK_KEYS.has(key) && Array.isArray(currentValue)) {
-        const normalized = currentValue.map((x) => Number(x) & 0xff);
-        return `__STATUS_MASK__${JSON.stringify(normalized)}`;
-      }
-      return currentValue;
-    },
-    2
-  );
-
-  return (encoded ?? 'null').replace(/"__STATUS_MASK__(\[[^"]*\])"/g, '$1');
+function prettyJson(value: unknown): string {
+  return JSON.stringify(value, null, 2) ?? 'null';
 }
 
 // Blockchain account type
@@ -133,8 +119,8 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
 
   const resolvedMode: CardDetailPanelMode = mode ?? { type: 'standard' };
   const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
-  const cardRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(card), [card]);
-  const gameViewRawJson = React.useMemo(() => stringifyWithCompactStatusMasks(view), [view]);
+  const cardRawJson = React.useMemo(() => prettyJson(card), [card]);
+  const gameViewRawJson = React.useMemo(() => prettyJson(view), [view]);
   const isActionDisabled = resolvedMode.type === 'sandbox' || resolvedMode.type === 'readOnly';
   const isChainBackedMode =
     resolvedMode.type === 'blockchain' || resolvedMode.type === 'tournament';

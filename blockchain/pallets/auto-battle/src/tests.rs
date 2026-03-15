@@ -2,7 +2,6 @@ use crate::{mock::*, ActiveGame, ActiveTournamentGame, Error};
 use frame::arithmetic::Perbill;
 use frame::testing_prelude::*;
 use oab_core::{CommitTurnAction, GamePhase};
-use std::collections::BTreeMap;
 
 fn bounded_set_entries(
     entries: Vec<crate::CardSetEntryInput>,
@@ -21,7 +20,6 @@ fn sample_card_data(attack: i32, health: i32) -> crate::UserCardData<Test> {
             play_cost: 1,
             burn_value: 1,
         },
-        base_statuses: oab_core::types::StatusMask::empty(),
         shop_abilities: BoundedVec::try_from(vec![]).unwrap(),
         battle_abilities: BoundedVec::try_from(vec![]).unwrap(),
     }
@@ -38,7 +36,6 @@ fn ghost_unit(card_id: u32) -> oab_core::bounded::GhostBoardUnit {
         card_id: oab_core::types::CardId(card_id),
         perm_attack: 0,
         perm_health: 0,
-        perm_statuses: oab_core::types::StatusMask::empty(),
     }
 }
 
@@ -66,59 +63,6 @@ fn create_custom_set(creator: u64, card_stats: &[(i32, i32)], name: &[u8]) -> (u
     ));
 
     (crate::NextSetId::<Test>::get() - 1, card_ids)
-}
-
-#[test]
-fn test_apply_player_permanent_status_deltas_updates_board_statuses() {
-    new_test_ext().execute_with(|| {
-        let card_id = oab_core::types::CardId(5000);
-        let mut card_pool = BTreeMap::new();
-        card_pool.insert(
-            card_id,
-            oab_core::types::UnitCard::new(card_id, "Test", 2, 2, 1, 1),
-        );
-
-        let mut board_unit = oab_core::types::BoardUnit::new(card_id);
-        board_unit
-            .perm_statuses
-            .insert(oab_core::types::Status::Poison);
-
-        let local_state = oab_core::state::LocalGameState {
-            bag: vec![],
-            hand: vec![],
-            board: vec![Some(board_unit), None, None, None, None],
-            mana_limit: 3,
-            shop_mana: 0,
-            round: 1,
-            lives: 3,
-            wins: 0,
-            phase: oab_core::GamePhase::Shop,
-            next_card_id: 6000,
-            game_seed: 7,
-        };
-
-        let mut core_state = oab_core::state::GameState::reconstruct(card_pool, 0, local_state);
-
-        let mut grant = oab_core::types::StatusMask::empty();
-        grant.insert(oab_core::types::Status::Shield);
-        let mut remove = oab_core::types::StatusMask::empty();
-        remove.insert(oab_core::types::Status::Poison);
-
-        let mut deltas = BTreeMap::new();
-        deltas.insert(oab_core::battle::UnitId::player(1), (grant, remove));
-
-        AutoBattle::apply_player_permanent_status_deltas(&mut core_state, &[0], &deltas);
-
-        let updated = core_state.local_state.board[0]
-            .as_ref()
-            .expect("board slot should remain occupied");
-        assert!(updated
-            .perm_statuses
-            .contains(oab_core::types::Status::Shield));
-        assert!(!updated
-            .perm_statuses
-            .contains(oab_core::types::Status::Poison));
-    });
 }
 
 #[test]
@@ -294,7 +238,6 @@ fn test_submit_card_and_metadata() {
                 play_cost: 1,
                 burn_value: 1,
             },
-            base_statuses: oab_core::types::StatusMask::empty(),
             shop_abilities: BoundedVec::try_from(vec![]).unwrap(),
             battle_abilities: BoundedVec::try_from(vec![]).unwrap(),
         };
@@ -348,7 +291,6 @@ fn test_submit_card_and_metadata() {
                 play_cost: 2,
                 burn_value: 2,
             },
-            base_statuses: oab_core::types::StatusMask::empty(),
             shop_abilities: BoundedVec::try_from(vec![]).unwrap(),
             battle_abilities: BoundedVec::try_from(vec![]).unwrap(),
         };

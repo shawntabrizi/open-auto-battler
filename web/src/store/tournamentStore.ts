@@ -3,7 +3,6 @@ import { Binary } from 'polkadot-api';
 import { useBlockchainStore } from './blockchainStore';
 import { useGameStore } from './gameStore';
 import { submitTx } from '../utils/tx';
-import { decodeStatusMask } from '../utils/status';
 
 interface TournamentInfo {
   id: number;
@@ -212,7 +211,6 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
                 play_cost: card.data.economy.play_cost,
                 burn_value: card.data.economy.burn_value,
               },
-              base_statuses: toStatusMask(card.data.base_statuses),
               shop_abilities: shopAbilities,
               battle_abilities: battleAbilities,
             });
@@ -318,7 +316,6 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
             typeof u.perm_attack === 'number' ? u.perm_attack : Number(u.perm_attack || 0),
           perm_health:
             typeof u.perm_health === 'number' ? u.perm_health : Number(u.perm_health || 0),
-          perm_statuses: toStatusMask(u.perm_statuses),
         }));
 
         const battleOutput = engine.resolve_battle_p2p(
@@ -399,10 +396,6 @@ function papiEnumStr(v: any): string {
   return v?.type ?? String(v);
 }
 
-function toStatusMask(v: any): number[] {
-  return decodeStatusMask(v);
-}
-
 function convertEffect(v: any): any {
   if (!v) return v;
   const result: any = { type: papiEnumStr(v) };
@@ -413,8 +406,6 @@ function convertEffect(v: any): any {
         result[key] = convertTarget(val);
       } else if (key === 'card_id') {
         result[key] = typeof val === 'number' ? val : Number(val);
-      } else if (key === 'status') {
-        result[key] = papiEnumStr(val);
       } else {
         result[key] = val;
       }

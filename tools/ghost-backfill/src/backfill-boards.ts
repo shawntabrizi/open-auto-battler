@@ -3,7 +3,6 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   AccountId,
-  FixedSizeBinary,
   createClient,
   type PolkadotSigner,
 } from "polkadot-api";
@@ -21,7 +20,6 @@ import type {
   DatasetBoard,
   DatasetSet,
   GhostBackfillDataset,
-  StatusName,
 } from "./dataset.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -30,11 +28,6 @@ const PROJECT_ROOT = path.resolve(__dirname, "..");
 
 const DEFAULT_WS = "ws://127.0.0.1:9944";
 const DEFAULT_CONFIG = path.join(PROJECT_ROOT, "ghost-board-backfill.json");
-const STATUS_INDEX: Record<StatusName, number> = {
-  Shield: 0,
-  Poison: 1,
-  Guard: 2,
-};
 
 interface CliOptions {
   ws: string;
@@ -186,19 +179,6 @@ function normalizeCardId(value: unknown): number {
   return Number(value);
 }
 
-function statusNamesToMask(statuses: StatusName[]): FixedSizeBinary<32> {
-  const mask = new Array<number>(32).fill(0);
-
-  for (const status of statuses) {
-    const bit = STATUS_INDEX[status];
-    const byteIndex = Math.floor(bit / 8);
-    const bitOffset = bit % 8;
-    mask[byteIndex] |= 1 << bitOffset;
-  }
-
-  return FixedSizeBinary.fromArray(mask as number[] & { length: 32 });
-}
-
 function validateDataset(
   dataset: GhostBackfillDataset,
   targetSetId: number,
@@ -255,7 +235,6 @@ function resolveBoardUnits(board: DatasetBoard, setCardIds: number[]) {
     card_id: setCardIds[unit.card_ref % setCardIds.length],
     perm_attack: unit.perm_attack,
     perm_health: unit.perm_health,
-    perm_statuses: statusNamesToMask(unit.statuses ?? []),
   }));
 }
 

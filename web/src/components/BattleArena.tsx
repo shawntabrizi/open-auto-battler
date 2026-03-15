@@ -667,7 +667,6 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
               health: unit.health,
               play_cost: 0,
               burn_value: 0,
-              base_statuses: unit.statuses,
               shop_abilities: [],
               battle_abilities: unit.battle_abilities,
             }}

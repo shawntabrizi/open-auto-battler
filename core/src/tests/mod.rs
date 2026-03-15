@@ -9,7 +9,6 @@ mod opponents;
 mod priority;
 mod state;
 mod state_ops;
-mod status;
 mod triggers;
 mod turns;
 mod units;
@@ -64,7 +63,6 @@ fn create_tester_unit(id: u32, name: &str, attack: i32, health: i32) -> CombatUn
             play_cost: 1,
             burn_value: 1,
         },
-        base_statuses: StatusMask::empty(),
         shop_abilities: vec![],
         battle_abilities: vec![ability],
     };
@@ -84,7 +82,6 @@ fn create_dummy_enemy() -> CombatUnit {
             play_cost: 0,
             burn_value: 0,
         },
-        base_statuses: StatusMask::empty(),
         shop_abilities: vec![],
         battle_abilities: vec![],
     };

@@ -16,8 +16,6 @@ export type CompareOp =
   | 'Equal'
   | 'GreaterThanOrEqual'
   | 'LessThanOrEqual';
-export type Status = 'Shield' | 'Poison' | 'Guard';
-export type StatusMask = number[];
 
 // Battle condition types
 export type BattleMatcher =
@@ -104,18 +102,13 @@ export type BattleEffect =
   | { type: 'ModifyStatsPermanent'; health: number; attack: number; target: BattleTarget }
   | { type: 'SpawnUnit'; card_id: number }
   | { type: 'Destroy'; target: BattleTarget }
-  | { type: 'GainMana'; amount: number }
-  | { type: 'GrantStatusThisBattle'; status: Status; target: BattleTarget }
-  | { type: 'GrantStatusPermanent'; status: Status; target: BattleTarget }
-  | { type: 'RemoveStatusPermanent'; status: Status; target: BattleTarget };
+  | { type: 'GainMana'; amount: number };
 
 export type ShopEffect =
   | { type: 'ModifyStatsPermanent'; health: number; attack: number; target: ShopTarget }
   | { type: 'SpawnUnit'; card_id: number }
   | { type: 'Destroy'; target: ShopTarget }
-  | { type: 'GainMana'; amount: number }
-  | { type: 'GrantStatusPermanent'; status: Status; target: ShopTarget }
-  | { type: 'RemoveStatusPermanent'; status: Status; target: ShopTarget };
+  | { type: 'GainMana'; amount: number };
 
 export interface BattleAbility {
   trigger: BattleTrigger;
@@ -142,7 +135,6 @@ export interface CardView {
   health: number;
   play_cost: number;
   burn_value: number;
-  base_statuses: StatusMask;
   shop_abilities: ShopAbility[];
   battle_abilities: BattleAbility[];
 }
@@ -154,9 +146,6 @@ export interface BoardUnitView {
   health: number;
   play_cost: number;
   burn_value: number;
-  base_statuses: StatusMask;
-  perm_statuses: StatusMask;
-  active_statuses: StatusMask;
   shop_abilities: ShopAbility[];
   battle_abilities: BattleAbility[];
 }
@@ -184,7 +173,6 @@ export interface UnitView {
   name: string;
   attack: number;
   health: number;
-  statuses: StatusMask;
   battle_abilities: BattleAbility[];
 }
 
@@ -247,29 +235,6 @@ export type CombatEvent =
         source_instance_id: number;
         team: Team;
         amount: number;
-      };
-    }
-  | {
-      type: 'StatusApplied';
-      payload: {
-        target_instance_id: number;
-        status: Status;
-        permanent: boolean;
-      };
-    }
-  | {
-      type: 'StatusRemoved';
-      payload: {
-        target_instance_id: number;
-        status: Status;
-        permanent: boolean;
-      };
-    }
-  | {
-      type: 'StatusConsumed';
-      payload: {
-        target_instance_id: number;
-        status: Status;
       };
     }
   | {

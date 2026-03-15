@@ -1,5 +1,4 @@
 import type { CardView } from '../types';
-import { decodeStatusMask } from './status';
 
 function papiEnumStr(value: any): string {
   if (typeof value === 'string') return value;
@@ -43,8 +42,6 @@ function convertEffect(value: any): any {
         result[key] = convertTarget(entry);
       } else if (key === 'card_id') {
         result[key] = typeof entry === 'number' ? entry : Number(entry);
-      } else if (key === 'status') {
-        result[key] = papiEnumStr(entry);
       } else {
         result[key] = entry;
       }
@@ -112,7 +109,6 @@ export function blockchainCardToCardView(card: any): CardView {
     health: Number(card.data?.stats?.health ?? 0),
     play_cost: Number(card.data?.economy?.play_cost ?? 0),
     burn_value: Number(card.data?.economy?.burn_value ?? 0),
-    base_statuses: decodeStatusMask(card.data?.base_statuses),
     shop_abilities: (card.data?.shop_abilities || []).map(convertAbility),
     battle_abilities: (card.data?.battle_abilities || []).map(convertAbility),
   };

@@ -2202,9 +2202,6 @@
       "play_cost": 3,
       "burn_value": 2
     },
-    "base_statuses": [
-      "Guard"
-    ],
     "shop_abilities": [],
     "battle_abilities": [
       {
@@ -2278,21 +2275,6 @@
           "type": "ModifyStats",
           "health": 0,
           "attack": 1,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      },
-      {
-        "trigger": "OnAllyFaint",
-        "effect": {
-          "type": "GrantStatusThisBattle",
-          "status": "Shield",
           "target": {
             "type": "All",
             "data": {
@@ -2630,24 +2612,7 @@
       "burn_value": 2
     },
     "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "GrantStatusPermanent",
-          "status": "Shield",
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "SelfUnit",
-              "index": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
+    "battle_abilities": []
   },
   {
     "id": 86,
@@ -2878,9 +2843,6 @@
       "play_cost": 5,
       "burn_value": 3
     },
-    "base_statuses": [
-      "Poison"
-    ],
     "shop_abilities": [],
     "battle_abilities": []
   },
@@ -3108,23 +3070,7 @@
       "burn_value": 3
     },
     "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnHurt",
-        "effect": {
-          "type": "GrantStatusThisBattle",
-          "status": "Shield",
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
+    "battle_abilities": []
   },
   {
     "id": 102,

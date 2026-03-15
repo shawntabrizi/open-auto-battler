@@ -6,7 +6,6 @@ Standalone tooling for seeding blockchain ghost brackets from a checked-in JSON 
 
 - Generates a JSON file with at least 3 boards for every non-terminal round / wins / losses bracket through round 10
 - Stores the dataset under set `0` for now
-- Emits no board statuses; all submitted `perm_statuses` masks are empty
 - Submits `AutoBattle.backfill_ghost_board` calls wrapped in `Sudo.sudo(...)`
 - Groups submissions into `Utility.batch_all(...)` calls for faster backfills
 

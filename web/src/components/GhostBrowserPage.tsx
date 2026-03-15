@@ -4,7 +4,6 @@ import { useInitGuard } from '../hooks';
 import { useBlockchainStore } from '../store/blockchainStore';
 import type { BoardUnitView, CardView } from '../types';
 import { blockchainCardToCardView } from '../utils/blockchainCards';
-import { decodeStatusMask } from '../utils/status';
 import { CardDetailPanel } from './CardDetailPanel';
 import { PageHeader } from './PageHeader';
 import { RotatePrompt } from './RotatePrompt';
@@ -17,7 +16,6 @@ type GhostBoardUnitView = {
   cardId: number;
   permAttack: number;
   permHealth: number;
-  permStatuses: number[];
 };
 
 type GhostCatalogCard = CardView;
@@ -66,7 +64,6 @@ function normalizeGhostBoard(ghost: any): GhostBoardUnitView[] {
       typeof unit.perm_attack === 'number' ? unit.perm_attack : Number(unit.perm_attack || 0),
     permHealth:
       typeof unit.perm_health === 'number' ? unit.perm_health : Number(unit.perm_health || 0),
-    permStatuses: decodeStatusMask(unit.perm_statuses),
   }));
 }
 
@@ -122,9 +119,6 @@ function buildGhostBoardUnitCard(
     health: baseHealth + unit.permHealth,
     play_cost: baseCard?.play_cost ?? 0,
     burn_value: baseCard?.burn_value ?? 0,
-    base_statuses: baseCard?.base_statuses || [],
-    perm_statuses: unit.permStatuses,
-    active_statuses: [],
     shop_abilities: baseCard?.shop_abilities || [],
     battle_abilities: baseCard?.battle_abilities || [],
   };

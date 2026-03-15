@@ -18,7 +18,7 @@ use crate::state::{calculate_mana_limit, derive_hand_indices_logic, CardSetEntry
 use crate::types::{
     Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CardId, CommitTurnAction,
     Condition, EconomyStats, Matcher, ShopAbility, ShopCondition, ShopEffect, ShopMatcher,
-    ShopTarget, ShopTrigger, Status, StatusMask, TurnAction, UnitCard, UnitStats,
+    ShopTarget, ShopTrigger, TurnAction, UnitCard, UnitStats,
 };
 use crate::{GamePhase, GameState};
 
@@ -49,7 +49,6 @@ pub struct GhostBoardUnit {
     pub card_id: CardId,
     pub perm_attack: i32,
     pub perm_health: i32,
-    pub perm_statuses: StatusMask,
 }
 
 /// A stored ghost board representing a player's board state.
@@ -315,18 +314,6 @@ pub enum BoundedBattleEffect {
     GainMana {
         amount: i32,
     },
-    GrantStatusThisBattle {
-        status: Status,
-        target: AbilityTarget,
-    },
-    GrantStatusPermanent {
-        status: Status,
-        target: AbilityTarget,
-    },
-    RemoveStatusPermanent {
-        status: Status,
-        target: AbilityTarget,
-    },
 }
 
 impl From<AbilityEffect> for BoundedBattleEffect {
@@ -354,15 +341,6 @@ impl From<AbilityEffect> for BoundedBattleEffect {
             AbilityEffect::SpawnUnit { card_id } => Self::SpawnUnit { card_id },
             AbilityEffect::Destroy { target } => Self::Destroy { target },
             AbilityEffect::GainMana { amount } => Self::GainMana { amount },
-            AbilityEffect::GrantStatusThisBattle { status, target } => {
-                Self::GrantStatusThisBattle { status, target }
-            }
-            AbilityEffect::GrantStatusPermanent { status, target } => {
-                Self::GrantStatusPermanent { status, target }
-            }
-            AbilityEffect::RemoveStatusPermanent { status, target } => {
-                Self::RemoveStatusPermanent { status, target }
-            }
         }
     }
 }
@@ -394,15 +372,6 @@ impl From<BoundedBattleEffect> for AbilityEffect {
             BoundedBattleEffect::SpawnUnit { card_id } => AbilityEffect::SpawnUnit { card_id },
             BoundedBattleEffect::Destroy { target } => AbilityEffect::Destroy { target },
             BoundedBattleEffect::GainMana { amount } => AbilityEffect::GainMana { amount },
-            BoundedBattleEffect::GrantStatusThisBattle { status, target } => {
-                AbilityEffect::GrantStatusThisBattle { status, target }
-            }
-            BoundedBattleEffect::GrantStatusPermanent { status, target } => {
-                AbilityEffect::GrantStatusPermanent { status, target }
-            }
-            BoundedBattleEffect::RemoveStatusPermanent { status, target } => {
-                AbilityEffect::RemoveStatusPermanent { status, target }
-            }
         }
     }
 }
@@ -425,14 +394,6 @@ pub enum BoundedShopEffect {
     GainMana {
         amount: i32,
     },
-    GrantStatusPermanent {
-        status: Status,
-        target: ShopTarget,
-    },
-    RemoveStatusPermanent {
-        status: Status,
-        target: ShopTarget,
-    },
 }
 
 impl From<ShopEffect> for BoundedShopEffect {
@@ -450,12 +411,6 @@ impl From<ShopEffect> for BoundedShopEffect {
             ShopEffect::SpawnUnit { card_id } => Self::SpawnUnit { card_id },
             ShopEffect::Destroy { target } => Self::Destroy { target },
             ShopEffect::GainMana { amount } => Self::GainMana { amount },
-            ShopEffect::GrantStatusPermanent { status, target } => {
-                Self::GrantStatusPermanent { status, target }
-            }
-            ShopEffect::RemoveStatusPermanent { status, target } => {
-                Self::RemoveStatusPermanent { status, target }
-            }
         }
     }
 }
@@ -475,12 +430,6 @@ impl From<BoundedShopEffect> for ShopEffect {
             BoundedShopEffect::SpawnUnit { card_id } => ShopEffect::SpawnUnit { card_id },
             BoundedShopEffect::Destroy { target } => ShopEffect::Destroy { target },
             BoundedShopEffect::GainMana { amount } => ShopEffect::GainMana { amount },
-            BoundedShopEffect::GrantStatusPermanent { status, target } => {
-                ShopEffect::GrantStatusPermanent { status, target }
-            }
-            BoundedShopEffect::RemoveStatusPermanent { status, target } => {
-                ShopEffect::RemoveStatusPermanent { status, target }
-            }
         }
     }
 }
@@ -649,7 +598,6 @@ where
     pub name: BoundedVec<u8, MaxStringLen>,
     pub stats: UnitStats,
     pub economy: EconomyStats,
-    pub base_statuses: StatusMask,
     pub shop_abilities: BoundedVec<BoundedShopAbility<MaxConditions>, MaxAbilities>,
     pub battle_abilities: BoundedVec<BoundedBattleAbility<MaxConditions>, MaxAbilities>,
 }
@@ -663,7 +611,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Cl
             name: self.name.clone(),
             stats: self.stats.clone(),
             economy: self.economy.clone(),
-            base_statuses: self.base_statuses,
             shop_abilities: self.shop_abilities.clone(),
             battle_abilities: self.battle_abilities.clone(),
         }
@@ -678,7 +625,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Pa
             && self.name == other.name
             && self.stats == other.stats
             && self.economy == other.economy
-            && self.base_statuses == other.base_statuses
             && self.shop_abilities == other.shop_abilities
             && self.battle_abilities == other.battle_abilities
     }
@@ -698,7 +644,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> De
             .field("name", &self.name)
             .field("stats", &self.stats)
             .field("economy", &self.economy)
-            .field("base_statuses", &self.base_statuses)
             .field("shop_abilities", &self.shop_abilities)
             .field("battle_abilities", &self.battle_abilities)
             .finish()
@@ -718,7 +663,6 @@ where
             name: string_to_bounded(card.name),
             stats: card.stats,
             economy: card.economy,
-            base_statuses: card.base_statuses,
             shop_abilities: BoundedVec::truncate_from(
                 card.shop_abilities.into_iter().map(Into::into).collect(),
             ),
@@ -742,7 +686,6 @@ where
             name: bounded_to_string(bounded.name),
             stats: bounded.stats,
             economy: bounded.economy,
-            base_statuses: bounded.base_statuses,
             shop_abilities: bounded
                 .shop_abilities
                 .into_inner()
@@ -1395,7 +1338,6 @@ where
     pub name: BoundedVec<u8, MaxStringLen>,
     pub attack: i32,
     pub health: i32,
-    pub statuses: StatusMask,
     pub battle_abilities: BoundedVec<BoundedBattleAbility<MaxConditions>, MaxAbilities>,
 }
 
@@ -1409,7 +1351,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Cl
             name: self.name.clone(),
             attack: self.attack,
             health: self.health,
-            statuses: self.statuses,
             battle_abilities: self.battle_abilities.clone(),
         }
     }
@@ -1424,7 +1365,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> Pa
             && self.name == other.name
             && self.attack == other.attack
             && self.health == other.health
-            && self.statuses == other.statuses
             && self.battle_abilities == other.battle_abilities
     }
 }
@@ -1444,7 +1384,6 @@ impl<MaxAbilities: Get<u32>, MaxStringLen: Get<u32>, MaxConditions: Get<u32>> De
             .field("name", &self.name)
             .field("attack", &self.attack)
             .field("health", &self.health)
-            .field("statuses", &self.statuses)
             .field("battle_abilities", &self.battle_abilities)
             .finish()
     }
@@ -1464,7 +1403,6 @@ where
             name: string_to_bounded(uv.name),
             attack: uv.attack,
             health: uv.health,
-            statuses: uv.statuses,
             battle_abilities: BoundedVec::truncate_from(
                 uv.battle_abilities.into_iter().map(Into::into).collect(),
             ),
@@ -1486,7 +1424,6 @@ where
             name: bounded_to_string(bounded.name),
             attack: bounded.attack,
             health: bounded.health,
-            statuses: bounded.statuses,
             battle_abilities: bounded
                 .battle_abilities
                 .into_inner()
@@ -1561,20 +1498,6 @@ where
         source_instance_id: UnitId,
         team: Team,
         amount: i32,
-    },
-    StatusApplied {
-        target_instance_id: UnitId,
-        status: Status,
-        permanent: bool,
-    },
-    StatusRemoved {
-        target_instance_id: UnitId,
-        status: Status,
-        permanent: bool,
-    },
-    StatusConsumed {
-        target_instance_id: UnitId,
-        status: Status,
     },
     UnitSpawn {
         team: Team,
@@ -1678,31 +1601,6 @@ impl<
                 source_instance_id: *source_instance_id,
                 team: *team,
                 amount: *amount,
-            },
-            Self::StatusApplied {
-                target_instance_id,
-                status,
-                permanent,
-            } => Self::StatusApplied {
-                target_instance_id: *target_instance_id,
-                status: *status,
-                permanent: *permanent,
-            },
-            Self::StatusRemoved {
-                target_instance_id,
-                status,
-                permanent,
-            } => Self::StatusRemoved {
-                target_instance_id: *target_instance_id,
-                status: *status,
-                permanent: *permanent,
-            },
-            Self::StatusConsumed {
-                target_instance_id,
-                status,
-            } => Self::StatusConsumed {
-                target_instance_id: *target_instance_id,
-                status: *status,
             },
             Self::UnitSpawn {
                 team,
@@ -1841,40 +1739,6 @@ impl<
                 },
             ) => s1 == s2 && tm1 == tm2 && a1 == a2,
             (
-                Self::StatusApplied {
-                    target_instance_id: t1,
-                    status: k1,
-                    permanent: p1,
-                },
-                Self::StatusApplied {
-                    target_instance_id: t2,
-                    status: k2,
-                    permanent: p2,
-                },
-            ) => t1 == t2 && k1 == k2 && p1 == p2,
-            (
-                Self::StatusRemoved {
-                    target_instance_id: t1,
-                    status: k1,
-                    permanent: p1,
-                },
-                Self::StatusRemoved {
-                    target_instance_id: t2,
-                    status: k2,
-                    permanent: p2,
-                },
-            ) => t1 == t2 && k1 == k2 && p1 == p2,
-            (
-                Self::StatusConsumed {
-                    target_instance_id: t1,
-                    status: k1,
-                },
-                Self::StatusConsumed {
-                    target_instance_id: t2,
-                    status: k2,
-                },
-            ) => t1 == t2 && k1 == k2,
-            (
                 Self::UnitSpawn {
                     team: tm1,
                     spawned_unit: s1,
@@ -2011,34 +1875,6 @@ impl<
                 .field("team", team)
                 .field("amount", amount)
                 .finish(),
-            Self::StatusApplied {
-                target_instance_id,
-                status,
-                permanent,
-            } => f
-                .debug_struct("StatusApplied")
-                .field("target_instance_id", target_instance_id)
-                .field("status", status)
-                .field("permanent", permanent)
-                .finish(),
-            Self::StatusRemoved {
-                target_instance_id,
-                status,
-                permanent,
-            } => f
-                .debug_struct("StatusRemoved")
-                .field("target_instance_id", target_instance_id)
-                .field("status", status)
-                .field("permanent", permanent)
-                .finish(),
-            Self::StatusConsumed {
-                target_instance_id,
-                status,
-            } => f
-                .debug_struct("StatusConsumed")
-                .field("target_instance_id", target_instance_id)
-                .field("status", status)
-                .finish(),
             Self::UnitSpawn {
                 team,
                 spawned_unit,
@@ -2149,31 +1985,6 @@ where
                 source_instance_id,
                 team,
                 amount,
-            },
-            crate::battle::CombatEvent::StatusApplied {
-                target_instance_id,
-                status,
-                permanent,
-            } => Self::StatusApplied {
-                target_instance_id,
-                status,
-                permanent,
-            },
-            crate::battle::CombatEvent::StatusRemoved {
-                target_instance_id,
-                status,
-                permanent,
-            } => Self::StatusRemoved {
-                target_instance_id,
-                status,
-                permanent,
-            },
-            crate::battle::CombatEvent::StatusConsumed {
-                target_instance_id,
-                status,
-            } => Self::StatusConsumed {
-                target_instance_id,
-                status,
             },
             crate::battle::CombatEvent::UnitSpawn {
                 team,

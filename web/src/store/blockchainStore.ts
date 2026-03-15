@@ -18,7 +18,6 @@ import { AccountId } from '@polkadot-api/substrate-bindings';
 import { createCallArgCoercer } from '../utils/papiCoercion';
 import { initEmojiMap } from '../utils/emoji';
 import { submitTx } from '../utils/tx';
-import { decodeStatusMask } from '../utils/status';
 import { useSettingsStore } from './settingsStore';
 
 // ============================================================================
@@ -38,10 +37,6 @@ function papiEnumStr(v: any): string {
   return v?.type ?? String(v);
 }
 
-function toStatusMask(v: any): number[] {
-  return decodeStatusMask(v);
-}
-
 /**
  * Convert AbilityEffect from PAPI to serde format.
  * Serde: internally tagged (#[serde(tag = "type")])
@@ -59,8 +54,6 @@ function convertEffect(v: any): any {
       } else if (key === 'card_id') {
         // CardId is #[serde(transparent)] — just a number
         result[key] = typeof val === 'number' ? val : Number(val);
-      } else if (key === 'status') {
-        result[key] = papiEnumStr(val);
       } else {
         result[key] = val;
       }
@@ -170,7 +163,6 @@ function blockchainCardToEngineCard(card: any) {
       play_cost: card.data.economy.play_cost,
       burn_value: card.data.economy.burn_value,
     },
-    base_statuses: toStatusMask(card.data.base_statuses),
     shop_abilities: shopAbilities,
     battle_abilities: battleAbilities,
   };
@@ -260,7 +252,6 @@ function normalizeGhostBoard(ghost: any): any[] {
       typeof unit.perm_attack === 'number' ? unit.perm_attack : Number(unit.perm_attack || 0),
     perm_health:
       typeof unit.perm_health === 'number' ? unit.perm_health : Number(unit.perm_health || 0),
-    perm_statuses: toStatusMask(unit.perm_statuses),
   }));
 }
 
@@ -678,7 +669,6 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
             typeof u.perm_attack === 'number' ? u.perm_attack : Number(u.perm_attack || 0),
           perm_health:
             typeof u.perm_health === 'number' ? u.perm_health : Number(u.perm_health || 0),
-          perm_statuses: toStatusMask(u.perm_statuses),
         }));
 
         // Replay battle locally with the chain's seed and opponent

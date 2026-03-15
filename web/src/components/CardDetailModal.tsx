@@ -4,22 +4,8 @@ import type { BoardUnitView, CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import { formatAbilitySentence } from '../utils/abilityText';
 
-const STATUS_MASK_KEYS = new Set(['base_statuses', 'perm_statuses', 'active_statuses', 'statuses']);
-
-function stringifyWithCompactStatusMasks(value: unknown): string {
-  const encoded = JSON.stringify(
-    value,
-    (key, currentValue) => {
-      if (STATUS_MASK_KEYS.has(key) && Array.isArray(currentValue)) {
-        const normalized = currentValue.map((x) => Number(x) & 0xff);
-        return `__STATUS_MASK__${JSON.stringify(normalized)}`;
-      }
-      return currentValue;
-    },
-    2
-  );
-
-  return (encoded ?? 'null').replace(/"__STATUS_MASK__(\[[^"]*\])"/g, '$1');
+function prettyJson(value: unknown): string {
+  return JSON.stringify(value, null, 2) ?? 'null';
 }
 
 interface CardDetailModalProps {
@@ -32,7 +18,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
   const cardNameMap = useGameStore((state) => state.cardNameMap);
   const [showRaw, setShowRaw] = React.useState(false);
   const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
-  const rawJson = React.useMemo(() => stringifyWithCompactStatusMasks(card), [card]);
+  const rawJson = React.useMemo(() => prettyJson(card), [card]);
   const allAbilities = [...card.shop_abilities, ...card.battle_abilities];
 
   if (!isOpen) return null;

@@ -115,7 +115,6 @@ export default function PresentationViewer() {
             health: props.health ?? 3,
             play_cost: props.play_cost ?? 2,
             burn_value: props.burn_value ?? 1,
-            base_statuses: props.base_statuses || [],
             shop_abilities: props.shop_abilities || [],
             battle_abilities: props.battle_abilities || [],
           };
@@ -136,7 +135,6 @@ export default function PresentationViewer() {
             health: props.health ?? 3,
             play_cost: props.play_cost ?? 2,
             burn_value: props.burn_value ?? 1,
-            base_statuses: props.base_statuses || [],
             shop_abilities: props.shop_abilities || [],
             battle_abilities: props.battle_abilities || [],
           };
