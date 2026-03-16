@@ -25,6 +25,7 @@ pub trait WeightInfo {
     fn abandon_tournament() -> Weight;
     fn claim_prize() -> Weight;
     fn backfill_ghost_board() -> Weight;
+    fn claim_victory_achievement() -> Weight;
 }
 
 /// Weights for pallet-auto-battle using runtime database weights.
@@ -107,6 +108,13 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
             .saturating_add(T::DbWeight::get().reads(3))
             .saturating_add(T::DbWeight::get().writes(3))
     }
+
+    fn claim_victory_achievement() -> Weight {
+        // 1 read for archive entry + up to 5 reads/writes for achievements
+        Weight::from_parts(100_000_000, 0)
+            .saturating_add(T::DbWeight::get().reads(6))
+            .saturating_add(T::DbWeight::get().writes(5))
+    }
 }
 
 // For backwards compatibility and tests.
@@ -187,5 +195,11 @@ impl WeightInfo for () {
         Weight::from_parts(180_000_000, 0)
             .saturating_add(RocksDbWeight::get().reads(3))
             .saturating_add(RocksDbWeight::get().writes(3))
+    }
+
+    fn claim_victory_achievement() -> Weight {
+        Weight::from_parts(100_000_000, 0)
+            .saturating_add(RocksDbWeight::get().reads(6))
+            .saturating_add(RocksDbWeight::get().writes(5))
     }
 }

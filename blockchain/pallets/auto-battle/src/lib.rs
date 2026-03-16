@@ -468,6 +468,19 @@ pub mod pallet {
         ValueQuery,
     >;
 
+    /// Victory achievements: tracks which card IDs a player has won with.
+    /// Key: (AccountId, card_id) -> true if the player has achieved a 10-win run with that card.
+    #[pallet::storage]
+    pub type VictoryAchievements<T: Config> = StorageDoubleMap<
+        _,
+        Blake2_128Concat,
+        T::AccountId, // player
+        Blake2_128Concat,
+        u32, // card_id
+        bool,
+        ValueQuery,
+    >;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -535,6 +548,12 @@ pub mod pallet {
             lives: i32,
             pool_size: u32,
         },
+        /// Victory achievements have been claimed from a winning ghost board.
+        VictoryAchievementClaimed {
+            owner: T::AccountId,
+            archive_id: u64,
+            card_ids: Vec<u32>,
+        },
     }
 
     #[pallet::error]
@@ -587,6 +606,10 @@ pub mod pallet {
         TournamentGameAlreadyActive,
         /// No active tournament game found.
         NoActiveTournamentGame,
+        /// The specified ghost archive entry does not exist.
+        GhostArchiveNotFound,
+        /// The ghost board does not have 10 wins (not a victory board).
+        NotVictoryBoard,
     }
 
     /// Input for creating a card set.
@@ -751,11 +774,21 @@ pub mod pallet {
 
             // Store player's board as ghost (after selecting opponent)
             let ghost = Self::create_ghost_board(&battle.core_state);
-            Self::store_ghost(&who, &battle.bracket, ghost);
+            Self::store_ghost(&who, &battle.bracket, ghost.clone());
 
             let turn = Self::execute_and_advance(&who, &mut battle, enemy_units, b"shop");
 
             if turn.game_over {
+                // Archive the winning board with the final wins count
+                // so it can be used for victory achievement claims.
+                if turn.current_wins >= 10 {
+                    let victory_bracket = MatchmakingBracket {
+                        wins: turn.current_wins,
+                        ..battle.bracket
+                    };
+                    Self::store_ghost(&who, &victory_bracket, ghost);
+                }
+
                 ActiveGame::<T>::remove(&who);
                 Self::deposit_event(Event::BattleReported {
                     owner: who,
@@ -1103,12 +1136,22 @@ pub mod pallet {
 
             // Store player's board as tournament ghost
             let ghost = Self::create_ghost_board(&battle.core_state);
-            Self::store_tournament_ghost(&who, tid, &battle.bracket, ghost);
+            Self::store_tournament_ghost(&who, tid, &battle.bracket, ghost.clone());
 
             let turn =
                 Self::execute_and_advance(&who, &mut battle, enemy_units, b"tournament_shop");
 
             if turn.game_over {
+                // Archive the winning board with the final wins count
+                // so it can be used for victory achievement claims.
+                if turn.current_wins >= 10 {
+                    let victory_bracket = MatchmakingBracket {
+                        wins: turn.current_wins,
+                        ..battle.bracket
+                    };
+                    Self::store_ghost(&who, &victory_bracket, ghost);
+                }
+
                 TournamentPlayerStats::<T>::mutate(tid, &who, |stats| {
                     stats.total_games += 1;
                     stats.total_wins += turn.current_wins as u32;
@@ -1353,6 +1396,49 @@ pub mod pallet {
                 wins,
                 lives,
                 pool_size,
+            });
+
+            Ok(())
+        }
+
+        /// Claim victory achievements from a ghost archive entry with 10 wins.
+        ///
+        /// Anyone can call this extrinsic. It looks up the ghost archive entry,
+        /// verifies it has exactly 10 wins, and records each card ID on the board
+        /// as a victory achievement for the board's owner.
+        #[pallet::call_index(14)]
+        #[pallet::weight(T::WeightInfo::claim_victory_achievement())]
+        pub fn claim_victory_achievement(
+            origin: OriginFor<T>,
+            set_id: u32,
+            round: i32,
+            wins: i32,
+            lives: i32,
+            archive_id: u64,
+        ) -> DispatchResult {
+            ensure_signed(origin)?;
+
+            // Verify the board has 10 wins
+            ensure!(wins >= 10, Error::<T>::NotVictoryBoard);
+
+            // Look up the ghost archive entry
+            let entry = GhostArchive::<T>::get((set_id, round, wins, lives, archive_id))
+                .ok_or(Error::<T>::GhostArchiveNotFound)?;
+
+            // Record each card ID as a victory achievement for the owner
+            let mut card_ids = Vec::new();
+            for unit in entry.board.units.iter() {
+                let card_id = unit.card_id.0;
+                if !VictoryAchievements::<T>::get(&entry.owner, card_id) {
+                    VictoryAchievements::<T>::insert(&entry.owner, card_id, true);
+                    card_ids.push(card_id);
+                }
+            }
+
+            Self::deposit_event(Event::VictoryAchievementClaimed {
+                owner: entry.owner,
+                archive_id,
+                card_ids,
             });
 
             Ok(())
