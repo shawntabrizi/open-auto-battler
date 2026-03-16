@@ -22,39 +22,45 @@ The beta is the first version of Open Auto Battler that feels like a complete ga
 
 | Layer | Status | Details |
 |-------|--------|---------|
-| **Core Engine** | ~90% | Battle system, ability system (11 battle triggers, 9 effects, 6 shop triggers, 6 effects), permanent stat modifiers, statuses (Shield/Poison/Guard), targeting, conditions, deterministic RNG |
-| **Pallet** | ~80% | start_game, submit_turn, submit_card, create_card_set, ghost matchmaking, tournament system, ghost backfill |
+| **Core Engine** | ~90% | Battle system, ability system (11 battle triggers, 6 effects, 6 shop triggers, 4 effects), permanent stat modifiers, targeting, conditions, deterministic RNG |
+| **Pallet** | ~85% | start_game, submit_turn, submit_card, create_card_set, ghost matchmaking, tournament system, ghost backfill, victory achievements |
 | **Frontend** | ~75% | Shop/battle UI, card rendering, customization (5 NFT slots), WASM bridge, creator hub, multiplayer, sandbox |
 | **Content** | ~40% | 110 cards, 2 sets (Starter Pack 40 cards, SAP Turtle Pack 60 cards), 1 style set (Cosmic) |
 
 ## What Needs to Be Built
 
-### Phase 1: Achievement System + Holographic Rewards
+### Phase 1: Achievement System + Holographic Rewards ✅ DONE
 
-**Core Engine Changes:**
-- Add `AchievementTracker` type to `core/src/types.rs` — a per-card bitmap tracking which cards were on the player's board during a 10-win (perfect) run
-- After battle resolution, when `wins == WINS_TO_VICTORY`, record all card IDs that were on the board at any point during that run
-- A card is "mastered" when a player has achieved a perfect run with that card on their board
+**What was built:**
 
-**Pallet Changes (`blockchain/pallets/auto-battle/src/lib.rs`):**
-- New storage: `CardMastery<T>` — `StorageDoubleMap<(AccountId, CardId), bool>` — tracks which cards a player has mastered
-- New storage: `HolographicUnlocks<T>` — `StorageDoubleMap<(AccountId, CardId), bool>` — tracks earned holographic variants
-- New storage: `RunCardLog<T>` — `StorageMap<AccountId, BoundedVec<CardId>>` — accumulates every unique card ID placed on board during current run
-- Modify `submit_turn`: when a card is placed on board, add its base card ID to `RunCardLog`
-- Modify game-over logic: on a perfect 10-win run, iterate `RunCardLog` entries → set `CardMastery` and `HolographicUnlocks` to true for each
-- New event: `AchievementUnlocked { owner, card_id }`
-- New query-friendly storage: `SetMasteryProgress<T>` — `StorageDoubleMap<(AccountId, SetId), u32>` — count of mastered cards in a set (denormalized for fast UI reads)
+The achievement system uses a simpler, gas-efficient design based on the existing ghost archive infrastructure rather than tracking cards throughout a run.
+
+**How it works:** When a player wins 10 rounds, their final board is archived in `GhostArchive` with `wins=10`. Anyone can then call `claim_victory_achievement` pointing at that archive entry. The pallet verifies the entry has 10+ wins, reads the card IDs from the board, and records them as unlocked achievements for the board's owner.
+
+**Implementation (already merged):**
+- New storage: `VictoryAchievements<T>` — `StorageDoubleMap<(AccountId, CardId), bool>` — tracks which cards a player had on their board during a 10-win run
+- New extrinsic: `claim_victory_achievement(set_id, round, wins, lives, archive_id)` — permissionless, anyone can call. Looks up the ghost archive entry, verifies `wins >= 10`, records each card ID as an achievement for the board owner
+- New event: `VictoryAchievementClaimed { owner, archive_id, card_ids }`
+- Victory boards are now archived: both `submit_turn` and `submit_tournament_turn` store an additional ghost with `wins=10` in the archive when a player achieves victory
+- Status system (Shield/Poison/Guard) was removed to simplify the engine for beta — 5 cards became stat-sticks (balance pass in Phase 3 will address)
 
 **Design Rationale:**
-The achievement is: "win a full 10-round run with this card appearing on your board at least once." This encourages players to build around every card — even weak ones — since they need each card on their board during *some* winning run. This makes "bad" cards into puzzle challenges.
+The achievement is: "reach 10 wins with this card on your final board." This is simpler than tracking every card across all rounds, costs zero extra gas during gameplay (no `RunCardLog` writes per turn), and leverages the ghost archive that already exists. The tradeoff is that only the final board cards count, not cards used mid-run — but this still creates the intended puzzle challenge of building winning boards around specific cards.
 
-### Phase 2: Holographic Card Rendering
+### Phase 2: Holographic Card Rendering ✅ DONE
 
-**Frontend Changes:**
-- Add `isHolographic` flag to card view resolution — check `HolographicUnlocks` storage for the connected account
-- New CSS treatment for holographic cards: animated rainbow gradient overlay, subtle shimmer animation, prismatic border effect
-- Holographic toggle: in deck/collection views, holographic cards show a special badge + can be toggled to display the holo effect
-- Achievement progress panel: per-set grid showing which cards are mastered (checkmark) vs remaining (grayed), with overall % completion
+**What was built:**
+- `achievementStore.ts` — Zustand store that queries `VictoryAchievements` on-chain storage for the connected account and exposes `isHolographic(cardId)`
+- Achievements are fetched automatically on account selection
+- `UnitCard` internally checks the achievement store — every card in the app (hand, board, battle, sandbox, bag, ghost browser, set preview, etc.) automatically renders holographic if unlocked
+- CSS holographic effect: animated rotating `conic-gradient` rainbow border (via `.holo-border` wrapper), rainbow shimmer overlay (`.holo-shimmer` div), and pulsing prismatic outer glow
+- Works alongside existing card effects (rarity glow, tilt, wobble) without conflicts
+- Genesis style NFTs (Cosmic set) are now minted to new accounts on "New User" / "Add Funds" via a batched `Utility.batch_all` transaction
+
+**Remaining:**
+- [ ] Achievement progress panel: per-set grid showing which cards are mastered vs remaining, with overall % completion
+- [ ] Call `claim_victory_achievement` after a victory run ends (can be triggered automatically or via a button)
+- [ ] Holographic badge/indicator in collection views
 
 **No NFT minting required** — holographic is an on-chain unlock flag, not an NFT. It's a permanent cosmetic tied to the player's account and displayed automatically.
 
@@ -65,11 +71,12 @@ The achievement is: "win a full 10-round run with this card appearing on your bo
 The existing "Starter Pack" (set 0, cards 0-39) is the base. Needs a balance pass:
 
 - **Mana curve:** Ensure a healthy distribution across costs 1-7+ so early, mid, and late game are all viable
-- **Archetype diversity:** At least 4-5 distinct archetypes (aggro rush, buff/scaling, spawn swarm, sniper/removal, tank/guard) that are competitively viable
+- **Archetype diversity:** At least 4-5 distinct archetypes (aggro rush, buff/scaling, spawn swarm, sniper/removal, tank wall) that are competitively viable
 - **Ability coverage:** Every battle trigger and shop trigger should appear on at least 1-2 cards in the set
 - **Rarity tuning:** Replace the current flat rarity-10 with a tiered curve (common 10, uncommon 8, rare 6, epic 4, legendary 2) so drafts have meaningful variance
 - **Token cards:** Review spawn-token cards (rarity 0) for balance — spawned units shouldn't be strictly better than draftable ones
 - **Stat budget formula:** Each card should follow a rough budget of `attack + health ≈ play_cost * 1.5 + ability_tax` where ability_tax scales with effect power
+- **Status removal cleanup:** 5 cards lost their abilities when the status system was removed (Elephant, Ox, Turtle, Scorpion, Gorilla) — these need new non-status abilities or rebalanced stats
 
 Deliverable: Updated `cards/cards.json` and `cards/sets.json` with rebalanced Starter Pack.
 
@@ -94,32 +101,13 @@ Each style set contains 5 items:
 
 **Deliverable:** Update `cards/styles.json` with 2 new entries. Art assets uploaded to IPFS. Each set should be pre-minted as an NFT collection so players can acquire them.
 
-### Phase 5: Pallet Polish for Beta
-
-**Game Recording:**
-- New storage: `GameHistory<T>` — `StorageMap<(AccountId, u64), GameRecord>` — stores completed game summaries (set_id, final_wins, final_round, rounds_played, timestamp, cards_used)
-- New storage: `PlayerStats<T>` — `StorageMap<AccountId, AggregateStats>` — total games, total wins, perfect runs, favorite set, etc.
-- Populate on game completion (both victory and defeat paths in `submit_turn`)
-
-**Board Snapshots:**
-- The ghost archive (`GhostArchive`) already stores every board ever submitted — this serves as the board recording system
-- Add a new storage `GameBoards<T>` — `StorageNMap<(AccountId, game_id, round), BoundedGhostBoard>` — stores the player's board at each round of a specific game, enabling full game replay
-
-**Quality of Life:**
-- Add `get_mastery_progress` runtime API or storage query so the frontend can efficiently show achievement progress
-- Ensure `abandon_game` cleans up `RunCardLog`
-
-### Phase 6: Frontend Beta Features
+### Phase 5: Frontend Beta Features
 
 **Achievement UI:**
 - New `AchievementsPage` component: grid view of all cards in a set, each showing mastered/unmastered state
 - Progress bar per set: "23/40 cards mastered"
 - Card detail modal shows mastery status + holographic preview
 - Toast notification on achievement unlock after a perfect run
-
-**Game History:**
-- New `ProfilePage` component: lifetime stats, recent game history, mastery progress across all sets
-- Game replay viewer: step through recorded boards round-by-round
 
 **Styling System (already mostly built):**
 - Verify all 5 customization slots work end-to-end with NFTs: board_bg, hand_bg, card_style, avatar, card_art
@@ -137,9 +125,8 @@ Each style set contains 5 items:
 ENGINE
   [x] Basic card stats (mana/burn/health/attack)
   [x] Ability system (battle + shop triggers/effects)
-  [x] Permanent stat modifiers (perm_attack, perm_health, perm_statuses)
-  [x] Status system (Shield, Poison, Guard)
-  [ ] Achievement tracking logic (run card log → mastery on perfect run)
+  [x] Permanent stat modifiers (perm_attack, perm_health)
+  [x] Status system removed (Shield/Poison/Guard stripped for beta simplicity)
 
 PALLET
   [x] Create cards on-chain
@@ -147,14 +134,13 @@ PALLET
   [x] Ghost opponent storage + matchmaking
   [x] Game progression (start → shop → battle → repeat)
   [x] Tournament system
-  [ ] CardMastery + HolographicUnlocks storage
-  [ ] RunCardLog tracking during games
-  [ ] Perfect-run achievement trigger
-  [ ] GameHistory + PlayerStats recording
-  [ ] GameBoards round-by-round snapshots
+  [x] VictoryAchievements storage (AccountId × CardId → bool)
+  [x] claim_victory_achievement extrinsic (permissionless, reads ghost archive)
+  [x] Victory boards archived with wins=10 on game completion
 
 CONTENT
   [ ] 1 balanced competitive card set (~40 cards, tiered rarity)
+  [ ] Rebalance 5 cards that lost status abilities (Elephant, Ox, Turtle, Scorpion, Gorilla)
   [x] 1 style set (Cosmic)
   [ ] 1 style set (Medieval)
   [ ] 1 style set (Neon Cyber)
@@ -166,9 +152,11 @@ FRONTEND
   [x] IPFS upload + minting
   [x] Creator hub (cards + sets)
   [x] Sandbox mode (free testing of card builds and strategies)
-  [ ] Holographic card CSS effect
-  [ ] Achievement progress page
-  [ ] Game history / profile page
+  [x] Holographic card CSS effect (rainbow border + shimmer, driven by on-chain achievements)
+  [x] Achievement store (fetches VictoryAchievements on account select)
+  [x] Genesis style NFT minting on new user / add funds
+  [ ] Achievement progress page (per-set mastery grid)
+  [ ] Call claim_victory_achievement after victory runs
   [ ] Style set bundle view
 ```
 
@@ -186,10 +174,9 @@ These features already exist in the codebase but are not part of the beta scope.
 
 ## Suggested Build Order
 
-1. **Achievement system** (pallet storage + submit_turn modifications) — this is the core new feature
-2. **Holographic rendering** (frontend CSS) — immediate visual payoff once achievements work
-3. **Balance pass** on Starter Pack — makes the game actually fun to play competitively
-4. **Game recording** (pallet storage) — adds depth to the experience
-5. **2 new style sets** (art production + IPFS upload + styles.json) — can be parallelized with above
-6. **Frontend pages** (achievements, profile, history) — ties everything together
-7. **Integration testing** + ghost backfill for the rebalanced set
+1. ~~**Achievement system** (pallet storage + submit_turn modifications)~~ ✅ DONE
+2. ~~**Holographic rendering** (frontend CSS + achievement store)~~ ✅ DONE
+3. **Balance pass** on Starter Pack — makes the game actually fun to play competitively; also fix the 5 cards that lost status abilities
+4. **2 new style sets** (art production + IPFS upload + styles.json) — can be parallelized with above
+5. **Frontend pages** (achievement progress grid, style bundles) + wire `claim_victory_achievement` call after victory runs
+6. **Integration testing** + ghost backfill for the rebalanced set

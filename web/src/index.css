@@ -241,6 +241,93 @@ body {
     0 0 4px rgba(251, 191, 36, 0.3);
 }
 
+/* ═══════════════════════════════════════════
+   Holographic card effect
+   Uses a wrapper div (.holo-border) for the rainbow border
+   since .card::before is already used for paper grain.
+   ═══════════════════════════════════════════ */
+
+/* The wrapper provides the rainbow border */
+.holo-border {
+  --holo-speed: 4s;
+  padding: 2px;
+  border-radius: 0.5rem;
+  background: conic-gradient(
+    from var(--holo-angle, 0deg),
+    #ff6ec7, #ffb86c, #a8ff78, #78d0ff, #c084fc, #ff6ec7
+  );
+  animation:
+    holo-border-spin var(--holo-speed) linear infinite,
+    holo-glow-pulse 3s ease-in-out infinite;
+}
+
+/* The card inside loses its own border */
+.holo-border > .card-holographic {
+  border: none;
+  border-radius: calc(0.5rem - 2px);
+}
+
+/* Rainbow shimmer overlay — uses a child div (.holo-shimmer)
+   because ::after is used by .card-tilt for the glare effect */
+.holo-shimmer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 6;
+  background: linear-gradient(
+    var(--holo-angle, 135deg),
+    rgba(255, 110, 199, 0.15),
+    rgba(255, 184, 108, 0.15),
+    rgba(168, 255, 120, 0.15),
+    rgba(120, 208, 255, 0.15),
+    rgba(192, 132, 252, 0.15),
+    rgba(255, 110, 199, 0.15)
+  );
+  mix-blend-mode: screen;
+  animation: holo-border-spin 4s linear infinite;
+}
+
+/* Prismatic outer glow on the wrapper */
+@keyframes holo-glow-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgba(192, 132, 252, 0.3),
+      0 0 20px rgba(120, 208, 255, 0.2),
+      0 0 4px rgba(255, 110, 199, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(255, 110, 199, 0.4),
+      0 0 28px rgba(168, 255, 120, 0.25),
+      0 0 6px rgba(120, 208, 255, 0.3);
+  }
+}
+
+@keyframes holo-border-spin {
+  0%   { --holo-angle: 0deg; }
+  100% { --holo-angle: 360deg; }
+}
+
+@property --holo-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Holographic overrides rarity glow */
+.card-holographic.card-rare-glow,
+.card-holographic.card-legendary-glow {
+  animation: none;
+}
+
+.holo-border:hover {
+  box-shadow:
+    0 0 24px rgba(192, 132, 252, 0.5),
+    0 0 36px rgba(120, 208, 255, 0.3),
+    0 0 8px rgba(255, 110, 199, 0.35);
+}
+
 /* 3D Tilt effect — desktop only */
 @media (hover: hover) {
   .card-tilt {

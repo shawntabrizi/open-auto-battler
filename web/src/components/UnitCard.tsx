@@ -7,6 +7,7 @@ import { useCustomizationStore } from '../store/customizationStore';
 import { useCardTilt } from '../hooks/useCardTilt';
 import { SwordIcon, HeartIcon, AbilityIcon } from './Icons';
 import { CARD_SIZES, CARD_TEXT, type CardSizeVariant } from '../constants/cardSizes';
+import { useAchievementStore } from '../store/achievementStore';
 
 /** Derive a visual rarity tier from play_cost + ability count. */
 export function getRarityTier(card: CardView | BoardUnitView): 'common' | 'uncommon' | 'rare' | 'legendary' {
@@ -76,6 +77,7 @@ export function UnitCard({
     maxRotation: sizeVariant === 'compact' || sizeVariant === 'battle' ? 8 : 12,
   });
 
+  const isHolographic = useAchievementStore((s) => s.isHolographic(card.id));
   const artSrc = getCardArtSm(card.id);
   const [artFailed, setArtFailed] = useState(false);
   const showArt = artSrc && !artFailed;
@@ -84,7 +86,7 @@ export function UnitCard({
   const rarity = getRarityTier(card);
   const rarityStyle = RARITY_STYLES[rarity];
 
-  return (
+  const cardEl = (
     <div
       ref={enableTilt ? tiltRef : undefined}
       onClick={() => {
@@ -96,6 +98,7 @@ export function UnitCard({
       className={`
         unit-card card relative ${sizes.tw} ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none rounded-lg border-2 transition-all duration-200 overflow-hidden
         bg-black ${rarityStyle.border} ${rarityStyle.glow}
+        ${isHolographic ? 'card-holographic' : ''}
         ${isSelected ? 'card-selected ring-2 ring-yellow-400' : ''}
         ${enableWobble && !isSelected ? 'wobble-card' : ''}
         ${enableTilt && !isSelected ? 'card-tilt' : ''}
@@ -187,6 +190,9 @@ export function UnitCard({
           </div>
         )}
 
+        {/* Holographic shimmer overlay */}
+        {isHolographic && <div className="holo-shimmer" />}
+
         {/* Card style frame overlay - behind stats/badges but above card art */}
         {cardStyle && (
           <img
@@ -198,6 +204,11 @@ export function UnitCard({
         )}
     </div>
   );
+
+  if (isHolographic) {
+    return <div className="holo-border">{cardEl}</div>;
+  }
+  return cardEl;
 }
 
 // Empty slot component

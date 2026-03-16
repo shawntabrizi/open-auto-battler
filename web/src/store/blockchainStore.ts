@@ -526,6 +526,12 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
 
   selectAccount: async (account) => {
     set({ selectedAccount: account });
+    // Fetch achievements for the new account
+    const { api } = get();
+    if (api && account) {
+      const { useAchievementStore } = await import('./achievementStore');
+      useAchievementStore.getState().fetchAchievements(api, account.address);
+    }
     await get().refreshGameState(true);
   },
 
@@ -952,17 +958,11 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     const newAccounts = [...accounts, account];
     set({ accounts: newAccounts });
 
-    // Fund the account using Alice (sudo) with Balances.force_set_balance
+    // Fund the account and mint genesis style NFTs in a single batch
     try {
-      const alice = getDevAccounts()[0]; // Alice is first dev account
-      const fundAmount = BigInt(10_000_000_000_000); // 10 units
-      const innerCall = api.tx.Balances.force_set_balance({
-        who: { type: 'Id', value: account.address },
-        new_free: fundAmount,
-      });
-      const sudoTx = api.tx.Sudo.sudo({ call: innerCall.decodedCall });
-      await submitTx(sudoTx, alice.polkadotSigner, `Sudo.sudo(fund ${name})`);
-      console.log(`Funded local account ${name} (${account.address}) with 10 units`);
+      const alice = getDevAccounts()[0];
+      await fundAndMintStyleNfts(api, alice, account.address, name);
+      console.log(`Funded and minted NFTs for local account ${name} (${account.address})`);
     } catch (err) {
       console.error('Failed to fund local account:', err);
     }
@@ -1002,16 +1002,70 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     const alice = getDevAccounts()[0];
-    const fundAmount = BigInt(10_000_000_000_000); // 10 units
-    const innerCall = api.tx.Balances.force_set_balance({
-      who: { type: 'Id', value: selectedAccount.address },
-      new_free: fundAmount,
-    });
-    const sudoTx = api.tx.Sudo.sudo({ call: innerCall.decodedCall });
-    await submitTx(
-      sudoTx,
-      alice.polkadotSigner,
-      `Sudo.sudo(fund ${selectedAccount.name ?? selectedAccount.address.slice(0, 6)})`
-    );
+    const label = selectedAccount.name ?? selectedAccount.address.slice(0, 6);
+    await fundAndMintStyleNfts(api, alice, selectedAccount.address, label);
   },
 }));
+
+// Genesis style NFT items (from cards/styles.json).
+// Each entry: [collectionId, type, name, cid]
+const GENESIS_STYLE_ITEMS: [number, string, string, string][] = [
+  [0, 'avatar', 'Cosmic Elf', 'bafkreie47hbisockampzum46sebuwwcopkb5wovku7nksvkqgb2qmu6ggq'],
+  [0, 'hand_bg', 'Cosmic Soil', 'bafybeicuqz6a4ejkrbv644lt5rxz6ha3oah22lrofkdnaxwk5lyt6kvdue'],
+  [0, 'card_style', 'Cosmic Vines', 'bafkreieiwi6hgi7bgg4vw5pdpr6fqaxijktk42gd7cq443slztqvkazwmy'],
+  [0, 'board_bg', 'Cosmic Tree', 'bafybeicdlpsvd2hk3bv5a3uakmcnlehp7nmhkgksvvusr66lbbla35ennu'],
+  [0, 'card_art', 'Cosmic Cards', 'bafybeialdf7cqyadsw2i57s6f5vdjyggotdtmcjzu7jr2oyp2ejuvkmxfy'],
+];
+
+/** Deterministic item ID for a given target address + style type. */
+function styleItemId(targetAddress: string, collectionId: number, type: string): number {
+  const idSeed = targetAddress + collectionId + type;
+  let hash = 0;
+  for (let i = 0; i < idSeed.length; i++) {
+    hash = ((hash << 5) - hash + idSeed.charCodeAt(i)) | 0;
+  }
+  return (Math.abs(hash) % 900000) + 100000; // 100000-999999 range (avoid genesis 0-4)
+}
+
+/** Fund an account and mint genesis style NFTs.
+ *  Fund goes through Sudo (requires root). NFT mints are signed by Alice (collection admin). */
+async function fundAndMintStyleNfts(
+  api: any,
+  alice: ReturnType<typeof getDevAccounts>[0],
+  targetAddress: string,
+  label: string,
+) {
+  // 1. Fund via sudo
+  const fundCall = api.tx.Balances.force_set_balance({
+    who: { type: 'Id', value: targetAddress },
+    new_free: BigInt(10_000_000_000_000),
+  });
+  const sudoTx = api.tx.Sudo.sudo({ call: fundCall.decodedCall });
+
+  // 2. Batch mint + set_metadata for each style item (signed by Alice as collection admin)
+  const mintCalls: any[] = [];
+  for (const [collectionId, type, name, cid] of GENESIS_STYLE_ITEMS) {
+    const itemId = styleItemId(targetAddress, collectionId, type);
+    mintCalls.push(
+      api.tx.Nfts.mint({
+        collection: collectionId,
+        item: itemId,
+        mint_to: { type: 'Id', value: targetAddress },
+        witness_data: undefined,
+      }).decodedCall
+    );
+    mintCalls.push(
+      api.tx.Nfts.set_metadata({
+        collection: collectionId,
+        item: itemId,
+        data: Binary.fromText(JSON.stringify({ type, name, image: `ipfs://${cid}` })),
+      }).decodedCall
+    );
+  }
+
+  const mintBatch = api.tx.Utility.batch_all({ calls: mintCalls });
+
+  // Submit both: sudo fund first, then Alice-signed mint batch
+  await submitTx(sudoTx, alice.polkadotSigner, `Sudo.sudo(fund ${label})`);
+  await submitTx(mintBatch, alice.polkadotSigner, `Utility.force_batch(mint NFTs for ${label})`);
+}
