@@ -148,7 +148,7 @@ export const CustomizePage: React.FC = () => {
             )}
             {!isConnected && (
               <Link
-                to="/settings/network"
+                to="/network"
                 state={location.state}
                 className="mt-2 text-yellow-500 text-xs hover:underline"
               >

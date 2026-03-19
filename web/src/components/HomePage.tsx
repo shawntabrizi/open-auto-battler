@@ -23,8 +23,8 @@ export function HomePage() {
 
   const isBlockchainAvailable = isConnected;
   const isChecking = isConnecting && !isConnected;
-  const localRoute = isBlockchainAvailable ? '/local' : '/settings/network';
-  const onlineRoute = isBlockchainAvailable ? '/blockchain' : '/settings/network';
+  const localRoute = isBlockchainAvailable ? '/local' : '/network';
+  const onlineRoute = isBlockchainAvailable ? '/blockchain' : '/network';
 
   useEffect(() => {
     if (isBlockchainAvailable) {
@@ -131,7 +131,7 @@ export function HomePage() {
 
           {!isBlockchainAvailable && !isChecking && (
             <Link
-              to="/settings/network"
+              to="/network"
               className="opacity-0 animate-stagger-fade-in stagger-4 block w-full rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-center text-xs lg:text-sm text-red-100"
               style={{ animationFillMode: 'forwards' }}
             >
@@ -168,7 +168,6 @@ export function HomePage() {
             { to: '/multiplayer', label: 'P2P' },
             { to: '/blockchain/ghosts', label: 'Ghosts' },
             { to: '/presentations', label: 'Presentations' },
-            { to: '/settings', label: 'Settings' },
           ].map((link) => (
             <Link
               key={link.to}

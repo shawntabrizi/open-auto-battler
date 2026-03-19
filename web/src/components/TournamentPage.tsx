@@ -251,7 +251,7 @@ export const TournamentPage: React.FC = () => {
             {isConnecting ? 'CONNECTING...' : 'RETRY CONNECTION'}
           </button>
           <a
-            href="#/settings/network"
+            href="#/network"
             className="mt-3 text-sm text-warm-400 hover:text-warm-200 transition-colors"
           >
             Network Settings

@@ -356,7 +356,7 @@ export function GhostBrowserPage() {
                 {isConnecting ? 'CONNECTING...' : 'RETRY CONNECTION'}
               </button>
               <Link
-                to="/settings/network"
+                to="/network"
                 className="rounded-xl border border-warm-700 px-4 py-3 text-sm font-bold text-warm-200 transition-colors hover:border-warm-500 hover:text-white"
               >
                 NETWORK SETTINGS

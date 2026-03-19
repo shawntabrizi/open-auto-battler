@@ -128,7 +128,7 @@ export const BlockchainPage: React.FC = () => {
             {isConnecting ? 'CONNECTING...' : 'RETRY CONNECTION'}
           </button>
           <Link
-            to="/settings/network"
+            to="/network"
             className="mt-3 text-sm text-warm-400 hover:text-warm-200 transition-colors"
           >
             Network Settings

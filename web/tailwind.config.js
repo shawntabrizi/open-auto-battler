@@ -109,8 +109,7 @@ export default {
         },
         'card-settle': {
           '0%': {
-            transform:
-              'translateX(calc(var(--settle-slots, 0) * var(--slot-stride, 88px)))',
+            transform: 'translateX(calc(var(--settle-slots, 0) * var(--slot-stride, 88px)))',
           },
           '100%': { transform: 'translateX(0)' },
         },
@@ -141,7 +140,10 @@ export default {
         },
         'result-glow': {
           '0%, 100%': { textShadow: '0 0 20px var(--glow-color, rgba(212,168,67,0.4))' },
-          '50%': { textShadow: '0 0 40px var(--glow-color, rgba(212,168,67,0.7)), 0 0 80px var(--glow-color, rgba(212,168,67,0.3))' },
+          '50%': {
+            textShadow:
+              '0 0 40px var(--glow-color, rgba(212,168,67,0.7)), 0 0 80px var(--glow-color, rgba(212,168,67,0.3))',
+          },
         },
         'impact-line': {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
@@ -169,6 +171,14 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(12px) scale(0.97)' },
           '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'slide-in-right': {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
       },
       animation: {
         'idle-wobble': 'idle-wobble 3.5s ease-in-out infinite',
@@ -194,6 +204,8 @@ export default {
         'glow-breathe': 'glow-breathe 2.5s ease-in-out infinite',
         'vignette-creep': 'vignette-creep 1.5s ease-out forwards',
         'panel-card-enter': 'panel-card-enter 0.4s var(--spring-bounce) both',
+        'fade-in': 'fade-in 0.2s ease-out both',
+        'slide-in-right': 'slide-in-right 0.25s ease-out both',
       },
     },
   },

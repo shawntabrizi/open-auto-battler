@@ -284,6 +284,7 @@ interface BlockchainStore {
   // Account state
   accounts: any[];
   selectedAccount: any;
+  isLoggedIn: boolean;
 
   // Game state
   chainState: any;
@@ -313,6 +314,11 @@ interface BlockchainStore {
   ) => Promise<{ board: any[]; seed: number } | null>;
   submitCard: (cardData: any, metadata: any) => Promise<void>;
   createCardSet: (cards: { card_id: number; rarity: number }[], name?: string) => Promise<void>;
+
+  // Auth
+  login: () => void;
+  logout: () => void;
+  getAccountBalance: (address: string) => Promise<bigint>;
 
   // Local account management
   createLocalAccount: (name: string) => Promise<void>;
@@ -403,6 +409,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   // Account state
   accounts: [],
   selectedAccount: null,
+  isLoggedIn: false,
 
   // Game state
   chainState: null,
@@ -421,6 +428,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       codecs: null,
       isConnected: false,
       isConnecting: false,
+      isLoggedIn: false,
       connectionError: null,
       blockNumber: null,
       chainState: null,
@@ -500,6 +508,18 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       await Promise.all([get().fetchSets(), get().fetchCards()]);
       get().hydrateGameEngineFromChainData();
       set({ isConnected: true, isConnecting: false, connectionError: null });
+
+      // Restore login session if the previously logged-in account is still available
+      try {
+        const savedAddress = localStorage.getItem('oab-logged-in');
+        if (savedAddress) {
+          const match = get().accounts.find((a: any) => a.address === savedAddress);
+          if (match) {
+            await get().selectAccount(match);
+            set({ isLoggedIn: true });
+          }
+        }
+      } catch {}
 
       if (get().selectedAccount) {
         await get().refreshGameState();
@@ -1005,6 +1025,34 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
     const label = selectedAccount.name ?? selectedAccount.address.slice(0, 6);
     await fundAndMintStyleNfts(api, alice, selectedAccount.address, label);
   },
+
+  login: () => {
+    const { selectedAccount } = get();
+    if (selectedAccount) {
+      set({ isLoggedIn: true });
+      try {
+        localStorage.setItem('oab-logged-in', selectedAccount.address);
+      } catch {}
+    }
+  },
+
+  logout: () => {
+    set({ isLoggedIn: false });
+    try {
+      localStorage.removeItem('oab-logged-in');
+    } catch {}
+  },
+
+  getAccountBalance: async (address: string) => {
+    const { api } = get();
+    if (!api) return BigInt(0);
+    try {
+      const acct = await api.query.System.Account.getValue(address);
+      return acct?.data?.free ?? BigInt(0);
+    } catch {
+      return BigInt(0);
+    }
+  },
 }));
 
 // Genesis style NFT items (from cards/styles.json).
@@ -1033,7 +1081,7 @@ async function fundAndMintStyleNfts(
   api: any,
   alice: ReturnType<typeof getDevAccounts>[0],
   targetAddress: string,
-  label: string,
+  label: string
 ) {
   // 1. Fund via sudo
   const fundCall = api.tx.Balances.force_set_balance({
