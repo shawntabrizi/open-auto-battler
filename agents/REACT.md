@@ -11,7 +11,7 @@ The frontend is a React application built with Vite and Tailwind CSS.
 ## UI/UX
 - **Tailwind CSS**: Use utility classes for styling. Follow the "monospace/retro-tech" aesthetic established in the `BlockchainPage` and `Arena` components.
 - **Component Structure**:
-  - `GameShell.tsx`: Generic game layout with DndContext, HUD, Arena, ManaBar, Shop, and overlays.
+  - `GameShell.tsx`: Generic game layout with DndContext, GameTopBar, Arena, ManaBar, Shop, and overlays.
   - `GameLayout.tsx`: Generic game wrapper that handles loading/error states and initialization, uses GameShell.
   - `Arena.tsx`: Main game board rendering.
   - `Shop.tsx`: Card purchasing and turn preparation.
@@ -81,13 +81,13 @@ function MyComponent() {
 - **`*Shell`**: The actual UI shell/container (e.g., `GameShell`)
 - **`*Overlay`**: Modal/overlay components (e.g., `BattleOverlay`, `BagOverlay`)
 - **`*Manager`**: Non-visual coordination components (e.g., `MultiplayerManager`)
-- **No prefix**: Generic reusable UI components (e.g., `Arena`, `HUD`, `Shop`, `UnitCard`)
+- **No prefix**: Generic reusable UI components (e.g., `Arena`, `Shop`, `UnitCard`)
 
 ## Component Architecture
 
 ```
 GameShell (generic)
-├── HUD
+├── GameTopBar
 ├── Arena
 ├── ManaBar
 ├── Shop
@@ -101,7 +101,7 @@ GameLayout (generic wrapper)
 ├── Loading/error states
 └── GameShell
 
-App.tsx (local game route)
+LocalGamePage (local game route)
 └── GameLayout
 
 MultiplayerGame (multiplayer route)
@@ -147,10 +147,15 @@ function MyComponent() {
 ```
 
 **Examples in codebase:**
-- `GameLayout.tsx` - guards `init()` call (used by App.tsx and MultiplayerGame.tsx)
+- `GameLayout.tsx` - guards `init()` call (used by LocalGamePage.tsx and MultiplayerGame.tsx)
+- `LocalGamePage.tsx` - guards initialization
 - `SandboxPage.tsx` - guards `init()` call
 - `BlockchainPage.tsx` - guards `init()` and `refresh()` calls
-- `HomePage.tsx` - guards `connect()` call
+- `AuthGate.tsx` - guards blockchain connection on mount
+- `LoginPage.tsx` - guards session restore
+- `AchievementsPage.tsx` - guards achievement data fetch
+- `TournamentPage.tsx` - guards tournament state initialization
+- `CardsPage.tsx`, `SetPage.tsx`, `GhostBrowserPage.tsx` - guard data fetches
 
 **Rule:** Any initialization that calls into the WASM engine MUST use `useInitGuard`.
 

@@ -609,8 +609,8 @@ cd blockchain && ./start_chain.sh
 cd web && pnpm dev
 
 # 4. Open browser to http://localhost:5173
-#    - Sandbox Mode: Pure local play, no chain
-#    - Blockchain Mode: Full on-chain gameplay
+#    - Log in, then Play > Online Arena (on-chain) or Play > Offline (local)
+#    - Cards > Sandbox for card testing without a game
 ```
 
 ### Key Files to Understand

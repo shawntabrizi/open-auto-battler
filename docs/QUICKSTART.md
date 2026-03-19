@@ -28,9 +28,7 @@ Open http://localhost:5173 when ready.
 
 This compiles `client/` to WASM and copies artifacts to `web/src/wasm/`.
 
-### 2. Run in Sandbox Mode (No Blockchain)
-
-For quick iteration on game logic:
+### 2. Run the Web UI
 
 ```bash
 cd web
@@ -38,7 +36,7 @@ pnpm install
 pnpm dev
 ```
 
-Open http://localhost:5173 and click "Sandbox Mode". Everything runs locally in your browser.
+Open http://localhost:5173. You will see the **Login Page**. To play, you need a running blockchain (see step 3).
 
 ### 3. Run with Blockchain
 
@@ -58,7 +56,7 @@ cd web
 pnpm dev
 ```
 
-Open http://localhost:5173 and click "Blockchain Mode".
+Open http://localhost:5173. On the Login Page, connect to the chain, select an account, and log in. From the Main Menu, navigate to **Play > Online Arena** (on-chain) or **Play > Offline** (local WASM). For card testing without a game, go to **Cards > Sandbox**.
 
 ## Project Structure at a Glance
 
@@ -165,7 +163,7 @@ Omni Node outputs block info and extrinsic results.
 
 ### State Inspection
 
-In Blockchain Mode, the UI shows:
+In Online Arena mode, the UI shows:
 - Current chain state (decoded from SCALE)
 - Action log (what will be submitted)
 - Battle events (combat resolution)

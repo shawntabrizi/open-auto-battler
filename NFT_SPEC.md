@@ -70,7 +70,7 @@ Overlay PNG frame rendered on top of card content. Must have a transparent cente
 
 ### Player Avatar (`avatar`)
 
-Circular avatar displayed in the HUD next to the Lives section.
+Circular avatar displayed in the GameTopBar next to the Lives section.
 
 | Property | Value |
 |----------|-------|
