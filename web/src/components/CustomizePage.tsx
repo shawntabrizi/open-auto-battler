@@ -240,32 +240,53 @@ export const CustomizePage: React.FC = () => {
         <p className="text-warm-500 text-[9px] lg:text-sm">Select a category to customize</p>
       </div>
 
-      {/* Category grid */}
-      <div className="flex-1 flex items-center justify-center p-2 lg:p-8">
-        <div className="grid grid-cols-2 gap-2 lg:gap-6 w-full max-w-sm lg:max-w-lg">
+      {/* Mobile: two-column layout — preview left, categories right */}
+      <div className="flex-1 flex lg:hidden p-2 gap-2 min-h-0">
+        <div className="w-2/3 flex items-center justify-center">
+          <CustomizationPreview />
+        </div>
+        <div className="w-1/3 flex flex-col gap-1 overflow-y-auto justify-center">
           {SECTIONS.map((section) => {
-            const current = selections[SLOT_MAP[section.type]];
             return (
               <button
                 key={section.type}
                 onClick={() => setActiveSection(section.type)}
-                className="bg-warm-900/50 border border-white/5 hover:border-yellow-500/30 rounded-lg lg:rounded-2xl p-2 lg:p-6 text-center transition-all hover:bg-warm-800/50 active:scale-95"
+                className="flex items-center gap-2 bg-warm-900/50 border border-white/5 hover:border-yellow-500/30 rounded-lg px-3 py-1.5 transition-all hover:bg-warm-800/50 active:scale-95"
               >
-                <div className="text-2xl lg:text-5xl mb-1 lg:mb-3">{section.icon}</div>
-                <div className="text-[10px] lg:text-base font-bold text-white">{section.label}</div>
-                <div className="text-[8px] lg:text-xs text-warm-500 mt-0.5 lg:mt-1">
-                  {current ? current.name : 'Default'}
-                </div>
+                <span className="text-base">{section.icon}</span>
+                <span className="text-[10px] font-bold text-white">{section.label}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Desktop: preview below categories */}
-      <div className="hidden lg:flex justify-center pb-8">
-        <div className="w-full max-w-md">
-          <CustomizationPreview />
+      {/* Desktop: preview on top, category grid below */}
+      <div className="hidden lg:flex flex-col flex-1">
+        <div className="flex justify-center px-8 pb-4">
+          <div className="w-full max-w-xs">
+            <CustomizationPreview />
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="grid grid-cols-2 gap-6 w-full max-w-lg">
+            {SECTIONS.map((section) => {
+              const current = selections[SLOT_MAP[section.type]];
+              return (
+                <button
+                  key={section.type}
+                  onClick={() => setActiveSection(section.type)}
+                  className="bg-warm-900/50 border border-white/5 hover:border-yellow-500/30 rounded-2xl p-6 text-center transition-all hover:bg-warm-800/50 active:scale-95"
+                >
+                  <div className="text-5xl mb-3">{section.icon}</div>
+                  <div className="text-base font-bold text-white">{section.label}</div>
+                  <div className="text-xs text-warm-500 mt-1">
+                    {current ? current.name : 'Default'}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
