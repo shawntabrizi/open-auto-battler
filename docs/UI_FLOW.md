@@ -28,8 +28,8 @@ flowchart TD
 
   Shop --> Battle["Battle Phase"]
   Battle --> Shop
-  Battle --> Victory["Victory 🏆"]
-  Battle --> Defeat["Defeat 💀"]
+  Battle --> Victory["Victory"]
+  Battle --> Defeat["Defeat"]
   Victory --> Main
   Defeat --> Main
 
@@ -43,12 +43,18 @@ flowchart TD
   Cards --> CreateSet["/blockchain/create-set"]
   Cards -.-> SetPreview["Set Preview Overlay"]
 
+  Customize --> CustBg["/customize/backgrounds"]
+  Customize --> CustHand["/customize/hand"]
+  Customize --> CustBorder["/customize/card-border"]
+  Customize --> CustAvatar["/customize/avatar"]
+  Customize --> CustArt["/customize/card-art"]
+
   History --> Achievements["/history/achievements"]
   History --> Stats["/history/stats"]
   History --> BattleHistory["/history/battles"]
   History --> Ghosts["/history/ghosts"]
 
-  Hamburger["Hamburger Menu (every page)"]
+  Hamburger["Hamburger Menu (via TopBar / GameTopBar)"]
   Hamburger --> Settings["/settings"]
   Hamburger --> Account["/account"]
   Hamburger --> Network["/network"]
@@ -90,11 +96,43 @@ flowchart TD
 - "or" divider
 - **Create Game Account** button — generates a new local mnemonic account, funds it, and auto-selects it
 
+### TopBar (Standard Navigation Bar)
+
+**Component:** `TopBar`
+
+**Position:** Top of every page (except DevPage). Rendered inline (not fixed) as the first child of each page's flex column.
+
+**Layout:** `[<- Back]` ... `[Title]` ... `[Hamburger]`
+
+- **Back button** (left, optional): Navigates to the parent route. Hidden on root pages (Main Menu, Login).
+- **Title** (center, optional): Absolutely centered page title with gradient text.
+- **Hamburger trigger** (right): Opens the global slide-out menu via `menuStore`.
+- **`hasCardPanel`** prop: Adds left margin to clear the card detail sidebar when present.
+
+**Usage:** All standard (non-game) pages render `<TopBar>` directly. There is no separate floating hamburger trigger — the hamburger button lives exclusively inside TopBar and GameTopBar.
+
+### GameTopBar (In-Game Navigation Bar)
+
+**Component:** `GameTopBar`
+
+**Position:** Top of the game screen during shop/battle phases, rendered by `GameShell`.
+
+**Layout:** `[Avatar] [Bag] [Round] [Wins] [Lives] [Battle!]` ... `[Hamburger]`
+
+**Contents:**
+- Player avatar (if customized)
+- Bag button (shop phase only) — opens the Draw Pool overlay
+- Round counter
+- Wins counter (current / target)
+- Lives counter (current / starting)
+- Battle / End Turn button with multiplayer timer support
+- Hamburger trigger (right-aligned) — opens the in-game slide-out menu
+
 ### Hamburger Menu (Global)
 
-**Position:** Fixed top-right corner, present on every page after login.
+**Component:** `HamburgerMenu`
 
-**Trigger:** Hamburger icon button. Opens a slide-out panel from the right with a dark backdrop.
+**Rendering:** Mounted once at the app root (inside `AuthGate`, outside `Routes`). Renders only the slide-out panel and backdrop — there is no floating trigger button. The menu is opened via `menuStore.open()`, called by the hamburger button in TopBar or GameTopBar.
 
 **Close:** Click backdrop, click X button, or press Escape.
 
@@ -117,25 +155,13 @@ flowchart TD
 | Return to Menu | Home | `/` | Navigates to main menu |
 | Abandon | Warning | — | Confirmation dialog, then abandons game and navigates to `/` |
 
-### Top-Left Back Button
-
-**Position:** Fixed top-left corner, mirrors the hamburger.
-
-**Usage:** Present on all sub-pages via `PageHeader` or `BackLink`. Routes back to the parent page.
-
-### Top-Right Close Button
-
-**Position:** Fixed top-right, just left of the hamburger.
-
-**Usage:** Used in overlays (Set Preview, Draw Pool, Battle in sandbox) to close the overlay without conflicting with the hamburger.
-
 ## Main Menu
 
 **Route:** `/`
 
 **Component:** `HomePage`
 
-**Back:** None (root page)
+**TopBar:** Present (no back button, no title — hamburger only)
 
 **Contents:**
 
@@ -153,7 +179,7 @@ flowchart TD
 
 **Route:** `/play`
 
-**Back:** Menu (`/`)
+**TopBar:** Back to `/` (Menu), title "Play"
 
 | Label | Route | Size | Notes |
 |---|---|---|---|
@@ -166,7 +192,7 @@ flowchart TD
 
 **Route:** `/cards`
 
-**Back:** Menu (`/`)
+**TopBar:** Back to `/` (Menu), title "Cards"
 
 **Contents:**
 - **Sandbox CTA** — "See All Cards in the Sandbox" banner linking to `/sandbox`
@@ -177,32 +203,53 @@ flowchart TD
 
 **Route:** `/customize`
 
-**Back:** Menu (`/`)
+**TopBar:** Back to `/` (Menu), title "Customize"
 
 **Contents:**
 - **Mobile:** Two-column layout — live preview (2/3) + category buttons (1/3) as compact `[icon] Title` rows
-- **Desktop:** Live preview (landscape 16:9) centered on top, 2x2 category grid below
+- **Desktop:** Live preview centered on top, 2x2 category grid below with current selection name per category
 - **Categories:** Background, Hand, Card Border, Avatar, Card Art
-- Clicking a category enters the item selection sub-view
+- Clicking a category navigates to `/customize/:category`
+
+### Customize Category Pages
+
+Each category has its own route under `/customize/:category`:
+
+| Route | Category | Shape | Specs |
+|---|---|---|---|
+| `/customize/backgrounds` | Board Background | landscape | 16:9, 1920x1080 |
+| `/customize/hand` | Hand Background | wide | 5:1, 1920x384 |
+| `/customize/card-border` | Card Border | card | 3:4, 256x352, PNG with alpha |
+| `/customize/avatar` | Avatar | circle | 1:1, 256x256 |
+| `/customize/card-art` | Card Art | card | IPFS directory with WebP images |
+
+**TopBar:** Back to `/customize` (Customize), title is the category label
+
+**Contents:**
+- Desktop: live preview bar at top, NFT grid below (columns vary by shape)
+- Mobile: horizontal scroll of NFT tiles
+- "Default" tile always first (deselects customization)
+- Each tile shows NFT image, name, and item ID
+- Empty state links to Mint NFT page or Network Settings
 
 ## History
 
 **Route:** `/history`
 
-**Back:** Menu (`/`)
+**TopBar:** Back to `/` (Menu), title "History"
 
 | Label | Route | Icon | Description |
 |---|---|---|---|
-| Achievements | `/history/achievements` | 🏆 | Track your progress |
-| Stats | `/history/stats` | 📊 | Matches, wins & more |
-| Battle History | `/history/battles` | ⚔️ | Review past battles (placeholder) |
-| Ghost Opponents | `/history/ghosts` | 👻 | Saved battle ghosts |
+| Achievements | `/history/achievements` | Trophy | Track your progress |
+| Stats | `/history/stats` | Chart | Matches, wins & more |
+| Battle History | `/history/battles` | Swords | Review past battles (placeholder) |
+| Ghost Opponents | `/history/ghosts` | Ghost | Saved battle ghosts |
 
 ## Achievements
 
 **Route:** `/history/achievements`
 
-**Back:** History (`/history`)
+**TopBar:** Back to `/history` (History), title "Achievements", `hasCardPanel`
 
 **Contents:**
 - Card Detail Panel on the left (read-only). Click a card to inspect.
@@ -216,24 +263,24 @@ flowchart TD
 
 **Route:** `/history/stats`
 
-**Back:** History (`/history`)
+**TopBar:** Back to `/history` (History), title "Stats"
 
 **Contents:** Grid of stat cards, each with icon, value, and label:
 
 | Icon | Label | Source |
 |---|---|---|
-| 🎮 | Transactions | `System.Account` nonce |
-| 💰 | Balance | `System.Account` free balance |
-| ⭐ | Victory Achievements | `VictoryAchievements` count |
-| 🏟️ | Tournament Games | `TournamentPlayerStats.total_games` (aggregated) |
-| 🏆 | Tournament Wins | `TournamentPlayerStats.total_wins` (aggregated) |
-| 💎 | Perfect Runs | `TournamentPlayerStats.perfect_runs` (aggregated) |
+| Gamepad | Transactions | `System.Account` nonce |
+| Coin | Balance | `System.Account` free balance |
+| Star | Victory Achievements | `VictoryAchievements` count |
+| Stadium | Tournament Games | `TournamentPlayerStats.total_games` (aggregated) |
+| Trophy | Tournament Wins | `TournamentPlayerStats.total_wins` (aggregated) |
+| Diamond | Perfect Runs | `TournamentPlayerStats.perfect_runs` (aggregated) |
 
 ## Battle History
 
 **Route:** `/history/battles`
 
-**Back:** History (`/history`)
+**TopBar:** Back to `/history` (History), title "Battle History"
 
 **Status:** Placeholder. Will contain replays and match outcomes.
 
@@ -241,7 +288,7 @@ flowchart TD
 
 **Route:** `/history/ghosts`
 
-**Back:** History (`/history`)
+**TopBar:** Back to `/history` (History), title "Ghost Browser", `hasCardPanel` (desktop)
 
 **Contents:** Browse ghost opponent pools by set, bracket, and owner.
 
@@ -251,43 +298,43 @@ flowchart TD
 
 **Route:** `/blockchain`
 
-**Back:** Play (`/play`)
+**TopBar:** Back to `/play` (Play), title "Online Arena" (shown on connection-error and loading states)
 
 **Flow:**
 1. If not connected → connection error screen with retry
 2. If no active game → **Set Selection Screen** (shared with Offline). "Play" calls `startGame` on-chain.
-3. If active game → **Game Shell** with "Commit" button (submits turn on-chain)
+3. If active game → **GameShell** with GameTopBar; "Commit" button (submits turn on-chain)
 4. Victory/defeat → Game Over Screen
 
 ### Offline
 
 **Route:** `/local`
 
-**Back:** Play (`/play`)
+**TopBar:** Back to `/play` (Play), title "Local Play" (shown on connection-error and loading states)
 
 **Flow:**
 1. If not connected → blockchain required screen
 2. If engine ready, no game → **Set Selection Screen**
-3. If game active → **Game Shell** with "Battle" button (local opponent matching)
+3. If game active → **GameShell** with GameTopBar; "Battle" button (local opponent matching)
 4. Victory/defeat → Game Over Screen
 
 ### Tournament
 
 **Route:** `/tournament`
 
-**Back:** Play (`/play`)
+**TopBar:** Back to `/play` (Play), title "Tournament"
 
 **Flow:**
 1. If not connected → connection screen
 2. Tournament details → entry form
-3. Active game → **Game Shell** with tournament mode
+3. Active game → **GameShell** with GameTopBar and tournament mode
 4. Game over → tournament results
 
 ### Peer-to-Peer
 
 **Route:** `/multiplayer` → `/multiplayer/game`
 
-**Back:** Play (`/play`)
+**TopBar:** Back to `/play` (Play), title "P2P Multiplayer"
 
 **Contents:** P2P connection setup, then direct multiplayer game.
 
@@ -295,10 +342,9 @@ flowchart TD
 
 **Route:** `/sandbox`
 
-**Back:** Cards (`/cards`)
+**TopBar:** Back to `/cards` (Cards), title "Sandbox", `hasCardPanel`
 
 **Contents:**
-- Header: Back (Cards), Sandbox title, Clear button, Seed input, Battle button
 - Card Detail Panel on left
 - Battle arena (player/enemy boards)
 - Search bar
@@ -308,9 +354,24 @@ flowchart TD
 
 **Shared component** used by `/local` and `/blockchain`
 
+**TopBar:** Back to `/play` (Play) by default (configurable via `backTo` / `backLabel` props), title "Choose Your Set"
+
 **Contents:**
 - Featured set with card fan preview, Preview and Play buttons
 - "See All Sets" link → grid view of all sets with Preview/Play per set
+
+### Game Over Screen
+
+**Shared component** rendered by GameShell when the game ends (victory or defeat)
+
+**TopBar:** Back to `/` (Menu), no title
+
+**Contents:**
+- Animated reveal sequence (title → subtitle → stats → pips → button)
+- Victory or defeat theme (trophy/skull icon, gradient colors)
+- Stats: wins, lives remaining, rounds played
+- Win/loss pip history
+- "Play Again" button (starts a new run)
 
 ## Hamburger Menu Pages
 
@@ -318,7 +379,7 @@ flowchart TD
 
 **Route:** `/settings`
 
-**Back:** Menu (`/`) or Game (via `returnTo` state)
+**TopBar:** Back to `/` (Menu) or Game (via `returnTo` state), title "Settings"
 
 **Contents:**
 - **Debug** section: Show Raw JSON toggle
@@ -327,7 +388,7 @@ flowchart TD
 
 **Route:** `/account`
 
-**Back:** Menu (`/`)
+**TopBar:** Back to `/` (Menu), title "Account"
 
 **Contents:**
 - **Name** — display with inline edit (Save/Cancel, Enter/Escape). Persists to `localStorage` for local accounts.
@@ -339,7 +400,7 @@ flowchart TD
 
 **Route:** `/network`
 
-**Back:** Menu (`/`)
+**TopBar:** Back to `/` (Menu), title "Network"
 
 **Contents:**
 - **WebSocket Endpoint** selector: Localhost / Hosted Node / Custom
@@ -350,7 +411,7 @@ flowchart TD
 
 **Route:** `/marketplace`
 
-**Back:** Menu (`/`)
+**TopBar:** Back to `/` (Menu), title "Marketplace"
 
 **Status:** Placeholder. "Coming Soon" — will contain card packs, cosmetics, and more.
 
@@ -360,7 +421,7 @@ flowchart TD
 
 **Route:** `/blockchain/create-card`
 
-**Back:** Cards (`/cards`)
+**TopBar:** Back to `/cards` (Cards), title "Card Creator"
 
 **Contents:** Card designer with stats, abilities, preview, mint on-chain.
 
@@ -368,7 +429,7 @@ flowchart TD
 
 **Route:** `/blockchain/create-set`
 
-**Back:** Cards (`/cards`)
+**TopBar:** Back to `/cards` (Cards), title "Set Creator", `hasCardPanel` (desktop)
 
 **Contents:** Card set builder, select cards and create set on-chain.
 
@@ -376,29 +437,42 @@ flowchart TD
 
 **Route:** `/blockchain/mint-nft`
 
-**Back:** Cards (`/cards`)
+**TopBar:** Back to `/cards` (Cards), title "Mint NFT"
 
 **Contents:** NFT minting for cosmetic items.
 
+### Set Page
+
+**Route:** `/set/:setId`
+
+**TopBar:** Back to `/cards` (Cards), title is set name, `hasCardPanel`
+
+**Contents:** Full set view with all cards and Card Detail Panel.
+
 ## Overlays
 
-These are full-screen or partial overlays rendered on top of the current page:
+These are full-screen or partial overlays rendered on top of the current page. Close buttons are inline (absolutely positioned within the overlay), not fixed global buttons.
 
 | Overlay | Trigger | Close | Notes |
 |---|---|---|---|
-| Set Preview | Click set in Cards page or Set Selection | TopRightClose button | Shows all cards in a set with Card Detail Panel |
-| Draw Pool (Bag) | Click bag icon in HUD or press B | TopRightClose button | Shows remaining cards in bag during game |
-| Battle | End Turn / Battle button | Continue button (or TopRightClose in sandbox) | Animated battle sequence |
-| Forfeit Confirmation | Abandon in hamburger menu | Cancel / Surrender buttons | Modal dialog |
+| Set Preview | Click set in Cards page or Set Selection | Inline close button (absolute top-right within overlay) | Shows all cards in a set with Card Detail Panel |
+| Draw Pool (Bag) | Click bag icon in GameTopBar or press B | Inline close button (absolute top-right within overlay) | Shows remaining cards in bag during game |
+| Battle | End Turn / Battle button | Continue button (or inline close in sandbox) | Animated battle sequence |
+| Forfeit Confirmation | Abandon in hamburger menu | Cancel / Abandon buttons | Inline confirmation within the hamburger panel |
 
 ## Route Index
 
-| Route | Page | Back |
+| Route | Page | TopBar Back |
 |---|---|---|
 | `/` | Main Menu | — |
 | `/play` | Play | `/` |
 | `/cards` | Cards | `/` |
 | `/customize` | Customize | `/` |
+| `/customize/backgrounds` | Customize: Background | `/customize` |
+| `/customize/hand` | Customize: Hand | `/customize` |
+| `/customize/card-border` | Customize: Card Border | `/customize` |
+| `/customize/avatar` | Customize: Avatar | `/customize` |
+| `/customize/card-art` | Customize: Card Art | `/customize` |
 | `/history` | History | `/` |
 | `/history/achievements` | Achievements | `/history` |
 | `/history/stats` | Stats | `/history` |
@@ -417,5 +491,9 @@ These are full-screen or partial overlays rendered on top of the current page:
 | `/blockchain/create-card` | Create Card | `/cards` |
 | `/blockchain/create-set` | Create Set | `/cards` |
 | `/blockchain/mint-nft` | Mint NFT | `/cards` |
+| `/set/:setId` | Set Page | `/cards` |
 | `/dev` | Dev Preview | — |
+| `/dev/game-over` | Game Over Preview | — |
 | `/presentations` | Presentations | — |
+| `/presentations/:id` | Presentation Viewer | — |
+| `/embed` | Embed Page | — |
