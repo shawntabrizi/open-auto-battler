@@ -285,6 +285,8 @@ interface BlockchainStore {
   accounts: any[];
   selectedAccount: any;
   isLoggedIn: boolean;
+  /** True while restoring a previous login session from localStorage */
+  isRestoringSession: boolean;
 
   // Game state
   chainState: any;
@@ -410,6 +412,13 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   accounts: [],
   selectedAccount: null,
   isLoggedIn: false,
+  isRestoringSession: (() => {
+    try {
+      return !!localStorage.getItem('oab-logged-in');
+    } catch {
+      return false;
+    }
+  })(),
 
   // Game state
   chainState: null,
@@ -516,10 +525,16 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
           const match = get().accounts.find((a: any) => a.address === savedAddress);
           if (match) {
             await get().selectAccount(match);
-            set({ isLoggedIn: true });
+            set({ isLoggedIn: true, isRestoringSession: false });
+          } else {
+            set({ isRestoringSession: false });
           }
+        } else {
+          set({ isRestoringSession: false });
         }
-      } catch {}
+      } catch {
+        set({ isRestoringSession: false });
+      }
 
       if (get().selectedAccount) {
         await get().refreshGameState();
@@ -534,6 +549,7 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         codecs: null,
         isConnected: false,
         isConnecting: false,
+        isRestoringSession: false,
         blockNumber: null,
         chainState: null,
         allCards: [],
