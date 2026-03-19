@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { UnitCard } from './UnitCard';
 import { CardDetailPanel } from './CardDetailPanel';
+import { TopRightClose } from './TopRightClose';
 import type { CardView } from '../types';
 
 export function SetPreviewOverlay() {
@@ -17,15 +18,12 @@ export function SetPreviewOverlay() {
   return (
     <div className="fixed inset-0 z-[70] animate-in fade-in duration-300">
       {/* Left sidebar - card detail panel */}
-      <CardDetailPanel
-        card={selectedCard}
-        isVisible={true}
-        mode={{ type: 'readOnly' }}
-      />
+      <CardDetailPanel card={selectedCard} isVisible={true} mode={{ type: 'readOnly' }} />
 
       {/* Card grid - offset to the right of the sidebar */}
       <div className="fixed left-[11rem] lg:left-80 right-0 top-0 bottom-0 bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden">
-        <div className="flex justify-between items-center mb-3 lg:mb-8 border-b border-warm-700 pb-2 lg:pb-4 pr-10 lg:pr-12">
+        <TopRightClose onClick={closePreview} label="Close Preview" />
+        <div className="flex items-center mb-3 lg:mb-8 border-b border-warm-700 pb-2 lg:pb-4 pr-10 lg:pr-12">
           <div className="flex flex-col">
             <h2 className="text-lg lg:text-3xl font-bold text-white flex items-center gap-2 lg:gap-3">
               Set Preview
@@ -36,12 +34,6 @@ export function SetPreviewOverlay() {
               <span className="hidden lg:inline"> Click a card for full details.</span>
             </p>
           </div>
-          <button
-            onClick={closePreview}
-            className="btn btn-secondary px-3 lg:px-6 py-2 lg:py-3 text-sm lg:text-lg flex items-center gap-1 lg:gap-2 hover:scale-105 transition-transform"
-          >
-            <span>✕</span> <span className="hidden lg:inline">Close</span>
-          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto pr-1 lg:pr-4 custom-scrollbar">

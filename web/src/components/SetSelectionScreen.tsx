@@ -26,12 +26,14 @@ function CardFan({ cards }: { cards: CardView[] }) {
           <div
             key={card.id}
             className="set-card-fan-card"
-            style={{
-              '--fan-x': pos.x,
-              '--fan-rot': pos.rot,
-              '--fan-arc': pos.arc,
-              zIndex: i,
-            } as React.CSSProperties}
+            style={
+              {
+                '--fan-x': pos.x,
+                '--fan-rot': pos.rot,
+                '--fan-arc': pos.arc,
+                zIndex: i,
+              } as React.CSSProperties
+            }
           >
             {getCardArtSm(card.id) ? (
               <img
@@ -51,13 +53,7 @@ function CardFan({ cards }: { cards: CardView[] }) {
   );
 }
 
-function AllSetsView({
-  onBack,
-  onSelect,
-}: {
-  onBack: () => void;
-  onSelect: (id: number) => void;
-}) {
+function AllSetsView({ onBack, onSelect }: { onBack: () => void; onSelect: (id: number) => void }) {
   const { setMetas, setPreviewCards, previewSet } = useGameStore();
   const sorted = [...setMetas].sort((a, b) => a.id - b.id);
 
@@ -89,18 +85,28 @@ function AllSetsView({
               >
                 {/* Mini card preview */}
                 <div className="flex justify-center gap-0.5 lg:gap-1 mb-2 lg:mb-3">
-                  {cards
-                    ? cards.slice(0, 5).map((c) => {
-                        const art = getCardArtSm(c.id);
-                        return art ? (
-                          <img key={c.id} src={art} alt="" className="w-6 h-8 lg:w-8 lg:h-11 object-cover object-[center_30%] rounded-sm border border-warm-700/50" />
-                        ) : (
-                          <div key={c.id} className="w-6 h-8 lg:w-8 lg:h-11 flex items-center justify-center bg-warm-800 rounded-sm border border-warm-700/50 text-xs">
-                            {getCardEmoji(c.id)}
-                          </div>
-                        );
-                      })
-                    : <span className="text-warm-600">...</span>}
+                  {cards ? (
+                    cards.slice(0, 5).map((c) => {
+                      const art = getCardArtSm(c.id);
+                      return art ? (
+                        <img
+                          key={c.id}
+                          src={art}
+                          alt=""
+                          className="w-6 h-8 lg:w-8 lg:h-11 object-cover object-[center_30%] rounded-sm border border-warm-700/50"
+                        />
+                      ) : (
+                        <div
+                          key={c.id}
+                          className="w-6 h-8 lg:w-8 lg:h-11 flex items-center justify-center bg-warm-800 rounded-sm border border-warm-700/50 text-xs"
+                        >
+                          {getCardEmoji(c.id)}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <span className="text-warm-600">...</span>
+                  )}
                 </div>
                 <div className="text-center">
                   <div className="text-xs lg:text-base font-heading text-warm-100 truncate">
@@ -133,9 +139,19 @@ function AllSetsView({
   );
 }
 
-export function SetSelectionScreen() {
+export function SetSelectionScreen({
+  onStartGame,
+  backTo = '/',
+  backLabel = 'Menu',
+}: {
+  /** Override the start game handler. Defaults to gameStore.startGame */
+  onStartGame?: (setId: number) => void;
+  backTo?: string;
+  backLabel?: string;
+} = {}) {
   const { setMetas, startGame, previewSet, loadSetPreviews, setPreviewCards } = useGameStore();
   const [showAllSets, setShowAllSets] = useState(false);
+  const handleStart = onStartGame ?? startGame;
 
   useEffect(() => {
     loadSetPreviews();
@@ -145,17 +161,12 @@ export function SetSelectionScreen() {
   const featuredCards = featuredMeta ? setPreviewCards[featuredMeta.id] : null;
 
   if (showAllSets) {
-    return (
-      <AllSetsView
-        onBack={() => setShowAllSets(false)}
-        onSelect={(id) => startGame(id)}
-      />
-    );
+    return <AllSetsView onBack={() => setShowAllSets(false)} onSelect={(id) => handleStart(id)} />;
   }
 
   return (
     <div className="h-full flex flex-col px-4 py-4 overflow-y-auto">
-      <BackLink to="/" label="Menu" />
+      <BackLink to={backTo} label={backLabel} />
       <BackLinkSpacer />
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="text-center w-full max-w-md lg:max-w-lg">
@@ -166,42 +177,42 @@ export function SetSelectionScreen() {
             Select a card set and begin your run.
           </p>
 
-        {featuredMeta && featuredCards ? (
-          <div className="bg-warm-900/60 border border-warm-700/40 rounded-xl lg:rounded-2xl p-3 lg:p-6 mb-3 lg:mb-5 flex flex-col items-center max-h-[50vh] lg:max-h-none">
-            <div className="text-[0.65rem] lg:text-xs text-gold/70 uppercase tracking-widest font-heading">
-              Featured Set &mdash; {featuredMeta.name}
-            </div>
-            <div className="text-[0.65rem] lg:text-xs text-warm-500 mb-1 lg:mb-3">
-              {featuredCards.length} cards
-            </div>
+          {featuredMeta && featuredCards ? (
+            <div className="bg-warm-900/60 border border-warm-700/40 rounded-xl lg:rounded-2xl p-3 lg:p-6 mb-3 lg:mb-5 flex flex-col items-center max-h-[50vh] lg:max-h-none">
+              <div className="text-[0.65rem] lg:text-xs text-gold/70 uppercase tracking-widest font-heading">
+                Featured Set &mdash; {featuredMeta.name}
+              </div>
+              <div className="text-[0.65rem] lg:text-xs text-warm-500 mb-1 lg:mb-3">
+                {featuredCards.length} cards
+              </div>
 
-            <div className="relative flex-1 min-h-0 flex items-center justify-center w-full">
-              <CardFan cards={featuredCards} />
-              <div className="absolute inset-0 flex items-end justify-center pb-2 lg:pb-4 z-10">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => previewSet(featuredMeta.id)}
-                    className="px-4 lg:px-5 py-1.5 lg:py-2 text-xs lg:text-sm font-bold border border-warm-600 text-warm-300 hover:text-warm-100 hover:border-warm-400 rounded-lg transition-all bg-warm-900/80 backdrop-blur-sm"
-                  >
-                    Preview
-                  </button>
-                  <button
-                    onClick={() => startGame(featuredMeta.id)}
-                    className="px-6 lg:px-8 py-1.5 lg:py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-warm-950 font-bold rounded-lg text-xs lg:text-sm transition-all transform hover:scale-105 shadow-lg shadow-yellow-500/20"
-                  >
-                    Play
-                  </button>
+              <div className="relative flex-1 min-h-0 flex items-center justify-center w-full">
+                <CardFan cards={featuredCards} />
+                <div className="absolute inset-0 flex items-end justify-center pb-2 lg:pb-4 z-10">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => previewSet(featuredMeta.id)}
+                      className="px-4 lg:px-5 py-1.5 lg:py-2 text-xs lg:text-sm font-bold border border-warm-600 text-warm-300 hover:text-warm-100 hover:border-warm-400 rounded-lg transition-all bg-warm-900/80 backdrop-blur-sm"
+                    >
+                      Preview
+                    </button>
+                    <button
+                      onClick={() => handleStart(featuredMeta.id)}
+                      className="px-6 lg:px-8 py-1.5 lg:py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-warm-950 font-bold rounded-lg text-xs lg:text-sm transition-all transform hover:scale-105 shadow-lg shadow-yellow-500/20"
+                    >
+                      Play
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : featuredMeta ? (
-          <div className="bg-warm-900/60 border border-warm-700/40 rounded-xl p-6 lg:p-8 mb-4 lg:mb-6">
-            <div className="text-warm-500 animate-pulse">Loading...</div>
-          </div>
-        ) : (
-          <div className="text-warm-600 italic py-6 lg:py-8 mb-4 lg:mb-6">No sets available</div>
-        )}
+          ) : featuredMeta ? (
+            <div className="bg-warm-900/60 border border-warm-700/40 rounded-xl p-6 lg:p-8 mb-4 lg:mb-6">
+              <div className="text-warm-500 animate-pulse">Loading...</div>
+            </div>
+          ) : (
+            <div className="text-warm-600 italic py-6 lg:py-8 mb-4 lg:mb-6">No sets available</div>
+          )}
 
           {setMetas.length > 1 && (
             <button

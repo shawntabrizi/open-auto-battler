@@ -1,5 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import { UnitCard } from './UnitCard';
+import { TopRightClose } from './TopRightClose';
 import { type CardView } from '../types';
 
 export function BagOverlay() {
@@ -18,7 +19,8 @@ export function BagOverlay() {
 
   return (
     <div className="fixed left-[11rem] lg:left-80 right-0 top-0 lg:top-16 bottom-0 lg:bottom-48 z-[60] bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300">
-      <div className="flex justify-between items-center mb-3 lg:mb-8 border-b border-warm-700 pb-2 lg:pb-4">
+      <TopRightClose onClick={() => setShowBag(false)} label="Close Draw Pool" />
+      <div className="flex items-center mb-3 lg:mb-8 border-b border-warm-700 pb-2 lg:pb-4 pr-10 lg:pr-12">
         <div className="flex flex-col">
           <h2 className="text-lg lg:text-3xl font-bold text-white flex items-center gap-2 lg:gap-3">
             <span className="text-blue-400">🎒</span> Draw Pool
@@ -28,12 +30,6 @@ export function BagOverlay() {
             <span className="hidden lg:inline"> in your bag (excluding your current hand)</span>.
           </p>
         </div>
-        <button
-          onClick={() => setShowBag(false)}
-          className="btn btn-secondary px-3 lg:px-6 py-2 lg:py-3 text-sm lg:text-lg flex items-center gap-1 lg:gap-2 hover:scale-105 transition-transform"
-        >
-          <span>✕</span> <span className="hidden lg:inline">Close</span>
-        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto pr-1 lg:pr-4 custom-scrollbar">

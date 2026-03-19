@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useSandboxStore } from '../store/sandboxStore';
 import { BattleArena } from './BattleArena';
+import { TopRightClose } from './TopRightClose';
 import type { BattleAbility, BattleOutput, CombatEvent } from '../types';
 import { formatAbilitySummary } from '../utils/abilityText';
 
@@ -257,22 +258,11 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
       )}
 
       {/* Top bar — title + close */}
-      <div className="relative z-10 flex items-center justify-between px-4 lg:px-8 py-1.5 lg:py-4">
-        <div className="w-8" /> {/* spacer */}
+      {isSandbox && <TopRightClose onClick={onContinue} label="Close (Esc)" />}
+      <div className="relative z-10 flex items-center justify-center px-4 lg:px-8 py-1.5 lg:py-4">
         <h2 className="text-sm lg:text-xl font-heading font-bold text-warm-300/80 tracking-widest uppercase">
           {title}
         </h2>
-        {isSandbox ? (
-          <button
-            onClick={onContinue}
-            className="w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center text-warm-400 hover:text-warm-100 hover:bg-warm-800 rounded-full transition-colors text-sm lg:text-base"
-            title="Close (Esc)"
-          >
-            x
-          </button>
-        ) : (
-          <div className="w-8" /> /* spacer */
-        )}
         {/* Fade line instead of hard border */}
         <div className="absolute bottom-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-warm-600/30 to-transparent" />
       </div>
