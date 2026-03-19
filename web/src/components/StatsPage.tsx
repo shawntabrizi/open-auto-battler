@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useBlockchainStore } from '../store/blockchainStore';
 import { useAchievementStore } from '../store/achievementStore';
-import { PageHeader } from './PageHeader';
+import { TopBar } from './TopBar';
 
 interface PlayerStats {
   nonce: number;
@@ -105,42 +105,43 @@ export function StatsPage() {
   }, [api, selectedAccount, unlockedCardIds]);
 
   return (
-    <div className="fixed inset-0 bg-warm-950 text-white overflow-y-auto">
-      <div className="w-full max-w-lg lg:max-w-2xl mx-auto p-3 lg:p-6">
-        <PageHeader backTo="/history" backLabel="History" title="Stats" />
-
-        {loading || !stats ? (
-          <div className="text-center py-16 text-warm-500 text-sm">Loading stats...</div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 lg:gap-4">
-            <StatCard icon="🎮" label="Transactions" value={stats.nonce} />
-            <StatCard
-              icon="💰"
-              label="Balance"
-              value={formatBalance(stats.freeBalance)}
-              color="text-green-400"
-            />
-            <StatCard
-              icon="⭐"
-              label="Victory Achievements"
-              value={stats.achievementCount}
-              color="text-yellow-400"
-            />
-            <StatCard icon="🏟️" label="Tournament Games" value={stats.tournamentGames} />
-            <StatCard
-              icon="🏆"
-              label="Tournament Wins"
-              value={stats.tournamentWins}
-              color="text-amber-400"
-            />
-            <StatCard
-              icon="💎"
-              label="Perfect Runs"
-              value={stats.tournamentPerfectRuns}
-              color="text-purple-400"
-            />
-          </div>
-        )}
+    <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
+      <TopBar backTo="/history" backLabel="History" title="Stats" />
+      <div className="flex-1 overflow-y-auto">
+        <div className="w-full max-w-lg lg:max-w-2xl mx-auto p-3 lg:p-6">
+          {loading || !stats ? (
+            <div className="text-center py-16 text-warm-500 text-sm">Loading stats...</div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 lg:gap-4">
+              <StatCard icon="🎮" label="Transactions" value={stats.nonce} />
+              <StatCard
+                icon="💰"
+                label="Balance"
+                value={formatBalance(stats.freeBalance)}
+                color="text-green-400"
+              />
+              <StatCard
+                icon="⭐"
+                label="Victory Achievements"
+                value={stats.achievementCount}
+                color="text-yellow-400"
+              />
+              <StatCard icon="🏟️" label="Tournament Games" value={stats.tournamentGames} />
+              <StatCard
+                icon="🏆"
+                label="Tournament Wins"
+                value={stats.tournamentWins}
+                color="text-amber-400"
+              />
+              <StatCard
+                icon="💎"
+                label="Perfect Runs"
+                value={stats.tournamentPerfectRuns}
+                color="text-purple-400"
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

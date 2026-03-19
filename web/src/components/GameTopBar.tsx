@@ -2,13 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useMultiplayerStore } from '../store/multiplayerStore';
 import { useCustomizationStore } from '../store/customizationStore';
-import {
-  HeartIcon,
-  StarIcon,
-  BagIcon,
-  HourglassIcon,
-  WarningIcon,
-} from './Icons';
+import { useMenuStore } from '../store/menuStore';
+import { HeartIcon, StarIcon, BagIcon, HourglassIcon, WarningIcon } from './Icons';
 import battleSwordIcon from '../../battle-sword.svg';
 
 const BATTLE_TIMER_SECONDS = 20;
@@ -83,9 +78,13 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
             >
               <span className="text-white text-sm font-bold flex items-center gap-1">
                 {opponentWaiting ? (
-                  <><WarningIcon className="w-4 h-4" /> Submit in:</>
+                  <>
+                    <WarningIcon className="w-4 h-4" /> Submit in:
+                  </>
                 ) : (
-                  <><HourglassIcon className="w-4 h-4" /> Waiting:</>
+                  <>
+                    <HourglassIcon className="w-4 h-4" /> Waiting:
+                  </>
                 )}
               </span>
               <span
@@ -129,9 +128,14 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
   );
 }
 
-export function HUD({ hideEndTurn, customAction, className = '' }: HUDProps & { className?: string } = {}) {
+export function GameTopBar({
+  hideEndTurn,
+  customAction,
+  className = '',
+}: HUDProps & { className?: string } = {}) {
   const { view, setShowBag, showBag, startingLives, winsToVictory } = useGameStore();
   const playerAvatar = useCustomizationStore((s) => s.selections.playerAvatar);
+  const openMenu = useMenuStore((s) => s.open);
 
   // Keyboard shortcut for Bag view
   useEffect(() => {
@@ -148,9 +152,9 @@ export function HUD({ hideEndTurn, customAction, className = '' }: HUDProps & { 
 
   if (!view) return null;
 
-
   return (
-    <div className={`hud h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center px-2 lg:px-6 relative z-20 overflow-hidden ${className}`}
+    <div
+      className={`game-top-bar h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center px-2 lg:px-6 relative z-20 overflow-hidden ${className}`}
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
     >
       {/* HUD items — all same height */}
@@ -175,20 +179,26 @@ export function HUD({ hideEndTurn, customAction, className = '' }: HUDProps & { 
 
         {/* Round */}
         <div className="bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10">
-          <span className="text-[10px] lg:text-xs text-warm-400 font-heading uppercase tracking-wider">Round</span>
+          <span className="text-[10px] lg:text-xs text-warm-400 font-heading uppercase tracking-wider">
+            Round
+          </span>
           <span className="text-xs lg:text-sm font-bold text-gold font-stat">{view.round}</span>
         </div>
 
         {/* Wins */}
         <div className="bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
           <StarIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-gold" />
-          <span className="font-bold text-xs lg:text-sm font-stat">{view.wins}/{winsToVictory}</span>
+          <span className="font-bold text-xs lg:text-sm font-stat">
+            {view.wins}/{winsToVictory}
+          </span>
         </div>
 
         {/* Lives */}
         <div className="bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
           <HeartIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-red-500" />
-          <span className="font-bold text-xs lg:text-sm font-stat">{view.lives}/{startingLives}</span>
+          <span className="font-bold text-xs lg:text-sm font-stat">
+            {view.lives}/{startingLives}
+          </span>
         </div>
 
         {/* Combat button */}
@@ -196,6 +206,17 @@ export function HUD({ hideEndTurn, customAction, className = '' }: HUDProps & { 
           <InlineEndTurn hideEndTurn={hideEndTurn} customAction={customAction} />
         )}
       </div>
+
+      {/* Hamburger — right-aligned */}
+      <button
+        onClick={openMenu}
+        aria-label="Open menu"
+        className="ml-auto p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors shrink-0"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 lg:w-5 lg:h-5">
+          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+        </svg>
+      </button>
     </div>
   );
 }
@@ -272,7 +293,9 @@ export function BattleAction({
               <>
                 <span className="font-bold text-xs text-warm-400">Wait</span>
                 {displayTimer !== null && (
-                  <span className={`font-bold text-sm ${displayTimer <= 5 ? 'text-yellow-300' : 'text-white'}`}>
+                  <span
+                    className={`font-bold text-sm ${displayTimer <= 5 ? 'text-yellow-300' : 'text-white'}`}
+                  >
                     {displayTimer}s
                   </span>
                 )}
@@ -280,7 +303,9 @@ export function BattleAction({
             ) : (
               <>
                 <span className="text-lg font-bold leading-none">&#9876;</span>
-                <span className="text-[0.55rem] font-bold uppercase tracking-wide mt-0.5">Battle</span>
+                <span className="text-[0.55rem] font-bold uppercase tracking-wide mt-0.5">
+                  Battle
+                </span>
               </>
             )}
           </button>
@@ -351,11 +376,7 @@ export function BattleAction({
               {isWaiting ? (
                 <span className="font-bold tracking-wide text-base lg:text-2xl">Waiting...</span>
               ) : (
-                <img
-                  src={battleSwordIcon}
-                  alt="Battle"
-                  className="h-16 lg:h-28"
-                />
+                <img src={battleSwordIcon} alt="Battle" className="h-16 lg:h-28" />
               )}
             </button>
           </>

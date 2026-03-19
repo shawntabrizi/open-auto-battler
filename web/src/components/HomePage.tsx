@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { RotatePrompt } from './RotatePrompt';
 import { ParticleBackground } from './ParticleBackground';
+import { TopBar } from './TopBar';
 
 const MENU_BUTTONS = [
   {
@@ -31,7 +32,8 @@ const MENU_BUTTONS = [
 
 export function HomePage() {
   return (
-    <div className="min-h-screen min-h-svh bg-surface-dark flex flex-col items-center justify-center p-3 lg:p-4 text-white overflow-hidden relative">
+    <div className="min-h-screen min-h-svh bg-surface-dark flex flex-col text-white overflow-hidden relative">
+      <TopBar />
       {/* Atmospheric background */}
       <div
         className="absolute inset-0 z-0"
@@ -43,62 +45,64 @@ export function HomePage() {
       <ParticleBackground />
 
       {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-sm lg:max-w-md">
-        {/* Title */}
-        <div
-          className="mb-6 lg:mb-10 text-center opacity-0 animate-stagger-fade-in stagger-1"
-          style={{ animationFillMode: 'forwards' }}
-        >
-          <h1 className="font-title text-3xl lg:text-5xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 mb-1 lg:mb-2">
-            OPEN AUTO BATTLER
-          </h1>
-          <p className="font-heading text-warm-400 text-xs lg:text-sm tracking-widest uppercase">
-            Roguelike Deck-Building Auto-Battler
-          </p>
-        </div>
-
-        {/* Menu buttons */}
-        <div className="flex flex-col gap-2.5 lg:gap-4 w-full">
-          {/* Play — primary CTA, larger */}
-          <Link
-            to="/play"
-            className="opacity-0 animate-stagger-fade-in stagger-2 group block w-full p-5 lg:p-7 rounded-xl border-2 transition-all active:scale-[0.98] text-center bg-gradient-to-br from-amber-500/10 to-orange-600/5 border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]"
+      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-3 lg:p-4">
+        <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-sm lg:max-w-md">
+          {/* Title */}
+          <div
+            className="mb-6 lg:mb-10 text-center opacity-0 animate-stagger-fade-in stagger-1"
             style={{ animationFillMode: 'forwards' }}
           >
-            <h2 className="font-heading text-2xl lg:text-3xl font-bold text-white tracking-wide">
-              PLAY
-            </h2>
-            <p className="text-warm-400 text-[10px] lg:text-sm mt-1">
-              Online Arena, Offline, Peer-to-Peer
+            <h1 className="font-title text-3xl lg:text-5xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 mb-1 lg:mb-2">
+              OPEN AUTO BATTLER
+            </h1>
+            <p className="font-heading text-warm-400 text-xs lg:text-sm tracking-widest uppercase">
+              Roguelike Deck-Building Auto-Battler
             </p>
-          </Link>
-
-          {/* Secondary menu row */}
-          <div className="grid grid-cols-3 gap-2.5 lg:gap-4">
-            {MENU_BUTTONS.map((btn, i) => (
-              <Link
-                key={btn.to}
-                to={btn.to}
-                className={`opacity-0 animate-stagger-fade-in stagger-${i + 3} group block p-3 lg:p-4 rounded-xl border transition-all active:scale-[0.98] text-center bg-gradient-to-br ${btn.gradient} ${btn.border}`}
-                style={{ animationFillMode: 'forwards' }}
-              >
-                <h3 className="font-heading text-sm lg:text-base font-bold text-white tracking-wide">
-                  {btn.label}
-                </h3>
-                <p className="text-warm-500 text-[8px] lg:text-xs mt-0.5 leading-tight">
-                  {btn.description}
-                </p>
-              </Link>
-            ))}
           </div>
-        </div>
 
-        {/* Version */}
-        <div
-          className="mt-6 lg:mt-10 text-[9px] lg:text-[10px] text-warm-600 font-mono opacity-0 animate-stagger-fade-in stagger-7"
-          style={{ animationFillMode: 'forwards' }}
-        >
-          v0.1.0
+          {/* Menu buttons */}
+          <div className="flex flex-col gap-2.5 lg:gap-4 w-full">
+            {/* Play — primary CTA, larger */}
+            <Link
+              to="/play"
+              className="opacity-0 animate-stagger-fade-in stagger-2 group block w-full p-5 lg:p-7 rounded-xl border-2 transition-all active:scale-[0.98] text-center bg-gradient-to-br from-amber-500/10 to-orange-600/5 border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]"
+              style={{ animationFillMode: 'forwards' }}
+            >
+              <h2 className="font-heading text-2xl lg:text-3xl font-bold text-white tracking-wide">
+                PLAY
+              </h2>
+              <p className="text-warm-400 text-[10px] lg:text-sm mt-1">
+                Online Arena, Offline, Peer-to-Peer
+              </p>
+            </Link>
+
+            {/* Secondary menu row */}
+            <div className="grid grid-cols-3 gap-2.5 lg:gap-4">
+              {MENU_BUTTONS.map((btn, i) => (
+                <Link
+                  key={btn.to}
+                  to={btn.to}
+                  className={`opacity-0 animate-stagger-fade-in stagger-${i + 3} group block p-3 lg:p-4 rounded-xl border transition-all active:scale-[0.98] text-center bg-gradient-to-br ${btn.gradient} ${btn.border}`}
+                  style={{ animationFillMode: 'forwards' }}
+                >
+                  <h3 className="font-heading text-sm lg:text-base font-bold text-white tracking-wide">
+                    {btn.label}
+                  </h3>
+                  <p className="text-warm-500 text-[8px] lg:text-xs mt-0.5 leading-tight">
+                    {btn.description}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Version */}
+          <div
+            className="mt-6 lg:mt-10 text-[9px] lg:text-[10px] text-warm-600 font-mono opacity-0 animate-stagger-fade-in stagger-7"
+            style={{ animationFillMode: 'forwards' }}
+          >
+            v0.1.0
+          </div>
         </div>
       </div>
 

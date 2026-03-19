@@ -2,16 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useBlockchainStore } from '../store/blockchainStore';
 import { useGameStore } from '../store/gameStore';
+import { useMenuStore } from '../store/menuStore';
 import { GearIcon, CloseIcon } from './Icons';
-
-/** Three-line hamburger icon */
-function MenuIcon({ className = 'w-6 h-6' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-    </svg>
-  );
-}
 
 /** Person icon for account */
 function PersonIcon({ className = 'w-5 h-5' }: { className?: string }) {
@@ -97,10 +89,11 @@ const MENU_ITEMS = [
  * - In-game menu: Settings, Tutorial, Return to Menu, Abandon
  */
 export function HamburgerMenu() {
-  const [open, setOpen] = useState(false);
+  const { isOpen: open } = useMenuStore();
+  const setOpen = (v: boolean) =>
+    v ? useMenuStore.getState().open() : useMenuStore.getState().close();
   const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { isConnected, logout, abandonGame } = useBlockchainStore();
@@ -150,16 +143,6 @@ export function HamburgerMenu() {
 
   return (
     <>
-      {/* Hamburger button — fixed top-right corner */}
-      <button
-        ref={buttonRef}
-        onClick={() => setOpen(true)}
-        aria-label="Open menu"
-        className="fixed top-3 right-3 lg:top-4 lg:right-4 z-[100] p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors backdrop-blur-sm"
-      >
-        <MenuIcon className="w-5 h-5 lg:w-6 lg:h-6" />
-      </button>
-
       {/* Backdrop + Panel */}
       {open && (
         <div className="fixed inset-0 z-[200]">

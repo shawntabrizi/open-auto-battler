@@ -7,7 +7,7 @@ import {
   type NftItem,
 } from '../store/customizationStore';
 import { CustomizationPreview } from './CustomizationPreview';
-import { BackLink, BackLinkSpacer } from './PageHeader';
+import { TopBar } from './TopBar';
 
 type TileShape = 'landscape' | 'wide' | 'card' | 'circle';
 
@@ -216,21 +216,12 @@ export const CustomizePage: React.FC = () => {
   // ── Category menu ──
   return (
     <div className="h-screen h-svh bg-warm-950 text-warm-200 flex flex-col">
-      {/* Header */}
-      <div className="p-3 lg:p-6 shrink-0">
-        <div className="flex items-center justify-between mb-1">
-          <BackLink
-            to={backLink}
-            state={backState}
-            label={isBlockchainRoute ? 'Creator Hub' : 'Menu'}
-          />
-          <BackLinkSpacer />
-        </div>
-        <h1 className="text-base lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase mt-1">
-          Customize
-        </h1>
-        <p className="text-warm-500 text-[9px] lg:text-sm">Select a category to customize</p>
-      </div>
+      <TopBar
+        backTo={backLink}
+        backState={backState}
+        backLabel={isBlockchainRoute ? 'Creator Hub' : 'Menu'}
+        title="Customize"
+      />
 
       {/* Mobile: two-column layout — preview left, categories right */}
       <div className="flex-1 flex lg:hidden p-2 gap-2 min-h-0">

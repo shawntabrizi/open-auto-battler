@@ -22,6 +22,7 @@ const PAGES: Record<string, string> = {
   'Create Set': '/blockchain/create-set',
   'Mint NFT': '/blockchain/mint-nft',
   'Ghost Browser': '/history/ghosts',
+  Presentations: '/presentations',
   'Game Over (Victory)': '/dev/game-over?phase=victory',
   'Game Over (Defeat)': '/dev/game-over?phase=defeat',
 };

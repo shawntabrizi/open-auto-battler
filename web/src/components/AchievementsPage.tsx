@@ -6,7 +6,7 @@ import { CARD_SIZES } from '../constants/cardSizes';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
 import { CardDetailPanel } from './CardDetailPanel';
-import { PageHeader } from './PageHeader';
+import { TopBar } from './TopBar';
 import { useInitGuard } from '../hooks';
 import type { CardView } from '../types';
 
@@ -85,15 +85,16 @@ export function AchievementsPage() {
   const silverCount = sorted.filter((c) => unlockedCardIds.has(c.id)).length;
 
   return (
-    <div className="fixed inset-0 bg-warm-950 text-white flex">
-      {/* Card Detail Panel — left side */}
+    <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
+      {/* Card Detail Panel — left side, full height */}
       <CardDetailPanel card={selectedCard} isVisible={true} mode={{ type: 'readOnly' }} />
+
+      {/* Top bar — starts after card panel */}
+      <TopBar backTo="/history" backLabel="History" title="Achievements" hasCardPanel />
 
       {/* Main content — offset for panel */}
       <div className="flex-1 ml-44 lg:ml-80 overflow-y-auto">
         <div className="w-full max-w-5xl mx-auto p-3 lg:p-6">
-          <PageHeader backTo="/history" backLabel="History" title="Achievements" />
-
           {sorted.length === 0 ? (
             <div className="text-center py-16 text-warm-500 text-sm">
               {engine ? 'No cards found.' : 'Loading...'}
@@ -104,9 +105,7 @@ export function AchievementsPage() {
               <div className="mb-4 lg:mb-6 flex items-center justify-center gap-4 lg:gap-8 p-3 lg:p-4 bg-warm-900/60 border border-warm-700/40 rounded-xl">
                 <div className="flex items-center gap-2">
                   <TrophyIcon tier="bronze" earned={true} />
-                  <span className="text-sm lg:text-base font-stat font-bold">
-                    0 / {totalCards}
-                  </span>
+                  <span className="text-sm lg:text-base font-stat font-bold">0 / {totalCards}</span>
                   <span className="text-[10px] lg:text-xs text-warm-500">Played</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -118,9 +117,7 @@ export function AchievementsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <TrophyIcon tier="gold" earned={true} />
-                  <span className="text-sm lg:text-base font-stat font-bold">
-                    0 / {totalCards}
-                  </span>
+                  <span className="text-sm lg:text-base font-stat font-bold">0 / {totalCards}</span>
                   <span className="text-[10px] lg:text-xs text-warm-500">Perfect</span>
                 </div>
               </div>

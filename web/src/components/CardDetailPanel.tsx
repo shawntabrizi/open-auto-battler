@@ -304,9 +304,9 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
       >
         {/* Header */}
         <div className="border-b border-warm-800 py-2 lg:py-3 px-3 lg:px-5">
-          <span className="text-xs font-bold uppercase tracking-wider text-yellow-500">
+          <div className="text-xs font-bold uppercase tracking-wider text-yellow-500">
             Card Details
-          </span>
+          </div>
         </div>
 
         {/* Content */}

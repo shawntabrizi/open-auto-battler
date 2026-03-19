@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
-import { BackLink, BackLinkSpacer } from './PageHeader';
+import { TopBar } from './TopBar';
 import type { CardView } from '../types';
 
 /** Fan positions for up to 5 cards */
@@ -165,18 +165,10 @@ export function SetSelectionScreen({
   }
 
   return (
-    <div className="h-full flex flex-col px-4 py-4 overflow-y-auto">
-      <BackLink to={backTo} label={backLabel} />
-      <BackLinkSpacer />
-      <div className="flex-1 flex flex-col items-center justify-center">
+    <div className="h-full flex flex-col">
+      <TopBar backTo={backTo} backLabel={backLabel} title="Choose Your Set" />
+      <div className="flex-1 flex flex-col items-center justify-center overflow-y-auto px-4 py-4">
         <div className="text-center w-full max-w-md lg:max-w-lg">
-          <h2 className="text-xl lg:text-3xl font-heading font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-0.5 lg:mb-1">
-            Choose Your Set
-          </h2>
-          <p className="text-warm-500 text-xs lg:text-sm mb-4 lg:mb-6">
-            Select a card set and begin your run.
-          </p>
-
           {featuredMeta && featuredCards ? (
             <div className="bg-warm-900/60 border border-warm-700/40 rounded-xl lg:rounded-2xl p-3 lg:p-6 mb-3 lg:mb-5 flex flex-col items-center max-h-[50vh] lg:max-h-none">
               <div className="text-[0.65rem] lg:text-xs text-gold/70 uppercase tracking-widest font-heading">

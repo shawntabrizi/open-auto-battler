@@ -1,9 +1,9 @@
 import { useSandboxStore } from '../store/sandboxStore';
-import { TopLeftBack } from './TopLeftButton';
 import { UnitCard, EmptySlot } from './UnitCard';
 import { CardDetailPanel } from './CardDetailPanel';
 import { BattleOverlay } from './BattleOverlay';
 import { RotatePrompt } from './RotatePrompt';
+import { TopBar } from './TopBar';
 import { useInitGuard } from '../hooks';
 import type { CardView } from '../types';
 
@@ -75,16 +75,26 @@ function SandboxHeader() {
   const hasUnits = playerBoard.some((u) => u !== null) || enemyBoard.some((u) => u !== null);
 
   return (
-    <div className="flex-shrink-0 bg-warm-900 border-b border-warm-700 px-3 lg:px-4 py-2 lg:py-2.5 ml-44 lg:ml-80">
-      <TopLeftBack to="/cards" label="Cards" />
-      {/* Top row: title, clear, seed — pr for hamburger clearance */}
-      <div className="flex items-center gap-3 mb-2 pr-10 lg:pr-12">
-        <h1 className="text-sm lg:text-lg font-bold text-gold truncate">Sandbox</h1>
+    <>
+      <TopBar backTo="/cards" backLabel="Cards" title="Sandbox" hasCardPanel />
+      {/* Action bar below TopBar */}
+      <div className="flex-shrink-0 bg-warm-900 border-b border-warm-700 px-3 lg:px-4 py-1.5 lg:py-2 ml-44 lg:ml-80 flex items-center justify-center gap-2 lg:gap-3">
         <button
           onClick={clearAllBoards}
-          className="ml-auto px-2 lg:px-3 py-1 bg-warm-700 hover:bg-warm-600 rounded text-white text-xs lg:text-sm transition-colors"
+          className="px-2 lg:px-3 py-1 bg-warm-700 hover:bg-warm-600 rounded text-white text-xs lg:text-sm transition-colors"
         >
           Clear
+        </button>
+        <button
+          onClick={runBattle}
+          disabled={!hasUnits}
+          className={`px-4 lg:px-6 py-1 rounded-lg font-bold text-xs lg:text-sm transition-colors ${
+            hasUnits
+              ? 'bg-gold text-black hover:bg-yellow-400'
+              : 'bg-warm-600 text-warm-400 cursor-not-allowed'
+          }`}
+        >
+          Battle!
         </button>
         <div className="hidden lg:flex items-center gap-1">
           <label className="text-warm-400 text-xs">Seed:</label>
@@ -96,21 +106,7 @@ function SandboxHeader() {
           />
         </div>
       </div>
-      {/* Battle button — centered */}
-      <div className="flex justify-center">
-        <button
-          onClick={runBattle}
-          disabled={!hasUnits}
-          className={`px-6 lg:px-8 py-1.5 rounded-lg font-bold text-xs lg:text-sm transition-colors ${
-            hasUnits
-              ? 'bg-gold text-black hover:bg-yellow-400'
-              : 'bg-warm-600 text-warm-400 cursor-not-allowed'
-          }`}
-        >
-          Battle!
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 

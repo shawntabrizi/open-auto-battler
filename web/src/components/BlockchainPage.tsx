@@ -6,7 +6,7 @@ import { GameShell } from './GameShell';
 import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { SetSelectionScreen } from './SetSelectionScreen';
 import { RotatePrompt } from './RotatePrompt';
-import { BackLink, BackLinkSpacer } from './PageHeader';
+import { TopBar } from './TopBar';
 import { useInitGuard } from '../hooks';
 import { Link } from 'react-router-dom';
 
@@ -79,10 +79,9 @@ export const BlockchainPage: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
-        <BackLink to="/" label="Menu" />
-        <BackLinkSpacer />
-        <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col text-white">
+        <TopBar backTo="/play" backLabel="Play" title="Online Arena" />
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
           <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600">
             BLOCKCHAIN MODE
           </h1>

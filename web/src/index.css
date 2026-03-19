@@ -1241,8 +1241,8 @@ body {
     margin-left: 11rem !important;
   }
 
-  .hud {
-    height: 2.25rem;
+  .game-top-bar {
+    height: 3rem;
     padding-left: max(0.5rem, env(safe-area-inset-left));
     padding-right: max(0.5rem, env(safe-area-inset-right));
   }

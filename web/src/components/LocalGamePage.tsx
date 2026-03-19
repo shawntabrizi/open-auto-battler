@@ -9,7 +9,7 @@ import { GameShell } from './GameShell';
 import { RotatePrompt } from './RotatePrompt';
 import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { SetSelectionScreen } from './SetSelectionScreen';
-import { BackLink, BackLinkSpacer } from './PageHeader';
+import { TopBar } from './TopBar';
 
 export function LocalGamePage() {
   const {
@@ -108,10 +108,9 @@ export function LocalGamePage() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen min-h-svh bg-warm-950 text-white flex flex-col p-4">
-        <BackLink to="/play" label="Play" />
-        <BackLinkSpacer />
-        <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="min-h-screen min-h-svh bg-warm-950 text-white flex flex-col">
+        <TopBar backTo="/play" backLabel="Play" title="Local Play" />
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
           <div className="w-full max-w-md rounded-3xl border border-warm-800 bg-warm-900/70 p-6 lg:p-8 text-center">
             <div className="text-[10px] lg:text-xs font-heading tracking-[0.35em] text-warm-500 uppercase">
               Local Play

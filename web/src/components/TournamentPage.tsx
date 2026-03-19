@@ -6,7 +6,7 @@ import { GameShell } from './GameShell';
 import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { RotatePrompt } from './RotatePrompt';
 import { Link } from 'react-router-dom';
-import { BackLink, BackLinkSpacer } from './PageHeader';
+import { TopBar } from './TopBar';
 import { useInitGuard } from '../hooks';
 import { submitTx } from '../utils/tx';
 
@@ -136,10 +136,9 @@ export const TournamentPage: React.FC = () => {
   if (tournamentGameOver) {
     const isPerfect = lastGameWins >= 10;
     return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
-        <BackLink to="/play" label="Play" />
-        <BackLinkSpacer />
-        <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col text-white">
+        <TopBar backTo="/play" backLabel="Play" title="Tournament" />
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
           <div
             className={`p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm lg:max-w-none ${
               isPerfect
@@ -197,10 +196,9 @@ export const TournamentPage: React.FC = () => {
     // but handle it gracefully
     const isVictory = view.phase === 'victory';
     return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
-        <BackLink to="/play" label="Play" />
-        <BackLinkSpacer />
-        <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col text-white">
+        <TopBar backTo="/play" backLabel="Play" title="Tournament" />
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
           <div
             className={`p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm ${
               isVictory
@@ -240,10 +238,9 @@ export const TournamentPage: React.FC = () => {
   // ── Not Connected ──
   if (!isConnected) {
     return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
-        <BackLink to="/play" label="Play" />
-        <BackLinkSpacer />
-        <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col text-white">
+        <TopBar backTo="/play" backLabel="Play" title="Tournament" />
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
           <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
             TOURNAMENT
           </h1>
@@ -300,10 +297,9 @@ export const TournamentPage: React.FC = () => {
     `Set #${activeTournament?.config.set_id ?? '?'}`;
 
   return (
-    <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans flex flex-col p-4">
-      <BackLink to="/play" label="Play" />
-      <BackLinkSpacer />
-      <div className="flex-1 flex items-center justify-center overflow-y-auto">
+    <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans flex flex-col">
+      <TopBar backTo="/play" backLabel="Play" title="Tournament" />
+      <div className="flex-1 flex items-center justify-center overflow-y-auto p-4">
         <div className="text-center bg-warm-900 p-3 lg:p-6 rounded-xl lg:rounded-2xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-lg">
           {/* Header */}
           <h3 className="text-lg lg:text-2xl font-black mb-1 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
