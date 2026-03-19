@@ -8,6 +8,7 @@ import { HomePage } from './components/HomePage.tsx';
 import { PlayPage } from './components/PlayPage.tsx';
 import { CardsPage } from './components/CardsPage.tsx';
 import { HistoryPage } from './components/HistoryPage.tsx';
+import { AchievementsPage } from './components/AchievementsPage.tsx';
 import { LocalGamePage } from './components/LocalGamePage.tsx';
 import { SandboxPage } from './components/SandboxPage.tsx';
 import { MultiplayerPage } from './components/MultiplayerPage.tsx';
@@ -42,6 +43,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/play" element={<PlayPage />} />
           <Route path="/cards" element={<CardsPage />} />
           <Route path="/history" element={<HistoryPage />} />
+          <Route path="/history/achievements" element={<AchievementsPage />} />
           <Route path="/local" element={<LocalGamePage />} />
           <Route path="/sandbox" element={<SandboxPage />} />
           <Route path="/multiplayer" element={<MultiplayerPage />} />
