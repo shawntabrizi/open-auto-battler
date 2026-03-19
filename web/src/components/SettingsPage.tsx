@@ -1,10 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useGameStore } from '../store/gameStore';
 import { PageHeader } from './PageHeader';
 
 // ── Settings Hub ──
 
 export function SettingsPage() {
   const location = useLocation();
+  const { showRawJson, toggleShowRawJson } = useGameStore();
   const returnTo =
     location.state &&
     typeof location.state === 'object' &&
@@ -41,6 +43,33 @@ export function SettingsPage() {
               <span className="text-warm-600 text-lg">&rarr;</span>
             </div>
           </Link>
+
+          {/* Debug section */}
+          <div className="w-full p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30">
+            <div className="font-bold text-base lg:text-lg text-white mb-3">Debug</div>
+            <button
+              onClick={toggleShowRawJson}
+              className="w-full flex items-center justify-between p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors"
+            >
+              <div className="text-left">
+                <div className="text-sm text-warm-200">Show Raw JSON</div>
+                <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
+                  Display raw card and game state data
+                </div>
+              </div>
+              <div
+                className={`w-10 h-5 rounded-full transition-colors relative ${
+                  showRawJson ? 'bg-yellow-500' : 'bg-warm-700'
+                }`}
+              >
+                <div
+                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                    showRawJson ? 'translate-x-5' : 'translate-x-0.5'
+                  }`}
+                />
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     </div>

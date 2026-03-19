@@ -1,5 +1,4 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useGameStore } from '../store/gameStore';
 import { useBlockchainStore } from '../store/blockchainStore';
@@ -95,35 +94,18 @@ export interface CardDetailPanelProps {
   layout?: 'fixed' | 'contained';
 }
 
-type TabType = 'card' | 'rules' | 'mode';
-
 export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: CardDetailPanelProps) {
-  const [activeTab, setActiveTab] = React.useState<TabType>('card');
   const [showForfeitConfirm, setShowForfeitConfirm] = React.useState(false);
   const [forfeitPending, setForfeitPending] = React.useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const {
-    view,
-    cardNameMap,
-    selection,
-    burnHandCard,
-    burnBoardUnit,
-    setSelection,
-    showRawJson,
-    toggleShowRawJson,
-    newRun,
-  } = useGameStore();
+  const { cardNameMap, selection, burnHandCard, burnBoardUnit, setSelection, showRawJson, newRun } =
+    useGameStore();
   const abandonGame = useBlockchainStore((state) => state.abandonGame);
   const abandonTournament = useTournamentStore((state) => state.abandonTournament);
 
   const resolvedMode: CardDetailPanelMode = mode ?? { type: 'standard' };
   const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
   const cardRawJson = React.useMemo(() => prettyJson(card), [card]);
-  const gameViewRawJson = React.useMemo(() => prettyJson(view), [view]);
   const isActionDisabled = resolvedMode.type === 'sandbox' || resolvedMode.type === 'readOnly';
-  const isChainBackedMode =
-    resolvedMode.type === 'blockchain' || resolvedMode.type === 'tournament';
   const forfeitContext =
     resolvedMode.type === 'tournament'
       ? {
@@ -168,7 +150,6 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
       toast.success(forfeitContext.success);
       setShowForfeitConfirm(false);
       setSelection(null);
-      setActiveTab('card');
     } catch (err) {
       console.error('Forfeit failed:', err);
     } finally {
@@ -316,261 +297,20 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
     );
   };
 
-  const renderRulesTab = () => {
-    return (
-      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6 text-sm text-warm-300 pb-4">
-        <section>
-          <h3 className="font-bold text-white mb-2 border-b border-warm-700 pb-1 flex items-center gap-2">
-            <span className="text-blue-400">01.</span> Planning Phase
-          </h3>
-          <p className="leading-relaxed">
-            Every round, you derive a fresh <strong className="text-white">Hand of 7 cards</strong>{' '}
-            from your Bag. The selection is deterministic based on your game seed and the current
-            round.
-          </p>
-          <p className="mt-2 text-warm-400 italic">
-            Unused hand cards return to your Bag. The Bag only shrinks when you play or burn cards.
-          </p>
-        </section>
-
-        <section>
-          <h3 className="font-bold text-white mb-2 border-b border-warm-700 pb-1 flex items-center gap-2">
-            <span className="text-blue-400">02.</span> Mana & Economy
-          </h3>
-          <p className="leading-relaxed">
-            You start each turn with <strong className="text-blue-400">0 Mana</strong>. Gain mana by{' '}
-            <strong className="text-orange-400">burning</strong> cards from your hand or units
-            already on your board.
-          </p>
-          <ul className="mt-2 space-y-1 list-disc list-inside text-xs">
-            <li>
-              <strong className="text-white">Capacity:</strong> Starts at 3, increases by +1 every
-              round (Max 10).
-            </li>
-            <li>
-              <strong className="text-white">Refilling:</strong> You can burn, spend, and burn again
-              in one turn.
-            </li>
-            <li>
-              <strong className="text-white">Hard Limit:</strong> You cannot hold more than your
-              capacity at once.
-            </li>
-          </ul>
-        </section>
-
-        <section>
-          <h3 className="font-bold text-white mb-2 border-b border-warm-700 pb-1 flex items-center gap-2">
-            <span className="text-blue-400">03.</span> Priority System
-          </h3>
-          <p className="mb-2 leading-relaxed text-xs">
-            When multiple units share a trigger (e.g. "Battle Start"), the game uses a{' '}
-            <strong className="text-white">Priority Queue</strong> to decide who goes first:
-          </p>
-          <div className="bg-black/30 p-3 rounded-lg border border-warm-800 font-mono text-[11px] space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-warm-500">1. Higher Power</span>
-              <span className="text-red-400">ATTACK</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-warm-500">2. Higher Vitality</span>
-              <span className="text-green-400">HEALTH</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-warm-500">3. Default Team</span>
-              <span className="text-blue-400">PLAYER</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-warm-500">4. Physical Lead</span>
-              <span className="text-yellow-400">FRONT-MOST</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-warm-500">5. Internal Logic</span>
-              <span className="text-purple-400">TOP-ABILITY</span>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <h3 className="font-bold text-white mb-2 border-b border-warm-700 pb-1 flex items-center gap-2">
-            <span className="text-blue-400">04.</span> Recursive Logic
-          </h3>
-          <p className="leading-relaxed">
-            The game state is <strong className="text-white">Live</strong>. If an ability kills a
-            unit or spawns a new one, that unit's "On Death" or "On Spawn" triggers happen{' '}
-            <strong className="text-yellow-500">immediately</strong>—even if it interrupts the
-            current priority queue.
-          </p>
-          <p className="mt-2 text-xs text-warm-400 leading-relaxed">
-            Example: If a fast sniper kills a unit with "On Death: Damage", that damage fires before
-            the next unit in the sniper's original phase acts.
-          </p>
-        </section>
-
-        <section>
-          <h3 className="font-bold text-white mb-2 border-b border-warm-700 pb-1 flex items-center gap-2">
-            <span className="text-blue-400">05.</span> Victory
-          </h3>
-          <p className="leading-relaxed text-xs">
-            Battles are automated from <strong className="text-white">Front to Back</strong>. The
-            first team to have all units defeated loses the round. Accumulate{' '}
-            <strong className="text-yellow-500">10 Stars</strong> to win the run!
-          </p>
-        </section>
-      </div>
-    );
-  };
-
-  const renderModeTab = () => {
-    const isBlockchain = isChainBackedMode;
-
-    return (
-      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
-        {/* Blockchain Connection Status - only shown in blockchain mode */}
-        {isBlockchain && (
-          <div className="p-4 bg-warm-800/50 rounded-lg border border-warm-700">
-            <h3 className="font-bold text-white mb-3">Chain Connection</h3>
-
-            {/* Connection Status */}
-            <div className="flex items-center gap-2 mb-3 p-2 bg-warm-900 rounded border border-white/5">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-xs font-mono text-warm-400">
-                {resolvedMode.blockNumber != null
-                  ? `Block #${resolvedMode.blockNumber.toLocaleString()}`
-                  : 'Connected'}
-              </span>
-            </div>
-
-            {/* Account Selector */}
-            {resolvedMode.accounts.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-[10px] text-warm-500 uppercase font-bold">Account</label>
-                <select
-                  value={resolvedMode.selectedAccount?.address || ''}
-                  onChange={(e) => {
-                    const account = resolvedMode.accounts.find((a) => a.address === e.target.value);
-                    resolvedMode.onSelectAccount?.(account);
-                  }}
-                  className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50"
-                >
-                  {resolvedMode.accounts.map((acc) => (
-                    <option key={acc.address} value={acc.address}>
-                      {acc.source === 'dev' ? '🛠️ ' : ''}
-                      {acc.name} ({acc.address.slice(0, 6)}...)
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="p-4 bg-warm-800/50 rounded-lg border border-warm-700">
-          <div className="space-y-3">
-            <button
-              onClick={() =>
-                navigate('/settings', {
-                  state: { returnTo: `${location.pathname}${location.search}` },
-                })
-              }
-              className="w-full btn bg-yellow-900/50 hover:bg-yellow-800 text-yellow-200 border border-yellow-700 text-xs py-2"
-            >
-              Settings
-            </button>
-            <button
-              onClick={() => setShowForfeitConfirm(true)}
-              className="w-full btn bg-red-900/50 hover:bg-red-800 text-red-200 border border-red-700 text-xs py-2"
-            >
-              Forfeit
-            </button>
-            <button
-              onClick={() => navigate('/')}
-              className="w-full btn bg-warm-700/50 hover:bg-warm-600 text-warm-300 border border-warm-600 text-xs py-2"
-            >
-              Exit to Menu
-            </button>
-          </div>
-        </div>
-
-        <div className="p-4 bg-warm-800/50 rounded-lg border border-warm-700">
-          <h3 className="font-bold text-white mb-2">Debug Tools</h3>
-          <div className="space-y-3">
-            <button
-              onClick={toggleShowRawJson}
-              className="w-full btn bg-blue-900/50 hover:bg-blue-800 text-blue-200 border border-blue-700 text-xs py-2"
-            >
-              {showRawJson ? 'Hide Raw State' : 'View Raw Game State'}
-            </button>
-          </div>
-        </div>
-
-        {showRawJson && view && (
-          <div className="mt-4 p-2 bg-black/50 rounded border border-warm-800">
-            <div className="text-[10px] text-warm-500 mb-1 flex justify-between items-center">
-              <span>GAME_VIEW.JSON</span>
-              <button
-                onClick={() => navigator.clipboard.writeText(gameViewRawJson)}
-                className="text-blue-500 hover:text-blue-400"
-              >
-                Copy
-              </button>
-            </div>
-            <pre className="text-[9px] text-green-500/80 custom-scrollbar max-h-64 overflow-auto">
-              {gameViewRawJson}
-            </pre>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <>
       <div
         className={`card-detail-panel ${containerClassName} bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30`}
       >
-        {/* Tabs */}
-        <div className="flex border-b border-warm-800">
-          <button
-            onClick={() => setActiveTab('card')}
-            className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-              activeTab === 'card'
-                ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
-                : 'text-warm-500 hover:text-warm-300'
-            }`}
-          >
-            <span className="lg:hidden text-base">🃏</span>
-            <span className="hidden lg:inline">Card</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('rules')}
-            className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-              activeTab === 'rules'
-                ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
-                : 'text-warm-500 hover:text-warm-300'
-            }`}
-          >
-            <span className="lg:hidden text-base">📖</span>
-            <span className="hidden lg:inline">Rules</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('mode')}
-            className={`flex-1 py-2 lg:py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-              activeTab === 'mode'
-                ? 'bg-warm-800 text-yellow-500 border-b-2 border-yellow-500'
-                : 'text-warm-500 hover:text-warm-300'
-            }`}
-          >
-            <span className="lg:hidden text-base">⚙️</span>
-            <span className="hidden lg:inline">System</span>
-          </button>
+        {/* Header */}
+        <div className="border-b border-warm-800 py-2 lg:py-3 px-3 lg:px-5">
+          <span className="text-xs font-bold uppercase tracking-wider text-yellow-500">
+            Card Details
+          </span>
         </div>
 
-        {/* Tab Content */}
-        <div className="flex-1 p-3 lg:p-5 flex flex-col overflow-hidden">
-          {activeTab === 'card' && renderCardTab()}
-          {activeTab === 'rules' && renderRulesTab()}
-          {activeTab === 'mode' && renderModeTab()}
-        </div>
+        {/* Content */}
+        <div className="flex-1 p-3 lg:p-5 flex flex-col overflow-hidden">{renderCardTab()}</div>
 
         {/* Footer */}
         <div className="p-1 lg:p-4 border-t border-warm-800 bg-black/20 text-[6px] lg:text-[10px] text-warm-600 text-center uppercase tracking-tighter">

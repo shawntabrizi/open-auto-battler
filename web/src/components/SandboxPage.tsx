@@ -1,9 +1,9 @@
+import { Link } from 'react-router-dom';
 import { useSandboxStore } from '../store/sandboxStore';
 import { UnitCard, EmptySlot } from './UnitCard';
 import { CardDetailPanel } from './CardDetailPanel';
 import { BattleOverlay } from './BattleOverlay';
 import { RotatePrompt } from './RotatePrompt';
-import { PageHeader } from './PageHeader';
 import { useInitGuard } from '../hooks';
 import type { CardView } from '../types';
 
@@ -75,44 +75,48 @@ function SandboxHeader() {
   const hasUnits = playerBoard.some((u) => u !== null) || enemyBoard.some((u) => u !== null);
 
   return (
-    <PageHeader
-      backTo="/"
-      backLabel="Menu"
-      title="Sandbox"
-      variant="toolbar"
-      right={
-        <>
-          <div className="hidden lg:flex items-center gap-1">
-            <label className="text-warm-400 text-xs">Seed:</label>
-            <input
-              type="number"
-              value={battleSeed}
-              onChange={(e) => setBattleSeed(parseInt(e.target.value) || 0)}
-              className="w-16 px-2 py-1 bg-warm-800 border border-warm-600 rounded text-white text-xs"
-            />
-          </div>
-
-          <button
-            onClick={clearAllBoards}
-            className="px-2 lg:px-3 py-1 bg-warm-700 hover:bg-warm-600 rounded text-white text-xs lg:text-sm transition-colors"
-          >
-            Clear
-          </button>
-
-          <button
-            onClick={runBattle}
-            disabled={!hasUnits}
-            className={`px-3 lg:px-4 py-1 rounded font-bold text-xs lg:text-sm transition-colors ${
-              hasUnits
-                ? 'bg-gold text-black hover:bg-yellow-400'
-                : 'bg-warm-600 text-warm-400 cursor-not-allowed'
-            }`}
-          >
-            Battle!
-          </button>
-        </>
-      }
-    />
+    <div className="flex-shrink-0 bg-warm-900 border-b border-warm-700 px-3 lg:px-4 py-2 lg:py-2.5 ml-44 lg:ml-80">
+      {/* Top row: back, title, clear, seed — pr for hamburger clearance */}
+      <div className="flex items-center gap-3 mb-2 pr-10 lg:pr-12">
+        <Link
+          to="/cards"
+          className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm shrink-0"
+        >
+          <span>&larr;</span>
+          <span>Cards</span>
+        </Link>
+        <h1 className="text-sm lg:text-lg font-bold text-gold truncate">Sandbox</h1>
+        <button
+          onClick={clearAllBoards}
+          className="ml-auto px-2 lg:px-3 py-1 bg-warm-700 hover:bg-warm-600 rounded text-white text-xs lg:text-sm transition-colors"
+        >
+          Clear
+        </button>
+        <div className="hidden lg:flex items-center gap-1">
+          <label className="text-warm-400 text-xs">Seed:</label>
+          <input
+            type="number"
+            value={battleSeed}
+            onChange={(e) => setBattleSeed(parseInt(e.target.value) || 0)}
+            className="w-16 px-2 py-1 bg-warm-800 border border-warm-600 rounded text-white text-xs"
+          />
+        </div>
+      </div>
+      {/* Battle button — centered */}
+      <div className="flex justify-center">
+        <button
+          onClick={runBattle}
+          disabled={!hasUnits}
+          className={`px-6 lg:px-8 py-1.5 rounded-lg font-bold text-xs lg:text-sm transition-colors ${
+            hasUnits
+              ? 'bg-gold text-black hover:bg-yellow-400'
+              : 'bg-warm-600 text-warm-400 cursor-not-allowed'
+          }`}
+        >
+          Battle!
+        </button>
+      </div>
+    </div>
   );
 }
 

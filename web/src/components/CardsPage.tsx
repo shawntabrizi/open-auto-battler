@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
@@ -24,7 +25,25 @@ export function CardsPage() {
   return (
     <div className="fixed inset-0 bg-warm-950 text-white overflow-y-auto">
       <div className="w-full max-w-3xl mx-auto p-3 lg:p-6">
-        <PageHeader backTo="/" backLabel="Menu" title="Cards" subtitle="Browse all card sets" />
+        <PageHeader
+          backTo="/"
+          backLabel="Menu"
+          title="Cards"
+          subtitle="Browse all card sets"
+        />
+
+        {/* Sandbox CTA */}
+        <Link
+          to="/sandbox"
+          className="block w-full mb-4 lg:mb-6 p-3 lg:p-4 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-orange-600/5 hover:border-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)] active:scale-[0.99] transition-all text-center"
+        >
+          <span className="font-heading text-sm lg:text-base font-bold text-white tracking-wide">
+            See All Cards in the Sandbox
+          </span>
+          <p className="text-warm-500 text-[10px] lg:text-xs mt-0.5">
+            Browse every card and test battles
+          </p>
+        </Link>
 
         {sorted.length === 0 ? (
           <div className="text-center py-16 text-warm-500 text-sm">
