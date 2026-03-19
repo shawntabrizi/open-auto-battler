@@ -22,10 +22,19 @@ flowchart TD
   Play --> P2P["/multiplayer"]
 
   OnlineArena --> SetSelect["Set Selection"]
-  OnlineArena --> GameShell["Game (shop/battle)"]
   Offline --> SetSelect
-  Offline --> GameShell
-  Tournament --> GameShell
+  SetSelect --> Shop["Shop Phase"]
+  Tournament --> Shop
+
+  Shop --> Battle["Battle Phase"]
+  Battle --> Shop
+  Battle --> Victory["Victory 🏆"]
+  Battle --> Defeat["Defeat 💀"]
+  Victory --> Main
+  Defeat --> Main
+
+  Shop --> InGameHamburger
+  Battle --> InGameHamburger
 
   P2P --> MultiGame["/multiplayer/game"]
 
@@ -51,8 +60,6 @@ flowchart TD
   InGameHamburger --> Tutorial["Tutorial (TODO)"]
   InGameHamburger --> ReturnMenu["Return to Menu → /"]
   InGameHamburger --> Abandon["Abandon → /"]
-
-  Settings --> SettingsCustomize["/customize"]
 
   Cards --> MintNft["/blockchain/mint-nft"]
 ```
@@ -256,7 +263,7 @@ flowchart TD
 
 **Route:** `/local`
 
-**Back:** Menu (`/`)
+**Back:** Play (`/play`)
 
 **Flow:**
 1. If not connected → blockchain required screen
@@ -268,7 +275,7 @@ flowchart TD
 
 **Route:** `/tournament`
 
-**Back:** Menu (`/`)
+**Back:** Play (`/play`)
 
 **Flow:**
 1. If not connected → connection screen
@@ -280,7 +287,7 @@ flowchart TD
 
 **Route:** `/multiplayer` → `/multiplayer/game`
 
-**Back:** Menu (`/`)
+**Back:** Play (`/play`)
 
 **Contents:** P2P connection setup, then direct multiplayer game.
 
@@ -314,7 +321,6 @@ flowchart TD
 **Back:** Menu (`/`) or Game (via `returnTo` state)
 
 **Contents:**
-- Link to **Customize** (`/customize`)
 - **Debug** section: Show Raw JSON toggle
 
 ### Account
@@ -398,12 +404,12 @@ These are full-screen or partial overlays rendered on top of the current page:
 | `/history/stats` | Stats | `/history` |
 | `/history/battles` | Battle History (placeholder) | `/history` |
 | `/history/ghosts` | Ghost Browser | `/history` |
-| `/local` | Offline Game | `/` |
+| `/local` | Offline Game | `/play` |
 | `/sandbox` | Sandbox | `/cards` |
-| `/multiplayer` | P2P Setup | `/` |
+| `/multiplayer` | P2P Setup | `/play` |
 | `/multiplayer/game` | P2P Game | `/multiplayer` |
 | `/blockchain` | Online Arena | `/play` |
-| `/tournament` | Tournament | `/` |
+| `/tournament` | Tournament | `/play` |
 | `/settings` | Settings | `/` or game |
 | `/network` | Network | `/` |
 | `/account` | Account | `/` |

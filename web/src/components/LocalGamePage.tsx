@@ -109,7 +109,7 @@ export function LocalGamePage() {
   if (!isConnected) {
     return (
       <div className="min-h-screen min-h-svh bg-warm-950 text-white flex flex-col p-4">
-        <BackLink to="/" label="Menu" />
+        <BackLink to="/play" label="Play" />
         <BackLinkSpacer />
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="w-full max-w-md rounded-3xl border border-warm-800 bg-warm-900/70 p-6 lg:p-8 text-center">

@@ -378,7 +378,7 @@ function getLocalAccounts() {
 const SHOW_DEV_ACCOUNTS = false;
 const DEV_ACCOUNTS = ['Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Ferdie'];
 
-const getDevAccounts = () => {
+export const getDevAccounts = () => {
   const miniSecret = entropyToMiniSecret(mnemonicToEntropy(DEV_PHRASE));
   const derive = sr25519CreateDerive(miniSecret);
   const accountId = AccountId(42);

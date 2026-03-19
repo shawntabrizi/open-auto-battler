@@ -141,8 +141,8 @@ function AllSetsView({ onBack, onSelect }: { onBack: () => void; onSelect: (id: 
 
 export function SetSelectionScreen({
   onStartGame,
-  backTo = '/',
-  backLabel = 'Menu',
+  backTo = '/play',
+  backLabel = 'Play',
 }: {
   /** Override the start game handler. Defaults to gameStore.startGame */
   onStartGame?: (setId: number) => void;

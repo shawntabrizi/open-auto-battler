@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useBlockchainStore, getDevAccounts } from '../store/blockchainStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useGameStore } from '../store/gameStore';
 import { GameShell } from './GameShell';
 import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { RotatePrompt } from './RotatePrompt';
+import { Link } from 'react-router-dom';
 import { BackLink, BackLinkSpacer } from './PageHeader';
 import { useInitGuard } from '../hooks';
 import { submitTx } from '../utils/tx';
@@ -136,7 +137,7 @@ export const TournamentPage: React.FC = () => {
     const isPerfect = lastGameWins >= 10;
     return (
       <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
-        <BackLink to="/" label="Menu" />
+        <BackLink to="/play" label="Play" />
         <BackLinkSpacer />
         <div className="flex-1 flex flex-col items-center justify-center">
           <div
@@ -197,7 +198,7 @@ export const TournamentPage: React.FC = () => {
     const isVictory = view.phase === 'victory';
     return (
       <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
-        <BackLink to="/" label="Menu" />
+        <BackLink to="/play" label="Play" />
         <BackLinkSpacer />
         <div className="flex-1 flex flex-col items-center justify-center">
           <div
@@ -240,7 +241,7 @@ export const TournamentPage: React.FC = () => {
   if (!isConnected) {
     return (
       <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
-        <BackLink to="/" label="Menu" />
+        <BackLink to="/play" label="Play" />
         <BackLinkSpacer />
         <div className="flex-1 flex flex-col items-center justify-center">
           <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
@@ -253,12 +254,12 @@ export const TournamentPage: React.FC = () => {
           >
             {isConnecting ? 'CONNECTING...' : 'RETRY CONNECTION'}
           </button>
-          <a
-            href="#/network"
+          <Link
+            to="/network"
             className="mt-3 text-sm text-warm-400 hover:text-warm-200 transition-colors"
           >
             Network Settings
-          </a>
+          </Link>
           {connectionError && (
             <p className="mt-3 max-w-md rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-center text-xs text-red-200">
               {connectionError}
@@ -300,7 +301,7 @@ export const TournamentPage: React.FC = () => {
 
   return (
     <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans flex flex-col p-4">
-      <BackLink to="/" label="Menu" />
+      <BackLink to="/play" label="Play" />
       <BackLinkSpacer />
       <div className="flex-1 flex items-center justify-center overflow-y-auto">
         <div className="text-center bg-warm-900 p-3 lg:p-6 rounded-xl lg:rounded-2xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-lg">
@@ -513,9 +514,12 @@ export const TournamentPage: React.FC = () => {
 // ── Dev helper: create a test tournament via sudo ──
 
 const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }) => {
-  const { api, selectedAccount, blockNumber, availableSets } = useBlockchainStore();
+  const { api, blockNumber, availableSets } = useBlockchainStore();
   const [selectedSetId, setSelectedSetId] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  // Alice is always available — derived directly from dev seed
+  const alice = getDevAccounts()[0];
 
   // Default to first available set
   useEffect(() => {
@@ -525,7 +529,7 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
   }, [availableSets, selectedSetId]);
 
   const handleCreate = async () => {
-    if (!api || !selectedAccount || !blockNumber) return;
+    if (!api || !alice || !blockNumber) return;
     setLoading(true);
     try {
       const startBlock = blockNumber + 1;
@@ -545,9 +549,9 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
         },
       });
 
-      // Wrap in sudo
+      // Wrap in sudo — always signed by Alice (sudo key)
       const tx = api.tx.Sudo.sudo({ call: innerCall.decodedCall });
-      await submitTx(tx, selectedAccount.polkadotSigner, 'Sudo.sudo(create_tournament)');
+      await submitTx(tx, alice.polkadotSigner, 'Sudo.sudo(create_tournament)');
       onCreated();
     } catch (err) {
       console.error('Create test tournament failed:', err);
@@ -585,7 +589,7 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
         </div>
         <button
           onClick={handleCreate}
-          disabled={loading || !selectedAccount}
+          disabled={loading || !alice}
           className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded text-xs transition-all disabled:opacity-50"
         >
           {loading ? 'CREATING...' : 'CREATE TOURNAMENT'}

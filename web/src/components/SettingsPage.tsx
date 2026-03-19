@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { PageHeader } from './PageHeader';
 
@@ -26,24 +26,6 @@ export function SettingsPage() {
 
         {/* Options */}
         <div className="flex flex-col gap-3 lg:gap-4">
-          <Link
-            to="/customize"
-            state={location.state}
-            className="w-full text-left p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30 hover:border-warm-600 transition-all group"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-bold text-base lg:text-lg text-white group-hover:text-yellow-400 transition-colors">
-                  Customize
-                </div>
-                <div className="text-warm-500 text-xs lg:text-sm mt-0.5">
-                  Card art, backgrounds &amp; avatars
-                </div>
-              </div>
-              <span className="text-warm-600 text-lg">&rarr;</span>
-            </div>
-          </Link>
-
           {/* Debug section */}
           <div className="w-full p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30">
             <div className="font-bold text-base lg:text-lg text-white mb-3">Debug</div>
