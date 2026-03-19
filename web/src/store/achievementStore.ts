@@ -1,21 +1,31 @@
 import { create } from 'zustand';
 
+const ACHIEVEMENT_BRONZE = 0b001;
+const ACHIEVEMENT_SILVER = 0b010;
+const ACHIEVEMENT_GOLD = 0b100;
+
 interface AchievementStore {
-  /** Set of card IDs the connected player has unlocked via victory achievements. */
-  unlockedCardIds: Set<number>;
+  /** Map of card ID to achievement bitmap (bronze=1, silver=2, gold=4). */
+  achievements: Map<number, number>;
   /** Whether achievements have been fetched for the current account. */
   isLoaded: boolean;
 
-  /** Fetch VictoryAchievements for the given account from on-chain storage. */
+  /** Fetch achievement bitmaps for the given account from on-chain storage. */
   fetchAchievements: (api: any, accountAddress: string) => Promise<void>;
-  /** Check if a card ID is unlocked. */
+  /** Check if a card has the bronze achievement (played on board for a battle). */
+  hasBronze: (cardId: number) => boolean;
+  /** Check if a card has the silver achievement (10 wins). */
+  hasSilver: (cardId: number) => boolean;
+  /** Check if a card has the gold achievement (perfect 10 wins, no losses). */
+  hasGold: (cardId: number) => boolean;
+  /** Check if a card has holographic effect (silver or gold achievement). */
   isHolographic: (cardId: number) => boolean;
   /** Clear achievements (on account switch / disconnect). */
   clear: () => void;
 }
 
 export const useAchievementStore = create<AchievementStore>((set, get) => ({
-  unlockedCardIds: new Set(),
+  achievements: new Map(),
   isLoaded: false,
 
   fetchAchievements: async (api: any, accountAddress: string) => {
@@ -23,23 +33,30 @@ export const useAchievementStore = create<AchievementStore>((set, get) => ({
 
     try {
       const entries = await api.query.AutoBattle.VictoryAchievements.getEntries(accountAddress);
-      const cardIds = new Set<number>();
+      const achievements = new Map<number, number>();
       for (const entry of entries) {
-        // Key is (AccountId, card_id), value is bool
-        if (entry.value) {
+        // Key is (AccountId, card_id), value is u8 bitmap
+        const bits = Number(entry.value);
+        if (bits > 0) {
           const cardId = Number(entry.keyArgs[1]);
-          cardIds.add(cardId);
+          achievements.set(cardId, bits);
         }
       }
-      set({ unlockedCardIds: cardIds, isLoaded: true });
+      set({ achievements, isLoaded: true });
     } catch (err) {
       // VictoryAchievements storage may not exist on older chains — treat as empty
       console.warn('Failed to fetch victory achievements:', err);
-      set({ unlockedCardIds: new Set(), isLoaded: true });
+      set({ achievements: new Map(), isLoaded: true });
     }
   },
 
-  isHolographic: (cardId: number) => get().unlockedCardIds.has(cardId),
+  hasBronze: (cardId: number) => ((get().achievements.get(cardId) ?? 0) & ACHIEVEMENT_BRONZE) !== 0,
+  hasSilver: (cardId: number) => ((get().achievements.get(cardId) ?? 0) & ACHIEVEMENT_SILVER) !== 0,
+  hasGold: (cardId: number) => ((get().achievements.get(cardId) ?? 0) & ACHIEVEMENT_GOLD) !== 0,
+  isHolographic: (cardId: number) => {
+    const bits = get().achievements.get(cardId) ?? 0;
+    return (bits & (ACHIEVEMENT_SILVER | ACHIEVEMENT_GOLD)) !== 0;
+  },
 
-  clear: () => set({ unlockedCardIds: new Set(), isLoaded: false }),
+  clear: () => set({ achievements: new Map(), isLoaded: false }),
 }));

@@ -148,6 +148,7 @@ impl GameView {
                 GamePhase::Battle => String::from("battle"),
                 GamePhase::Victory => String::from("victory"),
                 GamePhase::Defeat => String::from("defeat"),
+                GamePhase::Completed => String::from("completed"),
             },
             bag_count: state.bag.len() as u32,
             can_afford,

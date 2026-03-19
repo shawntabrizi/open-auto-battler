@@ -30,7 +30,6 @@ pub(crate) struct PreparedBattle {
 pub(crate) struct TurnResult<T: Config> {
     pub result: BattleResult,
     pub game_over: bool,
-    pub current_wins: i32,
     pub completed_round: i32,
     pub opponent_ghost: BoundedGhostBoard<T>,
     pub new_seed: u64,
@@ -333,8 +332,8 @@ impl<T: Config> Pallet<T> {
         }
 
         let completed_round = battle.core_state.local_state.round;
-        let current_wins = battle.core_state.local_state.wins;
-        let game_over = battle.core_state.local_state.lives <= 0 || current_wins >= 10;
+        let game_over =
+            battle.core_state.local_state.lives <= 0 || battle.core_state.local_state.wins >= 10;
 
         let new_seed = if !game_over {
             let new_seed = Self::generate_next_seed(who, next_seed_context);
@@ -352,7 +351,6 @@ impl<T: Config> Pallet<T> {
         TurnResult {
             result,
             game_over,
-            current_wins,
             completed_round,
             opponent_ghost,
             new_seed,
@@ -376,6 +374,71 @@ impl<T: Config> Pallet<T> {
 
         let card_pool = Self::get_card_pool(card_set);
         Some(Self::ghost_to_combat_units(&ghost_entry.board, &card_pool))
+    }
+
+    /// Finalize a completed game: archive victory ghost and grant silver/gold achievements.
+    /// Shared by both `end_game` and `end_tournament_game`.
+    pub(crate) fn finalize_game(
+        who: &T::AccountId,
+        set_id: u32,
+        state: &BoundedLocalGameState<T>,
+    ) {
+        let wins = state.wins;
+        let lives = state.lives;
+
+        // Build ghost board from the session's board
+        let units: Vec<GhostBoardUnit> = state
+            .board
+            .iter()
+            .flatten()
+            .map(|board_unit| GhostBoardUnit {
+                card_id: board_unit.card_id,
+                perm_attack: board_unit.perm_attack,
+                perm_health: board_unit.perm_health,
+            })
+            .collect();
+        let ghost: BoundedGhostBoard<T> = CoreBoundedGhostBoard {
+            units: units.try_into().unwrap_or_default(),
+        };
+
+        // Archive the board in a bracket keyed by final stats
+        if !ghost.units.is_empty() {
+            let bracket = MatchmakingBracket {
+                set_id,
+                round: state.round,
+                wins,
+                lives,
+            };
+            Self::store_ghost(who, &bracket, ghost);
+        }
+
+        // Grant silver/gold achievements for cards on the final board
+        if wins >= 10 {
+            let mut new_bits = ACHIEVEMENT_SILVER;
+            if lives >= 3 {
+                new_bits |= ACHIEVEMENT_GOLD;
+            }
+            for board_unit in state.board.iter().flatten() {
+                let card_id = board_unit.card_id.0;
+                let old = VictoryAchievements::<T>::get(who, card_id);
+                let updated = old | new_bits;
+                if updated != old {
+                    VictoryAchievements::<T>::insert(who, card_id, updated);
+                }
+            }
+        }
+    }
+
+    /// Grant bronze achievement (bit 0) for every card currently on the player's board.
+    /// Called at battle time so cards that enter combat earn the bronze star.
+    pub(crate) fn grant_bronze_achievements(who: &T::AccountId, core_state: &GameState) {
+        for board_unit in core_state.local_state.board.iter().flatten() {
+            let card_id = board_unit.card_id.0;
+            let current = VictoryAchievements::<T>::get(who, card_id);
+            if current & ACHIEVEMENT_BRONZE == 0 {
+                VictoryAchievements::<T>::insert(who, card_id, current | ACHIEVEMENT_BRONZE);
+            }
+        }
     }
 
     /// Push a ghost entry into a pool with FIFO rotation at capacity.

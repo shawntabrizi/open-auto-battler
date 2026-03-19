@@ -164,7 +164,12 @@ fn test_game_over_after_three_losses() {
             action.into()
         ));
 
-        // Game should be removed (player lost)
+        // Game should be in Completed phase (not removed yet)
+        let session = ActiveGame::<Test>::get(account_id).expect("session should still exist");
+        assert_eq!(session.state.phase, GamePhase::Completed);
+
+        // end_game finalizes and removes it
+        assert_ok!(AutoBattle::end_game(RuntimeOrigin::signed(account_id)));
         assert!(ActiveGame::<Test>::get(account_id).is_none());
     });
 }
@@ -712,7 +717,12 @@ fn test_tournament_game_over_records_stats() {
             action.into()
         ));
 
-        // Game should be removed
+        // Game should be in Completed phase
+        let session = ActiveTournamentGame::<Test>::get(player).expect("session should still exist");
+        assert_eq!(session.state.phase, GamePhase::Completed);
+
+        // end_tournament_game finalizes and removes it
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(player)));
         assert!(ActiveTournamentGame::<Test>::get(player).is_none());
 
         // Stats should be recorded
@@ -771,6 +781,9 @@ fn test_tournament_perfect_run_stats() {
             action.into()
         ));
 
+        // Finalize the completed game
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(player)));
+
         // Verify stats for defeat
         let stats = crate::TournamentPlayerStats::<Test>::get(0, player);
         assert_eq!(stats.total_games, 1);
@@ -805,7 +818,14 @@ fn test_tournament_perfect_run_stats() {
         // So wins = 10, lives = 99, game_over = true (wins >= 10).
         // perfect_runs = 1 since wins >= 10.
 
+        // Game should be in Completed phase
+        let session = ActiveTournamentGame::<Test>::get(player).expect("session should exist");
+        assert_eq!(session.state.phase, GamePhase::Completed);
+
+        // Finalize the completed game
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(player)));
         assert!(ActiveTournamentGame::<Test>::get(player).is_none());
+
         let stats = crate::TournamentPlayerStats::<Test>::get(0, player);
         assert_eq!(stats.total_games, 2);
         assert_eq!(stats.perfect_runs, 1);
@@ -1212,6 +1232,7 @@ fn test_claim_prize_perfect_run_player() {
             RuntimeOrigin::signed(player),
             action.into()
         ));
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(player)));
 
         // Verify perfect run recorded
         let stats = crate::TournamentPlayerStats::<Test>::get(0, player);
@@ -1252,6 +1273,7 @@ fn test_tournament_multiple_players_prize_split() {
             RuntimeOrigin::signed(1),
             action.into()
         ));
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(1)));
 
         // Player 2 also gets a perfect run
         ActiveTournamentGame::<Test>::mutate(2u64, |session| {
@@ -1264,6 +1286,7 @@ fn test_tournament_multiple_players_prize_split() {
             RuntimeOrigin::signed(2),
             action.into()
         ));
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(2)));
 
         System::set_block_number(101);
 
@@ -1309,16 +1332,17 @@ fn test_no_perfect_runs_player_share_stays_in_pallet() {
             default_prize_config(),
         ));
 
-        // Player 2 joins and loses
+        // Player 2 joins and loses (set lives to 0 so Draw still triggers game over)
         assert_ok!(AutoBattle::join_tournament(RuntimeOrigin::signed(2), 0));
         ActiveTournamentGame::<Test>::mutate(2u64, |session| {
-            session.as_mut().unwrap().state.lives = 1;
+            session.as_mut().unwrap().state.lives = 0;
         });
         let action = CommitTurnAction { actions: vec![] };
         assert_ok!(AutoBattle::submit_tournament_turn(
             RuntimeOrigin::signed(2),
             action.into()
         ));
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(2)));
 
         System::set_block_number(101);
 
@@ -1339,118 +1363,17 @@ fn test_no_perfect_runs_player_share_stays_in_pallet() {
 }
 
 #[test]
-fn test_claim_victory_achievement() {
-    new_test_ext().execute_with(|| {
-        let (set_id, card_ids) = create_custom_set(1, &[(3, 4), (5, 6)], b"Victory Set");
-
-        // Backfill a ghost with wins=10 (victory board)
-        assert_ok!(AutoBattle::backfill_ghost_board(
-            RuntimeOrigin::root(),
-            set_id,
-            10,
-            10,
-            1,
-            bounded_ghost_board(vec![ghost_unit(card_ids[0]), ghost_unit(card_ids[1])])
-        ));
-
-        let archive_id = crate::NextGhostArchiveId::<Test>::get() - 1;
-
-        // The pallet account is the owner of backfilled ghosts
-        let owner = AutoBattle::pallet_account_id();
-
-        // Before claiming, no achievements exist
-        assert!(!crate::VictoryAchievements::<Test>::get(&owner, card_ids[0]));
-        assert!(!crate::VictoryAchievements::<Test>::get(&owner, card_ids[1]));
-
-        // Anyone can call claim_victory_achievement
-        assert_ok!(AutoBattle::claim_victory_achievement(
-            RuntimeOrigin::signed(99), // some random caller
-            set_id,
-            10,
-            10,
-            1,
-            archive_id,
-        ));
-
-        // Achievements are now recorded for the board owner
-        assert!(crate::VictoryAchievements::<Test>::get(&owner, card_ids[0]));
-        assert!(crate::VictoryAchievements::<Test>::get(&owner, card_ids[1]));
-
-        // Calling again is fine (idempotent), but emits empty card_ids
-        assert_ok!(AutoBattle::claim_victory_achievement(
-            RuntimeOrigin::signed(99),
-            set_id,
-            10,
-            10,
-            1,
-            archive_id,
-        ));
-    });
-}
-
-#[test]
-fn test_claim_victory_achievement_rejects_non_victory_board() {
-    new_test_ext().execute_with(|| {
-        let (set_id, card_ids) = create_custom_set(1, &[(3, 4)], b"Non-Victory Set");
-
-        // Backfill a ghost with wins=5 (not a victory)
-        assert_ok!(AutoBattle::backfill_ghost_board(
-            RuntimeOrigin::root(),
-            set_id,
-            5,
-            5,
-            2,
-            bounded_ghost_board(vec![ghost_unit(card_ids[0])])
-        ));
-
-        let archive_id = crate::NextGhostArchiveId::<Test>::get() - 1;
-
-        // Should fail because wins < 10
-        assert_noop!(
-            AutoBattle::claim_victory_achievement(
-                RuntimeOrigin::signed(1),
-                set_id,
-                5,
-                5,
-                2,
-                archive_id,
-            ),
-            Error::<Test>::NotVictoryBoard
-        );
-    });
-}
-
-#[test]
-fn test_claim_victory_achievement_rejects_missing_archive() {
-    new_test_ext().execute_with(|| {
-        // No archive entry exists at this key
-        assert_noop!(
-            AutoBattle::claim_victory_achievement(
-                RuntimeOrigin::signed(1),
-                0,
-                1,
-                10,
-                1,
-                999,
-            ),
-            Error::<Test>::GhostArchiveNotFound
-        );
-    });
-}
-
-#[test]
-fn test_victory_board_archived_with_ten_wins() {
+fn test_end_game_grants_achievements() {
     new_test_ext().execute_with(|| {
         let player = 1;
         assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(player), 0));
 
-        // Place a unit on the board so the ghost is non-empty
+        // Place a unit on the board and set wins to 10 so game ends as victory
         ActiveGame::<Test>::mutate(player, |session| {
             let s = session.as_mut().unwrap();
             s.state.board[0] = Some(oab_core::types::BoardUnit::new(
                 oab_core::types::CardId(0),
             ));
-            // Set wins to 10 so game ends as a victory after the next battle
             s.state.wins = 10;
             s.state.lives = 100;
         });
@@ -1463,47 +1386,78 @@ fn test_victory_board_archived_with_ten_wins() {
             action.into()
         ));
 
-        // Game should be over (wins >= 10)
+        // Game should be in Completed phase, not removed
+        let session = ActiveGame::<Test>::get(player).expect("session should exist");
+        assert_eq!(session.state.phase, GamePhase::Completed);
+
+        // Pre-battle ghost was archived during submit_turn
+        let archive_id_mid = crate::NextGhostArchiveId::<Test>::get();
+        assert_eq!(archive_id_mid, archive_id_before + 1);
+
+        // end_game finalizes: archives victory ghost and grants achievements
+        assert_ok!(AutoBattle::end_game(RuntimeOrigin::signed(player)));
         assert!(ActiveGame::<Test>::get(player).is_none());
 
-        // Two ghosts should have been archived:
-        // 1. The pre-battle ghost at the original bracket (wins=10)
-        // 2. The victory ghost also at wins=10
+        // Victory ghost should have been archived by end_game
         let archive_id_after = crate::NextGhostArchiveId::<Test>::get();
-        assert_eq!(archive_id_after, archive_id_before + 2);
+        assert_eq!(archive_id_after, archive_id_mid + 1);
 
-        // The victory archive entry (second one) should have wins=10 in its key
-        // and be owned by the player
-        let victory_entry = crate::GhostArchive::<Test>::get((
-            0, // set_id (genesis set)
-            1, // round
-            10, // wins
-            100, // lives (the battle was a loss with empty board, but lives started at 100)
-            archive_id_before + 1, // second archive entry
-        ));
-        assert!(victory_entry.is_some(), "Victory ghost should be archived");
-        let entry = victory_entry.unwrap();
-        assert_eq!(entry.owner, player);
-        assert!(!entry.board.units.is_empty(), "Victory board should have units");
-        assert_eq!(entry.board.units[0].card_id, oab_core::types::CardId(0));
-
-        // Now claim the victory achievement using this archive entry
-        assert_ok!(AutoBattle::claim_victory_achievement(
-            RuntimeOrigin::signed(99), // anyone can call
-            0,
-            1,
-            10,
-            100,
-            archive_id_before + 1,
-        ));
-
-        // Verify the achievement is recorded for the board owner (player), not the caller
-        assert!(crate::VictoryAchievements::<Test>::get(player, 0));
+        // Bronze was granted during submit_turn (battle time)
+        // Silver and gold granted by end_game (wins >= 10, lives >= 3)
+        let bits = crate::VictoryAchievements::<Test>::get(player, 0);
+        assert!(bits & crate::pallet::ACHIEVEMENT_BRONZE != 0, "should have bronze");
+        assert!(bits & crate::pallet::ACHIEVEMENT_SILVER != 0, "should have silver");
+        assert!(bits & crate::pallet::ACHIEVEMENT_GOLD != 0, "should have gold");
     });
 }
 
 #[test]
-fn test_tournament_victory_board_archived_with_ten_wins() {
+fn test_end_game_no_silver_gold_on_loss() {
+    new_test_ext().execute_with(|| {
+        let player = 1;
+        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(player), 0));
+
+        // Place a unit and set lives to 1 so next loss ends game
+        ActiveGame::<Test>::mutate(player, |session| {
+            let s = session.as_mut().unwrap();
+            s.state.board[0] = Some(oab_core::types::BoardUnit::new(
+                oab_core::types::CardId(0),
+            ));
+            s.state.lives = 1;
+        });
+
+        let action = CommitTurnAction { actions: vec![] };
+        assert_ok!(AutoBattle::submit_turn(
+            RuntimeOrigin::signed(player),
+            action.into()
+        ));
+
+        assert_ok!(AutoBattle::end_game(RuntimeOrigin::signed(player)));
+
+        // Only bronze should be set (wins < 10)
+        let bits = crate::VictoryAchievements::<Test>::get(player, 0);
+        assert!(bits & crate::pallet::ACHIEVEMENT_BRONZE != 0, "should have bronze");
+        assert_eq!(bits & crate::pallet::ACHIEVEMENT_SILVER, 0, "should not have silver");
+        assert_eq!(bits & crate::pallet::ACHIEVEMENT_GOLD, 0, "should not have gold");
+    });
+}
+
+#[test]
+fn test_end_game_requires_completed_phase() {
+    new_test_ext().execute_with(|| {
+        let player = 1;
+        assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(player), 0));
+
+        // Game is in Shop phase, end_game should fail
+        assert_noop!(
+            AutoBattle::end_game(RuntimeOrigin::signed(player)),
+            Error::<Test>::WrongPhase
+        );
+    });
+}
+
+#[test]
+fn test_end_tournament_game_archives_and_records_stats() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
         create_test_tournament(1, 100, 50);
@@ -1514,7 +1468,7 @@ fn test_tournament_victory_board_archived_with_ten_wins() {
             0
         ));
 
-        // Place a unit and set wins to 10
+        // Place a unit and set wins to 10 for victory
         ActiveTournamentGame::<Test>::mutate(player, |session| {
             let s = session.as_mut().unwrap();
             s.state.board[0] = Some(oab_core::types::BoardUnit::new(
@@ -1532,23 +1486,29 @@ fn test_tournament_victory_board_archived_with_ten_wins() {
             action.into()
         ));
 
-        // Game should be over
+        // Game should be in Completed phase
+        let session = ActiveTournamentGame::<Test>::get(player).expect("session should exist");
+        assert_eq!(session.state.phase, GamePhase::Completed);
+
+        // end_tournament_game finalizes
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(player)));
         assert!(ActiveTournamentGame::<Test>::get(player).is_none());
 
-        // Victory ghost should have been archived in the regular ghost archive
-        // (tournament victories also get archived for achievement purposes)
+        // Victory ghost archived by end_tournament_game
         let archive_id_after = crate::NextGhostArchiveId::<Test>::get();
-        assert!(archive_id_after > archive_id_before, "Victory ghost should be archived");
+        assert!(archive_id_after > archive_id_before);
 
-        // Find the victory entry with wins=10
-        let victory_entry = crate::GhostArchive::<Test>::get((
-            0, // set_id
-            1, // round
-            10, // wins
-            100, // lives
-            archive_id_after - 1, // last archive entry
-        ));
-        assert!(victory_entry.is_some(), "Tournament victory ghost should be in regular archive");
-        assert_eq!(victory_entry.unwrap().owner, player);
+        // Tournament stats recorded
+        let stats = crate::TournamentPlayerStats::<Test>::get(0, player);
+        assert_eq!(stats.total_games, 1);
+        assert_eq!(stats.perfect_runs, 1);
+        let tstate = crate::TournamentStates::<Test>::get(0);
+        assert_eq!(tstate.total_perfect_runs, 1);
+
+        // Achievements granted
+        let bits = crate::VictoryAchievements::<Test>::get(player, 0);
+        assert!(bits & crate::pallet::ACHIEVEMENT_BRONZE != 0, "should have bronze");
+        assert!(bits & crate::pallet::ACHIEVEMENT_SILVER != 0, "should have silver");
+        assert!(bits & crate::pallet::ACHIEVEMENT_GOLD != 0, "should have gold");
     });
 }

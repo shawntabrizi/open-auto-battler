@@ -42,7 +42,7 @@ function StatCard({
 
 export function StatsPage() {
   const { api, selectedAccount } = useBlockchainStore();
-  const { unlockedCardIds, isLoaded, fetchAchievements } = useAchievementStore();
+  const { achievements, isLoaded, fetchAchievements } = useAchievementStore();
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -85,7 +85,7 @@ export function StatsPage() {
           setStats({
             nonce,
             freeBalance,
-            achievementCount: unlockedCardIds.size,
+            achievementCount: achievements.size,
             tournamentGames,
             tournamentWins,
             tournamentPerfectRuns,
@@ -102,7 +102,7 @@ export function StatsPage() {
     return () => {
       cancelled = true;
     };
-  }, [api, selectedAccount, unlockedCardIds]);
+  }, [api, selectedAccount, achievements]);
 
   return (
     <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">

@@ -64,6 +64,7 @@ fn test_game_view_phase_mapping() {
         (GamePhase::Battle, "battle"),
         (GamePhase::Victory, "victory"),
         (GamePhase::Defeat, "defeat"),
+        (GamePhase::Completed, "completed"),
     ];
 
     for (phase, expected) in cases {

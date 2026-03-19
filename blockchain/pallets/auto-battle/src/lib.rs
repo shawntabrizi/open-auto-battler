@@ -468,8 +468,16 @@ pub mod pallet {
         ValueQuery,
     >;
 
-    /// Victory achievements: tracks which card IDs a player has won with.
-    /// Key: (AccountId, card_id) -> true if the player has achieved a 10-win run with that card.
+    /// Achievement bitmap flags.
+    /// Each bit represents a tier: bronze (played), silver (10 wins), gold (perfect 10 wins).
+    pub const ACHIEVEMENT_BRONZE: u8 = 0b001;
+    pub const ACHIEVEMENT_SILVER: u8 = 0b010;
+    pub const ACHIEVEMENT_GOLD: u8 = 0b100;
+
+    /// Achievements per card per player, stored as a bitmap.
+    /// Bit 0 = bronze (card played on board for a battle)
+    /// Bit 1 = silver (won 10 rounds with this card)
+    /// Bit 2 = gold (perfect 10-win run, no losses, with this card)
     #[pallet::storage]
     pub type VictoryAchievements<T: Config> = StorageDoubleMap<
         _,
@@ -477,7 +485,7 @@ pub mod pallet {
         T::AccountId, // player
         Blake2_128Concat,
         u32, // card_id
-        bool,
+        u8,  // achievement bitmap
         ValueQuery,
     >;
 
@@ -548,11 +556,12 @@ pub mod pallet {
             lives: i32,
             pool_size: u32,
         },
-        /// Victory achievements have been claimed from a winning ghost board.
-        VictoryAchievementClaimed {
+        /// A game has been finalized via end_game or end_tournament_game.
+        GameEnded {
             owner: T::AccountId,
-            archive_id: u64,
-            card_ids: Vec<u32>,
+            wins: i32,
+            lives: i32,
+            round: i32,
         },
     }
 
@@ -606,10 +615,6 @@ pub mod pallet {
         TournamentGameAlreadyActive,
         /// No active tournament game found.
         NoActiveTournamentGame,
-        /// The specified ghost archive entry does not exist.
-        GhostArchiveNotFound,
-        /// The ghost board does not have 10 wins (not a victory board).
-        NotVictoryBoard,
     }
 
     /// Input for creating a card set.
@@ -760,6 +765,9 @@ pub mod pallet {
                 b"battle",
             )?;
 
+            // Grant bronze achievements for all cards on the board entering battle
+            Self::grant_bronze_achievements(&who, &battle.core_state);
+
             // Select ghost from regular pool, fallback to procedural
             let enemy_units =
                 Self::select_ghost_opponent(&battle.bracket, &battle.card_set, battle.battle_seed)
@@ -778,27 +786,9 @@ pub mod pallet {
 
             let turn = Self::execute_and_advance(&who, &mut battle, enemy_units, b"shop");
 
+            // If game is over, mark as Completed for end_game to finalize
             if turn.game_over {
-                // Archive the winning board with the final wins count
-                // so it can be used for victory achievement claims.
-                if turn.current_wins >= 10 {
-                    let victory_bracket = MatchmakingBracket {
-                        wins: turn.current_wins,
-                        ..battle.bracket
-                    };
-                    Self::store_ghost(&who, &victory_bracket, ghost);
-                }
-
-                ActiveGame::<T>::remove(&who);
-                Self::deposit_event(Event::BattleReported {
-                    owner: who,
-                    round: turn.completed_round,
-                    result: turn.result,
-                    new_seed: 0,
-                    battle_seed: battle.battle_seed,
-                    opponent_board: turn.opponent_ghost,
-                });
-                return Ok(());
+                battle.core_state.local_state.phase = GamePhase::Completed;
             }
 
             session.state = battle.core_state.local_state.into();
@@ -1118,6 +1108,9 @@ pub mod pallet {
                 b"tournament_battle",
             )?;
 
+            // Grant bronze achievements for all cards on the board entering battle
+            Self::grant_bronze_achievements(&who, &battle.core_state);
+
             // Select ghost from tournament pool, fallback to procedural
             let enemy_units = Self::select_tournament_ghost_opponent(
                 tid,
@@ -1141,45 +1134,9 @@ pub mod pallet {
             let turn =
                 Self::execute_and_advance(&who, &mut battle, enemy_units, b"tournament_shop");
 
+            // If game is over, mark as Completed for end_tournament_game to finalize
             if turn.game_over {
-                // Archive the winning board with the final wins count
-                // so it can be used for victory achievement claims.
-                if turn.current_wins >= 10 {
-                    let victory_bracket = MatchmakingBracket {
-                        wins: turn.current_wins,
-                        ..battle.bracket
-                    };
-                    Self::store_ghost(&who, &victory_bracket, ghost);
-                }
-
-                TournamentPlayerStats::<T>::mutate(tid, &who, |stats| {
-                    stats.total_games += 1;
-                    stats.total_wins += turn.current_wins as u32;
-                    if turn.current_wins >= 10 {
-                        stats.perfect_runs += 1;
-                    }
-                });
-                if turn.current_wins >= 10 {
-                    TournamentStates::<T>::mutate(tid, |state| {
-                        state.total_perfect_runs += 1;
-                    });
-                }
-
-                ActiveTournamentGame::<T>::remove(&who);
-                Self::deposit_event(Event::BattleReported {
-                    owner: who.clone(),
-                    round: turn.completed_round,
-                    result: turn.result.clone(),
-                    new_seed: 0,
-                    battle_seed: battle.battle_seed,
-                    opponent_board: turn.opponent_ghost.clone(),
-                });
-                Self::deposit_event(Event::TournamentGameCompleted {
-                    owner: who,
-                    tournament_id: tid,
-                    wins: turn.current_wins,
-                });
-                return Ok(());
+                battle.core_state.local_state.phase = GamePhase::Completed;
             }
 
             session.state = battle.core_state.local_state.into();
@@ -1401,44 +1358,84 @@ pub mod pallet {
             Ok(())
         }
 
-        /// Claim victory achievements from a ghost archive entry with 10 wins.
+        /// Finalize a completed regular game.
         ///
-        /// Anyone can call this extrinsic. It looks up the ghost archive entry,
-        /// verifies it has exactly 10 wins, and records each card ID on the board
-        /// as a victory achievement for the board's owner.
-        #[pallet::call_index(14)]
-        #[pallet::weight(T::WeightInfo::claim_victory_achievement())]
-        pub fn claim_victory_achievement(
-            origin: OriginFor<T>,
-            set_id: u32,
-            round: i32,
-            wins: i32,
-            lives: i32,
-            archive_id: u64,
-        ) -> DispatchResult {
-            ensure_signed(origin)?;
+        /// Must be called after `submit_turn` ends the game (phase == Completed).
+        /// Archives the final board as a victory ghost (if 10+ wins), grants
+        /// silver/gold achievements, and removes the game session.
+        #[pallet::call_index(15)]
+        #[pallet::weight(T::WeightInfo::end_game())]
+        pub fn end_game(origin: OriginFor<T>) -> DispatchResult {
+            let who = ensure_signed(origin)?;
 
-            // Verify the board has 10 wins
-            ensure!(wins >= 10, Error::<T>::NotVictoryBoard);
+            let session = ActiveGame::<T>::get(&who).ok_or(Error::<T>::NoActiveGame)?;
+            ensure!(
+                session.state.phase == GamePhase::Completed,
+                Error::<T>::WrongPhase
+            );
 
-            // Look up the ghost archive entry
-            let entry = GhostArchive::<T>::get((set_id, round, wins, lives, archive_id))
-                .ok_or(Error::<T>::GhostArchiveNotFound)?;
+            Self::finalize_game(&who, session.set_id, &session.state);
 
-            // Record each card ID as a victory achievement for the owner
-            let mut card_ids = Vec::new();
-            for unit in entry.board.units.iter() {
-                let card_id = unit.card_id.0;
-                if !VictoryAchievements::<T>::get(&entry.owner, card_id) {
-                    VictoryAchievements::<T>::insert(&entry.owner, card_id, true);
-                    card_ids.push(card_id);
+            ActiveGame::<T>::remove(&who);
+
+            Self::deposit_event(Event::GameEnded {
+                owner: who,
+                wins: session.state.wins,
+                lives: session.state.lives,
+                round: session.state.round,
+            });
+
+            Ok(())
+        }
+
+        /// Finalize a completed tournament game.
+        ///
+        /// Must be called after `submit_tournament_turn` ends the game (phase == Completed).
+        /// Archives the final board, grants achievements, records tournament stats,
+        /// and removes the tournament game session.
+        #[pallet::call_index(16)]
+        #[pallet::weight(T::WeightInfo::end_tournament_game())]
+        pub fn end_tournament_game(origin: OriginFor<T>) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let session =
+                ActiveTournamentGame::<T>::get(&who).ok_or(Error::<T>::NoActiveTournamentGame)?;
+            ensure!(
+                session.state.phase == GamePhase::Completed,
+                Error::<T>::WrongPhase
+            );
+
+            let tid = session.tournament_id;
+            let wins = session.state.wins;
+
+            Self::finalize_game(&who, session.set_id, &session.state);
+
+            // Update tournament statistics
+            TournamentPlayerStats::<T>::mutate(tid, &who, |stats| {
+                stats.total_games += 1;
+                stats.total_wins += wins as u32;
+                if wins >= 10 {
+                    stats.perfect_runs += 1;
                 }
+            });
+            if wins >= 10 {
+                TournamentStates::<T>::mutate(tid, |state| {
+                    state.total_perfect_runs += 1;
+                });
             }
 
-            Self::deposit_event(Event::VictoryAchievementClaimed {
-                owner: entry.owner,
-                archive_id,
-                card_ids,
+            ActiveTournamentGame::<T>::remove(&who);
+
+            Self::deposit_event(Event::GameEnded {
+                owner: who.clone(),
+                wins: session.state.wins,
+                lives: session.state.lives,
+                round: session.state.round,
+            });
+            Self::deposit_event(Event::TournamentGameCompleted {
+                owner: who,
+                tournament_id: tid,
+                wins,
             });
 
             Ok(())

@@ -46,7 +46,7 @@ function TrophyIcon({ tier, earned }: { tier: TrophyTier; earned: boolean }) {
 
 export function AchievementsPage() {
   const { engine, init, loadSetPreviews, setPreviewCards, setMetas } = useGameStore();
-  const { unlockedCardIds, isLoaded, fetchAchievements } = useAchievementStore();
+  const { isLoaded, fetchAchievements, hasBronze, hasSilver, hasGold } = useAchievementStore();
   const { api, selectedAccount } = useBlockchainStore();
   const [selectedCard, setSelectedCard] = useState<CardView | null>(null);
 
@@ -82,7 +82,9 @@ export function AchievementsPage() {
   const sorted = allCards.sort((a, b) => a.name.localeCompare(b.name));
 
   const totalCards = sorted.length;
-  const silverCount = sorted.filter((c) => unlockedCardIds.has(c.id)).length;
+  const bronzeCount = sorted.filter((c) => hasBronze(c.id)).length;
+  const silverCount = sorted.filter((c) => hasSilver(c.id)).length;
+  const goldCount = sorted.filter((c) => hasGold(c.id)).length;
 
   return (
     <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
@@ -105,7 +107,7 @@ export function AchievementsPage() {
               <div className="mb-4 lg:mb-6 flex items-center justify-center gap-4 lg:gap-8 p-3 lg:p-4 bg-warm-900/60 border border-warm-700/40 rounded-xl">
                 <div className="flex items-center gap-2">
                   <TrophyIcon tier="bronze" earned={true} />
-                  <span className="text-sm lg:text-base font-stat font-bold">0 / {totalCards}</span>
+                  <span className="text-sm lg:text-base font-stat font-bold">{bronzeCount} / {totalCards}</span>
                   <span className="text-[10px] lg:text-xs text-warm-500">Played</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -117,7 +119,7 @@ export function AchievementsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <TrophyIcon tier="gold" earned={true} />
-                  <span className="text-sm lg:text-base font-stat font-bold">0 / {totalCards}</span>
+                  <span className="text-sm lg:text-base font-stat font-bold">{goldCount} / {totalCards}</span>
                   <span className="text-[10px] lg:text-xs text-warm-500">Perfect</span>
                 </div>
               </div>
@@ -125,7 +127,9 @@ export function AchievementsPage() {
               {/* Card grid */}
               <div className="flex flex-wrap gap-2 lg:gap-3 justify-center">
                 {sorted.map((card) => {
-                  const hasSilver = unlockedCardIds.has(card.id);
+                  const cardBronze = hasBronze(card.id);
+                  const cardSilver = hasSilver(card.id);
+                  const cardGold = hasGold(card.id);
                   const art = getCardArtSm(card.id);
                   const isSelected = selectedCard?.id === card.id;
 
@@ -164,9 +168,9 @@ export function AchievementsPage() {
                       </button>
 
                       <div className="flex items-center gap-0.5 lg:gap-1 mt-1">
-                        <TrophyIcon tier="bronze" earned={false} />
-                        <TrophyIcon tier="silver" earned={hasSilver} />
-                        <TrophyIcon tier="gold" earned={false} />
+                        <TrophyIcon tier="bronze" earned={cardBronze} />
+                        <TrophyIcon tier="silver" earned={cardSilver} />
+                        <TrophyIcon tier="gold" earned={cardGold} />
                       </div>
                     </div>
                   );

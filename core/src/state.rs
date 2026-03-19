@@ -39,6 +39,7 @@ pub enum GamePhase {
     Battle,
     Victory,
     Defeat,
+    Completed,
 }
 
 /// An entry in a card set, mapping a card to its rarity.
