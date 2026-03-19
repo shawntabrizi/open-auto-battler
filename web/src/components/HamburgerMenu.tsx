@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useBlockchainStore } from '../store/blockchainStore';
+import { useGameStore } from '../store/gameStore';
 import { GearIcon, CloseIcon } from './Icons';
 
 /** Three-line hamburger icon */
@@ -48,6 +49,40 @@ function NetworkIcon({ className = 'w-5 h-5' }: { className?: string }) {
   );
 }
 
+/** Lightbulb icon for tutorial */
+function TutorialIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z" />
+    </svg>
+  );
+}
+
+/** Home / return icon */
+function HomeIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+    </svg>
+  );
+}
+
+/** Warning / abandon icon */
+function AbandonIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+    </svg>
+  );
+}
+
+/** Routes that are considered "in-game" (shop/battle phase) */
+const GAME_ROUTES = ['/local', '/blockchain', '/tournament', '/multiplayer/game'];
+
+function isGameRoute(pathname: string) {
+  return GAME_ROUTES.some((r) => pathname === r || pathname.startsWith(r + '/'));
+}
+
 const MENU_ITEMS = [
   { to: '/settings', icon: GearIcon, label: 'Settings' },
   { to: '/account', icon: PersonIcon, label: 'Account' },
@@ -57,14 +92,21 @@ const MENU_ITEMS = [
 
 /**
  * Global hamburger menu button + slide-out panel.
- * Accessible from every page, inspired by SAP's "corner sandwich menu".
+ * Shows different items depending on context:
+ * - Standard menu: Settings, Account, Network, Shop, Log Out
+ * - In-game menu: Settings, Tutorial, Return to Menu, Abandon
  */
 export function HamburgerMenu() {
   const [open, setOpen] = useState(false);
+  const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
-  const { isConnected, logout } = useBlockchainStore();
+  const location = useLocation();
+  const { isConnected, logout, abandonGame } = useBlockchainStore();
+  const { newRun } = useGameStore();
+
+  const inGame = isGameRoute(location.pathname);
 
   // Close on Escape
   useEffect(() => {
@@ -76,17 +118,34 @@ export function HamburgerMenu() {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  // Focus trap: return focus to button on close
+  // Reset abandon confirm when panel closes
   useEffect(() => {
-    if (!open) {
-      buttonRef.current?.focus();
-    }
+    if (!open) setShowAbandonConfirm(false);
   }, [open]);
 
   const handleLogout = () => {
     logout();
     setOpen(false);
     navigate('/');
+  };
+
+  const handleReturnToMenu = () => {
+    setOpen(false);
+    navigate('/');
+  };
+
+  const handleAbandon = async () => {
+    try {
+      if (location.pathname === '/blockchain' || location.pathname === '/tournament') {
+        await abandonGame();
+      } else {
+        newRun();
+      }
+      setOpen(false);
+      navigate('/');
+    } catch (err) {
+      console.error('Abandon failed:', err);
+    }
   };
 
   return (
@@ -118,7 +177,7 @@ export function HamburgerMenu() {
             {/* Panel header */}
             <div className="flex items-center justify-between p-4 border-b border-warm-800">
               <span className="font-heading text-sm lg:text-base tracking-widest uppercase text-warm-300">
-                Menu
+                {inGame ? 'Game Menu' : 'Menu'}
               </span>
               <button
                 onClick={() => setOpen(false)}
@@ -129,34 +188,115 @@ export function HamburgerMenu() {
               </button>
             </div>
 
-            {/* Menu items */}
-            <nav className="flex-1 py-2">
-              {MENU_ITEMS.map(({ to, icon: Icon, label }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
-                >
-                  <Icon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
-                  <span className="font-heading text-sm lg:text-base tracking-wide">{label}</span>
-                </Link>
-              ))}
-            </nav>
+            {inGame ? (
+              <>
+                {/* In-game menu items */}
+                <nav className="flex-1 py-2">
+                  <Link
+                    to="/settings"
+                    state={{ returnTo: location.pathname }}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
+                  >
+                    <GearIcon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
+                    <span className="font-heading text-sm lg:text-base tracking-wide">
+                      Settings
+                    </span>
+                  </Link>
 
-            {/* Logout at bottom */}
-            <div className="border-t border-warm-800 p-2">
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 w-full px-5 py-3.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors group"
-              >
-                <LogoutIcon className="w-5 h-5 text-red-500/70 group-hover:text-red-400 transition-colors" />
-                <span className="font-heading text-sm lg:text-base tracking-wide">Log Out</span>
-                {isConnected && (
-                  <span className="ml-auto text-[10px] text-warm-600">connected</span>
-                )}
-              </button>
-            </div>
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      // TODO: implement tutorial/game tips overlay
+                    }}
+                    className="flex items-center gap-3 w-full px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
+                  >
+                    <TutorialIcon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
+                    <span className="font-heading text-sm lg:text-base tracking-wide">
+                      Tutorial
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={handleReturnToMenu}
+                    className="flex items-center gap-3 w-full px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
+                  >
+                    <HomeIcon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
+                    <span className="font-heading text-sm lg:text-base tracking-wide">
+                      Return to Menu
+                    </span>
+                  </button>
+                </nav>
+
+                {/* Abandon at bottom */}
+                <div className="border-t border-warm-800 p-2">
+                  {showAbandonConfirm ? (
+                    <div className="p-3 text-center">
+                      <p className="text-warm-300 text-sm mb-3">
+                        Abandon this run? All progress will be lost.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setShowAbandonConfirm(false)}
+                          className="flex-1 px-3 py-2 text-sm font-bold border border-warm-700 text-warm-300 hover:border-warm-500 rounded-lg transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => void handleAbandon()}
+                          className="flex-1 px-3 py-2 text-sm font-bold bg-red-900/50 hover:bg-red-900/70 border border-red-700 text-red-300 rounded-lg transition-colors"
+                        >
+                          Abandon
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowAbandonConfirm(true)}
+                      className="flex items-center gap-3 w-full px-5 py-3.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors group"
+                    >
+                      <AbandonIcon className="w-5 h-5 text-red-500/70 group-hover:text-red-400 transition-colors" />
+                      <span className="font-heading text-sm lg:text-base tracking-wide">
+                        Abandon
+                      </span>
+                    </button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Standard menu items */}
+                <nav className="flex-1 py-2">
+                  {MENU_ITEMS.map(({ to, icon: Icon, label }) => (
+                    <Link
+                      key={to}
+                      to={to}
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
+                    >
+                      <Icon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
+                      <span className="font-heading text-sm lg:text-base tracking-wide">
+                        {label}
+                      </span>
+                    </Link>
+                  ))}
+                </nav>
+
+                {/* Logout at bottom */}
+                <div className="border-t border-warm-800 p-2">
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 w-full px-5 py-3.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors group"
+                  >
+                    <LogoutIcon className="w-5 h-5 text-red-500/70 group-hover:text-red-400 transition-colors" />
+                    <span className="font-heading text-sm lg:text-base tracking-wide">Log Out</span>
+                    {isConnected && (
+                      <span className="ml-auto text-[10px] text-warm-600">connected</span>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
