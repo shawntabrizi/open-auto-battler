@@ -1,5 +1,6 @@
 import { toast } from 'react-hot-toast';
 import { useTxStore } from '../store/txStore';
+import { useBlockchainStore } from '../store/blockchainStore';
 
 const TX_TIMEOUT_MS = 30_000; // 30 seconds
 
@@ -18,19 +19,8 @@ export function submitTx(
 ): Promise<any> {
   console.log(`[tx] Submitting: ${label}`);
 
-  // Determine if the signer is an extension wallet (needs "approve in wallet" prompt)
-  // Local accounts have source === 'local' or 'dev'; extension accounts don't.
-  let isExtension = false;
-  try {
-    // Avoid importing blockchainStore directly to prevent circular deps.
-    // Instead, check if signer has a known extension marker.
-    // PAPI injected signers don't have a reliable flag, so we check the store lazily.
-    const { useBlockchainStore } = require('../store/blockchainStore');
-    const account = useBlockchainStore.getState().selectedAccount;
-    isExtension = account?.source !== 'local' && account?.source !== 'dev';
-  } catch {
-    // If store isn't available, default to false
-  }
+  const account = useBlockchainStore.getState().selectedAccount;
+  const isExtension = account?.source !== 'local' && account?.source !== 'dev';
 
   useTxStore.setState({ status: 'signing', label, isExtensionSigner: isExtension });
 

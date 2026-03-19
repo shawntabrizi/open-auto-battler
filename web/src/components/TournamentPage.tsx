@@ -497,8 +497,8 @@ export const TournamentPage: React.FC = () => {
 
 const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }) => {
   const { api, blockNumber, availableSets } = useBlockchainStore();
+  const isSubmittingTx = useIsSubmitting();
   const [selectedSetId, setSelectedSetId] = useState(0);
-  const [loading, setLoading] = useState(false);
 
   // Alice is always available — derived directly from dev seed
   const alice = getDevAccounts()[0];
@@ -512,7 +512,6 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
 
   const handleCreate = async () => {
     if (!api || !alice || !blockNumber) return;
-    setLoading(true);
     try {
       const startBlock = blockNumber + 1;
       const endBlock = blockNumber + 1000;
@@ -537,8 +536,6 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
       onCreated();
     } catch (err) {
       console.error('Create test tournament failed:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -571,10 +568,10 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
         </div>
         <button
           onClick={handleCreate}
-          disabled={loading || !alice}
+          disabled={isSubmittingTx || !alice}
           className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded text-xs transition-all disabled:opacity-50"
         >
-          {loading ? 'CREATING...' : 'CREATE TOURNAMENT'}
+          CREATE TOURNAMENT
         </button>
       </div>
     </div>

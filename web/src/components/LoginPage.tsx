@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useBlockchainStore } from '../store/blockchainStore';
+import { useIsSubmitting } from '../store/txStore';
 import { useSettingsStore, PRESET_ENDPOINTS } from '../store/settingsStore';
 import { ParticleBackground } from './ParticleBackground';
 import { TopBar } from './TopBar';
@@ -61,8 +62,7 @@ export function LoginPage() {
 
   const [balance, setBalance] = useState<bigint | null>(null);
   const [checkingBalance, setCheckingBalance] = useState(false);
-  const [creatingAccount, setCreatingAccount] = useState(false);
-  const [fundingAccount, setFundingAccount] = useState(false);
+  const isSubmitting = useIsSubmitting();
   const [showNetworkPicker, setShowNetworkPicker] = useState(false);
   const [selected, setSelected] = useState<EndpointOption>(getOptionFromEndpoint(endpoint));
   const [customUrl, setCustomUrl] = useState(
@@ -103,27 +103,18 @@ export function LoginPage() {
   };
 
   const handleCreateAccount = async () => {
-    setCreatingAccount(true);
-    try {
-      const name = `Account ${accounts.length + 1}`;
-      await createLocalAccount(name);
-      // Balance will re-fetch via the useEffect when selectedAccount changes
-    } finally {
-      setCreatingAccount(false);
-    }
+    const name = `Account ${accounts.length + 1}`;
+    await createLocalAccount(name);
   };
 
   const handleFundAccount = async () => {
     if (!selectedAccount) return;
-    setFundingAccount(true);
     try {
       await fundSelectedAccount();
       toast.success('Account funded');
       await fetchBalance();
     } catch {
       toast.error('Failed to fund account');
-    } finally {
-      setFundingAccount(false);
     }
   };
 
@@ -328,10 +319,10 @@ export function LoginPage() {
                   ) : (
                     <button
                       onClick={handleFundAccount}
-                      disabled={fundingAccount}
+                      disabled={isSubmitting}
                       className="w-full p-4 rounded-xl font-bold text-base bg-gradient-to-r from-accent-violet to-purple-600 hover:from-purple-500 hover:to-purple-500 text-white active:scale-[0.98] transition-all disabled:opacity-50"
                     >
-                      {fundingAccount ? 'Funding...' : 'Fund Account'}
+                      Fund Account
                     </button>
                   )}
                 </>
@@ -347,10 +338,10 @@ export function LoginPage() {
               {/* Create account */}
               <button
                 onClick={handleCreateAccount}
-                disabled={creatingAccount}
+                disabled={isSubmitting}
                 className="w-full p-3 rounded-xl font-bold text-sm border border-warm-700 bg-warm-900/30 hover:border-warm-600 hover:bg-warm-800/50 text-warm-300 transition-all disabled:opacity-50"
               >
-                {creatingAccount ? 'Creating...' : 'Create Game Account'}
+                Create Game Account
               </button>
             </div>
           )}

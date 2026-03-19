@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { useIsSubmitting } from '../store/txStore';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
 import { TopBar } from './TopBar';
@@ -55,6 +56,7 @@ function CardFan({ cards }: { cards: CardView[] }) {
 
 function AllSetsView({ onBack, onSelect }: { onBack: () => void; onSelect: (id: number) => void }) {
   const { setMetas, setPreviewCards, previewSet } = useGameStore();
+  const isSubmitting = useIsSubmitting();
   const sorted = [...setMetas].sort((a, b) => a.id - b.id);
 
   return (
@@ -125,7 +127,8 @@ function AllSetsView({ onBack, onSelect }: { onBack: () => void; onSelect: (id: 
                   </button>
                   <button
                     onClick={() => onSelect(meta.id)}
-                    className="flex-1 text-center text-[0.65rem] lg:text-xs py-1 bg-gold/20 text-gold hover:bg-gold/30 rounded transition-colors"
+                    disabled={isSubmitting}
+                    className="flex-1 text-center text-[0.65rem] lg:text-xs py-1 bg-gold/20 text-gold hover:bg-gold/30 rounded transition-colors disabled:opacity-50"
                   >
                     Play
                   </button>
@@ -150,6 +153,7 @@ export function SetSelectionScreen({
   backLabel?: string;
 } = {}) {
   const { setMetas, startGame, previewSet, loadSetPreviews, setPreviewCards } = useGameStore();
+  const isSubmitting = useIsSubmitting();
   const [showAllSets, setShowAllSets] = useState(false);
   const handleStart = onStartGame ?? startGame;
 
@@ -190,7 +194,8 @@ export function SetSelectionScreen({
                     </button>
                     <button
                       onClick={() => handleStart(featuredMeta.id)}
-                      className="px-6 lg:px-8 py-1.5 lg:py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-warm-950 font-bold rounded-lg text-xs lg:text-sm transition-all transform hover:scale-105 shadow-lg shadow-yellow-500/20"
+                      disabled={isSubmitting}
+                      className="px-6 lg:px-8 py-1.5 lg:py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-warm-950 font-bold rounded-lg text-xs lg:text-sm transition-all transform hover:scale-105 shadow-lg shadow-yellow-500/20 disabled:opacity-50"
                     >
                       Play
                     </button>
