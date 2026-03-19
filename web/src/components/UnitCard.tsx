@@ -10,10 +10,12 @@ import { CARD_SIZES, CARD_TEXT, type CardSizeVariant } from '../constants/cardSi
 import { useAchievementStore } from '../store/achievementStore';
 
 /** Derive a visual rarity tier from play_cost + ability count. */
-export function getRarityTier(card: CardView | BoardUnitView): 'common' | 'uncommon' | 'rare' | 'legendary' {
+export function getRarityTier(
+  card: CardView | BoardUnitView
+): 'common' | 'uncommon' | 'rare' | 'legendary' {
   const cost = card.play_cost;
-  const abilityCount = ((card as any).shop_abilities?.length ?? 0) +
-    ((card as any).battle_abilities?.length ?? 0);
+  const abilityCount =
+    ((card as any).shop_abilities?.length ?? 0) + ((card as any).battle_abilities?.length ?? 0);
   if (cost >= 5 || (cost >= 4 && abilityCount >= 2)) return 'legendary';
   if (cost >= 4 || (cost >= 3 && abilityCount >= 2)) return 'rare';
   if (cost >= 3 || abilityCount >= 2) return 'uncommon';
@@ -104,104 +106,107 @@ export function UnitCard({
         ${enableTilt && !isSelected ? 'card-tilt' : ''}
       `}
       style={
-        enableWobble && !isSelected
-          ? { animationDelay: `${(card.id * 200) % 3500}ms` }
-          : undefined
+        enableWobble && !isSelected ? { animationDelay: `${(card.id * 200) % 3500}ms` } : undefined
       }
     >
-        {showArt ? (
-          <>
-            {/* Full-bleed card art — brightness boost for vibrancy */}
-            <img
-              src={artSrc!}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
-              style={{ filter: 'brightness(1.15) saturate(1.1)' }}
-              loading="lazy"
-              onError={() => setArtFailed(true)}
-            />
-            {/* Gradient overlay — lighter than before for brighter art */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
-          </>
-        ) : (
-          <>
-            {/* Emoji fallback when no card art available */}
-            <div className="absolute inset-0 flex items-center justify-center text-3xl lg:text-4xl bg-card-bg">
-              {getCardEmoji(card.id)}
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          </>
-        )}
-
-        {/* Card name - overlaid at top, above all overlays */}
-        <div
-          className={`relative z-[11] ${text.title} font-bold text-center truncate text-white pt-0.5 lg:pt-0.5 px-0.5`}
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
-        >
-          {card.name}
-        </div>
-
-        {/* Ability badge */}
-        {(() => {
-          const abils = [...((card as any).shop_abilities ?? []), ...((card as any).battle_abilities ?? [])];
-          return abils.length > 0 ? (
-            <div className={`absolute bottom-5 right-0.5 lg:bottom-7 lg:right-1 z-[3] bg-yellow-500 rounded-full ${text.abilityBadge} flex items-center justify-center text-[0.5rem] lg:text-[0.55rem] font-bold border border-yellow-300 shadow`}>
-              {abils.length > 1 ? (
-                abils.length
-              ) : (
-                <AbilityIcon className="w-2 h-2 lg:w-2.5 lg:h-2.5" />
-              )}
-            </div>
-          ) : null;
-        })()}
-
-        {/* Stats row - pinned to bottom */}
-        <div
-          className="card-stats-row absolute bottom-0 left-0 right-0 z-[2] flex justify-between items-center px-1 lg:px-2 pb-0.5 lg:pb-1"
-          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
-        >
-          <div className={`flex items-center ${text.stat} font-stat`}>
-            <SwordIcon className={`${text.statIcon} text-red-400 mr-0.5`} />
-            <span className="font-bold text-white">{card.attack}</span>
-          </div>
-          <div className={`flex items-center ${text.stat} font-stat`}>
-            <HeartIcon className={`${text.statIcon} text-green-400`} />
-            <span className="font-bold text-white ml-0.5">{card.health}</span>
-          </div>
-        </div>
-
-        {/* Cost badge (top left) — blue mana bolt */}
-        {showCost && (
-          <div
-            className={`card-cost-badge absolute -top-0.5 -left-0.5 lg:-top-1 lg:-left-1 z-10 ${text.badge} rounded-lg flex items-center justify-center font-stat font-bold ${
-              can_afford ? 'cost-badge' : 'cost-badge-dim'
-            }`}
-          >
-            {card.play_cost}
-          </div>
-        )}
-
-        {/* Burn value badge (top right) — gold flame */}
-        {showBurn && (
-          <div
-            className={`card-burn-badge absolute -top-0.5 -right-0.5 lg:-top-1 lg:-right-1 z-10 ${text.badge} burn-badge rounded-lg flex items-center justify-center font-stat font-bold`}
-          >
-            {card.burn_value}
-          </div>
-        )}
-
-        {/* Holographic shimmer overlay */}
-        {isHolographic && <div className="holo-shimmer" />}
-
-        {/* Card style frame overlay - behind stats/badges but above card art */}
-        {cardStyle && (
+      {showArt ? (
+        <>
+          {/* Full-bleed card art — brightness boost for vibrancy */}
           <img
-            src={cardStyle.imageUrl}
+            src={artSrc!}
             alt=""
-            className="absolute inset-0 w-full h-full pointer-events-none z-[1] rounded-lg"
-            style={{ objectFit: 'fill' }}
+            className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
+            style={{ filter: 'brightness(1.15) saturate(1.1)' }}
+            loading="lazy"
+            onError={() => setArtFailed(true)}
           />
-        )}
+          {/* Gradient overlay — lighter than before for brighter art */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
+        </>
+      ) : (
+        <>
+          {/* Emoji fallback when no card art available */}
+          <div className="absolute inset-0 flex items-center justify-center text-3xl lg:text-4xl bg-card-bg">
+            {getCardEmoji(card.id)}
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        </>
+      )}
+
+      {/* Card name - overlaid at top, above all overlays */}
+      <div
+        className={`relative z-[11] ${text.title} font-bold text-center truncate text-white pt-0.5 lg:pt-0.5 px-0.5`}
+        style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+      >
+        {card.name}
+      </div>
+
+      {/* Ability badge */}
+      {(() => {
+        const abils = [
+          ...((card as any).shop_abilities ?? []),
+          ...((card as any).battle_abilities ?? []),
+        ];
+        return abils.length > 0 ? (
+          <div
+            className={`absolute bottom-5 right-0.5 lg:bottom-7 lg:right-1 z-[3] bg-yellow-500 rounded-full ${text.abilityBadge} flex items-center justify-center text-[0.5rem] lg:text-[0.55rem] font-bold border border-yellow-300 shadow`}
+          >
+            {abils.length > 1 ? (
+              abils.length
+            ) : (
+              <AbilityIcon className="w-2 h-2 lg:w-2.5 lg:h-2.5" />
+            )}
+          </div>
+        ) : null;
+      })()}
+
+      {/* Stats row - pinned to bottom */}
+      <div
+        className="card-stats-row absolute bottom-0 left-0 right-0 z-[2] flex justify-between items-center px-1 lg:px-2 pb-0.5 lg:pb-1"
+        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
+      >
+        <div className={`flex items-center ${text.stat} font-stat`}>
+          <SwordIcon className={`${text.statIcon} text-red-400 mr-0.5`} />
+          <span className="font-bold text-white">{card.attack}</span>
+        </div>
+        <div className={`flex items-center ${text.stat} font-stat`}>
+          <HeartIcon className={`${text.statIcon} text-green-400`} />
+          <span className="font-bold text-white ml-0.5">{card.health}</span>
+        </div>
+      </div>
+
+      {/* Cost badge (top left) — blue mana bolt */}
+      {showCost && (
+        <div
+          className={`card-cost-badge absolute -top-0.5 -left-0.5 lg:-top-1 lg:-left-1 z-10 ${text.badge} rounded-lg flex items-center justify-center font-stat font-bold ${
+            can_afford ? 'cost-badge' : 'cost-badge-dim'
+          }`}
+        >
+          {card.play_cost}
+        </div>
+      )}
+
+      {/* Burn value badge (top right) — gold flame */}
+      {showBurn && (
+        <div
+          className={`card-burn-badge absolute -top-0.5 -right-0.5 lg:-top-1 lg:-right-1 z-10 ${text.badge} burn-badge rounded-lg flex items-center justify-center font-stat font-bold`}
+        >
+          {card.burn_value}
+        </div>
+      )}
+
+      {/* Holographic shimmer overlay */}
+      {isHolographic && <div className="holo-shimmer" />}
+
+      {/* Card style frame overlay - behind stats/badges but above card art */}
+      {cardStyle && (
+        <img
+          src={cardStyle.imageUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full pointer-events-none z-[1] rounded-lg"
+          style={{ objectFit: 'fill' }}
+        />
+      )}
     </div>
   );
 

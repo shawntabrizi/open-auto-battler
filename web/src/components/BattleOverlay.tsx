@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useSandboxStore } from '../store/sandboxStore';
 import { BattleArena } from './BattleArena';
-import { TopRightClose } from './TopRightClose';
+import { CloseIcon } from './Icons';
 import type { BattleAbility, BattleOutput, CombatEvent } from '../types';
 import { formatAbilitySummary } from '../utils/abilityText';
 
@@ -258,7 +258,15 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
       )}
 
       {/* Top bar — title + close */}
-      {isSandbox && <TopRightClose onClick={onContinue} label="Close (Esc)" />}
+      {isSandbox && (
+        <button
+          onClick={onContinue}
+          aria-label="Close (Esc)"
+          className="absolute top-3 right-3 lg:top-4 lg:right-4 z-10 p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors"
+        >
+          <CloseIcon className="w-4 h-4 lg:w-5 lg:h-5" />
+        </button>
+      )}
       <div className="relative z-10 flex items-center justify-center px-4 lg:px-8 py-1.5 lg:py-4">
         <h2 className="text-sm lg:text-xl font-heading font-bold text-warm-300/80 tracking-widest uppercase">
           {title}

@@ -167,11 +167,13 @@ export function CustomizeCategoryPage() {
 
           {/* Desktop: grid */}
           <div className="hidden lg:block flex-1 overflow-y-auto p-6">
-            <div className={`grid gap-5 max-w-4xl ${
-              cat.shape === 'card' || cat.shape === 'circle'
-                ? 'grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
-                : 'grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'
-            }`}>
+            <div
+              className={`grid gap-5 max-w-4xl ${
+                cat.shape === 'card' || cat.shape === 'circle'
+                  ? 'grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+                  : 'grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'
+              }`}
+            >
               <NftTile
                 isSelected={selectedNft === null || selectedNft === undefined}
                 onClick={handleDeselect}

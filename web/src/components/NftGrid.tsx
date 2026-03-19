@@ -10,7 +10,14 @@ interface NftGridProps {
   emptyAction?: React.ReactNode;
 }
 
-export function NftGrid({ items, selectedItemId, onSelect, onDeselect, emptyMessage, emptyAction }: NftGridProps) {
+export function NftGrid({
+  items,
+  selectedItemId,
+  onSelect,
+  onDeselect,
+  emptyMessage,
+  emptyAction,
+}: NftGridProps) {
   if (items.length === 0) {
     return (
       <div className="text-center py-2 lg:py-6 text-warm-500 text-[10px] lg:text-sm">
@@ -47,13 +54,11 @@ export function NftGrid({ items, selectedItemId, onSelect, onDeselect, emptyMess
       }`}
     >
       <div className="w-12 h-12 lg:w-full lg:aspect-square rounded overflow-hidden mb-0.5 lg:mb-2 bg-warm-700/50">
-        <IpfsImage
-          src={nft.imageUrl}
-          alt={nft.name}
-          className="w-full h-full object-cover"
-        />
+        <IpfsImage src={nft.imageUrl} alt={nft.name} className="w-full h-full object-cover" />
       </div>
-      <div className="text-[8px] lg:text-xs font-bold truncate max-w-[3rem] lg:max-w-none">{nft.name}</div>
+      <div className="text-[8px] lg:text-xs font-bold truncate max-w-[3rem] lg:max-w-none">
+        {nft.name}
+      </div>
       <div className="text-[7px] lg:text-[10px] text-warm-500 hidden lg:block">#{nft.itemId}</div>
     </button>
   ));

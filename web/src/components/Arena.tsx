@@ -212,7 +212,9 @@ export function Arena() {
                             card={unit}
                             showCost={false}
                             showBurn={true}
-                            isSelected={selection?.type === 'board' && selection.index === arrayIndex}
+                            isSelected={
+                              selection?.type === 'board' && selection.index === arrayIndex
+                            }
                             onClick={() => handleBoardSlotClick(arrayIndex)}
                             enableWobble={false}
                           />
@@ -250,7 +252,6 @@ export function Arena() {
           })}
         </div>
       </div>
-
     </div>
   );
 }

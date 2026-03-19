@@ -109,7 +109,11 @@ export function GameShell({
         className={`game-layout h-screen flex flex-col bg-board-bg ${className}`}
       >
         {/* Zone 1: Top HUD */}
-        <GameTopBar hideEndTurn={hideEndTurn} customAction={customAction} className={contentMargin} />
+        <GameTopBar
+          hideEndTurn={hideEndTurn}
+          customAction={customAction}
+          className={contentMargin}
+        />
 
         {/* Zone 2: Arena (Board) with left panel */}
         <div

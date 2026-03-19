@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { UnitCard } from './UnitCard';
 import { CardDetailPanel } from './CardDetailPanel';
-import { TopRightClose } from './TopRightClose';
+import { CloseIcon } from './Icons';
 import type { CardView } from '../types';
 
 export function SetPreviewOverlay() {
@@ -22,7 +22,13 @@ export function SetPreviewOverlay() {
 
       {/* Card grid - offset to the right of the sidebar */}
       <div className="fixed left-[11rem] lg:left-80 right-0 top-0 bottom-0 bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden">
-        <TopRightClose onClick={closePreview} label="Close Preview" />
+        <button
+          onClick={closePreview}
+          aria-label="Close Preview"
+          className="absolute top-3 right-3 lg:top-4 lg:right-4 z-10 p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors"
+        >
+          <CloseIcon className="w-4 h-4 lg:w-5 lg:h-5" />
+        </button>
         <div className="flex items-center mb-3 lg:mb-8 border-b border-warm-700 pb-2 lg:pb-4 pr-10 lg:pr-12">
           <div className="flex flex-col">
             <h2 className="text-lg lg:text-3xl font-bold text-white flex items-center gap-2 lg:gap-3">

@@ -76,10 +76,7 @@ export function DroppableBoardSlot({ id, children }: DroppableBoardSlotProps) {
   });
 
   return (
-    <div
-      ref={setNodeRef}
-      className={`transition-all duration-150 ${isOver ? 'scale-105' : ''}`}
-    >
+    <div ref={setNodeRef} className={`transition-all duration-150 ${isOver ? 'scale-105' : ''}`}>
       {typeof children === 'function' ? children({ isOver }) : children}
     </div>
   );
@@ -106,11 +103,7 @@ export function DroppableEmptySlot({
 
   return (
     <div ref={setNodeRef}>
-      <EmptySlot
-        onClick={onClick}
-        isTarget={isTarget || isOver}
-        label={label}
-      />
+      <EmptySlot onClick={onClick} isTarget={isTarget || isOver} label={label} />
     </div>
   );
 }
@@ -132,9 +125,5 @@ export function DroppableBurnZone({ children, onHoverChange }: DroppableBurnZone
     onHoverChange(isOver);
   }, [isOver, onHoverChange]);
 
-  return (
-    <div ref={setNodeRef}>
-      {children}
-    </div>
-  );
+  return <div ref={setNodeRef}>{children}</div>;
 }

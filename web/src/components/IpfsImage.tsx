@@ -52,16 +52,17 @@ export function IpfsImage({ src, alt, className = '', fallback }: IpfsImageProps
 
   return (
     <>
-      {status === 'loading' && (
-        <div className={`animate-pulse bg-warm-700 rounded ${className}`} />
-      )}
-      {status === 'error' && (
-        fallback ? <>{fallback}</> : (
-          <div className={`bg-warm-800 rounded flex items-center justify-center text-warm-500 text-xs ${className}`}>
+      {status === 'loading' && <div className={`animate-pulse bg-warm-700 rounded ${className}`} />}
+      {status === 'error' &&
+        (fallback ? (
+          <>{fallback}</>
+        ) : (
+          <div
+            className={`bg-warm-800 rounded flex items-center justify-center text-warm-500 text-xs ${className}`}
+          >
             Failed to load
           </div>
-        )
-      )}
+        ))}
       <img
         ref={imgRef}
         src={src}
