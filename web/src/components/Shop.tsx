@@ -107,7 +107,7 @@ export function Shop() {
             {/* Hand label - desktop only */}
             <div className="hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 items-center gap-2">
               <span className="text-sm text-warm-400">Hand</span>
-              <span className="text-xs text-warm-500">({view.bag_count} in deck)</span>
+              <span className="text-xs text-warm-500">({view.bag_count} in bag)</span>
             </div>
             <div className="hand-row flex gap-2 lg:gap-4 lg:mt-4">
               {view.hand.map((card, i) =>

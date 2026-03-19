@@ -171,7 +171,7 @@ export function SetSelectionScreen({
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="text-center w-full max-w-md lg:max-w-lg">
           <h2 className="text-xl lg:text-3xl font-heading font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-0.5 lg:mb-1">
-            Choose Your Deck
+            Choose Your Set
           </h2>
           <p className="text-warm-500 text-xs lg:text-sm mb-4 lg:mb-6">
             Select a card set and begin your run.

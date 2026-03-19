@@ -302,7 +302,7 @@ interface BlockchainStore {
   refreshGameState: (force?: boolean) => Promise<void>;
   submitTurnOnChain: () => Promise<void>;
   abandonGame: () => Promise<void>;
-  fetchDeck: () => any[];
+  fetchBag: () => any[];
   fetchCards: () => Promise<void>;
   fetchSets: () => Promise<void>;
   hydrateGameEngineFromChainData: () => void;
@@ -752,22 +752,22 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
   },
 
   /**
-   * Fetch the full deck/bag from the WASM engine (Cold Path - on demand only)
+   * Fetch the full bag from the WASM engine (Cold Path - on demand only)
    * Use sparingly as this includes all card data.
    */
-  fetchDeck: () => {
+  fetchBag: () => {
     const { engine } = useGameStore.getState();
     if (!engine) {
-      console.warn('WASM engine not ready, cannot fetch deck.');
+      console.warn('WASM engine not ready, cannot fetch bag.');
       return [];
     }
 
     try {
       const bag = engine.get_bag();
-      console.log('Fetched full deck IDs from WASM:', bag.length, 'cards');
+      console.log('Fetched full bag IDs from WASM:', bag.length, 'cards');
       return bag;
     } catch (e) {
-      console.error('Failed to fetch deck:', e);
+      console.error('Failed to fetch bag:', e);
       return [];
     }
   },

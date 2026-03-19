@@ -123,7 +123,7 @@ export function GameShell({
           <ManaBar />
         </div>
 
-        {/* Zone 4: Command Deck (Shop) */}
+        {/* Zone 4: Hand (Shop) */}
         <div
           className={`game-shop flex-shrink-0 mt-auto ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
         >
