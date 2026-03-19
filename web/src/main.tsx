@@ -19,6 +19,7 @@ import { BlockchainPage } from './components/BlockchainPage.tsx';
 import { CreateSetPage } from './components/CreateSetPage.tsx';
 import { CreateCardPage } from './components/CreateCardPage.tsx';
 import { CustomizePage } from './components/CustomizePage.tsx';
+import { CustomizeCategoryPage } from './components/CustomizeCategoryPage.tsx';
 import { MintNftPage } from './components/MintNftPage.tsx';
 import { GhostBrowserPage } from './components/GhostBrowserPage.tsx';
 import { TournamentPage } from './components/TournamentPage.tsx';
@@ -59,6 +60,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/account" element={<AccountPage />} />
           <Route path="/marketplace" element={<ShopPage />} />
           <Route path="/customize" element={<CustomizePage />} />
+          <Route path="/customize/:category" element={<CustomizeCategoryPage />} />
           <Route path="/set/:setId" element={<SetPage />} />
           <Route path="/dev" element={<DevPage />} />
           <Route path="/dev/game-over" element={<GameOverPreview />} />
