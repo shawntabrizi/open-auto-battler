@@ -60,7 +60,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/blockchain/create-set" element={<CreateSetPage />} />
           <Route path="/blockchain/customize" element={<CustomizePage />} />
           <Route path="/blockchain/mint-nft" element={<MintNftPage />} />
-          <Route path="/blockchain/ghosts" element={<GhostBrowserPage />} />
+          <Route path="/history/ghosts" element={<GhostBrowserPage />} />
           <Route
             path="/embed"
             element={

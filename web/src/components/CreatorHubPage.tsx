@@ -28,7 +28,7 @@ const TOOLS = [
     icon: '🖼️',
   },
   {
-    to: '/blockchain/ghosts',
+    to: '/history/ghosts',
     title: 'Ghost Browser',
     description: 'Inspect active ghost pools by set, bracket, and owner',
     icon: '👻',
