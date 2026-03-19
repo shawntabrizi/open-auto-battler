@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { useSandboxStore } from '../store/sandboxStore';
+import { TopLeftBack } from './TopLeftButton';
 import { UnitCard, EmptySlot } from './UnitCard';
 import { CardDetailPanel } from './CardDetailPanel';
 import { BattleOverlay } from './BattleOverlay';
@@ -76,15 +76,9 @@ function SandboxHeader() {
 
   return (
     <div className="flex-shrink-0 bg-warm-900 border-b border-warm-700 px-3 lg:px-4 py-2 lg:py-2.5 ml-44 lg:ml-80">
-      {/* Top row: back, title, clear, seed — pr for hamburger clearance */}
+      <TopLeftBack to="/cards" label="Cards" />
+      {/* Top row: title, clear, seed — pr for hamburger clearance */}
       <div className="flex items-center gap-3 mb-2 pr-10 lg:pr-12">
-        <Link
-          to="/cards"
-          className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm shrink-0"
-        >
-          <span>&larr;</span>
-          <span>Cards</span>
-        </Link>
         <h1 className="text-sm lg:text-lg font-bold text-gold truncate">Sandbox</h1>
         <button
           onClick={clearAllBoards}

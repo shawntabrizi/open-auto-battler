@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { CardDetailPanel } from './CardDetailPanel';
 import { UnitCard } from './UnitCard';
-import { BackLink } from './PageHeader';
+import { BackLink, BackLinkSpacer } from './PageHeader';
 import { type CardView } from '../types';
 import { blockchainCardToCardView } from '../utils/blockchainCards';
 
@@ -61,6 +61,7 @@ export const CreateSetPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-warm-900 flex flex-col p-4 text-white">
         <BackLink to="/blockchain/creator" label="Creator Hub" />
+        <BackLinkSpacer />
         <div className="flex-1 flex flex-col items-center justify-center">
           <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase">
             Set Creator
@@ -86,6 +87,7 @@ export const CreateSetPage: React.FC = () => {
           <div className="mb-4 lg:mb-8">
             <div className="flex items-center justify-between mb-1">
               <BackLink to="/blockchain/creator" label="Creator Hub" />
+              <BackLinkSpacer />
               <Link
                 to="/blockchain/create-card"
                 className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center gap-1.5 text-xs lg:text-sm"

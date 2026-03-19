@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BackLink } from './PageHeader';
+import { BackLink, BackLinkSpacer } from './PageHeader';
 
 const TOOLS = [
   {
@@ -39,6 +39,7 @@ export const CreatorHubPage: React.FC = () => {
   return (
     <div className="min-h-screen min-h-svh bg-warm-950 text-warm-200 flex flex-col p-4 lg:p-8">
       <BackLink to="/blockchain" label="Dashboard" />
+      <BackLinkSpacer />
 
       <div className="flex-1 flex flex-col items-center justify-center">
         <h1 className="text-2xl lg:text-4xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase mb-1 lg:mb-2">

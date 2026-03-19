@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import { uploadToPinata, ipfsUrl } from '../utils/ipfs';
 import { submitTx } from '../utils/tx';
 import { IpfsImage } from './IpfsImage';
-import { BackLink } from './PageHeader';
+import { BackLink, BackLinkSpacer } from './PageHeader';
 import { Binary } from 'polkadot-api';
 import type { CustomizationType } from '../store/customizationStore';
 
@@ -175,6 +175,7 @@ export const MintNftPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-warm-900 flex flex-col p-4 text-white">
         <BackLink to="/blockchain/creator" label="Creator Hub" />
+        <BackLinkSpacer />
         <div className="flex-1 flex flex-col items-center justify-center">
           <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase">
             Mint NFT
@@ -196,6 +197,7 @@ export const MintNftPage: React.FC = () => {
         {/* Header */}
         <div className="mb-4 lg:mb-8">
           <BackLink to="/blockchain/creator" label="Creator Hub" />
+          <BackLinkSpacer />
           <h1 className="text-xl lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase mt-1">
             Mint Customization NFT
           </h1>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
-import { BackLink } from './PageHeader';
+import { BackLink, BackLinkSpacer } from './PageHeader';
 import type { CardView } from '../types';
 
 /** Fan positions for up to 5 cards */
@@ -156,6 +156,7 @@ export function SetSelectionScreen() {
   return (
     <div className="h-full flex flex-col px-4 py-4 overflow-y-auto">
       <BackLink to="/" label="Menu" />
+      <BackLinkSpacer />
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="text-center w-full max-w-md lg:max-w-lg">
           <h2 className="text-xl lg:text-3xl font-heading font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-0.5 lg:mb-1">

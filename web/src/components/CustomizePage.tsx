@@ -7,7 +7,7 @@ import {
   type NftItem,
 } from '../store/customizationStore';
 import { CustomizationPreview } from './CustomizationPreview';
-import { BackLink } from './PageHeader';
+import { BackLink, BackLinkSpacer } from './PageHeader';
 
 type TileShape = 'landscape' | 'wide' | 'card' | 'circle';
 
@@ -224,6 +224,7 @@ export const CustomizePage: React.FC = () => {
             state={backState}
             label={isBlockchainRoute ? 'Creator Hub' : 'Menu'}
           />
+          <BackLinkSpacer />
           {isBlockchainRoute && (
             <Link
               to="/blockchain/creator"

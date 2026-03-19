@@ -384,7 +384,6 @@ export function GhostBrowserPage() {
             backTo="/blockchain/creator"
             backLabel="Creator Hub"
             title="Ghost Browser"
-            variant="toolbar"
             right={
               <button
                 onClick={() => setRefreshNonce((value) => value + 1)}

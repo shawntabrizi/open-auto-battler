@@ -5,7 +5,7 @@ import { GameOverScreen } from './GameOverScreen';
 import { GameShell } from './GameShell';
 import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { RotatePrompt } from './RotatePrompt';
-import { BackLink } from './PageHeader';
+import { BackLink, BackLinkSpacer } from './PageHeader';
 import { useInitGuard } from '../hooks';
 import { Link } from 'react-router-dom';
 
@@ -116,6 +116,7 @@ export const BlockchainPage: React.FC = () => {
     return (
       <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col p-4 text-white">
         <BackLink to="/" label="Menu" />
+        <BackLinkSpacer />
         <div className="flex-1 flex flex-col items-center justify-center">
           <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600">
             BLOCKCHAIN MODE
@@ -148,6 +149,7 @@ export const BlockchainPage: React.FC = () => {
       <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans selection:bg-yellow-500/30 flex flex-col p-4">
         <div className="flex items-center justify-between">
           <BackLink to="/" label="Menu" />
+          <BackLinkSpacer />
           <Link
             to="/blockchain/creator"
             className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm"

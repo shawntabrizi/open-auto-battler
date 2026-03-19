@@ -1,4 +1,7 @@
-import { Link } from 'react-router-dom';
+import { TopLeftBack } from './TopLeftButton';
+
+/** Height spacer to clear the fixed top-left button */
+const BACK_BUTTON_SPACER = 'pt-10 lg:pt-12';
 
 interface PageHeaderProps {
   /** Route to navigate back to */
@@ -15,16 +18,12 @@ interface PageHeaderProps {
   right?: React.ReactNode;
   /** Title gradient colors - defaults to yellow-to-orange */
   titleGradient?: string;
-  /** Use toolbar style (horizontal bar with border-bottom) vs stacked style */
-  variant?: 'stacked' | 'toolbar';
 }
 
 /**
- * Consistent page header with back navigation.
- *
- * Two variants:
- * - `stacked` (default): Back link above title, for centered content pages
- * - `toolbar`: Horizontal bar, for tool/editor pages
+ * Page header with a fixed top-left back button and page title.
+ * The back button is positioned in the top-left corner (SAP-style).
+ * Includes top padding to clear the fixed button.
  */
 export function PageHeader({
   backTo,
@@ -34,60 +33,30 @@ export function PageHeader({
   subtitle,
   right,
   titleGradient,
-  variant = 'stacked',
 }: PageHeaderProps) {
-  const backElement = (
-    <Link
-      to={backTo}
-      state={backState}
-      className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm shrink-0"
-    >
-      <span>&larr;</span>
-      <span>{backLabel}</span>
-    </Link>
-  );
-
-  if (variant === 'toolbar') {
-    return (
-      <div className="flex-shrink-0 bg-warm-900 border-b border-warm-700 px-3 lg:px-4 py-2 lg:py-2.5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          {backElement}
-          <h1
-            className={`text-sm lg:text-lg font-bold truncate ${
-              titleGradient
-                ? `text-transparent bg-clip-text bg-gradient-to-r ${titleGradient}`
-                : 'text-gold'
-            }`}
-          >
-            {title}
-          </h1>
-        </div>
-        {right && <div className="flex items-center gap-2 lg:gap-3 shrink-0">{right}</div>}
-      </div>
-    );
-  }
-
-  // Stacked variant
   return (
-    <div className="mb-4 lg:mb-8">
-      {backElement}
-      <h1
-        className={`text-xl lg:text-3xl font-black mt-1 ${
-          titleGradient
-            ? `text-transparent bg-clip-text bg-gradient-to-r ${titleGradient}`
-            : 'text-white'
-        }`}
-      >
-        {title}
-      </h1>
-      {subtitle && <p className="text-warm-500 text-xs lg:text-sm mt-0.5">{subtitle}</p>}
-      {right && <div className="mt-2 flex items-center gap-3">{right}</div>}
-    </div>
+    <>
+      <TopLeftBack to={backTo} state={backState} label={backLabel} />
+      <div className={`${BACK_BUTTON_SPACER} mb-4 lg:mb-8`}>
+        <h1
+          className={`text-xl lg:text-3xl font-black ${
+            titleGradient
+              ? `text-transparent bg-clip-text bg-gradient-to-r ${titleGradient}`
+              : 'text-white'
+          }`}
+        >
+          {title}
+        </h1>
+        {subtitle && <p className="text-warm-500 text-xs lg:text-sm mt-0.5">{subtitle}</p>}
+        {right && <div className="mt-2 flex items-center gap-3">{right}</div>}
+      </div>
+    </>
   );
 }
 
 /**
- * Standalone back link for use in custom layouts.
+ * Standalone back button for use in custom layouts.
+ * Renders as a fixed top-left button (SAP-style).
  */
 export function BackLink({
   to,
@@ -98,14 +67,13 @@ export function BackLink({
   state?: unknown;
   label?: string;
 }) {
-  return (
-    <Link
-      to={to}
-      state={state}
-      className="inline-flex items-center gap-1 text-warm-400 hover:text-warm-200 transition-colors text-xs lg:text-sm"
-    >
-      <span>&larr;</span>
-      <span>{label}</span>
-    </Link>
-  );
+  return <TopLeftBack to={to} state={state} label={label} />;
+}
+
+/**
+ * Spacer div to push content below the fixed back button.
+ * Use this after BackLink in custom layouts.
+ */
+export function BackLinkSpacer() {
+  return <div className={BACK_BUTTON_SPACER} />;
 }

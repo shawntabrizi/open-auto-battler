@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMultiplayerStore } from '../store/multiplayerStore';
 import { RotatePrompt } from './RotatePrompt';
-import { BackLink } from './PageHeader';
+import { BackLink, BackLinkSpacer } from './PageHeader';
 import { QRCodeSVG } from 'qrcode.react';
 
 export function MultiplayerPage() {
@@ -99,6 +99,7 @@ export function MultiplayerPage() {
         {/* Header */}
         <div className="w-full mb-4 lg:mb-8">
           <BackLink to="/" label="Menu" />
+          <BackLinkSpacer />
           <h1 className="font-title text-2xl lg:text-4xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 mt-1 text-center">
             P2P MULTIPLAYER
           </h1>
