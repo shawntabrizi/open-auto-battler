@@ -787,13 +787,13 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
           </button>
         </div>
 
-        {/* Speed controls — desktop only */}
-        <div className="hidden lg:flex items-center bg-warm-900/60 rounded-lg border border-warm-700/50 p-0.5 lg:p-1 gap-0.5">
+        {/* Speed controls */}
+        <div className="flex items-center bg-warm-900/60 rounded-lg border border-warm-700/50 p-0.5 lg:p-1 gap-0.5">
           {speedOptions.map((option) => (
             <button
               key={option.value}
               onClick={() => selectSpeed(option.value)}
-              className={`px-2 lg:px-2.5 py-1 lg:py-1.5 text-xs lg:text-sm font-medium rounded-md transition-colors ${
+              className={`px-1.5 lg:px-2.5 py-0.5 lg:py-1.5 text-[10px] lg:text-sm font-medium rounded-md transition-colors ${
                 playMode === 'auto' && playbackSpeed === option.value
                   ? 'bg-accent-amber text-warm-950 shadow-sm'
                   : 'text-warm-300 hover:bg-warm-700 hover:text-warm-100'
