@@ -10,6 +10,7 @@ import { CardsPage } from './components/CardsPage.tsx';
 import { HistoryPage } from './components/HistoryPage.tsx';
 import { AchievementsPage } from './components/AchievementsPage.tsx';
 import { StatsPage } from './components/StatsPage.tsx';
+import { BattleHistoryPage } from './components/BattleHistoryPage.tsx';
 import { LocalGamePage } from './components/LocalGamePage.tsx';
 import { SandboxPage } from './components/SandboxPage.tsx';
 import { MultiplayerPage } from './components/MultiplayerPage.tsx';
@@ -19,7 +20,6 @@ import { CreateSetPage } from './components/CreateSetPage.tsx';
 import { CreateCardPage } from './components/CreateCardPage.tsx';
 import { CustomizePage } from './components/CustomizePage.tsx';
 import { MintNftPage } from './components/MintNftPage.tsx';
-import { CreatorHubPage } from './components/CreatorHubPage.tsx';
 import { GhostBrowserPage } from './components/GhostBrowserPage.tsx';
 import { TournamentPage } from './components/TournamentPage.tsx';
 import { SettingsPage } from './components/SettingsPage.tsx';
@@ -46,6 +46,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/history/achievements" element={<AchievementsPage />} />
           <Route path="/history/stats" element={<StatsPage />} />
+          <Route path="/history/battles" element={<BattleHistoryPage />} />
           <Route path="/local" element={<LocalGamePage />} />
           <Route path="/sandbox" element={<SandboxPage />} />
           <Route path="/multiplayer" element={<MultiplayerPage />} />
@@ -55,14 +56,12 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/network" element={<NetworkPage />} />
           <Route path="/account" element={<AccountPage />} />
-          <Route path="/shop" element={<ShopPage />} />
+          <Route path="/marketplace" element={<ShopPage />} />
           <Route path="/customize" element={<CustomizePage />} />
           <Route path="/dev" element={<DevPage />} />
           <Route path="/dev/game-over" element={<GameOverPreview />} />
-          <Route path="/blockchain/creator" element={<CreatorHubPage />} />
           <Route path="/blockchain/create-card" element={<CreateCardPage />} />
           <Route path="/blockchain/create-set" element={<CreateSetPage />} />
-          <Route path="/blockchain/customize" element={<CustomizePage />} />
           <Route path="/blockchain/mint-nft" element={<MintNftPage />} />
           <Route path="/history/ghosts" element={<GhostBrowserPage />} />
           <Route

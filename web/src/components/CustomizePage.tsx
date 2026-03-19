@@ -225,14 +225,6 @@ export const CustomizePage: React.FC = () => {
             label={isBlockchainRoute ? 'Creator Hub' : 'Menu'}
           />
           <BackLinkSpacer />
-          {isBlockchainRoute && (
-            <Link
-              to="/blockchain/creator"
-              className="text-warm-400 hover:text-warm-200 border border-warm-800 px-2 py-1 lg:px-3 lg:py-1.5 rounded lg:rounded-lg text-[9px] lg:text-sm transition-colors"
-            >
-              Creator Hub
-            </Link>
-          )}
         </div>
         <h1 className="text-base lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase mt-1">
           Customize

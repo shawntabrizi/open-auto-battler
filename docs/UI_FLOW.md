@@ -9,30 +9,57 @@ Last updated: 2026-03-19
 ```mermaid
 flowchart TD
   Login["Login Page (gate)"]
+  Login --> Main["Main Menu /"]
 
-  Login --> Main["Main Menu"]
+  Main --> Play["/play"]
+  Main --> Cards["/cards"]
+  Main --> Customize["/customize"]
+  Main --> History["/history"]
 
-  Main --> Play["Play"]
-  Main --> Cards["Cards"]
-  Main --> Customize["Customize"]
-  Main --> History["History"]
+  Play --> OnlineArena["/blockchain"]
+  Play --> Tournament["/tournament"]
+  Play --> Offline["/local"]
+  Play --> P2P["/multiplayer"]
 
-  Play --> OnlineArena["Online Arena"]
-  Play --> Offline["Offline"]
-  Play --> P2P["Peer-to-Peer"]
-  Play --> Tournament["Tournament (if live)"]
+  OnlineArena --> SetSelect["Set Selection"]
+  OnlineArena --> GameShell["Game (shop/battle)"]
+  Offline --> SetSelect
+  Offline --> GameShell
+  Tournament --> GameShell
+
+  P2P --> MultiGame["/multiplayer/game"]
+
+  Cards --> Sandbox["/sandbox"]
+  Cards --> CreateCard["/blockchain/create-card"]
+  Cards --> CreateSet["/blockchain/create-set"]
+  Cards -.-> SetPreview["Set Preview Overlay"]
+
+  History --> Achievements["/history/achievements"]
+  History --> Stats["/history/stats"]
+  History --> BattleHistory["/history/battles"]
+  History --> Ghosts["/history/ghosts"]
 
   Hamburger["Hamburger Menu (every page)"]
-  Hamburger --> Settings["Settings"]
-  Hamburger --> Account["Account"]
-  Hamburger --> Network["Network"]
-  Hamburger --> Shop["Shop"]
-  Hamburger --> Logout["Log Out"]
+  Hamburger --> Settings["/settings"]
+  Hamburger --> Account["/account"]
+  Hamburger --> Network["/network"]
+  Hamburger --> Marketplace["/marketplace"]
+  Hamburger --> Logout["Log Out → Login"]
 
-  Settings --> SettingsCustomize["Customize"]
+  InGameHamburger["In-Game Hamburger"]
+  InGameHamburger --> InGameSettings["/settings (returnTo game)"]
+  InGameHamburger --> Tutorial["Tutorial (TODO)"]
+  InGameHamburger --> ReturnMenu["Return to Menu → /"]
+  InGameHamburger --> Abandon["Abandon → /"]
+
+  Settings --> SettingsCustomize["/customize"]
+
+  Cards --> MintNft["/blockchain/mint-nft"]
 ```
 
-## Login Page
+## Global Elements
+
+### Login Page
 
 **Route:** None (rendered by `AuthGate` when `isLoggedIn` is false)
 
@@ -56,73 +83,7 @@ flowchart TD
 - "or" divider
 - **Create Game Account** button — generates a new local mnemonic account, funds it, and auto-selects it
 
-## Main Menu
-
-**Route:** `/`
-
-**Component:** `HomePage`
-
-**Purpose:** Central hub. Four main buttons lead to the primary sections of the game.
-
-**Contents:**
-
-| Label | Route | Color | Description |
-|---|---|---|---|
-| Play | `/play` | Amber/gold | Online Arena, Offline, Peer-to-Peer |
-| Cards | `/cards` | Violet | Browse sets & collection |
-| Customize | `/customize` | Emerald | Card art, backgrounds & avatars |
-| History | `/history` | Blue | Achievements, replays & stats |
-
-- Version number (`v0.1.0`) at the bottom
-- Particle background animation
-- Rotate prompt overlay (mobile portrait)
-
-## Play
-
-**Route:** `/play`
-
-**Back:** Menu (`/`)
-
-**Component:** `PlayPage`
-
-**Purpose:** Choose a play mode.
-
-**Contents:**
-
-| Label | Route | Size | Notes |
-|---|---|---|---|
-| Online Arena | `/blockchain` | Large (primary) | Compete on the blockchain. Shows connection status dot + block number when connected. Routes to `/network` if not connected. |
-| Tournament | `/tournament` | Medium | Only shown when an active tournament exists. Shows entry fee and prize pool. |
-| Offline | `/local` | Half-width | Single player, no transactions. Routes to `/network` if not connected. |
-| Peer-to-Peer | `/multiplayer` | Half-width | Direct connect P2P multiplayer. |
-
-Online Arena is intentionally the largest button — this is the primary game mode.
-
-## Cards
-
-**Route:** `/cards`
-
-**Back:** Menu (`/`)
-
-**Status:** Placeholder page. Will contain: browse card sets, view collection, create custom packs.
-
-## Customize
-
-**Route:** `/customize`
-
-**Back:** Menu (`/`)
-
-**Purpose:** Visual customization — card art, backgrounds, avatars, card borders.
-
-## History
-
-**Route:** `/history`
-
-**Back:** Menu (`/`)
-
-**Status:** Placeholder page. Will contain: achievements, replays, stats, hall of fame.
-
-## Hamburger Menu (Global)
+### Hamburger Menu (Global)
 
 **Position:** Fixed top-right corner, present on every page after login.
 
@@ -130,65 +91,325 @@ Online Arena is intentionally the largest button — this is the primary game mo
 
 **Close:** Click backdrop, click X button, or press Escape.
 
-**Menu items:**
+**Standard menu** (non-game routes):
 
 | Label | Icon | Route | Notes |
 |---|---|---|---|
 | Settings | Gear | `/settings` | Game settings hub |
 | Account | Person | `/account` | Account info, balances, name editing |
 | Network | Globe | `/network` | Blockchain endpoint picker |
-| Shop | Cart | `/shop` | Placeholder — coming soon |
+| Marketplace | Cart | `/marketplace` | Placeholder — coming soon |
 | Log Out | Exit arrow | — | Clears login session, returns to login page |
 
-The Log Out button sits at the bottom of the panel, separated by a border. It shows "connected" text when the blockchain connection is active.
+**In-game menu** (on `/local`, `/blockchain`, `/tournament`, `/multiplayer/game`):
 
-## Settings
+| Label | Icon | Route | Notes |
+|---|---|---|---|
+| Settings | Gear | `/settings` | Passes `returnTo` state so back returns to game |
+| Tutorial | Lightbulb | — | Placeholder (TODO) |
+| Return to Menu | Home | `/` | Navigates to main menu |
+| Abandon | Warning | — | Confirmation dialog, then abandons game and navigates to `/` |
 
-**Route:** `/settings`
+### Top-Left Back Button
+
+**Position:** Fixed top-left corner, mirrors the hamburger.
+
+**Usage:** Present on all sub-pages via `PageHeader` or `BackLink`. Routes back to the parent page.
+
+### Top-Right Close Button
+
+**Position:** Fixed top-right, just left of the hamburger.
+
+**Usage:** Used in overlays (Set Preview, Draw Pool, Battle in sandbox) to close the overlay without conflicting with the hamburger.
+
+## Main Menu
+
+**Route:** `/`
+
+**Component:** `HomePage`
+
+**Back:** None (root page)
+
+**Contents:**
+
+| Label | Route | Size | Color |
+|---|---|---|---|
+| Play | `/play` | Large (primary) | Amber/gold |
+| Cards | `/cards` | 1/3 width | Violet |
+| Customize | `/customize` | 1/3 width | Emerald |
+| History | `/history` | 1/3 width | Blue |
+
+- Version number at the bottom
+- Particle background animation
+
+## Play
+
+**Route:** `/play`
+
+**Back:** Menu (`/`)
+
+| Label | Route | Size | Notes |
+|---|---|---|---|
+| Online Arena | `/blockchain` | Large (primary) | Shows connection status. Routes to `/network` if not connected. |
+| Tournament | `/tournament` | Medium | Only shown when active tournament exists. Shows entry fee and prize pool. |
+| Offline | `/local` | Half-width | Single player. Routes to `/network` if not connected. |
+| Peer-to-Peer | `/multiplayer` | Half-width | Direct connect P2P. |
+
+## Cards
+
+**Route:** `/cards`
 
 **Back:** Menu (`/`)
 
 **Contents:**
-- Link to **Customize** (`/customize`) — card art, backgrounds, avatars
+- **Sandbox CTA** — "See All Cards in the Sandbox" banner linking to `/sandbox`
+- **Set grid** — all card sets with mini 5-card art preview, name, card count. Click opens Set Preview Overlay.
+- **Create Card** (`/blockchain/create-card`) and **Create Set** (`/blockchain/create-set`) buttons at bottom
 
-## Account
+## Customize
+
+**Route:** `/customize`
+
+**Back:** Menu (`/`)
+
+**Contents:**
+- **Mobile:** Two-column layout — live preview (2/3) + category buttons (1/3) as compact `[icon] Title` rows
+- **Desktop:** Live preview (landscape 16:9) centered on top, 2x2 category grid below
+- **Categories:** Background, Hand, Card Border, Avatar, Card Art
+- Clicking a category enters the item selection sub-view
+
+## History
+
+**Route:** `/history`
+
+**Back:** Menu (`/`)
+
+| Label | Route | Icon | Description |
+|---|---|---|---|
+| Achievements | `/history/achievements` | 🏆 | Track your progress |
+| Stats | `/history/stats` | 📊 | Matches, wins & more |
+| Battle History | `/history/battles` | ⚔️ | Review past battles (placeholder) |
+| Ghost Opponents | `/history/ghosts` | 👻 | Saved battle ghosts |
+
+## Achievements
+
+**Route:** `/history/achievements`
+
+**Back:** History (`/history`)
+
+**Contents:**
+- Card Detail Panel on the left (read-only). Click a card to inspect.
+- **Stats bar** at top — Bronze (Played) / Silver (Wins) / Gold (Perfect) counts with colored medal icons
+- **Card grid** — all cards sorted alphabetically, using standard compact card dimensions with full-bleed art. Each card shows name + 3 trophy icons below:
+  - **Bronze** — played the card on any board (not tracked on-chain yet)
+  - **Silver** — won a 10-win run with this card on board (from `VictoryAchievements` on-chain)
+  - **Gold** — perfect run with this card (not tracked on-chain yet)
+
+## Stats
+
+**Route:** `/history/stats`
+
+**Back:** History (`/history`)
+
+**Contents:** Grid of stat cards, each with icon, value, and label:
+
+| Icon | Label | Source |
+|---|---|---|
+| 🎮 | Transactions | `System.Account` nonce |
+| 💰 | Balance | `System.Account` free balance |
+| ⭐ | Victory Achievements | `VictoryAchievements` count |
+| 🏟️ | Tournament Games | `TournamentPlayerStats.total_games` (aggregated) |
+| 🏆 | Tournament Wins | `TournamentPlayerStats.total_wins` (aggregated) |
+| 💎 | Perfect Runs | `TournamentPlayerStats.perfect_runs` (aggregated) |
+
+## Battle History
+
+**Route:** `/history/battles`
+
+**Back:** History (`/history`)
+
+**Status:** Placeholder. Will contain replays and match outcomes.
+
+## Ghost Browser
+
+**Route:** `/history/ghosts`
+
+**Back:** History (`/history`)
+
+**Contents:** Browse ghost opponent pools by set, bracket, and owner.
+
+## Game Pages
+
+### Online Arena
+
+**Route:** `/blockchain`
+
+**Back:** Play (`/play`)
+
+**Flow:**
+1. If not connected → connection error screen with retry
+2. If no active game → **Set Selection Screen** (shared with Offline). "Play" calls `startGame` on-chain.
+3. If active game → **Game Shell** with "Commit" button (submits turn on-chain)
+4. Victory/defeat → Game Over Screen
+
+### Offline
+
+**Route:** `/local`
+
+**Back:** Menu (`/`)
+
+**Flow:**
+1. If not connected → blockchain required screen
+2. If engine ready, no game → **Set Selection Screen**
+3. If game active → **Game Shell** with "Battle" button (local opponent matching)
+4. Victory/defeat → Game Over Screen
+
+### Tournament
+
+**Route:** `/tournament`
+
+**Back:** Menu (`/`)
+
+**Flow:**
+1. If not connected → connection screen
+2. Tournament details → entry form
+3. Active game → **Game Shell** with tournament mode
+4. Game over → tournament results
+
+### Peer-to-Peer
+
+**Route:** `/multiplayer` → `/multiplayer/game`
+
+**Back:** Menu (`/`)
+
+**Contents:** P2P connection setup, then direct multiplayer game.
+
+### Sandbox
+
+**Route:** `/sandbox`
+
+**Back:** Cards (`/cards`)
+
+**Contents:**
+- Header: Back (Cards), Sandbox title, Clear button, Seed input, Battle button
+- Card Detail Panel on left
+- Battle arena (player/enemy boards)
+- Search bar
+- Card gallery (all cards, click to place on board)
+
+### Set Selection Screen
+
+**Shared component** used by `/local` and `/blockchain`
+
+**Contents:**
+- Featured set with card fan preview, Preview and Play buttons
+- "See All Sets" link → grid view of all sets with Preview/Play per set
+
+## Hamburger Menu Pages
+
+### Settings
+
+**Route:** `/settings`
+
+**Back:** Menu (`/`) or Game (via `returnTo` state)
+
+**Contents:**
+- Link to **Customize** (`/customize`)
+- **Debug** section: Show Raw JSON toggle
+
+### Account
 
 **Route:** `/account`
 
 **Back:** Menu (`/`)
 
-**Purpose:** View and manage the currently logged-in account.
-
 **Contents:**
-- **Name** — display name with inline edit (Save/Cancel, Enter/Escape). Persists to `localStorage` for local accounts.
+- **Name** — display with inline edit (Save/Cancel, Enter/Escape). Persists to `localStorage` for local accounts.
 - **Address** — full SS58 address, source type (dev / local / injected)
-- **On-chain info** — 2x2 grid:
-  - Nonce
-  - Free balance (green)
-  - Reserved balance (yellow)
-  - Frozen balance (blue)
+- **On-chain info** — 2x2 grid: Nonce, Free (green), Reserved (yellow), Frozen (blue)
 - Refresh button
 
-## Network
+### Network
 
 **Route:** `/network`
 
 **Back:** Menu (`/`)
 
-**Purpose:** Configure and connect to a blockchain node.
-
 **Contents:**
-- **WebSocket Endpoint** selector — radio-style buttons:
-  - Localhost (`ws://127.0.0.1:9944`)
-  - Hosted Node (`wss://oab-rpc.shawntabrizi.com`)
-  - Custom (freeform URL input)
+- **WebSocket Endpoint** selector: Localhost / Hosted Node / Custom
 - **Connect / Reconnect** button
-- **Connection status** — dot indicator, connected/disconnected label, block number, current endpoint URL, error message if any
+- **Connection status** — dot, label, block number, endpoint URL, error
 
-## Shop
+### Marketplace
 
-**Route:** `/shop`
+**Route:** `/marketplace`
 
 **Back:** Menu (`/`)
 
-**Status:** Placeholder page. Shows a cart icon, "Coming Soon" heading, and description text.
+**Status:** Placeholder. "Coming Soon" — will contain card packs, cosmetics, and more.
+
+## Creator Pages
+
+### Create Card
+
+**Route:** `/blockchain/create-card`
+
+**Back:** Cards (`/cards`)
+
+**Contents:** Card designer with stats, abilities, preview, mint on-chain.
+
+### Create Set
+
+**Route:** `/blockchain/create-set`
+
+**Back:** Cards (`/cards`)
+
+**Contents:** Card set builder, select cards and create set on-chain.
+
+### Mint NFT
+
+**Route:** `/blockchain/mint-nft`
+
+**Back:** Cards (`/cards`)
+
+**Contents:** NFT minting for cosmetic items.
+
+## Overlays
+
+These are full-screen or partial overlays rendered on top of the current page:
+
+| Overlay | Trigger | Close | Notes |
+|---|---|---|---|
+| Set Preview | Click set in Cards page or Set Selection | TopRightClose button | Shows all cards in a set with Card Detail Panel |
+| Draw Pool (Bag) | Click bag icon in HUD or press B | TopRightClose button | Shows remaining cards in bag during game |
+| Battle | End Turn / Battle button | Continue button (or TopRightClose in sandbox) | Animated battle sequence |
+| Forfeit Confirmation | Abandon in hamburger menu | Cancel / Surrender buttons | Modal dialog |
+
+## Route Index
+
+| Route | Page | Back |
+|---|---|---|
+| `/` | Main Menu | — |
+| `/play` | Play | `/` |
+| `/cards` | Cards | `/` |
+| `/customize` | Customize | `/` |
+| `/history` | History | `/` |
+| `/history/achievements` | Achievements | `/history` |
+| `/history/stats` | Stats | `/history` |
+| `/history/battles` | Battle History (placeholder) | `/history` |
+| `/history/ghosts` | Ghost Browser | `/history` |
+| `/local` | Offline Game | `/` |
+| `/sandbox` | Sandbox | `/cards` |
+| `/multiplayer` | P2P Setup | `/` |
+| `/multiplayer/game` | P2P Game | `/multiplayer` |
+| `/blockchain` | Online Arena | `/play` |
+| `/tournament` | Tournament | `/` |
+| `/settings` | Settings | `/` or game |
+| `/network` | Network | `/` |
+| `/account` | Account | `/` |
+| `/marketplace` | Marketplace | `/` |
+| `/blockchain/create-card` | Create Card | `/cards` |
+| `/blockchain/create-set` | Create Set | `/cards` |
+| `/blockchain/mint-nft` | Mint NFT | `/cards` |
+| `/dev` | Dev Preview | — |
+| `/presentations` | Presentations | — |

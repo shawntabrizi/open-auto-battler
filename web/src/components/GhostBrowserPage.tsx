@@ -326,8 +326,8 @@ export function GhostBrowserPage() {
     return (
       <div className="min-h-screen min-h-svh bg-warm-950 text-white flex flex-col p-4">
         <PageHeader
-          backTo="/blockchain/creator"
-          backLabel="Creator Hub"
+          backTo="/history"
+          backLabel="History"
           title="Ghost Browser"
           subtitle="Active ghost opponents require a live chain connection."
         />
@@ -381,8 +381,8 @@ export function GhostBrowserPage() {
       <div className="flex-1 min-w-0 h-full overflow-y-auto">
         <div className="sticky top-0 z-20 border-b border-warm-900/80 bg-warm-950/95 backdrop-blur-sm">
           <PageHeader
-            backTo="/blockchain/creator"
-            backLabel="Creator Hub"
+            backTo="/history"
+            backLabel="History"
             title="Ghost Browser"
             right={
               <button

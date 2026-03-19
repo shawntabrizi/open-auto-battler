@@ -1,11 +1,11 @@
 import { PageHeader } from './PageHeader';
 
-/** Placeholder shop page — to be built out later */
+/** Placeholder marketplace page — to be built out later */
 export function ShopPage() {
   return (
     <div className="fixed inset-0 bg-warm-950 text-white overflow-y-auto">
       <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[15vh]">
-        <PageHeader backTo="/" backLabel="Menu" title="Shop" />
+        <PageHeader backTo="/" backLabel="Menu" title="Marketplace" />
 
         <div className="flex flex-col items-center justify-center py-16 lg:py-24 gap-4">
           <div className="text-5xl lg:text-6xl opacity-30">

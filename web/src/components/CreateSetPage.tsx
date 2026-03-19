@@ -60,7 +60,7 @@ export const CreateSetPage: React.FC = () => {
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-warm-900 flex flex-col p-4 text-white">
-        <BackLink to="/blockchain/creator" label="Creator Hub" />
+        <BackLink to="/cards" label="Cards" />
         <BackLinkSpacer />
         <div className="flex-1 flex flex-col items-center justify-center">
           <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase">
@@ -86,7 +86,7 @@ export const CreateSetPage: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="mb-4 lg:mb-8">
             <div className="flex items-center justify-between mb-1">
-              <BackLink to="/blockchain/creator" label="Creator Hub" />
+              <BackLink to="/cards" label="Cards" />
               <BackLinkSpacer />
               <Link
                 to="/blockchain/create-card"

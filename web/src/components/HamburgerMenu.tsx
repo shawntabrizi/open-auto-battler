@@ -87,7 +87,7 @@ const MENU_ITEMS = [
   { to: '/settings', icon: GearIcon, label: 'Settings' },
   { to: '/account', icon: PersonIcon, label: 'Account' },
   { to: '/network', icon: NetworkIcon, label: 'Network' },
-  { to: '/shop', icon: ShopIcon, label: 'Shop' },
+  { to: '/marketplace', icon: ShopIcon, label: 'Marketplace' },
 ] as const;
 
 /**
