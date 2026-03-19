@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useIsSubmitting } from '../store/txStore';
 import { useBlockchainStore } from '../store/blockchainStore';
 import { useGameStore } from '../store/gameStore';
 import { GameOverScreen } from './GameOverScreen';
@@ -32,7 +33,7 @@ export const BlockchainPage: React.FC = () => {
 
   const { submitTurnOnChain } = useBlockchainStore();
 
-  const [txLoading, setTxLoading] = useState(false);
+  const isSubmitting = useIsSubmitting();
 
   // Guard for refresh to prevent double-call
   const refreshCalled = useRef(false);
@@ -60,16 +61,11 @@ export const BlockchainPage: React.FC = () => {
   }, [engine, isConnected, selectedAccount, refreshGameState]);
 
   const handleSubmitTurn = async () => {
-    setTxLoading(true);
-    try {
-      // Submit actions to the chain — the blockchain resolves the battle
-      // with its own seed and opponent selection. We do NOT run endTurn()
-      // locally because the local engine uses a different seed/opponent,
-      // producing a different (wrong) result.
-      await submitTurnOnChain();
-    } finally {
-      setTxLoading(false);
-    }
+    // Submit actions to the chain — the blockchain resolves the battle
+    // with its own seed and opponent selection. We do NOT run endTurn()
+    // locally because the local engine uses a different seed/opponent,
+    // producing a different (wrong) result.
+    await submitTurnOnChain();
   };
 
   // Show game over screen
@@ -113,12 +109,7 @@ export const BlockchainPage: React.FC = () => {
       <>
         <SetSelectionScreen
           onStartGame={async (setId) => {
-            setTxLoading(true);
-            try {
-              await startGame(setId);
-            } finally {
-              setTxLoading(false);
-            }
+            await startGame(setId);
           }}
           backTo="/play"
           backLabel="Play"
@@ -135,9 +126,9 @@ export const BlockchainPage: React.FC = () => {
       <GameShell
         hideEndTurn={true}
         customAction={{
-          label: txLoading ? 'Submitting...' : 'Commit',
+          label: 'Commit',
           onClick: handleSubmitTurn,
-          disabled: txLoading,
+          disabled: isSubmitting,
           variant: 'chain',
         }}
         blockchainMode={true}

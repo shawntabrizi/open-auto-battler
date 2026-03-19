@@ -43,12 +43,12 @@ interface TournamentStore {
   allPlayerStats: LeaderboardEntry[];
   tournamentGameOver: boolean;
   lastGameWins: number;
-
   fetchActiveTournament: () => Promise<void>;
   fetchPlayerStats: () => Promise<void>;
   fetchAllPlayerStats: (tournamentId: number) => Promise<void>;
   joinTournament: (tournamentId: number) => Promise<void>;
   submitTournamentTurn: () => Promise<void>;
+  endTournamentGame: () => Promise<void>;
   abandonTournament: () => Promise<void>;
   refreshTournamentGameState: (force?: boolean) => Promise<void>;
   resetGameOver: () => void;
@@ -298,11 +298,6 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
         (e: any) => e.type === 'AutoBattle' && e.value?.type === 'BattleReported'
       );
 
-      // Check for TournamentGameCompleted event
-      const completedEvent = txResult.events.find(
-        (e: any) => e.type === 'AutoBattle' && e.value?.type === 'TournamentGameCompleted'
-      );
-
       if (battleEvent) {
         const { battle_seed, opponent_board } = battleEvent.value.value;
 
@@ -324,35 +319,52 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           BigInt(battle_seed)
         );
 
-        if (completedEvent) {
-          const wins = Number(completedEvent.value.value.wins);
-          // Game is over — after battle animation, show tournament game over
-          useGameStore.setState({
-            battleOutput,
-            showBattleOverlay: true,
-            afterBattleCallback: () => {
-              set({ hasActiveTournamentGame: false, tournamentGameOver: true, lastGameWins: wins });
-              // Refresh stats
-              get().fetchPlayerStats();
-              get().fetchAllPlayerStats(get().activeTournament?.id ?? 0);
-              // Refresh tournament state (pot, entries, etc.)
-              get().fetchActiveTournament();
-            },
-          });
-        } else {
-          // Game continues — after battle animation, refresh tournament game state
-          useGameStore.setState({
-            battleOutput,
-            showBattleOverlay: true,
-            afterBattleCallback: () => get().refreshTournamentGameState(true),
-          });
-        }
+        // After battle animation, refresh state and finalize if game ended
+        useGameStore.setState({
+          battleOutput,
+          showBattleOverlay: true,
+          afterBattleCallback: async () => {
+            await get().refreshTournamentGameState(true);
+            // If game ended, call end_tournament_game to finalize on-chain
+            const view = useGameStore.getState().view;
+            if (view?.phase === 'completed') {
+              void get().endTournamentGame();
+            }
+          },
+        });
       } else {
         console.warn('No BattleReported event found in tournament tx result');
         await get().refreshTournamentGameState(true);
       }
     } catch (err) {
       console.error('Submit tournament turn failed:', err);
+    }
+  },
+
+  endTournamentGame: async () => {
+    const { api, selectedAccount } = useBlockchainStore.getState();
+    if (!api || !selectedAccount) return;
+
+    try {
+      const tx = api.tx.AutoBattle.end_tournament_game({});
+      const txResult = await submitTx(
+        tx,
+        selectedAccount.polkadotSigner,
+        'Saving Tournament Results'
+      );
+
+      // Extract TournamentGameCompleted event for the wins count
+      const completedEvent = txResult.events.find(
+        (e: any) => e.type === 'AutoBattle' && e.value?.type === 'TournamentGameCompleted'
+      );
+      const wins = completedEvent ? Number(completedEvent.value.value.wins) : 0;
+
+      set({ hasActiveTournamentGame: false, tournamentGameOver: true, lastGameWins: wins });
+      get().fetchPlayerStats();
+      get().fetchAllPlayerStats(get().activeTournament?.id ?? 0);
+      get().fetchActiveTournament();
+    } catch (err) {
+      console.error('End tournament game failed:', err);
     }
   },
 

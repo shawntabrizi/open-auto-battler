@@ -303,6 +303,7 @@ interface BlockchainStore {
   startGame: (set_id?: number) => Promise<void>;
   refreshGameState: (force?: boolean) => Promise<void>;
   submitTurnOnChain: () => Promise<void>;
+  endGame: () => Promise<void>;
   abandonGame: () => Promise<void>;
   fetchBag: () => any[];
   fetchCards: () => Promise<void>;
@@ -738,7 +739,14 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
         useGameStore.setState({
           battleOutput,
           showBattleOverlay: true,
-          afterBattleCallback: () => get().refreshGameState(true),
+          afterBattleCallback: async () => {
+            await get().refreshGameState(true);
+            // If game ended, finalize on-chain (archive ghost, grant achievements, remove session)
+            const view = useGameStore.getState().view;
+            if (view?.phase === 'completed') {
+              void get().endGame();
+            }
+          },
         });
       } else {
         // No battle event found — fall back to refresh
@@ -747,6 +755,19 @@ export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
       }
     } catch (err) {
       console.error('Submit turn failed:', err);
+    }
+  },
+
+  endGame: async () => {
+    const { api, selectedAccount } = get();
+    if (!api || !selectedAccount) return;
+
+    try {
+      const tx = api.tx.AutoBattle.end_game({});
+      await submitTx(tx, selectedAccount.polkadotSigner, 'Saving Results');
+      set({ chainState: null });
+    } catch (err) {
+      console.error('End game failed:', err);
     }
   },
 

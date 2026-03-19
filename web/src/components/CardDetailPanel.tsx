@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { useGameStore } from '../store/gameStore';
 import { useBlockchainStore } from '../store/blockchainStore';
 import { useTournamentStore } from '../store/tournamentStore';
+import { useIsSubmitting } from '../store/txStore';
 import type { BoardUnitView, CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import { getCardArtMd } from '../utils/cardArt';
@@ -96,7 +97,7 @@ export interface CardDetailPanelProps {
 
 export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: CardDetailPanelProps) {
   const [showForfeitConfirm, setShowForfeitConfirm] = React.useState(false);
-  const [forfeitPending, setForfeitPending] = React.useState(false);
+  const isSubmitting = useIsSubmitting();
   const { cardNameMap, selection, burnHandCard, burnBoardUnit, setSelection, showRawJson, newRun } =
     useGameStore();
   const abandonGame = useBlockchainStore((state) => state.abandonGame);
@@ -138,7 +139,6 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
   }, [isVisible, showForfeitConfirm]);
 
   const handleForfeit = React.useCallback(async () => {
-    setForfeitPending(true);
     try {
       if (resolvedMode.type === 'blockchain') {
         await abandonGame();
@@ -152,8 +152,6 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
       setSelection(null);
     } catch (err) {
       console.error('Forfeit failed:', err);
-    } finally {
-      setForfeitPending(false);
     }
   }, [
     abandonGame,
@@ -323,7 +321,7 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
           <div
             className="absolute inset-0"
             onClick={() => {
-              if (!forfeitPending) {
+              if (!isSubmitting) {
                 setShowForfeitConfirm(false);
               }
             }}
@@ -352,17 +350,17 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
               <div className="mt-6 grid grid-cols-2 gap-3 w-full">
                 <button
                   onClick={() => setShowForfeitConfirm(false)}
-                  disabled={forfeitPending}
+                  disabled={isSubmitting}
                   className="battle-btn rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Fight On
                 </button>
                 <button
                   onClick={() => void handleForfeit()}
-                  disabled={forfeitPending}
+                  disabled={isSubmitting}
                   className="rounded-xl border border-red-800/70 bg-red-950/60 px-4 py-3 text-sm font-bold uppercase tracking-wider text-red-300 transition-all hover:bg-red-900/50 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {forfeitPending ? 'Surrendering...' : 'Surrender'}
+                  Surrender
                 </button>
               </div>
             </div>

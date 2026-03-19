@@ -31,6 +31,7 @@ import { HamburgerMenu } from './components/HamburgerMenu.tsx';
 import { DevPage } from './components/DevPage.tsx';
 import { SetPage } from './components/SetPage.tsx';
 import { GameOverPreview } from './components/GameOverPreview.tsx';
+import { TransactionOverlay } from './components/TransactionOverlay.tsx';
 
 // Lazy-loaded features (code-split, no impact on main bundle)
 import { PresentationsPage, PresentationViewer, EmbedPage } from './features/presentations';
@@ -38,6 +39,7 @@ import { PresentationsPage, PresentationViewer, EmbedPage } from './features/pre
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Toaster position="top-right" />
+    <TransactionOverlay />
     <HashRouter>
       <AuthGate>
         <HamburgerMenu />

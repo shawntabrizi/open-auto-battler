@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useBlockchainStore } from '../store/blockchainStore';
 import { useGameStore } from '../store/gameStore';
+import { useIsSubmitting } from '../store/txStore';
 import { toast } from 'react-hot-toast';
 import { TopBar } from './TopBar';
 import {
@@ -94,7 +95,7 @@ export const CreateCardPage: React.FC = () => {
     battle_abilities: [] as BattleAbility[],
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmitting = useIsSubmitting();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [triedSubmitCard, setTriedSubmitCard] = useState(false);
   const [abilityLane, setAbilityLane] = useState<'battle' | 'shop'>('battle');
@@ -113,7 +114,6 @@ export const CreateCardPage: React.FC = () => {
       toast.error('Connect wallet first');
       return;
     }
-    setIsSubmitting(true);
     try {
       await submitCard(
         {
@@ -143,8 +143,6 @@ export const CreateCardPage: React.FC = () => {
       });
     } catch (err) {
       toast.error('Failed to submit card');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -497,7 +495,7 @@ export const CreateCardPage: React.FC = () => {
                 disabled={isSubmitting}
                 className="w-full bg-yellow-500 hover:bg-yellow-400 text-warm-950 font-black py-4 rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-yellow-500/10 uppercase tracking-wider"
               >
-                {isSubmitting ? 'MINTING...' : 'MINT CARD ON-CHAIN'}
+                MINT CARD ON-CHAIN
               </button>
             </div>
 

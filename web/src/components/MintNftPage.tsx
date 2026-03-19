@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useBlockchainStore } from '../store/blockchainStore';
+import { useIsSubmitting } from '../store/txStore';
 import { toast } from 'react-hot-toast';
 import { uploadToPinata, ipfsUrl } from '../utils/ipfs';
 import { submitTx } from '../utils/tx';
@@ -31,8 +32,7 @@ export const MintNftPage: React.FC = () => {
   const [description, setDescription] = useState('');
   const [collectionId, setCollectionId] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const [isMinting, setIsMinting] = useState(false);
-  const [isCreatingCollection, setIsCreatingCollection] = useState(false);
+  const isSubmitting = useIsSubmitting();
   const [collectionExists, setCollectionExists] = useState<boolean | null>(null);
   const [pinataKey, setPinataKey] = useState(() => {
     try {
@@ -54,7 +54,6 @@ export const MintNftPage: React.FC = () => {
 
   const handleCreateCollection = async () => {
     if (!api || !selectedAccount) return;
-    setIsCreatingCollection(true);
     try {
       // pallet-nfts uses INVERTED bitflags:
       //   BitFlags::EMPTY (0) = all settings ENABLED
@@ -79,8 +78,6 @@ export const MintNftPage: React.FC = () => {
       setCollectionExists(true);
     } catch {
       // submitTx already logs and toasts
-    } finally {
-      setIsCreatingCollection(false);
     }
   };
 
@@ -131,7 +128,6 @@ export const MintNftPage: React.FC = () => {
       return;
     }
 
-    setIsMinting(true);
     try {
       // Build metadata JSON
       const metadata = JSON.stringify({
@@ -143,7 +139,6 @@ export const MintNftPage: React.FC = () => {
 
       if (metadata.length > 256) {
         toast.error('Metadata exceeds 256 byte limit. Shorten name/description.');
-        setIsMinting(false);
         return;
       }
 
@@ -184,8 +179,6 @@ export const MintNftPage: React.FC = () => {
       setDescription('');
     } catch {
       // submitTx already logs and toasts
-    } finally {
-      setIsMinting(false);
     }
   };
 
@@ -384,10 +377,10 @@ export const MintNftPage: React.FC = () => {
                         </p>
                         <button
                           onClick={handleCreateCollection}
-                          disabled={isCreatingCollection}
+                          disabled={isSubmitting}
                           className="bg-orange-500 hover:bg-orange-400 text-warm-950 font-bold py-2 px-4 rounded-lg text-xs transition-all disabled:opacity-50"
                         >
-                          {isCreatingCollection ? 'Creating...' : 'Create Collection'}
+                          Create Collection
                         </button>
                       </div>
                     )}
@@ -398,10 +391,10 @@ export const MintNftPage: React.FC = () => {
               {/* Mint button */}
               <button
                 onClick={handleMint}
-                disabled={isMinting || !cid || !name}
+                disabled={isSubmitting || !cid || !name}
                 className="w-full bg-yellow-500 hover:bg-yellow-400 text-warm-950 font-black py-4 rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-yellow-500/10 uppercase tracking-wider"
               >
-                {isMinting ? 'MINTING...' : 'MINT NFT ON-CHAIN'}
+                MINT NFT ON-CHAIN
               </button>
             </div>
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useIsSubmitting } from '../store/txStore';
 import { useBlockchainStore, getDevAccounts } from '../store/blockchainStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useGameStore } from '../store/gameStore';
@@ -56,7 +57,7 @@ export const TournamentPage: React.FC = () => {
     resetGameOver,
   } = useTournamentStore();
 
-  const [txLoading, setTxLoading] = useState(false);
+  const isSubmitting = useIsSubmitting();
   const refreshCalled = useRef(false);
 
   // Initialize WASM engine
@@ -96,32 +97,17 @@ export const TournamentPage: React.FC = () => {
 
   const handleJoinTournament = async () => {
     if (!activeTournament) return;
-    setTxLoading(true);
-    try {
-      await joinTournament(activeTournament.id);
-    } finally {
-      setTxLoading(false);
-    }
+    await joinTournament(activeTournament.id);
   };
 
   const handleSubmitTournamentTurn = async () => {
-    setTxLoading(true);
-    try {
-      await submitTournamentTurn();
-    } finally {
-      setTxLoading(false);
-    }
+    await submitTournamentTurn();
   };
 
   const handlePlayAgain = async () => {
     if (!activeTournament) return;
     resetGameOver();
-    setTxLoading(true);
-    try {
-      await joinTournament(activeTournament.id);
-    } finally {
-      setTxLoading(false);
-    }
+    await joinTournament(activeTournament.id);
   };
 
   const handleBackToTournament = () => {
@@ -170,10 +156,10 @@ export const TournamentPage: React.FC = () => {
               {activeTournament && (
                 <button
                   onClick={handlePlayAgain}
-                  disabled={txLoading}
+                  disabled={isSubmitting}
                   className="bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 px-8 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
                 >
-                  {txLoading ? 'JOINING...' : 'PLAY AGAIN'}
+                  PLAY AGAIN
                 </button>
               )}
               <button
@@ -215,10 +201,10 @@ export const TournamentPage: React.FC = () => {
               {activeTournament && (
                 <button
                   onClick={handlePlayAgain}
-                  disabled={txLoading}
+                  disabled={isSubmitting}
                   className="bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 px-8 rounded-xl text-sm transition-all disabled:opacity-50"
                 >
-                  {txLoading ? 'JOINING...' : 'PLAY AGAIN'}
+                  PLAY AGAIN
                 </button>
               )}
               <button
@@ -274,9 +260,9 @@ export const TournamentPage: React.FC = () => {
         <GameShell
           hideEndTurn={true}
           customAction={{
-            label: txLoading ? 'Submitting...' : 'Commit',
+            label: 'Commit',
             onClick: handleSubmitTournamentTurn,
-            disabled: txLoading,
+            disabled: isSubmitting,
             variant: 'chain',
           }}
           blockchainMode={true}
@@ -492,10 +478,10 @@ export const TournamentPage: React.FC = () => {
               {/* Join Button */}
               <button
                 onClick={handleJoinTournament}
-                disabled={txLoading}
+                disabled={isSubmitting}
                 className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-black px-6 lg:px-12 py-2.5 lg:py-4 rounded-full text-xs lg:text-base transition-all transform hover:scale-105 disabled:opacity-50 shadow-lg shadow-purple-500/20"
               >
-                {txLoading ? 'JOINING...' : 'JOIN TOURNAMENT'}
+                JOIN TOURNAMENT
               </button>
             </>
           )}

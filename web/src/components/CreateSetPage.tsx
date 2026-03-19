@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useBlockchainStore } from '../store/blockchainStore';
+import { useIsSubmitting } from '../store/txStore';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { CardDetailPanel } from './CardDetailPanel';
@@ -13,7 +14,7 @@ export const CreateSetPage: React.FC = () => {
 
   const [selectedCards, setSelectedCards] = useState<{ card_id: number; rarity: number }[]>([]);
   const [setName, setSetName] = useState('');
-  const [isCreatingSet, setIsCreatingSet] = useState(false);
+  const isSubmitting = useIsSubmitting();
   const [detailCard, setDetailCard] = useState<CardView | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -44,7 +45,6 @@ export const CreateSetPage: React.FC = () => {
       return;
     }
 
-    setIsCreatingSet(true);
     try {
       await createCardSet(selectedCards, setName || undefined);
       toast.success('Card set created successfully!');
@@ -52,8 +52,6 @@ export const CreateSetPage: React.FC = () => {
       setSetName('');
     } catch (err) {
       toast.error('Failed to create card set');
-    } finally {
-      setIsCreatingSet(false);
     }
   };
 
@@ -278,10 +276,10 @@ export const CreateSetPage: React.FC = () => {
                 <div className="mt-6 pt-6 border-t border-white/5">
                   <button
                     onClick={handleCreateSet}
-                    disabled={isCreatingSet || selectedCards.length === 0}
+                    disabled={isSubmitting || selectedCards.length === 0}
                     className="w-full bg-yellow-500 hover:bg-yellow-400 text-warm-950 font-black py-4 rounded-2xl transition-all disabled:opacity-50 shadow-xl shadow-yellow-500/10 uppercase tracking-widest"
                   >
-                    {isCreatingSet ? 'DEPLOYING...' : 'DEPLOY CARD SET'}
+                    DEPLOY CARD SET
                   </button>
                 </div>
               </div>
