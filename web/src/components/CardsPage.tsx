@@ -98,6 +98,28 @@ export function CardsPage() {
             })}
           </div>
         )}
+
+        {/* Creator actions */}
+        <div className="mt-6 lg:mt-8 grid grid-cols-2 gap-2.5 lg:gap-4">
+          <Link
+            to="/blockchain/create-card"
+            className="p-3 lg:p-4 rounded-xl border border-warm-700 bg-warm-900/30 hover:border-warm-500 transition-all text-center group"
+          >
+            <div className="font-heading text-sm lg:text-base font-bold text-warm-200 group-hover:text-yellow-400 transition-colors">
+              Create Card
+            </div>
+            <div className="text-warm-500 text-[10px] lg:text-xs mt-0.5">Design a new card</div>
+          </Link>
+          <Link
+            to="/blockchain/create-set"
+            className="p-3 lg:p-4 rounded-xl border border-warm-700 bg-warm-900/30 hover:border-warm-500 transition-all text-center group"
+          >
+            <div className="font-heading text-sm lg:text-base font-bold text-warm-200 group-hover:text-yellow-400 transition-colors">
+              Create Set
+            </div>
+            <div className="text-warm-500 text-[10px] lg:text-xs mt-0.5">Build a card set</div>
+          </Link>
+        </div>
       </div>
 
       <SetPreviewOverlay />
