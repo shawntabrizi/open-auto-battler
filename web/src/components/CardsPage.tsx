@@ -3,12 +3,11 @@ import { Link } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
-import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { TopBar } from './TopBar';
 import { useInitGuard } from '../hooks';
 
 export function CardsPage() {
-  const { engine, init, setMetas, setPreviewCards, loadSetPreviews, previewSet } = useGameStore();
+  const { engine, init, setMetas, setPreviewCards, loadSetPreviews } = useGameStore();
 
   useInitGuard(() => {
     void init();
@@ -50,9 +49,9 @@ export function CardsPage() {
               {sorted.map((meta) => {
                 const cards = setPreviewCards[meta.id];
                 return (
-                  <button
+                  <Link
                     key={meta.id}
-                    onClick={() => previewSet(meta.id)}
+                    to={`/set/${meta.id}`}
                     className="bg-warm-900/80 border border-warm-700/40 hover:border-warm-500 rounded-xl p-3 lg:p-4 transition-all active:scale-[0.98] text-left group"
                   >
                     {/* Mini card preview */}
@@ -89,7 +88,7 @@ export function CardsPage() {
                         {cards ? `${cards.length} cards` : `Set #${meta.id}`}
                       </div>
                     </div>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
@@ -118,8 +117,6 @@ export function CardsPage() {
           </div>
         </div>
       </div>
-
-      <SetPreviewOverlay />
     </div>
   );
 }

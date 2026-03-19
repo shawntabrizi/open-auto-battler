@@ -28,6 +28,7 @@ import { AccountPage } from './components/AccountPage.tsx';
 import { ShopPage } from './components/ShopPage.tsx';
 import { HamburgerMenu } from './components/HamburgerMenu.tsx';
 import { DevPage } from './components/DevPage.tsx';
+import { SetPage } from './components/SetPage.tsx';
 import { GameOverPreview } from './components/GameOverPreview.tsx';
 
 // Lazy-loaded features (code-split, no impact on main bundle)
@@ -58,6 +59,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/account" element={<AccountPage />} />
           <Route path="/marketplace" element={<ShopPage />} />
           <Route path="/customize" element={<CustomizePage />} />
+          <Route path="/set/:setId" element={<SetPage />} />
           <Route path="/dev" element={<DevPage />} />
           <Route path="/dev/game-over" element={<GameOverPreview />} />
           <Route path="/blockchain/create-card" element={<CreateCardPage />} />
