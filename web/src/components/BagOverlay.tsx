@@ -18,7 +18,7 @@ export function BagOverlay() {
     .sort((a, b) => a.card.play_cost - b.card.play_cost || a.card.name.localeCompare(b.card.name));
 
   return (
-    <div className="fixed left-[11rem] lg:left-80 right-0 top-0 lg:top-16 bottom-0 lg:bottom-48 z-[60] bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300">
+    <div className="fixed left-[11rem] lg:left-80 right-0 top-0 bottom-0 z-[60] bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300">
       <TopRightClose onClick={() => setShowBag(false)} label="Close Draw Pool" />
       <div className="flex items-center mb-3 lg:mb-8 border-b border-warm-700 pb-2 lg:pb-4 pr-10 lg:pr-12">
         <div className="flex flex-col">

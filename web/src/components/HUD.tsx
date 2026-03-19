@@ -4,9 +4,7 @@ import { useMultiplayerStore } from '../store/multiplayerStore';
 import { useCustomizationStore } from '../store/customizationStore';
 import {
   HeartIcon,
-  HeartOutlineIcon,
   StarIcon,
-  StarOutlineIcon,
   BagIcon,
   HourglassIcon,
   WarningIcon,
@@ -100,7 +98,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
           <button
             onClick={handleEndTurn}
             disabled={isWaiting}
-            className={`battle-btn rounded-lg text-sm lg:text-base px-4 lg:px-6 py-1.5 lg:py-2 transition-all font-bold ${
+            className={`battle-btn rounded-lg text-xs lg:text-sm px-2 lg:px-3 border border-warm-700 font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
               isWaiting
                 ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
                 : opponentWaiting && displayTimer !== null && displayTimer <= 5
@@ -116,12 +114,12 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
         <button
           onClick={customAction.onClick}
           disabled={customAction.disabled}
-          className={`rounded-lg text-sm lg:text-base px-4 lg:px-6 py-1.5 lg:py-2 transition-all font-bold ${
+          className={`rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
             customAction.disabled
-              ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
+              ? 'bg-warm-600 border-warm-600 scale-95 opacity-80 cursor-not-allowed'
               : customAction.variant === 'chain'
-                ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900'
-                : 'battle-btn'
+                ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900 border-orange-500/60'
+                : 'battle-btn border-warm-700'
           }`}
         >
           {customAction.label}
@@ -131,8 +129,8 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
   );
 }
 
-export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
-  const { view, setShowBag, showBag, selection, startingLives, winsToVictory } = useGameStore();
+export function HUD({ hideEndTurn, customAction, className = '' }: HUDProps & { className?: string } = {}) {
+  const { view, setShowBag, showBag, startingLives, winsToVictory } = useGameStore();
   const playerAvatar = useCustomizationStore((s) => s.selections.playerAvatar);
 
   // Keyboard shortcut for Bag view
@@ -150,77 +148,53 @@ export function HUD({ hideEndTurn, customAction }: HUDProps = {}) {
 
   if (!view) return null;
 
-  const showCardPanel = view?.phase === 'shop' || selection?.type === 'board' || showBag;
 
   return (
-    <div className={`hud h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center justify-between px-2 lg:px-6 relative z-20 overflow-hidden ${showCardPanel ? 'show-card-panel' : ''}`}
+    <div className={`hud h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center px-2 lg:px-6 relative z-20 overflow-hidden ${className}`}
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
     >
-      {/* Left: Lives */}
-      <div className="flex items-center gap-1 lg:gap-2">
+      {/* HUD items — all same height */}
+      <div className="flex items-center gap-1.5 lg:gap-2">
         {playerAvatar && (
           <div className="w-6 h-6 lg:w-10 lg:h-10 rounded-full overflow-hidden border-2 border-yellow-500/50 flex-shrink-0">
             <img src={playerAvatar.imageUrl} alt="avatar" className="w-full h-full object-cover" />
           </div>
         )}
-        <span className="text-warm-400 hidden lg:inline">Lives:</span>
-        {/* Mobile: compact numeric */}
-        <div className="flex lg:hidden items-center gap-1">
-          <HeartIcon className="w-4 h-4 text-red-500" />
-          <span className="font-bold text-sm">{view.lives}/{startingLives}</span>
-        </div>
-        {/* Desktop: full hearts */}
-        <div className="hidden lg:flex gap-1">
-          {Array.from({ length: startingLives }).map((_, i) =>
-            i < view.lives ? (
-              <HeartIcon key={i} className="w-5 h-5 text-red-500" />
-            ) : (
-              <HeartOutlineIcon key={i} className="w-5 h-5 text-warm-600" />
-            )
-          )}
-        </div>
-      </div>
 
-      {/* Center: Round & End Turn */}
-      <div className="flex items-center gap-2 lg:gap-4">
-        <div className="flex items-center gap-1.5 lg:gap-2 bg-warm-900/60 border border-warm-800/60 rounded-lg px-2.5 py-1 lg:px-4 lg:py-1.5">
-          <span className="text-xs lg:text-sm text-warm-400 font-heading uppercase tracking-wider">Round</span>
-          <span className="text-sm lg:text-lg font-bold text-gold font-stat">{view.round}</span>
-        </div>
-
+        {/* Bag */}
         {view.phase === 'shop' && (
-          <div className="flex items-center gap-2 lg:gap-3">
-            <button
-              onClick={() => setShowBag(true)}
-              className="bg-warm-800 hover:bg-warm-700 text-warm-100 border border-warm-700 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-4 py-1"
-              title="View your draw pool (B)"
-            >
-              <BagIcon className="w-4 h-4 lg:w-5 lg:h-5 text-amber-400" />
-              <span className="font-bold text-sm lg:text-base">{view.bag_count}</span>
-            </button>
-            <InlineEndTurn hideEndTurn={hideEndTurn} customAction={customAction} />
-          </div>
+          <button
+            onClick={() => setShowBag(true)}
+            className="hud-pill bg-warm-800 hover:bg-warm-700 text-warm-100 border border-warm-700 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10"
+            title="View your draw pool (B)"
+          >
+            <BagIcon className="w-3.5 h-3.5 lg:w-5 lg:h-5 text-amber-400" />
+            <span className="font-bold text-xs lg:text-sm font-stat">{view.bag_count}</span>
+          </button>
         )}
-      </div>
 
-      {/* Right: Wins */}
-      <div className="flex items-center gap-1 lg:gap-2">
-        <span className="text-warm-400 hidden lg:inline">Wins:</span>
-        {/* Mobile: compact numeric */}
-        <div className="flex lg:hidden items-center gap-1">
-          <StarIcon className="w-4 h-4 text-gold" />
-          <span className="font-bold text-sm">{view.wins}/{winsToVictory}</span>
+        {/* Round */}
+        <div className="bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10">
+          <span className="text-[10px] lg:text-xs text-warm-400 font-heading uppercase tracking-wider">Round</span>
+          <span className="text-xs lg:text-sm font-bold text-gold font-stat">{view.round}</span>
         </div>
-        {/* Desktop: full stars */}
-        <div className="hidden lg:flex gap-1">
-          {Array.from({ length: winsToVictory }).map((_, i) =>
-            i < view.wins ? (
-              <StarIcon key={i} className="w-5 h-5 text-gold" />
-            ) : (
-              <StarOutlineIcon key={i} className="w-5 h-5 text-warm-600" />
-            )
-          )}
+
+        {/* Wins */}
+        <div className="bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
+          <StarIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-gold" />
+          <span className="font-bold text-xs lg:text-sm font-stat">{view.wins}/{winsToVictory}</span>
         </div>
+
+        {/* Lives */}
+        <div className="bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
+          <HeartIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-red-500" />
+          <span className="font-bold text-xs lg:text-sm font-stat">{view.lives}/{startingLives}</span>
+        </div>
+
+        {/* Combat button */}
+        {view.phase === 'shop' && (
+          <InlineEndTurn hideEndTurn={hideEndTurn} customAction={customAction} />
+        )}
       </div>
     </div>
   );
