@@ -79,7 +79,7 @@ export const CustomizePage: React.FC = () => {
   const [activeSection, setActiveSection] = useState<CustomizationType | null>(null);
   const location = useLocation();
   const isBlockchainRoute = location.pathname.startsWith('/blockchain');
-  const backLink = isBlockchainRoute ? '/blockchain' : '/settings';
+  const backLink = isBlockchainRoute ? '/blockchain' : '/';
   const backState = isBlockchainRoute ? undefined : location.state;
 
   useEffect(() => {
@@ -222,7 +222,7 @@ export const CustomizePage: React.FC = () => {
           <BackLink
             to={backLink}
             state={backState}
-            label={isBlockchainRoute ? 'Creator Hub' : 'Settings'}
+            label={isBlockchainRoute ? 'Creator Hub' : 'Menu'}
           />
           {isBlockchainRoute && (
             <Link

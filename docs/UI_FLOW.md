@@ -12,13 +12,15 @@ flowchart TD
 
   Login --> Main["Main Menu"]
 
-  Main --> Play["Play (local)"]
-  Main --> PlayOnline["Play Online (blockchain)"]
-  Main --> Tournament["Tournament (if live)"]
-  Main --> Sandbox["Sandbox"]
-  Main --> P2P["P2P Multiplayer"]
-  Main --> Ghosts["Ghosts"]
-  Main --> Presentations["Presentations"]
+  Main --> Play["Play"]
+  Main --> Cards["Cards"]
+  Main --> Customize["Customize"]
+  Main --> History["History"]
+
+  Play --> OnlineArena["Online Arena"]
+  Play --> Offline["Offline"]
+  Play --> P2P["Peer-to-Peer"]
+  Play --> Tournament["Tournament (if live)"]
 
   Hamburger["Hamburger Menu (every page)"]
   Hamburger --> Settings["Settings"]
@@ -27,7 +29,7 @@ flowchart TD
   Hamburger --> Shop["Shop"]
   Hamburger --> Logout["Log Out"]
 
-  Settings --> Customize["Customize"]
+  Settings --> SettingsCustomize["Customize"]
 ```
 
 ## Login Page
@@ -60,33 +62,65 @@ flowchart TD
 
 **Component:** `HomePage`
 
-**Purpose:** Central hub for all game modes and features.
+**Purpose:** Central hub. Four main buttons lead to the primary sections of the game.
 
 **Contents:**
 
-### Primary actions
-| Label | Route | Condition |
-|---|---|---|
-| PLAY | `/local` | Blockchain connected |
-| PLAY | `/network` | Blockchain not connected (redirects to network settings) |
-| PLAY ONLINE | `/blockchain` | Blockchain connected |
-| PLAY ONLINE | `/network` | Blockchain not connected |
-| TOURNAMENT LIVE | `/tournament` | Only shown when an active tournament exists |
+| Label | Route | Color | Description |
+|---|---|---|---|
+| Play | `/play` | Amber/gold | Online Arena, Offline, Peer-to-Peer |
+| Cards | `/cards` | Violet | Browse sets & collection |
+| Customize | `/customize` | Emerald | Card art, backgrounds & avatars |
+| History | `/history` | Blue | Achievements, replays & stats |
 
-The PLAY ONLINE card shows a live connection status dot (green/yellow/red) and block number.
-
-### Secondary links (bottom row)
-| Label | Route |
-|---|---|
-| Sandbox | `/sandbox` |
-| P2P | `/multiplayer` |
-| Ghosts | `/blockchain/ghosts` |
-| Presentations | `/presentations` |
-
-### Other
 - Version number (`v0.1.0`) at the bottom
 - Particle background animation
 - Rotate prompt overlay (mobile portrait)
+
+## Play
+
+**Route:** `/play`
+
+**Back:** Menu (`/`)
+
+**Component:** `PlayPage`
+
+**Purpose:** Choose a play mode.
+
+**Contents:**
+
+| Label | Route | Size | Notes |
+|---|---|---|---|
+| Online Arena | `/blockchain` | Large (primary) | Compete on the blockchain. Shows connection status dot + block number when connected. Routes to `/network` if not connected. |
+| Tournament | `/tournament` | Medium | Only shown when an active tournament exists. Shows entry fee and prize pool. |
+| Offline | `/local` | Half-width | Single player, no transactions. Routes to `/network` if not connected. |
+| Peer-to-Peer | `/multiplayer` | Half-width | Direct connect P2P multiplayer. |
+
+Online Arena is intentionally the largest button — this is the primary game mode.
+
+## Cards
+
+**Route:** `/cards`
+
+**Back:** Menu (`/`)
+
+**Status:** Placeholder page. Will contain: browse card sets, view collection, create custom packs.
+
+## Customize
+
+**Route:** `/customize`
+
+**Back:** Menu (`/`)
+
+**Purpose:** Visual customization — card art, backgrounds, avatars, card borders.
+
+## History
+
+**Route:** `/history`
+
+**Back:** Menu (`/`)
+
+**Status:** Placeholder page. Will contain: achievements, replays, stats, hall of fame.
 
 ## Hamburger Menu (Global)
 

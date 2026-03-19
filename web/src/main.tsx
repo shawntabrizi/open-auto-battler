@@ -5,6 +5,9 @@ import { Toaster } from 'react-hot-toast';
 import './index.css';
 import { AuthGate } from './components/AuthGate.tsx';
 import { HomePage } from './components/HomePage.tsx';
+import { PlayPage } from './components/PlayPage.tsx';
+import { CardsPage } from './components/CardsPage.tsx';
+import { HistoryPage } from './components/HistoryPage.tsx';
 import { LocalGamePage } from './components/LocalGamePage.tsx';
 import { SandboxPage } from './components/SandboxPage.tsx';
 import { MultiplayerPage } from './components/MultiplayerPage.tsx';
@@ -36,6 +39,9 @@ createRoot(document.getElementById('root')!).render(
         <HamburgerMenu />
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/play" element={<PlayPage />} />
+          <Route path="/cards" element={<CardsPage />} />
+          <Route path="/history" element={<HistoryPage />} />
           <Route path="/local" element={<LocalGamePage />} />
           <Route path="/sandbox" element={<SandboxPage />} />
           <Route path="/multiplayer" element={<MultiplayerPage />} />
