@@ -62,8 +62,6 @@ fn test_game_view_phase_mapping() {
     let cases = [
         (GamePhase::Shop, "shop"),
         (GamePhase::Battle, "battle"),
-        (GamePhase::Victory, "victory"),
-        (GamePhase::Defeat, "defeat"),
         (GamePhase::Completed, "completed"),
     ];
 

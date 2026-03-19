@@ -146,8 +146,6 @@ impl GameView {
             phase: match state.phase {
                 GamePhase::Shop => String::from("shop"),
                 GamePhase::Battle => String::from("battle"),
-                GamePhase::Victory => String::from("victory"),
-                GamePhase::Defeat => String::from("defeat"),
                 GamePhase::Completed => String::from("completed"),
             },
             bag_count: state.bag.len() as u32,

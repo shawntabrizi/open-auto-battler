@@ -31,7 +31,7 @@ export function GameOverScreen() {
 
   if (!view) return null;
 
-  const isVictory = view.phase === 'victory';
+  const isVictory = view.wins >= (winsToVictory || 10);
 
   const stats = [
     {

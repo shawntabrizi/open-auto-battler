@@ -49,7 +49,7 @@ export function GameLayout() {
   }
 
   // Show game over screen
-  if (view.phase === 'victory' || view.phase === 'defeat') {
+  if (view.phase === 'completed') {
     return <GameOverScreen />;
   }
 

@@ -546,12 +546,8 @@ impl GameEngine {
             return Err("Not in battle phase".to_string());
         }
 
-        if self.state.wins >= self.wins_to_victory {
-            self.state.phase = GamePhase::Victory;
-            return Ok(());
-        }
-        if self.state.lives <= 0 {
-            self.state.phase = GamePhase::Defeat;
+        if self.state.wins >= self.wins_to_victory || self.state.lives <= 0 {
+            self.state.phase = GamePhase::Completed;
             return Ok(());
         }
 

@@ -477,7 +477,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         engine.continue_after_battle();
         const nextView = engine.get_view();
         set({ view: nextView, showBattleOverlay: false, battleOutput: null });
-        if (nextView?.phase === 'victory' || nextView?.phase === 'defeat') {
+        if (nextView?.phase === 'completed') {
           clearPersistedLocalSession();
         } else {
           get().saveLocalResumePoint();

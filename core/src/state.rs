@@ -37,8 +37,6 @@ pub const STARTING_BAG_SIZE: usize = 50;
 pub enum GamePhase {
     Shop,
     Battle,
-    Victory,
-    Defeat,
     Completed,
 }
 

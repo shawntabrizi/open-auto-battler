@@ -12,7 +12,7 @@ const MOCK_VIEW: GameView = {
   round: 8,
   lives: 1,
   wins: 7,
-  phase: 'defeat',
+  phase: 'completed',
   bag_count: 0,
   can_afford: [],
   can_undo: false,
@@ -20,15 +20,14 @@ const MOCK_VIEW: GameView = {
 
 export function GameOverPreview() {
   const [searchParams] = useSearchParams();
-  const phase = searchParams.get('phase') === 'victory' ? 'victory' : 'defeat';
+  const isVictory = searchParams.get('result') === 'victory';
 
   useEffect(() => {
     const view: GameView = {
       ...MOCK_VIEW,
-      phase,
-      wins: phase === 'victory' ? 10 : 7,
-      lives: phase === 'victory' ? 2 : 0,
-      round: phase === 'victory' ? 10 : 8,
+      wins: isVictory ? 10 : 7,
+      lives: isVictory ? 2 : 0,
+      round: isVictory ? 10 : 8,
     };
 
     useGameStore.setState({
@@ -38,7 +37,7 @@ export function GameOverPreview() {
         // no-op in preview
       },
     });
-  }, [phase]);
+  }, [isVictory]);
 
   return (
     <div className="h-screen h-svh">

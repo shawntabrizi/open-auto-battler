@@ -149,7 +149,7 @@ export function LocalGamePage() {
     );
   }
 
-  if (view?.phase === 'victory' || view?.phase === 'defeat') {
+  if (view?.phase === 'completed') {
     return <GameOverScreen />;
   }
 

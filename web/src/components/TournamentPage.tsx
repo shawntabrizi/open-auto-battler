@@ -190,11 +190,11 @@ export const TournamentPage: React.FC = () => {
     );
   }
 
-  // ── Game Over from view (victory/defeat while playing) ──
-  if (view?.phase === 'victory' || view?.phase === 'defeat') {
+  // ── Game Over from view (completed while playing) ──
+  if (view?.phase === 'completed') {
     // This shouldn't normally happen since we handle game over via TournamentGameCompleted event,
     // but handle it gracefully
-    const isVictory = view.phase === 'victory';
+    const isVictory = view.wins >= 10;
     return (
       <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col text-white">
         <TopBar backTo="/play" backLabel="Play" title="Tournament" />

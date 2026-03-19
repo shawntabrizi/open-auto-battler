@@ -29,8 +29,8 @@ const PAGES: Record<string, string> = {
   'Set Preview': '/set/1',
   'Ghost Browser': '/history/ghosts',
   Presentations: '/presentations',
-  'Game Over (Victory)': '/dev/game-over?phase=victory',
-  'Game Over (Defeat)': '/dev/game-over?phase=defeat',
+  'Game Over (Victory)': '/dev/game-over?result=victory',
+  'Game Over (Defeat)': '/dev/game-over?result=defeat',
 };
 
 const PRESETS = {

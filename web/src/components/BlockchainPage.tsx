@@ -73,7 +73,7 @@ export const BlockchainPage: React.FC = () => {
   };
 
   // Show game over screen
-  if (view?.phase === 'victory' || view?.phase === 'defeat' || view?.phase === 'completed') {
+  if (view?.phase === 'completed') {
     return <GameOverScreen />;
   }
 
