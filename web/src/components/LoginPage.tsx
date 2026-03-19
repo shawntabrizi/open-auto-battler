@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { useIsSubmitting } from '../store/txStore';
 import { useSettingsStore, PRESET_ENDPOINTS } from '../store/settingsStore';
 import { ParticleBackground } from './ParticleBackground';
@@ -56,7 +56,7 @@ export function LoginPage() {
     login,
     blockNumber,
     connectionError,
-  } = useBlockchainStore();
+  } = useArenaStore();
 
   const { endpoint, setEndpoint } = useSettingsStore();
 

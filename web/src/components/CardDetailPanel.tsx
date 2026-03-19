@@ -1,7 +1,7 @@
 import React from 'react';
 import { toast } from 'react-hot-toast';
 import { useGameStore } from '../store/gameStore';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useIsSubmitting } from '../store/txStore';
 import type { BoardUnitView, CardView } from '../types';
@@ -100,7 +100,7 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
   const isSubmitting = useIsSubmitting();
   const { cardNameMap, selection, burnHandCard, burnBoardUnit, setSelection, showRawJson, newRun } =
     useGameStore();
-  const abandonGame = useBlockchainStore((state) => state.abandonGame);
+  const abandonGame = useArenaStore((state) => state.abandonGame);
   const abandonTournament = useTournamentStore((state) => state.abandonTournament);
 
   const resolvedMode: CardDetailPanelMode = mode ?? { type: 'standard' };

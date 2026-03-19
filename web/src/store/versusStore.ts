@@ -45,7 +45,7 @@ interface MultiplayerState {
   setLives: (lives: number) => void;
 }
 
-export const useMultiplayerStore = create<MultiplayerState>((set, get) => ({
+export const useVersusStore = create<MultiplayerState>((set, get) => ({
   peer: null,
   conn: null,
   myPeerId: null,

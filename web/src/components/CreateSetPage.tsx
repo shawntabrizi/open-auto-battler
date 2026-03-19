@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { useIsSubmitting } from '../store/txStore';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -10,7 +10,7 @@ import { type CardView } from '../types';
 import { blockchainCardToCardView } from '../utils/blockchainCards';
 
 export const CreateSetPage: React.FC = () => {
-  const { isConnected, connect, allCards, fetchCards, createCardSet } = useBlockchainStore();
+  const { isConnected, connect, allCards, fetchCards, createCardSet } = useArenaStore();
 
   const [selectedCards, setSelectedCards] = useState<{ card_id: number; rarity: number }[]>([]);
   const [setName, setSetName] = useState('');
@@ -83,7 +83,7 @@ export const CreateSetPage: React.FC = () => {
           <div className="mb-4 lg:mb-8">
             <div className="flex items-center justify-between mb-1">
               <Link
-                to="/blockchain/create-card"
+                to="/cards/create-card"
                 className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center gap-1.5 text-xs lg:text-sm"
               >
                 <span>+</span> MINT NEW CARDS

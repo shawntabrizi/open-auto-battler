@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { useAchievementStore } from '../store/achievementStore';
 import { TopBar } from './TopBar';
 
@@ -41,7 +41,7 @@ function StatCard({
 }
 
 export function StatsPage() {
-  const { api, selectedAccount } = useBlockchainStore();
+  const { api, selectedAccount } = useArenaStore();
   const { achievements, isLoaded, fetchAchievements } = useAchievementStore();
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [loading, setLoading] = useState(false);

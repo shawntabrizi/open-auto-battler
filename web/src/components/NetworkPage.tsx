@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSettingsStore, PRESET_ENDPOINTS } from '../store/settingsStore';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { TopBar } from './TopBar';
 import toast from 'react-hot-toast';
 
@@ -14,7 +14,7 @@ function getOptionFromEndpoint(endpoint: string): EndpointOption {
 
 export function NetworkPage() {
   const { endpoint, setEndpoint } = useSettingsStore();
-  const { connect, isConnected, blockNumber, connectionError } = useBlockchainStore();
+  const { connect, isConnected, blockNumber, connectionError } = useArenaStore();
 
   const [selected, setSelected] = useState<EndpointOption>(getOptionFromEndpoint(endpoint));
   const [customUrl, setCustomUrl] = useState(

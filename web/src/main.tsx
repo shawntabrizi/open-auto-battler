@@ -22,7 +22,6 @@ import { CustomizePage } from './components/CustomizePage.tsx';
 import { CustomizeCategoryPage } from './components/CustomizeCategoryPage.tsx';
 import { MintNftPage } from './components/MintNftPage.tsx';
 import { GhostBrowserPage } from './components/GhostBrowserPage.tsx';
-import { TournamentPage } from './components/TournamentPage.tsx';
 import { SettingsPage } from './components/SettingsPage.tsx';
 import { NetworkPage } from './components/NetworkPage.tsx';
 import { AccountPage } from './components/AccountPage.tsx';
@@ -32,6 +31,14 @@ import { DevPage } from './components/DevPage.tsx';
 import { SetPage } from './components/SetPage.tsx';
 import { GameOverPreview } from './components/GameOverPreview.tsx';
 import { TransactionOverlay } from './components/TransactionOverlay.tsx';
+import { BlockchainSelectPage } from './components/BlockchainSelectPage.tsx';
+import { ArenaGamePage } from './components/ArenaGamePage.tsx';
+import { PracticeSelectPage } from './components/PracticeSelectPage.tsx';
+import { PracticeGamePage } from './components/PracticeGamePage.tsx';
+import { VersusRedirect } from './components/VersusRedirect.tsx';
+import { TournamentRedirect } from './components/TournamentRedirect.tsx';
+import { TournamentLobbyPage } from './components/TournamentLobbyPage.tsx';
+import { TournamentGamePage } from './components/TournamentGamePage.tsx';
 
 // Lazy-loaded features (code-split, no impact on main bundle)
 import { PresentationsPage, PresentationViewer, EmbedPage } from './features/presentations';
@@ -51,12 +58,19 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/history/achievements" element={<AchievementsPage />} />
           <Route path="/history/stats" element={<StatsPage />} />
           <Route path="/history/battles" element={<BattleHistoryPage />} />
-          <Route path="/local" element={<LocalGamePage />} />
+          <Route path="/practice" element={<LocalGamePage />} />
+          <Route path="/practice/select" element={<PracticeSelectPage />} />
+          <Route path="/practice/game" element={<PracticeGamePage />} />
           <Route path="/sandbox" element={<SandboxPage />} />
-          <Route path="/multiplayer" element={<MultiplayerPage />} />
-          <Route path="/multiplayer/game" element={<MultiplayerGame />} />
-          <Route path="/blockchain" element={<BlockchainPage />} />
-          <Route path="/tournament" element={<TournamentPage />} />
+          <Route path="/versus" element={<VersusRedirect />} />
+          <Route path="/versus/lobby" element={<MultiplayerPage />} />
+          <Route path="/versus/game" element={<MultiplayerGame />} />
+          <Route path="/arena" element={<BlockchainPage />} />
+          <Route path="/arena/select" element={<BlockchainSelectPage />} />
+          <Route path="/arena/game" element={<ArenaGamePage />} />
+          <Route path="/tournament" element={<TournamentRedirect />} />
+          <Route path="/tournament/lobby" element={<TournamentLobbyPage />} />
+          <Route path="/tournament/game" element={<TournamentGamePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/network" element={<NetworkPage />} />
           <Route path="/account" element={<AccountPage />} />
@@ -66,9 +80,9 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/set/:setId" element={<SetPage />} />
           <Route path="/dev" element={<DevPage />} />
           <Route path="/dev/game-over" element={<GameOverPreview />} />
-          <Route path="/blockchain/create-card" element={<CreateCardPage />} />
-          <Route path="/blockchain/create-set" element={<CreateSetPage />} />
-          <Route path="/blockchain/mint-nft" element={<MintNftPage />} />
+          <Route path="/cards/create-card" element={<CreateCardPage />} />
+          <Route path="/cards/create-set" element={<CreateSetPage />} />
+          <Route path="/customize/mint-nft" element={<MintNftPage />} />
           <Route path="/history/ghosts" element={<GhostBrowserPage />} />
           <Route
             path="/embed"

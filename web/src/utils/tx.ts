@@ -1,6 +1,6 @@
 import { toast } from 'react-hot-toast';
 import { useTxStore } from '../store/txStore';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 
 const TX_TIMEOUT_MS = 30_000; // 30 seconds
 
@@ -19,7 +19,7 @@ export function submitTx(
 ): Promise<any> {
   console.log(`[tx] Submitting: ${label}`);
 
-  const account = useBlockchainStore.getState().selectedAccount;
+  const account = useArenaStore.getState().selectedAccount;
   const isExtension = account?.source !== 'local' && account?.source !== 'dev';
 
   useTxStore.setState({ status: 'signing', label, isExtensionSigner: isExtension });

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useAchievementStore } from '../store/achievementStore';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { CARD_SIZES } from '../constants/cardSizes';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
@@ -47,7 +47,7 @@ function TrophyIcon({ tier, earned }: { tier: TrophyTier; earned: boolean }) {
 export function AchievementsPage() {
   const { engine, init, loadSetPreviews, setPreviewCards, setMetas } = useGameStore();
   const { isLoaded, fetchAchievements, hasBronze, hasSilver, hasGold } = useAchievementStore();
-  const { api, selectedAccount } = useBlockchainStore();
+  const { api, selectedAccount } = useArenaStore();
   const [selectedCard, setSelectedCard] = useState<CardView | null>(null);
 
   useInitGuard(() => {

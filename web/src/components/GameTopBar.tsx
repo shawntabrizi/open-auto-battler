@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { useMultiplayerStore } from '../store/multiplayerStore';
+import { useVersusStore } from '../store/versusStore';
 import { useCustomizationStore } from '../store/customizationStore';
 import { useMenuStore } from '../store/menuStore';
 import { HeartIcon, StarIcon, BagIcon, HourglassIcon, WarningIcon } from './Icons';
@@ -22,7 +22,7 @@ interface HUDProps {
 function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
   const { view, endTurn, engine } = useGameStore();
   const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } =
-    useMultiplayerStore();
+    useVersusStore();
   const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
   const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -233,7 +233,7 @@ export function BattleAction({
 }) {
   const { view, endTurn, engine } = useGameStore();
   const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } =
-    useMultiplayerStore();
+    useVersusStore();
   const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
   const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
 

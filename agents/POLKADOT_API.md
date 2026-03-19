@@ -15,7 +15,7 @@ This project uses the modern `polkadot-api` (PAPI) library for blockchain intera
   - **Option Types**: Use `undefined` for `None` and the raw value for `Some`.
 
 ## Store Integration (Zustand)
-- Connection logic resides in `blockchainStore.ts`.
+- Connection logic resides in `arenaStore.ts`.
 - Use `getTypedCodecs` for manual SCALE decoding when syncing with WASM.
 - Throttle chain state refreshes to avoid UI lag.
 

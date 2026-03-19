@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { useIsSubmitting } from '../store/txStore';
 import { toast } from 'react-hot-toast';
 import { uploadToPinata, ipfsUrl } from '../utils/ipfs';
@@ -23,7 +23,7 @@ const TYPE_OPTIONS: { value: CustomizationType; label: string; specs: string }[]
 const PINATA_KEY_STORAGE = 'oab_pinata_key';
 
 export const MintNftPage: React.FC = () => {
-  const { isConnected, connect, api, selectedAccount } = useBlockchainStore();
+  const { isConnected, connect, api, selectedAccount } = useArenaStore();
 
   const [nftType, setNftType] = useState<CustomizationType>('board_bg');
   const [uploadTab, setUploadTab] = useState<'pinata' | 'manual'>('manual');

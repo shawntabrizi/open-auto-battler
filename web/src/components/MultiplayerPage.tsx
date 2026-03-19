@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useMultiplayerStore } from '../store/multiplayerStore';
+import { useVersusStore } from '../store/versusStore';
 import { RotatePrompt } from './RotatePrompt';
 import { TopBar } from './TopBar';
 import { QRCodeSVG } from 'qrcode.react';
@@ -19,7 +19,7 @@ export function MultiplayerPage() {
     isHost,
     lives,
     setLives,
-  } = useMultiplayerStore();
+  } = useVersusStore();
 
   const [targetId, setTargetId] = useState('');
   const [showLogs, setShowLogs] = useState(false);
@@ -32,7 +32,7 @@ export function MultiplayerPage() {
   const joinIdFromUrl = searchParams.get('join');
 
   const joinUrl = myPeerId
-    ? `${window.location.origin}${window.location.pathname}#/multiplayer?join=${myPeerId}`
+    ? `${window.location.origin}${window.location.pathname}#/versus/lobby?join=${myPeerId}`
     : '';
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export function MultiplayerPage() {
   };
 
   const handleGoToGame = () => {
-    void navigate('/multiplayer/game');
+    void navigate('/versus/game');
   };
 
   const handleCopyLink = () => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
 import { useIsSubmitting } from '../store/txStore';
 import { toast } from 'react-hot-toast';
@@ -60,7 +60,7 @@ const SHOP_SCOPES: ShopScope[] = ['SelfUnit', 'Allies', 'All', 'AlliesOther', 'T
 const STATS: StatType[] = ['Health', 'Attack', 'Mana'];
 
 export const CreateCardPage: React.FC = () => {
-  const { isConnected, connect, submitCard } = useBlockchainStore();
+  const { isConnected, connect, submitCard } = useArenaStore();
   const cardNameMap = useGameStore((state) => state.cardNameMap);
   const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
 

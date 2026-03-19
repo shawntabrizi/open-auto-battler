@@ -16,14 +16,28 @@ flowchart TD
   Main --> Customize["/customize"]
   Main --> History["/history"]
 
-  Play --> OnlineArena["/blockchain"]
+  Play --> Arena["/arena"]
   Play --> Tournament["/tournament"]
-  Play --> Offline["/local"]
-  Play --> P2P["/multiplayer"]
+  Play --> Practice["/practice"]
+  Play --> Versus["/versus"]
 
-  OnlineArena --> SetSelect["Set Selection"]
-  Offline --> SetSelect
-  SetSelect --> Shop["Shop Phase"]
+  Arena --> ArenaSelect["/arena/select"]
+  Arena --> ArenaGame["/arena/game"]
+  Practice --> PracticeSelect["/practice/select"]
+  Practice --> PracticeGame["/practice/game"]
+  Tournament --> TournamentLobby["/tournament/lobby"]
+  Tournament --> TournamentGame["/tournament/game"]
+  Versus --> VersusLobby["/versus/lobby"]
+  Versus --> VersusGame["/versus/game"]
+
+  ArenaSelect --> ArenaGame
+  PracticeSelect --> PracticeGame
+  TournamentLobby --> TournamentGame
+  VersusLobby --> VersusGame
+
+  ArenaGame --> Shop["Shop Phase"]
+  PracticeGame --> Shop
+  TournamentGame --> Shop
   Tournament --> Shop
 
   Shop --> Battle["Battle Phase"]
@@ -36,11 +50,10 @@ flowchart TD
   Shop --> InGameHamburger
   Battle --> InGameHamburger
 
-  P2P --> MultiGame["/multiplayer/game"]
 
   Cards --> Sandbox["/sandbox"]
-  Cards --> CreateCard["/blockchain/create-card"]
-  Cards --> CreateSet["/blockchain/create-set"]
+  Cards --> CreateCard["/cards/create-card"]
+  Cards --> CreateSet["/cards/create-set"]
   Cards -.-> SetPreview["Set Preview Overlay"]
 
   Customize --> CustBg["/customize/backgrounds"]
@@ -67,7 +80,7 @@ flowchart TD
   InGameHamburger --> ReturnMenu["Return to Menu → /"]
   InGameHamburger --> Abandon["Abandon → /"]
 
-  Cards --> MintNft["/blockchain/mint-nft"]
+  Cards --> MintNft["/customize/mint-nft"]
 ```
 
 ## Global Elements
@@ -146,7 +159,7 @@ flowchart TD
 | Marketplace | Cart | `/marketplace` | Placeholder — coming soon |
 | Log Out | Exit arrow | — | Clears login session, returns to login page |
 
-**In-game menu** (on `/local`, `/blockchain`, `/tournament`, `/multiplayer/game`):
+**In-game menu** (on `/practice/game`, `/arena/game`, `/tournament/game`, `/versus/game`):
 
 | Label | Icon | Route | Notes |
 |---|---|---|---|
@@ -183,10 +196,10 @@ flowchart TD
 
 | Label | Route | Size | Notes |
 |---|---|---|---|
-| Online Arena | `/blockchain` | Large (primary) | Shows connection status. Routes to `/network` if not connected. |
+| Online Arena | `/arena` | Large (primary) | Shows connection status. Routes to `/network` if not connected. |
 | Tournament | `/tournament` | Medium | Only shown when active tournament exists. Shows entry fee and prize pool. |
-| Offline | `/local` | Half-width | Single player. Routes to `/network` if not connected. |
-| Peer-to-Peer | `/multiplayer` | Half-width | Direct connect P2P. |
+| Offline | `/practice` | Half-width | Single player. Routes to `/network` if not connected. |
+| Peer-to-Peer | `/versus` | Half-width | Direct connect P2P. |
 
 ## Cards
 
@@ -197,7 +210,7 @@ flowchart TD
 **Contents:**
 - **Sandbox CTA** — "See All Cards in the Sandbox" banner linking to `/sandbox`
 - **Set grid** — all card sets with mini 5-card art preview, name, card count. Click opens Set Preview Overlay.
-- **Create Card** (`/blockchain/create-card`) and **Create Set** (`/blockchain/create-set`) buttons at bottom
+- **Create Card** (`/cards/create-card`) and **Create Set** (`/cards/create-set`) buttons at bottom
 
 ## Customize
 
@@ -296,7 +309,7 @@ Each category has its own route under `/customize/:category`:
 
 ### Online Arena
 
-**Route:** `/blockchain`
+**Routes:** `/arena` → `/arena/select` → `/arena/game`
 
 **TopBar:** Back to `/play` (Play), title "Online Arena" (shown on connection-error and loading states)
 
@@ -308,7 +321,7 @@ Each category has its own route under `/customize/:category`:
 
 ### Offline
 
-**Route:** `/local`
+**Routes:** `/practice` → `/practice/select` → `/practice/game`
 
 **TopBar:** Back to `/play` (Play), title "Local Play" (shown on connection-error and loading states)
 
@@ -320,7 +333,7 @@ Each category has its own route under `/customize/:category`:
 
 ### Tournament
 
-**Route:** `/tournament`
+**Routes:** `/tournament` → `/tournament/lobby` → `/tournament/game`
 
 **TopBar:** Back to `/play` (Play), title "Tournament"
 
@@ -332,7 +345,7 @@ Each category has its own route under `/customize/:category`:
 
 ### Peer-to-Peer
 
-**Route:** `/multiplayer` → `/multiplayer/game`
+**Routes:** `/versus` → `/versus/lobby` → `/versus/game`
 
 **TopBar:** Back to `/play` (Play), title "P2P Multiplayer"
 
@@ -352,7 +365,7 @@ Each category has its own route under `/customize/:category`:
 
 ### Set Selection Screen
 
-**Shared component** used by `/local` and `/blockchain`
+**Shared component** used by `/practice/select` and `/arena/select`
 
 **TopBar:** Back to `/play` (Play) by default (configurable via `backTo` / `backLabel` props), title "Choose Your Set"
 
@@ -419,7 +432,7 @@ Each category has its own route under `/customize/:category`:
 
 ### Create Card
 
-**Route:** `/blockchain/create-card`
+**Route:** `/cards/create-card`
 
 **TopBar:** Back to `/cards` (Cards), title "Card Creator"
 
@@ -427,7 +440,7 @@ Each category has its own route under `/customize/:category`:
 
 ### Create Set
 
-**Route:** `/blockchain/create-set`
+**Route:** `/cards/create-set`
 
 **TopBar:** Back to `/cards` (Cards), title "Set Creator", `hasCardPanel` (desktop)
 
@@ -435,7 +448,7 @@ Each category has its own route under `/customize/:category`:
 
 ### Mint NFT
 
-**Route:** `/blockchain/mint-nft`
+**Route:** `/customize/mint-nft`
 
 **TopBar:** Back to `/cards` (Cards), title "Mint NFT"
 
@@ -478,19 +491,26 @@ These are full-screen or partial overlays rendered on top of the current page. C
 | `/history/stats` | Stats | `/history` |
 | `/history/battles` | Battle History (placeholder) | `/history` |
 | `/history/ghosts` | Ghost Browser | `/history` |
-| `/local` | Offline Game | `/play` |
+| `/practice` | Practice (redirect) | `/play` |
+| `/practice/select` | Practice Set Selection | `/play` |
+| `/practice/game` | Practice Game | `/practice` |
 | `/sandbox` | Sandbox | `/cards` |
-| `/multiplayer` | P2P Setup | `/play` |
-| `/multiplayer/game` | P2P Game | `/multiplayer` |
-| `/blockchain` | Online Arena | `/play` |
-| `/tournament` | Tournament | `/play` |
+| `/versus` | Versus (redirect) | `/play` |
+| `/versus/lobby` | P2P Lobby | `/play` |
+| `/versus/game` | P2P Game | `/versus/lobby` |
+| `/arena` | Arena (redirect) | `/play` |
+| `/arena/select` | Arena Set Selection | `/play` |
+| `/arena/game` | Arena Game | `/arena` |
+| `/tournament` | Tournament (redirect) | `/play` |
+| `/tournament/lobby` | Tournament Lobby | `/play` |
+| `/tournament/game` | Tournament Game | `/tournament/lobby` |
 | `/settings` | Settings | `/` or game |
 | `/network` | Network | `/` |
 | `/account` | Account | `/` |
 | `/marketplace` | Marketplace | `/` |
-| `/blockchain/create-card` | Create Card | `/cards` |
-| `/blockchain/create-set` | Create Set | `/cards` |
-| `/blockchain/mint-nft` | Mint NFT | `/cards` |
+| `/cards/create-card` | Create Card | `/cards` |
+| `/cards/create-set` | Create Set | `/cards` |
+| `/customize/mint-nft` | Mint NFT | `/cards` |
 | `/set/:setId` | Set Page | `/cards` |
 | `/dev` | Dev Preview | — |
 | `/dev/game-over` | Game Over Preview | — |

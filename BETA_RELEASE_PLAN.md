@@ -35,13 +35,13 @@ The beta is the first version of Open Auto Battler that feels like a complete ga
 
 The achievement system uses a simpler, gas-efficient design based on the existing ghost archive infrastructure rather than tracking cards throughout a run.
 
-**How it works:** When a player wins 10 rounds, their final board is archived in `GhostArchive` with `wins=10`. Anyone can then call `claim_victory_achievement` pointing at that archive entry. The pallet verifies the entry has 10+ wins, reads the card IDs from the board, and records them as unlocked achievements for the board's owner.
+**How it works:** Achievements use a bitmap per (player, card_id) stored in `VictoryAchievements`. Bronze is granted automatically when a card enters battle. Silver and gold are granted when the player calls `end_game` / `end_tournament_game` after completing a run with 10+ wins (gold requires no losses).
 
 **Implementation (already merged):**
-- New storage: `VictoryAchievements<T>` — `StorageDoubleMap<(AccountId, CardId), bool>` — tracks which cards a player had on their board during a 10-win run
-- New extrinsic: `claim_victory_achievement(set_id, round, wins, lives, archive_id)` — permissionless, anyone can call. Looks up the ghost archive entry, verifies `wins >= 10`, records each card ID as an achievement for the board owner
-- New event: `VictoryAchievementClaimed { owner, archive_id, card_ids }`
-- Victory boards are now archived: both `submit_turn` and `submit_tournament_turn` store an additional ghost with `wins=10` in the archive when a player achieves victory
+- Storage: `VictoryAchievements<T>` — `StorageDoubleMap<(AccountId, CardId), u8>` — bitmap per card (bit 0 = bronze/played, bit 1 = silver/10 wins, bit 2 = gold/perfect run)
+- `submit_turn` / `submit_tournament_turn` grant bronze for all cards on board entering battle, then set `phase = Completed` when game ends
+- `end_game` / `end_tournament_game` extrinsics finalize: archive ghost board, grant silver/gold achievements, update tournament stats, remove session
+- `GamePhase` enum: `{Shop, Battle, Completed}` — consistent across pallet and client engine
 - Status system (Shield/Poison/Guard) was removed to simplify the engine for beta — 5 cards became stat-sticks (balance pass in Phase 3 will address)
 
 **Design Rationale:**
@@ -50,7 +50,7 @@ The achievement is: "reach 10 wins with this card on your final board." This is 
 ### Phase 2: Holographic Card Rendering ✅ DONE
 
 **What was built:**
-- `achievementStore.ts` — Zustand store that queries `VictoryAchievements` on-chain storage for the connected account and exposes `isHolographic(cardId)`
+- `achievementStore.ts` — Zustand store that queries `VictoryAchievements` on-chain storage for the connected account and exposes `hasBronze`, `hasSilver`, `hasGold`, and `isHolographic` (silver or gold)
 - Achievements are fetched automatically on account selection
 - `UnitCard` internally checks the achievement store — every card in the app (hand, board, battle, sandbox, bag, ghost browser, set preview, etc.) automatically renders holographic if unlocked
 - CSS holographic effect: animated rotating `conic-gradient` rainbow border (via `.holo-border` wrapper), rainbow shimmer overlay (`.holo-shimmer` div), and pulsing prismatic outer glow
@@ -59,7 +59,7 @@ The achievement is: "reach 10 wins with this card on your final board." This is 
 
 **Remaining:**
 - [ ] Achievement progress panel: per-set grid showing which cards are mastered vs remaining, with overall % completion
-- [ ] Call `claim_victory_achievement` after a victory run ends (can be triggered automatically or via a button)
+- [x] `end_game` / `end_tournament_game` called automatically after game completion (grants achievements)
 - [ ] Holographic badge/indicator in collection views
 
 **No NFT minting required** — holographic is an on-chain unlock flag, not an NFT. It's a permanent cosmetic tied to the player's account and displayed automatically.
@@ -134,8 +134,8 @@ PALLET
   [x] Ghost opponent storage + matchmaking
   [x] Game progression (start → shop → battle → repeat)
   [x] Tournament system
-  [x] VictoryAchievements storage (AccountId × CardId → bool)
-  [x] claim_victory_achievement extrinsic (permissionless, reads ghost archive)
+  [x] VictoryAchievements (AccountId × CardId → u8 bitmap)
+  [x] end_game / end_tournament_game extrinsics (finalize game, grant achievements)
   [x] Victory boards archived with wins=10 on game completion
 
 CONTENT
@@ -156,7 +156,7 @@ FRONTEND
   [x] Achievement store (fetches VictoryAchievements on account select)
   [x] Genesis style NFT minting on new user / add funds
   [ ] Achievement progress page (per-set mastery grid)
-  [ ] Call claim_victory_achievement after victory runs
+  [ ] Call end_game after victory runs
   [ ] Style set bundle view
 ```
 
@@ -178,5 +178,5 @@ These features already exist in the codebase but are not part of the beta scope.
 2. ~~**Holographic rendering** (frontend CSS + achievement store)~~ ✅ DONE
 3. **Balance pass** on Starter Pack — makes the game actually fun to play competitively; also fix the 5 cards that lost status abilities
 4. **2 new style sets** (art production + IPFS upload + styles.json) — can be parallelized with above
-5. **Frontend pages** (achievement progress grid, style bundles) + wire `claim_victory_achievement` call after victory runs
+5. **Frontend pages** (achievement progress grid, style bundles) + wire `end_game` call after victory runs
 6. **Integration testing** + ghost backfill for the rebalanced set

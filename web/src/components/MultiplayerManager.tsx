@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useMultiplayerStore } from '../store/multiplayerStore';
+import { useVersusStore } from '../store/versusStore';
 import { useGameStore } from '../store/gameStore';
 
 const BATTLE_TIMER_SECONDS = 20;
@@ -24,7 +24,7 @@ export function MultiplayerManager() {
     setIsReady,
     battleTimer,
     setBattleTimer,
-  } = useMultiplayerStore();
+  } = useVersusStore();
 
   const { startMultiplayerGame, resolveMultiplayerBattle, view, engine } = useGameStore();
 
@@ -82,7 +82,7 @@ export function MultiplayerManager() {
       const guestPlayerSeed = Math.floor(Math.random() * 1000000);
       const sharedBattleSeed = Math.floor(Math.random() * 1000000);
 
-      const { lives } = useMultiplayerStore.getState();
+      const { lives } = useVersusStore.getState();
       setGameSeed(hostPlayerSeed);
       setBattleSeed(sharedBattleSeed);
       startMultiplayerGame(hostPlayerSeed, lives);
@@ -112,7 +112,7 @@ export function MultiplayerManager() {
     if (guestGameStarted.current) return;
     if (!isHost && gameSeed !== null && engine && status === 'in-game') {
       guestGameStarted.current = true;
-      const { lives } = useMultiplayerStore.getState();
+      const { lives } = useVersusStore.getState();
       addLog('Guest: Starting game with received seed...');
       startMultiplayerGame(gameSeed, lives);
     }
@@ -127,7 +127,7 @@ export function MultiplayerManager() {
       setBattleTimer(BATTLE_TIMER_SECONDS);
 
       timerRef.current = setInterval(() => {
-        const currentTimer = useMultiplayerStore.getState().battleTimer;
+        const currentTimer = useVersusStore.getState().battleTimer;
         if (currentTimer !== null && currentTimer > 1) {
           setBattleTimer(currentTimer - 1);
         } else {

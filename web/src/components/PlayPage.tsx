@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { TopBar } from './TopBar';
 
@@ -10,7 +10,7 @@ const formatBalance = (raw: bigint, decimals = 12) =>
   });
 
 export function PlayPage() {
-  const { isConnected, blockNumber } = useBlockchainStore();
+  const { isConnected, blockNumber } = useArenaStore();
   const { activeTournament } = useTournamentStore();
 
   return (
@@ -21,7 +21,7 @@ export function PlayPage() {
           <div className="flex flex-col gap-3 lg:gap-4">
             {/* Online Arena — primary mode */}
             <Link
-              to={isConnected ? '/blockchain' : '/network'}
+              to={isConnected ? '/arena' : '/network'}
               className={`group block w-full p-5 lg:p-7 rounded-xl border-2 transition-all text-center ${
                 isConnected
                   ? 'border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-orange-600/5 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] active:scale-[0.98]'
@@ -63,7 +63,7 @@ export function PlayPage() {
             {/* Secondary modes */}
             <div className="grid grid-cols-2 gap-3 lg:gap-4">
               <Link
-                to={isConnected ? '/local' : '/network'}
+                to={isConnected ? '/practice' : '/network'}
                 className={`group block p-4 lg:p-5 rounded-xl border transition-all text-center ${
                   isConnected
                     ? 'border-warm-700 bg-warm-900/30 hover:border-warm-500 hover:bg-warm-800/40 active:scale-[0.98]'
@@ -75,7 +75,7 @@ export function PlayPage() {
               </Link>
 
               <Link
-                to="/multiplayer"
+                to="/versus"
                 className="group block p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30 hover:border-warm-500 hover:bg-warm-800/40 active:scale-[0.98] transition-all text-center"
               >
                 <h3 className="font-heading text-base lg:text-lg font-bold text-white">

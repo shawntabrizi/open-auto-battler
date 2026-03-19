@@ -272,7 +272,7 @@ function collectGhostCandidates(entries: any[], setId: number) {
     .filter((entry: any) => entry.setId === setId && entry.ghosts.length > 0);
 }
 
-interface BlockchainStore {
+interface ArenaStore {
   // Connection state
   client: any;
   api: any;
@@ -400,7 +400,7 @@ export const getDevAccounts = () => {
   });
 };
 
-export const useBlockchainStore = create<BlockchainStore>((set, get) => ({
+export const useArenaStore = create<ArenaStore>((set, get) => ({
   // Connection state
   client: null,
   api: null,

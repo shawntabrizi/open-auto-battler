@@ -5,7 +5,7 @@ The frontend is a React application built with Vite and Tailwind CSS.
 ## State Management
 - **Zustand**: Primary state management.
   - `gameStore.ts`: Local game state, WASM engine instance, and UI states (modals, selections).
-  - `blockchainStore.ts`: Wallet connection, account management, and on-chain syncing.
+  - `arenaStore.ts`: Wallet connection, account management, and on-chain syncing.
 - **WASM Bridge**: The `gameStore` initializes the `GameEngine`. All heavy game logic is delegated to the WASM module.
 
 ## UI/UX

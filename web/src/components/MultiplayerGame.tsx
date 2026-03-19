@@ -2,16 +2,16 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GameLayout } from './GameLayout';
 import { MultiplayerManager } from './MultiplayerManager';
-import { useMultiplayerStore } from '../store/multiplayerStore';
+import { useVersusStore } from '../store/versusStore';
 
 export function MultiplayerGame() {
   const navigate = useNavigate();
-  const { status, conn } = useMultiplayerStore();
+  const { status, conn } = useVersusStore();
 
   // Redirect to lobby if not connected
   useEffect(() => {
     if (!conn || status === 'disconnected') {
-      void navigate('/multiplayer');
+      void navigate('/versus/lobby');
     }
   }, [conn, status, navigate]);
 

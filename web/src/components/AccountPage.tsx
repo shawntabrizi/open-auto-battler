@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { TopBar } from './TopBar';
 
 const formatBalance = (raw: bigint, decimals = 12) =>
@@ -16,8 +16,8 @@ interface AccountInfo {
 }
 
 export function AccountPage() {
-  const { isConnected, selectedAccount } = useBlockchainStore();
-  const api = useBlockchainStore((s) => s.api);
+  const { isConnected, selectedAccount } = useArenaStore();
+  const api = useArenaStore((s) => s.api);
 
   const [info, setInfo] = useState<AccountInfo | null>(null);
   const [loading, setLoading] = useState(false);
@@ -58,11 +58,11 @@ export function AccountPage() {
   const handleSaveName = () => {
     if (!selectedAccount || !nameInput.trim()) return;
     // Update the account name in the store's accounts array
-    const { accounts } = useBlockchainStore.getState();
+    const { accounts } = useArenaStore.getState();
     const updated = accounts.map((a: any) =>
       a.address === selectedAccount.address ? { ...a, name: nameInput.trim() } : a
     );
-    useBlockchainStore.setState({
+    useArenaStore.setState({
       accounts: updated,
       selectedAccount: { ...selectedAccount, name: nameInput.trim() },
     });

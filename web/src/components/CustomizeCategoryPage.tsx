@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import {
   useCustomizationStore,
   type CustomizationType,
@@ -80,7 +80,7 @@ const SHAPE_CLASSES: Record<TileShape, { sm: string; lg: string; rounded: string
 
 export function CustomizeCategoryPage() {
   const { category } = useParams<{ category: string }>();
-  const { isConnected, api, selectedAccount } = useBlockchainStore();
+  const { isConnected, api, selectedAccount } = useArenaStore();
   const { ownedNfts, selections, isLoading, fetchUserNfts, selectCustomization } =
     useCustomizationStore();
 
@@ -127,7 +127,7 @@ export function CustomizeCategoryPage() {
           </p>
           {isConnected && (
             <Link
-              to="/blockchain/mint-nft"
+              to="/customize/mint-nft"
               className="mt-2 text-yellow-500 text-xs hover:underline"
             >
               Mint one

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { useInitGuard } from '../hooks';
 import { LoginPage } from './LoginPage';
 
@@ -13,9 +13,9 @@ const RESTORE_TIMEOUT_MS = 10_000;
  * - Shows the app content if logged in
  */
 export function AuthGate({ children }: { children: React.ReactNode }) {
-  const isLoggedIn = useBlockchainStore((s) => s.isLoggedIn);
-  const isRestoringSession = useBlockchainStore((s) => s.isRestoringSession);
-  const connect = useBlockchainStore((s) => s.connect);
+  const isLoggedIn = useArenaStore((s) => s.isLoggedIn);
+  const isRestoringSession = useArenaStore((s) => s.isRestoringSession);
+  const connect = useArenaStore((s) => s.connect);
 
   // Auto-connect when restoring a session
   useInitGuard(() => {
@@ -28,8 +28,8 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isRestoringSession) return;
     const timer = setTimeout(() => {
-      if (useBlockchainStore.getState().isRestoringSession) {
-        useBlockchainStore.setState({ isRestoringSession: false });
+      if (useArenaStore.getState().isRestoringSession) {
+        useArenaStore.setState({ isRestoringSession: false });
       }
     }, RESTORE_TIMEOUT_MS);
     return () => clearTimeout(timer);

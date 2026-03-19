@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
 import { useMenuStore } from '../store/menuStore';
 import { GearIcon, CloseIcon } from './Icons';
@@ -68,11 +68,11 @@ function AbandonIcon({ className = 'w-5 h-5' }: { className?: string }) {
   );
 }
 
-/** Routes that are considered "in-game" (shop/battle phase) */
-const GAME_ROUTES = ['/local', '/blockchain', '/tournament', '/multiplayer/game'];
+// Routes that are considered "in-game" (shop/battle phase)
+const GAME_ROUTES = ['/practice/game', '/arena/game', '/tournament/game', '/versus/game'];
 
 function isGameRoute(pathname: string) {
-  return GAME_ROUTES.some((r) => pathname === r || pathname.startsWith(r + '/'));
+  return GAME_ROUTES.includes(pathname);
 }
 
 const MENU_ITEMS = [
@@ -96,7 +96,7 @@ export function HamburgerMenu() {
   const panelRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isConnected, logout, abandonGame } = useBlockchainStore();
+  const { isConnected, logout, abandonGame } = useArenaStore();
   const { newRun } = useGameStore();
 
   const inGame = isGameRoute(location.pathname);
@@ -129,7 +129,7 @@ export function HamburgerMenu() {
 
   const handleAbandon = async () => {
     try {
-      if (location.pathname === '/blockchain' || location.pathname === '/tournament') {
+      if (location.pathname === '/arena/game' || location.pathname === '/tournament/game') {
         await abandonGame();
       } else {
         newRun();

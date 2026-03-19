@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useIsSubmitting } from '../store/txStore';
-import { useBlockchainStore, getDevAccounts } from '../store/blockchainStore';
+import { useArenaStore, getDevAccounts } from '../store/arenaStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useGameStore } from '../store/gameStore';
-import { GameShell } from './GameShell';
 import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { RotatePrompt } from './RotatePrompt';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { TopBar } from './TopBar';
 import { useInitGuard } from '../hooks';
 import { submitTx } from '../utils/tx';
@@ -22,7 +21,7 @@ const formatPerbill = (value: number) => {
   return `${pct.toFixed(pct % 1 === 0 ? 0 : 1)}%`;
 };
 
-export const TournamentPage: React.FC = () => {
+export function TournamentLobbyPage() {
   const {
     isConnected,
     isConnecting,
@@ -36,14 +35,14 @@ export const TournamentPage: React.FC = () => {
     fetchCards,
     hydrateGameEngineFromChainData,
     connectionError,
-  } = useBlockchainStore();
+  } = useArenaStore();
 
-  const { init, engine, view, previewSet } = useGameStore();
+  const { init, engine, previewSet } = useGameStore();
+  const navigate = useNavigate();
 
   const {
     activeTournament,
     isLoadingTournament,
-    hasActiveTournamentGame,
     playerStats,
     allPlayerStats,
     tournamentGameOver,
@@ -52,15 +51,12 @@ export const TournamentPage: React.FC = () => {
     fetchPlayerStats,
     fetchAllPlayerStats,
     joinTournament,
-    submitTournamentTurn,
-    refreshTournamentGameState,
     resetGameOver,
   } = useTournamentStore();
 
   const isSubmitting = useIsSubmitting();
   const refreshCalled = useRef(false);
 
-  // Initialize WASM engine
   useInitGuard(() => {
     void init();
     if (isConnected) {
@@ -74,43 +70,31 @@ export const TournamentPage: React.FC = () => {
     hydrateGameEngineFromChainData();
   }, [engine, hydrateGameEngineFromChainData, isConnected]);
 
-  // Fetch tournament data when connected
   useEffect(() => {
     if (!isConnected) return;
     void fetchActiveTournament();
   }, [isConnected, fetchActiveTournament]);
 
-  // Fetch player stats and leaderboard when tournament is loaded
   useEffect(() => {
     if (!activeTournament || !selectedAccount) return;
     void fetchPlayerStats();
     void fetchAllPlayerStats(activeTournament.id);
   }, [activeTournament, selectedAccount, fetchPlayerStats, fetchAllPlayerStats]);
 
-  // Sync tournament game state when engine is ready
-  useEffect(() => {
-    if (!engine || !isConnected || !selectedAccount) return;
-    if (refreshCalled.current) return;
-    refreshCalled.current = true;
-    void refreshTournamentGameState();
-  }, [engine, isConnected, selectedAccount, refreshTournamentGameState]);
-
   const handleJoinTournament = async () => {
     if (!activeTournament) return;
     await joinTournament(activeTournament.id);
-  };
-
-  const handleSubmitTournamentTurn = async () => {
-    await submitTournamentTurn();
+    navigate('/tournament/game');
   };
 
   const handlePlayAgain = async () => {
     if (!activeTournament) return;
     resetGameOver();
     await joinTournament(activeTournament.id);
+    navigate('/tournament/game');
   };
 
-  const handleBackToTournament = () => {
+  const handleBackToLobby = () => {
     resetGameOver();
     refreshCalled.current = false;
     void fetchActiveTournament();
@@ -163,52 +147,7 @@ export const TournamentPage: React.FC = () => {
                 </button>
               )}
               <button
-                onClick={handleBackToTournament}
-                className="text-warm-400 hover:text-warm-200 text-sm transition-colors"
-              >
-                &larr; Back to Tournament
-              </button>
-            </div>
-          </div>
-        </div>
-        <RotatePrompt />
-      </div>
-    );
-  }
-
-  // ── Game Over from view (completed while playing) ──
-  if (view?.phase === 'completed') {
-    // This shouldn't normally happen since we handle game over via TournamentGameCompleted event,
-    // but handle it gracefully
-    const isVictory = view.wins >= 10;
-    return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col text-white">
-        <TopBar backTo="/play" backLabel="Play" title="Tournament" />
-        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
-          <div
-            className={`p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm ${
-              isVictory
-                ? 'bg-green-900/30 border-2 border-green-500'
-                : 'bg-red-900/30 border-2 border-red-500'
-            }`}
-          >
-            <h1
-              className={`text-3xl font-bold mb-4 ${isVictory ? 'text-green-400' : 'text-red-400'}`}
-            >
-              {isVictory ? 'PERFECT RUN!' : 'RUN OVER'}
-            </h1>
-            <div className="flex flex-col gap-3">
-              {activeTournament && (
-                <button
-                  onClick={handlePlayAgain}
-                  disabled={isSubmitting}
-                  className="bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 px-8 rounded-xl text-sm transition-all disabled:opacity-50"
-                >
-                  PLAY AGAIN
-                </button>
-              )}
-              <button
-                onClick={handleBackToTournament}
+                onClick={handleBackToLobby}
                 className="text-warm-400 hover:text-warm-200 text-sm transition-colors"
               >
                 &larr; Back to Tournament
@@ -253,30 +192,6 @@ export const TournamentPage: React.FC = () => {
     );
   }
 
-  // ── Active Tournament Game ──
-  if (hasActiveTournamentGame && view) {
-    return (
-      <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans selection:bg-purple-500/30 flex flex-col">
-        <GameShell
-          hideEndTurn={true}
-          customAction={{
-            label: 'Commit',
-            onClick: handleSubmitTournamentTurn,
-            disabled: isSubmitting,
-            variant: 'chain',
-          }}
-          blockchainMode={true}
-          detailMode="tournament"
-          blockNumber={blockNumber}
-          accounts={accounts}
-          selectedAccount={selectedAccount}
-          onSelectAccount={selectAccount}
-        />
-        <RotatePrompt />
-      </div>
-    );
-  }
-
   // ── Tournament Details Screen ──
   const setName =
     availableSets.find((s) => s.id === activeTournament?.config.set_id)?.name ||
@@ -287,12 +202,10 @@ export const TournamentPage: React.FC = () => {
       <TopBar backTo="/play" backLabel="Play" title="Tournament" />
       <div className="flex-1 flex items-center justify-center overflow-y-auto p-4">
         <div className="text-center bg-warm-900 p-3 lg:p-6 rounded-xl lg:rounded-2xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-lg">
-          {/* Header */}
           <h3 className="text-lg lg:text-2xl font-black mb-1 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
             TOURNAMENT
           </h3>
 
-          {/* Connection Status & Account */}
           <div className="flex items-center justify-center gap-2 lg:gap-3 mb-2 lg:mb-6">
             <div className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1 lg:py-1.5 bg-warm-800 rounded lg:rounded-lg border border-white/5">
               <div className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-green-500 animate-pulse" />
@@ -302,10 +215,10 @@ export const TournamentPage: React.FC = () => {
             </div>
             <select
               value={selectedAccount?.address}
-              onChange={(e) => selectAccount(accounts.find((a) => a.address === e.target.value))}
+              onChange={(e) => selectAccount(accounts.find((a: any) => a.address === e.target.value))}
               className="bg-warm-800 border border-white/10 rounded lg:rounded-lg px-1.5 lg:px-2 py-1 lg:py-1.5 text-[10px] lg:text-xs outline-none focus:border-purple-500/50"
             >
-              {accounts.map((acc) => (
+              {accounts.map((acc: any) => (
                 <option key={acc.address} value={acc.address}>
                   {acc.source === 'dev' ? '🛠️ ' : ''}
                   {acc.name} ({acc.address.slice(0, 6)}...)
@@ -325,7 +238,6 @@ export const TournamentPage: React.FC = () => {
             />
           ) : (
             <>
-              {/* Card Set */}
               <div className="flex items-center justify-center gap-2 mb-2 lg:mb-4">
                 <span className="text-xs lg:text-sm text-warm-300">
                   Card Set: <span className="font-bold text-white">{setName}</span>
@@ -338,136 +250,66 @@ export const TournamentPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Info Grid */}
               <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5 lg:gap-3 mb-2 lg:mb-4 text-center lg:text-left">
                 <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
-                    Fee
-                  </div>
-                  <div className="text-xs lg:text-sm font-bold text-white">
-                    {formatBalance(activeTournament.config.entry_fee)}
-                  </div>
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">Fee</div>
+                  <div className="text-xs lg:text-sm font-bold text-white">{formatBalance(activeTournament.config.entry_fee)}</div>
                 </div>
                 <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
-                    Pool
-                  </div>
-                  <div className="text-xs lg:text-sm font-bold text-purple-300">
-                    {formatBalance(activeTournament.state.total_pot)}
-                  </div>
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">Pool</div>
+                  <div className="text-xs lg:text-sm font-bold text-purple-300">{formatBalance(activeTournament.state.total_pot)}</div>
                 </div>
                 <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
-                    Entries
-                  </div>
-                  <div className="text-xs lg:text-sm font-bold text-white">
-                    {activeTournament.state.total_entries}
-                  </div>
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">Entries</div>
+                  <div className="text-xs lg:text-sm font-bold text-white">{activeTournament.state.total_entries}</div>
                 </div>
                 <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
-                    Perfect
-                  </div>
-                  <div className="text-xs lg:text-sm font-bold text-green-400">
-                    {activeTournament.state.total_perfect_runs}
-                  </div>
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">Perfect</div>
+                  <div className="text-xs lg:text-sm font-bold text-green-400">{activeTournament.state.total_perfect_runs}</div>
                 </div>
               </div>
 
-              {/* Prize Distribution */}
               <div className="bg-warm-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
-                <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">
-                  Prize Distribution
-                </div>
+                <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">Prize Distribution</div>
                 <div className="flex gap-2 lg:gap-4 text-[10px] lg:text-xs">
-                  <div>
-                    <span className="text-warm-400">Players: </span>
-                    <span className="text-white font-bold">
-                      {formatPerbill(activeTournament.config.prize_config.player_share)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-warm-400">Set Creator: </span>
-                    <span className="text-white font-bold">
-                      {formatPerbill(activeTournament.config.prize_config.set_creator_share)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-warm-400">Card Creators: </span>
-                    <span className="text-white font-bold">
-                      {formatPerbill(activeTournament.config.prize_config.card_creators_share)}
-                    </span>
-                  </div>
+                  <div><span className="text-warm-400">Players: </span><span className="text-white font-bold">{formatPerbill(activeTournament.config.prize_config.player_share)}</span></div>
+                  <div><span className="text-warm-400">Set Creator: </span><span className="text-white font-bold">{formatPerbill(activeTournament.config.prize_config.set_creator_share)}</span></div>
+                  <div><span className="text-warm-400">Card Creators: </span><span className="text-white font-bold">{formatPerbill(activeTournament.config.prize_config.card_creators_share)}</span></div>
                 </div>
               </div>
 
-              {/* Your Stats */}
               {playerStats && playerStats.total_games > 0 && (
                 <div className="bg-purple-900/20 rounded lg:rounded-lg p-2 lg:p-3 border border-purple-500/20 mb-2 lg:mb-4 text-left">
-                  <div className="text-[8px] lg:text-[10px] text-purple-400 uppercase font-bold mb-1 lg:mb-2">
-                    Your Stats
-                  </div>
+                  <div className="text-[8px] lg:text-[10px] text-purple-400 uppercase font-bold mb-1 lg:mb-2">Your Stats</div>
                   <div className="flex gap-2 lg:gap-4 text-[10px] lg:text-xs">
-                    <div>
-                      <span className="text-warm-400">Games: </span>
-                      <span className="text-white font-bold">{playerStats.total_games}</span>
-                    </div>
-                    <div>
-                      <span className="text-warm-400">Wins: </span>
-                      <span className="text-white font-bold">{playerStats.total_wins}</span>
-                    </div>
-                    <div>
-                      <span className="text-warm-400">Perfect Runs: </span>
-                      <span className="text-green-400 font-bold">{playerStats.perfect_runs}</span>
-                    </div>
+                    <div><span className="text-warm-400">Games: </span><span className="text-white font-bold">{playerStats.total_games}</span></div>
+                    <div><span className="text-warm-400">Wins: </span><span className="text-white font-bold">{playerStats.total_wins}</span></div>
+                    <div><span className="text-warm-400">Perfect Runs: </span><span className="text-green-400 font-bold">{playerStats.perfect_runs}</span></div>
                   </div>
                 </div>
               )}
 
-              {/* Leaderboard */}
               {allPlayerStats.length > 0 && (
                 <div className="bg-warm-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">
-                    Leaderboard
-                  </div>
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">Leaderboard</div>
                   <table className="w-full text-[10px] lg:text-xs">
                     <thead>
                       <tr className="text-warm-500">
                         <th className="text-left pb-0.5 lg:pb-1">#</th>
                         <th className="text-left pb-0.5 lg:pb-1">Player</th>
-                        <th className="text-right pb-0.5 lg:pb-1">
-                          <span className="hidden lg:inline">Games</span>
-                          <span className="lg:hidden">G</span>
-                        </th>
-                        <th className="text-right pb-0.5 lg:pb-1">
-                          <span className="hidden lg:inline">Wins</span>
-                          <span className="lg:hidden">W</span>
-                        </th>
-                        <th className="text-right pb-0.5 lg:pb-1">
-                          <span className="hidden lg:inline">Perfect</span>
-                          <span className="lg:hidden">P</span>
-                        </th>
+                        <th className="text-right pb-0.5 lg:pb-1"><span className="hidden lg:inline">Games</span><span className="lg:hidden">G</span></th>
+                        <th className="text-right pb-0.5 lg:pb-1"><span className="hidden lg:inline">Wins</span><span className="lg:hidden">W</span></th>
+                        <th className="text-right pb-0.5 lg:pb-1"><span className="hidden lg:inline">Perfect</span><span className="lg:hidden">P</span></th>
                       </tr>
                     </thead>
                     <tbody>
                       {allPlayerStats.slice(0, 10).map((entry, i) => (
-                        <tr
-                          key={entry.account}
-                          className={
-                            entry.account === selectedAccount?.address
-                              ? 'text-purple-300'
-                              : 'text-warm-300'
-                          }
-                        >
+                        <tr key={entry.account} className={entry.account === selectedAccount?.address ? 'text-purple-300' : 'text-warm-300'}>
                           <td className="py-px lg:py-0.5">{i + 1}</td>
-                          <td className="py-px lg:py-0.5 font-mono">
-                            {entry.account.slice(0, 6)}...{entry.account.slice(-4)}
-                          </td>
+                          <td className="py-px lg:py-0.5 font-mono">{entry.account.slice(0, 6)}...{entry.account.slice(-4)}</td>
                           <td className="text-right py-px lg:py-0.5">{entry.stats.total_games}</td>
                           <td className="text-right py-px lg:py-0.5">{entry.stats.total_wins}</td>
-                          <td className="text-right py-px lg:py-0.5 text-green-400">
-                            {entry.stats.perfect_runs}
-                          </td>
+                          <td className="text-right py-px lg:py-0.5 text-green-400">{entry.stats.perfect_runs}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -475,7 +317,6 @@ export const TournamentPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Join Button */}
               <button
                 onClick={handleJoinTournament}
                 disabled={isSubmitting}
@@ -491,19 +332,17 @@ export const TournamentPage: React.FC = () => {
       <RotatePrompt />
     </div>
   );
-};
+}
 
 // ── Dev helper: create a test tournament via sudo ──
 
 const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }) => {
-  const { api, blockNumber, availableSets } = useBlockchainStore();
+  const { api, blockNumber, availableSets } = useArenaStore();
   const isSubmittingTx = useIsSubmitting();
   const [selectedSetId, setSelectedSetId] = useState(0);
 
-  // Alice is always available — derived directly from dev seed
   const alice = getDevAccounts()[0];
 
-  // Default to first available set
   useEffect(() => {
     if (availableSets.length > 0 && selectedSetId === 0) {
       setSelectedSetId(availableSets[0].id);
@@ -515,22 +354,20 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
     try {
       const startBlock = blockNumber + 1;
       const endBlock = blockNumber + 1000;
-      const entryFee = BigInt(1_000_000_000_000); // 1 unit
+      const entryFee = BigInt(1_000_000_000_000);
 
-      // Build the inner create_tournament call
       const innerCall = api.tx.AutoBattle.create_tournament({
         set_id: selectedSetId,
         entry_fee: entryFee,
         start_block: startBlock,
         end_block: endBlock,
         prize_config: {
-          player_share: 700_000_000, // 70%
-          set_creator_share: 200_000_000, // 20%
-          card_creators_share: 100_000_000, // 10%
+          player_share: 700_000_000,
+          set_creator_share: 200_000_000,
+          card_creators_share: 100_000_000,
         },
       });
 
-      // Wrap in sudo — always signed by Alice (sudo key)
       const tx = api.tx.Sudo.sudo({ call: innerCall.decodedCall });
       await submitTx(tx, alice.polkadotSigner, 'Sudo.sudo(create_tournament)');
       onCreated();
@@ -542,11 +379,8 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
   return (
     <div className="text-center">
       <p className="text-warm-400 text-sm mb-4">No active tournament found.</p>
-
       <div className="bg-warm-800/50 rounded-lg p-4 border border-white/5 mb-4 text-left">
-        <div className="text-[10px] text-warm-500 uppercase font-bold mb-3">
-          Create Test Tournament (Sudo)
-        </div>
+        <div className="text-[10px] text-warm-500 uppercase font-bold mb-3">Create Test Tournament (Sudo)</div>
         <div className="flex items-center gap-2 mb-3">
           <label className="text-xs text-warm-400 shrink-0">Card Set:</label>
           <select
@@ -554,18 +388,12 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
             onChange={(e) => setSelectedSetId(Number(e.target.value))}
             className="flex-1 bg-warm-700 border border-white/10 text-white text-xs rounded px-2 py-1.5 outline-none"
           >
-            {[...availableSets]
-              .sort((a, b) => a.id - b.id)
-              .map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} (#{s.id})
-                </option>
-              ))}
+            {[...availableSets].sort((a, b) => a.id - b.id).map((s) => (
+              <option key={s.id} value={s.id}>{s.name} (#{s.id})</option>
+            ))}
           </select>
         </div>
-        <div className="text-[10px] text-warm-500 mb-3">
-          Entry: 1 unit | Duration: 1000 blocks | Prize: 70/20/10
-        </div>
+        <div className="text-[10px] text-warm-500 mb-3">Entry: 1 unit | Duration: 1000 blocks | Prize: 70/20/10</div>
         <button
           onClick={handleCreate}
           disabled={isSubmittingTx || !alice}

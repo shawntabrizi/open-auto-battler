@@ -15,7 +15,7 @@ This document describes the current architecture of Open Auto Battler, an auto-b
 │                    ┌────────────┴────────────┐                             │
 │                    ▼                         ▼                             │
 │  ┌─────────────────────────┐   ┌─────────────────────────────────────┐    │
-│  │      gameStore.ts       │   │       blockchainStore.ts            │    │
+│  │      gameStore.ts       │   │       arenaStore.ts            │    │
 │  │   (Local Game State)    │   │   (Chain Sync & Transactions)       │    │
 │  └───────────┬─────────────┘   └─────────────────┬───────────────────┘    │
 │              │ Serde/JSON                        │ SCALE                   │
@@ -459,7 +459,7 @@ auto-battle/
 │   └── src/
 │       ├── store/
 │       │   ├── gameStore.ts      # Local WASM game state (Serde/JSON)
-│       │   └── blockchainStore.ts # Chain sync & transactions (SCALE)
+│       │   └── arenaStore.ts # Chain sync & transactions (SCALE)
 │       ├── components/
 │       │   ├── BlockchainPage.tsx # On-chain gameplay UI
 │       │   └── SandboxPage.tsx    # Local-only testing
@@ -608,7 +608,7 @@ cd blockchain && ./start_chain.sh
 # 3. Start the web UI (in another terminal)
 cd web && pnpm dev
 
-# 4. Open browser to http://localhost:5173
+# 4. Open browser to http://practicehost:5173
 #    - Log in, then Play > Online Arena (on-chain) or Play > Offline (local)
 #    - Cards > Sandbox for card testing without a game
 ```
@@ -624,7 +624,7 @@ cd web && pnpm dev
 | `core/src/state.rs` | Game state structure |
 | `client/src/engine.rs` | WASM bindings - browser ↔ core bridge |
 | `blockchain/pallets/auto-battle/src/lib.rs` | On-chain logic |
-| `web/src/store/blockchainStore.ts` | SCALE sync & transactions |
+| `web/src/store/arenaStore.ts` | SCALE sync & transactions |
 | `web/src/store/gameStore.ts` | Local state management (Serde/JSON) |
 
 ### Running Tests

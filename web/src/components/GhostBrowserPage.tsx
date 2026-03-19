@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useInitGuard } from '../hooks';
-import { useBlockchainStore } from '../store/blockchainStore';
+import { useArenaStore } from '../store/arenaStore';
 import type { BoardUnitView, CardView } from '../types';
 import { blockchainCardToCardView } from '../utils/blockchainCards';
 import { CardDetailPanel } from './CardDetailPanel';
@@ -137,7 +137,7 @@ export function GhostBrowserPage() {
     availableSets,
     accounts,
     blockNumber,
-  } = useBlockchainStore();
+  } = useArenaStore();
 
   const [selectedSetId, setSelectedSetId] = useState<number | null>(null);
   const [roundFilter, setRoundFilter] = useState(ALL_FILTER);

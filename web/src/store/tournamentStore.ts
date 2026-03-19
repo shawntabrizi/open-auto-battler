@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Binary } from 'polkadot-api';
-import { useBlockchainStore } from './blockchainStore';
+import { useArenaStore } from './arenaStore';
 import { useGameStore } from './gameStore';
 import { submitTx } from '../utils/tx';
 
@@ -64,13 +64,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   lastGameWins: 0,
 
   fetchActiveTournament: async () => {
-    const { api } = useBlockchainStore.getState();
+    const { api } = useArenaStore.getState();
     if (!api) return;
 
     set({ isLoadingTournament: true });
     try {
       const nextId = await api.query.AutoBattle.NextTournamentId.getValue();
-      const blockNumber = useBlockchainStore.getState().blockNumber ?? 0;
+      const blockNumber = useArenaStore.getState().blockNumber ?? 0;
 
       // Scan backwards to find the most recent active or upcoming tournament
       for (let id = Number(nextId) - 1; id >= 0; id--) {
@@ -117,7 +117,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   fetchPlayerStats: async () => {
-    const { api, selectedAccount } = useBlockchainStore.getState();
+    const { api, selectedAccount } = useArenaStore.getState();
     const { activeTournament } = get();
     if (!api || !selectedAccount || !activeTournament) return;
 
@@ -141,7 +141,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   fetchAllPlayerStats: async (tournamentId: number) => {
-    const { api } = useBlockchainStore.getState();
+    const { api } = useArenaStore.getState();
     if (!api) return;
 
     try {
@@ -168,7 +168,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   refreshTournamentGameState: async (_force = false) => {
-    const { api, client, selectedAccount, allCards } = useBlockchainStore.getState();
+    const { api, client, selectedAccount, allCards } = useArenaStore.getState();
     if (!api || !selectedAccount) return;
 
     // Internal helper to wait for engine to be ready
@@ -260,7 +260,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   joinTournament: async (tournamentId: number) => {
-    const { api, selectedAccount } = useBlockchainStore.getState();
+    const { api, selectedAccount } = useArenaStore.getState();
     if (!api || !selectedAccount) return;
 
     try {
@@ -273,7 +273,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   submitTournamentTurn: async () => {
-    const { api, codecs, selectedAccount } = useBlockchainStore.getState();
+    const { api, codecs, selectedAccount } = useArenaStore.getState();
     const { engine } = useGameStore.getState();
     if (!api || !codecs || !selectedAccount || !engine) return;
 
@@ -342,7 +342,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   endTournamentGame: async () => {
-    const { api, selectedAccount } = useBlockchainStore.getState();
+    const { api, selectedAccount } = useArenaStore.getState();
     if (!api || !selectedAccount) return;
 
     try {
@@ -369,7 +369,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 
   abandonTournament: async () => {
-    const { api, selectedAccount } = useBlockchainStore.getState();
+    const { api, selectedAccount } = useArenaStore.getState();
     if (!api || !selectedAccount) {
       throw new Error('Blockchain account is not ready');
     }
@@ -401,7 +401,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   },
 }));
 
-// ── PAPI-to-serde conversion helpers (copied from blockchainStore) ──
+// ── PAPI-to-serde conversion helpers (copied from arenaStore) ──
 
 function papiEnumStr(v: any): string {
   if (typeof v === 'string') return v;

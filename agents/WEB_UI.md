@@ -8,7 +8,7 @@ This document is derived from `web/src/*`.
 
 ## State Management
 - `web/src/store/gameStore.ts` owns the `GameEngine` lifecycle and core UI state.
-- `web/src/store/blockchainStore.ts` and `web/src/store/multiplayerStore.ts` manage other modes.
+- `web/src/store/arenaStore.ts` and `web/src/store/versusStore.ts` manage other modes.
 - `web/src/store/sandboxStore.ts` manages sandbox play.
 - `web/src/store/menuStore.ts` manages the hamburger menu open/close state.
 - `web/src/store/achievementStore.ts` manages achievement data.
