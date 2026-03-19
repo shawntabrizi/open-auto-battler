@@ -6,6 +6,7 @@ const PAGES: Record<string, string> = {
   Cards: '/cards',
   History: '/history',
   Achievements: '/history/achievements',
+  Stats: '/history/stats',
   'Local Game': '/local',
   Sandbox: '/sandbox',
   Multiplayer: '/multiplayer',
