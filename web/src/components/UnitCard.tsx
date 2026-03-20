@@ -75,7 +75,7 @@ export function UnitCard({
 }: UnitCardProps) {
   const cardStyle = useCustomizationStore((s) => s.selections.cardStyle);
   const { tiltRef } = useCardTilt({
-    enabled: enableTilt && !isSelected,
+    enabled: enableTilt,
     maxRotation: sizeVariant === 'compact' || sizeVariant === 'battle' ? 8 : 12,
   });
 
@@ -101,11 +101,11 @@ export function UnitCard({
         bg-black ${rarityStyle.border} ${rarityStyle.glow}
         ${isHolographic ? 'card-holographic' : ''}
         ${isSelected ? 'card-selected ring-2 ring-yellow-400' : ''}
-        ${enableWobble && !isSelected ? 'wobble-card' : ''}
-        ${enableTilt && !isSelected ? 'card-tilt' : ''}
+        ${enableWobble ? 'wobble-card' : ''}
+        ${enableTilt ? 'card-tilt' : ''}
       `}
       style={
-        enableWobble && !isSelected ? { animationDelay: `${(card.id * 200) % 3500}ms` } : undefined
+        enableWobble ? { animationDelay: `${(card.id * 200) % 3500}ms` } : undefined
       }
     >
       {/* Inner clip container for art/content — badges sit outside this */}
