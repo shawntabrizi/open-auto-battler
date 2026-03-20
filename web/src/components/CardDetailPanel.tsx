@@ -98,7 +98,7 @@ export interface CardDetailPanelProps {
 export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: CardDetailPanelProps) {
   const [showForfeitConfirm, setShowForfeitConfirm] = React.useState(false);
   const isSubmitting = useIsSubmitting();
-  const { cardNameMap, selection, burnHandCard, burnBoardUnit, setSelection, showRawJson, newRun } =
+  const { cardNameMap, setSelection, showRawJson, newRun } =
     useGameStore();
   const abandonGame = useArenaStore((state) => state.abandonGame);
   const abandonTournament = useTournamentStore((state) => state.abandonTournament);
@@ -106,7 +106,6 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
   const resolvedMode: CardDetailPanelMode = mode ?? { type: 'standard' };
   const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
   const cardRawJson = React.useMemo(() => prettyJson(card), [card]);
-  const isActionDisabled = resolvedMode.type === 'sandbox' || resolvedMode.type === 'readOnly';
   const forfeitContext =
     resolvedMode.type === 'tournament'
       ? {
@@ -169,11 +168,6 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
       ? 'relative h-full min-h-0 w-40 sm:w-44 lg:w-80 shrink-0'
       : 'fixed top-0 left-0 bottom-0 w-44 lg:w-80';
 
-  // Get the selected hand/board index for actions
-  const selectedHandIndex = selection?.type === 'hand' ? selection.index : -1;
-  const selectedBoardIndex = selection?.type === 'board' ? selection.index : -1;
-  const isBoardUnit = selection?.type === 'board';
-
   const renderCardTab = () => {
     if (!card) {
       return (
@@ -189,41 +183,6 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
 
     return (
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-        {/* Action Buttons */}
-        {!isActionDisabled && (
-          <div className="mb-3 lg:mb-6 space-y-1.5 lg:space-y-2">
-            {isBoardUnit ? (
-              // Board unit actions
-              <button
-                onClick={() => {
-                  if (selectedBoardIndex >= 0) {
-                    burnBoardUnit(selectedBoardIndex);
-                    setSelection(null);
-                  }
-                }}
-                className="w-full btn btn-danger text-[10px] lg:text-sm py-1.5 lg:py-2"
-              >
-                Burn (+{card.burn_value} Mana)
-              </button>
-            ) : (
-              // Hand card actions
-              <>
-                <button
-                  onClick={() => {
-                    if (selectedHandIndex >= 0) {
-                      burnHandCard(selectedHandIndex);
-                      setSelection(null);
-                    }
-                  }}
-                  className="w-full btn btn-danger text-[10px] lg:text-sm py-1.5 lg:py-2"
-                >
-                  Burn (+{card.burn_value} Mana)
-                </button>
-              </>
-            )}
-          </div>
-        )}
-
         {/* Card Art — full width */}
         <div className="mb-3 lg:mb-6">
           <CardArtImage key={card.id} card={card} />
@@ -249,20 +208,20 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
         )}
 
         {/* Economy Section */}
-        <div className="grid grid-cols-2 gap-1.5 lg:gap-3 mb-3 lg:mb-6">
-          <div className="p-1.5 lg:p-3 bg-blue-900/20 border border-blue-800/50 rounded-lg">
+        <div className="flex gap-1.5 lg:gap-3 mb-3 lg:mb-6">
+          <div className="flex-1 min-w-0 p-1.5 lg:p-3 bg-blue-900/20 border border-blue-800/50 rounded-lg">
             <div className="text-[8px] lg:text-[10px] text-blue-400 uppercase font-bold mb-0.5 lg:mb-1">
               Cost
             </div>
-            <div className="text-sm lg:text-xl font-bold text-white flex items-center gap-0.5 lg:gap-1">
+            <div className="text-sm lg:text-xl font-bold text-white">
               {card.play_cost} <span className="text-blue-400 text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
-          <div className="p-1.5 lg:p-3 bg-orange-900/20 border border-orange-800/50 rounded-lg">
+          <div className="flex-1 min-w-0 p-1.5 lg:p-3 bg-orange-900/20 border border-orange-800/50 rounded-lg">
             <div className="text-[8px] lg:text-[10px] text-orange-400 uppercase font-bold mb-0.5 lg:mb-1">
               Burn
             </div>
-            <div className="text-sm lg:text-xl font-bold text-white flex items-center gap-0.5 lg:gap-1">
+            <div className="text-sm lg:text-xl font-bold text-white">
               +{card.burn_value}{' '}
               <span className="text-orange-400 text-[10px] lg:text-sm">Mana</span>
             </div>
