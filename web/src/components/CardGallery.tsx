@@ -70,11 +70,11 @@ export function CardGallery({
         </div>
       )}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-        <div className="grid grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-1 md:gap-4 lg:gap-6 pb-4 lg:pb-12">
+        <div className="flex flex-wrap gap-2 lg:gap-3 justify-center pb-4 lg:pb-12">
           {filtered.map(({ card, originalIndex }) => {
             const selected = isSelectedFn ? isSelectedFn(card, originalIndex) : selectedId === card.id;
             return (
-              <div key={`${card.id}-${originalIndex}`} className="aspect-[3/4]">
+              <div key={`${card.id}-${originalIndex}`} className="w-[4.5rem] h-24 lg:w-[7.5rem] lg:h-40">
                 <UnitCard
                   card={card}
                   showCost={true}
