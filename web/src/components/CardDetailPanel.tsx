@@ -296,17 +296,23 @@ export function CardDetailPanel({
         } ${containerClassName} ${frameClassName} bg-warm-950 shadow-2xl flex flex-col z-30`}
       >
         {/* Header */}
-        <div className="border-b border-warm-800 py-2 lg:py-3 px-3 lg:px-5 flex items-center justify-between">
+        <div
+          className={`border-b border-warm-800 py-2 lg:py-3 px-3 lg:px-5 flex items-center ${
+            isContainedLayout ? 'justify-between' : ''
+          }`}
+        >
           <div className="text-xs font-bold uppercase tracking-wider text-yellow-500">
             Card Details
           </div>
-          <button
-            onClick={handleClose}
-            className="text-warm-500 hover:text-warm-200 text-sm leading-none p-1 transition-colors"
-            aria-label="Close card details"
-          >
-            &#x2715;
-          </button>
+          {isContainedLayout && (
+            <button
+              onClick={handleClose}
+              className="text-warm-500 hover:text-warm-200 text-sm leading-none p-1 transition-colors"
+              aria-label="Close card details"
+            >
+              &#x2715;
+            </button>
+          )}
         </div>
 
         {/* Content */}
