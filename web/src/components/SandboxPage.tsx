@@ -239,7 +239,7 @@ function UnitGallery() {
   });
 
   return (
-    <div className="sandbox-gallery grid gap-1 lg:gap-2 overflow-visible" style={{ gridTemplateColumns: 'repeat(6, minmax(0, 1fr))' }}>
+    <div className="sandbox-gallery grid grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-1 md:gap-4 lg:gap-6 overflow-visible">
       {filteredTemplates.map((template) => (
         <div key={template.id} className="min-w-0 overflow-visible aspect-[3/4]">
           <UnitCard
