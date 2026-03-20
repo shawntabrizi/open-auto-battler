@@ -142,14 +142,14 @@ function SandboxArena() {
     return (
       <div
         key={`${team}-${index}`}
-        className="relative group cursor-pointer aspect-[3/4] rounded-lg overflow-hidden"
+        className="relative group cursor-pointer aspect-[3/4] rounded-lg"
         onClick={onClick}
       >
         {unit ? (
           <>
             <UnitCard card={unit} showCost={false} showBurn={false} />
-            <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-              <span className="text-red-400 text-lg">×</span>
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none z-20">
+              <span className="text-red-500 text-3xl lg:text-5xl font-black" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>×</span>
             </div>
           </>
         ) : (
