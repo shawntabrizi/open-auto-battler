@@ -152,8 +152,7 @@ export function GameTopBar({
   if (!view) return null;
 
   return (
-    <div
-      role="navigation"
+    <nav
       aria-label="Game controls"
       className={`game-top-bar h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center px-2 lg:px-6 relative z-20 overflow-hidden ${className}`}
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
@@ -218,7 +217,7 @@ export function GameTopBar({
           <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
         </svg>
       </button>
-    </div>
+    </nav>
   );
 }
 

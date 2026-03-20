@@ -95,6 +95,7 @@ export function Arena() {
   }
 
   const unitCount = view.board.filter(Boolean).length;
+  const handCount = view.hand?.filter(Boolean).length ?? 0;
   const hasHandSelection = selection?.type === 'hand';
 
   const handleBoardSlotClick = (index: number) => {
@@ -163,7 +164,9 @@ export function Arena() {
               ? 'Now tap a board slot to place your unit'
               : 'Tap a card in your hand to begin'
             : unitCount >= 5
-              ? 'Board full \u2014 burn a unit to make room'
+              ? handCount > 0
+                ? 'Board full \u2014 burn a unit to make room'
+                : `${unitCount}/5 units deployed`
               : hasHandSelection
                 ? 'Tap a slot to place your unit'
                 : `${unitCount}/5 units deployed`}

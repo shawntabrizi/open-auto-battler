@@ -294,9 +294,19 @@ export function EmptySlot({
   onDragOver,
   onDrop,
 }: EmptySlotProps) {
+  const isActionable = isTarget || isHovered;
   return (
     <div
       onClick={onClick}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && onClick) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      tabIndex={isActionable ? 0 : undefined}
+      role={isActionable ? 'button' : undefined}
+      aria-label={isActionable ? 'Place unit here' : undefined}
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={`

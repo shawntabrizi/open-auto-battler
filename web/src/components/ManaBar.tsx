@@ -8,7 +8,6 @@ export function ManaBar() {
   return (
     <div
       className="mana-bar-container w-full px-4 py-1.5 bg-warm-900/70 border-y border-warm-700"
-      role="status"
       aria-label={`Mana: ${view.mana} of ${view.mana_limit}`}
     >
       <div className="flex items-center gap-3">

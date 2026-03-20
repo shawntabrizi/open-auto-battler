@@ -6,7 +6,7 @@ export function RotatePrompt() {
   if (dismissed) return null;
 
   return (
-    <div className="rotate-prompt hidden" aria-hidden="true">
+    <div className="rotate-prompt hidden">
       <div className="rotate-prompt__banner">
         <span className="rotate-prompt__icon">&#x27F3;</span>
         <span className="rotate-prompt__text">Rotate your device for the best experience</span>

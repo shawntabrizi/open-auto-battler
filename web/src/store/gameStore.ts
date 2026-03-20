@@ -415,13 +415,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   playHandCard: (handIndex: number, boardSlot: number) => {
-    const { engine, view } = get();
+    const { engine } = get();
     if (!engine) return;
-    // Check if board is full
-    if (view?.board && view.board.every(Boolean)) {
-      toast('Board is full! Burn a unit to make room.', { icon: '\u26A0\uFE0F', id: 'board-full' });
-      return;
-    }
     try {
       engine.play_hand_card(handIndex, boardSlot);
       set({
@@ -469,15 +464,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   endTurn: () => {
-    const { engine, view } = get();
+    const { engine } = get();
     if (!engine) return;
-    // Warn if going to battle with an empty board
-    if (view?.board && !view.board.some(Boolean)) {
-      toast('You have no units on the board! Place cards before battling.', {
-        icon: '\u26A0\uFE0F',
-      });
-      return;
-    }
     try {
       engine.end_turn();
       set({

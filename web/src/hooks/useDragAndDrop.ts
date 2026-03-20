@@ -92,10 +92,13 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
       }
 
       if (!over) {
-        toast('Drop on the board to play or the flame to burn', {
-          icon: '\u{1F4A1}',
-          id: 'drop-hint',
-        });
+        const sourceType = active.data.current?.type as string | undefined;
+        if (sourceType === 'hand') {
+          toast('Drop on the board to play or the flame to burn', {
+            icon: '\u{1F4A1}',
+            id: 'drop-hint',
+          });
+        }
         return;
       }
 
