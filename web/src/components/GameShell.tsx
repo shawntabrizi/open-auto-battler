@@ -14,6 +14,7 @@ import { UnitCard } from './UnitCard';
 import { CARD_SIZES } from '../constants/cardSizes';
 import { RotatePrompt } from './RotatePrompt';
 import { GameKeyboardShortcuts } from './GameKeyboardShortcuts';
+import { KeyboardShortcutsOverlay } from './KeyboardShortcutsOverlay';
 import { useGameStore } from '../store/gameStore';
 import { useDragAndDrop } from '../hooks';
 
@@ -149,6 +150,7 @@ export function GameShell({
         {/* Battle Overlay */}
         <BattleOverlay />
         <BagOverlay />
+        <KeyboardShortcutsOverlay />
 
         <RotatePrompt />
       </div>

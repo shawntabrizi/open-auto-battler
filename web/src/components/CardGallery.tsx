@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type Ref } from 'react';
 import { UnitCard } from './UnitCard';
 import { CardFilterBar, type SortOption } from './CardFilterBar';
 import type { CardView, BoardUnitView } from '../types';
@@ -16,6 +16,10 @@ interface CardGalleryProps {
   onSortChange?: (sort: SortOption) => void;
   /** Hide the filter bar */
   hideFilter?: boolean;
+  /** Optional ref/label for the scrollable gallery region */
+  scrollRegionRef?: Ref<HTMLDivElement>;
+  scrollRegionLabel?: string;
+  scrollRegionTabIndex?: number;
 }
 
 export function CardGallery({
@@ -28,6 +32,9 @@ export function CardGallery({
   sortBy: controlledSort,
   onSortChange,
   hideFilter = false,
+  scrollRegionRef,
+  scrollRegionLabel,
+  scrollRegionTabIndex,
 }: CardGalleryProps) {
   // Internal state when not controlled
   const [internalSearch, setInternalSearch] = useState('');
@@ -69,12 +76,23 @@ export function CardGallery({
           />
         </div>
       )}
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+      <div
+        ref={scrollRegionRef}
+        role={scrollRegionLabel ? 'region' : undefined}
+        aria-label={scrollRegionLabel}
+        tabIndex={scrollRegionTabIndex}
+        className="flex-1 min-h-0 overflow-y-auto custom-scrollbar"
+      >
         <div className="flex flex-wrap gap-2 lg:gap-3 justify-center pt-1 lg:pt-2 pb-4 lg:pb-12">
           {filtered.map(({ card, originalIndex }) => {
-            const selected = isSelectedFn ? isSelectedFn(card, originalIndex) : selectedId === card.id;
+            const selected = isSelectedFn
+              ? isSelectedFn(card, originalIndex)
+              : selectedId === card.id;
             return (
-              <div key={`${card.id}-${originalIndex}`} className="w-[4.5rem] h-[6rem] md:w-[6rem] md:h-[8rem] lg:w-[7.5rem] lg:h-[10rem]">
+              <div
+                key={`${card.id}-${originalIndex}`}
+                className="w-[4.5rem] h-[6rem] md:w-[6rem] md:h-[8rem] lg:w-[7.5rem] lg:h-[10rem]"
+              >
                 <UnitCard
                   card={card}
                   showCost={true}

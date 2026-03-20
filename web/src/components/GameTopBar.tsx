@@ -97,6 +97,9 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
           <button
             onClick={handleEndTurn}
             disabled={isWaiting}
+            data-game-end-turn-action="true"
+            aria-keyshortcuts={GAME_SHORTCUTS.commit}
+            title={`Focus ${isWaiting ? 'Waiting' : 'Battle'} button (${GAME_SHORTCUTS.commit})`}
             className={`battle-btn rounded-lg text-xs lg:text-sm px-2 lg:px-3 border border-warm-700 font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
               isWaiting
                 ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
@@ -113,6 +116,9 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
         <button
           onClick={customAction.onClick}
           disabled={customAction.disabled}
+          data-game-custom-action="true"
+          aria-keyshortcuts={GAME_SHORTCUTS.commit}
+          title={`Focus ${customAction.label} button (${GAME_SHORTCUTS.commit})`}
           className={`rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
             customAction.disabled
               ? 'bg-warm-600 border-warm-600 scale-95 opacity-80 cursor-not-allowed'

@@ -149,9 +149,6 @@ export function Arena() {
           <span className="board-label text-xs lg:text-sm text-warm-400 font-heading uppercase tracking-[0.2em]">
             Staging Area
           </span>
-          <span className="hidden lg:inline text-[10px] text-warm-500">
-            Select: {GAME_SHORTCUTS.board} • Move: {GAME_SHORTCUTS.boardMove}
-          </span>
           <div className="h-px w-8 lg:w-16 bg-gradient-to-l from-transparent to-warm-600/40" />
         </div>
 
@@ -275,6 +272,10 @@ export function Arena() {
               </div>
             );
           })}
+        </div>
+
+        <div className="w-full lg:max-w-3xl text-center text-[10px] lg:text-xs text-warm-500">
+          Select: {GAME_SHORTCUTS.board} • Move: {GAME_SHORTCUTS.boardMove}
         </div>
       </div>
     </div>

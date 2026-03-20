@@ -4,8 +4,30 @@ import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
 import { useMenuStore } from '../store/menuStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useShortcutHelpStore } from '../store/shortcutHelpStore';
 import { useTutorialStore } from '../store/tutorialStore';
+import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
 import { GearIcon, CloseIcon } from './Icons';
+
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+function getFocusableElements(container: HTMLElement | null) {
+  if (!container) return [];
+
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    (element) =>
+      !element.hasAttribute('disabled') &&
+      element.getAttribute('aria-hidden') !== 'true' &&
+      element.offsetParent !== null
+  );
+}
 
 /** Person icon for account */
 function PersonIcon({ className = 'w-5 h-5' }: { className?: string }) {
@@ -48,6 +70,14 @@ function TutorialIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
       <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z" />
+    </svg>
+  );
+}
+
+function KeyboardIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M20 5H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V7a2 2 0 00-2-2zM8 9H6v2h2V9zm0 4H6v2h2v-2zm3-4H9v2h2V9zm0 4H9v2h2v-2zm3-4h-2v2h2V9zm0 4h-2v2h2v-2zm4 0h-3v2h3v-2zm0-4h-3v2h3V9z" />
     </svg>
   );
 }
@@ -105,23 +135,95 @@ export function HamburgerMenu() {
     v ? useMenuStore.getState().open() : useMenuStore.getState().close();
   const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { isConnected, logout, abandonGame, blockNumber } = useArenaStore();
   const { newRun } = useGameStore();
   const endpoint = useSettingsStore((s) => s.endpoint);
   const openTutorial = useTutorialStore((s) => s.open);
+  const openShortcutHelp = useShortcutHelpStore((s) => s.open);
 
   const inGame = isGameRoute(location.pathname);
 
   // Close on Escape
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    const focusInitialElement = () => {
+      const panel = panelRef.current;
+      if (!panel) return;
+
+      const preferredFocus = panel.querySelector<HTMLElement>('[data-menu-autofocus="true"]');
+      if (preferredFocus) {
+        preferredFocus.focus();
+        return;
+      }
+
+      const focusable = getFocusableElements(panel);
+      (focusable[0] ?? panel).focus();
     };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        return;
+      }
+
+      if (e.key !== 'Tab') return;
+
+      const panel = panelRef.current;
+      if (!panel) return;
+
+      const focusable = getFocusableElements(panel);
+      if (focusable.length === 0) {
+        e.preventDefault();
+        panel.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      const activeElement =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+      if (!activeElement || !panel.contains(activeElement)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+        return;
+      }
+
+      if (!e.shiftKey && activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      } else if (e.shiftKey && activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    };
+
+    const onFocusIn = (e: FocusEvent) => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      if (e.target instanceof Node && panel.contains(e.target)) return;
+
+      const focusable = getFocusableElements(panel);
+      (focusable[0] ?? panel).focus();
+    };
+
+    const frameId = window.requestAnimationFrame(focusInitialElement);
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    document.addEventListener('focusin', onFocusIn);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('focusin', onFocusIn);
+      previousFocusRef.current?.focus();
+    };
   }, [open]);
 
   // Reset abandon confirm when panel closes
@@ -132,12 +234,12 @@ export function HamburgerMenu() {
   const handleLogout = () => {
     logout();
     setOpen(false);
-    navigate('/');
+    void navigate('/');
   };
 
   const handleReturnToMenu = () => {
     setOpen(false);
-    navigate('/');
+    void navigate('/');
   };
 
   const handleAbandon = async () => {
@@ -148,7 +250,7 @@ export function HamburgerMenu() {
         newRun();
       }
       setOpen(false);
-      navigate('/');
+      void navigate('/');
     } catch (err) {
       console.error('Abandon failed:', err);
     }
@@ -168,6 +270,10 @@ export function HamburgerMenu() {
           {/* Slide-out panel from right */}
           <div
             ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={inGame ? 'Game Menu' : 'Menu'}
+            tabIndex={-1}
             className="absolute top-0 right-0 h-full w-72 lg:w-80 bg-warm-950 border-l border-warm-800 shadow-2xl flex flex-col animate-slide-in-right"
           >
             {/* Panel header */}
@@ -191,6 +297,7 @@ export function HamburgerMenu() {
                   <Link
                     to="/settings"
                     state={{ returnTo: location.pathname }}
+                    data-menu-autofocus="true"
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-3 px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
                   >
@@ -205,11 +312,28 @@ export function HamburgerMenu() {
                       setOpen(false);
                       openTutorial('how-to-play');
                     }}
+                    title={`Tutorial (${GAME_SHORTCUTS.tutorial})`}
+                    aria-keyshortcuts={GAME_SHORTCUTS.tutorial}
                     className="flex items-center gap-3 w-full px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
                   >
                     <TutorialIcon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
                     <span className="font-heading text-sm lg:text-base tracking-wide">
                       Tutorial
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      openShortcutHelp();
+                    }}
+                    title={`Keyboard shortcuts (${GAME_SHORTCUTS.help})`}
+                    aria-keyshortcuts={GAME_SHORTCUTS.help}
+                    className="flex items-center gap-3 w-full px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
+                  >
+                    <KeyboardIcon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
+                    <span className="font-heading text-sm lg:text-base tracking-wide">
+                      Keyboard Shortcuts
                     </span>
                   </button>
 
@@ -267,6 +391,7 @@ export function HamburgerMenu() {
                     <Link
                       key={to}
                       to={to}
+                      data-menu-autofocus={to === MENU_ITEMS[0].to ? 'true' : undefined}
                       onClick={() => setOpen(false)}
                       className="flex items-center gap-3 px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
                     >
@@ -286,11 +411,15 @@ export function HamburgerMenu() {
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500"></span>
                       </span>
-                      <span className="text-[10px] text-emerald-400 font-medium uppercase tracking-wider">Connected</span>
+                      <span className="text-[10px] text-emerald-400 font-medium uppercase tracking-wider">
+                        Connected
+                      </span>
                     </div>
                     <div className="text-[10px] text-warm-500 font-mono truncate">{endpoint}</div>
                     {blockNumber != null && (
-                      <div className="text-[10px] text-warm-500">Block #{blockNumber.toLocaleString()}</div>
+                      <div className="text-[10px] text-warm-500">
+                        Block #{blockNumber.toLocaleString()}
+                      </div>
                     )}
                   </div>
                 )}
