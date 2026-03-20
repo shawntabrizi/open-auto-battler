@@ -124,7 +124,7 @@ export function Arena() {
 
   return (
     <div
-      className="arena flex-1 flex flex-col items-center justify-center relative min-w-0"
+      className="arena flex-1 flex flex-col items-center justify-center relative min-w-0 min-h-0"
       style={
         boardBg
           ? {
@@ -138,7 +138,7 @@ export function Arena() {
       {boardBg && <div className="absolute inset-0 bg-board-bg/50" />}
 
       {/* Arena surface — visual frame that gives the board a sense of place */}
-      <div className="arena-surface relative z-10 flex flex-col items-center gap-1 lg:gap-4 px-2 lg:px-12 py-1 lg:py-8 rounded-xl w-full">
+      <div className="arena-surface relative z-10 flex flex-col items-center gap-1 lg:gap-4 px-2 lg:px-12 py-1 lg:py-8 rounded-xl w-full h-full min-h-0">
         {/* Board header */}
         <div className="flex items-center gap-3 lg:gap-4">
           <div className="h-px w-8 lg:w-16 bg-gradient-to-r from-transparent to-warm-600/40" />
@@ -158,7 +158,7 @@ export function Arena() {
         </div>
 
         {/* Board row */}
-        <div className="board-row flex gap-1 lg:gap-4 w-full lg:max-w-3xl">
+        <div className="board-row flex gap-1 lg:gap-4 w-full lg:max-w-3xl h-full">
           {Array.from({ length: 5 }).map((_, displayIndex) => {
             const arrayIndex = 4 - displayIndex;
             const unit = view.board[arrayIndex];
@@ -172,16 +172,13 @@ export function Arena() {
               animClass = 'animate-card-land';
             } else if (typeof slotAnim === 'object' && slotAnim.type === 'swapped') {
               animClass = 'animate-card-settle';
-              // --settle-slots: how many display-slots away the card came from.
-              // Board is reversed: displayIndex = 4 - arrayIndex.
-              // settleSlots = toArrayIndex - fromArrayIndex gives the correct
-              // screen-space direction (negative = came from left, positive = came from right).
               const settleSlots = arrayIndex - slotAnim.fromIndex;
               animStyle = { '--settle-slots': settleSlots } as React.CSSProperties;
             }
 
             return (
-              <div key={slotId} className="flex-1 min-w-0 aspect-[3/4]">
+              <div key={slotId} className="flex-1 min-w-0 h-full flex items-center justify-center" style={{ containerType: 'size' }}>
+                <div className="aspect-[3/4]" style={{ width: 'min(100cqw, calc(100cqh * 3 / 4))' }}>
                 <DroppableBoardSlot id={slotId}>
                   {({ isOver }) => (
                     <div className="relative w-full h-full">
@@ -230,6 +227,7 @@ export function Arena() {
                     </div>
                   )}
                 </DroppableBoardSlot>
+                </div>
               </div>
             );
           })}
