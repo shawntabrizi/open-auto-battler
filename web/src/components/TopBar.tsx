@@ -60,6 +60,7 @@ export function TopBar({
   const [balance, setBalance] = useState<bigint | null>(null);
   const [showFundPopup, setShowFundPopup] = useState(false);
   const [isFunding, setIsFunding] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const fetchBalance = useCallback(async () => {
     if (!selectedAccount || !isConnected) {
@@ -122,7 +123,15 @@ export function TopBar({
           </span>
           <span className="flex flex-col leading-tight min-w-0">
             <span>Signed in as <span className="text-white font-medium">{selectedAccount.name || 'Unknown'}</span>{showBalance && balance !== null && <span className="text-warm-400"> ({formatBalance(balance)})</span>}</span>
-            {showAddress && <span className="text-warm-500 text-[9px] lg:text-xs font-mono break-all">{selectedAccount.address}</span>}
+            {showAddress && <span
+              className="text-warm-500 text-[9px] lg:text-xs font-mono break-all cursor-pointer hover:text-warm-300 transition-colors"
+              onClick={() => {
+                navigator.clipboard.writeText(selectedAccount.address);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              title="Click to copy"
+            >{copied ? 'Copied!' : selectedAccount.address}</span>}
           </span>
         </span>
       ) : (

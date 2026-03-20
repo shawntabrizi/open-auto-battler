@@ -240,6 +240,8 @@ interface BattleArenaProps {
 
 export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, paused }: BattleArenaProps) {
   const cardNameMap = useGameStore((state) => state.cardNameMap);
+  const reducedAnimations = useGameStore((state) => state.reducedAnimations);
+  const defaultBattleSpeed = useGameStore((state) => state.defaultBattleSpeed);
   const unitMap = useMemo(() => buildUnitMap(battleOutput), [battleOutput]);
   const resolveCardName = useMemo(() => (cardId: number) => cardNameMap[cardId], [cardNameMap]);
   const [playerBoard, setPlayerBoard] = useState<UnitView[]>(
@@ -262,18 +264,10 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
   const [sourceGlowIds, setSourceGlowIds] = useState<Set<number>>(new Set());
 
   // Playback speed control
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(() => {
-    const saved = localStorage.getItem('battlePlaybackSpeed');
-    return saved ? parseFloat(saved) : 1;
-  });
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(defaultBattleSpeed);
 
   // Playback mode: 'auto' plays continuously, 'step' pauses for manual control
   const [playMode, setPlayMode] = useState<'auto' | 'step'>('auto');
-
-  // Save speed to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem('battlePlaybackSpeed', playbackSpeed.toString());
-  }, [playbackSpeed]);
 
   useEffect(() => {
     console.log({ battleOutput });
@@ -320,27 +314,29 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
       }
 
       case 'Clash': {
-        setShakeActive(true);
-        setTimeout(() => setShakeActive(false), 250);
-        // Clear first, then re-apply after DOM flushes so CSS animation restarts
-        setClashingUnitIds([]);
-        // Double rAF: first frame flushes the clear, second frame re-applies the class
-        requestAnimationFrame(() => {
+        if (!reducedAnimations) {
+          setShakeActive(true);
+          setTimeout(() => setShakeActive(false), 250);
+          // Clear first, then re-apply after DOM flushes so CSS animation restarts
+          setClashingUnitIds([]);
+          // Double rAF: first frame flushes the clear, second frame re-applies the class
           requestAnimationFrame(() => {
-            setPlayerBoard((prevPlayer) => {
-              setEnemyBoard((prevEnemy) => {
-                const pId = prevPlayer.length > 0 ? prevPlayer[0].instance_id : null;
-                const eId = prevEnemy.length > 0 ? prevEnemy[0].instance_id : null;
-                const clashing = [pId, eId].filter((id) => id !== null);
-                setClashingUnitIds(clashing);
-                return prevEnemy;
+            requestAnimationFrame(() => {
+              setPlayerBoard((prevPlayer) => {
+                setEnemyBoard((prevEnemy) => {
+                  const pId = prevPlayer.length > 0 ? prevPlayer[0].instance_id : null;
+                  const eId = prevEnemy.length > 0 ? prevEnemy[0].instance_id : null;
+                  const clashing = [pId, eId].filter((id) => id !== null);
+                  setClashingUnitIds(clashing);
+                  return prevEnemy;
+                });
+                return prevPlayer;
               });
-              return prevPlayer;
             });
           });
-        });
-        // Auto-clear after bump animation completes (0.5s)
-        setTimeout(() => setClashingUnitIds([]), 500);
+          // Auto-clear after bump animation completes (0.5s)
+          setTimeout(() => setClashingUnitIds([]), 500);
+        }
         break;
       }
 

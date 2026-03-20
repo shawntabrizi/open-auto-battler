@@ -89,6 +89,8 @@ interface GameStore {
   showCardNames: boolean;
   showAddress: boolean;
   showBalance: boolean;
+  defaultBattleSpeed: number;
+  reducedAnimations: boolean;
   showBag: boolean;
   startingLives: number;
   winsToVictory: number;
@@ -127,6 +129,8 @@ interface GameStore {
   toggleShowCardNames: () => void;
   toggleShowAddress: () => void;
   toggleShowBalance: () => void;
+  setDefaultBattleSpeed: (speed: number) => void;
+  toggleReducedAnimations: () => void;
   setShowBag: (show: boolean) => void;
   fetchBag: () => void; // Fetch bag IDs on demand
   getCommitAction: () => any;
@@ -220,6 +224,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showCardNames: JSON.parse(localStorage.getItem('showCardNames') ?? 'true'),
   showAddress: JSON.parse(localStorage.getItem('showAddress') ?? 'true'),
   showBalance: JSON.parse(localStorage.getItem('showBalance') ?? 'true'),
+  defaultBattleSpeed: JSON.parse(localStorage.getItem('defaultBattleSpeed') ?? '1'),
+  reducedAnimations: JSON.parse(localStorage.getItem('reducedAnimations') ?? 'false'),
   showBag: false,
   startingLives: 3,
   winsToVictory: 10,
@@ -688,6 +694,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newValue = !state.showBalance;
       localStorage.setItem('showBalance', JSON.stringify(newValue));
       return { showBalance: newValue };
+    });
+  },
+
+  setDefaultBattleSpeed: (speed: number) => {
+    localStorage.setItem('defaultBattleSpeed', JSON.stringify(speed));
+    set({ defaultBattleSpeed: speed });
+  },
+
+  toggleReducedAnimations: () => {
+    set((state) => {
+      const newValue = !state.reducedAnimations;
+      localStorage.setItem('reducedAnimations', JSON.stringify(newValue));
+      return { reducedAnimations: newValue };
     });
   },
 }));

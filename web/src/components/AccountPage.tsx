@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useArenaStore } from '../store/arenaStore';
 import { TopBar } from './TopBar';
 
@@ -19,12 +20,15 @@ export function AccountPage() {
   const { isConnected, selectedAccount } = useArenaStore();
   const api = useArenaStore((s) => s.api);
   const fundSelectedAccount = useArenaStore((s) => s.fundSelectedAccount);
+  const logout = useArenaStore((s) => s.logout);
+  const navigate = useNavigate();
 
   const [info, setInfo] = useState<AccountInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [isFunding, setIsFunding] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const fetchInfo = useCallback(async () => {
     if (!api || !selectedAccount) {
@@ -148,9 +152,18 @@ export function AccountPage() {
               {/* Address */}
               <section className="p-4 rounded-xl border border-warm-700 bg-warm-900/30">
                 <div className="text-xs text-warm-500 mb-1">Address</div>
-                <div className="text-xs lg:text-sm font-mono text-warm-300 break-all">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(selectedAccount.address);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="text-xs lg:text-sm font-mono text-warm-300 break-all text-left hover:text-white transition-colors w-full"
+                  title="Click to copy"
+                >
                   {selectedAccount.address}
-                </div>
+                  <span className="ml-2 text-[10px] text-warm-500">{copied ? 'Copied!' : '(tap to copy)'}</span>
+                </button>
                 <div className="text-xs text-warm-500 mt-3 mb-1">Source</div>
                 <div className="text-sm text-warm-300 capitalize">{selectedAccount.source}</div>
               </section>
@@ -221,6 +234,17 @@ export function AccountPage() {
                   </button>
                 </div>
               </section>
+
+              {/* Logout */}
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/');
+                }}
+                className="w-full p-3 rounded-xl border border-red-800/60 bg-red-900/20 text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors text-sm font-semibold"
+              >
+                Log Out
+              </button>
             </div>
           )}
         </div>

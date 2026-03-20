@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
 import { useMenuStore } from '../store/menuStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { useTutorialStore } from '../store/tutorialStore';
 import { GearIcon, CloseIcon } from './Icons';
 
@@ -106,8 +107,9 @@ export function HamburgerMenu() {
   const panelRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isConnected, logout, abandonGame } = useArenaStore();
+  const { isConnected, logout, abandonGame, blockNumber } = useArenaStore();
   const { newRun } = useGameStore();
+  const endpoint = useSettingsStore((s) => s.endpoint);
   const openTutorial = useTutorialStore((s) => s.open);
 
   const inGame = isGameRoute(location.pathname);
@@ -260,7 +262,7 @@ export function HamburgerMenu() {
             ) : (
               <>
                 {/* Standard menu items */}
-                <nav className="flex-1 py-2">
+                <nav className="flex-1 py-2 overflow-y-auto min-h-0">
                   {MENU_ITEMS.map(({ to, icon: Icon, label }) => (
                     <Link
                       key={to}
@@ -276,17 +278,31 @@ export function HamburgerMenu() {
                   ))}
                 </nav>
 
+                {/* Network status */}
+                {isConnected && (
+                  <div className="border-t border-warm-800 px-5 py-3 shrink-0">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500"></span>
+                      </span>
+                      <span className="text-[10px] text-emerald-400 font-medium uppercase tracking-wider">Connected</span>
+                    </div>
+                    <div className="text-[10px] text-warm-500 font-mono truncate">{endpoint}</div>
+                    {blockNumber != null && (
+                      <div className="text-[10px] text-warm-500">Block #{blockNumber.toLocaleString()}</div>
+                    )}
+                  </div>
+                )}
+
                 {/* Logout at bottom */}
-                <div className="border-t border-warm-800 p-2">
+                <div className="border-t border-warm-800 p-2 shrink-0">
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-3 w-full px-5 py-3.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors group"
                   >
                     <LogoutIcon className="w-5 h-5 text-red-500/70 group-hover:text-red-400 transition-colors" />
                     <span className="font-heading text-sm lg:text-base tracking-wide">Log Out</span>
-                    {isConnected && (
-                      <span className="ml-auto text-[10px] text-warm-600">connected</span>
-                    )}
                   </button>
                 </div>
               </>

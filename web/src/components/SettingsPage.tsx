@@ -6,7 +6,7 @@ import { TopBar } from './TopBar';
 
 export function SettingsPage() {
   const location = useLocation();
-  const { showRawJson, toggleShowRawJson, showCardNames, toggleShowCardNames, showAddress, toggleShowAddress, showBalance, toggleShowBalance } = useGameStore();
+  const { showRawJson, toggleShowRawJson, showCardNames, toggleShowCardNames, showAddress, toggleShowAddress, showBalance, toggleShowBalance, defaultBattleSpeed, setDefaultBattleSpeed, reducedAnimations, toggleReducedAnimations } = useGameStore();
   const returnTo =
     location.state &&
     typeof location.state === 'object' &&
@@ -87,6 +87,58 @@ export function SettingsPage() {
                   <div
                     className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
                       showBalance ? 'translate-x-5' : 'translate-x-0.5'
+                    }`}
+                  />
+                </div>
+              </button>
+            </div>
+
+            {/* Battle section */}
+            <div className="w-full p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30">
+              <div className="font-bold text-base lg:text-lg text-white mb-3">Battle</div>
+              {/* Default battle speed */}
+              <div className="p-3 rounded-lg border border-warm-700">
+                <div className="text-left mb-2">
+                  <div className="text-sm text-warm-200">Default Battle Speed</div>
+                  <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
+                    Starting playback speed for battles
+                  </div>
+                </div>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((speed) => (
+                    <button
+                      key={speed}
+                      onClick={() => setDefaultBattleSpeed(speed)}
+                      className={`flex-1 px-2 py-1.5 text-xs lg:text-sm font-medium rounded-md transition-colors ${
+                        defaultBattleSpeed === speed
+                          ? 'bg-yellow-500 text-warm-950'
+                          : 'bg-warm-800 text-warm-300 hover:bg-warm-700'
+                      }`}
+                    >
+                      {speed}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Reduced animations */}
+              <button
+                onClick={toggleReducedAnimations}
+                className="w-full flex items-center justify-between p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+              >
+                <div className="text-left">
+                  <div className="text-sm text-warm-200">Reduced Animations</div>
+                  <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
+                    Disable clash bumps and screen shake
+                  </div>
+                </div>
+                <div
+                  className={`w-10 h-5 rounded-full transition-colors relative ${
+                    reducedAnimations ? 'bg-yellow-500' : 'bg-warm-700'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      reducedAnimations ? 'translate-x-5' : 'translate-x-0.5'
                     }`}
                   />
                 </div>
