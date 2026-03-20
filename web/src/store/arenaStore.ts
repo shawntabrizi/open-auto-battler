@@ -742,11 +742,6 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
           showBattleOverlay: true,
           afterBattleCallback: async () => {
             await get().refreshGameState(true);
-            // If game ended, finalize on-chain (archive ghost, grant achievements, remove session)
-            const view = useGameStore.getState().view;
-            if (view?.phase === 'completed') {
-              void get().endGame();
-            }
           },
         });
       } else {

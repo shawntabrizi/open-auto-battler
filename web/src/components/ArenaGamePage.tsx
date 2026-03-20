@@ -47,13 +47,13 @@ export function ArenaGamePage() {
     void refreshGameState();
   }, [engine, isConnected, selectedAccount, refreshGameState]);
 
+  if (view?.phase === 'completed') {
+    return <GameOverScreen />;
+  }
+
   // No active game — redirect back to parent which will route to select
   if (!chainState) {
     return <Navigate to="/arena" replace />;
-  }
-
-  if (view?.phase === 'completed') {
-    return <GameOverScreen />;
   }
 
   return (

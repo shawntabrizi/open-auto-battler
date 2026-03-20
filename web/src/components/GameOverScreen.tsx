@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { useArenaStore } from '../store/arenaStore';
 import { useIsSubmitting } from '../store/txStore';
 import { TrophyIcon, SkullIcon, StarIcon, HeartIcon, HourglassIcon } from './Icons';
 import { TopBar } from './TopBar';
 
 export function GameOverScreen() {
   const { view, newRun, winsToVictory } = useGameStore();
+  const { chainState, endGame } = useArenaStore();
   const isSubmitting = useIsSubmitting();
 
   const [showTitle, setShowTitle] = useState(false);
@@ -187,7 +189,12 @@ export function GameOverScreen() {
             }`}
           >
             <button
-              onClick={newRun}
+              onClick={async () => {
+                if (chainState) {
+                  await endGame();
+                }
+                newRun();
+              }}
               disabled={isSubmitting}
               className="battle-btn font-heading font-bold text-sm lg:text-xl px-8 lg:px-14 py-2.5 lg:py-4 rounded-xl tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed"
             >
