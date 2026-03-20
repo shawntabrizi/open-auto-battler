@@ -10,13 +10,24 @@ interface CardFilterBarProps {
 export function CardFilterBar({ searchQuery, onSearchChange, sortBy, onSortChange }: CardFilterBarProps) {
   return (
     <div className="flex items-center gap-2">
-      <input
-        type="text"
-        placeholder="Search cards..."
-        value={searchQuery}
-        onChange={(e) => onSearchChange(e.target.value)}
-        className="flex-1 px-2 lg:px-3 py-1.5 lg:py-2 bg-warm-800 border border-warm-600 rounded text-white placeholder-warm-400 text-xs lg:text-sm focus:outline-none focus:border-blue-500"
-      />
+      <div className="flex-1 relative">
+        <input
+          type="text"
+          placeholder="Search cards..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-full px-2 lg:px-3 py-1.5 lg:py-2 pr-7 bg-warm-800 border border-warm-600 rounded text-white placeholder-warm-400 text-xs lg:text-sm focus:outline-none focus:border-blue-500"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => onSearchChange('')}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-warm-400 hover:text-white text-sm leading-none p-0.5"
+            aria-label="Clear search"
+          >
+            ✕
+          </button>
+        )}
+      </div>
       <select
         value={sortBy}
         onChange={(e) => onSortChange(e.target.value as SortOption)}
