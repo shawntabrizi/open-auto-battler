@@ -134,32 +134,13 @@ export function UnitCard({
         </>
       )}
 
-      {/* Card name - overlaid at top, above all overlays */}
+      {/* Card name - just above stats */}
       <div
-        className={`relative z-[11] ${text.title} font-bold text-center truncate text-white pt-0.5 lg:pt-0.5 px-0.5`}
+        className={`absolute bottom-5 lg:bottom-7 left-0 right-0 z-[2] ${text.title} font-bold text-center truncate text-white px-0.5`}
         style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
       >
         {card.name}
       </div>
-
-      {/* Ability badge */}
-      {(() => {
-        const abils = [
-          ...((card as any).shop_abilities ?? []),
-          ...((card as any).battle_abilities ?? []),
-        ];
-        return abils.length > 0 ? (
-          <div
-            className={`absolute bottom-5 right-0.5 lg:bottom-7 lg:right-1 z-[3] bg-yellow-500 rounded-full ${text.abilityBadge} flex items-center justify-center text-[0.5rem] lg:text-[0.55rem] font-bold border border-yellow-300 shadow`}
-          >
-            {abils.length > 1 ? (
-              abils.length
-            ) : (
-              <AbilityIcon className="w-2 h-2 lg:w-2.5 lg:h-2.5" />
-            )}
-          </div>
-        ) : null;
-      })()}
 
       {/* Stats row - pinned to bottom */}
       <div
@@ -170,6 +151,17 @@ export function UnitCard({
           <SwordIcon className={`${text.statIcon} text-red-400 mr-0.5`} />
           <span className="font-bold text-white">{card.attack}</span>
         </div>
+        {(() => {
+          const abils = [
+            ...((card as any).shop_abilities ?? []),
+            ...((card as any).battle_abilities ?? []),
+          ];
+          return abils.length > 0 ? (
+            <svg viewBox="0 0 24 24" fill="#eab308" className="w-3 h-3 lg:w-4 lg:h-4 drop-shadow">
+              <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+            </svg>
+          ) : null;
+        })()}
         <div className={`flex items-center ${text.stat} font-stat`}>
           <HeartIcon className={`${text.statIcon} text-green-400`} />
           <span className="font-bold text-white ml-0.5">{card.health}</span>
