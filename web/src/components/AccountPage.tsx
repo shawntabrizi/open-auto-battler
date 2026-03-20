@@ -158,15 +158,17 @@ export function AccountPage() {
                 <div className="text-xs text-warm-500 mb-1">Address</div>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(selectedAccount.address);
+                    void navigator.clipboard.writeText(selectedAccount.address);
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
                   }}
                   className="text-xs lg:text-sm font-mono text-warm-300 break-all text-left hover:text-white transition-colors w-full"
                   title="Click to copy"
                 >
-                  {selectedAccount.address}
-                  <span className="ml-2 text-[10px] text-warm-500">{copied ? 'Copied!' : '(tap to copy)'}</span>
+                  <span className="block">{selectedAccount.address}</span>
+                  <span className="mt-1 block text-[10px] text-warm-500">
+                    {copied ? 'Copied!' : 'Tap to copy'}
+                  </span>
                 </button>
                 <div className="text-xs text-warm-500 mt-3 mb-1">Source</div>
                 <div className="text-sm text-warm-300 capitalize">{selectedAccount.source}</div>
@@ -181,7 +183,10 @@ export function AccountPage() {
                       <div className="bg-warm-950 border border-warm-700 rounded-lg p-3 font-mono text-xs lg:text-sm text-amber-400 break-all select-all">
                         {getLocalAccountMnemonic(selectedAccount.address) || 'Not found'}
                       </div>
-                      <p className="text-[10px] text-red-400/80 mt-2">Do not share this with anyone. Anyone with this phrase can access your account.</p>
+                      <p className="text-[10px] text-red-400/80 mt-2">
+                        Do not share this with anyone. Anyone with this phrase can access your
+                        account.
+                      </p>
                       <button
                         onClick={() => setShowMnemonic(false)}
                         className="text-xs text-warm-500 hover:text-warm-300 mt-2 transition-colors"
@@ -271,7 +276,7 @@ export function AccountPage() {
               <button
                 onClick={() => {
                   logout();
-                  navigate('/');
+                  void navigate('/');
                 }}
                 className="w-full p-3 rounded-xl border border-red-800/60 bg-red-900/20 text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors text-sm font-semibold"
               >
@@ -279,8 +284,8 @@ export function AccountPage() {
               </button>
 
               {/* Forget Account — local accounts only */}
-              {selectedAccount.source === 'local' && (
-                showForgetConfirm ? (
+              {selectedAccount.source === 'local' &&
+                (showForgetConfirm ? (
                   <div className="w-full p-4 rounded-xl border border-red-700/60 bg-red-950/30">
                     <p className="text-sm text-warm-300 mb-3 text-center">
                       Forget this account? The private key will be permanently deleted.
@@ -296,7 +301,7 @@ export function AccountPage() {
                         onClick={() => {
                           removeLocalAccount(selectedAccount.address);
                           logout();
-                          navigate('/');
+                          void navigate('/');
                         }}
                         className="flex-1 p-2.5 rounded-lg bg-red-900/50 hover:bg-red-900/70 border border-red-700 text-red-300 text-sm font-semibold transition-colors"
                       >
@@ -311,8 +316,7 @@ export function AccountPage() {
                   >
                     Forget Account
                   </button>
-                )
-              )}
+                ))}
             </div>
           )}
         </div>
