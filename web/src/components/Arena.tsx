@@ -138,7 +138,7 @@ export function Arena() {
       {boardBg && <div className="absolute inset-0 bg-board-bg/50" />}
 
       {/* Arena surface — visual frame that gives the board a sense of place */}
-      <div className="arena-surface relative z-10 flex flex-col items-center gap-1 lg:gap-4 px-2 lg:px-12 py-1 lg:py-8 rounded-xl">
+      <div className="arena-surface relative z-10 flex flex-col items-center gap-1 lg:gap-4 px-2 lg:px-12 py-1 lg:py-8 rounded-xl w-full">
         {/* Board header */}
         <div className="flex items-center gap-3 lg:gap-4">
           <div className="h-px w-8 lg:w-16 bg-gradient-to-r from-transparent to-warm-600/40" />
@@ -158,7 +158,7 @@ export function Arena() {
         </div>
 
         {/* Board row */}
-        <div className="board-row flex gap-1 lg:gap-4">
+        <div className="board-row flex gap-1 lg:gap-4 w-full">
           {Array.from({ length: 5 }).map((_, displayIndex) => {
             const arrayIndex = 4 - displayIndex;
             const unit = view.board[arrayIndex];
@@ -236,7 +236,7 @@ export function Arena() {
         </div>
 
         {/* Position indicator — slot-aligned */}
-        <div className="hidden lg:flex gap-3 lg:gap-4">
+        <div className="hidden lg:flex gap-3 lg:gap-4 w-full">
           {Array.from({ length: 5 }).map((_, displayIndex) => {
             const arrayIndex = 4 - displayIndex;
             const isFront = arrayIndex === 0;
