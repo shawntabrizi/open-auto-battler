@@ -146,6 +146,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
   const [showContinue, setShowContinue] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
   const [lastEventIndex, setLastEventIndex] = useState(-1);
+  const [replayKey, setReplayKey] = useState(0);
   const logRef = useRef<HTMLDivElement>(null);
 
   // Build unit name map once per battle output
@@ -189,6 +190,16 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
       return () => clearTimeout(timer);
     }
   }, [showOverlay]);
+
+  const handleReplay = () => {
+    setBattleFinished(false);
+    setShowContinue(false);
+    setLastEventIndex(-1);
+    setShowSplash(true);
+    setReplayKey((k) => k + 1);
+    const timer = setTimeout(() => setShowSplash(false), 1500);
+    return () => clearTimeout(timer);
+  };
 
   // Escape key to close (especially useful in sandbox)
   useEffect(() => {
@@ -278,6 +289,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
       {/* Main battle area + result overlay */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center min-h-0 px-2 lg:px-8">
         <BattleArena
+          key={replayKey}
           battleOutput={battleOutput}
           onBattleEnd={() => setBattleFinished(true)}
           onEventProcessed={handleEventProcessed}
@@ -314,14 +326,22 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
                 </div>
               )}
 
-              {/* Continue button */}
+              {/* Continue + Replay buttons */}
               {showContinue && (
-                <button
-                  onClick={onContinue}
-                  className={`btn ${isSandbox ? 'bg-warm-700 hover:bg-warm-600' : 'btn-primary'} text-sm lg:text-lg px-10 lg:px-20 py-2.5 lg:py-3 animate-battle-continue shadow-[0_0_20px_rgba(234,179,8,0.3)]`}
-                >
-                  {isSandbox ? 'Close' : 'Continue'}
-                </button>
+                <div className="flex items-center gap-4 animate-battle-continue">
+                  <button
+                    onClick={handleReplay}
+                    className="px-6 lg:px-12 py-2.5 lg:py-3 rounded-lg font-semibold text-sm lg:text-lg text-warm-100 bg-gradient-to-b from-warm-600 to-warm-700 border border-warm-500/50 hover:from-warm-500 hover:to-warm-600 transition-all shadow-[0_0_15px_rgba(234,179,8,0.15)]"
+                  >
+                    Replay
+                  </button>
+                  <button
+                    onClick={onContinue}
+                    className="px-10 lg:px-20 py-2.5 lg:py-3 rounded-lg font-semibold text-sm lg:text-lg text-warm-950 bg-gradient-to-b from-[#d4a843] to-[#c48a2a] border border-amber-600/60 hover:from-[#f0c050] hover:to-[#d4a843] transition-all shadow-[0_0_20px_rgba(234,179,8,0.3)]"
+                  >
+                    {isSandbox ? 'Close' : 'Continue'}
+                  </button>
+                </div>
               )}
             </div>
           </div>
