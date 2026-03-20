@@ -430,7 +430,7 @@ impl<T: Config> Pallet<T> {
     }
 
     /// Grant bronze achievement (bit 0) for every card currently on the player's board.
-    /// Called at battle time so cards that enter combat earn the bronze star.
+    /// Called after a battle victory so cards that helped win earn the bronze star.
     pub(crate) fn grant_bronze_achievements(who: &T::AccountId, core_state: &GameState) {
         for board_unit in core_state.local_state.board.iter().flatten() {
             let card_id = board_unit.card_id.0;

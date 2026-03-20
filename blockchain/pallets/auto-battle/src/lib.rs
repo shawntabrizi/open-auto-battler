@@ -475,7 +475,7 @@ pub mod pallet {
     pub const ACHIEVEMENT_GOLD: u8 = 0b100;
 
     /// Achievements per card per player, stored as a bitmap.
-    /// Bit 0 = bronze (card played on board for a battle)
+    /// Bit 0 = bronze (card on board when a battle is won)
     /// Bit 1 = silver (won 10 rounds with this card)
     /// Bit 2 = gold (perfect 10-win run, no losses, with this card)
     #[pallet::storage]
