@@ -109,6 +109,11 @@ export function GameShell({
         ref={containerRef}
         className={`game-layout h-screen flex flex-col bg-board-bg ${className}`}
       >
+        {/* Skip-to-content link for keyboard navigation */}
+        <a href="#main-content" className="skip-link">
+          Skip to game
+        </a>
+
         {/* Zone 1: Top HUD */}
         <GameTopBar
           hideEndTurn={hideEndTurn}
@@ -116,24 +121,29 @@ export function GameShell({
           className={contentMargin}
         />
 
-        {/* Zone 2: Arena (Board) with left panel */}
-        <div
-          className={`game-main flex-1 flex flex-col overflow-hidden min-h-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
-        >
-          <Arena />
-        </div>
+        {/* Zone 2-4: Main game area */}
+        <main id="main-content" tabIndex={-1} className="flex flex-col flex-1 min-h-0 outline-none">
+          {/* Zone 2: Arena (Board) with left panel */}
+          <div
+            className={`game-main flex-1 flex flex-col overflow-hidden min-h-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
+          >
+            <Arena />
+          </div>
 
-        {/* Zone 3: Mana Bar (gateway between board and hand) */}
-        <div className={`flex-shrink-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}>
-          <ManaBar />
-        </div>
+          {/* Zone 3: Mana Bar (gateway between board and hand) */}
+          <div
+            className={`flex-shrink-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
+          >
+            <ManaBar />
+          </div>
 
-        {/* Zone 4: Hand (Shop) */}
-        <div
-          className={`game-shop flex-shrink-0 mt-auto ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
-        >
-          <Shop />
-        </div>
+          {/* Zone 4: Hand (Shop) */}
+          <div
+            className={`game-shop flex-shrink-0 mt-auto ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
+          >
+            <Shop />
+          </div>
+        </main>
 
         {/* Card Detail Panel */}
         <CardDetailPanel card={cardToShow} isVisible={showCardPanel} mode={cardPanelMode} />

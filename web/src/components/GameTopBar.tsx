@@ -21,8 +21,7 @@ interface HUDProps {
 /** Inline battle / custom-action buttons that sit inside the HUD bar */
 function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
   const { view, endTurn, engine } = useGameStore();
-  const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } =
-    useVersusStore();
+  const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } = useVersusStore();
   const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
   const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -154,6 +153,8 @@ export function GameTopBar({
 
   return (
     <div
+      role="navigation"
+      aria-label="Game controls"
       className={`game-top-bar h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center px-2 lg:px-6 relative z-20 overflow-hidden ${className}`}
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
     >
@@ -232,8 +233,7 @@ export function BattleAction({
   compact?: boolean;
 }) {
   const { view, endTurn, engine } = useGameStore();
-  const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } =
-    useVersusStore();
+  const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } = useVersusStore();
   const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
   const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
 

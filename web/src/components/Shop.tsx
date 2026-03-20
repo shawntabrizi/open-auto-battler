@@ -58,6 +58,8 @@ export function Shop() {
 
   return (
     <div
+      role="region"
+      aria-label="Your Hand"
       className={`shop h-32 lg:h-60 border-t border-warm-800/60 flex-shrink-0 relative ${handBg ? '' : 'bg-shop-bg'}`}
       style={
         handBg

@@ -133,73 +133,71 @@ export function UnitCard({
         ${enableWobble ? 'wobble-card' : ''}
         ${enableTilt ? 'card-tilt' : ''}
       `}
-      style={
-        enableWobble ? { animationDelay: `${(card.id * 200) % 3500}ms` } : undefined
-      }
+      style={enableWobble ? { animationDelay: `${(card.id * 200) % 3500}ms` } : undefined}
     >
       {/* Inner clip container for art/content — badges sit outside this */}
       <div className="absolute inset-0 overflow-hidden rounded-md">
-      {showArt ? (
-        <>
-          {/* Full-bleed card art — brightness boost for vibrancy */}
-          <img
-            src={artSrc!}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
-            style={{ filter: 'brightness(1.15) saturate(1.1)' }}
-            loading="lazy"
-            onError={() => setArtFailed(true)}
-          />
-          {/* Gradient overlay — lighter than before for brighter art */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
-        </>
-      ) : (
-        <>
-          {/* Emoji fallback when no card art available */}
-          <div className="absolute inset-0 flex items-center justify-center text-3xl lg:text-4xl bg-card-bg">
-            {getCardEmoji(card.id)}
+        {showArt ? (
+          <>
+            {/* Full-bleed card art — brightness boost for vibrancy */}
+            <img
+              src={artSrc!}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
+              style={{ filter: 'brightness(1.15) saturate(1.1)' }}
+              loading="lazy"
+              onError={() => setArtFailed(true)}
+            />
+            {/* Gradient overlay — lighter than before for brighter art */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25" />
+          </>
+        ) : (
+          <>
+            {/* Emoji fallback when no card art available */}
+            <div className="absolute inset-0 flex items-center justify-center text-3xl lg:text-4xl bg-card-bg">
+              {getCardEmoji(card.id)}
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          </>
+        )}
+
+        {/* Card name - just above stats */}
+        {showCardNames && (
+          <div
+            className={`absolute bottom-5 lg:bottom-7 left-0 right-0 z-[2] ${text.title} font-bold text-center truncate text-white px-0.5`}
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+          >
+            {card.name}
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        </>
-      )}
+        )}
 
-      {/* Card name - just above stats */}
-      {showCardNames && (
+        {/* Stats row - pinned to bottom */}
         <div
-          className={`absolute bottom-5 lg:bottom-7 left-0 right-0 z-[2] ${text.title} font-bold text-center truncate text-white px-0.5`}
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+          className="card-stats-row absolute bottom-0 left-0 right-0 z-[2] flex justify-between items-center px-1 lg:px-2 pb-0.5 lg:pb-1"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
         >
-          {card.name}
-        </div>
-      )}
-
-      {/* Stats row - pinned to bottom */}
-      <div
-        className="card-stats-row absolute bottom-0 left-0 right-0 z-[2] flex justify-between items-center px-1 lg:px-2 pb-0.5 lg:pb-1"
-        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
-      >
-        <div className={`flex items-center ${text.stat} font-stat`}>
-          <SwordIcon className={`${text.statIcon} text-red-400 mr-0.5`} />
-          <span className="font-bold text-white">{card.attack}</span>
-        </div>
-        {(() => {
-          const abils = [
-            ...((card as any).shop_abilities ?? []),
-            ...((card as any).battle_abilities ?? []),
-          ];
-          return abils.length > 0 ? (
-            <svg viewBox="0 0 24 24" fill="#eab308" className="w-3 h-3 lg:w-4 lg:h-4 drop-shadow">
-              <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-            </svg>
-          ) : null;
-        })()}
-        <div className={`flex items-center ${text.stat} font-stat`}>
-          <HeartIcon className={`${text.statIcon} text-green-400`} />
-          <span className="font-bold text-white ml-0.5">{card.health}</span>
+          <div className={`flex items-center ${text.stat} font-stat`}>
+            <SwordIcon className={`${text.statIcon} text-red-400 mr-0.5`} />
+            <span className="font-bold text-white">{card.attack}</span>
+          </div>
+          {(() => {
+            const abils = [
+              ...((card as any).shop_abilities ?? []),
+              ...((card as any).battle_abilities ?? []),
+            ];
+            return abils.length > 0 ? (
+              <svg viewBox="0 0 24 24" fill="#eab308" className="w-3 h-3 lg:w-4 lg:h-4 drop-shadow">
+                <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+              </svg>
+            ) : null;
+          })()}
+          <div className={`flex items-center ${text.stat} font-stat`}>
+            <HeartIcon className={`${text.statIcon} text-green-400`} />
+            <span className="font-bold text-white ml-0.5">{card.health}</span>
+          </div>
         </div>
       </div>
-
-      </div>{/* end inner clip container */}
+      {/* end inner clip container */}
 
       {/* Cost badge (top left) — blue mana bolt */}
       {showCost && (
@@ -235,25 +233,39 @@ export function UnitCard({
       )}
 
       {/* Ability tooltip rendered via portal so it's never clipped */}
-      {showTooltip && abilities.length > 0 && tooltipPos && createPortal(
-        <div
-          className="fixed z-[9999] pointer-events-none"
-          style={{ top: tooltipPos.top, left: tooltipPos.left, transform: 'translate(-50%, -100%) translateY(-8px)' }}
-        >
-          <div className="bg-warm-950/95 border border-warm-600/60 rounded-lg px-3 py-2 shadow-xl backdrop-blur-sm min-w-[180px] max-w-[260px]">
-            <div className="text-[10px] lg:text-xs font-bold text-white mb-1">{card.name}</div>
-            {abilities.map((ability: any, i: number) => (
-              <div key={i} className="flex items-start gap-1.5 text-[9px] lg:text-[11px] text-warm-300 leading-snug">
-                <svg viewBox="0 0 24 24" fill={ability._type === 'shop' ? '#60a5fa' : '#eab308'} className="w-3 h-3 shrink-0 mt-0.5">
-                  <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-                </svg>
-                <span>{formatAbilitySentence(ability, { resolveCardName })}</span>
-              </div>
-            ))}
-          </div>
-        </div>,
-        document.body
-      )}
+      {showTooltip &&
+        abilities.length > 0 &&
+        tooltipPos &&
+        createPortal(
+          <div
+            className="fixed z-[9999] pointer-events-none"
+            style={{
+              top: tooltipPos.top,
+              left: tooltipPos.left,
+              transform: 'translate(-50%, -100%) translateY(-8px)',
+            }}
+          >
+            <div className="bg-warm-950/95 border border-warm-600/60 rounded-lg px-3 py-2 shadow-xl backdrop-blur-sm min-w-[180px] max-w-[260px]">
+              <div className="text-[10px] lg:text-xs font-bold text-white mb-1">{card.name}</div>
+              {abilities.map((ability: any, i: number) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-1.5 text-[9px] lg:text-[11px] text-warm-300 leading-snug"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill={ability._type === 'shop' ? '#60a5fa' : '#eab308'}
+                    className="w-3 h-3 shrink-0 mt-0.5"
+                  >
+                    <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+                  </svg>
+                  <span>{formatAbilitySentence(ability, { resolveCardName })}</span>
+                </div>
+              ))}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 
@@ -288,10 +300,15 @@ export function EmptySlot({
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={`
-        empty-slot board-slot-engraved relative w-full h-full cursor-pointer rounded-lg flex items-center justify-center transition-all duration-200
-        ${isHovered ? 'slot-drop-target' : isTarget ? 'slot-available' : ''}
+        empty-slot board-slot-engraved relative w-full h-full rounded-lg flex items-center justify-center transition-all duration-200
+        ${isHovered ? 'slot-drop-target cursor-pointer' : isTarget ? 'slot-available cursor-pointer' : 'cursor-default'}
       `}
     >
+      {isTarget && !label && (
+        <span className="slot-place-icon text-amber-400/70 text-lg lg:text-2xl font-bold leading-none">
+          +
+        </span>
+      )}
       {label && (
         <span className="text-warm-600/60 text-[0.5rem] lg:text-xs font-heading uppercase tracking-widest">
           {label}

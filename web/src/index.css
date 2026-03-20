@@ -58,10 +58,31 @@
 
   /* Snappier spring for drag interactions — faster settle, subtler overshoot */
   --spring-snappy: linear(
-    0, 0.011, 0.044, 0.098, 0.175, 0.275, 0.398, 0.542,
-    0.704, 0.881, 1.02, 1.069, 1.075, 1.053, 1.019,
-    0.99, 0.971, 0.963, 0.966, 0.978, 0.991, 1.0,
-    1.003, 1.001, 1
+    0,
+    0.011,
+    0.044,
+    0.098,
+    0.175,
+    0.275,
+    0.398,
+    0.542,
+    0.704,
+    0.881,
+    1.02,
+    1.069,
+    1.075,
+    1.053,
+    1.019,
+    0.99,
+    0.971,
+    0.963,
+    0.966,
+    0.978,
+    0.991,
+    1,
+    1.003,
+    1.001,
+    1
   );
 
   --shadow-resting: 0 1px 2px hsla(30, 40%, 12%, 0.4), 0 2px 6px hsla(30, 40%, 12%, 0.2);
@@ -96,6 +117,45 @@ body {
   /* Small viewport height - accounts for mobile URL bar */
 }
 
+/* Global focus indicator for keyboard navigation */
+:focus-visible {
+  outline: 2px solid rgba(212, 168, 67, 0.8);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Cards and slots get a glow instead of outline */
+.card:focus-visible,
+.empty-slot:focus-visible,
+.action-circle:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(212, 168, 67, 0.8),
+    0 0 8px rgba(212, 168, 67, 0.4);
+}
+
+/* Skip-to-content link — visually hidden until focused */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  padding: 0.5rem 1.5rem;
+  background: #1e1a14;
+  color: #d4a843;
+  border: 2px solid #d4a843;
+  border-radius: 0 0 8px 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
 /* Prevent unwanted touch behaviors during drag */
 .game-layout {
   touch-action: manipulation;
@@ -104,7 +164,8 @@ body {
 
 /* Safe area padding for fullscreen overlays (battle, bag, etc.) */
 .safe-area-pad {
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
 }
 
 /* Left/right safe area with minimum padding for content bars */
@@ -254,7 +315,12 @@ body {
   border-radius: 0.5rem;
   background: conic-gradient(
     from var(--holo-angle, 0deg),
-    #ff6ec7, #ffb86c, #a8ff78, #78d0ff, #c084fc, #ff6ec7
+    #ff6ec7,
+    #ffb86c,
+    #a8ff78,
+    #78d0ff,
+    #c084fc,
+    #ff6ec7
   );
   animation:
     holo-border-spin var(--holo-speed) linear infinite,
@@ -290,7 +356,8 @@ body {
 
 /* Prismatic outer glow on the wrapper */
 @keyframes holo-glow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow:
       0 0 10px rgba(192, 132, 252, 0.3),
       0 0 20px rgba(120, 208, 255, 0.2),
@@ -305,8 +372,12 @@ body {
 }
 
 @keyframes holo-border-spin {
-  0%   { --holo-angle: 0deg; }
-  100% { --holo-angle: 360deg; }
+  0% {
+    --holo-angle: 0deg;
+  }
+  100% {
+    --holo-angle: 360deg;
+  }
 }
 
 @property --holo-angle {
@@ -381,7 +452,8 @@ body {
 }
 
 @keyframes swap-target-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     filter: brightness(1);
   }
@@ -462,27 +534,88 @@ body {
     0 0 8px rgba(212, 168, 67, 0.08);
 }
 
-/* Subtle indicator — slot is available for placement (hand card selected or dragging) */
+/* Obvious indicator — slot is available for placement (hand card selected or dragging) */
 .slot-available {
-  border-color: rgba(212, 168, 67, 0.3) !important;
-  border-style: dashed !important;
-  background: linear-gradient(135deg, rgba(40, 34, 24, 0.85) 0%, rgba(30, 26, 20, 0.9) 100%) !important;
+  border-color: rgba(212, 168, 67, 0.5) !important;
+  border-style: solid !important;
+  background: linear-gradient(
+    135deg,
+    rgba(50, 40, 20, 0.9) 0%,
+    rgba(35, 28, 16, 0.95) 100%
+  ) !important;
+  box-shadow:
+    inset 0 0 8px rgba(212, 168, 67, 0.1),
+    0 0 8px rgba(212, 168, 67, 0.15) !important;
+  animation: slot-available-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes slot-available-pulse {
+  0%,
+  100% {
+    border-color: rgba(212, 168, 67, 0.4);
+    box-shadow:
+      inset 0 0 8px rgba(212, 168, 67, 0.08),
+      0 0 6px rgba(212, 168, 67, 0.1);
+  }
+  50% {
+    border-color: rgba(212, 168, 67, 0.7);
+    box-shadow:
+      inset 0 0 12px rgba(212, 168, 67, 0.15),
+      0 0 12px rgba(212, 168, 67, 0.25);
+  }
+}
+
+/* "+" icon inside available slots */
+.slot-place-icon {
+  animation: slot-icon-fade 1.5s ease-in-out infinite;
+}
+
+@keyframes slot-icon-fade {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Onboarding hint pulse for first-time guidance */
+.onboarding-hint {
+  animation: hint-pulse 2s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Strong indicator — card is actively hovering over this slot */
 .slot-drop-target {
   border-color: rgba(212, 168, 67, 0.7) !important;
   border-style: solid !important;
-  background: linear-gradient(135deg, rgba(60, 48, 24, 0.9) 0%, rgba(40, 32, 16, 0.95) 100%) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(60, 48, 24, 0.9) 0%,
+    rgba(40, 32, 16, 0.95) 100%
+  ) !important;
   box-shadow:
     inset 0 0 12px rgba(212, 168, 67, 0.15),
     0 0 16px rgba(212, 168, 67, 0.2),
     0 0 4px rgba(212, 168, 67, 0.3) !important;
-  animation: slot-pulse 1s ease-in-out infinite, slot-breathe 1.2s ease-in-out infinite;
+  animation:
+    slot-pulse 1s ease-in-out infinite,
+    slot-breathe 1.2s ease-in-out infinite;
 }
 
 @keyframes slot-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow:
       inset 0 0 12px rgba(212, 168, 67, 0.15),
       0 0 16px rgba(212, 168, 67, 0.2),
@@ -498,10 +631,14 @@ body {
 
 /* Slot "breathes" — subtle scale pulse when ready to receive a card */
 @keyframes slot-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.04); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
 }
-
 
 /* Battle event log container */
 .battle-log-container {
@@ -564,14 +701,24 @@ body {
   inset: -80px;
   z-index: -1;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--burst-color, rgba(212,168,67,0.3)) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    var(--burst-color, rgba(212, 168, 67, 0.3)) 0%,
+    transparent 70%
+  );
   animation: burst-expand 0.8s ease-out forwards;
   pointer-events: none;
 }
 
-.result-burst-victory { --burst-color: rgba(74, 140, 58, 0.35); }
-.result-burst-defeat { --burst-color: rgba(168, 58, 42, 0.35); }
-.result-burst-draw { --burst-color: rgba(212, 168, 67, 0.3); }
+.result-burst-victory {
+  --burst-color: rgba(74, 140, 58, 0.35);
+}
+.result-burst-defeat {
+  --burst-color: rgba(168, 58, 42, 0.35);
+}
+.result-burst-draw {
+  --burst-color: rgba(212, 168, 67, 0.3);
+}
 
 /* Result screen flash overlay */
 .result-flash {
@@ -598,7 +745,12 @@ body {
 .game-over-atmosphere-defeat {
   background:
     radial-gradient(ellipse at 50% 30%, rgba(168, 58, 42, 0.1) 0%, transparent 40%),
-    radial-gradient(ellipse at center, transparent 20%, rgba(168, 58, 42, 0.15) 70%, rgba(0, 0, 0, 0.8) 100%);
+    radial-gradient(
+      ellipse at center,
+      transparent 20%,
+      rgba(168, 58, 42, 0.15) 70%,
+      rgba(0, 0, 0, 0.8) 100%
+    );
 }
 
 /* Game-over glow behind title */
@@ -1353,7 +1505,6 @@ body {
     display: none;
   }
 
-
   /* Card panel on left, full height on mobile */
   .card-detail-panel {
     width: 11rem !important;
@@ -1540,44 +1691,52 @@ body {
   }
 }
 
-
 @media (max-width: 1023px) and (orientation: portrait) {
   .rotate-prompt {
-    display: flex !important;
+    display: block !important;
     position: fixed;
-    inset: 0;
-    background: rgba(14, 12, 9, 0.95);
-    align-items: center;
-    justify-content: center;
+    bottom: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
+    pointer-events: none;
   }
 
-  .rotate-prompt__card {
-    width: min(90vw, 320px);
-    background: #1e1a14;
-    border: 1px solid #332c20;
-    border-radius: 16px;
-    padding: 1.5rem;
-    text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  .rotate-prompt__banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(30, 26, 20, 0.95);
+    border-top: 1px solid #332c20;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
+    pointer-events: auto;
   }
 
   .rotate-prompt__icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
     color: #d4a843;
+    flex-shrink: 0;
   }
 
-  .rotate-prompt__title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #e8dcc8;
-    margin-bottom: 0.5rem;
+  .rotate-prompt__text {
+    font-size: 0.75rem;
+    color: #a89478;
+    flex: 1;
   }
 
-  .rotate-prompt__subtitle {
-    font-size: 0.85rem;
+  .rotate-prompt__close {
+    font-size: 1rem;
     color: #7d6b50;
+    background: none;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .rotate-prompt__close:hover {
+    color: #e8dcc8;
   }
 }
 
@@ -1743,11 +1902,16 @@ body {
   }
 
   @keyframes sidebar-legendary-breathe {
-    0%, 100% {
-      box-shadow: 0 0 8px rgba(251, 191, 36, 0.2), inset 0 0 4px rgba(251, 191, 36, 0.1);
+    0%,
+    100% {
+      box-shadow:
+        0 0 8px rgba(251, 191, 36, 0.2),
+        inset 0 0 4px rgba(251, 191, 36, 0.1);
     }
     50% {
-      box-shadow: 0 0 16px rgba(251, 191, 36, 0.4), inset 0 0 8px rgba(251, 191, 36, 0.15);
+      box-shadow:
+        0 0 16px rgba(251, 191, 36, 0.4),
+        inset 0 0 8px rgba(251, 191, 36, 0.15);
     }
   }
 }
