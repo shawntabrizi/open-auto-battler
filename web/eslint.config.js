@@ -58,7 +58,6 @@ export default tseslint.config(
   },
   {
     files: [
-      'src/components/CardDetailPanel.tsx',
       'src/components/CreateCardPage.tsx',
       'src/components/CreateSetPage.tsx',
       'src/components/VersusManager.tsx',
