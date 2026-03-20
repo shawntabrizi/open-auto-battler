@@ -18,11 +18,13 @@ interface AccountInfo {
 export function AccountPage() {
   const { isConnected, selectedAccount } = useArenaStore();
   const api = useArenaStore((s) => s.api);
+  const fundSelectedAccount = useArenaStore((s) => s.fundSelectedAccount);
 
   const [info, setInfo] = useState<AccountInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
+  const [isFunding, setIsFunding] = useState(false);
 
   const fetchInfo = useCallback(async () => {
     if (!api || !selectedAccount) {
@@ -194,13 +196,30 @@ export function AccountPage() {
                   <div className="text-warm-600 text-sm">Unable to fetch account info.</div>
                 )}
 
-                <button
-                  onClick={() => void fetchInfo()}
-                  disabled={loading}
-                  className="mt-3 text-xs text-warm-500 hover:text-yellow-500 transition-colors disabled:opacity-50"
-                >
-                  Refresh
-                </button>
+                <div className="flex items-center gap-3 mt-3">
+                  <button
+                    onClick={() => void fetchInfo()}
+                    disabled={loading}
+                    className="text-xs text-warm-500 hover:text-yellow-500 transition-colors disabled:opacity-50"
+                  >
+                    Refresh
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setIsFunding(true);
+                      try {
+                        await fundSelectedAccount();
+                        await fetchInfo();
+                      } finally {
+                        setIsFunding(false);
+                      }
+                    }}
+                    disabled={isFunding}
+                    className="px-4 py-1.5 rounded-lg bg-gradient-to-b from-amber-500 to-amber-600 text-warm-950 font-bold text-xs hover:from-amber-400 hover:to-amber-500 transition-colors disabled:opacity-50"
+                  >
+                    {isFunding ? 'Funding...' : 'Fund Account'}
+                  </button>
+                </div>
               </section>
             </div>
           )}
