@@ -92,7 +92,7 @@ function SandboxHeader() {
         >
           Battle!
         </button>
-        <div className="hidden lg:flex items-center gap-1">
+        <div className="flex items-center gap-1">
           <label className="text-warm-400 text-xs">Seed:</label>
           <input
             type="number"
