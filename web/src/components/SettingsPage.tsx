@@ -13,6 +13,8 @@ export function SettingsPage() {
     toggleShowCardNames,
     showGameCardDetailsPanel,
     toggleShowGameCardDetailsPanel,
+    showBoardHelper,
+    toggleShowBoardHelper,
     showAddress,
     toggleShowAddress,
     showBalance,
@@ -81,6 +83,28 @@ export function SettingsPage() {
                   <div
                     className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
                       showGameCardDetailsPanel ? 'translate-x-5' : 'translate-x-0.5'
+                    }`}
+                  />
+                </div>
+              </button>
+              <button
+                onClick={toggleShowBoardHelper}
+                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+              >
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="text-sm text-warm-200">Show Board Helper</div>
+                  <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
+                    Show the in-game board action hint above the battlefield.
+                  </div>
+                </div>
+                <div
+                  className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
+                    showBoardHelper ? 'bg-yellow-500' : 'bg-warm-700'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      showBoardHelper ? 'translate-x-5' : 'translate-x-0.5'
                     }`}
                   />
                 </div>

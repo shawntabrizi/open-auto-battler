@@ -88,6 +88,7 @@ interface GameStore {
   showRawJson: boolean;
   showCardNames: boolean;
   showGameCardDetailsPanel: boolean;
+  showBoardHelper: boolean;
   showAddress: boolean;
   showBalance: boolean;
   defaultBattleSpeed: number;
@@ -129,6 +130,7 @@ interface GameStore {
   toggleShowRawJson: () => void;
   toggleShowCardNames: () => void;
   toggleShowGameCardDetailsPanel: () => void;
+  toggleShowBoardHelper: () => void;
   toggleShowAddress: () => void;
   toggleShowBalance: () => void;
   setDefaultBattleSpeed: (speed: number) => void;
@@ -225,6 +227,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showRawJson: JSON.parse(localStorage.getItem('showRawJson') || 'false'),
   showCardNames: JSON.parse(localStorage.getItem('showCardNames') ?? 'true'),
   showGameCardDetailsPanel: JSON.parse(localStorage.getItem('showGameCardDetailsPanel') ?? 'true'),
+  showBoardHelper: JSON.parse(localStorage.getItem('showBoardHelper') ?? 'true'),
   showAddress: JSON.parse(localStorage.getItem('showAddress') ?? 'true'),
   showBalance: JSON.parse(localStorage.getItem('showBalance') ?? 'true'),
   defaultBattleSpeed: JSON.parse(localStorage.getItem('defaultBattleSpeed') ?? '1'),
@@ -689,6 +692,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newValue = !state.showGameCardDetailsPanel;
       localStorage.setItem('showGameCardDetailsPanel', JSON.stringify(newValue));
       return { showGameCardDetailsPanel: newValue };
+    });
+  },
+
+  toggleShowBoardHelper: () => {
+    set((state) => {
+      const newValue = !state.showBoardHelper;
+      localStorage.setItem('showBoardHelper', JSON.stringify(newValue));
+      return { showBoardHelper: newValue };
     });
   },
 

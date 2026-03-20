@@ -133,7 +133,7 @@ export function Shop() {
             </span>
           </div>
           <div
-            className="hand-row flex items-center justify-center gap-2 lg:gap-4 h-full w-full lg:max-w-3xl px-2 lg:px-4"
+            className="hand-row flex items-center justify-center gap-2 lg:gap-4 h-full w-full lg:max-w-3xl px-2 lg:px-4 pt-8 lg:pt-10 pb-10 lg:pb-12"
             onClick={(event) => {
               if (event.target === event.currentTarget && selection) {
                 setSelection(null);
@@ -144,14 +144,14 @@ export function Shop() {
               card ? (
                 <div
                   key={`hand-${card.id}-${i}`}
-                  className={`flex-1 min-w-0 h-full flex items-center justify-center ${isNewRound ? 'animate-card-entrance' : ''}`}
+                  className={`flex-1 min-w-0 h-full flex items-center justify-center overflow-visible ${isNewRound ? 'animate-card-entrance' : ''}`}
                   style={{
                     containerType: 'size',
                     ...(isNewRound ? { animationDelay: `${i * 80}ms` } : undefined),
                   }}
                 >
                   <div
-                    className="aspect-[3/4]"
+                    className="relative aspect-[3/4]"
                     style={{ width: 'min(100cqw, calc(100cqh * 3 / 4))' }}
                   >
                     <DraggableCard
@@ -163,12 +163,15 @@ export function Shop() {
                       isSelected={selection?.type === 'hand' && selection.index === i}
                       onClick={() => handleHandSlotClick(i)}
                     />
+                    <div className="board-helper hidden lg:flex absolute left-1/2 top-full mt-2 -translate-x-1/2 w-[92%] justify-center rounded-full border border-warm-800/70 bg-black/35 px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider text-warm-300/80 shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm">
+                      {i + 1}
+                    </div>
                   </div>
                 </div>
               ) : (
                 <div
                   key={`hand-empty-${i}`}
-                  className="flex-1 min-w-0 h-full flex items-center justify-center"
+                  className="flex-1 min-w-0 h-full flex items-center justify-center overflow-visible"
                   style={{ containerType: 'size' }}
                   onClick={() => {
                     if (selection) {
@@ -177,19 +180,17 @@ export function Shop() {
                   }}
                 >
                   <div
-                    className="aspect-[3/4] rounded-lg border-2 border-dashed border-warm-700/50 bg-warm-800/20 flex items-center justify-center"
+                    className="relative aspect-[3/4] rounded-lg border-2 border-dashed border-warm-700/50 bg-warm-800/20 flex items-center justify-center"
                     style={{ width: 'min(100cqw, calc(100cqh * 3 / 4))' }}
                   >
                     <span className="text-warm-700/40 text-lg">&#9724;</span>
+                    <div className="board-helper hidden lg:flex absolute left-1/2 top-full mt-2 -translate-x-1/2 w-[92%] justify-center rounded-full border border-warm-800/70 bg-black/35 px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider text-warm-300/80 shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm">
+                      {i + 1}
+                    </div>
                   </div>
                 </div>
               )
             )}
-          </div>
-          <div className="board-helper hidden lg:flex absolute bottom-3 left-1/2 -translate-x-1/2 justify-center">
-            <div className="rounded-full border border-warm-800/70 bg-black/45 px-4 py-1.5 text-center text-xs text-warm-200/85 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm">
-              Select: {GAME_SHORTCUTS.hand}
-            </div>
           </div>
         </div>
 

@@ -22,9 +22,8 @@ const BOARD_HINT_TEXT = {
 } as const;
 
 const BOARD_HINT_TONE_CLASS = {
-  default: 'text-warm-200/85',
+  default: 'text-warm-200/90',
   selected: 'text-warm-100',
-  onboarding: 'onboarding-hint text-amber-300',
   warning: 'text-orange-200',
   danger: 'text-red-200',
 } as const;
@@ -71,13 +70,6 @@ function getBoardHintState({
     return {
       text: BOARD_HINT_TEXT.notEnoughMana,
       toneClass: BOARD_HINT_TONE_CLASS.warning,
-    };
-  }
-
-  if (unitCount === 0) {
-    return {
-      text: BOARD_HINT_TEXT.selectCard,
-      toneClass: BOARD_HINT_TONE_CLASS.onboarding,
     };
   }
 
@@ -133,7 +125,8 @@ function detectBoardChanges(
 }
 
 export function Arena() {
-  const { view, selection, setSelection, playHandCard, swapBoardPositions } = useGameStore();
+  const { view, selection, setSelection, playHandCard, swapBoardPositions, showBoardHelper } =
+    useGameStore();
   const boardBg = useCustomizationStore((s) => s.selections.boardBackground);
 
   // --- Board change detection (ref-only, zero extra re-renders) ---
@@ -258,6 +251,18 @@ export function Arena() {
           </div>
         </div>
 
+        {showBoardHelper && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-30 flex justify-center px-2 lg:bottom-4">
+            <div
+              className={`w-fit max-w-full rounded-full border border-warm-800/70 bg-black/60 px-4 py-1.5 text-center text-[11px] font-semibold leading-tight shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-sm sm:px-5 sm:py-2 sm:text-sm ${
+                boardHint.toneClass
+              }`}
+            >
+              {boardHint.text}
+            </div>
+          </div>
+        )}
+
         {/* Board row */}
         <div
           className="absolute inset-0 z-10 flex items-center justify-center px-2 lg:px-12"
@@ -356,17 +361,6 @@ export function Arena() {
                 </div>
               );
             })}
-          </div>
-        </div>
-
-        {/* Contextual hint — larger and closer to the board interaction area */}
-        <div className="board-helper board-helper--status absolute bottom-4 left-1/2 z-20 flex w-full -translate-x-1/2 justify-center lg:max-w-3xl">
-          <div
-            className={`rounded-full border border-warm-800/70 bg-black/50 px-5 py-2 text-center text-xs lg:text-sm font-semibold shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-sm ${
-              boardHint.toneClass
-            }`}
-          >
-            {boardHint.text}
           </div>
         </div>
       </div>
