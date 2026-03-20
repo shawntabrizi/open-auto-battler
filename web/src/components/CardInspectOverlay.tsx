@@ -131,14 +131,14 @@ export function CardInspectOverlay({ card, mode }: CardInspectOverlayProps) {
         className="absolute inset-0 bg-black/75 backdrop-blur-sm animate-fade-in"
         onClick={close}
       />
-      <div className="absolute inset-0 flex items-center justify-center p-4 lg:p-8">
+      <div className="absolute inset-0 flex items-center justify-center p-0 sm:p-4 lg:p-8">
         <div
           ref={panelRef}
           role="dialog"
           aria-modal="true"
           aria-label={`Inspect ${card.name}`}
           tabIndex={-1}
-          className="flex h-full max-h-[90vh] w-full max-w-md justify-center"
+          className="flex h-full w-full justify-center sm:max-h-[90vh] sm:max-w-6xl"
         >
           <CardDetailPanel
             card={card}
