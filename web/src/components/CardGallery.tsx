@@ -74,7 +74,7 @@ export function CardGallery({
           {filtered.map(({ card, originalIndex }) => {
             const selected = isSelectedFn ? isSelectedFn(card, originalIndex) : selectedId === card.id;
             return (
-              <div key={`${card.id}-${originalIndex}`} className="w-[4.5rem] h-24 lg:w-[7.5rem] lg:h-40">
+              <div key={`${card.id}-${originalIndex}`} className="w-[4.5rem] h-[6rem] md:w-[6rem] md:h-[8rem] lg:w-[7.5rem] lg:h-[10rem]">
                 <UnitCard
                   card={card}
                   showCost={true}
