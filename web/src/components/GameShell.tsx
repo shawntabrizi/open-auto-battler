@@ -109,11 +109,6 @@ export function GameShell({
         ref={containerRef}
         className={`game-layout h-screen flex flex-col bg-board-bg ${className}`}
       >
-        {/* Skip-to-content link for keyboard navigation */}
-        <a href="#main-content" className="skip-link">
-          Skip to game
-        </a>
-
         {/* Zone 1: Top HUD */}
         <GameTopBar
           hideEndTurn={hideEndTurn}
@@ -122,7 +117,7 @@ export function GameShell({
         />
 
         {/* Zone 2-4: Main game area */}
-        <main id="main-content" tabIndex={-1} className="flex flex-col flex-1 min-h-0 outline-none">
+        <main className="flex flex-col flex-1 min-h-0 outline-none">
           {/* Zone 2: Arena (Board) with left panel */}
           <div
             className={`game-main flex-1 flex flex-col overflow-hidden min-h-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}

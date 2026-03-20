@@ -76,7 +76,10 @@ export default function Shop() {
           </p>
           <p>
             <span className="text-green-400 font-bold">Play</span> cards from your hand onto the
-            board by spending mana. Tap a card to select it, then tap an empty board slot to place
+            board by spending mana.
+          </p>
+          <p>
+            Tap a card to select it, then tap an empty board slot to place
             it. You can also drag cards directly to the board.
           </p>
         </div>
