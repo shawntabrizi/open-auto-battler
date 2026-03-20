@@ -98,18 +98,30 @@ export function Arena() {
   const unitCount = view.board.filter(Boolean).length;
   const handCount = view.hand?.filter(Boolean).length ?? 0;
   const hasHandSelection = selection?.type === 'hand';
+  const canPlaceSelectedHand =
+    selection?.type === 'hand' ? Boolean(view.can_afford[selection.index]) : false;
   const boardHintText =
     unitCount === 0
-      ? hasHandSelection
+      ? canPlaceSelectedHand
         ? 'Now tap a board slot to place your unit'
-        : 'Tap a card in your hand to begin'
+        : hasHandSelection
+          ? 'Not enough mana - burn a card or unit for mana'
+          : 'Tap a card in your hand to begin'
       : unitCount >= 5
         ? handCount > 0
-          ? 'Board full \u2014 burn a unit to make room'
+          ? 'Board full - burn a unit to make room'
           : `${unitCount}/5 units deployed`
-        : hasHandSelection
+        : canPlaceSelectedHand
           ? 'Tap a slot to place your unit'
-          : `${unitCount}/5 units deployed`;
+          : hasHandSelection
+            ? 'Not enough mana - burn a card or unit for mana'
+            : `${unitCount}/5 units deployed`;
+  const boardHintToneClass =
+    unitCount === 0 && !hasHandSelection
+      ? 'onboarding-hint text-amber-300'
+      : hasHandSelection && !canPlaceSelectedHand
+        ? 'text-orange-200'
+        : 'text-warm-200/85';
   const hideBoardStatusHintOnSmallScreens = boardHintText.endsWith('units deployed');
 
   const handleBoardSlotClick = (index: number) => {
@@ -168,9 +180,7 @@ export function Arena() {
         {/* Contextual hint — always visible, guides new players through card placement */}
         <div
           className={`board-helper board-helper--status absolute top-14 lg:top-16 left-1/2 -translate-x-1/2 z-20 rounded-full border border-warm-800/70 bg-black/45 px-3 py-1 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm text-[0.6rem] lg:text-xs font-body text-center ${
-            unitCount === 0 && !hasHandSelection
-              ? 'onboarding-hint text-amber-300'
-              : 'text-warm-200/85'
+            boardHintToneClass
           } ${hideBoardStatusHintOnSmallScreens ? 'hidden lg:block' : ''}`}
         >
           {boardHintText}
@@ -254,7 +264,7 @@ export function Arena() {
                           ) : (
                             <EmptySlot
                               onClick={() => handleBoardSlotClick(arrayIndex)}
-                              isTarget={hasHandSelection}
+                              isTarget={canPlaceSelectedHand}
                               isHovered={isOver}
                             />
                           )}

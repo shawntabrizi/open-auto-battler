@@ -57,6 +57,17 @@ export function Shop() {
     }
   };
   const canBurn = selection?.type === 'hand' || selection?.type === 'board';
+  const shouldHighlightBurn = canBurn || isBurnHovered;
+  const burnHintText = canBurn
+    ? `Burn Card (${GAME_SHORTCUTS.burn})`
+    : isBurnHovered
+      ? `Burn Here (${GAME_SHORTCUTS.burn})`
+      : `Burn (${GAME_SHORTCUTS.burn})`;
+  const burnZoneClass = isBurnHovered
+    ? 'burn-zone-active burn-zone-active--hover'
+    : shouldHighlightBurn
+      ? 'burn-zone-active'
+      : '';
 
   return (
     <div
@@ -190,9 +201,9 @@ export function Shop() {
             disabled={!canBurn}
             aria-keyshortcuts={GAME_SHORTCUTS.burn}
             title={`Burn selected card or unit (${GAME_SHORTCUTS.burn})`}
-            className={`shop-side w-14 lg:w-32 h-full flex flex-col items-center justify-center border-l border-warm-700/50 transition-all duration-200 ${
-              isBurnHovered ? 'bg-red-900/20' : ''
-            } ${canBurn ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+            className={`shop-side ${burnZoneClass} w-14 lg:w-32 h-full flex flex-col items-center justify-center border-l border-warm-700/50 transition-all duration-200 ${
+              canBurn ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+            }`}
           >
             <img
               src={burnIcon}
@@ -200,15 +211,21 @@ export function Shop() {
               className={`burn-circle w-10 h-10 lg:w-20 lg:h-20 transition-all duration-200 ${
                 isBurnHovered
                   ? 'scale-115 drop-shadow-[0_0_12px_rgba(234,88,12,0.4)]'
-                  : 'opacity-80 hover:opacity-100 hover:scale-105'
+                  : shouldHighlightBurn
+                    ? 'scale-105 opacity-100 drop-shadow-[0_0_10px_rgba(234,88,12,0.3)]'
+                    : 'opacity-80 hover:opacity-100 hover:scale-105'
               }`}
             />
             <div
-              className={`burn-hint hidden lg:block text-[10px] mt-1 text-center px-2 ${isBurnHovered ? 'text-orange-400 font-bold' : 'text-warm-500'}`}
+              className={`burn-hint hidden lg:block text-[10px] mt-1 text-center px-2 ${
+                isBurnHovered
+                  ? 'text-orange-300 font-bold'
+                  : shouldHighlightBurn
+                    ? 'text-orange-200 font-semibold'
+                    : 'text-warm-500'
+              }`}
             >
-              {isBurnHovered
-                ? `BURN IT! (${GAME_SHORTCUTS.burn})`
-                : `Burn (${GAME_SHORTCUTS.burn})`}
+              {burnHintText}
             </div>
           </button>
         </DroppableBurnZone>

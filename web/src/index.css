@@ -514,33 +514,18 @@ body {
 
 /* Obvious indicator — slot is available for placement (hand card selected or dragging) */
 .slot-available {
-  border-color: rgba(212, 168, 67, 0.5) !important;
+  border-color: rgba(245, 202, 92, 0.82) !important;
   border-style: solid !important;
   background: linear-gradient(
     135deg,
-    rgba(50, 40, 20, 0.9) 0%,
-    rgba(35, 28, 16, 0.95) 100%
+    rgba(60, 46, 20, 0.92) 0%,
+    rgba(38, 30, 14, 0.97) 100%
   ) !important;
   box-shadow:
-    inset 0 0 8px rgba(212, 168, 67, 0.1),
-    0 0 8px rgba(212, 168, 67, 0.15) !important;
-  animation: slot-available-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes slot-available-pulse {
-  0%,
-  100% {
-    border-color: rgba(212, 168, 67, 0.4);
-    box-shadow:
-      inset 0 0 8px rgba(212, 168, 67, 0.08),
-      0 0 6px rgba(212, 168, 67, 0.1);
-  }
-  50% {
-    border-color: rgba(212, 168, 67, 0.7);
-    box-shadow:
-      inset 0 0 12px rgba(212, 168, 67, 0.15),
-      0 0 12px rgba(212, 168, 67, 0.25);
-  }
+    inset 0 0 16px rgba(245, 202, 92, 0.18),
+    0 0 16px rgba(245, 202, 92, 0.28),
+    0 0 28px rgba(217, 119, 6, 0.18) !important;
+  filter: saturate(1.08) brightness(1.06);
 }
 
 /* "+" icon inside available slots */
@@ -570,6 +555,51 @@ body {
   }
   50% {
     opacity: 1;
+  }
+}
+
+.burn-zone-active {
+  background-image: radial-gradient(
+    circle at center,
+    rgba(251, 191, 36, 0.2) 0%,
+    rgba(251, 146, 60, 0.32) 24%,
+    rgba(249, 115, 22, 0.28) 48%,
+    rgba(185, 28, 28, 0.32) 76%,
+    rgba(69, 10, 10, 0.52) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(251, 146, 60, 0.24),
+    inset 0 0 36px rgba(251, 146, 60, 0.12),
+    0 0 18px rgba(249, 115, 22, 0.14);
+  animation: burn-zone-pulse 1.8s ease-in-out infinite;
+}
+
+.burn-zone-active--hover {
+  background-image: radial-gradient(
+    circle at center,
+    rgba(253, 224, 71, 0.24) 0%,
+    rgba(251, 146, 60, 0.4) 22%,
+    rgba(249, 115, 22, 0.34) 46%,
+    rgba(220, 38, 38, 0.36) 74%,
+    rgba(69, 10, 10, 0.58) 100%
+  );
+}
+
+@keyframes burn-zone-pulse {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 1px rgba(251, 146, 60, 0.24),
+      inset 0 0 36px rgba(251, 146, 60, 0.12),
+      0 0 18px rgba(249, 115, 22, 0.14);
+    filter: saturate(1) brightness(1);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgba(251, 146, 60, 0.38),
+      inset 0 0 52px rgba(251, 146, 60, 0.2),
+      0 0 30px rgba(220, 38, 38, 0.2);
+    filter: saturate(1.14) brightness(1.08);
   }
 }
 
