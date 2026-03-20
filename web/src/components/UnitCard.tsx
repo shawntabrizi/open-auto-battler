@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { CardView, BoardUnitView } from '../types';
 import { getCardArtSm } from '../utils/cardArt';
@@ -61,6 +61,14 @@ interface UnitCardProps {
   onDrop?: (e: React.DragEvent) => void;
 }
 
+type TooltipAnchor = { top: number; left: number; bottom: number };
+type TooltipPlacement = 'above' | 'below';
+type TooltipPosition = {
+  top: number;
+  left: number;
+  placement: TooltipPlacement;
+};
+
 export function UnitCard({
   card,
   isSelected = false,
@@ -90,7 +98,9 @@ export function UnitCard({
   const [artFailed, setArtFailed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [tooltipAnchor, setTooltipAnchor] = useState<TooltipAnchor | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<TooltipPosition | null>(null);
   const hasGameSelection = !!activeSelection;
 
   const abilities = [
@@ -104,28 +114,76 @@ export function UnitCard({
   const rarityStyle = RARITY_STYLES[rarity];
   const showTooltip = abilities.length > 0 && (isSelected || (!hasGameSelection && isHovered));
 
-  useEffect(() => {
-    if (!showTooltip) return;
+  useLayoutEffect(() => {
+    if (!showTooltip) {
+      setTooltipAnchor(null);
+      setTooltipPos(null);
+      return;
+    }
+
+    let frameId = 0;
+    const viewportPadding = 12;
+    const gap = 8;
 
     const updateTooltipPosition = () => {
       if (!cardRef.current) return;
 
       const rect = cardRef.current.getBoundingClientRect();
-      setTooltipPos({
+      const nextAnchor = {
         top: rect.top,
         left: rect.left + rect.width / 2,
+        bottom: rect.bottom,
+      };
+      setTooltipAnchor(nextAnchor);
+
+      const tooltipEl = tooltipRef.current;
+      if (!tooltipEl) {
+        frameId = requestAnimationFrame(updateTooltipPosition);
+        return;
+      }
+
+      const tooltipWidth = tooltipEl.offsetWidth || 260;
+      const tooltipHeight = tooltipEl.offsetHeight || 0;
+      const availableAbove = Math.max(0, rect.top - viewportPadding - gap);
+      const availableBelow = Math.max(0, window.innerHeight - rect.bottom - viewportPadding - gap);
+
+      let placement: TooltipPlacement = 'above';
+      if (tooltipHeight > availableAbove && availableBelow > availableAbove) {
+        placement = 'below';
+      }
+
+      const halfWidth = tooltipWidth / 2;
+      const left = Math.min(
+        window.innerWidth - viewportPadding - halfWidth,
+        Math.max(viewportPadding + halfWidth, nextAnchor.left)
+      );
+
+      setTooltipPos({
+        top: placement === 'above' ? nextAnchor.top - gap : nextAnchor.bottom + gap,
+        left,
+        placement,
       });
     };
 
-    updateTooltipPosition();
-    window.addEventListener('resize', updateTooltipPosition);
-    window.addEventListener('scroll', updateTooltipPosition, true);
+    const scheduleTooltipUpdate = () => {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+      frameId = requestAnimationFrame(updateTooltipPosition);
+    };
+
+    scheduleTooltipUpdate();
+    window.addEventListener('resize', scheduleTooltipUpdate);
+    window.addEventListener('scroll', scheduleTooltipUpdate, true);
 
     return () => {
-      window.removeEventListener('resize', updateTooltipPosition);
-      window.removeEventListener('scroll', updateTooltipPosition, true);
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+      window.removeEventListener('resize', scheduleTooltipUpdate);
+      window.removeEventListener('scroll', scheduleTooltipUpdate, true);
     };
-  }, [showTooltip]);
+  }, [showTooltip, abilities.length, card.id]);
 
   const cardEl = (
     <div
@@ -250,17 +308,24 @@ export function UnitCard({
 
       {/* Ability tooltip rendered via portal so it's never clipped */}
       {showTooltip &&
-        tooltipPos &&
+        tooltipAnchor &&
         createPortal(
           <div
             className="fixed z-[9999] pointer-events-none"
             style={{
-              top: tooltipPos.top,
-              left: tooltipPos.left,
-              transform: 'translate(-50%, -100%) translateY(-8px)',
+              top: tooltipPos?.top ?? tooltipAnchor.top - 8,
+              left: tooltipPos?.left ?? tooltipAnchor.left,
+              transform:
+                (tooltipPos?.placement ?? 'above') === 'above'
+                  ? 'translate(-50%, -100%)'
+                  : 'translate(-50%, 0)',
+              visibility: tooltipPos ? 'visible' : 'hidden',
             }}
           >
-            <div className="bg-warm-950/95 border border-warm-600/60 rounded-lg px-3 py-2 shadow-xl backdrop-blur-sm min-w-[180px] max-w-[260px]">
+            <div
+              ref={tooltipRef}
+              className="bg-warm-950/95 border border-warm-600/60 rounded-lg px-3 py-2 shadow-xl backdrop-blur-sm min-w-[180px] max-w-[260px]"
+            >
               <div className="text-[10px] lg:text-xs font-bold text-white mb-1">{card.name}</div>
               {abilities.map((ability: any, i: number) => (
                 <div
