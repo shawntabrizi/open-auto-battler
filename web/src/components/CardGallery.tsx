@@ -70,7 +70,7 @@ export function CardGallery({
         </div>
       )}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-        <div className="flex flex-wrap gap-2 lg:gap-3 justify-center pb-4 lg:pb-12">
+        <div className="flex flex-wrap gap-2 lg:gap-3 justify-center pt-1 lg:pt-2 pb-4 lg:pb-12">
           {filtered.map(({ card, originalIndex }) => {
             const selected = isSelectedFn ? isSelectedFn(card, originalIndex) : selectedId === card.id;
             return (
