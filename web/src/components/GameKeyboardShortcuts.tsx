@@ -101,121 +101,7 @@ function getShortcutSlot(code: string) {
 }
 
 export function GameKeyboardShortcuts() {
-  const {
-    view,
-    bag,
-    cardSet,
-    selection,
-    showBag,
-    showBattleOverlay,
-    setSelection,
-    setShowBag,
-    burnHandCard,
-    playHandCard,
-    swapBoardPositions,
-    burnBoardUnit,
-    undo,
-  } = useGameStore();
-  const menuOpen = useMenuStore((state) => state.isOpen);
-  const openMenu = useMenuStore((state) => state.open);
-  const closeMenu = useMenuStore((state) => state.close);
-  const tutorialOpen = useTutorialStore((state) => state.isOpen);
-  const openTutorial = useTutorialStore((state) => state.open);
-  const closeTutorial = useTutorialStore((state) => state.close);
-  const helpOpen = useShortcutHelpStore((state) => state.isOpen);
-  const openHelp = useShortcutHelpStore((state) => state.open);
-  const closeHelp = useShortcutHelpStore((state) => state.close);
-  const inspectOpen = useCardInspectStore((state) => state.isOpen);
-  const openInspect = useCardInspectStore((state) => state.open);
-  const closeInspect = useCardInspectStore((state) => state.close);
-
   useEffect(() => {
-    if (!view) return;
-
-    const getInspectableCard = () => {
-      if (selection?.type === 'hand') {
-        return view.hand[selection.index] ?? null;
-      }
-
-      if (selection?.type === 'board') {
-        return view.board[selection.index] ?? null;
-      }
-
-      if (selection?.type === 'bag') {
-        const bagCardId = bag?.[selection.index];
-        return bagCardId != null ? (cardSet?.find((card) => card.id === bagCardId) ?? null) : null;
-      }
-
-      return null;
-    };
-
-    const handleHandShortcut = (slotIndex: number) => {
-      const card = view.hand[slotIndex];
-      if (!card) return false;
-
-      if (selection?.type === 'hand' && selection.index === slotIndex) {
-        setSelection(null);
-      } else {
-        setSelection({ type: 'hand', index: slotIndex });
-      }
-
-      return true;
-    };
-
-    const handleBoardShortcut = (displayIndex: number) => {
-      const boardIndex = BOARD_DISPLAY_TO_INDEX[displayIndex];
-      const unit = view.board[boardIndex];
-
-      if (unit) {
-        if (selection?.type === 'board' && selection.index === boardIndex) {
-          setSelection(null);
-        } else {
-          setSelection({ type: 'board', index: boardIndex });
-        }
-        return true;
-      }
-
-      if (selection?.type === 'hand') {
-        playHandCard(selection.index, boardIndex);
-        return true;
-      }
-
-      if (selection?.type === 'board') {
-        swapBoardPositions(selection.index, boardIndex);
-        return true;
-      }
-
-      return false;
-    };
-
-    const handleBurnShortcut = () => {
-      if (selection?.type === 'hand') {
-        burnHandCard(selection.index);
-        return true;
-      }
-
-      if (selection?.type === 'board') {
-        burnBoardUnit(selection.index);
-        return true;
-      }
-
-      return false;
-    };
-
-    const handleBoardMoveShortcut = (direction: 'left' | 'right') => {
-      if (selection?.type !== 'board') return false;
-
-      const delta = direction === 'left' ? 1 : -1;
-      const targetIndex = selection.index + delta;
-
-      if (targetIndex < 0 || targetIndex >= view.board.length) {
-        return true;
-      }
-
-      swapBoardPositions(selection.index, targetIndex);
-      return true;
-    };
-
     const focusPrimaryAction = () => {
       const primaryAction = document.querySelector<HTMLElement>(PRIMARY_ACTION_SELECTOR);
       if (!primaryAction) return false;
@@ -234,7 +120,126 @@ export function GameKeyboardShortcuts() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.repeat || isEditableTarget(event.target)) return;
+      const {
+        view,
+        bag,
+        cardSet,
+        selection,
+        showBag,
+        showBattleOverlay,
+        setSelection,
+        setShowBag,
+        burnHandCard,
+        playHandCard,
+        swapBoardPositions,
+        burnBoardUnit,
+        undo,
+      } = useGameStore.getState();
+      const { isOpen: menuOpen, open: openMenu, close: closeMenu } = useMenuStore.getState();
+      const {
+        isOpen: tutorialOpen,
+        open: openTutorial,
+        close: closeTutorial,
+      } = useTutorialStore.getState();
+      const {
+        isOpen: helpOpen,
+        open: openHelp,
+        close: closeHelp,
+      } = useShortcutHelpStore.getState();
+      const {
+        isOpen: inspectOpen,
+        open: openInspect,
+        close: closeInspect,
+      } = useCardInspectStore.getState();
+
+      if (!view) return;
       if (view.phase !== 'shop') return;
+
+      const getInspectableCard = () => {
+        if (selection?.type === 'hand') {
+          return view.hand[selection.index] ?? null;
+        }
+
+        if (selection?.type === 'board') {
+          return view.board[selection.index] ?? null;
+        }
+
+        if (selection?.type === 'bag') {
+          const bagCardId = bag?.[selection.index];
+          return bagCardId != null
+            ? (cardSet?.find((card) => card.id === bagCardId) ?? null)
+            : null;
+        }
+
+        return null;
+      };
+
+      const handleHandShortcut = (slotIndex: number) => {
+        const card = view.hand[slotIndex];
+        if (!card) return false;
+
+        if (selection?.type === 'hand' && selection.index === slotIndex) {
+          setSelection(null);
+        } else {
+          setSelection({ type: 'hand', index: slotIndex });
+        }
+
+        return true;
+      };
+
+      const handleBoardShortcut = (displayIndex: number) => {
+        const boardIndex = BOARD_DISPLAY_TO_INDEX[displayIndex];
+        const unit = view.board[boardIndex];
+
+        if (unit) {
+          if (selection?.type === 'board' && selection.index === boardIndex) {
+            setSelection(null);
+          } else {
+            setSelection({ type: 'board', index: boardIndex });
+          }
+          return true;
+        }
+
+        if (selection?.type === 'hand') {
+          playHandCard(selection.index, boardIndex);
+          return true;
+        }
+
+        if (selection?.type === 'board') {
+          swapBoardPositions(selection.index, boardIndex);
+          return true;
+        }
+
+        return false;
+      };
+
+      const handleBurnShortcut = () => {
+        if (selection?.type === 'hand') {
+          burnHandCard(selection.index);
+          return true;
+        }
+
+        if (selection?.type === 'board') {
+          burnBoardUnit(selection.index);
+          return true;
+        }
+
+        return false;
+      };
+
+      const handleBoardMoveShortcut = (direction: 'left' | 'right') => {
+        if (selection?.type !== 'board') return false;
+
+        const delta = direction === 'left' ? 1 : -1;
+        const targetIndex = selection.index + delta;
+
+        if (targetIndex < 0 || targetIndex >= view.board.length) {
+          return true;
+        }
+
+        swapBoardPositions(selection.index, targetIndex);
+        return true;
+      };
 
       const key = event.key.toLowerCase();
       const isHelpShortcut = event.code === 'Slash';
@@ -388,33 +393,7 @@ export function GameKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    bag,
-    burnBoardUnit,
-    burnHandCard,
-    cardSet,
-    closeMenu,
-    closeHelp,
-    closeInspect,
-    closeTutorial,
-    helpOpen,
-    inspectOpen,
-    menuOpen,
-    openHelp,
-    openInspect,
-    openMenu,
-    playHandCard,
-    selection,
-    setSelection,
-    setShowBag,
-    showBag,
-    showBattleOverlay,
-    swapBoardPositions,
-    openTutorial,
-    tutorialOpen,
-    undo,
-    view,
-  ]);
+  }, []);
 
   return null;
 }

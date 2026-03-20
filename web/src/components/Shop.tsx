@@ -24,7 +24,7 @@ export function Shop() {
       const timer = setTimeout(() => setIsNewRound(false), duration);
       return () => clearTimeout(timer);
     }
-  }, [view]);
+  }, [view?.round]);
 
   if (!view) return null;
 
