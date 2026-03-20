@@ -103,6 +103,8 @@ function getShortcutSlot(code: string) {
 export function GameKeyboardShortcuts() {
   const {
     view,
+    bag,
+    cardSet,
     selection,
     showBag,
     showBattleOverlay,
@@ -129,6 +131,23 @@ export function GameKeyboardShortcuts() {
 
   useEffect(() => {
     if (!view) return;
+
+    const getInspectableCard = () => {
+      if (selection?.type === 'hand') {
+        return view.hand[selection.index] ?? null;
+      }
+
+      if (selection?.type === 'board') {
+        return view.board[selection.index] ?? null;
+      }
+
+      if (selection?.type === 'bag') {
+        const bagCardId = bag?.[selection.index];
+        return bagCardId != null ? (cardSet?.find((card) => card.id === bagCardId) ?? null) : null;
+      }
+
+      return null;
+    };
 
     const handleHandShortcut = (slotIndex: number) => {
       const card = view.hand[slotIndex];
@@ -222,8 +241,8 @@ export function GameKeyboardShortcuts() {
       const hasPrimaryModifier = event.ctrlKey || event.metaKey;
       const hasUnsupportedModifier = event.altKey;
       const shortcutSlot = getShortcutSlot(event.code);
-      const hasInspectableSelection =
-        selection?.type === 'hand' || selection?.type === 'board' || selection?.type === 'bag';
+      const inspectableCard = getInspectableCard();
+      const hasInspectableSelection = inspectableCard !== null;
 
       if (key === 'i' && !event.shiftKey && !hasPrimaryModifier && !hasUnsupportedModifier) {
         if (inspectOpen) {
@@ -237,7 +256,7 @@ export function GameKeyboardShortcuts() {
           !tutorialOpen
         ) {
           event.preventDefault();
-          openInspect();
+          openInspect(inspectableCard);
         }
         return;
       }
@@ -370,8 +389,10 @@ export function GameKeyboardShortcuts() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
+    bag,
     burnBoardUnit,
     burnHandCard,
+    cardSet,
     closeMenu,
     closeHelp,
     closeInspect,

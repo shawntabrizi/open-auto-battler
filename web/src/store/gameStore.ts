@@ -612,7 +612,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ showBattleOverlay: false });
   },
   setShowBag: (show: boolean) => {
-    set({ showBag: show });
+    set({ showBag: show, selection: null });
     // Fetch bag when opening the overlay
     if (show) {
       get().fetchBag();

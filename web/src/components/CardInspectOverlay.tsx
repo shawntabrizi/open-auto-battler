@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { CardDetailPanel, type CardDetailPanelMode } from './CardDetailPanel';
-import type { BoardUnitView, CardView } from '../types';
 import { useCardInspectStore } from '../store/cardInspectStore';
 
 const FOCUSABLE_SELECTOR = [
@@ -24,12 +23,12 @@ function getFocusableElements(container: HTMLElement | null) {
 }
 
 interface CardInspectOverlayProps {
-  card: CardView | BoardUnitView | null;
   mode: CardDetailPanelMode;
 }
 
-export function CardInspectOverlay({ card, mode }: CardInspectOverlayProps) {
+export function CardInspectOverlay({ mode }: CardInspectOverlayProps) {
   const isOpen = useCardInspectStore((state) => state.isOpen);
+  const card = useCardInspectStore((state) => state.card);
   const close = useCardInspectStore((state) => state.close);
   const panelRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);

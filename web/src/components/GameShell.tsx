@@ -154,7 +154,7 @@ export function GameShell({
         <BattleOverlay />
         <BagOverlay />
         <KeyboardShortcutsOverlay />
-        <CardInspectOverlay card={cardToShow} mode={cardPanelMode} />
+        <CardInspectOverlay mode={cardPanelMode} />
 
         <RotatePrompt />
       </div>
