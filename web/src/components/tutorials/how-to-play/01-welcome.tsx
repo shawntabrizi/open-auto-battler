@@ -16,7 +16,7 @@ export default function Welcome() {
       </h1>
       <p className="text-warm-300 text-sm lg:text-lg leading-relaxed max-w-lg mx-auto mb-6 lg:mb-10">
         Draft cards, build a team, and watch them clash automatically.
-        Each round you grow stronger — but so do your opponents. Can you rack up 10 wins before
+        Each round you grow stronger, but so do your opponents. Can you rack up 10 wins before
         your lives run out?
       </p>
 

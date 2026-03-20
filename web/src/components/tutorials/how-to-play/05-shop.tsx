@@ -68,14 +68,15 @@ export default function Shop() {
             You draw <span className="text-white font-bold">5 random cards</span> from your bag into your hand.
           </p>
           <p>
-            <span className="text-red-400 font-bold">Burn</span> cards from your hand or your board to create <span className="text-blue-400 font-bold">mana</span>.
+            <span className="text-red-400 font-bold">Burn</span> cards from your hand or your board to gain <span className="text-blue-400 font-bold">mana</span>.
           </p>
           <p>
             <span className="text-green-400 font-bold">Play</span> cards from your hand onto the board by spending mana.
+            Units on your board <span className="text-white font-bold">carry over</span> between rounds.
           </p>
           <p>
             You start with <span className="text-blue-400 font-bold">3 mana</span>. Each{' '}
-            <span className="text-yellow-400 font-bold">round</span>, your mana limit grows by 1 — letting you
+            <span className="text-yellow-400 font-bold">round</span>, your mana limit grows by 1, letting you
             field stronger cards as the game goes on.
           </p>
         </div>

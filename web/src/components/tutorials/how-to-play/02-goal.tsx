@@ -2,8 +2,11 @@ export default function Goal() {
   return (
     <div className="text-center">
       <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white mb-4 lg:mb-6">
-        Goal
+        Your Mission
       </h2>
+      <p className="text-warm-300 text-sm lg:text-lg leading-relaxed max-w-md mx-auto mb-2 lg:mb-3">
+        Build a team of units strong enough to crush your opponents.
+      </p>
       <p className="text-warm-300 text-sm lg:text-lg leading-relaxed max-w-md mx-auto mb-4 lg:mb-6 flex flex-wrap items-center justify-center gap-1">
         <span>Earn</span>
         <span className="text-yellow-400 font-bold">10 wins</span>
@@ -20,13 +23,13 @@ export default function Goal() {
 
       <div className="text-warm-400 text-xs lg:text-sm leading-relaxed max-w-md mx-auto space-y-1">
         <p>
-          <span className="text-green-400 font-bold">Victory</span> — destroy all enemy units to earn a win.
+          <span className="text-green-400 font-bold">Victory:</span> destroy all enemy units to earn a win.
         </p>
         <p>
-          <span className="text-red-400 font-bold">Defeat</span> — lose all your units and you lose a life.
+          <span className="text-red-400 font-bold">Defeat:</span> lose all your units and you lose a life.
         </p>
         <p>
-          <span className="text-warm-300 font-bold">Draw</span> — both sides wiped out. No win, no life lost.
+          <span className="text-warm-300 font-bold">Draw:</span> both sides wiped out. No win, no life lost.
         </p>
       </div>
     </div>

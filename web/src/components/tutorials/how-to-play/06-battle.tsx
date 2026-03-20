@@ -55,8 +55,8 @@ export default function Battle() {
           unit with 0 health is destroyed.
         </p>
         <p>
-          Watch for <span className="text-yellow-400 font-bold">abilities</span> —
-          they fire during combat and can completely turn the tide.
+          Watch for <span className="text-yellow-400 font-bold">abilities</span>!
+          They fire during combat and can completely turn the tide.
         </p>
       </div>
     </div>

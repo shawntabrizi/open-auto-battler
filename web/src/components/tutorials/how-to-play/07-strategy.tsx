@@ -32,11 +32,11 @@ export default function Strategy() {
           When it falls, position 2 steps up, and so on.
         </p>
         <p>
-          Combat has <span className="text-yellow-400 font-bold">no randomness</span> —
-          the same boards always produce the same result. The only luck is which cards you draw.
+          Combat is <span className="text-yellow-400 font-bold">deterministic</span>.
+          The same battle will always produce the same result. The only luck is which cards you draw.
         </p>
         <p>
-          When abilities trigger, <span className="text-yellow-400 font-bold">stronger units act first</span> —
+          When abilities trigger, <span className="text-yellow-400 font-bold">stronger units act first</span>:
           highest attack goes first, then highest health, then front position.
         </p>
         <p>
