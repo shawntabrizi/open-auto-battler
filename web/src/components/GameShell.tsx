@@ -15,6 +15,7 @@ import { CARD_SIZES } from '../constants/cardSizes';
 import { RotatePrompt } from './RotatePrompt';
 import { GameKeyboardShortcuts } from './GameKeyboardShortcuts';
 import { KeyboardShortcutsOverlay } from './KeyboardShortcutsOverlay';
+import { CardInspectOverlay } from './CardInspectOverlay';
 import { useGameStore } from '../store/gameStore';
 import { useDragAndDrop } from '../hooks';
 
@@ -151,6 +152,7 @@ export function GameShell({
         <BattleOverlay />
         <BagOverlay />
         <KeyboardShortcutsOverlay />
+        <CardInspectOverlay card={cardToShow} mode={cardPanelMode} />
 
         <RotatePrompt />
       </div>

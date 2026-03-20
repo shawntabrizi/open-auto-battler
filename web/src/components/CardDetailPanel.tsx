@@ -93,9 +93,16 @@ export interface CardDetailPanelProps {
   isVisible: boolean;
   mode?: CardDetailPanelMode;
   layout?: 'fixed' | 'contained';
+  onClose?: () => void;
 }
 
-export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: CardDetailPanelProps) {
+export function CardDetailPanel({
+  card,
+  isVisible,
+  mode,
+  layout = 'fixed',
+  onClose,
+}: CardDetailPanelProps) {
   const [showForfeitConfirm, setShowForfeitConfirm] = React.useState(false);
   const isSubmitting = useIsSubmitting();
   const { cardNameMap, setSelection, showRawJson, newRun } = useGameStore();
@@ -164,10 +171,17 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
 
   const containerClassName =
     layout === 'contained'
-      ? 'relative h-full min-h-0 w-40 sm:w-44 lg:w-80 shrink-0'
+      ? 'relative h-full min-h-0 w-full max-w-md shrink-0 rounded-2xl overflow-hidden'
       : 'fixed top-0 left-0 bottom-0 w-44 lg:w-80';
+  const frameClassName =
+    layout === 'contained' ? 'border border-warm-700 rounded-2xl' : 'border-r border-warm-700';
 
   const handleClose = () => {
+    if (onClose) {
+      onClose();
+      return;
+    }
+
     setSelection(null);
   };
 
@@ -260,7 +274,7 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
   return (
     <>
       <div
-        className={`card-detail-panel ${containerClassName} bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30`}
+        className={`card-detail-panel ${containerClassName} ${frameClassName} bg-warm-950 shadow-2xl flex flex-col z-30`}
       >
         {/* Header */}
         <div className="border-b border-warm-800 py-2 lg:py-3 px-3 lg:px-5 flex items-center justify-between">

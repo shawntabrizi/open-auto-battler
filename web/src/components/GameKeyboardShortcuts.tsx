@@ -3,6 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import { useMenuStore } from '../store/menuStore';
 import { useTutorialStore } from '../store/tutorialStore';
 import { useShortcutHelpStore } from '../store/shortcutHelpStore';
+import { useCardInspectStore } from '../store/cardInspectStore';
 
 const DIGIT_SHORTCUT_CODES = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'] as const;
 const NUMPAD_SHORTCUT_CODES = ['Numpad1', 'Numpad2', 'Numpad3', 'Numpad4', 'Numpad5'] as const;
@@ -11,6 +12,7 @@ const BOARD_DISPLAY_TO_INDEX = [4, 3, 2, 1, 0] as const;
 export const GAME_SHORTCUTS = {
   bag: 'B',
   details: 'D',
+  inspect: 'I',
   tutorial: 'T',
   help: '?',
   menu: 'M',
@@ -30,6 +32,10 @@ export const GAME_SHORTCUT_SECTIONS = [
       { keys: 'Enter / Space', description: 'Activate the currently focused control.' },
       { keys: 'Escape', description: 'Close the current layer or clear the current selection.' },
       { keys: GAME_SHORTCUTS.details, description: 'Focus the card details panel.' },
+      {
+        keys: GAME_SHORTCUTS.inspect,
+        description: 'Open or close inspect mode for the selected card.',
+      },
     ],
   },
   {
@@ -117,6 +123,9 @@ export function GameKeyboardShortcuts() {
   const helpOpen = useShortcutHelpStore((state) => state.isOpen);
   const openHelp = useShortcutHelpStore((state) => state.open);
   const closeHelp = useShortcutHelpStore((state) => state.close);
+  const inspectOpen = useCardInspectStore((state) => state.isOpen);
+  const openInspect = useCardInspectStore((state) => state.open);
+  const closeInspect = useCardInspectStore((state) => state.close);
 
   useEffect(() => {
     if (!view) return;
@@ -213,6 +222,27 @@ export function GameKeyboardShortcuts() {
       const hasPrimaryModifier = event.ctrlKey || event.metaKey;
       const hasUnsupportedModifier = event.altKey;
       const shortcutSlot = getShortcutSlot(event.code);
+      const hasInspectableSelection =
+        selection?.type === 'hand' || selection?.type === 'board' || selection?.type === 'bag';
+
+      if (key === 'i' && !event.shiftKey && !hasPrimaryModifier && !hasUnsupportedModifier) {
+        if (inspectOpen) {
+          event.preventDefault();
+          closeInspect();
+        } else if (
+          hasInspectableSelection &&
+          !menuOpen &&
+          !showBattleOverlay &&
+          !helpOpen &&
+          !tutorialOpen
+        ) {
+          event.preventDefault();
+          openInspect();
+        }
+        return;
+      }
+
+      if (inspectOpen) return;
 
       if (key === 't' && !hasPrimaryModifier && !hasUnsupportedModifier) {
         if (tutorialOpen) {
@@ -344,10 +374,13 @@ export function GameKeyboardShortcuts() {
     burnHandCard,
     closeMenu,
     closeHelp,
+    closeInspect,
     closeTutorial,
     helpOpen,
+    inspectOpen,
     menuOpen,
     openHelp,
+    openInspect,
     openMenu,
     playHandCard,
     selection,

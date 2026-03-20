@@ -98,6 +98,19 @@ export function Arena() {
   const unitCount = view.board.filter(Boolean).length;
   const handCount = view.hand?.filter(Boolean).length ?? 0;
   const hasHandSelection = selection?.type === 'hand';
+  const boardHintText =
+    unitCount === 0
+      ? hasHandSelection
+        ? 'Now tap a board slot to place your unit'
+        : 'Tap a card in your hand to begin'
+      : unitCount >= 5
+        ? handCount > 0
+          ? 'Board full \u2014 burn a unit to make room'
+          : `${unitCount}/5 units deployed`
+        : hasHandSelection
+          ? 'Tap a slot to place your unit'
+          : `${unitCount}/5 units deployed`;
+  const hideBoardStatusHintOnSmallScreens = boardHintText.endsWith('units deployed');
 
   const handleBoardSlotClick = (index: number) => {
     const unit = view.board[index];
@@ -158,19 +171,9 @@ export function Arena() {
             unitCount === 0 && !hasHandSelection
               ? 'onboarding-hint text-amber-400/90'
               : 'text-warm-500/70'
-          }`}
+          } ${hideBoardStatusHintOnSmallScreens ? 'hidden lg:block' : ''}`}
         >
-          {unitCount === 0
-            ? hasHandSelection
-              ? 'Now tap a board slot to place your unit'
-              : 'Tap a card in your hand to begin'
-            : unitCount >= 5
-              ? handCount > 0
-                ? 'Board full \u2014 burn a unit to make room'
-                : `${unitCount}/5 units deployed`
-              : hasHandSelection
-                ? 'Tap a slot to place your unit'
-                : `${unitCount}/5 units deployed`}
+          {boardHintText}
         </div>
 
         {/* Board row */}
@@ -274,7 +277,7 @@ export function Arena() {
           })}
         </div>
 
-        <div className="w-full lg:max-w-3xl text-center text-[10px] lg:text-xs text-warm-500">
+        <div className="hidden lg:block w-full lg:max-w-3xl text-center text-[10px] lg:text-xs text-warm-500">
           Select: {GAME_SHORTCUTS.board} • Move: {GAME_SHORTCUTS.boardMove}
         </div>
       </div>
