@@ -1,117 +1,25 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { GAME_SHORTCUT_SECTIONS } from './GameKeyboardShortcuts';
 import { useShortcutHelpStore } from '../store/shortcutHelpStore';
+import { UI_LAYERS } from '../constants/uiLayers';
+import { useFocusTrap } from '../hooks';
 import { CloseIcon } from './Icons';
-
-const FOCUSABLE_SELECTOR = [
-  'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  '[tabindex]:not([tabindex="-1"])',
-].join(', ');
-
-function getFocusableElements(container: HTMLElement | null) {
-  if (!container) return [];
-
-  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-    (element) =>
-      !element.hasAttribute('disabled') &&
-      element.getAttribute('aria-hidden') !== 'true' &&
-      element.offsetParent !== null
-  );
-}
 
 export function KeyboardShortcutsOverlay() {
   const { isOpen, close } = useShortcutHelpStore();
   const panelRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    previousFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-
-    const focusInitialElement = () => {
-      const panel = panelRef.current;
-      if (!panel) return;
-
-      const preferredFocus = panel.querySelector<HTMLElement>('[data-shortcuts-autofocus="true"]');
-      if (preferredFocus) {
-        preferredFocus.focus();
-        return;
-      }
-
-      const focusable = getFocusableElements(panel);
-      (focusable[0] ?? panel).focus();
-    };
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        close();
-        return;
-      }
-
-      if (e.key !== 'Tab') return;
-
-      const panel = panelRef.current;
-      if (!panel) return;
-
-      const focusable = getFocusableElements(panel);
-      if (focusable.length === 0) {
-        e.preventDefault();
-        panel.focus();
-        return;
-      }
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (!first || !last) return;
-
-      const activeElement =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
-
-      if (!activeElement || !panel.contains(activeElement)) {
-        e.preventDefault();
-        (e.shiftKey ? last : first).focus();
-        return;
-      }
-
-      if (!e.shiftKey && activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      } else if (e.shiftKey && activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      }
-    };
-
-    const onFocusIn = (e: FocusEvent) => {
-      const panel = panelRef.current;
-      if (!panel) return;
-      if (e.target instanceof Node && panel.contains(e.target)) return;
-
-      const focusable = getFocusableElements(panel);
-      (focusable[0] ?? panel).focus();
-    };
-
-    const frameId = window.requestAnimationFrame(focusInitialElement);
-    window.addEventListener('keydown', onKey);
-    document.addEventListener('focusin', onFocusIn);
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      window.removeEventListener('keydown', onKey);
-      document.removeEventListener('focusin', onFocusIn);
-      previousFocusRef.current?.focus();
-    };
-  }, [close, isOpen]);
+  useFocusTrap({
+    containerRef: panelRef,
+    initialFocusSelector: '[data-shortcuts-autofocus="true"]',
+    isActive: isOpen,
+    onEscape: close,
+  });
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9997]">
+    <div className="fixed inset-0" style={{ zIndex: UI_LAYERS.keyboardShortcuts }}>
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in"
         onClick={close}

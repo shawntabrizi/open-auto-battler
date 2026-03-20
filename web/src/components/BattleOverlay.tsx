@@ -3,6 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import { useSandboxStore } from '../store/sandboxStore';
 import { BattleArena } from './BattleArena';
 import { CloseIcon } from './Icons';
+import { UI_LAYERS } from '../constants/uiLayers';
 import type { BattleAbility, BattleOutput, CombatEvent } from '../types';
 import { formatAbilitySummary } from '../utils/abilityText';
 
@@ -256,7 +257,10 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
 
       {/* BATTLE! Splash */}
       {showSplash && (
-        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/60 pointer-events-none">
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black/60 pointer-events-none"
+          style={{ zIndex: UI_LAYERS.inGameOverlay }}
+        >
           <span
             className="font-title text-5xl lg:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 animate-phase-splash"
             style={{

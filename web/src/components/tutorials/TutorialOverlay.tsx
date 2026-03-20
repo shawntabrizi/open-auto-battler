@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { UI_LAYERS } from '../../constants/uiLayers';
 import { useTutorialStore } from '../../store/tutorialStore';
 import { useGameStore } from '../../store/gameStore';
 import { getTutorial } from './registry';
@@ -50,7 +51,10 @@ export function TutorialOverlay() {
   if (!isOpen || !tutorial || !SlideComponent) return null;
 
   return (
-    <div className="fixed inset-0 z-[9998] flex flex-col bg-black/80 backdrop-blur-sm animate-fade-in">
+    <div
+      className="fixed inset-0 flex flex-col bg-black/80 backdrop-blur-sm animate-fade-in"
+      style={{ zIndex: UI_LAYERS.tutorial }}
+    >
       {/* Close button — floats above content */}
       <button
         onClick={close}

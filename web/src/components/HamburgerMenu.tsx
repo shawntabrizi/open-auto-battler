@@ -6,28 +6,10 @@ import { useMenuStore } from '../store/menuStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { useShortcutHelpStore } from '../store/shortcutHelpStore';
 import { useTutorialStore } from '../store/tutorialStore';
+import { UI_LAYERS } from '../constants/uiLayers';
+import { useFocusTrap } from '../hooks';
 import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
 import { GearIcon, CloseIcon } from './Icons';
-
-const FOCUSABLE_SELECTOR = [
-  'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  '[tabindex]:not([tabindex="-1"])',
-].join(', ');
-
-function getFocusableElements(container: HTMLElement | null) {
-  if (!container) return [];
-
-  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-    (element) =>
-      !element.hasAttribute('disabled') &&
-      element.getAttribute('aria-hidden') !== 'true' &&
-      element.offsetParent !== null
-  );
-}
 
 /** Person icon for account */
 function PersonIcon({ className = 'w-5 h-5' }: { className?: string }) {
@@ -135,7 +117,6 @@ export function HamburgerMenu() {
     v ? useMenuStore.getState().open() : useMenuStore.getState().close();
   const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { isConnected, logout, abandonGame, blockNumber } = useArenaStore();
@@ -146,85 +127,12 @@ export function HamburgerMenu() {
 
   const inGame = isGameRoute(location.pathname);
 
-  // Close on Escape
-  useEffect(() => {
-    if (!open) return;
-
-    previousFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-
-    const focusInitialElement = () => {
-      const panel = panelRef.current;
-      if (!panel) return;
-
-      const preferredFocus = panel.querySelector<HTMLElement>('[data-menu-autofocus="true"]');
-      if (preferredFocus) {
-        preferredFocus.focus();
-        return;
-      }
-
-      const focusable = getFocusableElements(panel);
-      (focusable[0] ?? panel).focus();
-    };
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setOpen(false);
-        return;
-      }
-
-      if (e.key !== 'Tab') return;
-
-      const panel = panelRef.current;
-      if (!panel) return;
-
-      const focusable = getFocusableElements(panel);
-      if (focusable.length === 0) {
-        e.preventDefault();
-        panel.focus();
-        return;
-      }
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (!first || !last) return;
-      const activeElement =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
-
-      if (!activeElement || !panel.contains(activeElement)) {
-        e.preventDefault();
-        (e.shiftKey ? last : first).focus();
-        return;
-      }
-
-      if (!e.shiftKey && activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      } else if (e.shiftKey && activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      }
-    };
-
-    const onFocusIn = (e: FocusEvent) => {
-      const panel = panelRef.current;
-      if (!panel) return;
-      if (e.target instanceof Node && panel.contains(e.target)) return;
-
-      const focusable = getFocusableElements(panel);
-      (focusable[0] ?? panel).focus();
-    };
-
-    const frameId = window.requestAnimationFrame(focusInitialElement);
-    window.addEventListener('keydown', onKey);
-    document.addEventListener('focusin', onFocusIn);
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      window.removeEventListener('keydown', onKey);
-      document.removeEventListener('focusin', onFocusIn);
-      previousFocusRef.current?.focus();
-    };
-  }, [open]);
+  useFocusTrap({
+    containerRef: panelRef,
+    initialFocusSelector: '[data-menu-autofocus="true"]',
+    isActive: open,
+    onEscape: () => setOpen(false),
+  });
 
   // Reset abandon confirm when panel closes
   useEffect(() => {
@@ -260,7 +168,7 @@ export function HamburgerMenu() {
     <>
       {/* Backdrop + Panel */}
       {open && (
-        <div className="fixed inset-0 z-[10010]">
+        <div className="fixed inset-0" style={{ zIndex: UI_LAYERS.globalMenu }}>
           {/* Dark backdrop */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"

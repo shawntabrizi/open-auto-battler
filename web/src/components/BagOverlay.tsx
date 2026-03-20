@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { UI_LAYERS } from '../constants/uiLayers';
 import { useGameStore } from '../store/gameStore';
 import { CardGallery } from './CardGallery';
 import { CloseIcon } from './Icons';
@@ -47,7 +48,8 @@ export function BagOverlay() {
     <div
       className={`fixed ${
         showGameCardDetailsPanel ? 'left-[11rem] lg:left-80' : 'left-0'
-      } right-0 top-0 bottom-0 z-[60] bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300`}
+      } right-0 top-0 bottom-0 bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300`}
+      style={{ zIndex: UI_LAYERS.inGameOverlay }}
     >
       <button
         onClick={() => setShowBag(false)}

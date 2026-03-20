@@ -5,6 +5,7 @@ import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
 import { useCustomizationStore } from '../store/customizationStore';
 import { formatAbilitySentence } from '../utils/abilityText';
+import { UI_LAYERS } from '../constants/uiLayers';
 
 import { useCardTilt } from '../hooks/useCardTilt';
 import { SwordIcon, HeartIcon } from './Icons';
@@ -311,8 +312,9 @@ export function UnitCard({
         tooltipAnchor &&
         createPortal(
           <div
-            className="fixed z-[70] pointer-events-none"
+            className="fixed pointer-events-none"
             style={{
+              zIndex: UI_LAYERS.tooltip,
               top: tooltipPos?.top ?? tooltipAnchor.top - 8,
               left: tooltipPos?.left ?? tooltipAnchor.left,
               transform:

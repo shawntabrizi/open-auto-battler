@@ -8,6 +8,7 @@ import type { BoardUnitView, CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import { getCardArtMd } from '../utils/cardArt';
 import { formatAbilitySentence } from '../utils/abilityText';
+import { UI_LAYERS } from '../constants/uiLayers';
 
 /** Card art image with loading state — remount via key={card.id} to reset on card change. */
 function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
@@ -333,7 +334,10 @@ export function CardDetailPanel({
       </div>
 
       {showForfeitConfirm && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+          style={{ zIndex: UI_LAYERS.confirmDialog }}
+        >
           <div
             className="absolute inset-0"
             onClick={() => {
