@@ -4,8 +4,7 @@ import { useInitGuard } from '../hooks';
 import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
 import { useSettingsStore } from '../store/settingsStore';
-import { getCardArtSm } from '../utils/cardArt';
-import { getCardEmoji } from '../utils/emoji';
+import { CardFan } from './CardFan';
 import { RotatePrompt } from './RotatePrompt';
 import { TopBar } from './TopBar';
 import { Navigate } from 'react-router-dom';
@@ -132,43 +131,24 @@ export function LocalGamePage() {
               </Link>
             </>
           ) : (
-            <>
-              <div className="bg-warm-900/80 border border-warm-700/40 rounded-xl p-4 lg:p-6 mb-4">
-                <p className="text-[10px] lg:text-xs text-warm-500 uppercase tracking-wider mb-2">
-                  Card Set
-                </p>
-                <h2 className="text-xl lg:text-2xl font-heading font-bold text-white mb-3">
-                  {setMeta.name}
-                </h2>
-                {cards && (
-                  <div className="flex items-center justify-center gap-1 mb-3">
-                    {cards.slice(0, 5).map((c) => {
-                      const art = getCardArtSm(c.id);
-                      return art ? (
-                        <img
-                          key={c.id}
-                          src={art}
-                          alt=""
-                          className="w-8 h-11 object-cover object-[center_30%] rounded-sm border border-warm-700/50"
-                        />
-                      ) : (
-                        <div
-                          key={c.id}
-                          className="w-8 h-11 flex items-center justify-center bg-warm-800 rounded-sm border border-warm-700/50 text-sm"
-                        >
-                          {getCardEmoji(c.id)}
-                        </div>
-                      );
-                    })}
-                    {cards.length > 5 && (
-                      <span className="text-warm-500 text-xs ml-1">+{cards.length - 5}</span>
-                    )}
+            <div className="flex flex-col items-center">
+              <div className="set-tile">
+                {cards && cards.length > 0 ? (
+                  <CardFan cards={cards} />
+                ) : (
+                  <div className="set-card-fan flex items-center justify-center">
+                    <span className="text-warm-600 text-sm">...</span>
                   </div>
                 )}
-                <p className="text-warm-500 text-xs">{cards?.length ?? '?'} cards</p>
               </div>
+              <h2 className="text-xl lg:text-2xl font-heading font-bold text-white mt-2">
+                {setMeta.name}
+              </h2>
+              <p className="text-warm-500 text-xs lg:text-sm">
+                {cards?.length ?? '?'} cards
+              </p>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 mt-6 w-full">
                 <button
                   onClick={() => startGame(selectedSetId)}
                   className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-warm-950 font-black py-3 lg:py-4 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 shadow-lg shadow-yellow-500/20 uppercase tracking-wider"
@@ -182,7 +162,7 @@ export function LocalGamePage() {
                   Change Set
                 </Link>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
