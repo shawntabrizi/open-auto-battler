@@ -177,7 +177,14 @@ export function Arena() {
         </div>
 
         {/* Board row */}
-        <div className="absolute inset-0 z-10 flex items-center justify-center px-2 lg:px-12">
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center px-2 lg:px-12"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && selection) {
+              setSelection(null);
+            }
+          }}
+        >
           <div className="board-row flex gap-1 lg:gap-4 w-full lg:max-w-3xl h-[clamp(10.5rem,28vh,13rem)] lg:h-[clamp(12.5rem,32vh,16rem)]">
             {Array.from({ length: 5 }).map((_, displayIndex) => {
               const arrayIndex = 4 - displayIndex;
@@ -199,11 +206,11 @@ export function Arena() {
               return (
                 <div
                   key={slotId}
-                  className="flex-1 min-w-0 h-full flex items-center justify-center"
+                  className="flex-1 min-w-0 h-full flex items-center justify-center overflow-visible"
                   style={{ containerType: 'size' }}
                 >
                   <div
-                    className="aspect-[3/4]"
+                    className="relative aspect-[3/4]"
                     style={{ width: 'min(100cqw, calc(100cqh * 3 / 4))' }}
                   >
                     <DroppableBoardSlot id={slotId}>
@@ -254,31 +261,20 @@ export function Arena() {
                         </div>
                       )}
                     </DroppableBoardSlot>
+                    <div
+                      className={`board-helper board-helper--positions hidden lg:flex absolute left-1/2 top-full mt-2 -translate-x-1/2 w-[92%] justify-center rounded-full border px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm ${
+                        arrayIndex === 0
+                          ? 'border-amber-500/30 bg-amber-500/10 text-amber-200 font-bold'
+                          : 'border-warm-800/70 bg-black/35 text-warm-300/80'
+                      }`}
+                    >
+                      {arrayIndex === 0 ? 'Front' : `${arrayIndex + 1}`}
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
-
-        {/* Position indicator — slot-aligned */}
-        <div className="board-helper board-helper--positions hidden lg:flex absolute bottom-14 left-1/2 -translate-x-1/2 z-20 gap-3 lg:gap-4 w-full lg:max-w-3xl">
-          {Array.from({ length: 5 }).map((_, displayIndex) => {
-            const arrayIndex = 4 - displayIndex;
-            const isFront = arrayIndex === 0;
-            return (
-              <div
-                key={`pos-${arrayIndex}`}
-                className={`flex-1 rounded-full border px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm ${
-                  isFront
-                    ? 'border-amber-500/30 bg-amber-500/10 text-amber-200 font-bold'
-                    : 'border-warm-800/70 bg-black/35 text-warm-300/80'
-                }`}
-              >
-                {isFront ? 'Front' : `${arrayIndex + 1}`}
-              </div>
-            );
-          })}
         </div>
 
         <div className="board-helper board-helper--shortcuts hidden lg:flex absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-full lg:max-w-3xl justify-center">

@@ -107,14 +107,28 @@ export function Shop() {
         </div>
 
         {/* Center: Hand */}
-        <div className="shop-hand flex-1 flex flex-col items-center justify-center overflow-hidden relative">
+        <div
+          className="shop-hand flex-1 flex flex-col items-center justify-center overflow-hidden relative"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && selection) {
+              setSelection(null);
+            }
+          }}
+        >
           {/* Hand label - desktop only */}
           <div className="board-helper hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 items-center gap-3 rounded-full border border-warm-700/60 bg-black/45 px-4 py-1.5 text-center shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm">
             <span className="font-title text-sm lg:text-xl font-bold uppercase tracking-[0.28em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-200 to-orange-300 [text-shadow:0_1px_8px_rgba(0,0,0,0.45)]">
               Hand
             </span>
           </div>
-          <div className="hand-row flex items-center justify-center gap-2 lg:gap-4 h-full w-full lg:max-w-3xl px-2 lg:px-4">
+          <div
+            className="hand-row flex items-center justify-center gap-2 lg:gap-4 h-full w-full lg:max-w-3xl px-2 lg:px-4"
+            onClick={(event) => {
+              if (event.target === event.currentTarget && selection) {
+                setSelection(null);
+              }
+            }}
+          >
             {view.hand.map((card, i) =>
               card ? (
                 <div
@@ -145,6 +159,11 @@ export function Shop() {
                   key={`hand-empty-${i}`}
                   className="flex-1 min-w-0 h-full flex items-center justify-center"
                   style={{ containerType: 'size' }}
+                  onClick={() => {
+                    if (selection) {
+                      setSelection(null);
+                    }
+                  }}
                 >
                   <div
                     className="aspect-[3/4] rounded-lg border-2 border-dashed border-warm-700/50 bg-warm-800/20 flex items-center justify-center"

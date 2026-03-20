@@ -78,6 +78,7 @@ export function UnitCard({
 }: UnitCardProps) {
   const cardStyle = useCustomizationStore((s) => s.selections.cardStyle);
   const showCardNames = useGameStore((s) => s.showCardNames);
+  const activeSelection = useGameStore((s) => s.selection);
   const { tiltRef } = useCardTilt({
     enabled: enableTilt,
     maxRotation: sizeVariant === 'compact' || sizeVariant === 'battle' ? 8 : 12,
@@ -87,19 +88,10 @@ export function UnitCard({
   const isHolographic = useAchievementStore((s) => s.isHolographic(card.id));
   const artSrc = getCardArtSm(card.id);
   const [artFailed, setArtFailed] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
-
-  useEffect(() => {
-    if (showTooltip && cardRef.current) {
-      const rect = cardRef.current.getBoundingClientRect();
-      setTooltipPos({
-        top: rect.top,
-        left: rect.left + rect.width / 2,
-      });
-    }
-  }, [showTooltip]);
+  const hasGameSelection = !!activeSelection;
 
   const abilities = [
     ...((card as any).shop_abilities ?? []).map((a: any) => ({ ...a, _type: 'shop' })),
@@ -110,6 +102,30 @@ export function UnitCard({
   const text = CARD_TEXT[sizeVariant];
   const rarity = getRarityTier(card);
   const rarityStyle = RARITY_STYLES[rarity];
+  const showTooltip = abilities.length > 0 && (isSelected || (!hasGameSelection && isHovered));
+
+  useEffect(() => {
+    if (!showTooltip) return;
+
+    const updateTooltipPosition = () => {
+      if (!cardRef.current) return;
+
+      const rect = cardRef.current.getBoundingClientRect();
+      setTooltipPos({
+        top: rect.top,
+        left: rect.left + rect.width / 2,
+      });
+    };
+
+    updateTooltipPosition();
+    window.addEventListener('resize', updateTooltipPosition);
+    window.addEventListener('scroll', updateTooltipPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updateTooltipPosition);
+      window.removeEventListener('scroll', updateTooltipPosition, true);
+    };
+  }, [showTooltip]);
 
   const cardEl = (
     <div
@@ -123,8 +139,8 @@ export function UnitCard({
       draggable={draggable}
       onDragOver={onDragOver}
       onDrop={onDrop}
-      onMouseEnter={() => abilities.length > 0 && setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
+      onMouseEnter={() => abilities.length > 0 && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={`
         unit-card card relative w-full h-full ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none rounded-lg border-2 transition-all duration-200
         bg-black ${rarityStyle.border} ${rarityStyle.glow}
@@ -141,7 +157,7 @@ export function UnitCard({
           <>
             {/* Full-bleed card art — brightness boost for vibrancy */}
             <img
-              src={artSrc!}
+              src={artSrc}
               alt=""
               className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
               style={{ filter: 'brightness(1.15) saturate(1.1)' }}
@@ -234,7 +250,6 @@ export function UnitCard({
 
       {/* Ability tooltip rendered via portal so it's never clipped */}
       {showTooltip &&
-        abilities.length > 0 &&
         tooltipPos &&
         createPortal(
           <div
