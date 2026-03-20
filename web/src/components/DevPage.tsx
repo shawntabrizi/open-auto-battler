@@ -42,6 +42,7 @@ const PAGES: Record<string, string> = {
 
 const PRESETS = {
   'iPhone SE': { w: 667, h: 375 },
+  'iPhone SE (vertical)': { w: 375, h: 667 },
   'iPhone 14': { w: 852, h: 393 },
   'iPhone 14 Pro Max': { w: 932, h: 430 },
   'iPad Mini': { w: 1024, h: 768 },
@@ -112,6 +113,7 @@ export function DevPage() {
   const [activePage, setActivePage] = useState('Local Game');
   const [viewports, setViewports] = useState<ViewportConfig[]>([
     { preset: 'iPhone SE' },
+    { preset: 'iPhone SE (vertical)' },
     { preset: 'iPad Pro 11"' },
   ]);
   const [routeVersion, setRouteVersion] = useState(0);

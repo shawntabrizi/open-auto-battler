@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useVersusStore } from '../store/versusStore';
-import { RotatePrompt } from './RotatePrompt';
 import { TopBar } from './TopBar';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -310,7 +309,6 @@ export function VersusPage() {
         </div>
       )}
 
-      <RotatePrompt />
     </div>
   );
 }

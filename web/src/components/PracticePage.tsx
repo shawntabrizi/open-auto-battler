@@ -5,7 +5,6 @@ import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
 import { useSettingsStore } from '../store/settingsStore';
 import { CardFan } from './CardFan';
-import { RotatePrompt } from './RotatePrompt';
 import { TopBar } from './TopBar';
 import { Navigate } from 'react-router-dom';
 
@@ -89,7 +88,6 @@ export function PracticePage() {
             </div>
           </div>
         </div>
-        <RotatePrompt />
       </div>
     );
   }
@@ -166,7 +164,6 @@ export function PracticePage() {
           )}
         </div>
       </div>
-      <RotatePrompt />
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { RotatePrompt } from './RotatePrompt';
 import { ParticleBackground } from './ParticleBackground';
 import { TopBar } from './TopBar';
 import swordsIcon from '../../swords.svg';
@@ -120,7 +119,6 @@ export function HomePage() {
         </div>
       </div>
 
-      <RotatePrompt />
     </div>
   );
 }

@@ -3,7 +3,6 @@ import { useIsSubmitting } from '../store/txStore';
 import { useArenaStore, getDevAccounts } from '../store/arenaStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useGameStore } from '../store/gameStore';
-import { RotatePrompt } from './RotatePrompt';
 import { Link, useNavigate } from 'react-router-dom';
 import { TopBar } from './TopBar';
 import { useInitGuard } from '../hooks';
@@ -154,7 +153,6 @@ export function TournamentLobbyPage() {
             </div>
           </div>
         </div>
-        <RotatePrompt />
       </div>
     );
   }
@@ -327,7 +325,6 @@ export function TournamentLobbyPage() {
           )}
         </div>
       </div>
-      <RotatePrompt />
     </div>
   );
 }

@@ -143,7 +143,7 @@ export function AchievementsPage() {
           ) : (
             <>
               {/* Achievement tiers */}
-              <div className="mb-4 lg:mb-6 grid grid-cols-3 gap-2 lg:gap-3">
+              <div className="mb-4 lg:mb-6 grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-3">
                 {([
                   { tier: 'bronze' as FilterTier, label: 'Win', desc: 'Win a battle with this card', count: bronzeCount, activeColor: 'border-amber-700 bg-amber-900/20', segActive: 'bg-amber-800 text-white' },
                   { tier: 'silver' as FilterTier, label: 'Victory', desc: '10-win run with this card', count: silverCount, activeColor: 'border-gray-500 bg-gray-900/20', segActive: 'bg-gray-600 text-white' },
@@ -156,22 +156,24 @@ export function AchievementsPage() {
                     { mode: 'missing', text: 'Missing' },
                   ];
                   return (
-                    <div key={tier} className={`p-2.5 lg:p-4 bg-warm-900/60 border rounded-xl text-center transition-colors ${
+                    <div key={tier} className={`p-2.5 lg:p-4 bg-warm-900/60 border rounded-xl transition-colors flex sm:flex-col items-center sm:items-stretch gap-3 sm:gap-0 sm:text-center ${
                       isActive ? activeColor : 'border-warm-700/40'
                     }`}>
-                      <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <div className="flex items-center gap-1.5 sm:justify-center sm:mb-1">
                         <TrophyIcon tier={tier} earned={true} />
                         <span className="text-sm lg:text-lg font-stat font-bold">{count}/{totalCards}</span>
                       </div>
-                      <div className={`text-[10px] lg:text-xs font-heading font-bold uppercase tracking-wider mb-0.5 ${
-                        tier === 'bronze' ? 'text-amber-400' : tier === 'silver' ? 'text-gray-300' : 'text-yellow-400'
-                      }`}>
-                        {label}
+                      <div className="flex flex-col sm:items-center">
+                        <div className={`text-[10px] lg:text-xs font-heading font-bold uppercase tracking-wider mb-0.5 ${
+                          tier === 'bronze' ? 'text-amber-400' : tier === 'silver' ? 'text-gray-300' : 'text-yellow-400'
+                        }`}>
+                          {label}
+                        </div>
+                        <p className="text-[9px] lg:text-[10px] text-warm-500 leading-tight mb-2">
+                          {desc}
+                        </p>
                       </div>
-                      <p className="text-[9px] lg:text-[10px] text-warm-500 leading-tight mb-2">
-                        {desc}
-                      </p>
-                      <div className="inline-flex rounded border border-warm-700/60 overflow-hidden">
+                      <div className="inline-flex rounded border border-warm-700/60 overflow-hidden ml-auto sm:ml-0 sm:self-center">
                         {modes.map(({ mode, text }) => {
                           const active = isActive && filterMode === mode || (!isActive && mode === 'all');
                           return (

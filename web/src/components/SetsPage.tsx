@@ -96,7 +96,7 @@ export function SetsPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 lg:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-6">
                 {sorted.map((meta) => (
                   <SetCard
                     key={meta.id}

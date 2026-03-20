@@ -6,7 +6,6 @@ import type { BoardUnitView, CardView } from '../types';
 import { blockchainCardToCardView } from '../utils/blockchainCards';
 import { CardDetailPanel } from './CardDetailPanel';
 import { TopBar } from './TopBar';
-import { RotatePrompt } from './RotatePrompt';
 import { EmptySlot, UnitCard } from './UnitCard';
 import { CARD_SIZES } from '../constants/cardSizes';
 
@@ -360,7 +359,6 @@ export function GhostBrowserPage() {
             </div>
           </div>
         </div>
-        <RotatePrompt />
       </div>
     );
   }
@@ -669,7 +667,6 @@ export function GhostBrowserPage() {
           </div>
         </div>
       </div>
-      <RotatePrompt />
     </div>
   );
 }

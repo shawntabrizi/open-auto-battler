@@ -4,7 +4,6 @@ import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
 import { GameOverScreen } from './GameOverScreen';
 import { GameShell } from './GameShell';
-import { RotatePrompt } from './RotatePrompt';
 import { useInitGuard } from '../hooks';
 import { Navigate } from 'react-router-dom';
 
@@ -72,7 +71,6 @@ export function ArenaGamePage() {
         selectedAccount={selectedAccount}
         onSelectAccount={selectAccount}
       />
-      <RotatePrompt />
     </div>
   );
 }

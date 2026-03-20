@@ -3,7 +3,6 @@ import { UnitCard } from './UnitCard';
 import { CardGallery } from './CardGallery';
 import { CardDetailPanel } from './CardDetailPanel';
 import { BattleOverlay } from './BattleOverlay';
-import { RotatePrompt } from './RotatePrompt';
 import { TopBar } from './TopBar';
 import { useInitGuard } from '../hooks';
 import type { CardView } from '../types';
@@ -55,7 +54,6 @@ export function SandboxPage() {
       {/* Battle Overlay - Sandbox Mode */}
       <BattleOverlay mode="sandbox" />
 
-      <RotatePrompt />
     </div>
   );
 }

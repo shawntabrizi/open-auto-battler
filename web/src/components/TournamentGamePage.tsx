@@ -4,7 +4,6 @@ import { useArenaStore } from '../store/arenaStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useGameStore } from '../store/gameStore';
 import { GameShell } from './GameShell';
-import { RotatePrompt } from './RotatePrompt';
 import { useInitGuard } from '../hooks';
 import { Navigate } from 'react-router-dom';
 
@@ -93,7 +92,6 @@ export function TournamentGamePage() {
         selectedAccount={selectedAccount}
         onSelectAccount={selectAccount}
       />
-      <RotatePrompt />
     </div>
   );
 }

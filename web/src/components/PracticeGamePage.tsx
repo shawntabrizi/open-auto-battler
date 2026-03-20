@@ -4,7 +4,6 @@ import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
 import { GameOverScreen } from './GameOverScreen';
 import { GameShell } from './GameShell';
-import { RotatePrompt } from './RotatePrompt';
 import { Navigate } from 'react-router-dom';
 
 export function PracticeGamePage() {
@@ -84,7 +83,6 @@ export function PracticeGamePage() {
           disabled: battleLoading,
         }}
       />
-      <RotatePrompt />
     </div>
   );
 }
