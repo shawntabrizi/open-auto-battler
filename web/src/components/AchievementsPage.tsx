@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useAchievementStore } from '../store/achievementStore';
 import { useArenaStore } from '../store/arenaStore';
@@ -6,6 +6,7 @@ import { CARD_SIZES } from '../constants/cardSizes';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
 import { CardDetailPanel } from './CardDetailPanel';
+import { CardFilterBar, type SortOption } from './CardFilterBar';
 import { TopBar } from './TopBar';
 import { useInitGuard } from '../hooks';
 import type { CardView } from '../types';
@@ -25,12 +26,12 @@ function TrophyIcon({ tier, earned }: { tier: TrophyTier; earned: boolean }) {
       className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full flex items-center justify-center ${
         earned ? c.bg : 'bg-warm-800'
       }`}
-      title={`${tier.charAt(0).toUpperCase() + tier.slice(1)} — ${
+      title={`${tier === 'bronze' ? 'Win' : tier === 'silver' ? 'Victory' : 'Perfect'} — ${
         tier === 'bronze'
-          ? 'Play this card on any board'
+          ? 'Win a battle with this card on your board'
           : tier === 'silver'
-            ? 'Win a game with this card'
-            : 'Perfect run with this card'
+            ? 'Achieve a 10-win run with this card'
+            : 'Perfect 10-win run, no losses'
       }${earned ? ' (Earned!)' : ''}`}
     >
       <svg
@@ -46,7 +47,7 @@ function TrophyIcon({ tier, earned }: { tier: TrophyTier; earned: boolean }) {
 
 export function AchievementsPage() {
   const { engine, init, loadSetPreviews, setPreviewCards, setMetas } = useGameStore();
-  const { isLoaded, fetchAchievements, hasBronze, hasSilver, hasGold } = useAchievementStore();
+  const { fetchAchievements, hasBronze, hasSilver, hasGold } = useAchievementStore();
   const { api, selectedAccount } = useArenaStore();
   const [selectedCard, setSelectedCard] = useState<CardView | null>(null);
 
@@ -61,12 +62,12 @@ export function AchievementsPage() {
     }
   }, [engine, setMetas, loadSetPreviews]);
 
-  // Fetch achievements when api/account available
+  // Always refetch achievements on mount
   useEffect(() => {
-    if (api && selectedAccount && !isLoaded) {
+    if (api && selectedAccount) {
       void fetchAchievements(api, selectedAccount.address);
     }
-  }, [api, selectedAccount, isLoaded, fetchAchievements]);
+  }, [api, selectedAccount, fetchAchievements]);
 
   // Build a flat list of all unique cards from all sets
   const allCards: CardView[] = [];
@@ -79,12 +80,50 @@ export function AchievementsPage() {
       }
     }
   }
-  const sorted = allCards.sort((a, b) => a.name.localeCompare(b.name));
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('name');
+
+  const sorted = [...allCards].sort((a, b) =>
+    sortBy === 'name' ? a.name.localeCompare(b.name) : a.play_cost - b.play_cost || a.name.localeCompare(b.name)
+  );
+
+  type FilterMode = 'all' | 'earned' | 'missing';
+  type FilterTier = 'bronze' | 'silver' | 'gold';
+  const [filterTier, setFilterTier] = useState<FilterTier | null>(null);
+  const [filterMode, setFilterMode] = useState<FilterMode>('all');
+
+  const setFilter = useCallback((tier: FilterTier, mode: FilterMode) => {
+    if (mode === 'all') {
+      setFilterTier(null);
+      setFilterMode('all');
+    } else {
+      setFilterTier(tier);
+      setFilterMode(mode);
+    }
+  }, []);
 
   const totalCards = sorted.length;
   const bronzeCount = sorted.filter((c) => hasBronze(c.id)).length;
   const silverCount = sorted.filter((c) => hasSilver(c.id)).length;
   const goldCount = sorted.filter((c) => hasGold(c.id)).length;
+
+  const filtered = sorted.filter((c) => {
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!c.name.toLowerCase().includes(q) && !JSON.stringify(c).toLowerCase().includes(q)) {
+        return false;
+      }
+    }
+    // Achievement tier filter
+    if (filterTier && filterMode !== 'all') {
+      const has = filterTier === 'bronze' ? hasBronze(c.id)
+        : filterTier === 'silver' ? hasSilver(c.id)
+        : hasGold(c.id);
+      return filterMode === 'earned' ? has : !has;
+    }
+    return true;
+  });
 
   return (
     <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
@@ -103,30 +142,69 @@ export function AchievementsPage() {
             </div>
           ) : (
             <>
-              {/* Stats bar */}
-              <div className="mb-4 lg:mb-6 flex items-center justify-center gap-4 lg:gap-8 p-3 lg:p-4 bg-warm-900/60 border border-warm-700/40 rounded-xl">
-                <div className="flex items-center gap-2">
-                  <TrophyIcon tier="bronze" earned={true} />
-                  <span className="text-sm lg:text-base font-stat font-bold">{bronzeCount} / {totalCards}</span>
-                  <span className="text-[10px] lg:text-xs text-warm-500">Played</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TrophyIcon tier="silver" earned={true} />
-                  <span className="text-sm lg:text-base font-stat font-bold">
-                    {silverCount} / {totalCards}
-                  </span>
-                  <span className="text-[10px] lg:text-xs text-warm-500">Wins</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <TrophyIcon tier="gold" earned={true} />
-                  <span className="text-sm lg:text-base font-stat font-bold">{goldCount} / {totalCards}</span>
-                  <span className="text-[10px] lg:text-xs text-warm-500">Perfect</span>
-                </div>
+              {/* Achievement tiers */}
+              <div className="mb-4 lg:mb-6 grid grid-cols-3 gap-2 lg:gap-3">
+                {([
+                  { tier: 'bronze' as FilterTier, label: 'Win', desc: 'Win a battle with this card', count: bronzeCount, activeColor: 'border-amber-700 bg-amber-900/20', segActive: 'bg-amber-800 text-white' },
+                  { tier: 'silver' as FilterTier, label: 'Victory', desc: '10-win run with this card', count: silverCount, activeColor: 'border-gray-500 bg-gray-900/20', segActive: 'bg-gray-600 text-white' },
+                  { tier: 'gold' as FilterTier, label: 'Perfect', desc: 'Perfect run, no losses', count: goldCount, activeColor: 'border-yellow-500 bg-yellow-900/20', segActive: 'bg-yellow-700 text-white' },
+                ]).map(({ tier, label, desc, count, activeColor, segActive }) => {
+                  const isActive = filterTier === tier;
+                  const modes: { mode: FilterMode; text: string }[] = [
+                    { mode: 'all', text: 'All' },
+                    { mode: 'earned', text: 'Earned' },
+                    { mode: 'missing', text: 'Missing' },
+                  ];
+                  return (
+                    <div key={tier} className={`p-2.5 lg:p-4 bg-warm-900/60 border rounded-xl text-center transition-colors ${
+                      isActive ? activeColor : 'border-warm-700/40'
+                    }`}>
+                      <div className="flex items-center justify-center gap-1.5 mb-1">
+                        <TrophyIcon tier={tier} earned={true} />
+                        <span className="text-sm lg:text-lg font-stat font-bold">{count}/{totalCards}</span>
+                      </div>
+                      <div className={`text-[10px] lg:text-xs font-heading font-bold uppercase tracking-wider mb-0.5 ${
+                        tier === 'bronze' ? 'text-amber-400' : tier === 'silver' ? 'text-gray-300' : 'text-yellow-400'
+                      }`}>
+                        {label}
+                      </div>
+                      <p className="text-[9px] lg:text-[10px] text-warm-500 leading-tight mb-2">
+                        {desc}
+                      </p>
+                      <div className="inline-flex rounded border border-warm-700/60 overflow-hidden">
+                        {modes.map(({ mode, text }) => {
+                          const active = isActive && filterMode === mode || (!isActive && mode === 'all');
+                          return (
+                            <button
+                              key={mode}
+                              onClick={() => setFilter(tier, mode)}
+                              className={`text-[8px] lg:text-[10px] px-1.5 lg:px-2 py-0.5 transition-colors ${
+                                active ? segActive : 'text-warm-600 hover:text-warm-300 hover:bg-warm-800/50'
+                              }`}
+                            >
+                              {text}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Search & Sort */}
+              <div className="mb-4 lg:mb-6">
+                <CardFilterBar
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  sortBy={sortBy}
+                  onSortChange={setSortBy}
+                />
               </div>
 
               {/* Card grid */}
               <div className="flex flex-wrap gap-2 lg:gap-3 justify-center">
-                {sorted.map((card) => {
+                {filtered.map((card) => {
                   const cardBronze = hasBronze(card.id);
                   const cardSilver = hasSilver(card.id);
                   const cardGold = hasGold(card.id);

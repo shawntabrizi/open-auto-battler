@@ -765,9 +765,6 @@ pub mod pallet {
                 b"battle",
             )?;
 
-            // Grant bronze achievements for all cards on the board entering battle
-            Self::grant_bronze_achievements(&who, &battle.core_state);
-
             // Select ghost from regular pool, fallback to procedural
             let enemy_units =
                 Self::select_ghost_opponent(&battle.bracket, &battle.card_set, battle.battle_seed)
@@ -785,6 +782,11 @@ pub mod pallet {
             Self::store_ghost(&who, &battle.bracket, ghost.clone());
 
             let turn = Self::execute_and_advance(&who, &mut battle, enemy_units, b"shop");
+
+            // Grant bronze achievements for cards on board if battle was won
+            if turn.result == BattleResult::Victory {
+                Self::grant_bronze_achievements(&who, &battle.core_state);
+            }
 
             // If game is over, mark as Completed for end_game to finalize
             if turn.game_over {
@@ -1108,9 +1110,6 @@ pub mod pallet {
                 b"tournament_battle",
             )?;
 
-            // Grant bronze achievements for all cards on the board entering battle
-            Self::grant_bronze_achievements(&who, &battle.core_state);
-
             // Select ghost from tournament pool, fallback to procedural
             let enemy_units = Self::select_tournament_ghost_opponent(
                 tid,
@@ -1133,6 +1132,11 @@ pub mod pallet {
 
             let turn =
                 Self::execute_and_advance(&who, &mut battle, enemy_units, b"tournament_shop");
+
+            // Grant bronze achievements for cards on board if battle was won
+            if turn.result == BattleResult::Victory {
+                Self::grant_bronze_achievements(&who, &battle.core_state);
+            }
 
             // If game is over, mark as Completed for end_tournament_game to finalize
             if turn.game_over {

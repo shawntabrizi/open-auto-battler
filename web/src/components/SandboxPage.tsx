@@ -1,6 +1,7 @@
 import { useSandboxStore } from '../store/sandboxStore';
 import { UnitCard, EmptySlot } from './UnitCard';
 import { CardDetailPanel } from './CardDetailPanel';
+import { CardFilterBar } from './CardFilterBar';
 import { BattleOverlay } from './BattleOverlay';
 import { RotatePrompt } from './RotatePrompt';
 import { TopBar } from './TopBar';
@@ -41,9 +42,9 @@ export function SandboxPage() {
             <SandboxArena />
           </div>
 
-          {/* Search Bar - fixed between arena and gallery */}
+          {/* Search & Sort - fixed between arena and gallery */}
           <div className="flex-shrink-0 px-2 lg:px-3 py-1.5 lg:py-2 bg-shop-bg border-b border-warm-700">
-            <SearchBar />
+            <SandboxFilterBar />
           </div>
 
           {/* Unit Gallery - scrolls independently */}
@@ -153,7 +154,7 @@ function SandboxArena() {
           onClick={onClick}
         >
           <UnitCard card={unit} showCost={false} showBurn={false} />
-          <div className="absolute -top-1.5 lg:-top-2 left-1/2 -tranwarm-x-1/2 text-[8px] lg:text-xs text-warm-400 pointer-events-none">
+          <div className="absolute -top-1.5 lg:-top-2 left-1/2 -translate-x-1/2 text-[8px] lg:text-xs text-warm-400 pointer-events-none">
             {displayIndex}
           </div>
           <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/20 rounded-lg transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
@@ -209,17 +210,18 @@ function SandboxArena() {
   );
 }
 
-function SearchBar() {
+function SandboxFilterBar() {
   const searchQuery = useSandboxStore((state) => state.searchQuery);
   const setSearchQuery = useSandboxStore((state) => state.setSearchQuery);
+  const sortBy = useSandboxStore((state) => state.sortBy);
+  const setSortBy = useSandboxStore((state) => state.setSortBy);
 
   return (
-    <input
-      type="text"
-      placeholder="Search cards..."
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      className="w-full px-2 lg:px-3 py-1.5 lg:py-2 bg-warm-800 border border-warm-600 rounded text-white placeholder-warm-400 text-xs lg:text-sm focus:outline-none focus:border-blue-500"
+    <CardFilterBar
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      sortBy={sortBy}
+      onSortChange={setSortBy}
     />
   );
 }
@@ -229,11 +231,12 @@ function UnitGallery() {
   const selectedTemplate = useSandboxStore((state) => state.selectedTemplate);
   const selectTemplate = useSandboxStore((state) => state.selectTemplate);
   const searchQuery = useSandboxStore((state) => state.searchQuery);
+  const sortBy = useSandboxStore((state) => state.sortBy);
 
-  // Sort templates by cost
-  const sortedTemplates = [...templates].sort((a, b) => a.play_cost - b.play_cost);
+  const sortedTemplates = [...templates].sort((a, b) =>
+    sortBy === 'name' ? a.name.localeCompare(b.name) : a.play_cost - b.play_cost || a.name.localeCompare(b.name)
+  );
 
-  // Filter templates based on search query (search in full JSON)
   const filteredTemplates = sortedTemplates.filter((template) => {
     if (!searchQuery) return true;
     const templateJson = JSON.stringify(template).toLowerCase();

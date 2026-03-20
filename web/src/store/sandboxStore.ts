@@ -33,6 +33,7 @@ interface SandboxStore {
   isBattling: boolean;
   battleSeed: number;
   searchQuery: string;
+  sortBy: 'cost' | 'name';
 
   // Actions
   init: () => Promise<void>;
@@ -48,6 +49,7 @@ interface SandboxStore {
   closeBattle: () => void;
   setBattleSeed: (seed: number) => void;
   setSearchQuery: (query: string) => void;
+  setSortBy: (sort: 'cost' | 'name') => void;
 }
 
 let wasmInitialized = false;
@@ -63,6 +65,7 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
   isBattling: false,
   battleSeed: 42,
   searchQuery: '',
+  sortBy: 'cost' as const,
 
   init: async () => {
     if (wasmModule) return;
@@ -190,5 +193,8 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
 
   setSearchQuery: (query) => {
     set({ searchQuery: query });
+  },
+  setSortBy: (sort) => {
+    set({ sortBy: sort });
   },
 }));

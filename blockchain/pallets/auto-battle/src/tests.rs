@@ -1402,10 +1402,10 @@ fn test_end_game_grants_achievements() {
         let archive_id_after = crate::NextGhostArchiveId::<Test>::get();
         assert_eq!(archive_id_after, archive_id_mid + 1);
 
-        // Bronze was granted during submit_turn (battle time)
-        // Silver and gold granted by end_game (wins >= 10, lives >= 3)
+        // Bronze requires winning a battle — this battle was lost (empty board) so no bronze.
+        // Silver and gold granted by end_game (wins >= 10, lives >= 3).
         let bits = crate::VictoryAchievements::<Test>::get(player, 0);
-        assert!(bits & crate::pallet::ACHIEVEMENT_BRONZE != 0, "should have bronze");
+        assert_eq!(bits & crate::pallet::ACHIEVEMENT_BRONZE, 0, "no bronze from lost battle");
         assert!(bits & crate::pallet::ACHIEVEMENT_SILVER != 0, "should have silver");
         assert!(bits & crate::pallet::ACHIEVEMENT_GOLD != 0, "should have gold");
     });
@@ -1434,11 +1434,9 @@ fn test_end_game_no_silver_gold_on_loss() {
 
         assert_ok!(AutoBattle::end_game(RuntimeOrigin::signed(player)));
 
-        // Only bronze should be set (wins < 10)
+        // No achievements — battle was lost (empty board) and wins < 10
         let bits = crate::VictoryAchievements::<Test>::get(player, 0);
-        assert!(bits & crate::pallet::ACHIEVEMENT_BRONZE != 0, "should have bronze");
-        assert_eq!(bits & crate::pallet::ACHIEVEMENT_SILVER, 0, "should not have silver");
-        assert_eq!(bits & crate::pallet::ACHIEVEMENT_GOLD, 0, "should not have gold");
+        assert_eq!(bits, 0, "no achievements from lost battle with low wins");
     });
 }
 
@@ -1505,9 +1503,9 @@ fn test_end_tournament_game_archives_and_records_stats() {
         let tstate = crate::TournamentStates::<Test>::get(0);
         assert_eq!(tstate.total_perfect_runs, 1);
 
-        // Achievements granted
+        // Bronze requires winning — this battle was lost (empty board). Silver/gold from end_tournament_game.
         let bits = crate::VictoryAchievements::<Test>::get(player, 0);
-        assert!(bits & crate::pallet::ACHIEVEMENT_BRONZE != 0, "should have bronze");
+        assert_eq!(bits & crate::pallet::ACHIEVEMENT_BRONZE, 0, "no bronze from lost battle");
         assert!(bits & crate::pallet::ACHIEVEMENT_SILVER != 0, "should have silver");
         assert!(bits & crate::pallet::ACHIEVEMENT_GOLD != 0, "should have gold");
     });
