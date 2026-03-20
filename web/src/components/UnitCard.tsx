@@ -311,7 +311,7 @@ export function UnitCard({
         tooltipAnchor &&
         createPortal(
           <div
-            className="fixed z-[9999] pointer-events-none"
+            className="fixed z-[45] pointer-events-none"
             style={{
               top: tooltipPos?.top ?? tooltipAnchor.top - 8,
               left: tooltipPos?.left ?? tooltipAnchor.left,

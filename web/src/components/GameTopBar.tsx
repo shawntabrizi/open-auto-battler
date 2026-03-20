@@ -45,7 +45,7 @@ function useCommitConfirmation(commitWarning: string | null, disabled: boolean) 
 
 /** Inline battle / custom-action buttons that sit inside the HUD bar */
 function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
-  const { view, endTurn, engine, getCommitWarning } = useGameStore();
+  const { view, endTurn, engine, getCommitWarning, setSelection } = useGameStore();
   const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } = useVersusStore();
   const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
   const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -83,6 +83,8 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
   if (hideEndTurn && !customAction) return null;
 
   const handleEndTurn = () => {
+    setSelection(null);
+
     if (status === 'in-game') {
       const board = engine?.get_board();
       setIsReady(true);
@@ -151,7 +153,10 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
       {customAction && (
         <button
           onClick={() => {
-            customActionConfirmation.trigger(customAction.onClick);
+            customActionConfirmation.trigger(() => {
+              setSelection(null);
+              customAction.onClick();
+            });
           }}
           disabled={customAction.disabled}
           data-game-custom-action="true"
@@ -281,7 +286,7 @@ export function BattleAction({
   customAction?: HUDProps['customAction'];
   compact?: boolean;
 }) {
-  const { view, endTurn, engine, getCommitWarning } = useGameStore();
+  const { view, endTurn, engine, getCommitWarning, setSelection } = useGameStore();
   const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } = useVersusStore();
   const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
   const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -321,6 +326,8 @@ export function BattleAction({
   if (hideEndTurn && !customAction) return null;
 
   const handleEndTurn = () => {
+    setSelection(null);
+
     if (status === 'in-game') {
       const board = engine?.get_board();
       setIsReady(true);
@@ -377,7 +384,10 @@ export function BattleAction({
         {customAction && (
           <button
             onClick={() => {
-              customActionConfirmation.trigger(customAction.onClick);
+              customActionConfirmation.trigger(() => {
+                setSelection(null);
+                customAction.onClick();
+              });
             }}
             disabled={customAction.disabled}
             className={`w-full rounded-lg text-[0.55rem] px-1 py-2 transition-all font-bold uppercase tracking-wide border ${
@@ -456,7 +466,10 @@ export function BattleAction({
         {customAction && (
           <button
             onClick={() => {
-              customActionConfirmation.trigger(customAction.onClick);
+              customActionConfirmation.trigger(() => {
+                setSelection(null);
+                customAction.onClick();
+              });
             }}
             disabled={customAction.disabled}
             className={`btn rounded-xl text-base lg:text-xl px-6 lg:px-10 py-2.5 lg:py-4 transition-all font-bold ${

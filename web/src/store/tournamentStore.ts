@@ -322,6 +322,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
         // After battle animation, refresh state and finalize if game ended
         useGameStore.setState({
           battleOutput,
+          selection: null,
           showBattleOverlay: true,
           afterBattleCallback: async () => {
             await get().refreshTournamentGameState(true);
