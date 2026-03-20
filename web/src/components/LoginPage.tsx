@@ -3,7 +3,7 @@ import { useArenaStore } from '../store/arenaStore';
 import { useIsSubmitting } from '../store/txStore';
 import { useSettingsStore, PRESET_ENDPOINTS } from '../store/settingsStore';
 import { ParticleBackground } from './ParticleBackground';
-import { TopBar } from './TopBar';
+
 import { useInitGuard } from '../hooks';
 import toast from 'react-hot-toast';
 
@@ -141,7 +141,6 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen min-h-svh bg-surface-dark flex flex-col text-white overflow-hidden relative">
-      <TopBar />
       {/* Atmospheric background */}
       <div
         className="absolute inset-0 z-0"
@@ -184,18 +183,16 @@ export function LoginPage() {
                   <span className="text-warm-500 font-mono text-[10px] truncate max-w-[180px]">{endpoint}</span>
                 )}
                 {isConnected && blockNumber !== null && (
-                  <span className="text-warm-600 font-mono ml-auto">
+                  <span className="text-warm-600 font-mono">
                     #{blockNumber.toLocaleString()}
                   </span>
                 )}
-                {!isConnected && !isConnecting && (
-                  <button
-                    onClick={() => setShowNetworkPicker(!showNetworkPicker)}
-                    className="ml-auto text-yellow-500 hover:text-yellow-400 text-xs transition-colors"
-                  >
-                    {showNetworkPicker ? 'Hide' : 'Configure'}
-                  </button>
-                )}
+                <button
+                  onClick={() => setShowNetworkPicker(!showNetworkPicker)}
+                  className="ml-auto text-yellow-500 hover:text-yellow-400 text-xs transition-colors shrink-0"
+                >
+                  {showNetworkPicker ? 'Hide' : 'Configure'}
+                </button>
               </div>
               {connectionError && (
                 <div className="mt-2 text-[10px] lg:text-xs text-red-300">{connectionError}</div>
