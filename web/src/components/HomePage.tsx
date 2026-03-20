@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { RotatePrompt } from './RotatePrompt';
 import { ParticleBackground } from './ParticleBackground';
 import { TopBar } from './TopBar';
+import swordsIcon from '../../swords.svg';
 
 const MENU_BUTTONS = [
   {
@@ -76,12 +77,17 @@ export function HomePage() {
               className="opacity-0 animate-stagger-fade-in stagger-2 group block w-full p-5 lg:p-7 rounded-xl border-2 transition-all active:scale-[0.98] text-center bg-gradient-to-br from-amber-500/10 to-orange-600/5 border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]"
               style={{ animationFillMode: 'forwards' }}
             >
-              <h2 className="font-heading text-2xl lg:text-3xl font-bold text-white tracking-wide">
-                PLAY
-              </h2>
-              <p className="text-warm-400 text-[10px] lg:text-sm mt-1">
-                Online Arena, Offline, Peer-to-Peer
-              </p>
+              <div className="flex items-center justify-center gap-3 lg:gap-5">
+                <img src={swordsIcon} alt="" className="h-16 lg:h-24 w-auto" />
+                <div className="text-left">
+                  <h2 className="font-heading text-2xl lg:text-3xl font-bold text-white tracking-wide">
+                    PLAY
+                  </h2>
+                  <p className="text-warm-400 text-[10px] lg:text-sm mt-0.5">
+                    Online Arena, Offline, Peer-to-Peer
+                  </p>
+                </div>
+              </div>
             </Link>
 
             {/* Secondary menu row */}

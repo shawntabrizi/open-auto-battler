@@ -3,6 +3,7 @@ import { useArenaStore } from '../store/arenaStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useTutorialStore } from '../store/tutorialStore';
 import { TopBar } from './TopBar';
+import swordsIcon from '../../swords.svg';
 
 const formatBalance = (raw: bigint, decimals = 12) =>
   (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
@@ -30,12 +31,17 @@ export function PlayPage() {
                   : 'border-warm-700/50 bg-warm-900/30 hover:border-warm-600'
               }`}
             >
-              <h2 className="font-heading text-2xl lg:text-3xl font-bold text-white tracking-wide">
-                ONLINE ARENA
-              </h2>
-              <p className="text-warm-400 text-xs lg:text-sm mt-1">
-                {isConnected ? 'Compete on the blockchain' : 'Requires blockchain connection'}
-              </p>
+              <div className="flex items-center justify-center gap-3 lg:gap-5">
+                <img src={swordsIcon} alt="" className="h-16 lg:h-24 w-auto" />
+                <div className="text-left">
+                  <h2 className="font-heading text-2xl lg:text-3xl font-bold text-white tracking-wide">
+                    ONLINE ARENA
+                  </h2>
+                  <p className="text-warm-400 text-xs lg:text-sm mt-0.5">
+                    {isConnected ? 'Compete on the blockchain' : 'Requires blockchain connection'}
+                  </p>
+                </div>
+              </div>
               {isConnected && (
                 <div className="mt-2 flex items-center justify-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
