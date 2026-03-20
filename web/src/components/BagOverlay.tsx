@@ -1,5 +1,5 @@
 import { useGameStore } from '../store/gameStore';
-import { UnitCard } from './UnitCard';
+import { CardGallery } from './CardGallery';
 import { CloseIcon } from './Icons';
 import { type CardView } from '../types';
 
@@ -14,8 +14,25 @@ export function BagOverlay() {
       bagIndex,
       card: cardSet?.find((c) => c.id === id),
     }))
-    .filter((entry): entry is { bagIndex: number; card: CardView } => !!entry.card)
-    .sort((a, b) => a.card.play_cost - b.card.play_cost || a.card.name.localeCompare(b.card.name));
+    .filter((entry): entry is { bagIndex: number; card: CardView } => !!entry.card);
+
+  const cards = bagCards.map((entry) => entry.card);
+
+  // Map card index in filtered/sorted gallery back to original bagIndex
+  const handleSelect = (card: CardView | null) => {
+    if (!card) {
+      setSelection(null);
+      return;
+    }
+    const entry = bagCards.find(
+      (e) => e.card.id === card.id && !(selection?.type === 'bag' && selection.index === e.bagIndex)
+    ) ?? bagCards.find((e) => e.card.id === card.id);
+    if (entry) {
+      setSelection({ type: 'bag', index: entry.bagIndex });
+    }
+  };
+
+  const selectedCardId = selection?.type === 'bag' ? bagCards.find((e) => e.bagIndex === selection.index)?.card.id ?? null : null;
 
   return (
     <div className="fixed left-[11rem] lg:left-80 right-0 top-0 bottom-0 z-[60] bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300">
@@ -38,34 +55,17 @@ export function BagOverlay() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-1 lg:pr-4 custom-scrollbar">
+      <div className="flex-1 min-h-0 pr-1 lg:pr-4">
         {bagCards.length === 0 ? (
           <div className="flex items-center justify-center h-full text-warm-500">
             Loading bag...
           </div>
         ) : (
-          <div className="grid grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-1 md:gap-4 lg:gap-6 pt-2 pb-4 lg:pb-12">
-            {bagCards.map(({ card, bagIndex }, i) => {
-              return (
-                <div key={`${card.id}-${i}`} className="aspect-[3/4]">
-                  <UnitCard
-                    card={card}
-                    showCost={true}
-                    showBurn={true}
-                    draggable={false}
-                    isSelected={selection?.type === 'bag' && selection.index === bagIndex}
-                    onClick={() => {
-                      if (selection?.type === 'bag' && selection.index === bagIndex) {
-                        setSelection(null);
-                      } else {
-                        setSelection({ type: 'bag', index: bagIndex });
-                      }
-                    }}
-                  />
-                </div>
-              );
-            })}
-          </div>
+          <CardGallery
+            cards={cards}
+            selectedId={selectedCardId}
+            onSelect={(card) => handleSelect(card as CardView | null)}
+          />
         )}
       </div>
 

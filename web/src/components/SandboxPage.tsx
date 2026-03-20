@@ -1,7 +1,7 @@
 import { useSandboxStore } from '../store/sandboxStore';
 import { UnitCard } from './UnitCard';
+import { CardGallery } from './CardGallery';
 import { CardDetailPanel } from './CardDetailPanel';
-import { CardFilterBar } from './CardFilterBar';
 import { BattleOverlay } from './BattleOverlay';
 import { RotatePrompt } from './RotatePrompt';
 import { TopBar } from './TopBar';
@@ -42,14 +42,9 @@ export function SandboxPage() {
             <SandboxArena />
           </div>
 
-          {/* Search & Sort - fixed between arena and gallery */}
-          <div className="flex-shrink-0 px-2 lg:px-3 py-1.5 lg:py-2 bg-shop-bg border-b border-warm-700">
-            <SandboxFilterBar />
-          </div>
-
-          {/* Unit Gallery - scrolls independently */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-2 lg:p-3 bg-shop-bg">
-            <UnitGallery />
+          {/* Unit Gallery with search/sort - scrolls independently */}
+          <div className="flex-1 min-h-0 p-2 lg:p-3 bg-shop-bg">
+            <SandboxGallery />
           </div>
         </div>
       </div>
@@ -205,50 +200,24 @@ function SandboxArena() {
   );
 }
 
-function SandboxFilterBar() {
+function SandboxGallery() {
+  const templates = useSandboxStore((state) => state.templates);
+  const selectedTemplate = useSandboxStore((state) => state.selectedTemplate);
+  const selectTemplate = useSandboxStore((state) => state.selectTemplate);
   const searchQuery = useSandboxStore((state) => state.searchQuery);
   const setSearchQuery = useSandboxStore((state) => state.setSearchQuery);
   const sortBy = useSandboxStore((state) => state.sortBy);
   const setSortBy = useSandboxStore((state) => state.setSortBy);
 
   return (
-    <CardFilterBar
+    <CardGallery
+      cards={templates}
+      selectedId={selectedTemplate?.id}
+      onSelect={(card) => selectTemplate(card as CardView | null)}
       searchQuery={searchQuery}
       onSearchChange={setSearchQuery}
       sortBy={sortBy}
       onSortChange={setSortBy}
     />
-  );
-}
-
-function UnitGallery() {
-  const templates = useSandboxStore((state) => state.templates);
-  const selectedTemplate = useSandboxStore((state) => state.selectedTemplate);
-  const selectTemplate = useSandboxStore((state) => state.selectTemplate);
-  const searchQuery = useSandboxStore((state) => state.searchQuery);
-  const sortBy = useSandboxStore((state) => state.sortBy);
-
-  const sortedTemplates = [...templates].sort((a, b) =>
-    sortBy === 'name' ? a.name.localeCompare(b.name) : a.play_cost - b.play_cost || a.name.localeCompare(b.name)
-  );
-
-  const filteredTemplates = sortedTemplates.filter((template) => {
-    if (!searchQuery) return true;
-    const templateJson = JSON.stringify(template).toLowerCase();
-    return templateJson.includes(searchQuery.toLowerCase());
-  });
-
-  return (
-    <div className="sandbox-gallery grid grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-1 md:gap-4 lg:gap-6 overflow-visible">
-      {filteredTemplates.map((template) => (
-        <div key={template.id} className="min-w-0 overflow-visible aspect-[3/4]">
-          <UnitCard
-            card={template}
-            isSelected={selectedTemplate?.id === template.id}
-            onClick={() => selectTemplate(selectedTemplate?.id === template.id ? null : template)}
-          />
-        </div>
-      ))}
-    </div>
   );
 }
