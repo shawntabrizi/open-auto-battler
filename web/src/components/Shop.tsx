@@ -2,6 +2,7 @@ import { useGameStore } from '../store/gameStore';
 import { useCustomizationStore } from '../store/customizationStore';
 import React, { useRef } from 'react';
 import { DraggableCard, DroppableBurnZone } from './DndComponents';
+import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
 import burnIcon from '../../burn.svg';
 
 export function Shop() {
@@ -23,7 +24,7 @@ export function Shop() {
       const timer = setTimeout(() => setIsNewRound(false), duration);
       return () => clearTimeout(timer);
     }
-  }, [view?.round]);
+  }, [view]);
 
   if (!view) return null;
 
@@ -55,6 +56,7 @@ export function Shop() {
       setSelection(null);
     }
   };
+  const canBurn = selection?.type === 'hand' || selection?.type === 'board';
 
   return (
     <div
@@ -78,12 +80,13 @@ export function Shop() {
           <button
             onClick={undo}
             disabled={!view.can_undo}
+            aria-keyshortcuts={GAME_SHORTCUTS.undo}
             className={`action-circle w-10 h-10 lg:w-16 lg:h-16 rounded-full flex items-center justify-center transition-all border-2 ${
               view.can_undo
                 ? 'bg-gradient-to-br from-warm-600 to-warm-700 border-warm-400/50 text-warm-100 hover:from-warm-500 hover:to-warm-600 cursor-pointer shadow-elevation-rest hover:shadow-elevation-hover'
                 : 'bg-warm-800 border-warm-700 text-warm-600 cursor-not-allowed'
             }`}
-            title="Undo last action"
+            title={`Undo last action (${GAME_SHORTCUTS.undo})`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -98,7 +101,9 @@ export function Shop() {
               />
             </svg>
           </button>
-          <div className="hidden lg:block text-[10px] text-warm-500 mt-2">Undo</div>
+          <div className="hidden lg:block text-[10px] text-warm-500 mt-2">
+            Undo ({GAME_SHORTCUTS.undo})
+          </div>
         </div>
 
         {/* Center: Hand */}
@@ -107,6 +112,7 @@ export function Shop() {
           <div className="hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 items-center gap-2">
             <span className="text-sm text-warm-400">Hand</span>
             <span className="text-xs text-warm-500">({view.bag_count} in bag)</span>
+            <span className="text-xs text-warm-500">Select: {GAME_SHORTCUTS.hand}</span>
           </div>
           <div className="hand-row flex items-center justify-center gap-2 lg:gap-4 h-full w-full lg:max-w-3xl px-2 lg:px-4">
             {view.hand.map((card, i) =>
@@ -154,9 +160,15 @@ export function Shop() {
 
         {/* Right: Burn Zone */}
         <DroppableBurnZone onHoverChange={setIsBurnHovered}>
-          <div
-            className={`shop-side w-14 lg:w-32 h-full flex flex-col items-center justify-center border-l border-warm-700/50 transition-all duration-200 cursor-pointer ${isBurnHovered ? 'bg-red-900/20' : ''}`}
+          <button
+            type="button"
             onClick={handleBurnClick}
+            disabled={!canBurn}
+            aria-keyshortcuts={GAME_SHORTCUTS.burn}
+            title={`Burn selected card or unit (${GAME_SHORTCUTS.burn})`}
+            className={`shop-side w-14 lg:w-32 h-full flex flex-col items-center justify-center border-l border-warm-700/50 transition-all duration-200 ${
+              isBurnHovered ? 'bg-red-900/20' : ''
+            } ${canBurn ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
           >
             <img
               src={burnIcon}
@@ -170,9 +182,11 @@ export function Shop() {
             <div
               className={`burn-hint hidden lg:block text-[10px] mt-1 text-center px-2 ${isBurnHovered ? 'text-orange-400 font-bold' : 'text-warm-500'}`}
             >
-              {isBurnHovered ? 'BURN IT!' : 'Burn Card'}
+              {isBurnHovered
+                ? `BURN IT! (${GAME_SHORTCUTS.burn})`
+                : `Burn (${GAME_SHORTCUTS.burn})`}
             </div>
-          </div>
+          </button>
         </DroppableBurnZone>
       </div>
     </div>

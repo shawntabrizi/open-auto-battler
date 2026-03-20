@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useReducer } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useCustomizationStore } from '../store/customizationStore';
 import { DraggableCard, DroppableBoardSlot } from './DndComponents';
+import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
 import { UnitCard, EmptySlot } from './UnitCard';
 import type { BoardUnitView } from '../types';
 
@@ -147,6 +148,9 @@ export function Arena() {
           <div className="h-px w-8 lg:w-16 bg-gradient-to-r from-transparent to-warm-600/40" />
           <span className="board-label text-xs lg:text-sm text-warm-400 font-heading uppercase tracking-[0.2em]">
             Staging Area
+          </span>
+          <span className="hidden lg:inline text-[10px] text-warm-500">
+            Select: {GAME_SHORTCUTS.board} • Move: {GAME_SHORTCUTS.boardMove}
           </span>
           <div className="h-px w-8 lg:w-16 bg-gradient-to-l from-transparent to-warm-600/40" />
         </div>

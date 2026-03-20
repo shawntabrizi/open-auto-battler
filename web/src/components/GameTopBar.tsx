@@ -3,6 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import { useVersusStore } from '../store/versusStore';
 import { useCustomizationStore } from '../store/customizationStore';
 import { useMenuStore } from '../store/menuStore';
+import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
 import { HeartIcon, StarIcon, BagIcon, HourglassIcon, WarningIcon } from './Icons';
 import battleSwordIcon from '../../battle-sword.svg';
 
@@ -132,22 +133,9 @@ export function GameTopBar({
   customAction,
   className = '',
 }: HUDProps & { className?: string } = {}) {
-  const { view, setShowBag, showBag, startingLives, winsToVictory } = useGameStore();
+  const { view, setShowBag, startingLives, winsToVictory } = useGameStore();
   const playerAvatar = useCustomizationStore((s) => s.selections.playerAvatar);
   const openMenu = useMenuStore((s) => s.open);
-
-  // Keyboard shortcut for Bag view
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'b') {
-        setShowBag(!showBag);
-      } else if (e.key === 'Escape') {
-        setShowBag(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setShowBag, showBag]);
 
   if (!view) return null;
 
@@ -170,7 +158,8 @@ export function GameTopBar({
           <button
             onClick={() => setShowBag(true)}
             className="hud-pill bg-warm-800 hover:bg-warm-700 text-warm-100 border border-warm-700 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10"
-            title="View your draw pool (B)"
+            title={`View your draw pool (${GAME_SHORTCUTS.bag})`}
+            aria-keyshortcuts={GAME_SHORTCUTS.bag}
           >
             <BagIcon className="w-3.5 h-3.5 lg:w-5 lg:h-5 text-amber-400" />
             <span className="font-bold text-xs lg:text-sm font-stat">{view.bag_count}</span>
@@ -211,6 +200,8 @@ export function GameTopBar({
       <button
         onClick={openMenu}
         aria-label="Open menu"
+        aria-keyshortcuts={GAME_SHORTCUTS.menu}
+        title={`Open menu (${GAME_SHORTCUTS.menu})`}
         className="ml-auto p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors shrink-0"
       >
         <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 lg:w-5 lg:h-5">

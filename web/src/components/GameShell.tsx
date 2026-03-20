@@ -13,6 +13,7 @@ import { BagOverlay } from './BagOverlay';
 import { UnitCard } from './UnitCard';
 import { CARD_SIZES } from '../constants/cardSizes';
 import { RotatePrompt } from './RotatePrompt';
+import { GameKeyboardShortcuts } from './GameKeyboardShortcuts';
 import { useGameStore } from '../store/gameStore';
 import { useDragAndDrop } from '../hooks';
 
@@ -109,6 +110,8 @@ export function GameShell({
         ref={containerRef}
         className={`game-layout h-screen flex flex-col bg-board-bg ${className}`}
       >
+        <GameKeyboardShortcuts />
+
         {/* Zone 1: Top HUD */}
         <GameTopBar
           hideEndTurn={hideEndTurn}

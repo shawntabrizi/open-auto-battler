@@ -136,17 +136,6 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
     }
   }, [isVisible, showForfeitConfirm]);
 
-  React.useEffect(() => {
-    if (!isVisible) return;
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setSelection(null);
-      }
-    };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [isVisible, setSelection]);
-
   const handleForfeit = React.useCallback(async () => {
     try {
       if (resolvedMode.type === 'blockchain') {
