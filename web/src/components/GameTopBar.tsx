@@ -23,9 +23,7 @@ function useCommitConfirmation(commitWarning: string | null, disabled: boolean) 
   const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
-    if (!commitWarning || disabled) {
-      setIsConfirming(false);
-    }
+    setIsConfirming(false);
   }, [commitWarning, disabled]);
 
   const trigger = (action: () => void) => {

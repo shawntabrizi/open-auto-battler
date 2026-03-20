@@ -378,7 +378,7 @@ export function GameKeyboardShortcuts() {
         return;
       }
 
-      if (key === 'z' && !event.shiftKey && !hasUnsupportedModifier) {
+      if (key === 'z' && !event.shiftKey && !hasPrimaryModifier && !hasUnsupportedModifier) {
         if (view.can_undo) {
           event.preventDefault();
           undo();
