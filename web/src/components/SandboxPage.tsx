@@ -1,5 +1,5 @@
 import { useSandboxStore } from '../store/sandboxStore';
-import { UnitCard, EmptySlot } from './UnitCard';
+import { UnitCard } from './UnitCard';
 import { CardDetailPanel } from './CardDetailPanel';
 import { CardFilterBar } from './CardFilterBar';
 import { BattleOverlay } from './BattleOverlay';
@@ -36,7 +36,7 @@ export function SandboxPage() {
       {/* Main content */}
       <div className="flex flex-1 min-h-0">
         {/* Center - Battle arena and gallery */}
-        <div className="flex-1 flex flex-col min-h-0 ml-44 lg:ml-80">
+        <div className="flex-1 flex flex-col min-h-0 ml-44 lg:ml-80 overflow-hidden">
           {/* Battle Arena */}
           <div className="flex-shrink-0 p-2 lg:p-3 border-b border-warm-700">
             <SandboxArena />
@@ -142,67 +142,64 @@ function SandboxArena() {
     team: 'player' | 'enemy',
     onClick: () => void
   ) => {
-    // Player: slots 4,3,2,1,0 display as 5,4,3,2,1 (back to front)
-    // Enemy: slots 0,1,2,3,4 display as 1,2,3,4,5 (front to back)
     const displayIndex = index + 1;
 
-    if (unit) {
-      return (
-        <div
-          key={`${team}-${index}`}
-          className="relative group cursor-pointer sandbox-slot"
-          onClick={onClick}
-        >
-          <UnitCard card={unit} showCost={false} showBurn={false} />
-          <div className="absolute -top-1.5 lg:-top-2 left-1/2 -translate-x-1/2 text-[8px] lg:text-xs text-warm-400 pointer-events-none">
-            {displayIndex}
-          </div>
-          <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/20 rounded-lg transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-            <span className="text-red-400 text-lg lg:text-2xl">×</span>
-          </div>
-        </div>
-      );
-    }
-
     return (
-      <div key={`${team}-${index}`} className="relative sandbox-slot">
-        <EmptySlot
-          onClick={onClick}
-          label={`${displayIndex}`}
-          isTarget={selectedTemplate !== null}
-        />
+      <div
+        key={`${team}-${index}`}
+        className="relative group cursor-pointer aspect-[3/4] rounded-lg overflow-hidden"
+        onClick={onClick}
+      >
+        {unit ? (
+          <>
+            <div className="w-full h-full [&_.unit-card]:!w-full [&_.unit-card]:!h-full [&_.holo-border]:!w-full [&_.holo-border]:!h-full">
+              <UnitCard card={unit} showCost={false} showBurn={false} />
+            </div>
+            <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+              <span className="text-red-400 text-lg">×</span>
+            </div>
+          </>
+        ) : (
+          <div className="w-full h-full border-2 border-dashed border-warm-600/30 rounded-lg flex items-center justify-center hover:border-warm-500/50 transition-colors">
+            <span className="text-warm-600 text-[0.6rem] lg:text-xs">{displayIndex}</span>
+          </div>
+        )}
       </div>
     );
   };
 
   return (
     <div className="bg-warm-800 rounded-lg p-2 lg:p-4">
-      <div className="flex items-center justify-center gap-2 lg:gap-6">
+      <div className="flex items-center gap-1 lg:gap-2">
         {/* Player side (left) - display 5 4 3 2 1 */}
-        <div className="flex flex-col items-center gap-0.5 lg:gap-1">
-          <div className="text-[8px] lg:text-xs text-blue-400 font-bold">PLAYER</div>
-          <div className="flex gap-0.5 lg:gap-1">
-            {[4, 3, 2, 1, 0].map((i) =>
-              renderSlot(playerBoard[i], i, 'player', () => handlePlayerSlotClick(i))
-            )}
+        <div className="flex-1 min-w-0 flex flex-col items-center gap-0.5">
+          <div className="text-[7px] lg:text-xs text-blue-400 font-bold">PLAYER</div>
+          <div className="flex gap-0.5 lg:gap-1 w-full">
+            {[4, 3, 2, 1, 0].map((i) => (
+              <div key={`p-${i}`} className="flex-1 min-w-0">
+                {renderSlot(playerBoard[i], i, 'player', () => handlePlayerSlotClick(i))}
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="text-sm lg:text-2xl font-bold text-warm-500">VS</div>
+        <div className="text-[0.6rem] lg:text-xl font-bold text-warm-500 shrink-0">VS</div>
 
         {/* Enemy side (right) - display 1 2 3 4 5 */}
-        <div className="flex flex-col items-center gap-0.5 lg:gap-1">
-          <div className="text-[8px] lg:text-xs text-red-400 font-bold">ENEMY</div>
-          <div className="flex gap-0.5 lg:gap-1">
-            {[0, 1, 2, 3, 4].map((i) =>
-              renderSlot(enemyBoard[i], i, 'enemy', () => handleEnemySlotClick(i))
-            )}
+        <div className="flex-1 min-w-0 flex flex-col items-center gap-0.5">
+          <div className="text-[7px] lg:text-xs text-red-400 font-bold">ENEMY</div>
+          <div className="flex gap-0.5 lg:gap-1 w-full">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={`e-${i}`} className="flex-1 min-w-0">
+                {renderSlot(enemyBoard[i], i, 'enemy', () => handleEnemySlotClick(i))}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
       {selectedTemplate && (
-        <div className="mt-1.5 lg:mt-2 text-center text-[10px] lg:text-xs text-warm-400">
+        <div className="mt-1 lg:mt-2 text-center text-[9px] lg:text-xs text-warm-400">
           Placing: <span className="text-yellow-400">{selectedTemplate.name}</span>
         </div>
       )}
@@ -244,14 +241,15 @@ function UnitGallery() {
   });
 
   return (
-    <div className="sandbox-gallery grid grid-cols-8 lg:grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-1 lg:gap-2">
+    <div className="sandbox-gallery grid gap-1 lg:gap-2" style={{ gridTemplateColumns: 'repeat(6, minmax(0, 1fr))' }}>
       {filteredTemplates.map((template) => (
-        <UnitCard
-          key={template.id}
-          card={template}
-          isSelected={selectedTemplate?.id === template.id}
-          onClick={() => selectTemplate(selectedTemplate?.id === template.id ? null : template)}
-        />
+        <div key={template.id} className="min-w-0 [&_.unit-card]:!w-full [&_.unit-card]:!h-auto [&_.unit-card]:aspect-[3/4]">
+          <UnitCard
+            card={template}
+            isSelected={selectedTemplate?.id === template.id}
+            onClick={() => selectTemplate(selectedTemplate?.id === template.id ? null : template)}
+          />
+        </div>
       ))}
     </div>
   );
