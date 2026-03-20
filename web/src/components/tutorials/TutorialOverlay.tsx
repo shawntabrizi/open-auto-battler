@@ -1,10 +1,27 @@
 import { useEffect } from 'react';
 import { useTutorialStore } from '../../store/tutorialStore';
+import { useGameStore } from '../../store/gameStore';
 import { getTutorial } from './registry';
 import { CloseIcon } from '../Icons';
 
 export function TutorialOverlay() {
   const { isOpen, tutorialId, slideIndex, close, next, prev } = useTutorialStore();
+  const { initEngine, engine, setMetas, loadSetPreviews } = useGameStore();
+
+  // Ensure engine + card previews are loaded for tutorial slides that display cards
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!engine) {
+      void initEngine();
+    }
+  }, [isOpen, engine, initEngine]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (engine && setMetas.length > 0) {
+      loadSetPreviews();
+    }
+  }, [isOpen, engine, setMetas, loadSetPreviews]);
 
   const tutorial = tutorialId ? getTutorial(tutorialId) : undefined;
   const total = tutorial?.slides.length ?? 0;

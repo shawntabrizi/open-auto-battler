@@ -74,7 +74,9 @@ export default function Shop() {
             <span className="text-green-400 font-bold">Play</span> cards from your hand onto the board by spending mana.
           </p>
           <p>
-            Each <span className="text-yellow-400 font-bold">round</span>, your mana limit increases, letting you play stronger cards.
+            You start with <span className="text-blue-400 font-bold">3 mana</span>. Each{' '}
+            <span className="text-yellow-400 font-bold">round</span>, your mana limit grows by 1 — letting you
+            field stronger cards as the game goes on.
           </p>
         </div>
       </div>

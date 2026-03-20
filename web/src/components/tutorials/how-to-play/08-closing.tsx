@@ -13,7 +13,7 @@ export default function Closing() {
             </svg>
           </div>
           <span className="text-amber-400 font-bold text-xs lg:text-sm">Bronze</span>
-          <span className="text-warm-500 text-[10px] lg:text-xs">Win a battle with this card</span>
+          <span className="text-warm-500 text-[10px] lg:text-xs">Win a battle with this card on board</span>
         </div>
 
         <div className="flex flex-col items-center gap-1">
@@ -23,7 +23,7 @@ export default function Closing() {
             </svg>
           </div>
           <span className="text-gray-300 font-bold text-xs lg:text-sm">Silver</span>
-          <span className="text-warm-500 text-[10px] lg:text-xs">Achieve a 10-win run</span>
+          <span className="text-warm-500 text-[10px] lg:text-xs">Complete a 10-win run with this card</span>
         </div>
 
         <div className="flex flex-col items-center gap-1">
@@ -33,7 +33,7 @@ export default function Closing() {
             </svg>
           </div>
           <span className="text-yellow-400 font-bold text-xs lg:text-sm">Gold</span>
-          <span className="text-warm-500 text-[10px] lg:text-xs">Perfect run — no losses</span>
+          <span className="text-warm-500 text-[10px] lg:text-xs">Perfect 10-0 run with this card</span>
         </div>
       </div>
 

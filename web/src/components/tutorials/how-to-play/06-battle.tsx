@@ -4,8 +4,8 @@ import { UnitCard } from '../../UnitCard';
 export default function Battle() {
   const setPreviewCards = useGameStore((s) => s.setPreviewCards);
   const allCards = Object.values(setPreviewCards).flat();
-  const playerCards = allCards.slice(0, 2);
-  const enemyCards = allCards.slice(3, 5);
+  const playerCards = allCards.slice(0, 5);
+  const enemyCards = allCards.slice(5, 10);
 
   return (
     <div>
@@ -55,12 +55,8 @@ export default function Battle() {
           unit with 0 health is destroyed.
         </p>
         <p>
-          Units may have <span className="text-yellow-400 font-bold">abilities</span> that
-          trigger during combat — these can turn the tides of battle!
-        </p>
-        <p>
-          If you win the battle, you earn a win. If you lose, you lose a life.
-          Draws will just take you to the next round.
+          Watch for <span className="text-yellow-400 font-bold">abilities</span> —
+          they fire during combat and can completely turn the tide.
         </p>
       </div>
     </div>

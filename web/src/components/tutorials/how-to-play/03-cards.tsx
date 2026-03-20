@@ -52,7 +52,7 @@ export default function Cards() {
             </div>
             <div>
               <span className="text-red-400 font-bold">Attack</span>
-              <span className="text-warm-400"> — damage dealt to the enemy unit each clash.</span>
+              <span className="text-warm-400"> — damage dealt to the front enemy unit in each clash.</span>
             </div>
           </div>
 
@@ -77,7 +77,7 @@ export default function Cards() {
             </div>
             <div>
               <span className="text-yellow-400 font-bold">Abilities</span>
-              <span className="text-warm-400"> — cards may have one or more abilities which trigger in battle.</span>
+              <span className="text-warm-400"> — special effects that trigger during battle or in the shop. Read the card text carefully!</span>
             </div>
           </div>
         </div>

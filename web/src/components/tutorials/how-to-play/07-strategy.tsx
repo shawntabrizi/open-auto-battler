@@ -2,7 +2,7 @@ export default function Strategy() {
   return (
     <div>
       <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white mb-4 lg:mb-6 text-center">
-        Board Position & Determinism
+        Strategy & Board Position
       </h2>
 
       {/* Position diagram */}
@@ -32,18 +32,16 @@ export default function Strategy() {
           When it falls, position 2 steps up, and so on.
         </p>
         <p>
-          Battles are <span className="text-yellow-400 font-bold">fully deterministic</span> —
-          the same boards with the same seed always produce the same result. There is no luck during combat,
-          only in which cards you draw.
+          Combat has <span className="text-yellow-400 font-bold">no randomness</span> —
+          the same boards always produce the same result. The only luck is which cards you draw.
         </p>
         <p>
-          When abilities trigger, <span className="text-yellow-400 font-bold">stronger units go first</span> —
-          the unit with the highest attack acts first, then highest health, then front position.
-          If there's still a tie, a deterministic seed breaks it fairly.
+          When abilities trigger, <span className="text-yellow-400 font-bold">stronger units act first</span> —
+          highest attack goes first, then highest health, then front position.
         </p>
         <p>
-          This means <span className="text-white font-bold">strategy matters</span>. Experiment with
-          board positioning, card synergies, and when to burn versus play to find the winning edge.
+          <span className="text-white font-bold">Every decision counts.</span> Experiment with
+          board order, card synergies, and when to burn versus play to find the winning edge.
         </p>
       </div>
     </div>
