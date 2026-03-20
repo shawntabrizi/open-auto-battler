@@ -1,10 +1,6 @@
 export default function Shop() {
   return (
     <div>
-      <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white mb-4 lg:mb-6 text-center">
-        The Shop Phase
-      </h2>
-
       <div className="flex flex-row items-center gap-4 lg:gap-8">
         {/* Mini game mockup */}
         <div className="rounded-xl border border-warm-700/50 bg-warm-950 w-48 lg:w-64 shrink-0 aspect-video flex flex-col">
@@ -61,6 +57,9 @@ export default function Shop() {
 
         {/* Text */}
         <div className="space-y-2 lg:space-y-3 text-warm-300 text-sm lg:text-base leading-relaxed">
+          <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white">
+            The Shop Phase
+          </h2>
           <p>
             Each round starts with the <span className="text-yellow-400 font-bold">Shop Phase</span>.
           </p>
@@ -72,17 +71,6 @@ export default function Shop() {
           </p>
           <p>
             <span className="text-green-400 font-bold">Play</span> cards from your hand onto the board by spending mana.
-            Units on your board <span className="text-white font-bold">carry over</span> between rounds.
-          </p>
-          <p>
-            Cards you don't use go back into your bag and can be drawn again later.
-            Burned cards are <span className="text-red-400 font-bold">gone for good</span>,
-            so you can thin your bag to improve future draws.
-          </p>
-          <p>
-            You start with <span className="text-blue-400 font-bold">3 mana</span>. Each{' '}
-            <span className="text-yellow-400 font-bold">round</span>, your mana limit grows by 1, letting you
-            field stronger cards as the game goes on.
           </p>
         </div>
       </div>

@@ -51,16 +51,14 @@ export function TutorialOverlay() {
 
   return (
     <div className="fixed inset-0 z-[9998] flex flex-col bg-black/80 backdrop-blur-sm animate-fade-in">
-      {/* Close button */}
-      <div className="flex-shrink-0 flex justify-end p-3">
-        <button
-          onClick={close}
-          className="p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors"
-          aria-label="Close tutorial"
-        >
-          <CloseIcon className="w-5 h-5" />
-        </button>
-      </div>
+      {/* Close button — floats above content */}
+      <button
+        onClick={close}
+        className="absolute top-3 right-3 z-[1] p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors"
+        aria-label="Close tutorial"
+      >
+        <CloseIcon className="w-5 h-5" />
+      </button>
 
       {/* Slide content */}
       <div className="flex-1 overflow-y-auto flex items-center justify-center px-6 lg:px-12">

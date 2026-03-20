@@ -11,10 +11,6 @@ export default function Cards() {
 
   return (
     <div>
-      <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white mb-4 lg:mb-6 text-center">
-        Cards
-      </h2>
-
       <div className="flex flex-row items-center gap-4 lg:gap-8">
         {/* Large card display */}
         {demoCard && (
@@ -25,6 +21,9 @@ export default function Cards() {
 
         {/* Stat explanations */}
         <div className="space-y-3 lg:space-y-4 text-sm lg:text-base">
+          <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white">
+            Cards
+          </h2>
           <div className="flex items-start gap-3">
             <div className="w-7 h-7 lg:w-8 lg:h-8 shrink-0 rounded bg-blue-900/40 border border-blue-700/50 flex items-center justify-center text-blue-400 font-stat font-bold text-sm lg:text-base">
               {demoCard?.play_cost ?? '3'}

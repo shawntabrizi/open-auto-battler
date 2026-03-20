@@ -1,0 +1,52 @@
+export default function RoundProgression() {
+  return (
+    <div>
+      <div className="flex flex-row items-center gap-4 lg:gap-8">
+        {/* Round / Mana table (vertical) */}
+        <div className="shrink-0 rounded-xl border border-warm-700/50 bg-warm-950 p-2 lg:p-3">
+          <table className="text-xs lg:text-sm border-collapse">
+            <thead>
+              <tr>
+                <th className="px-2 lg:px-3 py-1 text-yellow-400 font-bold border-b border-warm-700 text-left">Round</th>
+                <th className="px-2 lg:px-3 py-1 text-blue-400 font-bold border-b border-warm-700 text-left">Mana</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 8 }, (_, i) => (
+                <tr key={i}>
+                  <td className="px-2 lg:px-3 py-0.5 text-warm-400 font-mono text-center">{i < 7 ? i + 1 : '8+'}</td>
+                  <td className="px-2 lg:px-3 py-0.5 text-white font-mono text-center">{i + 3}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Text */}
+        <div className="space-y-2 lg:space-y-3 text-warm-300 text-sm lg:text-base leading-relaxed">
+          <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white">
+            Round Progression
+          </h2>
+          <p>
+            Units on your board <span className="text-white font-bold">carry over</span> between rounds.
+            This means you can continue to use them for future battles,
+            or <span className="text-red-400 font-bold">burn</span> them for future resources!
+          </p>
+          <p>
+            Cards you don't use go <span className="text-green-400 font-bold">back into your bag</span> and
+            can be drawn again later.
+            Burned cards are <span className="text-red-400 font-bold">gone for good</span>,
+            so you can thin your bag to control and improve your future shop draws.
+          </p>
+          <p>
+            You start with a limit of <span className="text-blue-400 font-bold">3 mana</span>. Each{' '}
+            <span className="text-yellow-400 font-bold">round</span>, your mana limit grows
+            by <span className="text-blue-400 font-bold">1</span>, up to a maximum
+            of <span className="text-blue-400 font-bold">10</span>, letting you
+            play stronger cards as the game goes on.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
