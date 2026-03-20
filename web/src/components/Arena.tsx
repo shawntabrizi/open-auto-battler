@@ -219,7 +219,7 @@ export function Arena() {
   return (
     <div
       role="region"
-      aria-label="Staging Area"
+      aria-label="Board"
       className="arena flex-1 flex flex-col items-center justify-center relative min-w-0 min-h-0"
       style={
         boardBg

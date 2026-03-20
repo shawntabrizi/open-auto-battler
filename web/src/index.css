@@ -16,74 +16,71 @@
   color: #e8dcc8;
   background-color: #0e0c09;
 
-  --spring-bounce: linear(
-    0,
-    0.004,
-    0.016,
-    0.035,
-    0.063,
-    0.098,
-    0.141,
-    0.191,
-    0.25,
-    0.316,
-    0.391,
-    0.472,
-    0.562,
-    0.659,
-    0.763,
-    0.876,
-    1,
-    1.08,
-    1.124,
-    1.135,
-    1.119,
-    1.084,
-    1.04,
-    0.995,
-    0.96,
-    0.938,
-    0.933,
-    0.942,
-    0.96,
-    0.982,
-    1,
-    1.008,
-    1.008,
-    1
-  );
+  --spring-bounce: linear(0,
+      0.004,
+      0.016,
+      0.035,
+      0.063,
+      0.098,
+      0.141,
+      0.191,
+      0.25,
+      0.316,
+      0.391,
+      0.472,
+      0.562,
+      0.659,
+      0.763,
+      0.876,
+      1,
+      1.08,
+      1.124,
+      1.135,
+      1.119,
+      1.084,
+      1.04,
+      0.995,
+      0.96,
+      0.938,
+      0.933,
+      0.942,
+      0.96,
+      0.982,
+      1,
+      1.008,
+      1.008,
+      1);
 
   /* Slot stride = card width + gap, used by swap slide animation */
-  --slot-stride: 150px; /* Mobile: w-36 (144px) + gap (~6px) */
+  --slot-stride: 150px;
+  /* Mobile: w-36 (144px) + gap (~6px) */
 
   /* Snappier spring for drag interactions — faster settle, subtler overshoot */
-  --spring-snappy: linear(
-    0,
-    0.011,
-    0.044,
-    0.098,
-    0.175,
-    0.275,
-    0.398,
-    0.542,
-    0.704,
-    0.881,
-    1.02,
-    1.069,
-    1.075,
-    1.053,
-    1.019,
-    0.99,
-    0.971,
-    0.963,
-    0.966,
-    0.978,
-    0.991,
-    1,
-    1.003,
-    1.001,
-    1
-  );
+  --spring-snappy: linear(0,
+      0.011,
+      0.044,
+      0.098,
+      0.175,
+      0.275,
+      0.398,
+      0.542,
+      0.704,
+      0.881,
+      1.02,
+      1.069,
+      1.075,
+      1.053,
+      1.019,
+      0.99,
+      0.971,
+      0.963,
+      0.966,
+      0.978,
+      0.991,
+      1,
+      1.003,
+      1.001,
+      1);
 
   --shadow-resting: 0 1px 2px hsla(30, 40%, 12%, 0.4), 0 2px 6px hsla(30, 40%, 12%, 0.2);
   --shadow-hover:
@@ -96,7 +93,8 @@
 
 @media (min-width: 1024px) {
   :root {
-    --slot-stride: 160px; /* Desktop: w-36 (144px) + gap-4 (16px) */
+    --slot-stride: 160px;
+    /* Desktop: w-36 (144px) + gap-4 (16px) */
   }
 }
 
@@ -142,8 +140,7 @@ body {
 
 /* Safe area padding for fullscreen overlays (battle, bag, etc.) */
 .safe-area-pad {
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
-    env(safe-area-inset-left);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 /* Left/right safe area with minimum padding for content bars */
@@ -251,6 +248,7 @@ body {
 }
 
 @keyframes legendary-pulse {
+
   0%,
   100% {
     box-shadow:
@@ -260,6 +258,7 @@ body {
       0 0 8px rgba(251, 191, 36, 0.25),
       0 0 2px rgba(251, 191, 36, 0.15);
   }
+
   50% {
     box-shadow:
       inset 1px 1px 0 0 rgba(251, 191, 36, 0.2),
@@ -291,22 +290,20 @@ body {
   --holo-speed: 4s;
   padding: 2px;
   border-radius: 0.5rem;
-  background: conic-gradient(
-    from var(--holo-angle, 0deg),
-    #ff6ec7,
-    #ffb86c,
-    #a8ff78,
-    #78d0ff,
-    #c084fc,
-    #ff6ec7
-  );
+  background: conic-gradient(from var(--holo-angle, 0deg),
+      #ff6ec7,
+      #ffb86c,
+      #a8ff78,
+      #78d0ff,
+      #c084fc,
+      #ff6ec7);
   animation:
     holo-border-spin var(--holo-speed) linear infinite,
     holo-glow-pulse 3s ease-in-out infinite;
 }
 
 /* The card inside loses its own border */
-.holo-border > .card-holographic {
+.holo-border>.card-holographic {
   border: none;
   border-radius: calc(0.5rem - 2px);
 }
@@ -319,21 +316,20 @@ body {
   border-radius: inherit;
   pointer-events: none;
   z-index: 6;
-  background: linear-gradient(
-    var(--holo-angle, 135deg),
-    rgba(255, 110, 199, 0.15),
-    rgba(255, 184, 108, 0.15),
-    rgba(168, 255, 120, 0.15),
-    rgba(120, 208, 255, 0.15),
-    rgba(192, 132, 252, 0.15),
-    rgba(255, 110, 199, 0.15)
-  );
+  background: linear-gradient(var(--holo-angle, 135deg),
+      rgba(255, 110, 199, 0.15),
+      rgba(255, 184, 108, 0.15),
+      rgba(168, 255, 120, 0.15),
+      rgba(120, 208, 255, 0.15),
+      rgba(192, 132, 252, 0.15),
+      rgba(255, 110, 199, 0.15));
   mix-blend-mode: screen;
   animation: holo-border-spin 4s linear infinite;
 }
 
 /* Prismatic outer glow on the wrapper */
 @keyframes holo-glow-pulse {
+
   0%,
   100% {
     box-shadow:
@@ -341,6 +337,7 @@ body {
       0 0 20px rgba(120, 208, 255, 0.2),
       0 0 4px rgba(255, 110, 199, 0.2);
   }
+
   50% {
     box-shadow:
       0 0 16px rgba(255, 110, 199, 0.4),
@@ -353,6 +350,7 @@ body {
   0% {
     --holo-angle: 0deg;
   }
+
   100% {
     --holo-angle: 360deg;
   }
@@ -387,8 +385,7 @@ body {
   }
 
   .card-tilt:hover {
-    transform: perspective(600px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))
-      scale(1.08) translateY(-4px);
+    transform: perspective(600px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) scale(1.08) translateY(-4px);
     box-shadow:
       inset 1px 1px 0 0 rgba(212, 168, 67, 0.15),
       inset -1px -1px 0 0 rgba(0, 0, 0, 0.25),
@@ -408,11 +405,9 @@ body {
     border-radius: inherit;
     pointer-events: none;
     z-index: 5;
-    background: radial-gradient(
-      circle at var(--glare-x, 50%) var(--glare-y, 50%),
-      rgba(255, 248, 230, var(--glare-opacity, 0)) 0%,
-      transparent 60%
-    );
+    background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%),
+        rgba(255, 248, 230, var(--glare-opacity, 0)) 0%,
+        transparent 60%);
     mix-blend-mode: soft-light;
   }
 }
@@ -430,11 +425,13 @@ body {
 }
 
 @keyframes swap-target-pulse {
+
   0%,
   100% {
     transform: scale(1);
     filter: brightness(1);
   }
+
   50% {
     transform: scale(1.06);
     filter: brightness(1.15);
@@ -480,14 +477,12 @@ body {
   transition: none !important;
 }
 
-/* Arena surface — the staging area where cards are placed */
+/* Arena surface — the board where cards are placed */
 .arena-surface {
-  background: linear-gradient(
-    180deg,
-    rgba(30, 26, 20, 0.3) 0%,
-    rgba(30, 26, 20, 0.6) 50%,
-    rgba(30, 26, 20, 0.3) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(30, 26, 20, 0.3) 0%,
+      rgba(30, 26, 20, 0.6) 50%,
+      rgba(30, 26, 20, 0.3) 100%);
   border: 1px solid rgba(69, 58, 42, 0.25);
   box-shadow:
     inset 0 1px 0 rgba(212, 168, 67, 0.06),
@@ -516,11 +511,9 @@ body {
 .slot-available {
   border-color: rgba(245, 202, 92, 0.82) !important;
   border-style: solid !important;
-  background: linear-gradient(
-    135deg,
-    rgba(60, 46, 20, 0.92) 0%,
-    rgba(38, 30, 14, 0.97) 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      rgba(60, 46, 20, 0.92) 0%,
+      rgba(38, 30, 14, 0.97) 100%) !important;
   box-shadow:
     inset 0 0 16px rgba(245, 202, 92, 0.18),
     0 0 16px rgba(245, 202, 92, 0.28),
@@ -534,10 +527,12 @@ body {
 }
 
 @keyframes slot-icon-fade {
+
   0%,
   100% {
     opacity: 0.5;
   }
+
   50% {
     opacity: 1;
   }
@@ -549,24 +544,24 @@ body {
 }
 
 @keyframes hint-pulse {
+
   0%,
   100% {
     opacity: 0.7;
   }
+
   50% {
     opacity: 1;
   }
 }
 
 .burn-zone-active {
-  background-image: radial-gradient(
-    circle at center,
-    rgba(251, 191, 36, 0.2) 0%,
-    rgba(251, 146, 60, 0.32) 24%,
-    rgba(249, 115, 22, 0.28) 48%,
-    rgba(185, 28, 28, 0.32) 76%,
-    rgba(69, 10, 10, 0.52) 100%
-  );
+  background-image: radial-gradient(circle at center,
+      rgba(251, 191, 36, 0.2) 0%,
+      rgba(251, 146, 60, 0.32) 24%,
+      rgba(249, 115, 22, 0.28) 48%,
+      rgba(185, 28, 28, 0.32) 76%,
+      rgba(69, 10, 10, 0.52) 100%);
   box-shadow:
     inset 0 0 0 1px rgba(251, 146, 60, 0.24),
     inset 0 0 36px rgba(251, 146, 60, 0.12),
@@ -575,17 +570,16 @@ body {
 }
 
 .burn-zone-active--hover {
-  background-image: radial-gradient(
-    circle at center,
-    rgba(253, 224, 71, 0.24) 0%,
-    rgba(251, 146, 60, 0.4) 22%,
-    rgba(249, 115, 22, 0.34) 46%,
-    rgba(220, 38, 38, 0.36) 74%,
-    rgba(69, 10, 10, 0.58) 100%
-  );
+  background-image: radial-gradient(circle at center,
+      rgba(253, 224, 71, 0.24) 0%,
+      rgba(251, 146, 60, 0.4) 22%,
+      rgba(249, 115, 22, 0.34) 46%,
+      rgba(220, 38, 38, 0.36) 74%,
+      rgba(69, 10, 10, 0.58) 100%);
 }
 
 @keyframes burn-zone-pulse {
+
   0%,
   100% {
     box-shadow:
@@ -594,6 +588,7 @@ body {
       0 0 18px rgba(249, 115, 22, 0.14);
     filter: saturate(1) brightness(1);
   }
+
   50% {
     box-shadow:
       inset 0 0 0 1px rgba(251, 146, 60, 0.38),
@@ -607,11 +602,9 @@ body {
 .slot-drop-target {
   border-color: rgba(212, 168, 67, 0.7) !important;
   border-style: solid !important;
-  background: linear-gradient(
-    135deg,
-    rgba(60, 48, 24, 0.9) 0%,
-    rgba(40, 32, 16, 0.95) 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      rgba(60, 48, 24, 0.9) 0%,
+      rgba(40, 32, 16, 0.95) 100%) !important;
   box-shadow:
     inset 0 0 12px rgba(212, 168, 67, 0.15),
     0 0 16px rgba(212, 168, 67, 0.2),
@@ -622,6 +615,7 @@ body {
 }
 
 @keyframes slot-pulse {
+
   0%,
   100% {
     box-shadow:
@@ -629,6 +623,7 @@ body {
       0 0 16px rgba(212, 168, 67, 0.2),
       0 0 4px rgba(212, 168, 67, 0.3);
   }
+
   50% {
     box-shadow:
       inset 0 0 16px rgba(212, 168, 67, 0.25),
@@ -639,10 +634,12 @@ body {
 
 /* Slot "breathes" — subtle scale pulse when ready to receive a card */
 @keyframes slot-breathe {
+
   0%,
   100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.04);
   }
@@ -660,13 +657,11 @@ body {
 
 .battle-log {
   mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 8%,
-    black 92%,
-    transparent 100%
-  );
+  -webkit-mask-image: linear-gradient(to bottom,
+      transparent 0%,
+      black 8%,
+      black 92%,
+      transparent 100%);
 }
 
 /* Battle result banner — dramatic presentation */
@@ -709,11 +704,9 @@ body {
   inset: -80px;
   z-index: -1;
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    var(--burst-color, rgba(212, 168, 67, 0.3)) 0%,
-    transparent 70%
-  );
+  background: radial-gradient(circle,
+      var(--burst-color, rgba(212, 168, 67, 0.3)) 0%,
+      transparent 70%);
   animation: burst-expand 0.8s ease-out forwards;
   pointer-events: none;
 }
@@ -721,9 +714,11 @@ body {
 .result-burst-victory {
   --burst-color: rgba(74, 140, 58, 0.35);
 }
+
 .result-burst-defeat {
   --burst-color: rgba(168, 58, 42, 0.35);
 }
+
 .result-burst-draw {
   --burst-color: rgba(212, 168, 67, 0.3);
 }
@@ -753,12 +748,10 @@ body {
 .game-over-atmosphere-defeat {
   background:
     radial-gradient(ellipse at 50% 30%, rgba(168, 58, 42, 0.1) 0%, transparent 40%),
-    radial-gradient(
-      ellipse at center,
+    radial-gradient(ellipse at center,
       transparent 20%,
       rgba(168, 58, 42, 0.15) 70%,
-      rgba(0, 0, 0, 0.8) 100%
-    );
+      rgba(0, 0, 0, 0.8) 100%);
 }
 
 /* Game-over glow behind title */
@@ -847,9 +840,11 @@ body {
   0% {
     box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
   }
+
   50% {
     box-shadow: 0 0 14px 5px rgba(220, 38, 38, 0.5);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
   }
@@ -865,9 +860,11 @@ body {
   0% {
     box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
   }
+
   50% {
     box-shadow: 0 0 14px 5px rgba(34, 197, 94, 0.5);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
   }
@@ -883,9 +880,11 @@ body {
   0% {
     box-shadow: 0 0 0 2px rgba(234, 179, 8, 0);
   }
+
   30% {
     box-shadow: 0 0 10px 3px rgba(234, 179, 8, 0.6);
   }
+
   100% {
     box-shadow: 0 0 0 2px rgba(234, 179, 8, 0);
   }
@@ -908,14 +907,12 @@ body {
   left: 10%;
   right: 10%;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(212, 168, 67, 0.4) 20%,
-    rgba(212, 168, 67, 0.6) 50%,
-    rgba(212, 168, 67, 0.4) 80%,
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(212, 168, 67, 0.4) 20%,
+      rgba(212, 168, 67, 0.6) 50%,
+      rgba(212, 168, 67, 0.4) 80%,
+      transparent);
   z-index: 1;
 }
 
@@ -996,35 +993,29 @@ body {
   overflow: hidden;
   background:
     /* Diagonal specular highlight — the bright streak */
-    linear-gradient(
-      135deg,
+    linear-gradient(135deg,
       transparent 0%,
       transparent 35%,
       rgba(255, 255, 255, 0.22) 42%,
       rgba(255, 248, 220, 0.45) 50%,
       rgba(255, 255, 255, 0.22) 58%,
       transparent 65%,
-      transparent 100%
-    ),
+      transparent 100%),
     /* Vertical bevel — lit top edge, shadowed bottom */
-    linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0.2) 0%,
-        transparent 8%,
-        transparent 92%,
-        rgba(0, 0, 0, 0.12) 100%
-      ),
+    linear-gradient(to bottom,
+      rgba(255, 255, 255, 0.2) 0%,
+      transparent 8%,
+      transparent 92%,
+      rgba(0, 0, 0, 0.12) 100%),
     /* Base metallic gold — deeper, richer stops */
-    linear-gradient(
-        180deg,
-        #e8c44a 0%,
-        #d4a830 15%,
-        #b8892a 35%,
-        #a07520 50%,
-        #b8892a 65%,
-        #d4a830 85%,
-        #e8c44a 100%
-      );
+    linear-gradient(180deg,
+      #e8c44a 0%,
+      #d4a830 15%,
+      #b8892a 35%,
+      #a07520 50%,
+      #b8892a 65%,
+      #d4a830 85%,
+      #e8c44a 100%);
   color: #1a0f00;
   border: 1px solid #7a5810;
   border-top-color: rgba(232, 196, 74, 0.7);
@@ -1046,16 +1037,14 @@ body {
   left: -120%;
   width: 60%;
   height: 100%;
-  background: linear-gradient(
-    105deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.05) 35%,
-    rgba(255, 255, 255, 0.4) 48%,
-    rgba(255, 255, 255, 0.5) 50%,
-    rgba(255, 255, 255, 0.4) 52%,
-    rgba(255, 255, 255, 0.05) 65%,
-    transparent 80%
-  );
+  background: linear-gradient(105deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.05) 35%,
+      rgba(255, 255, 255, 0.4) 48%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0.4) 52%,
+      rgba(255, 255, 255, 0.05) 65%,
+      transparent 80%);
   transform: skewX(-20deg);
   pointer-events: none;
   transition: left 0.6s ease-in-out;
@@ -1067,33 +1056,27 @@ body {
 
 .battle-btn:hover:not(:disabled) {
   background:
-    linear-gradient(
-      135deg,
+    linear-gradient(135deg,
       transparent 0%,
       transparent 30%,
       rgba(255, 255, 255, 0.28) 40%,
       rgba(255, 248, 220, 0.55) 50%,
       rgba(255, 255, 255, 0.28) 60%,
       transparent 70%,
-      transparent 100%
-    ),
-    linear-gradient(
-      to bottom,
+      transparent 100%),
+    linear-gradient(to bottom,
       rgba(255, 255, 255, 0.25) 0%,
       transparent 8%,
       transparent 92%,
-      rgba(0, 0, 0, 0.08) 100%
-    ),
-    linear-gradient(
-      180deg,
+      rgba(0, 0, 0, 0.08) 100%),
+    linear-gradient(180deg,
       #f0d060 0%,
       #e0c048 15%,
       #c8a030 35%,
       #b89028 50%,
       #c8a030 65%,
       #e0c048 85%,
-      #f0d060 100%
-    );
+      #f0d060 100%);
   transform: translateY(-2px) scale(1.03);
   border-top-color: rgba(240, 208, 96, 0.8);
   box-shadow:
@@ -1106,16 +1089,14 @@ body {
 
 .battle-btn:active:not(:disabled) {
   background:
-    linear-gradient(
-      135deg,
+    linear-gradient(135deg,
       transparent 0%,
       transparent 40%,
       rgba(255, 255, 255, 0.1) 48%,
       rgba(255, 248, 220, 0.2) 50%,
       rgba(255, 255, 255, 0.1) 52%,
       transparent 60%,
-      transparent 100%
-    ),
+      transparent 100%),
     linear-gradient(180deg, #a07520 0%, #906818 30%, #b8892a 70%, #c8a030 100%);
   transform: translateY(0) scale(0.98);
   box-shadow:
@@ -1160,17 +1141,21 @@ body {
     opacity: 0;
     transform: translateX(-50%) translateY(6px) scale(0.6);
   }
+
   15% {
     opacity: 1;
     transform: translateX(-50%) translateY(-2px) scale(1.1);
   }
+
   25% {
     transform: translateX(-50%) translateY(0) scale(1);
   }
+
   75% {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
   }
+
   100% {
     opacity: 0;
     transform: translateX(-50%) translateY(-12px) scale(0.9);
@@ -1179,6 +1164,7 @@ body {
 
 /* Mana tank animation */
 @keyframes mana-glow {
+
   0%,
   100% {
     box-shadow: 0 0 10px rgba(91, 143, 170, 0.5);
@@ -1195,6 +1181,7 @@ body {
 
 /* Battle animation */
 @keyframes shake {
+
   0%,
   100% {
     transform: translateX(0);
@@ -1214,6 +1201,7 @@ body {
 }
 
 @keyframes damage-flash {
+
   0%,
   100% {
     filter: brightness(1);
@@ -1299,6 +1287,7 @@ body {
   }
 
   @keyframes fade-in-out {
+
     0%,
     100% {
       opacity: 0;
@@ -1316,21 +1305,27 @@ body {
   .stagger-1 {
     animation-delay: 0ms;
   }
+
   .stagger-2 {
     animation-delay: 80ms;
   }
+
   .stagger-3 {
     animation-delay: 160ms;
   }
+
   .stagger-4 {
     animation-delay: 240ms;
   }
+
   .stagger-5 {
     animation-delay: 320ms;
   }
+
   .stagger-6 {
     animation-delay: 400ms;
   }
+
   .stagger-7 {
     animation-delay: 480ms;
   }
@@ -1343,10 +1338,12 @@ body {
   }
 
   @keyframes idle-wobble {
+
     0%,
     100% {
       --wobble-angle: -0.4deg;
     }
+
     50% {
       --wobble-angle: 0.4deg;
     }
@@ -1392,6 +1389,7 @@ body {
     max-width: 18rem;
     aspect-ratio: 18 / 11;
   }
+
   .set-card-fan-card {
     width: 5.5rem;
     height: 7.2rem;
@@ -1594,7 +1592,7 @@ body {
     gap: 0.5rem;
   }
 
-  .card-detail-panel--fixed .grid > div {
+  .card-detail-panel--fixed .grid>div {
     padding: 0.375rem;
   }
 
@@ -1772,8 +1770,7 @@ body {
   border-radius: 0.5rem;
   border: 1px solid rgba(212, 168, 67, 0.15);
   box-shadow: var(--shadow-resting);
-  transform: translateX(var(--fan-x, 0px)) translateY(var(--fan-arc, 0px))
-    rotate(var(--fan-rot, 0deg));
+  transform: translateX(var(--fan-x, 0px)) translateY(var(--fan-arc, 0px)) rotate(var(--fan-rot, 0deg));
   transition:
     transform 0.4s var(--spring-bounce),
     box-shadow 0.3s,
@@ -1798,8 +1795,7 @@ body {
 
 /* Tile hover: cards fan out like a hand of cards */
 .set-tile:hover .set-card-fan-img {
-  transform: translateX(calc(var(--fan-x, 0px) * 1.8))
-    translateY(calc(var(--fan-arc, 0px) * 2.2 - 14px)) rotate(calc(var(--fan-rot, 0deg) * 2));
+  transform: translateX(calc(var(--fan-x, 0px) * 1.8)) translateY(calc(var(--fan-arc, 0px) * 2.2 - 14px)) rotate(calc(var(--fan-rot, 0deg) * 2));
   box-shadow:
     var(--shadow-lifted),
     0 0 20px rgba(212, 168, 67, 0.12);
@@ -1807,8 +1803,7 @@ body {
 }
 
 .set-tile:hover .set-card-fan-card {
-  transform: translateX(calc(var(--fan-x, 0px) * 1.3))
-    translateY(calc(var(--fan-arc, 0px) * 1.5 - 8px)) rotate(calc(var(--fan-rot, 0deg) * 1.5));
+  transform: translateX(calc(var(--fan-x, 0px) * 1.3)) translateY(calc(var(--fan-arc, 0px) * 1.5 - 8px)) rotate(calc(var(--fan-rot, 0deg) * 1.5));
   box-shadow:
     var(--shadow-lifted),
     0 0 20px rgba(212, 168, 67, 0.12);
@@ -1899,12 +1894,15 @@ body {
       opacity: 0;
       transform: translateY(0) translateX(0);
     }
+
     15% {
       opacity: 0.7;
     }
+
     85% {
       opacity: 0.4;
     }
+
     100% {
       opacity: 0;
       transform: translateY(-60px) translateX(8px);
@@ -1916,12 +1914,14 @@ body {
   }
 
   @keyframes sidebar-legendary-breathe {
+
     0%,
     100% {
       box-shadow:
         0 0 8px rgba(251, 191, 36, 0.2),
         inset 0 0 4px rgba(251, 191, 36, 0.1);
     }
+
     50% {
       box-shadow:
         0 0 16px rgba(251, 191, 36, 0.4),

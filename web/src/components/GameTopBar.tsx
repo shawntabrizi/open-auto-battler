@@ -19,9 +19,33 @@ interface HUDProps {
   };
 }
 
+function useCommitConfirmation(commitWarning: string | null, disabled: boolean) {
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  useEffect(() => {
+    if (!commitWarning || disabled) {
+      setIsConfirming(false);
+    }
+  }, [commitWarning, disabled]);
+
+  const trigger = (action: () => void) => {
+    if (disabled) return;
+
+    if (commitWarning && !isConfirming) {
+      setIsConfirming(true);
+      return;
+    }
+
+    setIsConfirming(false);
+    action();
+  };
+
+  return { isConfirming, trigger };
+}
+
 /** Inline battle / custom-action buttons that sit inside the HUD bar */
 function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
-  const { view, endTurn, engine } = useGameStore();
+  const { view, endTurn, engine, getCommitWarning } = useGameStore();
   const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } = useVersusStore();
   const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
   const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -45,6 +69,16 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
     };
   }, [isReady, opponentReady, status, view?.phase]);
 
+  const isWaiting = status === 'in-game' && isReady && !opponentReady;
+  const opponentWaiting = status === 'in-game' && !isReady && opponentReady;
+  const displayTimer = isWaiting ? waitingTimer : opponentWaiting ? battleTimer : null;
+  const commitWarning = getCommitWarning();
+  const battleConfirmation = useCommitConfirmation(commitWarning, isWaiting);
+  const customActionConfirmation = useCommitConfirmation(
+    commitWarning,
+    Boolean(customAction?.disabled)
+  );
+
   if (!view || view.phase !== 'shop') return null;
   if (hideEndTurn && !customAction) return null;
 
@@ -57,10 +91,6 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
       endTurn();
     }
   };
-
-  const isWaiting = status === 'in-game' && isReady && !opponentReady;
-  const opponentWaiting = status === 'in-game' && !isReady && opponentReady;
-  const displayTimer = isWaiting ? waitingTimer : opponentWaiting ? battleTimer : null;
 
   return (
     <div className="flex items-center gap-2 lg:gap-3">
@@ -95,39 +125,49 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
             </div>
           )}
           <button
-            onClick={handleEndTurn}
+            onClick={() => battleConfirmation.trigger(handleEndTurn)}
             disabled={isWaiting}
             data-game-end-turn-action="true"
             aria-keyshortcuts={GAME_SHORTCUTS.commit}
-            title={`Focus ${isWaiting ? 'Waiting' : 'Battle'} button (${GAME_SHORTCUTS.commit})`}
-            className={`battle-btn rounded-lg text-xs lg:text-sm px-2 lg:px-3 border border-warm-700 font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
+            title={`Focus ${isWaiting ? 'Waiting' : battleConfirmation.isConfirming ? 'Are you sure' : 'Battle'} button (${GAME_SHORTCUTS.commit})`}
+            className={`rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
               isWaiting
                 ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
-                : opponentWaiting && displayTimer !== null && displayTimer <= 5
-                  ? 'animate-pulse bg-red-500 hover:bg-red-400'
-                  : ''
+                : battleConfirmation.isConfirming
+                  ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
+                  : opponentWaiting && displayTimer !== null && displayTimer <= 5
+                    ? 'animate-pulse bg-red-500 hover:bg-red-400 border-warm-700'
+                    : 'battle-btn border-warm-700'
             }`}
           >
-            {isWaiting ? 'Waiting...' : 'Battle!'}
+            {isWaiting
+              ? 'Waiting...'
+              : battleConfirmation.isConfirming
+                ? 'Are you sure?'
+                : 'Battle!'}
           </button>
         </>
       )}
       {customAction && (
         <button
-          onClick={customAction.onClick}
+          onClick={() => {
+            customActionConfirmation.trigger(customAction.onClick);
+          }}
           disabled={customAction.disabled}
           data-game-custom-action="true"
           aria-keyshortcuts={GAME_SHORTCUTS.commit}
-          title={`Focus ${customAction.label} button (${GAME_SHORTCUTS.commit})`}
+          title={`Focus ${customActionConfirmation.isConfirming ? 'Are you sure' : customAction.label} button (${GAME_SHORTCUTS.commit})`}
           className={`rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
             customAction.disabled
               ? 'bg-warm-600 border-warm-600 scale-95 opacity-80 cursor-not-allowed'
-              : customAction.variant === 'chain'
-                ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900 border-orange-500/60'
-                : 'battle-btn border-warm-700'
+              : customActionConfirmation.isConfirming
+                ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
+                : customAction.variant === 'chain'
+                  ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900 border-orange-500/60'
+                  : 'battle-btn border-warm-700'
           }`}
         >
-          {customAction.label}
+          {customActionConfirmation.isConfirming ? 'Are you sure?' : customAction.label}
         </button>
       )}
     </div>
@@ -241,7 +281,7 @@ export function BattleAction({
   customAction?: HUDProps['customAction'];
   compact?: boolean;
 }) {
-  const { view, endTurn, engine } = useGameStore();
+  const { view, endTurn, engine, getCommitWarning } = useGameStore();
   const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } = useVersusStore();
   const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
   const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -267,6 +307,16 @@ export function BattleAction({
     };
   }, [isReady, opponentReady, status, view?.phase]);
 
+  const isWaiting = status === 'in-game' && isReady && !opponentReady;
+  const opponentWaiting = status === 'in-game' && !isReady && opponentReady;
+  const displayTimer = isWaiting ? waitingTimer : opponentWaiting ? battleTimer : null;
+  const commitWarning = getCommitWarning();
+  const battleConfirmation = useCommitConfirmation(commitWarning, isWaiting);
+  const customActionConfirmation = useCommitConfirmation(
+    commitWarning,
+    Boolean(customAction?.disabled)
+  );
+
   if (!view || view.phase !== 'shop') return null;
   if (hideEndTurn && !customAction) return null;
 
@@ -280,22 +330,20 @@ export function BattleAction({
     }
   };
 
-  const isWaiting = status === 'in-game' && isReady && !opponentReady;
-  const opponentWaiting = status === 'in-game' && !isReady && opponentReady;
-  const displayTimer = isWaiting ? waitingTimer : opponentWaiting ? battleTimer : null;
-
   // Compact mode: thin vertical column button for mobile board tab
   if (compact) {
     return (
       <div className="flex flex-col items-center justify-center gap-1.5 w-full h-full pointer-events-auto px-1.5 py-1">
         {!hideEndTurn && (
           <button
-            onClick={handleEndTurn}
+            onClick={() => battleConfirmation.trigger(handleEndTurn)}
             disabled={isWaiting}
             className={`flex-1 w-full flex flex-col items-center justify-center rounded-lg border transition-colors ${
               isWaiting
                 ? 'bg-warm-800 border-warm-700 opacity-50 cursor-not-allowed'
-                : 'battle-btn border-amber-500/60 active:scale-95'
+                : battleConfirmation.isConfirming
+                  ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
+                  : 'battle-btn border-amber-500/60 active:scale-95'
             }`}
           >
             {isWaiting ? (
@@ -309,6 +357,13 @@ export function BattleAction({
                   </span>
                 )}
               </>
+            ) : battleConfirmation.isConfirming ? (
+              <>
+                <span className="font-bold text-xs text-white">Are you</span>
+                <span className="font-bold text-[0.55rem] uppercase tracking-wide mt-0.5">
+                  sure?
+                </span>
+              </>
             ) : (
               <>
                 <span className="text-lg font-bold leading-none">&#9876;</span>
@@ -321,17 +376,21 @@ export function BattleAction({
         )}
         {customAction && (
           <button
-            onClick={customAction.onClick}
+            onClick={() => {
+              customActionConfirmation.trigger(customAction.onClick);
+            }}
             disabled={customAction.disabled}
             className={`w-full rounded-lg text-[0.55rem] px-1 py-2 transition-all font-bold uppercase tracking-wide border ${
               customAction.disabled
                 ? 'bg-warm-800 border-warm-700 opacity-50 cursor-not-allowed text-warm-500'
-                : customAction.variant === 'chain'
-                  ? 'bg-gradient-to-b from-yellow-400 to-orange-500 border-orange-400/60 text-warm-900'
-                  : 'btn-primary border-amber-500/60'
+                : customActionConfirmation.isConfirming
+                  ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
+                  : customAction.variant === 'chain'
+                    ? 'bg-gradient-to-b from-yellow-400 to-orange-500 border-orange-400/60 text-warm-900'
+                    : 'btn-primary border-amber-500/60'
             }`}
           >
-            {customAction.label}
+            {customActionConfirmation.isConfirming ? 'Are you sure?' : customAction.label}
           </button>
         )}
       </div>
@@ -372,18 +431,22 @@ export function BattleAction({
               </div>
             )}
             <button
-              onClick={handleEndTurn}
+              onClick={() => battleConfirmation.trigger(handleEndTurn)}
               disabled={isWaiting}
               className={`battle-btn rounded-xl transition-all flex items-center justify-center ${
                 isWaiting
                   ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed px-4 lg:px-12 py-1.5 lg:py-4'
-                  : opponentWaiting && displayTimer !== null && displayTimer <= 5
-                    ? 'animate-pulse bg-red-500 hover:bg-red-400 px-2 lg:px-4 py-0.5 lg:py-1'
-                    : 'px-2 lg:px-4 py-0.5 lg:py-1'
+                  : battleConfirmation.isConfirming
+                    ? 'bg-red-700 hover:bg-red-600 text-white border border-red-400/70 px-5 lg:px-10 py-3 lg:py-4'
+                    : opponentWaiting && displayTimer !== null && displayTimer <= 5
+                      ? 'animate-pulse bg-red-500 hover:bg-red-400 px-2 lg:px-4 py-0.5 lg:py-1'
+                      : 'px-2 lg:px-4 py-0.5 lg:py-1'
               }`}
             >
               {isWaiting ? (
                 <span className="font-bold tracking-wide text-base lg:text-2xl">Waiting...</span>
+              ) : battleConfirmation.isConfirming ? (
+                <span className="font-bold tracking-wide text-base lg:text-2xl">Are you sure?</span>
               ) : (
                 <img src={battleSwordIcon} alt="Battle" className="h-16 lg:h-28" />
               )}
@@ -392,17 +455,21 @@ export function BattleAction({
         )}
         {customAction && (
           <button
-            onClick={customAction.onClick}
+            onClick={() => {
+              customActionConfirmation.trigger(customAction.onClick);
+            }}
             disabled={customAction.disabled}
             className={`btn rounded-xl text-base lg:text-xl px-6 lg:px-10 py-2.5 lg:py-4 transition-all font-bold ${
               customAction.disabled
                 ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
-                : customAction.variant === 'chain'
-                  ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900'
-                  : 'btn-primary'
+                : customActionConfirmation.isConfirming
+                  ? 'bg-red-700 hover:bg-red-600 text-white border border-red-400/70'
+                  : customAction.variant === 'chain'
+                    ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900'
+                    : 'btn-primary'
             }`}
           >
-            {customAction.label}
+            {customActionConfirmation.isConfirming ? 'Are you sure?' : customAction.label}
           </button>
         )}
       </div>

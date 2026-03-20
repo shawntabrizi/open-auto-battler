@@ -138,6 +138,7 @@ interface GameStore {
   setShowBag: (show: boolean) => void;
   fetchBag: () => void; // Fetch bag IDs on demand
   getCommitAction: () => any;
+  getCommitWarning: () => string | null;
 
   startVersusGame: (seed: number, lives?: number) => void;
   resolveVersusBattle: (opponentBoard: any, seed: number) => void;
@@ -156,6 +157,10 @@ let wasmInitialized = false;
 let initPromise: Promise<void> | null = null;
 let initEnginePromise: Promise<void> | null = null;
 const LOCAL_SESSION_STORAGE_KEY = 'localGameSessionV1';
+const EMPTY_BOARD_COMMIT_WARNING =
+  'Your board is empty, but you can still field a unit this round. Are you sure you want to commit?';
+const NO_ACTIONS_COMMIT_WARNING =
+  'You have not taken any actions this round. Are you sure you want to commit?';
 
 function buildCardNameMap(metas: Array<{ id: number; name: string }>): Record<number, string> {
   return Object.fromEntries(metas.map((meta) => [meta.id, meta.name]));
@@ -210,6 +215,41 @@ function savePersistedLocalSession(session: GameSessionSnapshot) {
 
 function clearPersistedLocalSession() {
   localStorage.removeItem(LOCAL_SESSION_STORAGE_KEY);
+}
+
+function canStillFieldAUnitThisRound(view: GameView | null): boolean {
+  if (!view || view.phase !== 'shop') return false;
+  if (view.board.some(Boolean)) return false;
+
+  const handCards = view.hand
+    .map((card, index) => ({ card, index }))
+    .filter((entry): entry is { card: CardView; index: number } => entry.card != null);
+
+  if (handCards.length === 0) return false;
+
+  return handCards.some(({ card, index }) => {
+    if (card.play_cost > view.mana_limit) return false;
+
+    const burnManaFromOtherCards = handCards.reduce(
+      (total, entry) => total + (entry.index === index ? 0 : entry.card.burn_value),
+      0
+    );
+    const reachableMana = Math.min(view.mana + burnManaFromOtherCards, view.mana_limit);
+
+    return reachableMana >= card.play_cost;
+  });
+}
+
+function getCommitWarning(view: GameView | null): string | null {
+  if (canStillFieldAUnitThisRound(view)) {
+    return EMPTY_BOARD_COMMIT_WARNING;
+  }
+
+  if (view?.phase === 'shop' && !view.can_undo) {
+    return NO_ACTIONS_COMMIT_WARNING;
+  }
+
+  return null;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -593,6 +633,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return null;
     return engine.get_commit_action();
   },
+  getCommitWarning: () => getCommitWarning(get().view),
   setAfterBattleCallback: (cb: (() => void) | null) => {
     set({ afterBattleCallback: cb });
   },
