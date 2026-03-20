@@ -181,7 +181,7 @@ export function UnitCard({
       {/* Cost badge (top left) — blue mana bolt */}
       {showCost && (
         <div
-          className={`card-cost-badge absolute -top-0.5 -left-0.5 lg:-top-1 lg:-left-1 z-10 ${text.badge} rounded-lg flex items-center justify-center font-stat font-bold ${
+          className={`card-cost-badge absolute -top-0.5 -left-0.5 lg:-top-1 lg:-left-1 z-10 ${text.badge} rounded flex items-center justify-center font-stat font-bold ${
             can_afford ? 'cost-badge' : 'cost-badge-dim'
           }`}
         >
@@ -192,7 +192,7 @@ export function UnitCard({
       {/* Burn value badge (top right) — gold flame */}
       {showBurn && (
         <div
-          className={`card-burn-badge absolute -top-0.5 -right-0.5 lg:-top-1 lg:-right-1 z-10 ${text.badge} burn-badge rounded-lg flex items-center justify-center font-stat font-bold`}
+          className={`card-burn-badge absolute -top-0.5 -right-0.5 lg:-top-1 lg:-right-1 z-10 ${text.badge} burn-badge rounded flex items-center justify-center font-stat font-bold`}
         >
           {card.burn_value}
         </div>

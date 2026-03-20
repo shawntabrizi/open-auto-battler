@@ -25,7 +25,7 @@ export const CARD_TEXT = {
   standard: {
     title: 'text-[0.65rem] lg:text-sm',
     stat: 'text-xs lg:text-base',
-    badge: 'w-4 h-4 lg:w-7 lg:h-7 text-[0.5rem] lg:text-sm',
+    badge: 'w-4 h-4 md:w-5 md:h-5 lg:w-7 lg:h-7 text-[0.5rem] md:text-xs lg:text-sm',
     statIcon: 'w-3 h-3 lg:w-4 lg:h-4',
     abilityBadge: 'w-3.5 h-3.5 lg:w-5 lg:h-5',
   },
