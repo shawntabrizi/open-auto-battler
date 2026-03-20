@@ -36,9 +36,6 @@ export const CreateSetPage: React.FC = () => {
     });
   };
 
-  const mapToCardView = (card: any): CardView => {
-    return blockchainCardToCardView(card);
-  };
 
   const handleCreateSet = async () => {
     if (selectedCards.length === 0) {
@@ -131,7 +128,7 @@ export const CreateSetPage: React.FC = () => {
                       .map((card) => {
                         const isSelected = selectedCards.some((c) => c.card_id === card.id);
                         const isDetailing = detailCard?.id === card.id;
-                        const cardView = mapToCardView(card);
+                        const cardView = blockchainCardToCardView(card);
                         return (
                           <div
                             key={card.id}

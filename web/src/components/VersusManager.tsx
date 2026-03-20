@@ -37,8 +37,10 @@ export function VersusManager() {
   useEffect(() => {
     if (!conn) return;
 
-    const handleData = (data: any) => {
-      if (!data || typeof data !== 'object') return;
+    const handleData = (raw: unknown) => {
+      if (!raw || typeof raw !== 'object') return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = raw as Record<string, any>;
 
       switch (data.type) {
         case 'HANDSHAKE':

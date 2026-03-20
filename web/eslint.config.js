@@ -59,8 +59,6 @@ export default tseslint.config(
   {
     files: [
       'src/components/CreateCardPage.tsx',
-      'src/components/CreateSetPage.tsx',
-      'src/components/VersusManager.tsx',
       'src/store/arenaStore.ts',
       'src/store/gameStore.ts',
       'src/store/versusStore.ts',
