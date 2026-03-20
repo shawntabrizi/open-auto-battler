@@ -327,6 +327,7 @@ interface ArenaStore {
   createLocalAccount: (name: string) => Promise<void>;
   removeLocalAccount: (address: string) => void;
   fundSelectedAccount: () => Promise<void>;
+  getLocalAccountMnemonic: (address: string) => string | null;
 
   // Internal helpers
   cardDataCoercer?: ((value: unknown) => any) | null;
@@ -1061,6 +1062,15 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
     const alice = getDevAccounts()[0];
     const label = selectedAccount.name ?? selectedAccount.address.slice(0, 6);
     await fundAndMintStyleNfts(api, alice, selectedAccount.address, label);
+  },
+
+  getLocalAccountMnemonic: (address: string) => {
+    const stored = loadStoredLocalAccounts();
+    for (const s of stored) {
+      const derived = deriveAccountFromMnemonic(s.mnemonic, s.name);
+      if (derived.address === address) return s.mnemonic;
+    }
+    return null;
   },
 
   login: () => {

@@ -178,8 +178,11 @@ export function LoginPage() {
                   }`}
                 />
                 <span className="text-warm-400">
-                  {isConnecting ? 'Connecting...' : isConnected ? 'Connected' : 'Disconnected'}
+                  {isConnecting ? 'Connecting...' : isConnected ? `Connected to` : 'Disconnected'}
                 </span>
+                {(isConnected || isConnecting) && (
+                  <span className="text-warm-500 font-mono text-[10px] truncate max-w-[180px]">{endpoint}</span>
+                )}
                 {isConnected && blockNumber !== null && (
                   <span className="text-warm-600 font-mono ml-auto">
                     #{blockNumber.toLocaleString()}
@@ -329,11 +332,13 @@ export function LoginPage() {
               )}
 
               {/* Divider */}
-              <div className="flex items-center gap-3 my-1">
-                <div className="flex-1 h-px bg-warm-800" />
-                <span className="text-warm-600 text-[10px] uppercase tracking-wider">or</span>
-                <div className="flex-1 h-px bg-warm-800" />
-              </div>
+              {accounts.length > 0 && (
+                <div className="flex items-center gap-3 my-1">
+                  <div className="flex-1 h-px bg-warm-800" />
+                  <span className="text-warm-600 text-[10px] uppercase tracking-wider">or</span>
+                  <div className="flex-1 h-px bg-warm-800" />
+                </div>
+              )}
 
               {/* Create account */}
               <button

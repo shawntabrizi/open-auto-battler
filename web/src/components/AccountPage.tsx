@@ -29,6 +29,10 @@ export function AccountPage() {
   const [nameInput, setNameInput] = useState('');
   const [isFunding, setIsFunding] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showForgetConfirm, setShowForgetConfirm] = useState(false);
+  const [showMnemonic, setShowMnemonic] = useState(false);
+  const removeLocalAccount = useArenaStore((s) => s.removeLocalAccount);
+  const getLocalAccountMnemonic = useArenaStore((s) => s.getLocalAccountMnemonic);
 
   const fetchInfo = useCallback(async () => {
     if (!api || !selectedAccount) {
@@ -96,7 +100,7 @@ export function AccountPage() {
     <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
       <TopBar backTo="/" backLabel="Menu" title="Account" />
       <div className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[10vh]">
+        <div className="w-full max-w-md lg:max-w-lg mx-auto p-3 lg:p-4 lg:mt-[10vh]">
           {!isConnected || !selectedAccount ? (
             <div className="text-center py-12 text-warm-500 text-sm">No account connected.</div>
           ) : (
@@ -167,6 +171,34 @@ export function AccountPage() {
                 <div className="text-xs text-warm-500 mt-3 mb-1">Source</div>
                 <div className="text-sm text-warm-300 capitalize">{selectedAccount.source}</div>
               </section>
+
+              {/* Export mnemonic — local accounts only */}
+              {selectedAccount.source === 'local' && (
+                <section className="p-4 rounded-xl border border-warm-700 bg-warm-900/30">
+                  <div className="text-xs text-warm-500 mb-2">Secret Recovery Phrase</div>
+                  {showMnemonic ? (
+                    <>
+                      <div className="bg-warm-950 border border-warm-700 rounded-lg p-3 font-mono text-xs lg:text-sm text-amber-400 break-all select-all">
+                        {getLocalAccountMnemonic(selectedAccount.address) || 'Not found'}
+                      </div>
+                      <p className="text-[10px] text-red-400/80 mt-2">Do not share this with anyone. Anyone with this phrase can access your account.</p>
+                      <button
+                        onClick={() => setShowMnemonic(false)}
+                        className="text-xs text-warm-500 hover:text-warm-300 mt-2 transition-colors"
+                      >
+                        Hide
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setShowMnemonic(true)}
+                      className="px-4 py-2 rounded-lg border border-warm-600 bg-warm-800 text-warm-200 hover:text-white hover:border-warm-500 transition-colors text-xs lg:text-sm font-semibold"
+                    >
+                      Reveal Recovery Phrase
+                    </button>
+                  )}
+                </section>
+              )}
 
               {/* On-chain info */}
               <section className="p-4 rounded-xl border border-warm-700 bg-warm-900/30">
@@ -245,6 +277,42 @@ export function AccountPage() {
               >
                 Log Out
               </button>
+
+              {/* Forget Account — local accounts only */}
+              {selectedAccount.source === 'local' && (
+                showForgetConfirm ? (
+                  <div className="w-full p-4 rounded-xl border border-red-700/60 bg-red-950/30">
+                    <p className="text-sm text-warm-300 mb-3 text-center">
+                      Forget this account? The private key will be permanently deleted.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowForgetConfirm(false)}
+                        className="flex-1 p-2.5 rounded-lg border border-warm-700 text-warm-300 hover:border-warm-500 text-sm font-semibold transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          removeLocalAccount(selectedAccount.address);
+                          logout();
+                          navigate('/');
+                        }}
+                        className="flex-1 p-2.5 rounded-lg bg-red-900/50 hover:bg-red-900/70 border border-red-700 text-red-300 text-sm font-semibold transition-colors"
+                      >
+                        Forget
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowForgetConfirm(true)}
+                    className="w-full p-3 rounded-xl border border-red-900/40 text-red-500/70 hover:text-red-400 hover:border-red-800/60 transition-colors text-sm"
+                  >
+                    Forget Account
+                  </button>
+                )
+              )}
             </div>
           )}
         </div>
