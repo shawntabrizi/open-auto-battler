@@ -158,7 +158,7 @@ export function Arena() {
         </div>
 
         {/* Board row */}
-        <div className="board-row flex gap-1 lg:gap-4 w-full">
+        <div className="board-row flex gap-1 lg:gap-4 w-full lg:max-w-3xl">
           {Array.from({ length: 5 }).map((_, displayIndex) => {
             const arrayIndex = 4 - displayIndex;
             const unit = view.board[arrayIndex];
@@ -236,7 +236,7 @@ export function Arena() {
         </div>
 
         {/* Position indicator — slot-aligned */}
-        <div className="hidden lg:flex gap-3 lg:gap-4 w-full">
+        <div className="hidden lg:flex gap-3 lg:gap-4 w-full lg:max-w-3xl">
           {Array.from({ length: 5 }).map((_, displayIndex) => {
             const arrayIndex = 4 - displayIndex;
             const isFront = arrayIndex === 0;

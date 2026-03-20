@@ -2,7 +2,6 @@ import { useGameStore } from '../store/gameStore';
 import { useCustomizationStore } from '../store/customizationStore';
 import React, { useRef } from 'react';
 import { DraggableCard, DroppableBurnZone } from './DndComponents';
-import { CARD_SIZES } from '../constants/cardSizes';
 import burnIcon from '../../burn.svg';
 
 export function Shop() {
@@ -107,30 +106,44 @@ export function Shop() {
             <span className="text-sm text-warm-400">Hand</span>
             <span className="text-xs text-warm-500">({view.bag_count} in bag)</span>
           </div>
-          <div className="hand-row flex gap-2 lg:gap-4 lg:mt-4">
+          <div className="hand-row flex items-center justify-center gap-2 lg:gap-4 h-full w-full lg:max-w-3xl px-2 lg:px-4">
             {view.hand.map((card, i) =>
               card ? (
                 <div
                   key={`hand-${card.id}-${i}`}
-                  className={`${CARD_SIZES.standard.tw} ${isNewRound ? 'animate-card-entrance' : ''}`}
-                  style={isNewRound ? { animationDelay: `${i * 80}ms` } : undefined}
+                  className={`flex-1 min-w-0 h-full flex items-center justify-center ${isNewRound ? 'animate-card-entrance' : ''}`}
+                  style={{
+                    containerType: 'size',
+                    ...(isNewRound ? { animationDelay: `${i * 80}ms` } : undefined),
+                  }}
                 >
-                  <DraggableCard
-                    id={`hand-${i}`}
-                    card={card}
-                    showCost={true}
-                    showBurn={true}
-                    can_afford={view.can_afford[i]}
-                    isSelected={selection?.type === 'hand' && selection.index === i}
-                    onClick={() => handleHandSlotClick(i)}
-                  />
+                  <div
+                    className="aspect-[3/4]"
+                    style={{ width: 'min(100cqw, calc(100cqh * 3 / 4))' }}
+                  >
+                    <DraggableCard
+                      id={`hand-${i}`}
+                      card={card}
+                      showCost={true}
+                      showBurn={true}
+                      can_afford={view.can_afford[i]}
+                      isSelected={selection?.type === 'hand' && selection.index === i}
+                      onClick={() => handleHandSlotClick(i)}
+                    />
+                  </div>
                 </div>
               ) : (
                 <div
                   key={`hand-empty-${i}`}
-                  className={`card-slot-placeholder ${CARD_SIZES.standard.tw} rounded-lg border-2 border-dashed border-warm-700/50 bg-warm-800/20 flex items-center justify-center`}
+                  className="flex-1 min-w-0 h-full flex items-center justify-center"
+                  style={{ containerType: 'size' }}
                 >
-                  <span className="text-warm-700/40 text-lg">&#9724;</span>
+                  <div
+                    className="aspect-[3/4] rounded-lg border-2 border-dashed border-warm-700/50 bg-warm-800/20 flex items-center justify-center"
+                    style={{ width: 'min(100cqw, calc(100cqh * 3 / 4))' }}
+                  >
+                    <span className="text-warm-700/40 text-lg">&#9724;</span>
+                  </div>
                 </div>
               )
             )}
