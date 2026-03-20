@@ -25,7 +25,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   },
   selectedSetId: (() => {
     const stored = localStorage.getItem(SET_STORAGE_KEY);
-    return stored !== null ? Number(stored) : null;
+    return stored !== null ? Number(stored) : 0;
   })(),
   selectSet: (id: number) => {
     localStorage.setItem(SET_STORAGE_KEY, String(id));
