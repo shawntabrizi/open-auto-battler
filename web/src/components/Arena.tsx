@@ -155,19 +155,19 @@ export function Arena() {
       {boardBg && <div className="absolute inset-0 bg-board-bg/50" />}
 
       {/* Arena surface — visual frame that gives the board a sense of place */}
-      <div className="arena-surface relative z-10 flex flex-col items-center gap-1.5 lg:gap-2 px-2 lg:px-12 py-1 lg:py-5 rounded-xl w-full h-full min-h-0">
+      <div className="arena-surface relative z-10 px-2 lg:px-12 py-1 lg:py-5 rounded-xl w-full h-full min-h-0">
         {/* Board header */}
-        <div className="board-helper board-helper--header hidden lg:flex items-center gap-3 lg:gap-4 rounded-full border border-warm-700/60 bg-black/45 px-3 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm">
+        <div className="board-helper board-helper--header hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 z-20 items-center gap-3 lg:gap-4 rounded-full border border-warm-700/60 bg-black/45 px-3 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm">
           <div className="h-px w-8 lg:w-16 bg-gradient-to-r from-transparent to-warm-600/40" />
-          <span className="board-label text-xs lg:text-sm text-warm-100 font-heading uppercase tracking-[0.2em]">
-            Staging Area
+          <span className="board-label font-title text-sm lg:text-xl font-bold uppercase tracking-[0.28em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-200 to-orange-300 [text-shadow:0_1px_8px_rgba(0,0,0,0.45)]">
+            Board
           </span>
           <div className="h-px w-8 lg:w-16 bg-gradient-to-l from-transparent to-warm-600/40" />
         </div>
 
         {/* Contextual hint — always visible, guides new players through card placement */}
         <div
-          className={`board-helper board-helper--status rounded-full border border-warm-800/70 bg-black/45 px-3 py-1 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm text-[0.6rem] lg:text-xs font-body text-center ${
+          className={`board-helper board-helper--status absolute top-14 lg:top-16 left-1/2 -translate-x-1/2 z-20 rounded-full border border-warm-800/70 bg-black/45 px-3 py-1 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm text-[0.6rem] lg:text-xs font-body text-center ${
             unitCount === 0 && !hasHandSelection
               ? 'onboarding-hint text-amber-300'
               : 'text-warm-200/85'
@@ -177,90 +177,92 @@ export function Arena() {
         </div>
 
         {/* Board row */}
-        <div className="board-row flex gap-1 lg:gap-4 w-full lg:max-w-3xl h-[clamp(10.5rem,28vh,13rem)] lg:h-[clamp(12.5rem,32vh,16rem)]">
-          {Array.from({ length: 5 }).map((_, displayIndex) => {
-            const arrayIndex = 4 - displayIndex;
-            const unit = view.board[arrayIndex];
-            const slotId = `board-slot-${arrayIndex}`;
+        <div className="absolute inset-0 z-10 flex items-center justify-center px-2 lg:px-12">
+          <div className="board-row flex gap-1 lg:gap-4 w-full lg:max-w-3xl h-[clamp(10.5rem,28vh,13rem)] lg:h-[clamp(12.5rem,32vh,16rem)]">
+            {Array.from({ length: 5 }).map((_, displayIndex) => {
+              const arrayIndex = 4 - displayIndex;
+              const unit = view.board[arrayIndex];
+              const slotId = `board-slot-${arrayIndex}`;
 
-            const slotAnim = slotAnimations.get(arrayIndex);
-            let animClass = '';
-            let animStyle: React.CSSProperties | undefined;
+              const slotAnim = slotAnimations.get(arrayIndex);
+              let animClass = '';
+              let animStyle: React.CSSProperties | undefined;
 
-            if (slotAnim === 'placed') {
-              animClass = 'animate-card-land';
-            } else if (typeof slotAnim === 'object' && slotAnim.type === 'swapped') {
-              animClass = 'animate-card-settle';
-              const settleSlots = arrayIndex - slotAnim.fromIndex;
-              animStyle = { '--settle-slots': settleSlots } as React.CSSProperties;
-            }
+              if (slotAnim === 'placed') {
+                animClass = 'animate-card-land';
+              } else if (typeof slotAnim === 'object' && slotAnim.type === 'swapped') {
+                animClass = 'animate-card-settle';
+                const settleSlots = arrayIndex - slotAnim.fromIndex;
+                animStyle = { '--settle-slots': settleSlots } as React.CSSProperties;
+              }
 
-            return (
-              <div
-                key={slotId}
-                className="flex-1 min-w-0 h-full flex items-center justify-center"
-                style={{ containerType: 'size' }}
-              >
+              return (
                 <div
-                  className="aspect-[3/4]"
-                  style={{ width: 'min(100cqw, calc(100cqh * 3 / 4))' }}
+                  key={slotId}
+                  className="flex-1 min-w-0 h-full flex items-center justify-center"
+                  style={{ containerType: 'size' }}
                 >
-                  <DroppableBoardSlot id={slotId}>
-                    {({ isOver }) => (
-                      <div className="relative w-full h-full">
-                        {/* Exit phantom — card that was just removed, animating out */}
-                        {exitingCards.has(arrayIndex) && (
-                          <div className="animate-card-exit absolute inset-0 z-10 pointer-events-none">
-                            <UnitCard
-                              card={exitingCards.get(arrayIndex)!}
-                              showCost={false}
-                              showBurn={false}
-                              enableTilt={false}
-                              enableWobble={false}
-                            />
-                          </div>
-                        )}
-                        {/* Current slot state */}
-                        {unit ? (
-                          <div className="relative w-full h-full">
-                            <div className="absolute inset-0">
-                              <EmptySlot isTarget={false} />
-                            </div>
-                            <div
-                              className={`relative z-10 w-full h-full ${animClass} ${isOver && !animClass ? 'swap-target' : ''}`}
-                              style={animStyle}
-                            >
-                              <DraggableCard
-                                id={`board-${arrayIndex}`}
-                                card={unit}
+                  <div
+                    className="aspect-[3/4]"
+                    style={{ width: 'min(100cqw, calc(100cqh * 3 / 4))' }}
+                  >
+                    <DroppableBoardSlot id={slotId}>
+                      {({ isOver }) => (
+                        <div className="relative w-full h-full">
+                          {/* Exit phantom — card that was just removed, animating out */}
+                          {exitingCards.has(arrayIndex) && (
+                            <div className="animate-card-exit absolute inset-0 z-10 pointer-events-none">
+                              <UnitCard
+                                card={exitingCards.get(arrayIndex)!}
                                 showCost={false}
-                                showBurn={true}
-                                isSelected={
-                                  selection?.type === 'board' && selection.index === arrayIndex
-                                }
-                                onClick={() => handleBoardSlotClick(arrayIndex)}
+                                showBurn={false}
+                                enableTilt={false}
                                 enableWobble={false}
                               />
                             </div>
-                          </div>
-                        ) : (
-                          <EmptySlot
-                            onClick={() => handleBoardSlotClick(arrayIndex)}
-                            isTarget={hasHandSelection}
-                            isHovered={isOver}
-                          />
-                        )}
-                      </div>
-                    )}
-                  </DroppableBoardSlot>
+                          )}
+                          {/* Current slot state */}
+                          {unit ? (
+                            <div className="relative w-full h-full">
+                              <div className="absolute inset-0">
+                                <EmptySlot isTarget={false} />
+                              </div>
+                              <div
+                                className={`relative z-10 w-full h-full ${animClass} ${isOver && !animClass ? 'swap-target' : ''}`}
+                                style={animStyle}
+                              >
+                                <DraggableCard
+                                  id={`board-${arrayIndex}`}
+                                  card={unit}
+                                  showCost={false}
+                                  showBurn={true}
+                                  isSelected={
+                                    selection?.type === 'board' && selection.index === arrayIndex
+                                  }
+                                  onClick={() => handleBoardSlotClick(arrayIndex)}
+                                  enableWobble={false}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <EmptySlot
+                              onClick={() => handleBoardSlotClick(arrayIndex)}
+                              isTarget={hasHandSelection}
+                              isHovered={isOver}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </DroppableBoardSlot>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Position indicator — slot-aligned */}
-        <div className="board-helper board-helper--positions hidden lg:flex gap-3 lg:gap-4 w-full lg:max-w-3xl">
+        <div className="board-helper board-helper--positions hidden lg:flex absolute bottom-14 left-1/2 -translate-x-1/2 z-20 gap-3 lg:gap-4 w-full lg:max-w-3xl">
           {Array.from({ length: 5 }).map((_, displayIndex) => {
             const arrayIndex = 4 - displayIndex;
             const isFront = arrayIndex === 0;
@@ -279,7 +281,7 @@ export function Arena() {
           })}
         </div>
 
-        <div className="board-helper board-helper--shortcuts hidden lg:flex w-full lg:max-w-3xl justify-center">
+        <div className="board-helper board-helper--shortcuts hidden lg:flex absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-full lg:max-w-3xl justify-center">
           <div className="rounded-full border border-warm-800/70 bg-black/45 px-4 py-1.5 text-center text-[10px] lg:text-xs text-warm-200/85 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm">
             Select: {GAME_SHORTCUTS.board} • Move: {GAME_SHORTCUTS.boardMove}
           </div>

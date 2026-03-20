@@ -110,8 +110,9 @@ export function Shop() {
         <div className="shop-hand flex-1 flex flex-col items-center justify-center overflow-hidden relative">
           {/* Hand label - desktop only */}
           <div className="board-helper hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 items-center gap-3 rounded-full border border-warm-700/60 bg-black/45 px-4 py-1.5 text-center shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm">
-            <span className="text-sm text-warm-100">Hand</span>
-            <span className="text-xs text-warm-200/85">({view.bag_count} in bag)</span>
+            <span className="font-title text-sm lg:text-xl font-bold uppercase tracking-[0.28em] text-transparent bg-clip-text bg-gradient-to-r from-yellow-100 via-amber-200 to-orange-300 [text-shadow:0_1px_8px_rgba(0,0,0,0.45)]">
+              Hand
+            </span>
           </div>
           <div className="hand-row flex items-center justify-center gap-2 lg:gap-4 h-full w-full lg:max-w-3xl px-2 lg:px-4">
             {view.hand.map((card, i) =>
