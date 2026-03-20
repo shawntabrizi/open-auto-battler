@@ -174,7 +174,7 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
   const renderCardTab = () => {
     if (!card) {
       return (
-        <div className="flex flex-col items-center justify-center py-6 lg:py-12 text-center">
+        <div className="flex min-h-full flex-col items-center justify-center py-6 lg:py-12 text-center">
           <div className="text-2xl lg:text-4xl mb-2 lg:mb-4">👆</div>
           <h3 className="text-sm lg:text-lg font-bold text-warm-300 mb-1 lg:mb-2">Select a Card</h3>
           <p className="text-[10px] lg:text-sm text-warm-400">Tap any card to view details.</p>
@@ -185,7 +185,7 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
     const allAbilities = [...card.shop_abilities, ...card.battle_abilities];
 
     return (
-      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+      <>
         {/* Card Art — full width */}
         <div className="mb-3 lg:mb-6">
           <CardArtImage key={card.id} card={card} />
@@ -253,7 +253,7 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
             </pre>
           </div>
         )}
-      </div>
+      </>
     );
   };
 
@@ -277,7 +277,15 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-3 lg:p-5 flex flex-col overflow-hidden">{renderCardTab()}</div>
+        <div
+          data-card-detail-scroll-region="true"
+          role="region"
+          aria-label="Card details"
+          tabIndex={0}
+          className="flex-1 overflow-y-auto p-3 pr-5 lg:p-5 lg:pr-7 custom-scrollbar outline-none focus-visible:ring-2 focus-visible:ring-yellow-300 focus-visible:ring-inset"
+        >
+          {renderCardTab()}
+        </div>
 
         {/* Footer */}
         <div className="p-1 lg:p-4 border-t border-warm-800 bg-black/20 text-[6px] lg:text-[10px] text-warm-600 text-center uppercase tracking-tighter">

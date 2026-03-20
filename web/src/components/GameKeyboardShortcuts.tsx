@@ -10,6 +10,7 @@ const BOARD_DISPLAY_TO_INDEX = [4, 3, 2, 1, 0] as const;
 
 export const GAME_SHORTCUTS = {
   bag: 'B',
+  details: 'D',
   tutorial: 'T',
   help: '?',
   menu: 'M',
@@ -28,6 +29,7 @@ export const GAME_SHORTCUT_SECTIONS = [
       { keys: 'Tab / Shift+Tab', description: 'Move focus between game controls.' },
       { keys: 'Enter / Space', description: 'Activate the currently focused control.' },
       { keys: 'Escape', description: 'Close the current layer or clear the current selection.' },
+      { keys: GAME_SHORTCUTS.details, description: 'Focus the card details panel.' },
     ],
   },
   {
@@ -71,6 +73,7 @@ const PRIMARY_ACTION_SELECTOR = [
   '[data-game-custom-action="true"]:not([disabled])',
   '[data-game-end-turn-action="true"]:not([disabled])',
 ].join(', ');
+const CARD_DETAIL_SCROLL_SELECTOR = '[data-card-detail-scroll-region="true"]';
 
 function isEditableTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
@@ -193,6 +196,14 @@ export function GameKeyboardShortcuts() {
       return true;
     };
 
+    const focusCardDetails = () => {
+      const cardDetails = document.querySelector<HTMLElement>(CARD_DETAIL_SCROLL_SELECTOR);
+      if (!cardDetails) return false;
+
+      cardDetails.focus();
+      return true;
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.repeat || isEditableTarget(event.target)) return;
       if (view.phase !== 'shop') return;
@@ -253,9 +264,23 @@ export function GameKeyboardShortcuts() {
       }
 
       if (showBag) {
+        if (key === 'd' && !event.shiftKey && !hasPrimaryModifier && !hasUnsupportedModifier) {
+          if (focusCardDetails()) {
+            event.preventDefault();
+          }
+          return;
+        }
+
         if (key === 'b' && !event.shiftKey && !hasPrimaryModifier && !hasUnsupportedModifier) {
           event.preventDefault();
           setShowBag(false);
+        }
+        return;
+      }
+
+      if (key === 'd' && !event.shiftKey && !hasPrimaryModifier && !hasUnsupportedModifier) {
+        if (focusCardDetails()) {
+          event.preventDefault();
         }
         return;
       }

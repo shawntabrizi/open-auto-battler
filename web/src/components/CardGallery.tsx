@@ -9,6 +9,8 @@ interface CardGalleryProps {
   /** Per-item selection check — overrides selectedId when provided (useful for duplicates). */
   isSelected?: (card: CardView | BoardUnitView, index: number) => boolean;
   onSelect?: (card: CardView | BoardUnitView | null, index: number) => void;
+  /** Make each rendered card a native button so keyboard users can tab and select cards. */
+  focusableCards?: boolean;
   /** Controlled search/sort from parent (e.g. sandbox store). Omit to use internal state. */
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
@@ -27,6 +29,7 @@ export function CardGallery({
   selectedId,
   isSelected: isSelectedFn,
   onSelect,
+  focusableCards = false,
   searchQuery: controlledSearch,
   onSearchChange,
   sortBy: controlledSort,
@@ -88,19 +91,36 @@ export function CardGallery({
             const selected = isSelectedFn
               ? isSelectedFn(card, originalIndex)
               : selectedId === card.id;
+            const handleSelect = () => onSelect?.(selected ? null : card, originalIndex);
+            const cardElement = (
+              <UnitCard
+                card={card}
+                showCost={true}
+                showBurn={true}
+                draggable={false}
+                isSelected={selected}
+                onClick={focusableCards ? undefined : handleSelect}
+              />
+            );
+
             return (
               <div
                 key={`${card.id}-${originalIndex}`}
                 className="w-[4.5rem] h-[6rem] md:w-[6rem] md:h-[8rem] lg:w-[7.5rem] lg:h-[10rem]"
               >
-                <UnitCard
-                  card={card}
-                  showCost={true}
-                  showBurn={true}
-                  draggable={false}
-                  isSelected={selected}
-                  onClick={() => onSelect?.(selected ? null : card, originalIndex)}
-                />
+                {focusableCards ? (
+                  <button
+                    type="button"
+                    aria-label={`${card.name}, cost ${card.play_cost}, attack ${card.attack}, health ${card.health}`}
+                    aria-pressed={selected}
+                    onClick={handleSelect}
+                    className="block w-full h-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                  >
+                    {cardElement}
+                  </button>
+                ) : (
+                  cardElement
+                )}
               </div>
             );
           })}

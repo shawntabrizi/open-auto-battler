@@ -64,6 +64,7 @@ export function BagOverlay() {
           <CardGallery
             cards={cards}
             isSelected={(_card, index) => index === selectedGalleryIndex}
+            focusableCards={true}
             scrollRegionRef={galleryScrollRef}
             scrollRegionLabel="Draw pool cards"
             scrollRegionTabIndex={0}
