@@ -809,11 +809,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
       {/* Battle field — teams face off */}
       <div className="flex items-center justify-center gap-1.5 lg:gap-12 w-full min-w-0">
         {/* Player side (left) */}
-        <div className="flex flex-col items-center gap-1 lg:gap-3">
+        <div className="flex-1 min-w-0 flex flex-col items-center gap-1 lg:gap-3">
           <span className="text-[0.6rem] lg:text-sm text-accent-emerald font-heading uppercase tracking-[0.15em]">
             Your Team
           </span>
-          <div className="flex gap-0.5 lg:gap-3 px-1 lg:px-6 py-1 lg:py-4 rounded-xl team-zone-player min-w-0">
+          <div className="flex gap-0.5 lg:gap-3 px-1 lg:px-6 py-1 lg:py-4 rounded-xl team-zone-player min-w-0 w-full">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={`player-slot-${4 - i}`} className="flex-1 min-w-0 aspect-[3/4]">
                 {renderUnit((playerBoard || [])[4 - i], 'player', 4 - i)}
@@ -832,11 +832,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
         </div>
 
         {/* Enemy side (right) */}
-        <div className="flex flex-col items-center gap-1 lg:gap-3">
+        <div className="flex-1 min-w-0 flex flex-col items-center gap-1 lg:gap-3">
           <span className="text-[0.6rem] lg:text-sm text-burn-red font-heading uppercase tracking-[0.15em]">
             Enemy
           </span>
-          <div className="flex gap-0.5 lg:gap-3 px-1 lg:px-6 py-1 lg:py-4 rounded-xl team-zone-enemy min-w-0">
+          <div className="flex gap-0.5 lg:gap-3 px-1 lg:px-6 py-1 lg:py-4 rounded-xl team-zone-enemy min-w-0 w-full">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={`enemy-slot-${i}`} className="flex-1 min-w-0 aspect-[3/4]">
                 {renderUnit((enemyBoard || [])[i], 'enemy', i)}
