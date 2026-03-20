@@ -21,17 +21,17 @@ flowchart TD
   Play --> Practice["/practice"]
   Play --> Versus["/versus"]
 
-  Arena --> ArenaSelect["/arena/select"]
+  Main --> Sets["/sets"]
+
   Arena --> ArenaGame["/arena/game"]
-  Practice --> PracticeSelect["/practice/select"]
   Practice --> PracticeGame["/practice/game"]
   Tournament --> TournamentLobby["/tournament/lobby"]
   Tournament --> TournamentGame["/tournament/game"]
   Versus --> VersusLobby["/versus/lobby"]
   Versus --> VersusGame["/versus/game"]
 
-  ArenaSelect --> ArenaGame
-  PracticeSelect --> PracticeGame
+  Sets -.->|select set| Arena
+  Sets -.->|select set| Practice
   TournamentLobby --> TournamentGame
   VersusLobby --> VersusGame
 
@@ -309,27 +309,31 @@ Each category has its own route under `/customize/:category`:
 
 ### Online Arena
 
-**Routes:** `/arena` → `/arena/select` → `/arena/game`
+**Routes:** `/arena` → `/arena/game`
 
-**TopBar:** Back to `/play` (Play), title "Online Arena" (shown on connection-error and loading states)
+**TopBar:** Back to `/play` (Play), title "Online Arena"
 
 **Flow:**
 1. If not connected → connection error screen with retry
-2. If no active game → **Set Selection Screen** (shared with Offline). "Play" calls `startGame` on-chain.
-3. If active game → **GameShell** with GameTopBar; "Commit" button (submits turn on-chain)
-4. Victory/defeat → Game Over Screen
+2. If active game → redirect to `/arena/game`
+3. Pre-game confirmation: shows selected set, "Start Game" button, "Change Set" link to `/sets`
+4. If no set selected → prompt to choose one at `/sets`
+5. Active game → **GameShell** with "Commit" button (submits turn on-chain)
+6. Game completed → Game Over Screen
 
 ### Offline
 
-**Routes:** `/practice` → `/practice/select` → `/practice/game`
+**Routes:** `/practice` → `/practice/game`
 
-**TopBar:** Back to `/play` (Play), title "Local Play" (shown on connection-error and loading states)
+**TopBar:** Back to `/play` (Play), title "Practice"
 
 **Flow:**
 1. If not connected → blockchain required screen
-2. If engine ready, no game → **Set Selection Screen**
-3. If game active → **GameShell** with GameTopBar; "Battle" button (local opponent matching)
-4. Victory/defeat → Game Over Screen
+2. If active game → redirect to `/practice/game`
+3. Pre-game confirmation: shows selected set, "Start Practice" button, "Change Set" link to `/sets`
+4. If no set selected → prompt to choose one at `/sets`
+5. Active game → **GameShell** with "Battle" button (local opponent matching)
+6. Game completed → Game Over Screen
 
 ### Tournament
 
@@ -363,15 +367,17 @@ Each category has its own route under `/customize/:category`:
 - Search bar
 - Card gallery (all cards, click to place on board)
 
-### Set Selection Screen
+### Set Browser
 
-**Shared component** used by `/practice/select` and `/arena/select`
+**Route:** `/sets`
 
-**TopBar:** Back to `/play` (Play) by default (configurable via `backTo` / `backLabel` props), title "Choose Your Set"
+**TopBar:** Back to `/play` (Play), title "Card Sets"
 
 **Contents:**
-- Featured set with card fan preview, Preview and Play buttons
-- "See All Sets" link → grid view of all sets with Preview/Play per set
+- Grid of all available sets with card preview thumbnails
+- Each set has Preview (links to `/sets/:setId`) and Select buttons
+- Currently selected set is highlighted
+- Selected set is persisted in localStorage and used by all game modes
 
 ### Game Over Screen
 
@@ -491,15 +497,15 @@ These are full-screen or partial overlays rendered on top of the current page. C
 | `/history/stats` | Stats | `/history` |
 | `/history/battles` | Battle History (placeholder) | `/history` |
 | `/history/ghosts` | Ghost Browser | `/history` |
-| `/practice` | Practice (redirect) | `/play` |
-| `/practice/select` | Practice Set Selection | `/play` |
+| `/sets` | Set Browser + Selection | `/play` |
+| `/sets/:setId` | Set Preview | `/sets` |
+| `/practice` | Practice Pre-Game | `/play` |
 | `/practice/game` | Practice Game | `/practice` |
 | `/sandbox` | Sandbox | `/cards` |
 | `/versus` | Versus (redirect) | `/play` |
 | `/versus/lobby` | P2P Lobby | `/play` |
 | `/versus/game` | P2P Game | `/versus/lobby` |
-| `/arena` | Arena (redirect) | `/play` |
-| `/arena/select` | Arena Set Selection | `/play` |
+| `/arena` | Arena Pre-Game | `/play` |
 | `/arena/game` | Arena Game | `/arena` |
 | `/tournament` | Tournament (redirect) | `/play` |
 | `/tournament/lobby` | Tournament Lobby | `/play` |

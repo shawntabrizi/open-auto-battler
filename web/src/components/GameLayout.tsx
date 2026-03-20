@@ -2,14 +2,12 @@ import { useGameStore } from '../store/gameStore';
 import { useInitGuard } from '../hooks';
 import { GameOverScreen } from './GameOverScreen';
 import { GameShell } from './GameShell';
-import { SetSelectionScreen } from './SetSelectionScreen';
-import { SetPreviewOverlay } from './SetPreviewOverlay';
+import { Navigate } from 'react-router-dom';
 
 export function GameLayout() {
   const { view, isLoading, error, engineReady, gameStarted } = useGameStore();
   const initEngine = useGameStore((state) => state.initEngine);
 
-  // Phase 1: Load WASM engine (no game started yet)
   useInitGuard(() => {
     void initEngine();
   }, [initEngine]);
@@ -30,14 +28,9 @@ export function GameLayout() {
     );
   }
 
-  // Engine ready but game not started — show set selection
+  // Engine ready but game not started — redirect to set selection
   if (engineReady && !gameStarted) {
-    return (
-      <>
-        <SetSelectionScreen />
-        <SetPreviewOverlay />
-      </>
-    );
+    return <Navigate to="/sets" replace />;
   }
 
   if (!view) {
@@ -48,15 +41,9 @@ export function GameLayout() {
     );
   }
 
-  // Show game over screen
   if (view.phase === 'completed') {
     return <GameOverScreen />;
   }
 
-  return (
-    <>
-      <GameShell />
-      <SetPreviewOverlay />
-    </>
-  );
+  return <GameShell />;
 }

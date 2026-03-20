@@ -6,7 +6,6 @@ import './index.css';
 import { AuthGate } from './components/AuthGate.tsx';
 import { HomePage } from './components/HomePage.tsx';
 import { PlayPage } from './components/PlayPage.tsx';
-import { CardsPage } from './components/CardsPage.tsx';
 import { HistoryPage } from './components/HistoryPage.tsx';
 import { AchievementsPage } from './components/AchievementsPage.tsx';
 import { StatsPage } from './components/StatsPage.tsx';
@@ -31,10 +30,9 @@ import { DevPage } from './components/DevPage.tsx';
 import { SetPage } from './components/SetPage.tsx';
 import { GameOverPreview } from './components/GameOverPreview.tsx';
 import { TransactionOverlay } from './components/TransactionOverlay.tsx';
-import { BlockchainSelectPage } from './components/BlockchainSelectPage.tsx';
 import { ArenaGamePage } from './components/ArenaGamePage.tsx';
-import { PracticeSelectPage } from './components/PracticeSelectPage.tsx';
 import { PracticeGamePage } from './components/PracticeGamePage.tsx';
+import { SetsPage } from './components/SetsPage.tsx';
 import { VersusRedirect } from './components/VersusRedirect.tsx';
 import { TournamentRedirect } from './components/TournamentRedirect.tsx';
 import { TournamentLobbyPage } from './components/TournamentLobbyPage.tsx';
@@ -53,20 +51,18 @@ createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/play" element={<PlayPage />} />
-          <Route path="/cards" element={<CardsPage />} />
+          <Route path="/cards" element={<SandboxPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/history/achievements" element={<AchievementsPage />} />
           <Route path="/history/stats" element={<StatsPage />} />
           <Route path="/history/battles" element={<BattleHistoryPage />} />
+          <Route path="/sets" element={<SetsPage />} />
           <Route path="/practice" element={<LocalGamePage />} />
-          <Route path="/practice/select" element={<PracticeSelectPage />} />
           <Route path="/practice/game" element={<PracticeGamePage />} />
-          <Route path="/sandbox" element={<SandboxPage />} />
           <Route path="/versus" element={<VersusRedirect />} />
           <Route path="/versus/lobby" element={<MultiplayerPage />} />
           <Route path="/versus/game" element={<MultiplayerGame />} />
           <Route path="/arena" element={<BlockchainPage />} />
-          <Route path="/arena/select" element={<BlockchainSelectPage />} />
           <Route path="/arena/game" element={<ArenaGamePage />} />
           <Route path="/tournament" element={<TournamentRedirect />} />
           <Route path="/tournament/lobby" element={<TournamentLobbyPage />} />
@@ -77,7 +73,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/marketplace" element={<ShopPage />} />
           <Route path="/customize" element={<CustomizePage />} />
           <Route path="/customize/:category" element={<CustomizeCategoryPage />} />
-          <Route path="/set/:setId" element={<SetPage />} />
+          <Route path="/sets/:setId" element={<SetPage />} />
           <Route path="/dev" element={<DevPage />} />
           <Route path="/dev/game-over" element={<GameOverPreview />} />
           <Route path="/cards/create-card" element={<CreateCardPage />} />

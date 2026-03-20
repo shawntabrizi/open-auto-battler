@@ -34,7 +34,7 @@ export function SetPage() {
 
   return (
     <div className="h-screen h-svh bg-warm-950 text-white flex flex-col overflow-hidden">
-      <TopBar backTo="/cards" backLabel="Cards" title={setName} hasCardPanel />
+      <TopBar backTo="/sets" backLabel="Sets" title={setName} hasCardPanel />
 
       <div className="flex-1 min-h-0 flex flex-col ml-44 lg:ml-80">
         <div className="flex items-center flex-shrink-0 px-3 lg:px-8 pt-3 lg:pt-6 pb-2 lg:pb-4 border-b border-warm-700">

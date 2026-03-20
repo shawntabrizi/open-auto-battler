@@ -3,7 +3,6 @@ import { useIsSubmitting } from '../store/txStore';
 import { useArenaStore, getDevAccounts } from '../store/arenaStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useGameStore } from '../store/gameStore';
-import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { RotatePrompt } from './RotatePrompt';
 import { Link, useNavigate } from 'react-router-dom';
 import { TopBar } from './TopBar';
@@ -37,7 +36,7 @@ export function TournamentLobbyPage() {
     connectionError,
   } = useArenaStore();
 
-  const { init, engine, previewSet } = useGameStore();
+  const { init, engine } = useGameStore();
   const navigate = useNavigate();
 
   const {
@@ -243,7 +242,7 @@ export function TournamentLobbyPage() {
                   Card Set: <span className="font-bold text-white">{setName}</span>
                 </span>
                 <button
-                  onClick={() => previewSet(activeTournament.config.set_id)}
+                  onClick={() => navigate(`/sets/${activeTournament.config.set_id}`)}
                   className="px-1.5 lg:px-2 py-0.5 lg:py-1 text-[9px] lg:text-[10px] font-bold border border-warm-600 text-warm-300 hover:text-white hover:border-warm-400 rounded transition-all"
                 >
                   PREVIEW
@@ -328,7 +327,6 @@ export function TournamentLobbyPage() {
           )}
         </div>
       </div>
-      <SetPreviewOverlay />
       <RotatePrompt />
     </div>
   );

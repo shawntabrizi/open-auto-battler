@@ -76,7 +76,7 @@ function SandboxHeader() {
 
   return (
     <>
-      <TopBar backTo="/cards" backLabel="Cards" title="Sandbox" hasCardPanel />
+      <TopBar backTo="/" backLabel="Menu" title="Card Sandbox" hasCardPanel />
       {/* Action bar below TopBar */}
       <div className="flex-shrink-0 bg-warm-900 border-b border-warm-700 px-3 lg:px-4 py-1.5 lg:py-2 ml-44 lg:ml-80 flex items-center justify-center gap-2 lg:gap-3">
         <button

@@ -5,7 +5,6 @@ import { useGameStore } from '../store/gameStore';
 import { GameOverScreen } from './GameOverScreen';
 import { GameShell } from './GameShell';
 import { RotatePrompt } from './RotatePrompt';
-import { SetPreviewOverlay } from './SetPreviewOverlay';
 import { Navigate } from 'react-router-dom';
 
 export function PracticeGamePage() {
@@ -85,7 +84,6 @@ export function PracticeGamePage() {
           disabled: battleLoading,
         }}
       />
-      <SetPreviewOverlay />
       <RotatePrompt />
     </div>
   );

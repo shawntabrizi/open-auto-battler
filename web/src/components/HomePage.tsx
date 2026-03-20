@@ -5,9 +5,17 @@ import { TopBar } from './TopBar';
 
 const MENU_BUTTONS = [
   {
+    to: '/sets',
+    label: 'Sets',
+    description: 'Browse & select card sets',
+    gradient: 'from-gold/10 to-yellow-900/5',
+    border:
+      'border-gold/40 hover:border-gold hover:shadow-[0_0_20px_rgba(196,138,42,0.12)]',
+  },
+  {
     to: '/cards',
     label: 'Cards',
-    description: 'Browse sets & collection',
+    description: 'Card Sandbox',
     gradient: 'from-accent-violet/10 to-purple-900/5',
     border:
       'border-accent-violet/40 hover:border-accent-violet hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]',
@@ -15,7 +23,7 @@ const MENU_BUTTONS = [
   {
     to: '/customize',
     label: 'Customize',
-    description: 'Card art, backgrounds & avatars',
+    description: 'Art, backgrounds & avatars',
     gradient: 'from-accent-emerald/10 to-green-900/5',
     border:
       'border-accent-emerald/40 hover:border-accent-emerald hover:shadow-[0_0_20px_rgba(90,154,110,0.12)]',
@@ -23,7 +31,7 @@ const MENU_BUTTONS = [
   {
     to: '/history',
     label: 'History',
-    description: 'Achievements, replays & stats',
+    description: 'Achievements & stats',
     gradient: 'from-mana-blue/10 to-blue-900/5',
     border:
       'border-mana-blue/40 hover:border-mana-blue hover:shadow-[0_0_20px_rgba(91,143,170,0.12)]',
@@ -77,7 +85,7 @@ export function HomePage() {
             </Link>
 
             {/* Secondary menu row */}
-            <div className="grid grid-cols-3 gap-2.5 lg:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-4">
               {MENU_BUTTONS.map((btn, i) => (
                 <Link
                   key={btn.to}
