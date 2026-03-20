@@ -10,6 +10,90 @@ type SlotAnim = 'placed' | { type: 'swapped'; fromIndex: number };
 type AnimState = { anims: Map<number, SlotAnim>; exits: Map<number, BoardUnitView> };
 const EMPTY_ANIM: AnimState = { anims: new Map(), exits: new Map() };
 
+const BOARD_HINT_TEXT = {
+  selectCard: 'Select a card',
+  placeFirstUnit: 'Now tap a board slot to place your unit',
+  placeUnit: 'Tap a board slot to place your unit',
+  repositionBoardCard: 'Reposition this board card or burn it for mana',
+  boardFull: 'Board full - burn a unit to make room',
+  notEnoughMana: 'Not enough mana to buy - burn a card or unit for mana',
+  cannotBuyThisRound:
+    'Cannot buy this card this round - burn it for mana or let it return to your bag next round',
+} as const;
+
+const BOARD_HINT_TONE_CLASS = {
+  default: 'text-warm-200/85',
+  selected: 'text-warm-100',
+  onboarding: 'onboarding-hint text-amber-300',
+  warning: 'text-orange-200',
+  danger: 'text-red-200',
+} as const;
+
+interface BoardHintParams {
+  unitCount: number;
+  handCount: number;
+  hasHandSelection: boolean;
+  hasBoardSelection: boolean;
+  canPlaceSelectedHand: boolean;
+  cannotBuySelectedHandThisRound: boolean;
+}
+
+function getBoardHintState({
+  unitCount,
+  handCount,
+  hasHandSelection,
+  hasBoardSelection,
+  canPlaceSelectedHand,
+  cannotBuySelectedHandThisRound,
+}: BoardHintParams) {
+  if (hasBoardSelection) {
+    return {
+      text: BOARD_HINT_TEXT.repositionBoardCard,
+      toneClass: BOARD_HINT_TONE_CLASS.selected,
+    };
+  }
+
+  if (hasHandSelection) {
+    if (cannotBuySelectedHandThisRound) {
+      return {
+        text: BOARD_HINT_TEXT.cannotBuyThisRound,
+        toneClass: BOARD_HINT_TONE_CLASS.danger,
+      };
+    }
+
+    if (canPlaceSelectedHand) {
+      return {
+        text: unitCount === 0 ? BOARD_HINT_TEXT.placeFirstUnit : BOARD_HINT_TEXT.placeUnit,
+        toneClass: BOARD_HINT_TONE_CLASS.default,
+      };
+    }
+
+    return {
+      text: BOARD_HINT_TEXT.notEnoughMana,
+      toneClass: BOARD_HINT_TONE_CLASS.warning,
+    };
+  }
+
+  if (unitCount === 0) {
+    return {
+      text: BOARD_HINT_TEXT.selectCard,
+      toneClass: BOARD_HINT_TONE_CLASS.onboarding,
+    };
+  }
+
+  if (unitCount >= 5 && handCount > 0) {
+    return {
+      text: BOARD_HINT_TEXT.boardFull,
+      toneClass: BOARD_HINT_TONE_CLASS.default,
+    };
+  }
+
+  return {
+    text: BOARD_HINT_TEXT.selectCard,
+    toneClass: BOARD_HINT_TONE_CLASS.default,
+  };
+}
+
 /** Compare previous and current board to classify each slot's change. */
 function detectBoardChanges(
   prev: (BoardUnitView | null)[],
@@ -98,31 +182,21 @@ export function Arena() {
   const unitCount = view.board.filter(Boolean).length;
   const handCount = view.hand?.filter(Boolean).length ?? 0;
   const hasHandSelection = selection?.type === 'hand';
+  const hasBoardSelection = selection?.type === 'board';
+  const selectedHandCard = selection?.type === 'hand' ? view.hand[selection.index] : null;
   const canPlaceSelectedHand =
     selection?.type === 'hand' ? Boolean(view.can_afford[selection.index]) : false;
-  const boardHintText =
-    unitCount === 0
-      ? canPlaceSelectedHand
-        ? 'Now tap a board slot to place your unit'
-        : hasHandSelection
-          ? 'Not enough mana - burn a card or unit for mana'
-          : 'Tap a card in your hand to begin'
-      : unitCount >= 5
-        ? handCount > 0
-          ? 'Board full - burn a unit to make room'
-          : `${unitCount}/5 units deployed`
-        : canPlaceSelectedHand
-          ? 'Tap a slot to place your unit'
-          : hasHandSelection
-            ? 'Not enough mana - burn a card or unit for mana'
-            : `${unitCount}/5 units deployed`;
-  const boardHintToneClass =
-    unitCount === 0 && !hasHandSelection
-      ? 'onboarding-hint text-amber-300'
-      : hasHandSelection && !canPlaceSelectedHand
-        ? 'text-orange-200'
-        : 'text-warm-200/85';
-  const hideBoardStatusHintOnSmallScreens = boardHintText.endsWith('units deployed');
+  const cannotBuySelectedHandThisRound = Boolean(
+    selectedHandCard && selectedHandCard.play_cost > view.mana_limit
+  );
+  const boardHint = getBoardHintState({
+    unitCount,
+    handCount,
+    hasHandSelection,
+    hasBoardSelection,
+    canPlaceSelectedHand,
+    cannotBuySelectedHandThisRound,
+  });
 
   const handleBoardSlotClick = (index: number) => {
     const unit = view.board[index];
@@ -177,13 +251,11 @@ export function Arena() {
           <div className="h-px w-8 lg:w-16 bg-gradient-to-l from-transparent to-warm-600/40" />
         </div>
 
-        {/* Contextual hint — always visible, guides new players through card placement */}
-        <div
-          className={`board-helper board-helper--status absolute top-14 lg:top-16 left-1/2 -translate-x-1/2 z-20 rounded-full border border-warm-800/70 bg-black/45 px-3 py-1 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm text-[0.6rem] lg:text-xs font-body text-center ${
-            boardHintToneClass
-          } ${hideBoardStatusHintOnSmallScreens ? 'hidden lg:block' : ''}`}
-        >
-          {boardHintText}
+        {/* Shortcut hint */}
+        <div className="board-helper board-helper--shortcuts hidden lg:flex absolute top-14 lg:top-16 left-1/2 -translate-x-1/2 z-20 w-full lg:max-w-3xl justify-center">
+          <div className="rounded-full border border-warm-800/70 bg-black/45 px-4 py-1.5 text-center text-[10px] lg:text-xs text-warm-200/85 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm">
+            Select: {GAME_SHORTCUTS.board} • Move: {GAME_SHORTCUTS.boardMove}
+          </div>
         </div>
 
         {/* Board row */}
@@ -287,9 +359,14 @@ export function Arena() {
           </div>
         </div>
 
-        <div className="board-helper board-helper--shortcuts hidden lg:flex absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-full lg:max-w-3xl justify-center">
-          <div className="rounded-full border border-warm-800/70 bg-black/45 px-4 py-1.5 text-center text-[10px] lg:text-xs text-warm-200/85 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm">
-            Select: {GAME_SHORTCUTS.board} • Move: {GAME_SHORTCUTS.boardMove}
+        {/* Contextual hint — larger and closer to the board interaction area */}
+        <div className="board-helper board-helper--status absolute bottom-4 left-1/2 z-20 flex w-full -translate-x-1/2 justify-center lg:max-w-3xl">
+          <div
+            className={`rounded-full border border-warm-800/70 bg-black/50 px-5 py-2 text-center text-xs lg:text-sm font-semibold shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-sm ${
+              boardHint.toneClass
+            }`}
+          >
+            {boardHint.text}
           </div>
         </div>
       </div>
