@@ -166,3 +166,9 @@ After all tasks are complete:
 ### Task 7: Fix dead clicks (MEDIUM)
 - **`ManaBar.tsx`**: Added `pointer-events-none` to mana segments, `aria-hidden="true"` to prevent them from appearing interactive.
 - **`UnitCard.tsx`** (`EmptySlot`): Changed from always `cursor-pointer` to conditional — only shows pointer cursor when the slot is actionable (`isTarget` or `isHovered`).
+
+### Task 8: Tutorial doesn't explain how to play cards (MEDIUM)
+- **`tutorials/how-to-play/05-shop.tsx`**: Added explicit instructions to the Shop Phase tutorial slide: "Tap a card to select it, then tap an empty board slot to place it. You can also drag cards directly to the board."
+
+### Task 9: Prevent accidental battle with empty board (HIGH)
+- **`store/gameStore.ts`** (`endTurn`): Added a guard that checks if the board has any units before allowing battle. If the board is empty, shows a toast warning ("You have no units on the board! Place cards before battling.") and blocks the action.

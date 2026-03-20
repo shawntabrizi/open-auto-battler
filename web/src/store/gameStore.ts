@@ -464,8 +464,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   endTurn: () => {
-    const { engine } = get();
+    const { engine, view } = get();
     if (!engine) return;
+    // Warn if going to battle with an empty board
+    if (view?.board && !view.board.some(Boolean)) {
+      toast('You have no units on the board! Place cards before battling.', {
+        icon: '\u26A0\uFE0F',
+      });
+      return;
+    }
     try {
       engine.end_turn();
       set({
