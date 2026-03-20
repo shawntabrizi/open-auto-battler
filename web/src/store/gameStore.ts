@@ -86,6 +86,7 @@ interface GameStore {
   selection: Selection | null;
   showBattleOverlay: boolean;
   showRawJson: boolean;
+  showCardNames: boolean;
   showBag: boolean;
   startingLives: number;
   winsToVictory: number;
@@ -121,6 +122,7 @@ interface GameStore {
   setSelection: (selection: Selection | null) => void;
   closeBattleOverlay: () => void;
   toggleShowRawJson: () => void;
+  toggleShowCardNames: () => void;
   setShowBag: (show: boolean) => void;
   fetchBag: () => void; // Fetch bag IDs on demand
   getCommitAction: () => any;
@@ -211,6 +213,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selection: null,
   showBattleOverlay: false,
   showRawJson: JSON.parse(localStorage.getItem('showRawJson') || 'false'),
+  showCardNames: JSON.parse(localStorage.getItem('showCardNames') ?? 'true'),
   showBag: false,
   startingLives: 3,
   winsToVictory: 10,
@@ -655,6 +658,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newValue = !state.showRawJson;
       localStorage.setItem('showRawJson', JSON.stringify(newValue));
       return { showRawJson: newValue };
+    });
+  },
+
+  toggleShowCardNames: () => {
+    set((state) => {
+      const newValue = !state.showCardNames;
+      localStorage.setItem('showCardNames', JSON.stringify(newValue));
+      return { showCardNames: newValue };
     });
   },
 }));

@@ -5,9 +5,10 @@ import { getCardEmoji } from '../utils/emoji';
 import { useCustomizationStore } from '../store/customizationStore';
 
 import { useCardTilt } from '../hooks/useCardTilt';
-import { SwordIcon, HeartIcon, AbilityIcon } from './Icons';
+import { SwordIcon, HeartIcon } from './Icons';
 import { CARD_TEXT, type CardSizeVariant } from '../constants/cardSizes';
 import { useAchievementStore } from '../store/achievementStore';
+import { useGameStore } from '../store/gameStore';
 
 /** Derive a visual rarity tier from play_cost + ability count. */
 export function getRarityTier(
@@ -74,6 +75,7 @@ export function UnitCard({
   onDrop,
 }: UnitCardProps) {
   const cardStyle = useCustomizationStore((s) => s.selections.cardStyle);
+  const showCardNames = useGameStore((s) => s.showCardNames);
   const { tiltRef } = useCardTilt({
     enabled: enableTilt,
     maxRotation: sizeVariant === 'compact' || sizeVariant === 'battle' ? 8 : 12,
@@ -135,12 +137,14 @@ export function UnitCard({
       )}
 
       {/* Card name - just above stats */}
-      <div
-        className={`absolute bottom-5 lg:bottom-7 left-0 right-0 z-[2] ${text.title} font-bold text-center truncate text-white px-0.5`}
-        style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
-      >
-        {card.name}
-      </div>
+      {showCardNames && (
+        <div
+          className={`absolute bottom-5 lg:bottom-7 left-0 right-0 z-[2] ${text.title} font-bold text-center truncate text-white px-0.5`}
+          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+        >
+          {card.name}
+        </div>
+      )}
 
       {/* Stats row - pinned to bottom */}
       <div
