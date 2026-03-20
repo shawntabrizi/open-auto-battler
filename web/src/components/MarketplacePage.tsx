@@ -1,7 +1,7 @@
 import { TopBar } from './TopBar';
 
 /** Placeholder marketplace page — to be built out later */
-export function ShopPage() {
+export function MarketplacePage() {
   return (
     <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
       <TopBar backTo="/" backLabel="Menu" title="Marketplace" />

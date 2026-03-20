@@ -138,7 +138,7 @@ flowchart TD
 - Round counter
 - Wins counter (current / target)
 - Lives counter (current / starting)
-- Battle / End Turn button with multiplayer timer support
+- Battle / End Turn button with versus timer support
 - Hamburger trigger (right-aligned) — opens the in-game slide-out menu
 
 ### Hamburger Menu (Global)
@@ -352,9 +352,9 @@ Each category has its own route under `/customize/:category`:
 
 **Routes:** `/versus` → `/versus/lobby` → `/versus/game`
 
-**TopBar:** Back to `/play` (Play), title "P2P Multiplayer"
+**TopBar:** Back to `/play` (Play), title "P2P Versus"
 
-**Contents:** P2P connection setup, then direct multiplayer game.
+**Contents:** P2P connection setup, then direct versus game.
 
 ### Card Sandbox
 

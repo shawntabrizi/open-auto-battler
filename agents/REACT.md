@@ -9,7 +9,7 @@ The frontend is a React application built with Vite and Tailwind CSS.
 - **WASM Bridge**: The `gameStore` initializes the `GameEngine`. All heavy game logic is delegated to the WASM module.
 
 ## UI/UX
-- **Tailwind CSS**: Use utility classes for styling. Follow the "monospace/retro-tech" aesthetic established in the `BlockchainPage` and `Arena` components.
+- **Tailwind CSS**: Use utility classes for styling. Follow the "monospace/retro-tech" aesthetic established in the `ArenaPage` and `Arena` components.
 - **Component Structure**:
   - `GameShell.tsx`: Generic game layout with DndContext, GameTopBar, Arena, ManaBar, Shop, and overlays.
   - `GameLayout.tsx`: Generic game wrapper that handles loading/error states and initialization, uses GameShell.
@@ -76,11 +76,11 @@ function MyComponent() {
 
 ## Naming Conventions
 
-- **`*Page`**: Route-level entry points with mode-specific setup (e.g., `BlockchainPage`, `SandboxPage`, `MultiplayerPage`)
+- **`*Page`**: Route-level entry points with mode-specific setup (e.g., `ArenaPage`, `SandboxPage`, `VersusPage`)
 - **`*Layout`**: Layout wrappers that handle state/structure (e.g., `GameLayout`)
 - **`*Shell`**: The actual UI shell/container (e.g., `GameShell`)
 - **`*Overlay`**: Modal/overlay components (e.g., `BattleOverlay`, `BagOverlay`)
-- **`*Manager`**: Non-visual coordination components (e.g., `MultiplayerManager`)
+- **`*Manager`**: Non-visual coordination components (e.g., `VersusManager`)
 - **No prefix**: Generic reusable UI components (e.g., `Arena`, `Shop`, `UnitCard`)
 
 ## Component Architecture
@@ -101,15 +101,15 @@ GameLayout (generic wrapper)
 ├── Loading/error states
 └── GameShell
 
-LocalGamePage (local game route)
+PracticePage (practice route)
 └── GameLayout
 
-MultiplayerGame (multiplayer route)
+VersusGame (versus route)
 ├── Connection guard
-├── MultiplayerManager
+├── VersusManager
 └── GameLayout
 
-BlockchainPage (blockchain mode)
+ArenaPage (arena mode)
 ├── Connection UI (when not connected)
 ├── Session Setup UI (when no chain state)
 └── GameShell (when game is active)
@@ -147,10 +147,10 @@ function MyComponent() {
 ```
 
 **Examples in codebase:**
-- `GameLayout.tsx` - guards `init()` call (used by LocalGamePage.tsx and MultiplayerGame.tsx)
-- `LocalGamePage.tsx` - guards initialization
+- `GameLayout.tsx` - guards `init()` call (used by PracticePage.tsx and VersusGame.tsx)
+- `PracticePage.tsx` - guards initialization
 - `SandboxPage.tsx` - guards `init()` call
-- `BlockchainPage.tsx` - guards `init()` and `refresh()` calls
+- `ArenaPage.tsx` - guards `init()` and `refresh()` calls
 - `AuthGate.tsx` - guards blockchain connection on mount
 - `LoginPage.tsx` - guards session restore
 - `AchievementsPage.tsx` - guards achievement data fetch

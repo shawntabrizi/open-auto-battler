@@ -58,14 +58,13 @@ export default tseslint.config(
   },
   {
     files: [
-      'src/components/CardDetailModal.tsx',
       'src/components/CardDetailPanel.tsx',
       'src/components/CreateCardPage.tsx',
       'src/components/CreateSetPage.tsx',
-      'src/components/MultiplayerManager.tsx',
-      'src/store/blockchainStore.ts',
+      'src/components/VersusManager.tsx',
+      'src/store/arenaStore.ts',
       'src/store/gameStore.ts',
-      'src/store/multiplayerStore.ts',
+      'src/store/versusStore.ts',
       'src/utils/papiCoercion.ts',
     ],
     rules: {

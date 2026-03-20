@@ -24,7 +24,7 @@ The beta is the first version of Open Auto Battler that feels like a complete ga
 |-------|--------|---------|
 | **Core Engine** | ~90% | Battle system, ability system (11 battle triggers, 6 effects, 6 shop triggers, 4 effects), permanent stat modifiers, targeting, conditions, deterministic RNG |
 | **Pallet** | ~85% | start_game, submit_turn, submit_card, create_card_set, ghost matchmaking, tournament system, ghost backfill, victory achievements |
-| **Frontend** | ~75% | Shop/battle UI, card rendering, customization (5 NFT slots), WASM bridge, creator hub, multiplayer, sandbox |
+| **Frontend** | ~75% | Shop/battle UI, card rendering, customization (5 NFT slots), WASM bridge, creator hub, versus, sandbox |
 | **Content** | ~40% | 110 cards, 2 sets (Starter Pack 40 cards, SAP Turtle Pack 60 cards), 1 style set (Cosmic) |
 
 ## What Needs to Be Built
@@ -165,7 +165,7 @@ FRONTEND
 These features already exist in the codebase but are not part of the beta scope. They can be polished and promoted in future releases:
 
 - **Tournament system** — On-chain tournaments with entry fees, prize pools split between players/set creators/card creators. Pallet and frontend support already built.
-- **Multiplayer/P2P** — Live player-vs-player battles. Frontend components and engine support exist.
+- **P2P Versus** — Live player-vs-player battles. Frontend components and engine support exist.
 - **Local/offline game mode** — Play without a blockchain connection using the pure WASM engine. No wallet needed.
 - **Ghost browser** — Browse and inspect stored ghost opponent boards from other players.
 - **Presentations system** — Interactive slide deck engine with embedded live battles, shop demos, and card breakdowns. Useful for demos and onboarding.

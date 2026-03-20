@@ -9,7 +9,7 @@ import { useInitGuard } from '../hooks';
 import { Link, Navigate } from 'react-router-dom';
 
 /** Arena pre-game: confirm selected set, start game, or redirect to active game. */
-export function BlockchainPage() {
+export function ArenaPage() {
   const {
     isConnected,
     isConnecting,

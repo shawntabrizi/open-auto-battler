@@ -127,8 +127,8 @@ interface GameStore {
   fetchBag: () => void; // Fetch bag IDs on demand
   getCommitAction: () => any;
 
-  startMultiplayerGame: (seed: number, lives?: number) => void;
-  resolveMultiplayerBattle: (opponentBoard: any, seed: number) => void;
+  startVersusGame: (seed: number, lives?: number) => void;
+  resolveVersusBattle: (opponentBoard: any, seed: number) => void;
   // Blockchain mode: optional callback override for "Continue" after battle
   afterBattleCallback: (() => void) | null;
   setAfterBattleCallback: (cb: (() => void) | null) => void;
@@ -307,7 +307,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  // One-shot init (for blockchain/multiplayer flows)
+  // One-shot init (for blockchain/versus flows)
   init: async (seed?: bigint) => {
     // If engine already exists, nothing to do
     if (get().engine) return;
@@ -502,7 +502,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  startMultiplayerGame: (playerSeed: number, lives?: number) => {
+  startVersusGame: (playerSeed: number, lives?: number) => {
     const { engine } = get();
     if (!engine) return;
     try {
@@ -526,7 +526,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  resolveMultiplayerBattle: (opponentBoard: any, seed: number) => {
+  resolveVersusBattle: (opponentBoard: any, seed: number) => {
     const { engine } = get();
     if (!engine) return;
     try {

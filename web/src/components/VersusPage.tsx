@@ -5,7 +5,7 @@ import { RotatePrompt } from './RotatePrompt';
 import { TopBar } from './TopBar';
 import { QRCodeSVG } from 'qrcode.react';
 
-export function MultiplayerPage() {
+export function VersusPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
@@ -86,7 +86,7 @@ export function MultiplayerPage() {
 
   return (
     <div className="min-h-screen min-h-svh bg-surface-dark flex flex-col overflow-hidden relative">
-      <TopBar backTo="/play" backLabel="Play" title="P2P Multiplayer" />
+      <TopBar backTo="/play" backLabel="Play" title="P2P Versus" />
       {/* Atmospheric background */}
       <div
         className="absolute inset-0 z-0"

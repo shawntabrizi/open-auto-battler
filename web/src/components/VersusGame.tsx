@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GameLayout } from './GameLayout';
-import { MultiplayerManager } from './MultiplayerManager';
+import { VersusManager } from './VersusManager';
 import { useVersusStore } from '../store/versusStore';
 
-export function MultiplayerGame() {
+export function VersusGame() {
   const navigate = useNavigate();
   const { status, conn } = useVersusStore();
 
@@ -21,7 +21,7 @@ export function MultiplayerGame() {
 
   return (
     <>
-      <MultiplayerManager />
+      <VersusManager />
       <GameLayout />
     </>
   );

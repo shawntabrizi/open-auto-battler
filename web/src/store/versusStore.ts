@@ -8,7 +8,7 @@ export interface LogEntry {
   message: string;
 }
 
-interface MultiplayerState {
+interface VersusState {
   peer: Peer | null;
   conn: DataConnection | null;
   myPeerId: string | null;
@@ -45,7 +45,7 @@ interface MultiplayerState {
   setLives: (lives: number) => void;
 }
 
-export const useVersusStore = create<MultiplayerState>((set, get) => ({
+export const useVersusStore = create<VersusState>((set, get) => ({
   peer: null,
   conn: null,
   myPeerId: null,
@@ -139,7 +139,7 @@ export const useVersusStore = create<MultiplayerState>((set, get) => ({
     });
 
     conn.on('data', (data: any) => {
-      // Handle START_GAME here to capture seeds even if MultiplayerManager hasn't mounted
+      // Handle START_GAME here to capture seeds even if VersusManager hasn't mounted
       if (data && typeof data === 'object' && data.type === 'START_GAME') {
         get().addLog(
           `Received START_GAME with playerSeed ${data.playerSeed}, battleSeed ${data.battleSeed}, lives ${data.lives ?? 3}`
@@ -151,7 +151,7 @@ export const useVersusStore = create<MultiplayerState>((set, get) => ({
           status: 'in-game',
         });
       }
-      // Other messages are handled by MultiplayerManager
+      // Other messages are handled by VersusManager
     });
 
     conn.on('close', () => {

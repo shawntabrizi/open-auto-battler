@@ -461,7 +461,7 @@ auto-battle/
 │       │   ├── gameStore.ts      # Local WASM game state (Serde/JSON)
 │       │   └── arenaStore.ts # Chain sync & transactions (SCALE)
 │       ├── components/
-│       │   ├── BlockchainPage.tsx # On-chain gameplay UI
+│       │   ├── ArenaPage.tsx      # On-chain gameplay UI
 │       │   └── SandboxPage.tsx    # Local-only testing
 │       └── wasm/            # Built WASM artifacts
 │
@@ -583,7 +583,7 @@ auto-battle/
 
 ### Infrastructure
 
-6. **Multiplayer Signaling**
+6. **Versus Signaling**
    - For real-time PvP: WebRTC or similar for board exchange
    - Chain as fallback/verification layer
 

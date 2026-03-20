@@ -13,7 +13,7 @@ export function PracticeGamePage() {
     gameStarted,
     view,
     currentSetId,
-    resolveMultiplayerBattle,
+    resolveVersusBattle,
     restoreLocalResumePoint,
     engineReady,
   } = useGameStore();
@@ -68,7 +68,7 @@ export function PracticeGamePage() {
         return;
       }
 
-      resolveMultiplayerBattle(opponent.board, opponent.seed);
+      resolveVersusBattle(opponent.board, opponent.seed);
     } finally {
       setBattleLoading(false);
     }

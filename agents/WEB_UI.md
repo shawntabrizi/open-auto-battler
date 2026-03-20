@@ -54,14 +54,14 @@ This document is derived from `web/src/*`.
 - `web/src/components/TransactionOverlay.tsx` - Transaction signing/broadcasting overlay.
 
 ### Mode-Specific Pages
-- `web/src/components/LocalGamePage.tsx` - Practice mode pre-game.
+- `web/src/components/PracticePage.tsx` - Practice mode pre-game.
 - `web/src/components/PracticeGamePage.tsx` - Active practice game.
-- `web/src/components/BlockchainPage.tsx` - Arena mode pre-game.
+- `web/src/components/ArenaPage.tsx` - Arena mode pre-game.
 - `web/src/components/ArenaGamePage.tsx` - Active arena game.
 - `web/src/components/TournamentLobbyPage.tsx` - Tournament lobby.
 - `web/src/components/TournamentGamePage.tsx` - Active tournament game.
-- `web/src/components/MultiplayerPage.tsx` - P2P multiplayer lobby.
-- `web/src/components/MultiplayerGame.tsx` - Active multiplayer game.
+- `web/src/components/VersusPage.tsx` - P2P versus lobby.
+- `web/src/components/VersusGame.tsx` - Active versus game.
 
 ### Menu & Hub Pages
 - `web/src/components/HomePage.tsx` - Main menu.
@@ -78,7 +78,7 @@ This document is derived from `web/src/*`.
 - `web/src/components/SettingsPage.tsx` - Settings.
 - `web/src/components/AccountPage.tsx` - Account info.
 - `web/src/components/NetworkPage.tsx` - Network/endpoint picker.
-- `web/src/components/ShopPage.tsx` - Marketplace (placeholder).
+- `web/src/components/MarketplacePage.tsx` - Marketplace (placeholder).
 - `web/src/components/GhostBrowserPage.tsx` - Ghost opponent browser.
 
 ### Creator Studio
@@ -102,7 +102,7 @@ This document is derived from `web/src/*`.
 - Use Tailwind responsive prefixes (`lg:`, `sm:`, etc.) for font sizes, padding, spacing, grid columns, and border radii.
 - Use `min-h-svh` alongside `min-h-screen` for full-height layouts.
 - Hide non-essential text on small screens with `hidden lg:block` when appropriate.
-- Reference existing pages like `BlockchainPage.tsx` for the responsive patterns used in this project.
+- Reference existing pages like `ArenaPage.tsx` for the responsive patterns used in this project.
 
 ## Styling
 - Base styles are in `web/src/index.css`.

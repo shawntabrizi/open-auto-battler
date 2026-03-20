@@ -4,7 +4,7 @@ import { useGameStore } from '../store/gameStore';
 
 const BATTLE_TIMER_SECONDS = 20;
 
-export function MultiplayerManager() {
+export function VersusManager() {
   const {
     conn,
     isHost,
@@ -26,7 +26,7 @@ export function MultiplayerManager() {
     setBattleTimer,
   } = useVersusStore();
 
-  const { startMultiplayerGame, resolveMultiplayerBattle, view, engine } = useGameStore();
+  const { startVersusGame, resolveVersusBattle, view, engine } = useGameStore();
 
   // Guards to prevent double-execution in React StrictMode
   const hostGameStarted = useRef(false);
@@ -47,7 +47,7 @@ export function MultiplayerManager() {
 
         case 'START_GAME':
           // Seed and status are now handled by the store's data handler
-          // The useEffect below will call startMultiplayerGame when engine is ready
+          // The useEffect below will call startVersusGame when engine is ready
           break;
 
         case 'END_TURN_READY':
@@ -85,7 +85,7 @@ export function MultiplayerManager() {
       const { lives } = useVersusStore.getState();
       setGameSeed(hostPlayerSeed);
       setBattleSeed(sharedBattleSeed);
-      startMultiplayerGame(hostPlayerSeed, lives);
+      startVersusGame(hostPlayerSeed, lives);
       sendMessage({
         type: 'START_GAME',
         playerSeed: guestPlayerSeed,
@@ -104,19 +104,19 @@ export function MultiplayerManager() {
     setBattleSeed,
     setGameSeed,
     setStatus,
-    startMultiplayerGame,
+    startVersusGame,
   ]);
 
-  // Guest starts game when they have a seed (possibly received while on /multiplayer) and engine is ready
+  // Guest starts game when they have a seed (possibly received while on /versus) and engine is ready
   useEffect(() => {
     if (guestGameStarted.current) return;
     if (!isHost && gameSeed !== null && engine && status === 'in-game') {
       guestGameStarted.current = true;
       const { lives } = useVersusStore.getState();
       addLog('Guest: Starting game with received seed...');
-      startMultiplayerGame(gameSeed, lives);
+      startVersusGame(gameSeed, lives);
     }
-  }, [isHost, gameSeed, engine, status, addLog, startMultiplayerGame]);
+  }, [isHost, gameSeed, engine, status, addLog, startVersusGame]);
 
   // Start timer when opponent is ready but we're not
   useEffect(() => {
@@ -184,7 +184,7 @@ export function MultiplayerManager() {
       // Round-specific seed using the shared battle seed
       const roundSeed = battleSeed + view.round * 100;
 
-      resolveMultiplayerBattle(opponentBoard, roundSeed);
+      resolveVersusBattle(opponentBoard, roundSeed);
 
       // Reset ready states for next round transition
       setIsReady(false);
@@ -198,7 +198,7 @@ export function MultiplayerManager() {
     battleSeed,
     view,
     addLog,
-    resolveMultiplayerBattle,
+    resolveVersusBattle,
     setIsReady,
     setOpponentBoard,
     setOpponentReady,

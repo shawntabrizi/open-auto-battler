@@ -10,7 +10,7 @@ import { TopBar } from './TopBar';
 import { Navigate } from 'react-router-dom';
 
 /** Practice pre-game: confirm selected set, start game, or redirect to active game. */
-export function LocalGamePage() {
+export function PracticePage() {
   const {
     isConnected,
     isConnecting,
