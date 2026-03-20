@@ -6,7 +6,7 @@ import { TopBar } from './TopBar';
 
 export function SettingsPage() {
   const location = useLocation();
-  const { showRawJson, toggleShowRawJson, showCardNames, toggleShowCardNames } = useGameStore();
+  const { showRawJson, toggleShowRawJson, showCardNames, toggleShowCardNames, showAddress, toggleShowAddress, showBalance, toggleShowBalance } = useGameStore();
   const returnTo =
     location.state &&
     typeof location.state === 'object' &&
@@ -43,6 +43,50 @@ export function SettingsPage() {
                   <div
                     className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
                       showCardNames ? 'translate-x-5' : 'translate-x-0.5'
+                    }`}
+                  />
+                </div>
+              </button>
+              <button
+                onClick={toggleShowAddress}
+                className="w-full flex items-center justify-between p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+              >
+                <div className="text-left">
+                  <div className="text-sm text-warm-200">Show Address</div>
+                  <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
+                    Display wallet address in the top bar
+                  </div>
+                </div>
+                <div
+                  className={`w-10 h-5 rounded-full transition-colors relative ${
+                    showAddress ? 'bg-yellow-500' : 'bg-warm-700'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      showAddress ? 'translate-x-5' : 'translate-x-0.5'
+                    }`}
+                  />
+                </div>
+              </button>
+              <button
+                onClick={toggleShowBalance}
+                className="w-full flex items-center justify-between p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+              >
+                <div className="text-left">
+                  <div className="text-sm text-warm-200">Show Balance</div>
+                  <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
+                    Display account balance in the top bar
+                  </div>
+                </div>
+                <div
+                  className={`w-10 h-5 rounded-full transition-colors relative ${
+                    showBalance ? 'bg-yellow-500' : 'bg-warm-700'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      showBalance ? 'translate-x-5' : 'translate-x-0.5'
                     }`}
                   />
                 </div>

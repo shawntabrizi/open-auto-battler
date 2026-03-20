@@ -87,6 +87,8 @@ interface GameStore {
   showBattleOverlay: boolean;
   showRawJson: boolean;
   showCardNames: boolean;
+  showAddress: boolean;
+  showBalance: boolean;
   showBag: boolean;
   startingLives: number;
   winsToVictory: number;
@@ -123,6 +125,8 @@ interface GameStore {
   closeBattleOverlay: () => void;
   toggleShowRawJson: () => void;
   toggleShowCardNames: () => void;
+  toggleShowAddress: () => void;
+  toggleShowBalance: () => void;
   setShowBag: (show: boolean) => void;
   fetchBag: () => void; // Fetch bag IDs on demand
   getCommitAction: () => any;
@@ -214,6 +218,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showBattleOverlay: false,
   showRawJson: JSON.parse(localStorage.getItem('showRawJson') || 'false'),
   showCardNames: JSON.parse(localStorage.getItem('showCardNames') ?? 'true'),
+  showAddress: JSON.parse(localStorage.getItem('showAddress') ?? 'true'),
+  showBalance: JSON.parse(localStorage.getItem('showBalance') ?? 'true'),
   showBag: false,
   startingLives: 3,
   winsToVictory: 10,
@@ -666,6 +672,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newValue = !state.showCardNames;
       localStorage.setItem('showCardNames', JSON.stringify(newValue));
       return { showCardNames: newValue };
+    });
+  },
+
+  toggleShowAddress: () => {
+    set((state) => {
+      const newValue = !state.showAddress;
+      localStorage.setItem('showAddress', JSON.stringify(newValue));
+      return { showAddress: newValue };
+    });
+  },
+
+  toggleShowBalance: () => {
+    set((state) => {
+      const newValue = !state.showBalance;
+      localStorage.setItem('showBalance', JSON.stringify(newValue));
+      return { showBalance: newValue };
     });
   },
 }));

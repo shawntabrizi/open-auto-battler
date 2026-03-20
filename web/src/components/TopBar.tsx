@@ -1,5 +1,14 @@
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useMenuStore } from '../store/menuStore';
+import { useArenaStore } from '../store/arenaStore';
+import { useGameStore } from '../store/gameStore';
+
+const formatBalance = (raw: bigint, decimals = 12) =>
+  (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 4,
+  });
 
 /** Three-line hamburger icon */
 function MenuIcon({ className = 'w-5 h-5' }: { className?: string }) {
@@ -41,6 +50,29 @@ export function TopBar({
   hasCardPanel = false,
 }: TopBarProps) {
   const openMenu = useMenuStore((s) => s.open);
+  const selectedAccount = useArenaStore((s) => s.selectedAccount);
+  const isConnected = useArenaStore((s) => s.isConnected);
+  const showAddress = useGameStore((s) => s.showAddress);
+  const showBalance = useGameStore((s) => s.showBalance);
+  const getAccountBalance = useArenaStore((s) => s.getAccountBalance);
+  const [balance, setBalance] = useState<bigint | null>(null);
+
+  const fetchBalance = useCallback(async () => {
+    if (!selectedAccount || !isConnected) {
+      setBalance(null);
+      return;
+    }
+    try {
+      const bal = await getAccountBalance(selectedAccount.address);
+      setBalance(bal);
+    } catch {
+      setBalance(null);
+    }
+  }, [selectedAccount, isConnected, getAccountBalance]);
+
+  useEffect(() => {
+    void fetchBalance();
+  }, [fetchBalance]);
 
   return (
     <div
@@ -48,7 +80,7 @@ export function TopBar({
         hasCardPanel ? 'ml-44 lg:ml-80' : ''
       }`}
     >
-      {/* Left: Back button */}
+      {/* Left: Back button or signed-in info */}
       {backTo ? (
         <Link
           to={backTo}
@@ -58,6 +90,17 @@ export function TopBar({
           <span>&larr;</span>
           <span>{backLabel}</span>
         </Link>
+      ) : selectedAccount ? (
+        <span className="inline-flex items-center gap-1.5 lg:gap-2 text-xs lg:text-sm text-warm-300 z-10 min-w-0">
+          <span className="relative flex h-2 w-2 lg:h-2.5 lg:w-2.5 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500"></span>
+          </span>
+          <span className="flex flex-col leading-tight min-w-0">
+            <span>Signed in as <span className="text-white font-medium">{selectedAccount.name || 'Unknown'}</span>{showBalance && balance !== null && <span className="text-warm-400"> ({formatBalance(balance)})</span>}</span>
+            {showAddress && <span className="text-warm-500 text-[9px] lg:text-xs font-mono break-all">{selectedAccount.address}</span>}
+          </span>
+        </span>
       ) : (
         <div />
       )}
