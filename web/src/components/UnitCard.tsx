@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { CardView, BoardUnitView } from '../types';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
 import { useCustomizationStore } from '../store/customizationStore';
+import { formatAbilitySentence } from '../utils/abilityText';
 
 import { useCardTilt } from '../hooks/useCardTilt';
 import { SwordIcon, HeartIcon } from './Icons';
@@ -81,9 +83,29 @@ export function UnitCard({
     maxRotation: sizeVariant === 'compact' || sizeVariant === 'battle' ? 8 : 12,
   });
 
+  const cardNameMap = useGameStore((s) => s.cardNameMap);
   const isHolographic = useAchievementStore((s) => s.isHolographic(card.id));
   const artSrc = getCardArtSm(card.id);
   const [artFailed, setArtFailed] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    if (showTooltip && cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      setTooltipPos({
+        top: rect.top,
+        left: rect.left + rect.width / 2,
+      });
+    }
+  }, [showTooltip]);
+
+  const abilities = [
+    ...((card as any).shop_abilities ?? []).map((a: any) => ({ ...a, _type: 'shop' })),
+    ...((card as any).battle_abilities ?? []).map((a: any) => ({ ...a, _type: 'battle' })),
+  ];
+  const resolveCardName = (cardId: number) => cardNameMap[cardId];
   const showArt = artSrc && !artFailed;
   const text = CARD_TEXT[sizeVariant];
   const rarity = getRarityTier(card);
@@ -91,13 +113,18 @@ export function UnitCard({
 
   const cardEl = (
     <div
-      ref={enableTilt ? tiltRef : undefined}
+      ref={(node) => {
+        (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        if (enableTilt && tiltRef) tiltRef(node);
+      }}
       onClick={() => {
         onClick?.();
       }}
       draggable={draggable}
       onDragOver={onDragOver}
       onDrop={onDrop}
+      onMouseEnter={() => abilities.length > 0 && setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
       className={`
         unit-card card relative w-full h-full ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none rounded-lg border-2 transition-all duration-200
         bg-black ${rarityStyle.border} ${rarityStyle.glow}
@@ -205,6 +232,27 @@ export function UnitCard({
           className="absolute inset-0 w-full h-full pointer-events-none z-[1] rounded-lg"
           style={{ objectFit: 'fill' }}
         />
+      )}
+
+      {/* Ability tooltip rendered via portal so it's never clipped */}
+      {showTooltip && abilities.length > 0 && tooltipPos && createPortal(
+        <div
+          className="fixed z-[9999] pointer-events-none"
+          style={{ top: tooltipPos.top, left: tooltipPos.left, transform: 'translate(-50%, -100%) translateY(-8px)' }}
+        >
+          <div className="bg-warm-950/95 border border-warm-600/60 rounded-lg px-3 py-2 shadow-xl backdrop-blur-sm min-w-[180px] max-w-[260px]">
+            <div className="text-[10px] lg:text-xs font-bold text-white mb-1">{card.name}</div>
+            {abilities.map((ability: any, i: number) => (
+              <div key={i} className="flex items-start gap-1.5 text-[9px] lg:text-[11px] text-warm-300 leading-snug">
+                <svg viewBox="0 0 24 24" fill={ability._type === 'shop' ? '#60a5fa' : '#eab308'} className="w-3 h-3 shrink-0 mt-0.5">
+                  <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+                </svg>
+                <span>{formatAbilitySentence(ability, { resolveCardName })}</span>
+              </div>
+            ))}
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
