@@ -7,6 +7,7 @@ import {
   useSensors,
   type Modifier,
 } from '@dnd-kit/core';
+import { toast } from 'react-hot-toast';
 import { useGameStore } from '../store/gameStore';
 import type { CardView, BoardUnitView } from '../types';
 
@@ -90,7 +91,13 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
         return;
       }
 
-      if (!over) return;
+      if (!over) {
+        toast('Drop on the board to play or the flame to burn', {
+          icon: '\u{1F4A1}',
+          id: 'drop-hint',
+        });
+        return;
+      }
 
       const activeData = active.data.current;
       const overData = over.data.current;

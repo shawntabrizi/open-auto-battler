@@ -98,8 +98,7 @@ export interface CardDetailPanelProps {
 export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: CardDetailPanelProps) {
   const [showForfeitConfirm, setShowForfeitConfirm] = React.useState(false);
   const isSubmitting = useIsSubmitting();
-  const { cardNameMap, setSelection, showRawJson, newRun } =
-    useGameStore();
+  const { cardNameMap, setSelection, showRawJson, newRun } = useGameStore();
   const abandonGame = useArenaStore((state) => state.abandonGame);
   const abandonTournament = useTournamentStore((state) => state.abandonTournament);
 
@@ -167,6 +166,10 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
     layout === 'contained'
       ? 'relative h-full min-h-0 w-40 sm:w-44 lg:w-80 shrink-0'
       : 'fixed top-0 left-0 bottom-0 w-44 lg:w-80';
+
+  const handleClose = () => {
+    setSelection(null);
+  };
 
   const renderCardTab = () => {
     if (!card) {
@@ -260,10 +263,17 @@ export function CardDetailPanel({ card, isVisible, mode, layout = 'fixed' }: Car
         className={`card-detail-panel ${containerClassName} bg-warm-950 border-r border-warm-700 shadow-2xl flex flex-col z-30`}
       >
         {/* Header */}
-        <div className="border-b border-warm-800 py-2 lg:py-3 px-3 lg:px-5">
+        <div className="border-b border-warm-800 py-2 lg:py-3 px-3 lg:px-5 flex items-center justify-between">
           <div className="text-xs font-bold uppercase tracking-wider text-yellow-500">
             Card Details
           </div>
+          <button
+            onClick={handleClose}
+            className="text-warm-500 hover:text-warm-200 text-sm leading-none p-1 transition-colors"
+            aria-label="Close card details"
+          >
+            &#x2715;
+          </button>
         </div>
 
         {/* Content */}

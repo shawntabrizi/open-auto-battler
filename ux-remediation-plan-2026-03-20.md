@@ -172,3 +172,16 @@ After all tasks are complete:
 
 ### Task 9: Prevent accidental battle with empty board (HIGH)
 - **`store/gameStore.ts`** (`endTurn`): Added a guard that checks if the board has any units before allowing battle. If the board is empty, shows a toast warning ("You have no units on the board! Place cards before battling.") and blocks the action.
+
+### Task 10: Toast feedback on failed drag drop (HIGH)
+- **`hooks/useDragAndDrop.ts`**: When a card is dropped on an invalid target (not board slot or burn zone), shows a hint toast: "Drop on the board to play or the flame to burn". Uses `id: 'drop-hint'` to prevent duplicate toasts.
+
+### Task 11: Board-full feedback (HIGH)
+- **`store/gameStore.ts`** (`playHandCard`): Added guard that checks if all 5 board slots are occupied before attempting to play. Shows toast: "Board is full! Burn a unit to make room."
+- **`Arena.tsx`**: Updated contextual hint to show "Board full — burn a unit to make room" when all 5 slots are occupied.
+
+### Task 12: Card detail panel close button (MEDIUM)
+- **`CardDetailPanel.tsx`**: Added an explicit close button (X) in the panel header next to "Card Details". Calls `setSelection(null)` to dismiss. Especially important on mobile where the panel takes 35% of screen width.
+
+### Task 13: Improved loading and error states (MEDIUM)
+- **`GameLayout.tsx`**: Replaced bare "Loading WASM..." text with a spinning loader + "Loading game engine..." animated text. Replaced raw error display with a user-friendly "Something went wrong" message, the error detail in small text, and a "Reload" button for recovery.

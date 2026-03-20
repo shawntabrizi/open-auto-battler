@@ -162,9 +162,11 @@ export function Arena() {
             ? hasHandSelection
               ? 'Now tap a board slot to place your unit'
               : 'Tap a card in your hand to begin'
-            : hasHandSelection
-              ? 'Tap a slot to place your unit'
-              : `${unitCount}/5 units deployed`}
+            : unitCount >= 5
+              ? 'Board full \u2014 burn a unit to make room'
+              : hasHandSelection
+                ? 'Tap a slot to place your unit'
+                : `${unitCount}/5 units deployed`}
         </div>
 
         {/* Board row */}

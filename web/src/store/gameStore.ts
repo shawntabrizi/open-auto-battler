@@ -415,8 +415,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   playHandCard: (handIndex: number, boardSlot: number) => {
-    const { engine } = get();
+    const { engine, view } = get();
     if (!engine) return;
+    // Check if board is full
+    if (view?.board && view.board.every(Boolean)) {
+      toast('Board is full! Burn a unit to make room.', { icon: '\u26A0\uFE0F', id: 'board-full' });
+      return;
+    }
     try {
       engine.play_hand_card(handIndex, boardSlot);
       set({
