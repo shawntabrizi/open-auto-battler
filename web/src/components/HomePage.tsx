@@ -85,7 +85,7 @@ export function HomePage() {
             </Link>
 
             {/* Secondary menu row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-4">
+            <div className="grid grid-cols-2 gap-2.5 lg:gap-4">
               {MENU_BUTTONS.map((btn, i) => (
                 <Link
                   key={btn.to}

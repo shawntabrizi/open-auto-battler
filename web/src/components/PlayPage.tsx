@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useArenaStore } from '../store/arenaStore';
 import { useTournamentStore } from '../store/tournamentStore';
+import { useTutorialStore } from '../store/tutorialStore';
 import { TopBar } from './TopBar';
 
 const formatBalance = (raw: bigint, decimals = 12) =>
@@ -12,6 +13,7 @@ const formatBalance = (raw: bigint, decimals = 12) =>
 export function PlayPage() {
   const { isConnected, blockNumber } = useArenaStore();
   const { activeTournament } = useTournamentStore();
+  const openTutorial = useTutorialStore((s) => s.open);
 
   return (
     <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
@@ -84,6 +86,17 @@ export function PlayPage() {
                 <p className="text-warm-500 text-[10px] lg:text-xs mt-1">Direct connect</p>
               </Link>
             </div>
+
+            {/* Tutorial */}
+            <button
+              onClick={() => openTutorial('how-to-play')}
+              className="block w-full p-3 lg:p-4 rounded-xl border border-warm-700/30 bg-warm-900/20 hover:border-warm-600 hover:bg-warm-800/30 active:scale-[0.99] transition-all text-center"
+            >
+              <h3 className="font-heading text-sm lg:text-base font-bold text-warm-300">
+                TUTORIAL
+              </h3>
+              <p className="text-warm-500 text-[10px] lg:text-xs mt-0.5">Learn how to play</p>
+            </button>
           </div>
         </div>
       </div>

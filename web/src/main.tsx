@@ -41,11 +41,13 @@ import { TournamentGamePage } from './components/TournamentGamePage.tsx';
 
 // Lazy-loaded features (code-split, no impact on main bundle)
 import { PresentationsPage, PresentationViewer, EmbedPage } from './features/presentations';
+import { TutorialOverlay } from './components/tutorials/TutorialOverlay';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Toaster position="top-right" />
     <TransactionOverlay />
+    <TutorialOverlay />
     <HashRouter>
       <AuthGate>
         <HamburgerMenu />

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
 import { useMenuStore } from '../store/menuStore';
+import { useTutorialStore } from '../store/tutorialStore';
 import { GearIcon, CloseIcon } from './Icons';
 
 /** Person icon for account */
@@ -107,6 +108,7 @@ export function HamburgerMenu() {
   const location = useLocation();
   const { isConnected, logout, abandonGame } = useArenaStore();
   const { newRun } = useGameStore();
+  const openTutorial = useTutorialStore((s) => s.open);
 
   const inGame = isGameRoute(location.pathname);
 
@@ -199,7 +201,7 @@ export function HamburgerMenu() {
                   <button
                     onClick={() => {
                       setOpen(false);
-                      // TODO: implement tutorial/game tips overlay
+                      openTutorial('how-to-play');
                     }}
                     className="flex items-center gap-3 w-full px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
                   >
