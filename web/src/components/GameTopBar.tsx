@@ -139,7 +139,8 @@ export function GameTopBar({
   customAction,
   className = '',
 }: HUDProps & { className?: string } = {}) {
-  const { view, setShowBag, startingLives, winsToVictory } = useGameStore();
+  const { view, setShowBag, selection, setSelection, startingLives, winsToVictory } =
+    useGameStore();
   const playerAvatar = useCustomizationStore((s) => s.selections.playerAvatar);
   const openMenu = useMenuStore((s) => s.open);
 
@@ -150,6 +151,18 @@ export function GameTopBar({
       aria-label="Game controls"
       className={`game-top-bar h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center px-2 lg:px-6 relative z-20 overflow-hidden ${className}`}
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
+      onClick={(event) => {
+        if (!selection) return;
+
+        const clickTarget = event.target;
+        if (!(clickTarget instanceof Element)) return;
+
+        if (clickTarget.closest('button, a, input, select, textarea, [role="button"]')) {
+          return;
+        }
+
+        setSelection(null);
+      }}
     >
       {/* HUD items — all same height */}
       <div className="flex items-center gap-1.5 lg:gap-2">

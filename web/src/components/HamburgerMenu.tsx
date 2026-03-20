@@ -260,7 +260,7 @@ export function HamburgerMenu() {
     <>
       {/* Backdrop + Panel */}
       {open && (
-        <div className="fixed inset-0 z-[200]">
+        <div className="fixed inset-0 z-[10010]">
           {/* Dark backdrop */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
