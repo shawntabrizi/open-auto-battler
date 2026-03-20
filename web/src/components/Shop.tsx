@@ -62,7 +62,7 @@ export function Shop() {
     <div
       role="region"
       aria-label="Your Hand"
-      className={`shop h-32 lg:h-60 border-t border-warm-800/60 flex-shrink-0 relative ${handBg ? '' : 'bg-shop-bg'}`}
+      className={`shop h-full border-t border-warm-800/60 relative ${handBg ? '' : 'bg-shop-bg'}`}
       style={
         handBg
           ? {
@@ -109,10 +109,9 @@ export function Shop() {
         {/* Center: Hand */}
         <div className="shop-hand flex-1 flex flex-col items-center justify-center overflow-hidden relative">
           {/* Hand label - desktop only */}
-          <div className="hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 items-center gap-2">
-            <span className="text-sm text-warm-400">Hand</span>
-            <span className="text-xs text-warm-500">({view.bag_count} in bag)</span>
-            <span className="text-xs text-warm-500">Select: {GAME_SHORTCUTS.hand}</span>
+          <div className="board-helper hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 items-center gap-3 rounded-full border border-warm-700/60 bg-black/45 px-4 py-1.5 text-center shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm">
+            <span className="text-sm text-warm-100">Hand</span>
+            <span className="text-xs text-warm-200/85">({view.bag_count} in bag)</span>
           </div>
           <div className="hand-row flex items-center justify-center gap-2 lg:gap-4 h-full w-full lg:max-w-3xl px-2 lg:px-4">
             {view.hand.map((card, i) =>
@@ -155,6 +154,11 @@ export function Shop() {
                 </div>
               )
             )}
+          </div>
+          <div className="board-helper hidden lg:flex absolute bottom-3 left-1/2 -translate-x-1/2 justify-center">
+            <div className="rounded-full border border-warm-800/70 bg-black/45 px-4 py-1.5 text-center text-xs text-warm-200/85 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm">
+              Select: {GAME_SHORTCUTS.hand}
+            </div>
           </div>
         </div>
 

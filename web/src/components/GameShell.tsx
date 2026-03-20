@@ -124,10 +124,10 @@ export function GameShell({
         />
 
         {/* Zone 2-4: Main game area */}
-        <main className="flex flex-col flex-1 min-h-0 outline-none">
+        <main className="grid grid-rows-[minmax(0,3fr)_auto_minmax(0,2fr)] flex-1 min-h-0 outline-none">
           {/* Zone 2: Arena (Board) with left panel */}
           <div
-            className={`game-main flex-1 flex flex-col overflow-hidden min-h-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
+            className={`game-main flex flex-col overflow-hidden min-h-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
           >
             <Arena />
           </div>
@@ -141,7 +141,7 @@ export function GameShell({
 
           {/* Zone 4: Hand (Shop) */}
           <div
-            className={`game-shop flex-shrink-0 mt-auto ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
+            className={`game-shop min-h-0 overflow-hidden ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
           >
             <Shop />
           </div>
