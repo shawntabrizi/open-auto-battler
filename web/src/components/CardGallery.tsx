@@ -6,7 +6,9 @@ import type { CardView, BoardUnitView } from '../types';
 interface CardGalleryProps {
   cards: (CardView | BoardUnitView)[];
   selectedId?: number | null;
-  onSelect?: (card: CardView | BoardUnitView | null) => void;
+  /** Per-item selection check — overrides selectedId when provided (useful for duplicates). */
+  isSelected?: (card: CardView | BoardUnitView, index: number) => boolean;
+  onSelect?: (card: CardView | BoardUnitView | null, index: number) => void;
   /** Controlled search/sort from parent (e.g. sandbox store). Omit to use internal state. */
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
@@ -19,6 +21,7 @@ interface CardGalleryProps {
 export function CardGallery({
   cards,
   selectedId,
+  isSelected: isSelectedFn,
   onSelect,
   searchQuery: controlledSearch,
   onSearchChange,
@@ -35,20 +38,23 @@ export function CardGallery({
   const sortBy = controlledSort ?? internalSort;
   const setSortBy = onSortChange ?? setInternalSort;
 
+  // Track original index through sort/filter so callbacks reference input array positions
   const sorted = useMemo(
     () =>
-      [...cards].sort((a, b) =>
-        sortBy === 'name'
-          ? a.name.localeCompare(b.name)
-          : a.play_cost - b.play_cost || a.name.localeCompare(b.name)
-      ),
+      cards
+        .map((card, originalIndex) => ({ card, originalIndex }))
+        .sort((a, b) =>
+          sortBy === 'name'
+            ? a.card.name.localeCompare(b.card.name)
+            : a.card.play_cost - b.card.play_cost || a.card.name.localeCompare(b.card.name)
+        ),
     [cards, sortBy]
   );
 
   const filtered = useMemo(() => {
     if (!searchQuery) return sorted;
     const q = searchQuery.toLowerCase();
-    return sorted.filter((card) => JSON.stringify(card).toLowerCase().includes(q));
+    return sorted.filter((item) => JSON.stringify(item.card).toLowerCase().includes(q));
   }, [sorted, searchQuery]);
 
   return (
@@ -65,20 +71,21 @@ export function CardGallery({
       )}
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
         <div className="grid grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-1 md:gap-4 lg:gap-6 pb-4 lg:pb-12">
-          {filtered.map((card, i) => (
-            <div key={`${card.id}-${i}`} className="aspect-[3/4]">
-              <UnitCard
-                card={card}
-                showCost={true}
-                showBurn={true}
-                draggable={false}
-                isSelected={selectedId === card.id}
-                onClick={() =>
-                  onSelect?.(selectedId === card.id ? null : card)
-                }
-              />
-            </div>
-          ))}
+          {filtered.map(({ card, originalIndex }) => {
+            const selected = isSelectedFn ? isSelectedFn(card, originalIndex) : selectedId === card.id;
+            return (
+              <div key={`${card.id}-${originalIndex}`} className="aspect-[3/4]">
+                <UnitCard
+                  card={card}
+                  showCost={true}
+                  showBurn={true}
+                  draggable={false}
+                  isSelected={selected}
+                  onClick={() => onSelect?.(selected ? null : card, originalIndex)}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

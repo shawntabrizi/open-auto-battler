@@ -18,21 +18,10 @@ export function BagOverlay() {
 
   const cards = bagCards.map((entry) => entry.card);
 
-  // Map card index in filtered/sorted gallery back to original bagIndex
-  const handleSelect = (card: CardView | null) => {
-    if (!card) {
-      setSelection(null);
-      return;
-    }
-    const entry = bagCards.find(
-      (e) => e.card.id === card.id && !(selection?.type === 'bag' && selection.index === e.bagIndex)
-    ) ?? bagCards.find((e) => e.card.id === card.id);
-    if (entry) {
-      setSelection({ type: 'bag', index: entry.bagIndex });
-    }
-  };
-
-  const selectedCardId = selection?.type === 'bag' ? bagCards.find((e) => e.bagIndex === selection.index)?.card.id ?? null : null;
+  // Track which gallery index is selected (survives sort/filter since bagCards order is stable)
+  const selectedGalleryIndex = selection?.type === 'bag'
+    ? bagCards.findIndex((e) => e.bagIndex === selection.index)
+    : -1;
 
   return (
     <div className="fixed left-[11rem] lg:left-80 right-0 top-0 bottom-0 z-[60] bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300">
@@ -63,8 +52,14 @@ export function BagOverlay() {
         ) : (
           <CardGallery
             cards={cards}
-            selectedId={selectedCardId}
-            onSelect={(card) => handleSelect(card as CardView | null)}
+            isSelected={(_card, index) => index === selectedGalleryIndex}
+            onSelect={(card, index) => {
+              if (!card || index === selectedGalleryIndex) {
+                setSelection(null);
+              } else {
+                setSelection({ type: 'bag', index: bagCards[index].bagIndex });
+              }
+            }}
           />
         )}
       </div>
