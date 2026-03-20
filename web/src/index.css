@@ -682,31 +682,49 @@ body {
     0 0 20px rgba(184, 92, 74, 0.05);
 }
 
-/* Target highlight pulse — units receiving damage or ability effects */
+/* Target highlight pulse — units receiving damage or ability effects (red glow) */
 @keyframes target-highlight {
   0% {
-    box-shadow: 0 0 0 0 rgba(212, 168, 67, 0.6);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
   }
   50% {
-    box-shadow: 0 0 12px 4px rgba(212, 168, 67, 0.4);
+    box-shadow: 0 0 14px 5px rgba(220, 38, 38, 0.5);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(212, 168, 67, 0);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
   }
 }
 
 .unit-target-highlight {
-  animation: target-highlight 0.6s ease-out;
+  animation: target-highlight 0.8s ease-out;
   border-radius: 8px;
 }
 
-/* Source glow — unit that triggered an ability */
+/* Positive target highlight (green glow for buffs/heals) */
+@keyframes target-highlight-positive {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 14px 5px rgba(34, 197, 94, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.unit-target-highlight-positive {
+  animation: target-highlight-positive 0.8s ease-out;
+  border-radius: 8px;
+}
+
+/* Source glow — unit that triggered an ability (yellow glow) */
 @keyframes source-glow {
   0% {
     box-shadow: 0 0 0 2px rgba(234, 179, 8, 0);
   }
   30% {
-    box-shadow: 0 0 8px 2px rgba(234, 179, 8, 0.5);
+    box-shadow: 0 0 10px 3px rgba(234, 179, 8, 0.6);
   }
   100% {
     box-shadow: 0 0 0 2px rgba(234, 179, 8, 0);

@@ -221,6 +221,9 @@ function getEventDelay(events: CombatEvent[], index: number, playbackSpeed: numb
       return 300 / playbackSpeed;
     case 'UnitSpawn':
       return 600 / playbackSpeed;
+    case 'PhaseStart':
+    case 'PhaseEnd':
+      return 0; // No visual effect, skip instantly
     default:
       return 500 / playbackSpeed;
   }
@@ -232,9 +235,10 @@ interface BattleArenaProps {
   battleOutput: BattleOutput;
   onBattleEnd: () => void;
   onEventProcessed?: (eventIndex: number) => void;
+  paused?: boolean;
 }
 
-export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: BattleArenaProps) {
+export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, paused }: BattleArenaProps) {
   const cardNameMap = useGameStore((state) => state.cardNameMap);
   const unitMap = useMemo(() => buildUnitMap(battleOutput), [battleOutput]);
   const resolveCardName = useMemo(() => (cardId: number) => cardNameMap[cardId], [cardNameMap]);
@@ -254,7 +258,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
   const [shakeActive, setShakeActive] = useState(false);
   const [dyingUnitIds, setDyingUnitIds] = useState<Set<number>>(new Set());
   const [colorFlash, setColorFlash] = useState<string | null>(null);
-  const [targetHighlightIds, setTargetHighlightIds] = useState<Set<number>>(new Set());
+  const [targetHighlightIds, setTargetHighlightIds] = useState<Map<number, 'positive' | 'negative'>>(new Map());
   const [sourceGlowIds, setSourceGlowIds] = useState<Set<number>>(new Set());
 
   // Playback speed control
@@ -277,6 +281,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
 
   // Process event visual effects when eventIndex changes
   useEffect(() => {
+    if (paused) return;
     if (eventIndex >= battleOutput.events.length) return;
 
     onEventProcessed?.(eventIndex);
@@ -292,7 +297,17 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
             formatTriggeredAbility(unitMap, source_instance_id, ability_index, resolveCardName)
           )
         );
-        setSourceGlowIds((prev) => new Set(prev).add(source_instance_id));
+        // Clear and re-set so animation retrigers on consecutive triggers
+        setSourceGlowIds((prev) => {
+          const next = new Set(prev);
+          next.delete(source_instance_id);
+          return next;
+        });
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setSourceGlowIds((prev) => new Set(prev).add(source_instance_id));
+          });
+        });
         setTimeout(() => {
           setSourceGlowIds((prev) => {
             const next = new Set(prev);
@@ -307,26 +322,45 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
       case 'Clash': {
         setShakeActive(true);
         setTimeout(() => setShakeActive(false), 250);
-        setPlayerBoard((prevPlayer) => {
-          setEnemyBoard((prevEnemy) => {
-            const pId = prevPlayer.length > 0 ? prevPlayer[0].instance_id : null;
-            const eId = prevEnemy.length > 0 ? prevEnemy[0].instance_id : null;
-            const clashing = [pId, eId].filter((id) => id !== null);
-            setClashingUnitIds(clashing);
-            return prevEnemy;
+        // Clear first, then re-apply after DOM flushes so CSS animation restarts
+        setClashingUnitIds([]);
+        // Double rAF: first frame flushes the clear, second frame re-applies the class
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setPlayerBoard((prevPlayer) => {
+              setEnemyBoard((prevEnemy) => {
+                const pId = prevPlayer.length > 0 ? prevPlayer[0].instance_id : null;
+                const eId = prevEnemy.length > 0 ? prevEnemy[0].instance_id : null;
+                const clashing = [pId, eId].filter((id) => id !== null);
+                setClashingUnitIds(clashing);
+                return prevEnemy;
+              });
+              return prevPlayer;
+            });
           });
-          return prevPlayer;
         });
+        // Auto-clear after bump animation completes (0.5s)
+        setTimeout(() => setClashingUnitIds([]), 500);
         break;
       }
 
       case 'DamageTaken': {
         const { target_instance_id, remaining_hp } = event.payload;
 
-        setTargetHighlightIds((prev) => new Set(prev).add(target_instance_id));
+        // Clear and re-set so animation retrigers on consecutive hits
+        setTargetHighlightIds((prev) => {
+          const next = new Map(prev);
+          next.delete(target_instance_id);
+          return next;
+        });
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setTargetHighlightIds((prev) => new Map(prev).set(target_instance_id, 'negative'));
+          });
+        });
         setTimeout(() => {
           setTargetHighlightIds((prev) => {
-            const next = new Set(prev);
+            const next = new Map(prev);
             next.delete(target_instance_id);
             return next;
           });
@@ -410,19 +444,34 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
       }
 
       case 'AbilityDamage': {
-        const { target_instance_id, damage, remaining_hp } = event.payload;
+        const { target_instance_id, damage, remaining_hp, source_instance_id } = event.payload;
 
-        setTargetHighlightIds((prev) => new Set(prev).add(target_instance_id));
-        setSourceGlowIds((prev) => new Set(prev).add(event.payload.source_instance_id));
+        // Clear and re-set so animations retrigger on consecutive hits
+        setTargetHighlightIds((prev) => {
+          const next = new Map(prev);
+          next.delete(target_instance_id);
+          return next;
+        });
+        setSourceGlowIds((prev) => {
+          const next = new Set(prev);
+          next.delete(source_instance_id);
+          return next;
+        });
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setTargetHighlightIds((prev) => new Map(prev).set(target_instance_id, 'negative'));
+            setSourceGlowIds((prev) => new Set(prev).add(source_instance_id));
+          });
+        });
         setTimeout(() => {
           setTargetHighlightIds((prev) => {
-            const next = new Set(prev);
+            const next = new Map(prev);
             next.delete(target_instance_id);
             return next;
           });
           setSourceGlowIds((prev) => {
             const next = new Set(prev);
-            next.delete(event.payload.source_instance_id);
+            next.delete(source_instance_id);
             return next;
           });
         }, 600);
@@ -450,10 +499,22 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
           attack_change,
         } = event.payload;
 
-        setTargetHighlightIds((prev) => new Set(prev).add(statsTarget));
+        const highlightType = (health_change >= 0 && attack_change >= 0) ? 'positive' : 'negative';
+
+        // Clear and re-set so animation retrigers on consecutive effects
+        setTargetHighlightIds((prev) => {
+          const next = new Map(prev);
+          next.delete(statsTarget);
+          return next;
+        });
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setTargetHighlightIds((prev) => new Map(prev).set(statsTarget, highlightType));
+          });
+        });
         setTimeout(() => {
           setTargetHighlightIds((prev) => {
-            const next = new Set(prev);
+            const next = new Map(prev);
             next.delete(statsTarget);
             return next;
           });
@@ -501,10 +562,22 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
           attack_change,
         } = event.payload;
 
-        setTargetHighlightIds((prev) => new Set(prev).add(statsTarget));
+        const highlightType = (health_change >= 0 && attack_change >= 0) ? 'positive' : 'negative';
+
+        // Clear and re-set so animation retrigers on consecutive effects
+        setTargetHighlightIds((prev) => {
+          const next = new Map(prev);
+          next.delete(statsTarget);
+          return next;
+        });
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setTargetHighlightIds((prev) => new Map(prev).set(statsTarget, highlightType));
+          });
+        });
         setTimeout(() => {
           setTargetHighlightIds((prev) => {
-            const next = new Set(prev);
+            const next = new Map(prev);
             next.delete(statsTarget);
             return next;
           });
@@ -558,10 +631,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
         break;
       }
     }
-  }, [eventIndex, battleOutput, onEventProcessed, unitMap]);
+  }, [paused, eventIndex, battleOutput, onEventProcessed, unitMap]);
 
-  // Auto-advance timer (only in auto mode)
+  // Auto-advance timer (only in auto mode, waits for splash to finish)
   useEffect(() => {
+    if (paused) return;
     if (eventIndex >= battleOutput.events.length) {
       if (playMode === 'auto') onBattleEnd();
       return;
@@ -571,7 +645,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
     const delay = getEventDelay(battleOutput.events, eventIndex, playbackSpeed);
     const timeoutId = setTimeout(() => setEventIndex((i) => i + 1), delay);
     return () => clearTimeout(timeoutId);
-  }, [eventIndex, playMode, playbackSpeed, battleOutput, onBattleEnd]);
+  }, [paused, eventIndex, playMode, playbackSpeed, battleOutput, onBattleEnd]);
 
   // --- Step / Skip handlers ---
 
@@ -580,7 +654,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
     setDamageNumbers(new Map());
     setStatChanges(new Map());
     setAbilityToasts(new Map());
-    setTargetHighlightIds(new Set());
+    setTargetHighlightIds(new Map());
     setSourceGlowIds(new Set());
   };
 
@@ -648,16 +722,22 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
 
     const isClashing = clashingUnitIds.includes(unit.instance_id);
     const isDying = dyingUnitIds.has(unit.instance_id);
-    const isTargetHighlighted = targetHighlightIds.has(unit.instance_id);
+    const targetHighlightType = targetHighlightIds.get(unit.instance_id);
     const isSourceGlowing = sourceGlowIds.has(unit.instance_id);
+
+    const targetHighlightClass = targetHighlightType === 'positive'
+      ? 'unit-target-highlight-positive'
+      : targetHighlightType === 'negative'
+        ? 'unit-target-highlight'
+        : '';
 
     return (
       <div
         key={`${unit.instance_id}-${index}`}
-        className={`relative w-full h-full ${isDying ? 'animate-death-shrink' : ''} ${isTargetHighlighted ? 'unit-target-highlight' : ''} ${isSourceGlowing ? 'unit-source-glow' : ''}`}
+        className={`relative w-full h-full ${isDying ? 'animate-death-shrink' : ''}`}
       >
         <div
-          className={`w-full h-full transition-transform duration-200 ${isClashing ? (isPlayer ? 'clash-bump-right' : 'clash-bump-left') : ''}`}
+          className={`w-full h-full transition-transform duration-200 ${isClashing ? (isPlayer ? 'clash-bump-right' : 'clash-bump-left') : ''} ${targetHighlightClass} ${isSourceGlowing ? 'unit-source-glow' : ''}`}
         >
           <UnitCard
             card={{

@@ -281,6 +281,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
           battleOutput={battleOutput}
           onBattleEnd={() => setBattleFinished(true)}
           onEventProcessed={handleEventProcessed}
+          paused={showSplash}
         />
 
         {/* Result overlay — centered over the battle field */}
