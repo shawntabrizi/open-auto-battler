@@ -68,6 +68,14 @@ function AbandonIcon({ className = 'w-5 h-5' }: { className?: string }) {
   );
 }
 
+function CreatorIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+    </svg>
+  );
+}
+
 // Routes that are considered "in-game" (shop/battle phase)
 const GAME_ROUTES = ['/practice/game', '/arena/game', '/tournament/game', '/versus/game'];
 
@@ -80,6 +88,7 @@ const MENU_ITEMS = [
   { to: '/account', icon: PersonIcon, label: 'Account' },
   { to: '/network', icon: NetworkIcon, label: 'Network' },
   { to: '/marketplace', icon: ShopIcon, label: 'Marketplace' },
+  { to: '/creator', icon: CreatorIcon, label: 'Creator Studio' },
 ] as const;
 
 /**

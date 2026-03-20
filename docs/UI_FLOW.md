@@ -51,9 +51,9 @@ flowchart TD
   Battle --> InGameHamburger
 
 
-  Cards --> Sandbox["/sandbox"]
-  Cards --> CreateCard["/cards/create-card"]
-  Cards --> CreateSet["/cards/create-set"]
+  Cards --> Sandbox["/cards"]
+  Cards --> CreateCard["/creator/card"]
+  Cards --> CreateSet["/creator/set"]
   Cards -.-> SetPreview["Set Preview Overlay"]
 
   Customize --> CustBg["/customize/backgrounds"]
@@ -80,7 +80,7 @@ flowchart TD
   InGameHamburger --> ReturnMenu["Return to Menu → /"]
   InGameHamburger --> Abandon["Abandon → /"]
 
-  Cards --> MintNft["/customize/mint-nft"]
+  Cards --> MintNft["/creator/mint"]
 ```
 
 ## Global Elements
@@ -201,16 +201,17 @@ flowchart TD
 | Offline | `/practice` | Half-width | Single player. Routes to `/network` if not connected. |
 | Peer-to-Peer | `/versus` | Half-width | Direct connect P2P. |
 
-## Cards
+## Card Sandbox
 
 **Route:** `/cards`
 
-**TopBar:** Back to `/` (Menu), title "Cards"
+**TopBar:** Back to `/` (Menu), title "Card Sandbox", `hasCardPanel`
 
 **Contents:**
-- **Sandbox CTA** — "See All Cards in the Sandbox" banner linking to `/sandbox`
-- **Set grid** — all card sets with mini 5-card art preview, name, card count. Click opens Set Preview Overlay.
-- **Create Card** (`/cards/create-card`) and **Create Set** (`/cards/create-set`) buttons at bottom
+- Card Detail Panel on left
+- Battle arena (player/enemy boards) for testing card interactions
+- Search bar to filter cards
+- Card gallery (all cards, click to place on boards)
 
 ## Customize
 
@@ -355,17 +356,9 @@ Each category has its own route under `/customize/:category`:
 
 **Contents:** P2P connection setup, then direct multiplayer game.
 
-### Sandbox
+### Card Sandbox
 
-**Route:** `/sandbox`
-
-**TopBar:** Back to `/cards` (Cards), title "Sandbox", `hasCardPanel`
-
-**Contents:**
-- Card Detail Panel on left
-- Battle arena (player/enemy boards)
-- Search bar
-- Card gallery (all cards, click to place on board)
+See [Card Sandbox](#card-sandbox) section above.
 
 ### Set Browser
 
@@ -434,29 +427,37 @@ Each category has its own route under `/customize/:category`:
 
 **Status:** Placeholder. "Coming Soon" — will contain card packs, cosmetics, and more.
 
-## Creator Pages
+## Creator Studio
+
+### Creator Landing
+
+**Route:** `/creator`
+
+**TopBar:** Back to `/` (Menu), title "Creator Studio"
+
+**Contents:** Links to Create Card, Create Set, and Mint NFT. Shows desktop-recommended banner on mobile.
 
 ### Create Card
 
-**Route:** `/cards/create-card`
+**Route:** `/creator/card`
 
-**TopBar:** Back to `/cards` (Cards), title "Card Creator"
+**TopBar:** Back to `/creator` (Creator), title "Card Creator"
 
 **Contents:** Card designer with stats, abilities, preview, mint on-chain.
 
 ### Create Set
 
-**Route:** `/cards/create-set`
+**Route:** `/creator/set`
 
-**TopBar:** Back to `/cards` (Cards), title "Set Creator", `hasCardPanel` (desktop)
+**TopBar:** Back to `/creator` (Creator), title "Set Creator", `hasCardPanel` (desktop)
 
 **Contents:** Card set builder, select cards and create set on-chain.
 
 ### Mint NFT
 
-**Route:** `/customize/mint-nft`
+**Route:** `/creator/mint`
 
-**TopBar:** Back to `/cards` (Cards), title "Mint NFT"
+**TopBar:** Back to `/creator` (Creator), title "Mint NFT"
 
 **Contents:** NFT minting for cosmetic items.
 
@@ -501,7 +502,7 @@ These are full-screen or partial overlays rendered on top of the current page. C
 | `/sets/:setId` | Set Preview | `/sets` |
 | `/practice` | Practice Pre-Game | `/play` |
 | `/practice/game` | Practice Game | `/practice` |
-| `/sandbox` | Sandbox | `/cards` |
+| `/cards` | Card Sandbox | `/` |
 | `/versus` | Versus (redirect) | `/play` |
 | `/versus/lobby` | P2P Lobby | `/play` |
 | `/versus/game` | P2P Game | `/versus/lobby` |
@@ -514,10 +515,11 @@ These are full-screen or partial overlays rendered on top of the current page. C
 | `/network` | Network | `/` |
 | `/account` | Account | `/` |
 | `/marketplace` | Marketplace | `/` |
-| `/cards/create-card` | Create Card | `/cards` |
-| `/cards/create-set` | Create Set | `/cards` |
-| `/customize/mint-nft` | Mint NFT | `/cards` |
-| `/set/:setId` | Set Page | `/cards` |
+| `/creator` | Creator Studio | `/` |
+| `/creator/card` | Create Card | `/creator` |
+| `/creator/set` | Create Set | `/creator` |
+| `/creator/mint` | Mint NFT | `/creator` |
+| `/sets/:setId` | Set Preview | `/sets` |
 | `/dev` | Dev Preview | — |
 | `/dev/game-over` | Game Over Preview | — |
 | `/presentations` | Presentations | — |

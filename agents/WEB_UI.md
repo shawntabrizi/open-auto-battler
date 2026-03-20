@@ -49,38 +49,43 @@ This document is derived from `web/src/*`.
 ### Overlays
 - `web/src/components/BattleOverlay.tsx` - Battle animation playback.
 - `web/src/components/BagOverlay.tsx` - Bag contents viewer.
-- `web/src/components/SetPreviewOverlay.tsx` - Set preview overlay for Cards and Set Selection.
-- `web/src/components/GameOverScreen.tsx` - Victory/defeat screen.
+- `web/src/components/GameOverScreen.tsx` - Game over screen.
 - `web/src/components/RotatePrompt.tsx` - Mobile orientation prompt.
-- `web/src/components/CardDetailModal.tsx` - Mobile card detail modal.
+- `web/src/components/TransactionOverlay.tsx` - Transaction signing/broadcasting overlay.
 
 ### Mode-Specific Pages
-- `web/src/components/LocalGamePage.tsx` - Local/offline game mode.
-- `web/src/components/BlockchainPage.tsx` - Blockchain game mode (wallet, on-chain turns).
-- `web/src/components/TournamentPage.tsx` - Tournament game mode.
+- `web/src/components/LocalGamePage.tsx` - Practice mode pre-game.
+- `web/src/components/PracticeGamePage.tsx` - Active practice game.
+- `web/src/components/BlockchainPage.tsx` - Arena mode pre-game.
+- `web/src/components/ArenaGamePage.tsx` - Active arena game.
+- `web/src/components/TournamentLobbyPage.tsx` - Tournament lobby.
+- `web/src/components/TournamentGamePage.tsx` - Active tournament game.
 - `web/src/components/MultiplayerPage.tsx` - P2P multiplayer lobby.
 - `web/src/components/MultiplayerGame.tsx` - Active multiplayer game.
-- `web/src/components/SandboxPage.tsx` - Card testing sandbox.
 
 ### Menu & Hub Pages
 - `web/src/components/HomePage.tsx` - Main menu.
 - `web/src/components/PlayPage.tsx` - Play mode selection.
-- `web/src/components/CardsPage.tsx` - Card sets browser.
-- `web/src/components/SetPage.tsx` - Single set view.
+- `web/src/components/SetsPage.tsx` - Set browser and selection.
+- `web/src/components/SetPage.tsx` - Single set preview.
+- `web/src/components/SandboxPage.tsx` - Card Sandbox (browse all cards, test battles).
 - `web/src/components/HistoryPage.tsx` - History hub.
 - `web/src/components/AchievementsPage.tsx` - Achievement tracking.
 - `web/src/components/StatsPage.tsx` - Player stats.
 - `web/src/components/BattleHistoryPage.tsx` - Battle history (placeholder).
 - `web/src/components/CustomizePage.tsx` - Customization hub.
-- `web/src/components/CustomizeCategoryPage.tsx` - Per-category customization (backgrounds, hand, card-border, avatar, card-art).
-- `web/src/components/SetSelectionScreen.tsx` - Set selection shared by local and blockchain modes.
+- `web/src/components/CustomizeCategoryPage.tsx` - Per-category customization.
 - `web/src/components/SettingsPage.tsx` - Settings.
 - `web/src/components/AccountPage.tsx` - Account info.
 - `web/src/components/NetworkPage.tsx` - Network/endpoint picker.
 - `web/src/components/ShopPage.tsx` - Marketplace (placeholder).
 - `web/src/components/GhostBrowserPage.tsx` - Ghost opponent browser.
+
+### Creator Studio
+- `web/src/components/CreatorPage.tsx` - Creator Studio landing page.
 - `web/src/components/CreateCardPage.tsx` - Card creator.
 - `web/src/components/CreateSetPage.tsx` - Set creator.
+- `web/src/components/MintNftPage.tsx` - NFT minting.
 - `web/src/components/MintNftPage.tsx` - NFT minting.
 - `web/src/components/DevPage.tsx` - Dev preview page.
 - `web/src/components/GameOverPreview.tsx` - Game over screen preview.

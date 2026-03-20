@@ -127,7 +127,7 @@ export function CustomizeCategoryPage() {
           </p>
           {isConnected && (
             <Link
-              to="/customize/mint-nft"
+              to="/creator/mint"
               className="mt-2 text-yellow-500 text-xs hover:underline"
             >
               Mint one

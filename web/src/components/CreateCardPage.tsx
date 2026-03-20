@@ -4,6 +4,7 @@ import { useGameStore } from '../store/gameStore';
 import { useIsSubmitting } from '../store/txStore';
 import { toast } from 'react-hot-toast';
 import { TopBar } from './TopBar';
+import { DesktopRecommendedBanner } from './DesktopRecommendedBanner';
 import {
   type AnyAbility,
   type BattleAbility,
@@ -301,7 +302,7 @@ export const CreateCardPage: React.FC = () => {
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-warm-900 flex flex-col text-white">
-        <TopBar backTo="/cards" backLabel="Cards" title="Card Creator" />
+        <TopBar backTo="/creator" backLabel="Creator" title="Card Creator" />
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <button
             onClick={connect}
@@ -316,7 +317,8 @@ export const CreateCardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-warm-950 text-warm-200 flex flex-col">
-      <TopBar backTo="/cards" backLabel="Cards" title="Card Creator" />
+      <TopBar backTo="/creator" backLabel="Creator" title="Card Creator" />
+      <DesktopRecommendedBanner />
       <div className="flex-1 p-4 lg:p-8 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

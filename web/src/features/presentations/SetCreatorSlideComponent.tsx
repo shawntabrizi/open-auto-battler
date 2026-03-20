@@ -1,5 +1,5 @@
 import { SlideIframe } from './SlideIframe';
 
 export function SetCreatorSlideComponent() {
-  return <SlideIframe src="./#/cards/create-set" title="Set Creator" />;
+  return <SlideIframe src="./#/creator/set" title="Set Creator" />;
 }

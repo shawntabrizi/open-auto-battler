@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import { CardDetailPanel } from './CardDetailPanel';
 import { UnitCard } from './UnitCard';
 import { TopBar } from './TopBar';
+import { DesktopRecommendedBanner } from './DesktopRecommendedBanner';
 import { type CardView } from '../types';
 import { blockchainCardToCardView } from '../utils/blockchainCards';
 
@@ -58,7 +59,7 @@ export const CreateSetPage: React.FC = () => {
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-warm-900 flex flex-col text-white">
-        <TopBar backTo="/cards" backLabel="Cards" title="Set Creator" />
+        <TopBar backTo="/creator" backLabel="Creator" title="Set Creator" />
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <button
             onClick={connect}
@@ -76,14 +77,15 @@ export const CreateSetPage: React.FC = () => {
       {/* Side Panel Integration - Always Visible */}
       <CardDetailPanel card={detailCard} isVisible={true} mode={{ type: 'readOnly' }} />
 
-      <TopBar backTo="/cards" backLabel="Cards" title="Set Creator" hasCardPanel />
+      <TopBar backTo="/creator" backLabel="Creator" title="Set Creator" hasCardPanel />
+      <DesktopRecommendedBanner />
 
       <div className="p-8 ml-80 transition-all duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="mb-4 lg:mb-8">
             <div className="flex items-center justify-between mb-1">
               <Link
-                to="/cards/create-card"
+                to="/creator/card"
                 className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center gap-1.5 text-xs lg:text-sm"
               >
                 <span>+</span> MINT NEW CARDS

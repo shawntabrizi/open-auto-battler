@@ -6,6 +6,7 @@ import { uploadToPinata, ipfsUrl } from '../utils/ipfs';
 import { submitTx } from '../utils/tx';
 import { IpfsImage } from './IpfsImage';
 import { TopBar } from './TopBar';
+import { DesktopRecommendedBanner } from './DesktopRecommendedBanner';
 import { Binary } from 'polkadot-api';
 import type { CustomizationType } from '../store/customizationStore';
 
@@ -185,7 +186,7 @@ export const MintNftPage: React.FC = () => {
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-warm-900 flex flex-col text-white">
-        <TopBar backTo="/cards" backLabel="Cards" title="Mint NFT" />
+        <TopBar backTo="/creator" backLabel="Creator" title="Mint NFT" />
         <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
           <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 uppercase">
             Mint NFT
@@ -203,7 +204,8 @@ export const MintNftPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-warm-950 text-warm-200 flex flex-col">
-      <TopBar backTo="/cards" backLabel="Cards" title="Mint NFT" />
+      <TopBar backTo="/creator" backLabel="Creator" title="Mint NFT" />
+      <DesktopRecommendedBanner />
       <div className="flex-1 overflow-y-auto p-4 lg:p-8">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">

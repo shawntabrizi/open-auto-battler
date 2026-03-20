@@ -154,8 +154,8 @@ function MyComponent() {
 - `AuthGate.tsx` - guards blockchain connection on mount
 - `LoginPage.tsx` - guards session restore
 - `AchievementsPage.tsx` - guards achievement data fetch
-- `TournamentPage.tsx` - guards tournament state initialization
-- `CardsPage.tsx`, `SetPage.tsx`, `GhostBrowserPage.tsx` - guard data fetches
+- `TournamentLobbyPage.tsx` - guards tournament state initialization
+- `SetsPage.tsx`, `SetPage.tsx`, `GhostBrowserPage.tsx` - guard data fetches
 
 **Rule:** Any initialization that calls into the WASM engine MUST use `useInitGuard`.
 

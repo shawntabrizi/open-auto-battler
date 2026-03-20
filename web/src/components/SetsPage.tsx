@@ -113,18 +113,29 @@ export function SetsPage() {
               {engine ? 'No sets found.' : 'Loading...'}
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 lg:gap-4">
-              {sorted.map((meta) => (
-                <SetCard
-                  key={meta.id}
-                  id={meta.id}
-                  name={meta.name}
-                  cards={setPreviewCards[meta.id]}
-                  isSelected={selectedSetId === meta.id}
-                  onSelect={() => selectSet(meta.id)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 lg:gap-4">
+                {sorted.map((meta) => (
+                  <SetCard
+                    key={meta.id}
+                    id={meta.id}
+                    name={meta.name}
+                    cards={setPreviewCards[meta.id]}
+                    isSelected={selectedSetId === meta.id}
+                    onSelect={() => selectSet(meta.id)}
+                  />
+                ))}
+              </div>
+
+              <div className="mt-6 lg:mt-10 text-center">
+                <Link
+                  to="/creator"
+                  className="text-warm-500 hover:text-warm-300 text-xs lg:text-sm transition-colors"
+                >
+                  Want to create your own set? Visit the Creator Studio &rarr;
+                </Link>
+              </div>
+            </>
           )}
         </div>
       </div>

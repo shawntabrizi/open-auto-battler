@@ -33,6 +33,7 @@ import { TransactionOverlay } from './components/TransactionOverlay.tsx';
 import { ArenaGamePage } from './components/ArenaGamePage.tsx';
 import { PracticeGamePage } from './components/PracticeGamePage.tsx';
 import { SetsPage } from './components/SetsPage.tsx';
+import { CreatorPage } from './components/CreatorPage.tsx';
 import { VersusRedirect } from './components/VersusRedirect.tsx';
 import { TournamentRedirect } from './components/TournamentRedirect.tsx';
 import { TournamentLobbyPage } from './components/TournamentLobbyPage.tsx';
@@ -76,9 +77,10 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/sets/:setId" element={<SetPage />} />
           <Route path="/dev" element={<DevPage />} />
           <Route path="/dev/game-over" element={<GameOverPreview />} />
-          <Route path="/cards/create-card" element={<CreateCardPage />} />
-          <Route path="/cards/create-set" element={<CreateSetPage />} />
-          <Route path="/customize/mint-nft" element={<MintNftPage />} />
+          <Route path="/creator" element={<CreatorPage />} />
+          <Route path="/creator/card" element={<CreateCardPage />} />
+          <Route path="/creator/set" element={<CreateSetPage />} />
+          <Route path="/creator/mint" element={<MintNftPage />} />
           <Route path="/history/ghosts" element={<GhostBrowserPage />} />
           <Route
             path="/embed"
