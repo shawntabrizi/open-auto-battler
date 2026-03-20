@@ -8,6 +8,7 @@ import { ShopSlideComponent } from './ShopSlideComponent';
 import { CardCreatorSlideComponent } from './CardCreatorSlideComponent';
 import { SetCreatorSlideComponent } from './SetCreatorSlideComponent';
 import { CardBreakdownComponent } from './CardBreakdownComponent';
+import { CARD_SIZES } from '../../constants/cardSizes';
 import type { CardView } from '../../types';
 import './styles.css';
 
@@ -120,11 +121,13 @@ export default function PresentationViewer() {
           };
           root.render(
             <div className="inline-block transform scale-150 origin-center m-8">
-              <UnitCard
-                card={cardData}
-                showCost={props.showCost !== false}
-                showBurn={props.showBurn !== false}
-              />
+              <div className={CARD_SIZES.standard.tw}>
+                <UnitCard
+                  card={cardData}
+                  showCost={props.showCost !== false}
+                  showBurn={props.showBurn !== false}
+                />
+              </div>
             </div>
           );
         } else if (componentType === 'card-breakdown') {

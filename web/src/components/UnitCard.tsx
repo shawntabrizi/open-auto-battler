@@ -6,7 +6,7 @@ import { useCustomizationStore } from '../store/customizationStore';
 
 import { useCardTilt } from '../hooks/useCardTilt';
 import { SwordIcon, HeartIcon, AbilityIcon } from './Icons';
-import { CARD_SIZES, CARD_TEXT, type CardSizeVariant } from '../constants/cardSizes';
+import { CARD_TEXT, type CardSizeVariant } from '../constants/cardSizes';
 import { useAchievementStore } from '../store/achievementStore';
 
 /** Derive a visual rarity tier from play_cost + ability count. */
@@ -83,7 +83,6 @@ export function UnitCard({
   const artSrc = getCardArtSm(card.id);
   const [artFailed, setArtFailed] = useState(false);
   const showArt = artSrc && !artFailed;
-  const sizes = CARD_SIZES[sizeVariant];
   const text = CARD_TEXT[sizeVariant];
   const rarity = getRarityTier(card);
   const rarityStyle = RARITY_STYLES[rarity];
@@ -98,7 +97,7 @@ export function UnitCard({
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={`
-        unit-card card relative ${sizes.tw} ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none rounded-lg border-2 transition-all duration-200 overflow-hidden
+        unit-card card relative w-full h-full ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none rounded-lg border-2 transition-all duration-200
         bg-black ${rarityStyle.border} ${rarityStyle.glow}
         ${isHolographic ? 'card-holographic' : ''}
         ${isSelected ? 'card-selected ring-2 ring-yellow-400' : ''}
@@ -109,6 +108,8 @@ export function UnitCard({
         enableWobble && !isSelected ? { animationDelay: `${(card.id * 200) % 3500}ms` } : undefined
       }
     >
+      {/* Inner clip container for art/content — badges sit outside this */}
+      <div className="absolute inset-0 overflow-hidden rounded-md">
       {showArt ? (
         <>
           {/* Full-bleed card art — brightness boost for vibrancy */}
@@ -175,6 +176,8 @@ export function UnitCard({
         </div>
       </div>
 
+      </div>{/* end inner clip container */}
+
       {/* Cost badge (top left) — blue mana bolt */}
       {showCost && (
         <div
@@ -211,7 +214,7 @@ export function UnitCard({
   );
 
   if (isHolographic) {
-    return <div className="holo-border">{cardEl}</div>;
+    return <div className="holo-border w-full h-full">{cardEl}</div>;
   }
   return cardEl;
 }
@@ -232,19 +235,16 @@ export function EmptySlot({
   isTarget = false,
   isHovered = false,
   label,
-  sizeVariant = 'standard',
   onDragOver,
   onDrop,
 }: EmptySlotProps) {
-  const sizes = CARD_SIZES[sizeVariant];
-
   return (
     <div
       onClick={onClick}
       onDragOver={onDragOver}
       onDrop={onDrop}
       className={`
-        empty-slot board-slot-engraved relative ${sizes.tw} cursor-pointer rounded-lg flex items-center justify-center transition-all duration-200
+        empty-slot board-slot-engraved relative w-full h-full cursor-pointer rounded-lg flex items-center justify-center transition-all duration-200
         ${isHovered ? 'slot-drop-target' : isTarget ? 'slot-available' : ''}
       `}
     >

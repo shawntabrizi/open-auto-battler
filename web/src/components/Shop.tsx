@@ -112,7 +112,7 @@ export function Shop() {
               card ? (
                 <div
                   key={`hand-${card.id}-${i}`}
-                  className={isNewRound ? 'animate-card-entrance' : ''}
+                  className={`${CARD_SIZES.standard.tw} ${isNewRound ? 'animate-card-entrance' : ''}`}
                   style={isNewRound ? { animationDelay: `${i * 80}ms` } : undefined}
                 >
                   <DraggableCard

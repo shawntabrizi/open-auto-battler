@@ -152,9 +152,7 @@ function SandboxArena() {
       >
         {unit ? (
           <>
-            <div className="w-full h-full [&_.unit-card]:!w-full [&_.unit-card]:!h-full [&_.holo-border]:!w-full [&_.holo-border]:!h-full">
-              <UnitCard card={unit} showCost={false} showBurn={false} />
-            </div>
+            <UnitCard card={unit} showCost={false} showBurn={false} />
             <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
               <span className="text-red-400 text-lg">×</span>
             </div>
@@ -241,9 +239,9 @@ function UnitGallery() {
   });
 
   return (
-    <div className="sandbox-gallery grid gap-1 lg:gap-2" style={{ gridTemplateColumns: 'repeat(6, minmax(0, 1fr))' }}>
+    <div className="sandbox-gallery grid gap-1 lg:gap-2 overflow-visible" style={{ gridTemplateColumns: 'repeat(6, minmax(0, 1fr))' }}>
       {filteredTemplates.map((template) => (
-        <div key={template.id} className="min-w-0 [&_.unit-card]:!w-full [&_.unit-card]:!h-auto [&_.unit-card]:aspect-[3/4]">
+        <div key={template.id} className="min-w-0 overflow-visible aspect-[3/4]">
           <UnitCard
             card={template}
             isSelected={selectedTemplate?.id === template.id}

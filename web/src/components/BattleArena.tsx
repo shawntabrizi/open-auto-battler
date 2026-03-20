@@ -654,10 +654,10 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
     return (
       <div
         key={`${unit.instance_id}-${index}`}
-        className={`relative ${isDying ? 'animate-death-shrink' : ''} ${isTargetHighlighted ? 'unit-target-highlight' : ''} ${isSourceGlowing ? 'unit-source-glow' : ''}`}
+        className={`relative w-full h-full ${isDying ? 'animate-death-shrink' : ''} ${isTargetHighlighted ? 'unit-target-highlight' : ''} ${isSourceGlowing ? 'unit-source-glow' : ''}`}
       >
         <div
-          className={`transition-transform duration-200 ${isClashing ? (isPlayer ? 'clash-bump-right' : 'clash-bump-left') : ''}`}
+          className={`w-full h-full transition-transform duration-200 ${isClashing ? (isPlayer ? 'clash-bump-right' : 'clash-bump-left') : ''}`}
         >
           <UnitCard
             card={{
@@ -814,9 +814,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
             Your Team
           </span>
           <div className="flex gap-0.5 lg:gap-3 px-1 lg:px-6 py-1 lg:py-4 rounded-xl team-zone-player min-w-0">
-            {Array.from({ length: 5 }).map((_, i) =>
-              renderUnit((playerBoard || [])[4 - i], 'player', 4 - i)
-            )}
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={`player-slot-${4 - i}`} className="flex-1 min-w-0 aspect-[3/4]">
+                {renderUnit((playerBoard || [])[4 - i], 'player', 4 - i)}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -835,7 +837,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed }: Bat
             Enemy
           </span>
           <div className="flex gap-0.5 lg:gap-3 px-1 lg:px-6 py-1 lg:py-4 rounded-xl team-zone-enemy min-w-0">
-            {Array.from({ length: 5 }).map((_, i) => renderUnit((enemyBoard || [])[i], 'enemy', i))}
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={`enemy-slot-${i}`} className="flex-1 min-w-0 aspect-[3/4]">
+                {renderUnit((enemyBoard || [])[i], 'enemy', i)}
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -8,6 +8,7 @@ import { CardDetailPanel } from './CardDetailPanel';
 import { TopBar } from './TopBar';
 import { RotatePrompt } from './RotatePrompt';
 import { EmptySlot, UnitCard } from './UnitCard';
+import { CARD_SIZES } from '../constants/cardSizes';
 
 const ALL_FILTER = 'all';
 const BOARD_SIZE = 5;
@@ -614,10 +615,12 @@ export function GhostBrowserPage() {
                                       key={`${ghost.id}-empty-${index}`}
                                       className="shrink-0 snap-start"
                                     >
-                                      <EmptySlot
-                                        sizeVariant="compact"
-                                        label={`Slot ${index + 1}`}
-                                      />
+                                      <div className={CARD_SIZES.compact.tw}>
+                                        <EmptySlot
+                                          sizeVariant="compact"
+                                          label={`Slot ${index + 1}`}
+                                        />
+                                      </div>
                                     </div>
                                   );
                                 }
@@ -627,18 +630,20 @@ export function GhostBrowserPage() {
 
                                 return (
                                   <div key={cardKey} className="shrink-0 snap-start">
-                                    <UnitCard
-                                      card={boardCard}
-                                      sizeVariant="compact"
-                                      showCost={true}
-                                      showBurn={true}
-                                      draggable={false}
-                                      isSelected={selectedCardKey === cardKey}
-                                      onClick={() => {
-                                        setDetailCard(boardCard);
-                                        setSelectedCardKey(cardKey);
-                                      }}
-                                    />
+                                    <div className={CARD_SIZES.compact.tw}>
+                                      <UnitCard
+                                        card={boardCard}
+                                        sizeVariant="compact"
+                                        showCost={true}
+                                        showBurn={true}
+                                        draggable={false}
+                                        isSelected={selectedCardKey === cardKey}
+                                        onClick={() => {
+                                          setDetailCard(boardCard);
+                                          setSelectedCardKey(cardKey);
+                                        }}
+                                      />
+                                    </div>
                                     <div className="mt-2 w-20 lg:w-28 rounded-xl border border-warm-800 bg-warm-900/70 px-2 py-1.5 text-center text-[10px] lg:text-[11px] text-warm-300">
                                       <div className="font-bold text-white">
                                         {boardCard.attack}/{boardCard.health}

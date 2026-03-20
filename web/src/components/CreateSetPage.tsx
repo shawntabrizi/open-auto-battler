@@ -141,14 +141,16 @@ export const CreateSetPage: React.FC = () => {
                             ${isDetailing ? 'ring-2 ring-blue-500 rounded-xl' : ''}
                           `}
                           >
-                            <UnitCard
-                              card={cardView}
-                              isSelected={isSelected}
-                              onClick={() => {
-                                toggleCardSelection(card.id);
-                                setDetailCard(cardView);
-                              }}
-                            />
+                            <div className="w-full aspect-[3/4]">
+                              <UnitCard
+                                card={cardView}
+                                isSelected={isSelected}
+                                onClick={() => {
+                                  toggleCardSelection(card.id);
+                                  setDetailCard(cardView);
+                                }}
+                              />
+                            </div>
 
                             {isSelected && (
                               <div className="absolute -top-2 -right-2 z-10 bg-yellow-500 text-warm-950 rounded-full p-1 shadow-lg">

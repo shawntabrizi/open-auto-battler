@@ -60,7 +60,7 @@ export function SetPage() {
           ) : (
             <div className="grid grid-cols-6 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-1 lg:gap-6 pb-4 lg:pb-12">
               {sorted.map((card, i) => (
-                <div key={`${card.id}-${i}`} className="flex justify-center">
+                <div key={`${card.id}-${i}`} className="aspect-[3/4]">
                   <UnitCard
                     card={card}
                     showCost={true}

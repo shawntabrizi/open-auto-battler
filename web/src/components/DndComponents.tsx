@@ -46,7 +46,7 @@ export function DraggableCard({
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="w-full h-full">
       <UnitCard
         card={card}
         isSelected={isSelected}
@@ -76,7 +76,7 @@ export function DroppableBoardSlot({ id, children }: DroppableBoardSlotProps) {
   });
 
   return (
-    <div ref={setNodeRef} className={`transition-all duration-150 ${isOver ? 'scale-105' : ''}`}>
+    <div ref={setNodeRef} className={`w-full h-full transition-all duration-150 ${isOver ? 'scale-105' : ''}`}>
       {typeof children === 'function' ? children({ isOver }) : children}
     </div>
   );
@@ -102,7 +102,7 @@ export function DroppableEmptySlot({
   });
 
   return (
-    <div ref={setNodeRef}>
+    <div ref={setNodeRef} className="w-full h-full">
       <EmptySlot onClick={onClick} isTarget={isTarget || isOver} label={label} />
     </div>
   );

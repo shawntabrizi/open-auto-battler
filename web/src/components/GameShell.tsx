@@ -11,6 +11,7 @@ import {
 import { BattleOverlay } from './BattleOverlay';
 import { BagOverlay } from './BagOverlay';
 import { UnitCard } from './UnitCard';
+import { CARD_SIZES } from '../constants/cardSizes';
 import { RotatePrompt } from './RotatePrompt';
 import { useGameStore } from '../store/gameStore';
 import { useDragAndDrop } from '../hooks';
@@ -147,7 +148,9 @@ export function GameShell({
       {/* Drag overlay - shows the card being dragged */}
       <DragOverlay>
         {activeCard ? (
-          <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showBurn={true} />
+          <div className={CARD_SIZES.standard.tw}>
+            <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showBurn={true} />
+          </div>
         ) : null}
       </DragOverlay>
     </DndContext>

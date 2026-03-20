@@ -5,6 +5,7 @@ import { ManaBar } from '../../components/ManaBar';
 import { Shop } from '../../components/Shop';
 import { BattleOverlay } from '../../components/BattleOverlay';
 import { UnitCard } from '../../components/UnitCard';
+import { CARD_SIZES } from '../../constants/cardSizes';
 import { useGameStore } from '../../store/gameStore';
 import { useInitGuard, useDragAndDrop } from '../../hooks';
 
@@ -75,7 +76,9 @@ export default function EmbedPage() {
 
       <DragOverlay>
         {activeCard ? (
-          <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showBurn={true} />
+          <div className={CARD_SIZES.standard.tw}>
+            <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showBurn={true} />
+          </div>
         ) : null}
       </DragOverlay>
     </DndContext>
