@@ -1669,6 +1669,12 @@ body {
   }
 }
 
+@media (max-height: 820px) {
+  .board-helper {
+    display: none !important;
+  }
+}
+
 @media (max-width: 1023px) and (orientation: portrait) {
   .rotate-prompt {
     display: block !important;

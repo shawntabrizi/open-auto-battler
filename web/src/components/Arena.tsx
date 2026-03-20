@@ -155,11 +155,11 @@ export function Arena() {
       {boardBg && <div className="absolute inset-0 bg-board-bg/50" />}
 
       {/* Arena surface — visual frame that gives the board a sense of place */}
-      <div className="arena-surface relative z-10 flex flex-col items-center gap-1 lg:gap-4 px-2 lg:px-12 py-1 lg:py-8 rounded-xl w-full h-full min-h-0">
+      <div className="arena-surface relative z-10 flex flex-col items-center gap-1.5 lg:gap-2 px-2 lg:px-12 py-1 lg:py-5 rounded-xl w-full h-full min-h-0">
         {/* Board header */}
-        <div className="flex items-center gap-3 lg:gap-4">
+        <div className="board-helper board-helper--header hidden lg:flex items-center gap-3 lg:gap-4 rounded-full border border-warm-700/60 bg-black/45 px-3 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm">
           <div className="h-px w-8 lg:w-16 bg-gradient-to-r from-transparent to-warm-600/40" />
-          <span className="board-label text-xs lg:text-sm text-warm-400 font-heading uppercase tracking-[0.2em]">
+          <span className="board-label text-xs lg:text-sm text-warm-100 font-heading uppercase tracking-[0.2em]">
             Staging Area
           </span>
           <div className="h-px w-8 lg:w-16 bg-gradient-to-l from-transparent to-warm-600/40" />
@@ -167,17 +167,17 @@ export function Arena() {
 
         {/* Contextual hint — always visible, guides new players through card placement */}
         <div
-          className={`text-[0.6rem] lg:text-xs font-body text-center ${
+          className={`board-helper board-helper--status rounded-full border border-warm-800/70 bg-black/45 px-3 py-1 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm text-[0.6rem] lg:text-xs font-body text-center ${
             unitCount === 0 && !hasHandSelection
-              ? 'onboarding-hint text-amber-400/90'
-              : 'text-warm-500/70'
+              ? 'onboarding-hint text-amber-300'
+              : 'text-warm-200/85'
           } ${hideBoardStatusHintOnSmallScreens ? 'hidden lg:block' : ''}`}
         >
           {boardHintText}
         </div>
 
         {/* Board row */}
-        <div className="board-row flex gap-1 lg:gap-4 w-full lg:max-w-3xl h-full">
+        <div className="board-row flex gap-1 lg:gap-4 w-full lg:max-w-3xl h-[clamp(10.5rem,28vh,13rem)] lg:h-[clamp(12.5rem,32vh,16rem)]">
           {Array.from({ length: 5 }).map((_, displayIndex) => {
             const arrayIndex = 4 - displayIndex;
             const unit = view.board[arrayIndex];
@@ -260,15 +260,17 @@ export function Arena() {
         </div>
 
         {/* Position indicator — slot-aligned */}
-        <div className="hidden lg:flex gap-3 lg:gap-4 w-full lg:max-w-3xl">
+        <div className="board-helper board-helper--positions hidden lg:flex gap-3 lg:gap-4 w-full lg:max-w-3xl">
           {Array.from({ length: 5 }).map((_, displayIndex) => {
             const arrayIndex = 4 - displayIndex;
             const isFront = arrayIndex === 0;
             return (
               <div
                 key={`pos-${arrayIndex}`}
-                className={`flex-1 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider ${
-                  isFront ? 'text-amber-400/70 font-bold' : 'text-warm-600/40'
+                className={`flex-1 rounded-full border px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm ${
+                  isFront
+                    ? 'border-amber-500/30 bg-amber-500/10 text-amber-200 font-bold'
+                    : 'border-warm-800/70 bg-black/35 text-warm-300/80'
                 }`}
               >
                 {isFront ? 'Front' : `${arrayIndex + 1}`}
@@ -277,8 +279,10 @@ export function Arena() {
           })}
         </div>
 
-        <div className="hidden lg:block w-full lg:max-w-3xl text-center text-[10px] lg:text-xs text-warm-500">
-          Select: {GAME_SHORTCUTS.board} • Move: {GAME_SHORTCUTS.boardMove}
+        <div className="board-helper board-helper--shortcuts hidden lg:flex w-full lg:max-w-3xl justify-center">
+          <div className="rounded-full border border-warm-800/70 bg-black/45 px-4 py-1.5 text-center text-[10px] lg:text-xs text-warm-200/85 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm">
+            Select: {GAME_SHORTCUTS.board} • Move: {GAME_SHORTCUTS.boardMove}
+          </div>
         </div>
       </div>
     </div>
