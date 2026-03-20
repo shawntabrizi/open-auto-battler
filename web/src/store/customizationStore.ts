@@ -129,9 +129,19 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
         }
       }
 
+      // Keep currently equipped items that are still owned, then auto-equip first owned item for empty slots
+      const filtered = filterSelectionsByOwnership(get().selections, nfts);
+      const autoEquipped = { ...filtered };
+      for (const [type, slotKey] of Object.entries(SLOT_MAP) as [CustomizationType, keyof CustomizationSelections][]) {
+        if (!autoEquipped[slotKey]) {
+          const firstOwned = nfts.find((n) => n.type === type);
+          if (firstOwned) autoEquipped[slotKey] = firstOwned;
+        }
+      }
+
       set({
         ownedNfts: nfts,
-        selections: filterSelectionsByOwnership(get().selections, nfts),
+        selections: autoEquipped,
         isLoading: false,
       });
     } catch (err) {

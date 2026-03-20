@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useArenaStore } from '../store/arenaStore';
+import { useCustomizationStore } from '../store/customizationStore';
 import { useInitGuard } from '../hooks';
 import { LoginPage } from './LoginPage';
 
@@ -16,6 +17,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const isLoggedIn = useArenaStore((s) => s.isLoggedIn);
   const isRestoringSession = useArenaStore((s) => s.isRestoringSession);
   const connect = useArenaStore((s) => s.connect);
+  const api = useArenaStore((s) => s.api);
+  const selectedAccount = useArenaStore((s) => s.selectedAccount);
+  const fetchUserNfts = useCustomizationStore((s) => s.fetchUserNfts);
 
   // Auto-connect when restoring a session
   useInitGuard(() => {
@@ -34,6 +38,13 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     }, RESTORE_TIMEOUT_MS);
     return () => clearTimeout(timer);
   }, [isRestoringSession]);
+
+  // Auto-fetch NFTs and equip customizations on login
+  useEffect(() => {
+    if (isLoggedIn && api && selectedAccount) {
+      void fetchUserNfts(api, selectedAccount.address);
+    }
+  }, [isLoggedIn, api, selectedAccount, fetchUserNfts]);
 
   if (isRestoringSession) {
     return (
