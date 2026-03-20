@@ -1,7 +1,10 @@
 import type { ComponentType } from 'react';
 import Welcome from './01-welcome';
-import Shop from './02-shop';
-import Battle from './03-battle';
-import Winning from './04-winning';
+import Goal from './02-goal';
+import Cards from './03-cards';
+import Shop from './04-shop';
+import Battle from './05-battle';
+import Strategy from './06-strategy';
+import Closing from './07-closing';
 
-export const slides: ComponentType[] = [Welcome, Shop, Battle, Winning];
+export const slides: ComponentType[] = [Welcome, Goal, Cards, Shop, Battle, Strategy, Closing];
