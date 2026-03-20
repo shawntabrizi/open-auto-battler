@@ -75,6 +75,11 @@ export default function Shop() {
             Units on your board <span className="text-white font-bold">carry over</span> between rounds.
           </p>
           <p>
+            Cards you don't use go back into your bag and can be drawn again later.
+            Burned cards are <span className="text-red-400 font-bold">gone for good</span>,
+            so you can thin your bag to improve future draws.
+          </p>
+          <p>
             You start with <span className="text-blue-400 font-bold">3 mana</span>. Each{' '}
             <span className="text-yellow-400 font-bold">round</span>, your mana limit grows by 1, letting you
             field stronger cards as the game goes on.
