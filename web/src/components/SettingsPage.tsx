@@ -6,7 +6,22 @@ import { TopBar } from './TopBar';
 
 export function SettingsPage() {
   const location = useLocation();
-  const { showRawJson, toggleShowRawJson, showCardNames, toggleShowCardNames, showAddress, toggleShowAddress, showBalance, toggleShowBalance, defaultBattleSpeed, setDefaultBattleSpeed, reducedAnimations, toggleReducedAnimations } = useGameStore();
+  const {
+    showRawJson,
+    toggleShowRawJson,
+    showCardNames,
+    toggleShowCardNames,
+    showGameCardDetailsPanel,
+    toggleShowGameCardDetailsPanel,
+    showAddress,
+    toggleShowAddress,
+    showBalance,
+    toggleShowBalance,
+    defaultBattleSpeed,
+    setDefaultBattleSpeed,
+    reducedAnimations,
+    toggleReducedAnimations,
+  } = useGameStore();
   const returnTo =
     location.state &&
     typeof location.state === 'object' &&
@@ -27,16 +42,16 @@ export function SettingsPage() {
               <div className="font-bold text-base lg:text-lg text-white mb-3">Display</div>
               <button
                 onClick={toggleShowCardNames}
-                className="w-full flex items-center justify-between p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors"
+                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors"
               >
-                <div className="text-left">
+                <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Show Card Names</div>
                   <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
                     Display card names on unit cards
                   </div>
                 </div>
                 <div
-                  className={`w-10 h-5 rounded-full transition-colors relative ${
+                  className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
                     showCardNames ? 'bg-yellow-500' : 'bg-warm-700'
                   }`}
                 >
@@ -48,17 +63,40 @@ export function SettingsPage() {
                 </div>
               </button>
               <button
-                onClick={toggleShowAddress}
-                className="w-full flex items-center justify-between p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+                onClick={toggleShowGameCardDetailsPanel}
+                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
               >
-                <div className="text-left">
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="text-sm text-warm-200">Show Game Card Details Panel</div>
+                  <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
+                    Keep the pinned card details sidebar visible during games. Use I to inspect
+                    cards when it is hidden.
+                  </div>
+                </div>
+                <div
+                  className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
+                    showGameCardDetailsPanel ? 'bg-yellow-500' : 'bg-warm-700'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      showGameCardDetailsPanel ? 'translate-x-5' : 'translate-x-0.5'
+                    }`}
+                  />
+                </div>
+              </button>
+              <button
+                onClick={toggleShowAddress}
+                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+              >
+                <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Show Address</div>
                   <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
                     Display wallet address in the top bar
                   </div>
                 </div>
                 <div
-                  className={`w-10 h-5 rounded-full transition-colors relative ${
+                  className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
                     showAddress ? 'bg-yellow-500' : 'bg-warm-700'
                   }`}
                 >
@@ -71,16 +109,16 @@ export function SettingsPage() {
               </button>
               <button
                 onClick={toggleShowBalance}
-                className="w-full flex items-center justify-between p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
               >
-                <div className="text-left">
+                <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Show Balance</div>
                   <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
                     Display account balance in the top bar
                   </div>
                 </div>
                 <div
-                  className={`w-10 h-5 rounded-full transition-colors relative ${
+                  className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
                     showBalance ? 'bg-yellow-500' : 'bg-warm-700'
                   }`}
                 >
@@ -123,16 +161,16 @@ export function SettingsPage() {
               {/* Reduced animations */}
               <button
                 onClick={toggleReducedAnimations}
-                className="w-full flex items-center justify-between p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
               >
-                <div className="text-left">
+                <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Reduced Animations</div>
                   <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
                     Disable clash bumps and screen shake
                   </div>
                 </div>
                 <div
-                  className={`w-10 h-5 rounded-full transition-colors relative ${
+                  className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
                     reducedAnimations ? 'bg-yellow-500' : 'bg-warm-700'
                   }`}
                 >
@@ -150,16 +188,16 @@ export function SettingsPage() {
               <div className="font-bold text-base lg:text-lg text-white mb-3">Debug</div>
               <button
                 onClick={toggleShowRawJson}
-                className="w-full flex items-center justify-between p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors"
+                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors"
               >
-                <div className="text-left">
+                <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Show Raw JSON</div>
                   <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
                     Display raw card and game state data
                   </div>
                 </div>
                 <div
-                  className={`w-10 h-5 rounded-full transition-colors relative ${
+                  className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
                     showRawJson ? 'bg-yellow-500' : 'bg-warm-700'
                   }`}
                 >

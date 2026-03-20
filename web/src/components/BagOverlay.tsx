@@ -5,7 +5,16 @@ import { CloseIcon } from './Icons';
 import { type CardView } from '../types';
 
 export function BagOverlay() {
-  const { view, bag, cardSet, showBag, setShowBag, selection, setSelection } = useGameStore();
+  const {
+    view,
+    bag,
+    cardSet,
+    showBag,
+    setShowBag,
+    selection,
+    setSelection,
+    showGameCardDetailsPanel,
+  } = useGameStore();
   const galleryScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,7 +44,11 @@ export function BagOverlay() {
     selection?.type === 'bag' ? bagCards.findIndex((e) => e.bagIndex === selection.index) : -1;
 
   return (
-    <div className="fixed left-[11rem] lg:left-80 right-0 top-0 bottom-0 z-[60] bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300">
+    <div
+      className={`fixed ${
+        showGameCardDetailsPanel ? 'left-[11rem] lg:left-80' : 'left-0'
+      } right-0 top-0 bottom-0 z-[60] bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300`}
+    >
       <button
         onClick={() => setShowBag(false)}
         aria-label="Close Draw Pool"

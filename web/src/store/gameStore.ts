@@ -12,7 +12,7 @@ interface GameSessionSnapshot {
   state: {
     bag: number[];
     hand: number[];
-    board: Array<any | null>;
+    board: unknown[];
     mana_limit: number;
     shop_mana: number;
     round: number;
@@ -87,6 +87,7 @@ interface GameStore {
   showBattleOverlay: boolean;
   showRawJson: boolean;
   showCardNames: boolean;
+  showGameCardDetailsPanel: boolean;
   showAddress: boolean;
   showBalance: boolean;
   defaultBattleSpeed: number;
@@ -127,6 +128,7 @@ interface GameStore {
   closeBattleOverlay: () => void;
   toggleShowRawJson: () => void;
   toggleShowCardNames: () => void;
+  toggleShowGameCardDetailsPanel: () => void;
   toggleShowAddress: () => void;
   toggleShowBalance: () => void;
   setDefaultBattleSpeed: (speed: number) => void;
@@ -222,6 +224,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showBattleOverlay: false,
   showRawJson: JSON.parse(localStorage.getItem('showRawJson') || 'false'),
   showCardNames: JSON.parse(localStorage.getItem('showCardNames') ?? 'true'),
+  showGameCardDetailsPanel: JSON.parse(localStorage.getItem('showGameCardDetailsPanel') ?? 'true'),
   showAddress: JSON.parse(localStorage.getItem('showAddress') ?? 'true'),
   showBalance: JSON.parse(localStorage.getItem('showBalance') ?? 'true'),
   defaultBattleSpeed: JSON.parse(localStorage.getItem('defaultBattleSpeed') ?? '1'),
@@ -678,6 +681,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newValue = !state.showCardNames;
       localStorage.setItem('showCardNames', JSON.stringify(newValue));
       return { showCardNames: newValue };
+    });
+  },
+
+  toggleShowGameCardDetailsPanel: () => {
+    set((state) => {
+      const newValue = !state.showGameCardDetailsPanel;
+      localStorage.setItem('showGameCardDetailsPanel', JSON.stringify(newValue));
+      return { showGameCardDetailsPanel: newValue };
     });
   },
 

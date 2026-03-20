@@ -54,7 +54,7 @@ export function GameShell({
   onSelectAccount,
   className = '',
 }: GameShellProps) {
-  const { view, bag, cardSet, selection, showBag } = useGameStore();
+  const { view, bag, cardSet, selection, showBag, showGameCardDetailsPanel } = useGameStore();
 
   const {
     activeId,
@@ -66,8 +66,10 @@ export function GameShell({
     getActiveCard,
   } = useDragAndDrop();
 
-  // Card panel is visible during shop phase or when a board unit is selected
-  const showCardPanel = view?.phase === 'shop' || selection?.type === 'board' || showBag;
+  // Pinned card panel is visible during shop phase or when a board unit is selected,
+  // unless the player has hidden it in settings.
+  const showCardPanel =
+    showGameCardDetailsPanel && (view?.phase === 'shop' || selection?.type === 'board' || showBag);
 
   // Determine which card to show in the panel
   const selectedCard =
