@@ -113,6 +113,12 @@ export function BlockchainPage() {
             </>
           ) : (
             <div className="flex flex-col items-center">
+              <h2 className="text-xl lg:text-2xl font-heading font-bold text-white">
+                {setMeta.name}
+              </h2>
+              <p className="text-warm-500 text-xs lg:text-sm">
+                {cards?.length ?? '?'} cards
+              </p>
               <div className="set-tile">
                 {cards && cards.length > 0 ? (
                   <CardFan cards={cards} />
@@ -122,12 +128,6 @@ export function BlockchainPage() {
                   </div>
                 )}
               </div>
-              <h2 className="text-xl lg:text-2xl font-heading font-bold text-white mt-2">
-                {setMeta.name}
-              </h2>
-              <p className="text-warm-500 text-xs lg:text-sm">
-                {cards?.length ?? '?'} cards
-              </p>
 
               <div className="flex flex-col gap-3 mt-6 w-full">
                 <button

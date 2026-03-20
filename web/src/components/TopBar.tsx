@@ -65,7 +65,7 @@ export function TopBar({
       {/* Center: Title */}
       {title && (
         <h1 className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-sm lg:text-xl font-heading font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 truncate px-24 lg:px-32">
+          <span className="text-sm lg:text-xl font-title font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 truncate px-24 lg:px-32">
             {title}
           </span>
         </h1>
