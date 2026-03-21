@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { UI_LAYERS } from '../constants/uiLayers';
 import { useGameStore } from '../store/gameStore';
 import { CardGallery } from './CardGallery';
-import { CloseIcon } from './Icons';
+import { CloseIcon, BagIcon } from './Icons';
 import { type CardView } from '../types';
 
 export function BagOverlay() {
@@ -61,7 +61,7 @@ export function BagOverlay() {
       <div className="flex items-center mb-3 lg:mb-8 border-b border-warm-700 pb-2 lg:pb-4 pr-10 lg:pr-12">
         <div className="flex flex-col">
           <h2 className="text-lg lg:text-3xl font-bold text-white flex items-center gap-2 lg:gap-3">
-            <span className="text-mana-blue">🎒</span> Draw Pool
+            <BagIcon className="w-5 h-5 lg:w-7 lg:h-7 text-mana-blue" /> Draw Pool
           </h2>
           <p className="text-warm-400 text-xs lg:text-base mt-0.5 lg:mt-1">
             <span className="text-white font-bold">{view.bag_count}</span> cards remaining

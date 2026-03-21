@@ -4,7 +4,7 @@ import { useVersusStore } from '../store/versusStore';
 import { useCustomizationStore } from '../store/customizationStore';
 import { useMenuStore } from '../store/menuStore';
 import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
-import { HeartIcon, StarIcon, BagIcon, HourglassIcon, WarningIcon } from './Icons';
+import { LivesIcon, StarIcon, BagIcon, HourglassIcon, WarningIcon } from './Icons';
 import battleSwordIcon from '../../battle-sword.svg';
 
 const BATTLE_TIMER_SECONDS = 20;
@@ -246,7 +246,7 @@ export function GameTopBar({
 
         {/* Lives */}
         <div className="theme-panel theme-pill bg-surface-dark/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
-          <HeartIcon className="theme-icon-health w-3.5 h-3.5 lg:w-4 lg:h-4" />
+          <LivesIcon className="theme-icon-health w-3.5 h-3.5 lg:w-4 lg:h-4" />
           <span className="font-bold text-xs lg:text-sm font-stat">
             {view.lives}/{startingLives}
           </span>

@@ -1,4 +1,4 @@
-import { StarIcon, HeartIcon } from '../../Icons';
+import { StarIcon, LivesIcon } from '../../Icons';
 
 export default function Goal() {
   return (
@@ -15,7 +15,7 @@ export default function Goal() {
         <StarIcon className="w-5 h-5 lg:w-6 lg:h-6 inline-block text-gold" />
         <span>before you lose all</span>
         <span className="text-defeat-red font-bold">3 lives</span>
-        <HeartIcon className="w-5 h-5 lg:w-6 lg:h-6 inline-block text-defeat-red" />
+        <LivesIcon className="w-5 h-5 lg:w-6 lg:h-6 inline-block text-defeat-red" />
         <span>!</span>
       </p>
 

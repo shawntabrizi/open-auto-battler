@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useArenaStore } from '../store/arenaStore';
 import { useIsSubmitting } from '../store/txStore';
-import { TrophyIcon, SkullIcon, StarIcon, HeartIcon, HourglassIcon } from './Icons';
+import { TrophyIcon, SkullIcon, StarIcon, LivesIcon, HourglassIcon } from './Icons';
 import { TopBar } from './TopBar';
 
 export function GameOverScreen() {
@@ -54,7 +54,7 @@ export function GameOverScreen() {
       value: view.lives,
       label: 'Lives Left',
       color: 'theme-icon-health',
-      icon: <HeartIcon className="theme-icon-health w-4 h-4 lg:w-5 lg:h-5" />,
+      icon: <LivesIcon className="theme-icon-health w-4 h-4 lg:w-5 lg:h-5" />,
     },
   ];
 
