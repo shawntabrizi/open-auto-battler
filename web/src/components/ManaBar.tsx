@@ -6,7 +6,10 @@ export function ManaBar() {
   if (!view) return null;
 
   return (
-    <div className="mana-bar-container w-full px-4 py-1.5 bg-warm-900/70 border-y border-warm-700">
+    <div
+      className="mana-bar-container w-full px-4 py-1.5 bg-warm-900/70 border-y border-warm-700"
+      aria-label={`Mana: ${view.mana} of ${view.mana_limit}`}
+    >
       <div className="flex items-center gap-3">
         {/* Mana label */}
         <div className="text-[10px] lg:text-xs text-mana-blue font-bold uppercase tracking-wide whitespace-nowrap">
@@ -14,7 +17,7 @@ export function ManaBar() {
         </div>
 
         {/* Mana bar with segments */}
-        <div className="flex-1 flex gap-1 lg:gap-1.5">
+        <div className="flex-1 flex gap-1 lg:gap-1.5 pointer-events-none" aria-hidden="true">
           {Array.from({ length: view.mana_limit }, (_, i) => (
             <div
               key={i}

@@ -5,6 +5,7 @@ import { useIsSubmitting } from '../store/txStore';
 import { toast } from 'react-hot-toast';
 import { TopBar } from './TopBar';
 import { DesktopRecommendedBanner } from './DesktopRecommendedBanner';
+import { UI_LAYERS } from '../constants/uiLayers';
 import {
   type AnyAbility,
   type BattleAbility,
@@ -362,7 +363,10 @@ export const CreateCardPage: React.FC = () => {
                         </button>
 
                         {showEmojiPicker && (
-                          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                          <div
+                            className="fixed inset-0 flex items-center justify-center p-4"
+                            style={{ zIndex: UI_LAYERS.editorPicker }}
+                          >
                             <div
                               className="absolute inset-0 bg-warm-950/80 backdrop-blur-sm"
                               onClick={() => setShowEmojiPicker(false)}

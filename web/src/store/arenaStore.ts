@@ -739,6 +739,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
         // Set up blockchain-aware continue: defer refreshGameState to "Continue" click
         useGameStore.setState({
           battleOutput,
+          selection: null,
           showBattleOverlay: true,
           afterBattleCallback: async () => {
             await get().refreshGameState(true);

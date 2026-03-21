@@ -1,10 +1,32 @@
+import { useEffect, useRef } from 'react';
+import { UI_LAYERS } from '../constants/uiLayers';
 import { useGameStore } from '../store/gameStore';
 import { CardGallery } from './CardGallery';
 import { CloseIcon } from './Icons';
 import { type CardView } from '../types';
 
 export function BagOverlay() {
-  const { view, bag, cardSet, showBag, setShowBag, selection, setSelection } = useGameStore();
+  const {
+    view,
+    bag,
+    cardSet,
+    showBag,
+    setShowBag,
+    selection,
+    setSelection,
+    showGameCardDetailsPanel,
+  } = useGameStore();
+  const galleryScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showBag || !view) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      galleryScrollRef.current?.focus();
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [showBag, view]);
 
   if (!showBag || !view) return null;
 
@@ -19,12 +41,16 @@ export function BagOverlay() {
   const cards = bagCards.map((entry) => entry.card);
 
   // Track which gallery index is selected (survives sort/filter since bagCards order is stable)
-  const selectedGalleryIndex = selection?.type === 'bag'
-    ? bagCards.findIndex((e) => e.bagIndex === selection.index)
-    : -1;
+  const selectedGalleryIndex =
+    selection?.type === 'bag' ? bagCards.findIndex((e) => e.bagIndex === selection.index) : -1;
 
   return (
-    <div className="fixed left-[11rem] lg:left-80 right-0 top-0 bottom-0 z-[60] bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300">
+    <div
+      className={`fixed ${
+        showGameCardDetailsPanel ? 'left-[11rem] lg:left-80' : 'left-0'
+      } right-0 top-0 bottom-0 bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300`}
+      style={{ zIndex: UI_LAYERS.inGameOverlay }}
+    >
       <button
         onClick={() => setShowBag(false)}
         aria-label="Close Draw Pool"
@@ -53,6 +79,10 @@ export function BagOverlay() {
           <CardGallery
             cards={cards}
             isSelected={(_card, index) => index === selectedGalleryIndex}
+            focusableCards={true}
+            scrollRegionRef={galleryScrollRef}
+            scrollRegionLabel="Draw pool cards"
+            scrollRegionTabIndex={0}
             onSelect={(card, index) => {
               if (!card || index === selectedGalleryIndex) {
                 setSelection(null);

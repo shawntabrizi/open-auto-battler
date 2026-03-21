@@ -12,7 +12,7 @@ interface GameSessionSnapshot {
   state: {
     bag: number[];
     hand: number[];
-    board: Array<any | null>;
+    board: unknown[];
     mana_limit: number;
     shop_mana: number;
     round: number;
@@ -87,6 +87,8 @@ interface GameStore {
   showBattleOverlay: boolean;
   showRawJson: boolean;
   showCardNames: boolean;
+  showGameCardDetailsPanel: boolean;
+  showBoardHelper: boolean;
   showAddress: boolean;
   showBalance: boolean;
   defaultBattleSpeed: number;
@@ -127,6 +129,8 @@ interface GameStore {
   closeBattleOverlay: () => void;
   toggleShowRawJson: () => void;
   toggleShowCardNames: () => void;
+  toggleShowGameCardDetailsPanel: () => void;
+  toggleShowBoardHelper: () => void;
   toggleShowAddress: () => void;
   toggleShowBalance: () => void;
   setDefaultBattleSpeed: (speed: number) => void;
@@ -134,6 +138,7 @@ interface GameStore {
   setShowBag: (show: boolean) => void;
   fetchBag: () => void; // Fetch bag IDs on demand
   getCommitAction: () => any;
+  getCommitWarning: () => string | null;
 
   startVersusGame: (seed: number, lives?: number) => void;
   resolveVersusBattle: (opponentBoard: any, seed: number) => void;
@@ -152,6 +157,10 @@ let wasmInitialized = false;
 let initPromise: Promise<void> | null = null;
 let initEnginePromise: Promise<void> | null = null;
 const LOCAL_SESSION_STORAGE_KEY = 'localGameSessionV1';
+const EMPTY_BOARD_COMMIT_WARNING =
+  'Your board is empty, but you can still field a unit this round. Are you sure you want to commit?';
+const NO_ACTIONS_COMMIT_WARNING =
+  'You have not taken any actions this round. Are you sure you want to commit?';
 
 function buildCardNameMap(metas: Array<{ id: number; name: string }>): Record<number, string> {
   return Object.fromEntries(metas.map((meta) => [meta.id, meta.name]));
@@ -208,6 +217,41 @@ function clearPersistedLocalSession() {
   localStorage.removeItem(LOCAL_SESSION_STORAGE_KEY);
 }
 
+function canStillFieldAUnitThisRound(view: GameView | null): boolean {
+  if (!view || view.phase !== 'shop') return false;
+  if (view.board.some(Boolean)) return false;
+
+  const handCards = view.hand
+    .map((card, index) => ({ card, index }))
+    .filter((entry): entry is { card: CardView; index: number } => entry.card != null);
+
+  if (handCards.length === 0) return false;
+
+  return handCards.some(({ card, index }) => {
+    if (card.play_cost > view.mana_limit) return false;
+
+    const burnManaFromOtherCards = handCards.reduce(
+      (total, entry) => total + (entry.index === index ? 0 : entry.card.burn_value),
+      0
+    );
+    const reachableMana = Math.min(view.mana + burnManaFromOtherCards, view.mana_limit);
+
+    return reachableMana >= card.play_cost;
+  });
+}
+
+function getCommitWarning(view: GameView | null): string | null {
+  if (canStillFieldAUnitThisRound(view)) {
+    return EMPTY_BOARD_COMMIT_WARNING;
+  }
+
+  if (view?.phase === 'shop' && !view.can_undo) {
+    return NO_ACTIONS_COMMIT_WARNING;
+  }
+
+  return null;
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   engine: null,
   view: null,
@@ -222,6 +266,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showBattleOverlay: false,
   showRawJson: JSON.parse(localStorage.getItem('showRawJson') || 'false'),
   showCardNames: JSON.parse(localStorage.getItem('showCardNames') ?? 'true'),
+  showGameCardDetailsPanel: JSON.parse(localStorage.getItem('showGameCardDetailsPanel') ?? 'true'),
+  showBoardHelper: JSON.parse(localStorage.getItem('showBoardHelper') ?? 'true'),
   showAddress: JSON.parse(localStorage.getItem('showAddress') ?? 'true'),
   showBalance: JSON.parse(localStorage.getItem('showBalance') ?? 'true'),
   defaultBattleSpeed: JSON.parse(localStorage.getItem('defaultBattleSpeed') ?? '1'),
@@ -566,7 +612,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ showBattleOverlay: false });
   },
   setShowBag: (show: boolean) => {
-    set({ showBag: show });
+    set({ showBag: show, selection: null });
     // Fetch bag when opening the overlay
     if (show) {
       get().fetchBag();
@@ -587,6 +633,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!engine) return null;
     return engine.get_commit_action();
   },
+  getCommitWarning: () => getCommitWarning(get().view),
   setAfterBattleCallback: (cb: (() => void) | null) => {
     set({ afterBattleCallback: cb });
   },
@@ -678,6 +725,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newValue = !state.showCardNames;
       localStorage.setItem('showCardNames', JSON.stringify(newValue));
       return { showCardNames: newValue };
+    });
+  },
+
+  toggleShowGameCardDetailsPanel: () => {
+    set((state) => {
+      const newValue = !state.showGameCardDetailsPanel;
+      localStorage.setItem('showGameCardDetailsPanel', JSON.stringify(newValue));
+      return { showGameCardDetailsPanel: newValue };
+    });
+  },
+
+  toggleShowBoardHelper: () => {
+    set((state) => {
+      const newValue = !state.showBoardHelper;
+      localStorage.setItem('showBoardHelper', JSON.stringify(newValue));
+      return { showBoardHelper: newValue };
     });
   },
 

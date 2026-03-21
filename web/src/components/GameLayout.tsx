@@ -15,7 +15,10 @@ export function GameLayout() {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-xl text-warm-400">Loading WASM...</div>
+        <div className="text-center">
+          <div className="inline-block w-8 h-8 border-2 border-warm-600 border-t-amber-400 rounded-full animate-spin mb-3" />
+          <div className="text-sm text-warm-400 animate-pulse">Loading game engine...</div>
+        </div>
       </div>
     );
   }
@@ -23,7 +26,16 @@ export function GameLayout() {
   if (error) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-xl text-red-400">Error: {error}</div>
+        <div className="text-center space-y-3">
+          <div className="text-lg text-red-400">Something went wrong</div>
+          <div className="text-xs text-warm-500 max-w-xs">{error}</div>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-1.5 text-sm font-bold text-warm-300 border border-warm-600 rounded-lg hover:bg-warm-800 transition-colors"
+          >
+            Reload
+          </button>
+        </div>
       </div>
     );
   }

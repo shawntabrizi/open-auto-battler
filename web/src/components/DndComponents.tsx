@@ -46,7 +46,19 @@ export function DraggableCard({
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="w-full h-full">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      onKeyDownCapture={(event) => {
+        if ((event.key === 'Enter' || event.key === ' ') && onClick) {
+          event.preventDefault();
+          onClick();
+        }
+      }}
+      className="w-full h-full"
+    >
       <UnitCard
         card={card}
         isSelected={isSelected}
@@ -76,7 +88,10 @@ export function DroppableBoardSlot({ id, children }: DroppableBoardSlotProps) {
   });
 
   return (
-    <div ref={setNodeRef} className={`w-full h-full transition-all duration-150 ${isOver ? 'scale-105' : ''}`}>
+    <div
+      ref={setNodeRef}
+      className={`w-full h-full transition-all duration-150 ${isOver ? 'scale-105' : ''}`}
+    >
       {typeof children === 'function' ? children({ isOver }) : children}
     </div>
   );

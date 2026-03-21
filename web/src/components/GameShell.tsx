@@ -13,6 +13,9 @@ import { BagOverlay } from './BagOverlay';
 import { UnitCard } from './UnitCard';
 import { CARD_SIZES } from '../constants/cardSizes';
 import { RotatePrompt } from './RotatePrompt';
+import { GameKeyboardShortcuts } from './GameKeyboardShortcuts';
+import { KeyboardShortcutsOverlay } from './KeyboardShortcutsOverlay';
+import { CardInspectOverlay } from './CardInspectOverlay';
 import { useGameStore } from '../store/gameStore';
 import { useDragAndDrop } from '../hooks';
 
@@ -51,7 +54,7 @@ export function GameShell({
   onSelectAccount,
   className = '',
 }: GameShellProps) {
-  const { view, bag, cardSet, selection, showBag } = useGameStore();
+  const { view, bag, cardSet, selection, showBag, showGameCardDetailsPanel } = useGameStore();
 
   const {
     activeId,
@@ -63,8 +66,10 @@ export function GameShell({
     getActiveCard,
   } = useDragAndDrop();
 
-  // Card panel is visible during shop phase or when a board unit is selected
-  const showCardPanel = view?.phase === 'shop' || selection?.type === 'board' || showBag;
+  // Pinned card panel is visible during shop phase or when a board unit is selected,
+  // unless the player has hidden it in settings.
+  const showCardPanel =
+    showGameCardDetailsPanel && (view?.phase === 'shop' || selection?.type === 'board' || showBag);
 
   // Determine which card to show in the panel
   const selectedCard =
@@ -109,6 +114,8 @@ export function GameShell({
         ref={containerRef}
         className={`game-layout h-screen flex flex-col bg-board-bg ${className}`}
       >
+        <GameKeyboardShortcuts />
+
         {/* Zone 1: Top HUD */}
         <GameTopBar
           hideEndTurn={hideEndTurn}
@@ -116,24 +123,29 @@ export function GameShell({
           className={contentMargin}
         />
 
-        {/* Zone 2: Arena (Board) with left panel */}
-        <div
-          className={`game-main flex-1 flex flex-col overflow-hidden min-h-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
-        >
-          <Arena />
-        </div>
+        {/* Zone 2-4: Main game area */}
+        <main className="grid grid-rows-[minmax(0,3fr)_auto_minmax(0,2fr)] flex-1 min-h-0 outline-none">
+          {/* Zone 2: Arena (Board) with left panel */}
+          <div
+            className={`game-main flex flex-col overflow-hidden min-h-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
+          >
+            <Arena />
+          </div>
 
-        {/* Zone 3: Mana Bar (gateway between board and hand) */}
-        <div className={`flex-shrink-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}>
-          <ManaBar />
-        </div>
+          {/* Zone 3: Mana Bar (gateway between board and hand) */}
+          <div
+            className={`flex-shrink-0 ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
+          >
+            <ManaBar />
+          </div>
 
-        {/* Zone 4: Hand (Shop) */}
-        <div
-          className={`game-shop flex-shrink-0 mt-auto ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
-        >
-          <Shop />
-        </div>
+          {/* Zone 4: Hand (Shop) */}
+          <div
+            className={`game-shop min-h-0 overflow-hidden ${contentMargin} ${showCardPanel ? 'show-card-panel' : ''}`}
+          >
+            <Shop />
+          </div>
+        </main>
 
         {/* Card Detail Panel */}
         <CardDetailPanel card={cardToShow} isVisible={showCardPanel} mode={cardPanelMode} />
@@ -141,6 +153,8 @@ export function GameShell({
         {/* Battle Overlay */}
         <BattleOverlay />
         <BagOverlay />
+        <KeyboardShortcutsOverlay />
+        <CardInspectOverlay mode={cardPanelMode} />
 
         <RotatePrompt />
       </div>

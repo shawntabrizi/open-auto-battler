@@ -12,7 +12,9 @@ export default function Shop() {
           </div>
 
           {/* Board label + area */}
-          <div className="text-[6px] text-warm-500 font-bold uppercase tracking-wider text-center bg-board-bg pt-0.5">BOARD</div>
+          <div className="text-[6px] text-warm-500 font-bold uppercase tracking-wider text-center bg-board-bg pt-0.5">
+            BOARD
+          </div>
           <div className="flex-[3] flex items-center justify-center gap-1 px-2 bg-board-bg">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
@@ -38,7 +40,9 @@ export default function Shop() {
           </div>
 
           {/* Hand label + area */}
-          <div className="text-[6px] text-warm-500 font-bold uppercase tracking-wider text-center bg-shop-bg border-t border-warm-700/50 pt-0.5">HAND</div>
+          <div className="text-[6px] text-warm-500 font-bold uppercase tracking-wider text-center bg-shop-bg border-t border-warm-700/50 pt-0.5">
+            HAND
+          </div>
           <div className="flex-[2] flex items-center justify-center gap-1 px-2 bg-shop-bg">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
@@ -57,20 +61,26 @@ export default function Shop() {
 
         {/* Text */}
         <div className="space-y-2 lg:space-y-3 text-warm-300 text-sm lg:text-base leading-relaxed">
-          <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white">
-            The Shop Phase
-          </h2>
+          <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white">The Shop Phase</h2>
           <p>
-            Each round starts with the <span className="text-yellow-400 font-bold">Shop Phase</span>.
+            Each round starts with the <span className="text-yellow-400 font-bold">Shop Phase</span>
+            .
           </p>
           <p>
-            You draw <span className="text-white font-bold">5 random cards</span> from your bag into your hand.
+            You draw <span className="text-white font-bold">5 random cards</span> from your bag into
+            your hand.
           </p>
           <p>
-            <span className="text-red-400 font-bold">Burn</span> cards from your hand or your board to gain <span className="text-blue-400 font-bold">mana</span>.
+            <span className="text-red-400 font-bold">Burn</span> cards from your hand or your board
+            to gain <span className="text-blue-400 font-bold">mana</span>.
           </p>
           <p>
-            <span className="text-green-400 font-bold">Play</span> cards from your hand onto the board by spending mana.
+            <span className="text-green-400 font-bold">Play</span> cards from your hand onto the
+            board by spending mana.
+          </p>
+          <p>
+            Tap a card to select it, then tap an empty board slot to place
+            it. You can also drag cards directly to the board.
           </p>
         </div>
       </div>
