@@ -12,7 +12,7 @@ export function ManaBar() {
     >
       <div className="flex items-center gap-3">
         {/* Mana label */}
-        <div className="text-[10px] lg:text-xs text-mana-blue font-bold uppercase tracking-wide whitespace-nowrap">
+        <div className="text-[10px] lg:text-xs text-mana font-bold uppercase tracking-wide whitespace-nowrap">
           Mana
         </div>
 
@@ -30,7 +30,7 @@ export function ManaBar() {
 
         {/* Mana count */}
         <div className="text-xs lg:text-sm font-bold text-white whitespace-nowrap">
-          <span className="text-mana-blue">{view.mana}</span>
+          <span className="text-mana">{view.mana}</span>
           <span className="text-base-400">/{view.mana_limit}</span>
         </div>
       </div>

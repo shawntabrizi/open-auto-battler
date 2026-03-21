@@ -314,10 +314,10 @@ export function HamburgerMenu() {
                     <div className="theme-panel rounded-xl border border-base-700/50 bg-base-900/30 px-4 py-3">
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-emerald opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-full w-full bg-accent-emerald"></span>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-positive opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-full w-full bg-positive"></span>
                         </span>
-                        <span className="text-[10px] text-accent-emerald font-medium uppercase tracking-wider">
+                        <span className="text-[10px] text-positive font-medium uppercase tracking-wider">
                           Connected
                         </span>
                       </div>

@@ -33,7 +33,7 @@ export function Shop() {
   // Defensive check for hand array
   if (!view.hand || !Array.isArray(view.hand)) {
     console.error('Shop: view.hand is invalid:', view.hand);
-    return <div className="text-defeat-red">Error: Hand data not available</div>;
+    return <div className="text-defeat">Error: Hand data not available</div>;
   }
 
   const handleHandSlotClick = (index: number) => {
@@ -96,7 +96,7 @@ export function Shop() {
             aria-keyshortcuts={GAME_SHORTCUTS.undo}
             className={`action-circle theme-button w-10 h-10 lg:w-16 lg:h-16 rounded-full flex items-center justify-center transition-all border-2 ${
               view.can_undo
-                ? 'theme-surface-button border-gold/30 text-gold hover:border-gold/60 hover:text-white cursor-pointer shadow-elevation-rest hover:shadow-elevation-hover'
+                ? 'theme-surface-button border-accent/30 text-accent hover:border-accent/60 hover:text-white cursor-pointer shadow-elevation-rest hover:shadow-elevation-hover'
                 : 'bg-surface-dark/80 border-base-700 text-base-500 cursor-not-allowed'
             }`}
             title={`Undo last action (${GAME_SHORTCUTS.undo})`}
@@ -129,7 +129,7 @@ export function Shop() {
           }}
         >
           {/* Hand label - desktop only */}
-          <div className="board-helper theme-panel hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 items-center gap-3 rounded-full border border-gold/30 bg-surface-dark/55 px-4 py-1.5 text-center shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm">
+          <div className="board-helper theme-panel hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 items-center gap-3 rounded-full border border-accent/30 bg-surface-dark/55 px-4 py-1.5 text-center shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm">
             <span className="theme-title-text font-title text-sm lg:text-xl font-bold uppercase tracking-[0.28em] text-transparent bg-clip-text [text-shadow:0_1px_8px_rgba(0,0,0,0.45)]">
               Hand
             </span>
@@ -229,9 +229,9 @@ export function Shop() {
             <div
               className={`burn-hint hidden lg:block text-[10px] mt-1 text-center px-2 ${
                 isBurnHovered
-                  ? 'text-burn-value font-bold'
+                  ? 'text-card-burn font-bold'
                   : shouldHighlightBurn
-                    ? 'text-gold font-semibold'
+                    ? 'text-accent font-semibold'
                     : 'text-base-500'
               }`}
             >

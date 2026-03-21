@@ -88,14 +88,14 @@ export function TutorialOverlay() {
         {isLast ? (
           <button
             onClick={close}
-            className="px-4 py-2 text-sm font-bold text-accent-emerald hover:text-accent-emerald transition-colors"
+            className="px-4 py-2 text-sm font-bold text-positive hover:text-positive transition-colors"
           >
             Done
           </button>
         ) : (
           <button
             onClick={next}
-            className="px-4 py-2 text-sm font-bold text-gold hover:text-gold transition-colors"
+            className="px-4 py-2 text-sm font-bold text-accent hover:text-accent transition-colors"
           >
             Next &rarr;
           </button>

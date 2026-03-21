@@ -15,7 +15,7 @@ export function CustomizationPreview() {
         {/* HUD bar */}
         <div className="h-[8%] bg-base-900/80 border-b border-base-700 flex items-center px-2 gap-2 shrink-0">
           {selections.playerAvatar && (
-            <div className="w-4 h-4 rounded-full overflow-hidden border border-gold/50 flex-shrink-0">
+            <div className="w-4 h-4 rounded-full overflow-hidden border border-accent/50 flex-shrink-0">
               <IpfsImage
                 src={selections.playerAvatar.imageUrl}
                 alt="avatar"
@@ -25,7 +25,7 @@ export function CustomizationPreview() {
           )}
           <span className="text-card-attack text-[8px]">&#9829;&#9829;&#9829;</span>
           <span className="text-[8px] text-base-400 ml-auto">R1</span>
-          <span className="text-gold text-[8px]">&#9733;</span>
+          <span className="text-accent text-[8px]">&#9733;</span>
         </div>
 
         {/* Board area */}

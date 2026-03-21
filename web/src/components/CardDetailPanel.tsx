@@ -49,7 +49,7 @@ function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
           <span className="px-1.5 py-0.5 bg-card-attack/15 text-card-attack border border-card-attack/40 rounded text-[10px] lg:text-xs font-stat font-bold">
             ATK: {card.attack}
           </span>
-          <span className="px-1.5 py-0.5 bg-victory-green/15 text-victory-green border border-victory-green/40 rounded text-[10px] lg:text-xs font-stat font-bold">
+          <span className="px-1.5 py-0.5 bg-victory/15 text-victory border border-victory/40 rounded text-[10px] lg:text-xs font-stat font-bold">
             HP: {card.health}
           </span>
         </div>
@@ -120,7 +120,7 @@ export function CardDetailPanel({
           subtitle: 'Your tournament journey ends here.',
           confirmation: 'All progress will be sealed. There is no returning to this battle.',
           success: 'You have surrendered.',
-          accent: 'from-accent-violet/20 via-defeat-red/10 to-transparent',
+          accent: 'from-special/20 via-defeat/10 to-transparent',
         }
       : resolvedMode.type === 'blockchain'
         ? {
@@ -128,14 +128,14 @@ export function CardDetailPanel({
             subtitle: 'Your battle record ends here.',
             confirmation: 'This run will be lost to the chain forever. There is no turning back.',
             success: 'You have surrendered.',
-            accent: 'from-gold/20 via-defeat-red/10 to-transparent',
+            accent: 'from-accent/20 via-defeat/10 to-transparent',
           }
         : {
             title: 'Surrender?',
             subtitle: 'Your current run will be lost.',
             confirmation: 'All progress is gone. You will start fresh from the beginning.',
             success: 'You have surrendered.',
-            accent: 'from-gold/15 via-defeat-red/10 to-transparent',
+            accent: 'from-accent/15 via-defeat/10 to-transparent',
           };
 
   React.useEffect(() => {
@@ -211,20 +211,20 @@ export function CardDetailPanel({
       <div className="space-y-3 lg:space-y-6">
         {/* Economy Section */}
         <div className="flex gap-1.5 lg:gap-3">
-          <div className="theme-panel flex-1 min-w-0 p-1.5 lg:p-3 bg-mana-blue/10 border border-mana-blue/30 rounded-lg">
-            <div className="text-[8px] lg:text-[10px] text-mana-blue uppercase font-heading font-bold mb-0.5 lg:mb-1">
+          <div className="theme-panel flex-1 min-w-0 p-1.5 lg:p-3 bg-mana/10 border border-mana/30 rounded-lg">
+            <div className="text-[8px] lg:text-[10px] text-mana uppercase font-heading font-bold mb-0.5 lg:mb-1">
               Cost
             </div>
             <div className="text-sm lg:text-xl font-stat font-bold text-white">
-              {card.play_cost} <span className="text-mana-blue text-[10px] lg:text-sm">Mana</span>
+              {card.play_cost} <span className="text-mana text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
-          <div className="theme-panel flex-1 min-w-0 p-1.5 lg:p-3 bg-burn-value/10 border border-burn-value/30 rounded-lg">
-            <div className="text-[8px] lg:text-[10px] text-burn-value uppercase font-heading font-bold mb-0.5 lg:mb-1">
+          <div className="theme-panel flex-1 min-w-0 p-1.5 lg:p-3 bg-card-burn/10 border border-card-burn/30 rounded-lg">
+            <div className="text-[8px] lg:text-[10px] text-card-burn uppercase font-heading font-bold mb-0.5 lg:mb-1">
               Burn
             </div>
             <div className="text-sm lg:text-xl font-stat font-bold text-white">
-              +{card.burn_value} <span className="text-burn-value text-[10px] lg:text-sm">Mana</span>
+              +{card.burn_value} <span className="text-card-burn text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
         </div>
@@ -237,7 +237,7 @@ export function CardDetailPanel({
                 key={index}
                 className="theme-panel mb-2 rounded-lg border border-base-700/70 bg-surface-mid/25 p-2 shadow-elevation-rest last:mb-0 lg:mb-4 lg:p-3"
               >
-                <h3 className="text-xs lg:text-md font-heading font-bold text-gold mb-1 lg:mb-2">
+                <h3 className="text-xs lg:text-md font-heading font-bold text-accent mb-1 lg:mb-2">
                   {allAbilities.length > 1 ? `Ability ${index + 1}` : 'Ability'}
                 </h3>
                 <div className="rounded border border-base-700/50 bg-surface-dark/70 p-1.5 text-[10px] italic text-base-100 font-body lg:p-2 lg:text-sm">
@@ -260,12 +260,12 @@ export function CardDetailPanel({
               <span>CARD_DATA.JSON</span>
               <button
                 onClick={() => navigator.clipboard.writeText(cardRawJson)}
-                className="text-mana-blue hover:text-white font-mono text-[9px]"
+                className="text-mana hover:text-white font-mono text-[9px]"
               >
                 Copy
               </button>
             </div>
-            <pre className="text-[9px] text-mana-blue/80 custom-scrollbar max-h-48 overflow-auto">
+            <pre className="text-[9px] text-mana/80 custom-scrollbar max-h-48 overflow-auto">
               {cardRawJson}
             </pre>
           </div>
@@ -323,7 +323,7 @@ export function CardDetailPanel({
           role="region"
           aria-label="Card details"
           tabIndex={0}
-          className={`flex-1 overflow-y-auto custom-scrollbar outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset ${contentPaddingClass}`}
+          className={`flex-1 overflow-y-auto custom-scrollbar outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset ${contentPaddingClass}`}
         >
           {renderCardTab()}
         </div>
@@ -353,10 +353,10 @@ export function CardDetailPanel({
 
             <div className="relative p-6 lg:p-7 flex flex-col items-center text-center">
               <h2
-                className="font-title text-3xl lg:text-4xl font-bold tracking-wide uppercase text-defeat-red"
+                className="font-title text-3xl lg:text-4xl font-bold tracking-wide uppercase text-defeat"
                 style={{
                   textShadow:
-                    '0 2px 12px rgb(var(--color-defeat-red) / 0.5), 0 0 40px rgb(var(--color-defeat-red) / 0.2)',
+                    '0 2px 12px rgb(var(--color-defeat) / 0.5), 0 0 40px rgb(var(--color-defeat) / 0.2)',
                 }}
               >
                 {forfeitContext.title}

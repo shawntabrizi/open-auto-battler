@@ -145,7 +145,7 @@ function SandboxArena() {
             <UnitCard card={unit} showCost={false} showBurn={false} />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none z-20">
               <span
-                className="text-defeat-red text-3xl lg:text-5xl font-black"
+                className="text-defeat text-3xl lg:text-5xl font-black"
                 style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}
               >
                 ×
@@ -166,7 +166,7 @@ function SandboxArena() {
       <div className="flex items-center gap-1 lg:gap-2">
         {/* Player side (left) - display 5 4 3 2 1 */}
         <div className="flex-1 min-w-0 flex flex-col items-center gap-0.5">
-          <div className="text-[7px] lg:text-xs text-mana-blue font-bold">PLAYER</div>
+          <div className="text-[7px] lg:text-xs text-mana font-bold">PLAYER</div>
           <div className="flex gap-0.5 lg:gap-1 w-full">
             {[4, 3, 2, 1, 0].map((i) => (
               <div key={`p-${i}`} className="flex-1 min-w-0">
@@ -180,7 +180,7 @@ function SandboxArena() {
 
         {/* Enemy side (right) - display 1 2 3 4 5 */}
         <div className="flex-1 min-w-0 flex flex-col items-center gap-0.5">
-          <div className="text-[7px] lg:text-xs text-defeat-red font-bold">ENEMY</div>
+          <div className="text-[7px] lg:text-xs text-defeat font-bold">ENEMY</div>
           <div className="flex gap-0.5 lg:gap-1 w-full">
             {[0, 1, 2, 3, 4].map((i) => (
               <div key={`e-${i}`} className="flex-1 min-w-0">
@@ -193,7 +193,7 @@ function SandboxArena() {
 
       {selectedTemplate && (
         <div className="mt-1 lg:mt-2 text-center text-[9px] lg:text-xs text-base-400">
-          Placing: <span className="text-gold">{selectedTemplate.name}</span>
+          Placing: <span className="text-accent">{selectedTemplate.name}</span>
         </div>
       )}
     </div>

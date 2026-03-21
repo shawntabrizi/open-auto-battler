@@ -40,7 +40,7 @@ export const CustomizePage: React.FC = () => {
             <Link
               key={section.slug}
               to={`/customize/${section.slug}`}
-              className="theme-panel theme-button flex items-center gap-2 bg-base-900/50 border border-white/5 hover:border-gold/30 rounded-lg px-3 py-1.5 transition-all hover:bg-base-800/50 active:scale-95"
+              className="theme-panel theme-button flex items-center gap-2 bg-base-900/50 border border-white/5 hover:border-accent/30 rounded-lg px-3 py-1.5 transition-all hover:bg-base-800/50 active:scale-95"
             >
               <span className="text-base">{section.icon}</span>
               <span className="text-[10px] font-bold text-white">{section.label}</span>
@@ -64,7 +64,7 @@ export const CustomizePage: React.FC = () => {
                 <Link
                   key={section.slug}
                   to={`/customize/${section.slug}`}
-                  className="theme-panel bg-base-900/50 border border-white/5 hover:border-gold/30 rounded-2xl p-6 text-center transition-all hover:bg-base-800/50 active:scale-95"
+                  className="theme-panel bg-base-900/50 border border-white/5 hover:border-accent/30 rounded-2xl p-6 text-center transition-all hover:bg-base-800/50 active:scale-95"
                 >
                   <div className="text-5xl mb-3">{section.icon}</div>
                   <div className="text-base font-bold text-white">{section.label}</div>

@@ -159,10 +159,10 @@ export function LoginPage() {
                 <div
                   className={`w-2 h-2 rounded-full ${
                     isConnecting
-                      ? 'bg-gold animate-pulse'
+                      ? 'bg-accent animate-pulse'
                       : isConnected
-                        ? 'bg-accent-emerald animate-pulse'
-                        : 'bg-defeat-red'
+                        ? 'bg-positive animate-pulse'
+                        : 'bg-defeat'
                   }`}
                 />
                 <span className="text-base-400">
@@ -178,13 +178,13 @@ export function LoginPage() {
                 )}
                 <button
                   onClick={() => setShowNetworkPicker(!showNetworkPicker)}
-                  className="ml-auto text-gold hover:text-base-200 text-xs transition-colors shrink-0"
+                  className="ml-auto text-accent hover:text-base-200 text-xs transition-colors shrink-0"
                 >
                   {showNetworkPicker ? 'Hide' : 'Configure'}
                 </button>
               </div>
               {connectionError && (
-                <div className="mt-2 text-[10px] lg:text-xs text-defeat-red">{connectionError}</div>
+                <div className="mt-2 text-[10px] lg:text-xs text-defeat">{connectionError}</div>
               )}
             </div>
 
@@ -197,7 +197,7 @@ export function LoginPage() {
                     onClick={() => setSelected(opt.key)}
                     className={`theme-panel w-full text-left p-3 rounded-xl border transition-all ${
                       selected === opt.key
-                        ? 'border-gold/60 bg-gold/10'
+                        ? 'border-accent/60 bg-accent/10'
                         : 'border-base-700 bg-base-900/30 hover:border-base-600'
                     }`}
                   >
@@ -208,10 +208,10 @@ export function LoginPage() {
                       </div>
                       <div
                         className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          selected === opt.key ? 'border-gold' : 'border-base-600'
+                          selected === opt.key ? 'border-accent' : 'border-base-600'
                         }`}
                       >
-                        {selected === opt.key && <div className="w-2 h-2 rounded-full bg-gold" />}
+                        {selected === opt.key && <div className="w-2 h-2 rounded-full bg-accent" />}
                       </div>
                     </div>
                   </button>
@@ -223,7 +223,7 @@ export function LoginPage() {
                     value={customUrl}
                     onChange={(e) => setCustomUrl(e.target.value)}
                     placeholder="ws://..."
-                    className="theme-input w-full p-3 rounded-xl border border-base-700 bg-base-900/50 text-sm font-mono text-white placeholder-base-600 focus:outline-none focus:border-gold/60"
+                    className="theme-input w-full p-3 rounded-xl border border-base-700 bg-base-900/50 text-sm font-mono text-white placeholder-base-600 focus:outline-none focus:border-accent/60"
                   />
                 )}
 
@@ -256,7 +256,7 @@ export function LoginPage() {
                     onChange={(e) =>
                       selectAccount(accounts.find((a) => a.address === e.target.value))
                     }
-                    className="theme-input w-full bg-base-900/50 border border-base-700 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-gold/60"
+                    className="theme-input w-full bg-base-900/50 border border-base-700 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accent/60"
                   >
                     {accounts.map((acc) => (
                       <option key={acc.address} value={acc.address}>
@@ -278,8 +278,8 @@ export function LoginPage() {
                         checkingBalance
                           ? 'text-base-600'
                           : hasFunds
-                            ? 'text-accent-emerald'
-                            : 'text-defeat-red'
+                            ? 'text-positive'
+                            : 'text-defeat'
                       }`}
                     >
                       {checkingBalance ? '...' : balance !== null ? formatBalance(balance) : '--'}

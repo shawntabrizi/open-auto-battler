@@ -43,13 +43,13 @@ export function CreatorPage() {
           </div>
 
           {!isConnected && (
-            <div className="theme-panel mb-6 p-3 rounded-xl border border-gold/30 bg-gold/5 text-center">
-              <p className="text-gold text-xs lg:text-sm">
+            <div className="theme-panel mb-6 p-3 rounded-xl border border-accent/30 bg-accent/5 text-center">
+              <p className="text-accent text-xs lg:text-sm">
                 Connect to the blockchain to use creator tools
               </p>
               <Link
                 to="/network"
-                className="inline-block mt-2 text-xs text-gold hover:text-base-200 underline"
+                className="inline-block mt-2 text-xs text-accent hover:text-base-200 underline"
               >
                 Network Settings
               </Link>
@@ -66,7 +66,7 @@ export function CreatorPage() {
                 <div className="flex items-start gap-4">
                   <span className="text-2xl lg:text-3xl">{tool.icon}</span>
                   <div>
-                    <h2 className="font-button font-bold text-base lg:text-lg text-white group-hover:text-gold transition-colors">
+                    <h2 className="font-button font-bold text-base lg:text-lg text-white group-hover:text-accent transition-colors">
                       {tool.label}
                     </h2>
                     <p className="text-base-400 text-xs lg:text-sm mt-0.5 leading-relaxed">

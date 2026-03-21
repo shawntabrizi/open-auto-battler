@@ -110,13 +110,13 @@ export function TournamentLobbyPage() {
           <div
             className={`theme-panel p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm lg:max-w-none ${
               isPerfect
-                ? 'bg-victory-green/10 border-2 border-victory-green'
-                : 'bg-defeat-red/10 border-2 border-defeat-red'
+                ? 'bg-victory/10 border-2 border-victory'
+                : 'bg-defeat/10 border-2 border-defeat'
             }`}
           >
             <h1
               className={`text-3xl lg:text-5xl font-bold mb-2 lg:mb-4 ${
-                isPerfect ? 'text-victory-green' : 'text-defeat-red'
+                isPerfect ? 'text-victory' : 'text-defeat'
               }`}
             >
               {isPerfect ? 'PERFECT RUN!' : 'RUN OVER'}
@@ -129,7 +129,7 @@ export function TournamentLobbyPage() {
 
             <div className="flex justify-center gap-6 lg:gap-12 mb-6 lg:mb-8">
               <div className="text-center">
-                <div className="text-2xl lg:text-4xl font-bold text-gold">{lastGameWins}</div>
+                <div className="text-2xl lg:text-4xl font-bold text-accent">{lastGameWins}</div>
                 <div className="text-xs lg:text-base text-base-400">Wins</div>
               </div>
             </div>
@@ -180,7 +180,7 @@ export function TournamentLobbyPage() {
             Network Settings
           </Link>
           {connectionError && (
-            <p className="mt-3 max-w-md rounded-xl theme-error-panel border px-3 py-2 text-center text-xs text-defeat-red">
+            <p className="mt-3 max-w-md rounded-xl theme-error-panel border px-3 py-2 text-center text-xs text-defeat">
               {connectionError}
             </p>
           )}
@@ -205,7 +205,7 @@ export function TournamentLobbyPage() {
 
           <div className="flex items-center justify-center gap-2 lg:gap-3 mb-2 lg:mb-6">
             <div className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1 lg:py-1.5 bg-base-800 rounded lg:rounded-lg border border-white/5">
-              <div className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-accent-emerald animate-pulse" />
+              <div className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-positive animate-pulse" />
               <span className="text-[10px] lg:text-xs font-mono text-base-400">
                 {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'Connected'}
               </span>
@@ -215,7 +215,7 @@ export function TournamentLobbyPage() {
               onChange={(e) =>
                 selectAccount(accounts.find((a: any) => a.address === e.target.value))
               }
-              className="theme-input bg-base-800 border border-white/10 rounded lg:rounded-lg px-1.5 lg:px-2 py-1 lg:py-1.5 text-[10px] lg:text-xs outline-none focus:border-gold/50"
+              className="theme-input bg-base-800 border border-white/10 rounded lg:rounded-lg px-1.5 lg:px-2 py-1 lg:py-1.5 text-[10px] lg:text-xs outline-none focus:border-accent/50"
             >
               {accounts.map((acc: any) => (
                 <option key={acc.address} value={acc.address}>
@@ -262,7 +262,7 @@ export function TournamentLobbyPage() {
                   <div className="text-[8px] lg:text-[10px] text-base-500 uppercase font-bold lg:mb-1">
                     Pool
                   </div>
-                  <div className="text-xs lg:text-sm font-bold text-accent-violet">
+                  <div className="text-xs lg:text-sm font-bold text-special">
                     {formatBalance(activeTournament.state.total_pot)}
                   </div>
                 </div>
@@ -278,7 +278,7 @@ export function TournamentLobbyPage() {
                   <div className="text-[8px] lg:text-[10px] text-base-500 uppercase font-bold lg:mb-1">
                     Perfect
                   </div>
-                  <div className="text-xs lg:text-sm font-bold text-victory-green">
+                  <div className="text-xs lg:text-sm font-bold text-victory">
                     {activeTournament.state.total_perfect_runs}
                   </div>
                 </div>
@@ -311,8 +311,8 @@ export function TournamentLobbyPage() {
               </div>
 
               {playerStats && playerStats.total_games > 0 && (
-                <div className="theme-panel bg-accent-violet/10 rounded lg:rounded-lg p-2 lg:p-3 border border-accent-violet/20 mb-2 lg:mb-4 text-left">
-                  <div className="text-[8px] lg:text-[10px] text-accent-violet uppercase font-bold mb-1 lg:mb-2">
+                <div className="theme-panel bg-special/10 rounded lg:rounded-lg p-2 lg:p-3 border border-special/20 mb-2 lg:mb-4 text-left">
+                  <div className="text-[8px] lg:text-[10px] text-special uppercase font-bold mb-1 lg:mb-2">
                     Your Stats
                   </div>
                   <div className="flex gap-2 lg:gap-4 text-[10px] lg:text-xs">
@@ -326,7 +326,7 @@ export function TournamentLobbyPage() {
                     </div>
                     <div>
                       <span className="text-base-400">Perfect Runs: </span>
-                      <span className="text-victory-green font-bold">{playerStats.perfect_runs}</span>
+                      <span className="text-victory font-bold">{playerStats.perfect_runs}</span>
                     </div>
                   </div>
                 </div>
@@ -362,7 +362,7 @@ export function TournamentLobbyPage() {
                           key={entry.account}
                           className={
                             entry.account === selectedAccount?.address
-                              ? 'text-accent-violet'
+                              ? 'text-special'
                               : 'text-base-300'
                           }
                         >
@@ -372,7 +372,7 @@ export function TournamentLobbyPage() {
                           </td>
                           <td className="text-right py-px lg:py-0.5">{entry.stats.total_games}</td>
                           <td className="text-right py-px lg:py-0.5">{entry.stats.total_wins}</td>
-                          <td className="text-right py-px lg:py-0.5 text-victory-green">
+                          <td className="text-right py-px lg:py-0.5 text-victory">
                             {entry.stats.perfect_runs}
                           </td>
                         </tr>

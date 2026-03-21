@@ -258,7 +258,7 @@ export function AchievementsPage() {
                       <button
                         onClick={() => setSelectedCard(isSelected ? null : card)}
                         className={`card relative ${CARD_SIZES.compact.tw} overflow-hidden bg-black cursor-pointer flex flex-col ${
-                          isSelected ? 'card-selected ring-2 ring-gold' : ''
+                          isSelected ? 'card-selected ring-2 ring-accent' : ''
                         }`}
                       >
                         {art ? (

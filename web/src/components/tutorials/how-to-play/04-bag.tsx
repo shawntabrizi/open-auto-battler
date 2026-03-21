@@ -33,12 +33,12 @@ export default function Bag() {
           </p>
           <p>
             Each round, you draw cards from this bag into your hand. The bag is your{' '}
-            <span className="text-gold font-bold">entire arsenal</span> for the run. Every
+            <span className="text-accent font-bold">entire arsenal</span> for the run. Every
             card you'll ever see comes from it.
           </p>
           <p>
             Check your bag early! Knowing what's inside lets you{' '}
-            <span className="text-accent-emerald font-bold">plan ahead</span>. Spot powerful combos,
+            <span className="text-positive font-bold">plan ahead</span>. Spot powerful combos,
             identify key cards, and build a strategy before the pressure is on.
           </p>
         </div>

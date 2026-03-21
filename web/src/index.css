@@ -33,15 +33,15 @@
   --color-base-800: 36 31 24;
   --color-base-900: 26 22 16;
   --color-base-950: 16 14 10;
-  --color-gold: 212 168 67;
-  --color-mana-blue: 91 143 170;
+  --color-accent: 212 168 67;
+  --color-mana: 91 143 170;
   --color-card-attack: 184 92 74;
-  --color-burn-value: 212 168 67;
-  --color-accent-amber: 196 138 42;
-  --color-accent-emerald: 90 154 110;
-  --color-accent-violet: 139 111 176;
-  --color-victory-green: 74 140 58;
-  --color-defeat-red: 168 58 42;
+  --color-card-burn: 212 168 67;
+  --color-accent-warm: 196 138 42;
+  --color-positive: 90 154 110;
+  --color-special: 139 111 176;
+  --color-victory: 74 140 58;
+  --color-defeat: 168 58 42;
   --color-card-bg: 30 26 20;
   --color-board-bg: 22 19 16;
   --color-shop-bg: 26 23 18;
@@ -438,30 +438,30 @@ body {
 
 /* ── Danger / destructive action styles ── */
 .theme-danger-button {
-  border-color: rgb(var(--color-defeat-red) / 0.3);
-  background: rgb(var(--color-defeat-red) / 0.08);
-  color: rgb(var(--color-defeat-red));
+  border-color: rgb(var(--color-defeat) / 0.3);
+  background: rgb(var(--color-defeat) / 0.08);
+  color: rgb(var(--color-defeat));
 }
 
 .theme-danger-button:hover {
-  border-color: rgb(var(--color-defeat-red) / 0.5);
-  background: rgb(var(--color-defeat-red) / 0.15);
+  border-color: rgb(var(--color-defeat) / 0.5);
+  background: rgb(var(--color-defeat) / 0.15);
 }
 
 .theme-danger-solid {
-  border-color: rgb(var(--color-defeat-red) / 0.6);
-  background: rgb(var(--color-defeat-red) / 0.3);
+  border-color: rgb(var(--color-defeat) / 0.6);
+  background: rgb(var(--color-defeat) / 0.3);
   color: white;
 }
 
 .theme-danger-solid:hover {
-  background: rgb(var(--color-defeat-red) / 0.45);
+  background: rgb(var(--color-defeat) / 0.45);
 }
 
 /* ── Alert panels ── */
 .theme-error-panel {
-  border-color: rgb(var(--color-defeat-red) / 0.3);
-  background: rgb(var(--color-defeat-red) / 0.1);
+  border-color: rgb(var(--color-defeat) / 0.3);
+  background: rgb(var(--color-defeat) / 0.1);
 }
 
 /* ── Achievement badge colors ── */
@@ -522,7 +522,7 @@ body {
 .shop {
   background: var(--theme-hand-surface);
   box-shadow:
-    inset 0 1px 0 rgb(var(--color-gold) / 0.05),
+    inset 0 1px 0 rgb(var(--color-accent) / 0.05),
     inset 0 24px 40px rgb(var(--color-surface-dark) / 0.12);
 }
 
@@ -561,29 +561,29 @@ body {
 .cost-badge {
   background: linear-gradient(
     180deg,
-    rgb(var(--color-mana-blue) / 0.95) 0%,
-    rgb(var(--color-mana-blue) / 0.78) 45%,
+    rgb(var(--color-mana) / 0.95) 0%,
+    rgb(var(--color-mana) / 0.78) 45%,
     rgb(var(--color-surface-mid) / 0.92) 100%
   );
-  border: 1.5px solid rgb(var(--color-mana-blue) / 0.45);
+  border: 1.5px solid rgb(var(--color-mana) / 0.45);
   box-shadow:
     inset 0 1px 0 rgb(var(--color-base-50) / 0.2),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15),
-    0 0 6px rgb(var(--color-mana-blue) / 0.42);
+    0 0 6px rgb(var(--color-mana) / 0.42);
 }
 
 .burn-badge {
   background: linear-gradient(
     180deg,
-    rgb(var(--color-burn-value) / 0.98) 0%,
-    rgb(var(--color-gold) / 0.88) 40%,
+    rgb(var(--color-card-burn) / 0.98) 0%,
+    rgb(var(--color-accent) / 0.88) 40%,
     rgb(var(--color-card-attack) / 0.72) 100%
   );
-  border: 1.5px solid rgb(var(--color-burn-value) / 0.5);
+  border: 1.5px solid rgb(var(--color-card-burn) / 0.5);
   box-shadow:
     inset 0 1px 0 rgb(var(--color-base-50) / 0.24),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15),
-    0 0 6px rgb(var(--color-gold) / 0.42);
+    0 0 6px rgb(var(--color-accent) / 0.42);
   color: rgb(var(--color-surface-dark));
 }
 
@@ -603,7 +603,7 @@ body {
   @apply bg-card-bg border-2 border-base-600 p-2 transition-all duration-200;
   border-radius: var(--theme-card-radius);
   box-shadow:
-    inset 1px 1px 0 0 rgb(var(--color-gold) / 0.12),
+    inset 1px 1px 0 0 rgb(var(--color-accent) / 0.12),
     inset -1px -1px 0 0 rgba(0, 0, 0, 0.25),
     var(--shadow-resting);
 }
@@ -630,7 +630,7 @@ body {
   .card:not(.card-tilt):hover {
     transform: scale(1.08) translateY(-4px);
     box-shadow:
-      inset 1px 1px 0 0 rgb(var(--color-gold) / 0.15),
+      inset 1px 1px 0 0 rgb(var(--color-accent) / 0.15),
       inset -1px -1px 0 0 rgba(0, 0, 0, 0.25),
       var(--shadow-lifted);
     transition:
@@ -641,15 +641,15 @@ body {
 
   /* Gold border on hover — only in hand/shop context */
   .shop .card:not(.card-tilt):hover:not(.card-selected) {
-    border-color: rgb(var(--color-gold) / 0.85);
+    border-color: rgb(var(--color-accent) / 0.85);
   }
 }
 
 .card-selected {
-  border-color: rgb(var(--color-gold) / 0.9);
+  border-color: rgb(var(--color-accent) / 0.9);
   box-shadow:
-    inset 0 0 10px rgb(var(--color-gold) / 0.15),
-    0 0 12px rgb(var(--color-gold) / 0.3);
+    inset 0 0 10px rgb(var(--color-accent) / 0.15),
+    0 0 12px rgb(var(--color-accent) / 0.3);
 }
 
 /* Rare card glow — cool blue shimmer */
@@ -678,31 +678,31 @@ body {
   0%,
   100% {
     box-shadow:
-      inset 1px 1px 0 0 rgb(var(--color-burn-value) / 0.18),
+      inset 1px 1px 0 0 rgb(var(--color-card-burn) / 0.18),
       inset -1px -1px 0 0 rgba(0, 0, 0, 0.25),
       var(--shadow-resting),
-      0 0 8px rgb(var(--color-burn-value) / 0.24),
-      0 0 2px rgb(var(--color-gold) / 0.15);
+      0 0 8px rgb(var(--color-card-burn) / 0.24),
+      0 0 2px rgb(var(--color-accent) / 0.15);
   }
 
   50% {
     box-shadow:
-      inset 1px 1px 0 0 rgb(var(--color-burn-value) / 0.22),
+      inset 1px 1px 0 0 rgb(var(--color-card-burn) / 0.22),
       inset -1px -1px 0 0 rgba(0, 0, 0, 0.25),
       var(--shadow-hover),
-      0 0 16px rgb(var(--color-burn-value) / 0.38),
-      0 0 4px rgb(var(--color-gold) / 0.22);
+      0 0 16px rgb(var(--color-card-burn) / 0.38),
+      0 0 4px rgb(var(--color-accent) / 0.22);
   }
 }
 
 .card-legendary-glow:hover {
   animation: none;
   box-shadow:
-    inset 1px 1px 0 0 rgb(var(--color-burn-value) / 0.22),
+    inset 1px 1px 0 0 rgb(var(--color-card-burn) / 0.22),
     inset -1px -1px 0 0 rgba(0, 0, 0, 0.25),
     var(--shadow-lifted),
-    0 0 20px rgb(var(--color-burn-value) / 0.45),
-    0 0 4px rgb(var(--color-gold) / 0.26);
+    0 0 20px rgb(var(--color-card-burn) / 0.45),
+    0 0 4px rgb(var(--color-accent) / 0.26);
 }
 
 /* ═══════════════════════════════════════════
@@ -817,14 +817,14 @@ body {
     transform: perspective(600px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))
       scale(1.08) translateY(-4px);
     box-shadow:
-      inset 1px 1px 0 0 rgb(var(--color-gold) / 0.15),
+      inset 1px 1px 0 0 rgb(var(--color-accent) / 0.15),
       inset -1px -1px 0 0 rgba(0, 0, 0, 0.25),
       var(--shadow-lifted);
   }
 
   /* Gold border on hover — only in hand/shop context */
   .shop .card-tilt:hover:not(.card-selected) {
-    border-color: rgb(var(--color-gold) / 0.85);
+    border-color: rgb(var(--color-accent) / 0.85);
   }
 
   /* Glare: warm light spot following the cursor */
@@ -901,7 +901,7 @@ body {
   );
   border: 1px solid rgb(var(--color-base-700) / 0.25);
   box-shadow:
-    inset 0 1px 0 rgb(var(--color-gold) / 0.08),
+    inset 0 1px 0 rgb(var(--color-accent) / 0.08),
     0 0 40px rgba(0, 0, 0, 0.3);
 }
 
@@ -915,12 +915,12 @@ body {
   border: 2px dashed rgb(var(--color-base-700) / 0.3);
   box-shadow:
     inset 0 2px 4px rgba(0, 0, 0, 0.4),
-    inset 0 -1px 0 rgb(var(--color-gold) / 0.05);
+    inset 0 -1px 0 rgb(var(--color-accent) / 0.05);
   transition: all 0.2s ease-out;
 }
 
 .board-slot-engraved:hover {
-  border-color: rgb(var(--color-gold) / 0.25);
+  border-color: rgb(var(--color-accent) / 0.25);
   background: linear-gradient(
     135deg,
     rgb(var(--color-surface-mid) / 0.92) 0%,
@@ -928,12 +928,12 @@ body {
   );
   box-shadow:
     inset 0 2px 4px rgba(0, 0, 0, 0.3),
-    0 0 8px rgb(var(--color-gold) / 0.08);
+    0 0 8px rgb(var(--color-accent) / 0.08);
 }
 
 /* Obvious indicator — slot is available for placement (hand card selected or dragging) */
 .slot-available {
-  border-color: rgb(var(--color-gold) / 0.82) !important;
+  border-color: rgb(var(--color-accent) / 0.82) !important;
   border-style: solid !important;
   background: linear-gradient(
     135deg,
@@ -941,9 +941,9 @@ body {
     rgb(var(--color-surface-dark) / 0.98) 100%
   ) !important;
   box-shadow:
-    inset 0 0 16px rgb(var(--color-gold) / 0.18),
-    0 0 16px rgb(var(--color-gold) / 0.28),
-    0 0 28px rgb(var(--color-burn-value) / 0.18) !important;
+    inset 0 0 16px rgb(var(--color-accent) / 0.18),
+    0 0 16px rgb(var(--color-accent) / 0.28),
+    0 0 28px rgb(var(--color-card-burn) / 0.18) !important;
   filter: saturate(1.08) brightness(1.06);
 }
 
@@ -966,15 +966,15 @@ body {
 .burn-zone-active {
   background-image: radial-gradient(
     circle at center,
-    rgb(var(--color-gold) / 0.18) 0%,
-    rgb(var(--color-burn-value) / 0.28) 24%,
+    rgb(var(--color-accent) / 0.18) 0%,
+    rgb(var(--color-card-burn) / 0.28) 24%,
     rgb(var(--color-card-attack) / 0.24) 54%,
     rgb(var(--color-card-attack) / 0.18) 78%,
     rgb(var(--color-surface-dark) / 0.5) 100%
   );
   box-shadow:
-    inset 0 0 0 1px rgb(var(--color-burn-value) / 0.24),
-    inset 0 0 36px rgb(var(--color-burn-value) / 0.12),
+    inset 0 0 0 1px rgb(var(--color-card-burn) / 0.24),
+    inset 0 0 36px rgb(var(--color-card-burn) / 0.12),
     0 0 18px rgb(var(--color-card-attack) / 0.14);
   animation: burn-zone-pulse 1.8s ease-in-out infinite;
 }
@@ -982,8 +982,8 @@ body {
 .burn-zone-active--hover {
   background-image: radial-gradient(
     circle at center,
-    rgb(var(--color-gold) / 0.24) 0%,
-    rgb(var(--color-burn-value) / 0.38) 22%,
+    rgb(var(--color-accent) / 0.24) 0%,
+    rgb(var(--color-card-burn) / 0.38) 22%,
     rgb(var(--color-card-attack) / 0.32) 50%,
     rgb(var(--color-card-attack) / 0.22) 76%,
     rgb(var(--color-surface-dark) / 0.56) 100%
@@ -994,16 +994,16 @@ body {
   0%,
   100% {
     box-shadow:
-      inset 0 0 0 1px rgb(var(--color-burn-value) / 0.24),
-      inset 0 0 36px rgb(var(--color-burn-value) / 0.12),
+      inset 0 0 0 1px rgb(var(--color-card-burn) / 0.24),
+      inset 0 0 36px rgb(var(--color-card-burn) / 0.12),
       0 0 18px rgb(var(--color-card-attack) / 0.14);
     filter: saturate(1) brightness(1);
   }
 
   50% {
     box-shadow:
-      inset 0 0 0 1px rgb(var(--color-burn-value) / 0.36),
-      inset 0 0 52px rgb(var(--color-burn-value) / 0.18),
+      inset 0 0 0 1px rgb(var(--color-card-burn) / 0.36),
+      inset 0 0 52px rgb(var(--color-card-burn) / 0.18),
       0 0 30px rgb(var(--color-card-attack) / 0.18);
     filter: saturate(1.14) brightness(1.08);
   }
@@ -1629,7 +1629,7 @@ body {
   height: 5.5rem;
   border-radius: 0.375rem;
   background: rgb(var(--color-card-bg) / 0.96);
-  border: 1.5px solid rgb(var(--color-gold) / 0.25);
+  border: 1.5px solid rgb(var(--color-accent) / 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1938,7 +1938,7 @@ body {
   height: 7.3rem;
   object-fit: cover;
   border-radius: 0.5rem;
-  border: 1px solid rgb(var(--color-gold) / 0.18);
+  border: 1px solid rgb(var(--color-accent) / 0.18);
   box-shadow: var(--shadow-resting);
   transform: translateX(var(--fan-x, 0px)) translateY(var(--fan-arc, 0px))
     rotate(var(--fan-rot, 0deg));
@@ -1970,7 +1970,7 @@ body {
     translateY(calc(var(--fan-arc, 0px) * 2.2 - 14px)) rotate(calc(var(--fan-rot, 0deg) * 2));
   box-shadow:
     var(--shadow-lifted),
-    0 0 20px rgb(var(--color-gold) / 0.12);
+    0 0 20px rgb(var(--color-accent) / 0.12);
   filter: brightness(1.08);
 }
 
@@ -1979,7 +1979,7 @@ body {
     translateY(calc(var(--fan-arc, 0px) * 1.5 - 8px)) rotate(calc(var(--fan-rot, 0deg) * 1.5));
   box-shadow:
     var(--shadow-lifted),
-    0 0 20px rgb(var(--color-gold) / 0.12);
+    0 0 20px rgb(var(--color-accent) / 0.12);
   filter: brightness(1.08);
 }
 
@@ -2012,13 +2012,13 @@ body {
   right: 10%;
   bottom: 30%;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgb(var(--color-gold) / 0) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgb(var(--color-accent) / 0) 0%, transparent 70%);
   pointer-events: none;
   transition: background 0.4s;
   z-index: -1;
 }
 
 .set-tile:hover::before {
-  background: radial-gradient(ellipse, rgb(var(--color-gold) / 0.06) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgb(var(--color-accent) / 0.06) 0%, transparent 70%);
 }
 

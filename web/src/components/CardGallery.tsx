@@ -114,7 +114,7 @@ export function CardGallery({
                     aria-label={`${card.name}, cost ${card.play_cost}, attack ${card.attack}, health ${card.health}`}
                     aria-pressed={selected}
                     onClick={handleSelect}
-                    className="block h-full w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-dark"
+                    className="block h-full w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-dark"
                   >
                     {cardElement}
                   </button>

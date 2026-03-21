@@ -24,20 +24,20 @@ export function ThemedToaster() {
         },
         success: {
           iconTheme: {
-            primary: theme.palette.victoryGreen,
+            primary: theme.palette.victory,
             secondary: theme.palette.base900,
           },
           style: {
-            borderColor: theme.palette.victoryGreen + '40',
+            borderColor: theme.palette.victory + '40',
           },
         },
         error: {
           iconTheme: {
-            primary: theme.palette.defeatRed,
+            primary: theme.palette.defeat,
             secondary: theme.palette.base900,
           },
           style: {
-            borderColor: theme.palette.defeatRed + '40',
+            borderColor: theme.palette.defeat + '40',
           },
         },
       }}

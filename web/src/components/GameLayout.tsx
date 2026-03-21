@@ -27,7 +27,7 @@ export function GameLayout() {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center space-y-3">
-          <div className="text-lg text-defeat-red">Something went wrong</div>
+          <div className="text-lg text-defeat">Something went wrong</div>
           <div className="text-xs text-base-500 max-w-xs">{error}</div>
           <button
             onClick={() => window.location.reload()}

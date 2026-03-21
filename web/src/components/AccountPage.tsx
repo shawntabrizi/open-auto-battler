@@ -116,7 +116,7 @@ export function AccountPage() {
                       type="text"
                       value={nameInput}
                       onChange={(e) => setNameInput(e.target.value)}
-                      className="theme-input flex-1 bg-base-900/50 border border-base-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-gold/60"
+                      className="theme-input flex-1 bg-base-900/50 border border-base-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-accent/60"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleSaveName();
@@ -147,7 +147,7 @@ export function AccountPage() {
                     <span className="text-sm lg:text-base text-white">{selectedAccount.name}</span>
                     <button
                       onClick={() => setEditingName(true)}
-                      className="text-xs text-base-500 hover:text-gold transition-colors"
+                      className="text-xs text-base-500 hover:text-accent transition-colors"
                     >
                       Edit
                     </button>
@@ -182,10 +182,10 @@ export function AccountPage() {
                   <div className="text-xs text-base-500 mb-2">Secret Recovery Phrase</div>
                   {showMnemonic ? (
                     <>
-                      <div className="theme-panel bg-base-950 border border-base-700 rounded-lg p-3 font-mono text-xs lg:text-sm text-gold break-all select-all">
+                      <div className="theme-panel bg-base-950 border border-base-700 rounded-lg p-3 font-mono text-xs lg:text-sm text-accent break-all select-all">
                         {getLocalAccountMnemonic(selectedAccount.address) || 'Not found'}
                       </div>
-                      <p className="text-[10px] text-defeat-red/80 mt-2">
+                      <p className="text-[10px] text-defeat/80 mt-2">
                         Do not share this with anyone. Anyone with this phrase can access your
                         account.
                       </p>
@@ -223,7 +223,7 @@ export function AccountPage() {
                     </div>
                     <div>
                       <div className="text-[10px] text-base-600 uppercase tracking-wider">Free</div>
-                      <div className="text-sm lg:text-base font-mono text-accent-emerald">
+                      <div className="text-sm lg:text-base font-mono text-positive">
                         {formatBalance(info.free)}
                       </div>
                     </div>
@@ -231,7 +231,7 @@ export function AccountPage() {
                       <div className="text-[10px] text-base-600 uppercase tracking-wider">
                         Reserved
                       </div>
-                      <div className="text-sm lg:text-base font-mono text-gold">
+                      <div className="text-sm lg:text-base font-mono text-accent">
                         {formatBalance(info.reserved)}
                       </div>
                     </div>
@@ -239,7 +239,7 @@ export function AccountPage() {
                       <div className="text-[10px] text-base-600 uppercase tracking-wider">
                         Frozen
                       </div>
-                      <div className="text-sm lg:text-base font-mono text-mana-blue">
+                      <div className="text-sm lg:text-base font-mono text-mana">
                         {formatBalance(info.frozen)}
                       </div>
                     </div>

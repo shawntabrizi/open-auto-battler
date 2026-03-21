@@ -32,7 +32,7 @@ export default function Welcome() {
           </div>
 
           <div
-            className="text-2xl lg:text-4xl font-title font-bold text-gold shrink-0"
+            className="text-2xl lg:text-4xl font-title font-bold text-accent shrink-0"
             style={{ textShadow: '0 0 20px rgba(212, 168, 67, 0.4)' }}
           >
             VS

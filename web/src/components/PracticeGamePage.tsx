@@ -74,7 +74,7 @@ export function PracticeGamePage() {
   };
 
   return (
-    <div className="h-screen h-svh bg-board-bg text-base-200 overflow-hidden font-sans selection:bg-gold/30 flex flex-col">
+    <div className="h-screen h-svh bg-board-bg text-base-200 overflow-hidden font-sans selection:bg-accent/30 flex flex-col">
       <GameShell
         hideEndTurn={true}
         customAction={{

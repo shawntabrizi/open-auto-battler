@@ -91,7 +91,7 @@ export function VersusPage() {
         className="absolute inset-0 z-0"
         style={{
           background:
-            'radial-gradient(ellipse at 50% 30%, rgb(var(--color-mana-blue) / 0.08), transparent 60%), radial-gradient(ellipse at 80% 70%, rgb(var(--color-accent-violet) / 0.06), transparent 50%)',
+            'radial-gradient(ellipse at 50% 30%, rgb(var(--color-mana) / 0.08), transparent 60%), radial-gradient(ellipse at 80% 70%, rgb(var(--color-special) / 0.06), transparent 50%)',
         }}
       />
 
@@ -102,10 +102,10 @@ export function VersusPage() {
             {/* Connected State */}
             {status === 'connected' || status === 'in-game' ? (
               <div className="text-center pt-2">
-                <div className="w-14 h-14 lg:w-20 lg:h-20 bg-accent-emerald/10 rounded-full flex items-center justify-center mx-auto mb-3 lg:mb-4 border-2 border-accent-emerald/50">
+                <div className="w-14 h-14 lg:w-20 lg:h-20 bg-positive/10 rounded-full flex items-center justify-center mx-auto mb-3 lg:mb-4 border-2 border-positive/50">
                   <span className="text-2xl lg:text-4xl">🔗</span>
                 </div>
-                <h2 className="text-lg lg:text-2xl font-heading font-bold text-accent-emerald mb-1 lg:mb-2">
+                <h2 className="text-lg lg:text-2xl font-heading font-bold text-positive mb-1 lg:mb-2">
                   Connected
                 </h2>
                 <p className="mb-4 lg:mb-6 text-base-400 text-xs lg:text-sm">
@@ -148,13 +148,13 @@ export function VersusPage() {
               joinIdFromUrl ? (
                 /* Auto-joining from QR */
                 <div className="text-center py-8 lg:py-12">
-                  <div className="w-12 h-12 lg:w-16 lg:h-16 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                  <div className="w-12 h-12 lg:w-16 lg:h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                   <h3 className="text-base lg:text-xl font-heading font-bold text-white mb-2">
                     Connecting...
                   </h3>
                   <p className="text-[10px] lg:text-sm text-base-400">
                     Joining game:{' '}
-                    <span className="font-mono text-mana-blue">
+                    <span className="font-mono text-mana">
                       {joinIdFromUrl.slice(0, 12)}...
                     </span>
                   </p>
@@ -210,7 +210,7 @@ export function VersusPage() {
                     <button
                       onClick={handleCopyLink}
                       className={`text-[10px] lg:text-sm transition-colors ${
-                        copiedLink ? 'text-victory-green' : 'text-mana-blue hover:text-white'
+                        copiedLink ? 'text-victory' : 'text-mana hover:text-white'
                       }`}
                     >
                       {copiedLink ? '✓ Copied!' : 'Copy Link'}
@@ -222,13 +222,13 @@ export function VersusPage() {
                     <div className="text-[8px] lg:text-xs text-base-500 uppercase tracking-widest font-heading mb-0.5 lg:mb-1">
                       Your ID
                     </div>
-                    <div className="text-[10px] lg:text-base font-mono text-mana-blue select-all break-all leading-tight">
+                    <div className="text-[10px] lg:text-base font-mono text-mana select-all break-all leading-tight">
                       {myPeerId}
                     </div>
                     <button
                       onClick={handleCopyId}
                       className={`text-[10px] lg:text-sm mt-1 transition-colors ${
-                        copiedId ? 'text-victory-green' : 'text-base-400 hover:text-base-200'
+                        copiedId ? 'text-victory' : 'text-base-400 hover:text-base-200'
                       }`}
                     >
                       {copiedId ? '✓ Copied!' : 'Copy ID'}
@@ -249,7 +249,7 @@ export function VersusPage() {
                         value={targetId}
                         onChange={(e) => setTargetId(e.target.value)}
                         placeholder="Opponent ID"
-                        className="theme-input flex-1 min-w-0 bg-base-950/60 border border-base-700/40 rounded-lg px-2 lg:px-4 py-1.5 lg:py-2.5 font-mono text-[10px] lg:text-sm text-white placeholder-base-600 focus:outline-none focus:border-gold/50"
+                        className="theme-input flex-1 min-w-0 bg-base-950/60 border border-base-700/40 rounded-lg px-2 lg:px-4 py-1.5 lg:py-2.5 font-mono text-[10px] lg:text-sm text-white placeholder-base-600 focus:outline-none focus:border-accent/50"
                       />
                       <button
                         onClick={handleJoin}
@@ -262,7 +262,7 @@ export function VersusPage() {
                   </div>
 
                   {status === 'connecting' && (
-                    <div className="text-center text-gold animate-pulse font-medium text-xs mt-3">
+                    <div className="text-center text-accent animate-pulse font-medium text-xs mt-3">
                       Connecting...
                     </div>
                   )}

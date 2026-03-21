@@ -142,7 +142,7 @@ export function DevPage() {
     <div className="app-shell h-screen flex flex-col text-white overflow-hidden">
       {/* Toolbar */}
       <div className="theme-panel flex-shrink-0 flex items-center gap-4 px-4 py-2 border-b border-base-700">
-        <span className="text-sm font-bold text-gold mr-2">DEV</span>
+        <span className="text-sm font-bold text-accent mr-2">DEV</span>
 
         <label className="text-xs text-base-400">Page:</label>
         <select
@@ -175,7 +175,7 @@ export function DevPage() {
             {viewports.length > 1 && (
               <button
                 onClick={() => removeViewport(i)}
-                className="text-base-500 hover:text-defeat-red text-xs px-1"
+                className="text-base-500 hover:text-defeat text-xs px-1"
               >
                 x
               </button>

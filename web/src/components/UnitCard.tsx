@@ -29,19 +29,19 @@ export function getRarityTier(
 /** Border and glow styles per rarity tier. */
 export const RARITY_STYLES = {
   common: {
-    border: 'border-accent-amber/40',
+    border: 'border-accent-warm/40',
     glow: '',
   },
   uncommon: {
-    border: 'border-accent-emerald/50',
+    border: 'border-positive/50',
     glow: '',
   },
   rare: {
-    border: 'border-mana-blue/60',
+    border: 'border-mana/60',
     glow: 'card-rare-glow',
   },
   legendary: {
-    border: 'border-gold/70',
+    border: 'border-accent/70',
     glow: 'card-legendary-glow',
   },
 } as const;
@@ -204,7 +204,7 @@ export function UnitCard({
         unit-card card relative w-full h-full ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none rounded-lg border-2 transition-all duration-200
         bg-black ${rarityStyle.border} ${rarityStyle.glow}
         ${isHolographic ? 'card-holographic' : ''}
-        ${isSelected ? 'card-selected ring-2 ring-gold' : ''}
+        ${isSelected ? 'card-selected ring-2 ring-accent' : ''}
         ${enableWobble ? 'wobble-card' : ''}
         ${enableTilt ? 'card-tilt' : ''}
       `}
@@ -333,7 +333,7 @@ export function UnitCard({
                   className="flex items-start gap-1.5 text-[9px] lg:text-[11px] text-base-300 leading-snug"
                 >
                   <AbilityIcon
-                    className={`w-3 h-3 shrink-0 mt-0.5 ${ability._type === 'shop' ? 'text-mana-blue' : 'text-gold'}`}
+                    className={`w-3 h-3 shrink-0 mt-0.5 ${ability._type === 'shop' ? 'text-mana' : 'text-accent'}`}
                   />
                   <span>{formatAbilitySentence(ability, { resolveCardName })}</span>
                 </div>
@@ -391,7 +391,7 @@ export function EmptySlot({
       `}
     >
       {isTarget && !label && (
-        <span className="slot-place-icon text-gold/70 text-lg lg:text-2xl font-bold leading-none">
+        <span className="slot-place-icon text-accent/70 text-lg lg:text-2xl font-bold leading-none">
           +
         </span>
       )}

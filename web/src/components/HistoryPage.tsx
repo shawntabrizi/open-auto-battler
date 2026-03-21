@@ -43,7 +43,7 @@ export function HistoryPage() {
               >
                 <span className="text-2xl lg:text-3xl">{item.icon}</span>
                 <div>
-                  <div className="font-button text-sm lg:text-base font-bold text-base-200 group-hover:text-gold transition-colors">
+                  <div className="font-button text-sm lg:text-base font-bold text-base-200 group-hover:text-accent transition-colors">
                     {item.label}
                   </div>
                   <div className="text-base-500 text-[10px] lg:text-xs">{item.description}</div>

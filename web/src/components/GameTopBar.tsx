@@ -101,9 +101,9 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
               className={`flex items-center gap-2 px-3 py-1 rounded-lg ${
                 opponentWaiting
                   ? displayTimer <= 5
-                    ? 'bg-defeat-red animate-pulse'
+                    ? 'bg-defeat animate-pulse'
                     : 'bg-card-attack'
-                  : 'bg-mana-blue'
+                  : 'bg-mana'
               }`}
             >
               <span className="text-white text-sm font-bold flex items-center gap-1">
@@ -118,7 +118,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
                 )}
               </span>
               <span
-                className={`text-white text-lg font-bold ${displayTimer <= 5 ? 'text-gold' : ''}`}
+                className={`text-white text-lg font-bold ${displayTimer <= 5 ? 'text-accent' : ''}`}
               >
                 {displayTimer}s
               </span>
@@ -134,10 +134,10 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
               isWaiting
                 ? 'bg-base-600 scale-95 opacity-80 cursor-not-allowed'
                 : battleConfirmation.isConfirming
-                  ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
+                  ? 'bg-defeat hover:bg-defeat/85 text-white border-defeat/50'
                   : opponentWaiting && displayTimer !== null && displayTimer <= 5
-                    ? 'animate-pulse bg-defeat-red hover:bg-defeat-red border-defeat-red/50'
-                    : 'battle-btn border-gold/40'
+                    ? 'animate-pulse bg-defeat hover:bg-defeat border-defeat/50'
+                    : 'battle-btn border-accent/40'
             }`}
           >
             {isWaiting
@@ -164,10 +164,10 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
             customAction.disabled
               ? 'bg-base-600 border-base-600 scale-95 opacity-80 cursor-not-allowed'
               : customActionConfirmation.isConfirming
-                ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
+                ? 'bg-defeat hover:bg-defeat/85 text-white border-defeat/50'
                 : customAction.variant === 'chain'
                   ? 'btn-primary'
-                  : 'battle-btn border-gold/40'
+                  : 'battle-btn border-accent/40'
           }`}
         >
           {customActionConfirmation.isConfirming ? 'Are you sure?' : customAction.label}
@@ -210,7 +210,7 @@ export function GameTopBar({
       {/* HUD items — all same height */}
       <div className="flex items-center gap-1.5 lg:gap-2">
         {playerAvatar && (
-          <div className="w-6 h-6 lg:w-10 lg:h-10 rounded-full overflow-hidden border-2 border-gold/50 flex-shrink-0">
+          <div className="w-6 h-6 lg:w-10 lg:h-10 rounded-full overflow-hidden border-2 border-accent/50 flex-shrink-0">
             <img src={playerAvatar.imageUrl} alt="avatar" className="w-full h-full object-cover" />
           </div>
         )}
@@ -233,7 +233,7 @@ export function GameTopBar({
           <span className="text-[10px] lg:text-xs text-base-400 font-heading uppercase tracking-wider">
             Round
           </span>
-          <span className="text-xs lg:text-sm font-bold text-gold font-stat">{view.round}</span>
+          <span className="text-xs lg:text-sm font-bold text-accent font-stat">{view.round}</span>
         </div>
 
         {/* Wins */}
@@ -347,8 +347,8 @@ export function BattleAction({
               isWaiting
                 ? 'bg-base-800 border-base-700 opacity-50 cursor-not-allowed'
                 : battleConfirmation.isConfirming
-                  ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
-                  : 'battle-btn border-gold/40 active:scale-95'
+                  ? 'bg-defeat hover:bg-defeat/85 text-white border-defeat/50'
+                  : 'battle-btn border-accent/40 active:scale-95'
             }`}
           >
             {isWaiting ? (
@@ -356,7 +356,7 @@ export function BattleAction({
                 <span className="font-bold text-xs text-base-400">Wait</span>
                 {displayTimer !== null && (
                   <span
-                    className={`font-bold text-sm ${displayTimer <= 5 ? 'text-gold' : 'text-white'}`}
+                    className={`font-bold text-sm ${displayTimer <= 5 ? 'text-accent' : 'text-white'}`}
                   >
                     {displayTimer}s
                   </span>
@@ -392,10 +392,10 @@ export function BattleAction({
               customAction.disabled
                 ? 'bg-base-800 border-base-700 opacity-50 cursor-not-allowed text-base-500'
                 : customActionConfirmation.isConfirming
-                  ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
+                  ? 'bg-defeat hover:bg-defeat/85 text-white border-defeat/50'
                   : customAction.variant === 'chain'
                     ? 'btn-primary'
-                    : 'btn-primary border-gold/40'
+                    : 'btn-primary border-accent/40'
             }`}
           >
             {customActionConfirmation.isConfirming ? 'Are you sure?' : customAction.label}
@@ -415,9 +415,9 @@ export function BattleAction({
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
                   opponentWaiting
                     ? displayTimer <= 5
-                      ? 'bg-defeat-red animate-pulse'
+                      ? 'bg-defeat animate-pulse'
                       : 'bg-card-attack'
-                    : 'bg-mana-blue'
+                    : 'bg-mana'
                 }`}
               >
                 <span className="text-white text-sm lg:text-base font-bold flex items-center gap-1">
@@ -432,7 +432,7 @@ export function BattleAction({
                   )}
                 </span>
                 <span
-                  className={`text-white text-lg lg:text-xl font-bold ${displayTimer <= 5 ? 'text-gold' : ''}`}
+                  className={`text-white text-lg lg:text-xl font-bold ${displayTimer <= 5 ? 'text-accent' : ''}`}
                 >
                   {displayTimer}s
                 </span>
@@ -445,9 +445,9 @@ export function BattleAction({
                 isWaiting
                   ? 'bg-base-600 scale-95 opacity-80 cursor-not-allowed px-4 lg:px-12 py-1.5 lg:py-4'
                   : battleConfirmation.isConfirming
-                    ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border border-defeat-red/50 px-5 lg:px-10 py-3 lg:py-4'
+                    ? 'bg-defeat hover:bg-defeat/85 text-white border border-defeat/50 px-5 lg:px-10 py-3 lg:py-4'
                     : opponentWaiting && displayTimer !== null && displayTimer <= 5
-                      ? 'animate-pulse bg-defeat-red hover:bg-defeat-red px-2 lg:px-4 py-0.5 lg:py-1'
+                      ? 'animate-pulse bg-defeat hover:bg-defeat px-2 lg:px-4 py-0.5 lg:py-1'
                       : 'px-2 lg:px-4 py-0.5 lg:py-1'
               }`}
             >
@@ -474,7 +474,7 @@ export function BattleAction({
               customAction.disabled
                 ? 'bg-base-600 scale-95 opacity-80 cursor-not-allowed'
                 : customActionConfirmation.isConfirming
-                  ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border border-defeat-red/50'
+                  ? 'bg-defeat hover:bg-defeat/85 text-white border border-defeat/50'
                   : customAction.variant === 'chain'
                     ? 'btn-primary'
                     : 'btn-primary'

@@ -79,7 +79,7 @@ export function NetworkPage() {
                   onClick={() => setSelected(opt.key)}
                   className={`theme-panel w-full text-left p-3 lg:p-4 rounded-xl border transition-all ${
                     selected === opt.key
-                      ? 'border-gold/60 bg-gold/10'
+                      ? 'border-accent/60 bg-accent/10'
                       : 'border-base-700 bg-base-900/30 hover:border-base-600'
                   }`}
                 >
@@ -90,10 +90,10 @@ export function NetworkPage() {
                     </div>
                     <div
                       className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                        selected === opt.key ? 'border-gold' : 'border-base-600'
+                        selected === opt.key ? 'border-accent' : 'border-base-600'
                       }`}
                     >
-                      {selected === opt.key && <div className="w-2 h-2 rounded-full bg-gold" />}
+                      {selected === opt.key && <div className="w-2 h-2 rounded-full bg-accent" />}
                     </div>
                   </div>
                   {opt.url && selected === opt.key && (
@@ -112,7 +112,7 @@ export function NetworkPage() {
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
                 placeholder="ws://..."
-                className="theme-input w-full mt-2 p-3 rounded-xl border border-base-700 bg-base-900/50 text-sm font-mono text-white placeholder-base-600 focus:outline-none focus:border-gold/60"
+                className="theme-input w-full mt-2 p-3 rounded-xl border border-base-700 bg-base-900/50 text-sm font-mono text-white placeholder-base-600 focus:outline-none focus:border-accent/60"
               />
             )}
           </div>
@@ -135,7 +135,7 @@ export function NetworkPage() {
             <div className="flex items-center gap-2 text-xs lg:text-sm">
               <div
                 className={`w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-accent-emerald animate-pulse' : 'bg-base-600'
+                  isConnected ? 'bg-positive animate-pulse' : 'bg-base-600'
                 }`}
               />
               <span className="text-base-400">{isConnected ? 'Connected' : 'Disconnected'}</span>
@@ -146,7 +146,7 @@ export function NetworkPage() {
               )}
             </div>
             {connectionError && (
-              <div className="mt-2 text-[10px] lg:text-xs text-defeat-red">{connectionError}</div>
+              <div className="mt-2 text-[10px] lg:text-xs text-defeat">{connectionError}</div>
             )}
             {isConnected && (
               <div className="mt-1 text-[10px] lg:text-xs font-mono text-base-600 truncate">

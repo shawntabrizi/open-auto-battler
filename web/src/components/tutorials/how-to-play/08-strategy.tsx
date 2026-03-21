@@ -14,7 +14,7 @@ export default function Strategy() {
               <div
                 className={`w-8 h-11 lg:w-12 lg:h-[4rem] rounded border-2 flex items-center justify-center text-xs lg:text-base font-stat font-bold ${
                   i === 4
-                    ? 'border-gold bg-gold/10 text-gold'
+                    ? 'border-accent bg-accent/10 text-accent'
                     : 'border-dashed border-base-600/40 text-base-600'
                 }`}
               >
@@ -27,7 +27,7 @@ export default function Strategy() {
         {/* Clash indicator with shared label */}
         <div className="flex flex-col items-center shrink-0 gap-1">
           <span className="text-lg lg:text-2xl">⚔️</span>
-          <span className="text-[7px] lg:text-[10px] text-gold font-bold uppercase">← Attack first →</span>
+          <span className="text-[7px] lg:text-[10px] text-accent font-bold uppercase">← Attack first →</span>
         </div>
 
         {/* Enemy board (mirrored) */}
@@ -37,7 +37,7 @@ export default function Strategy() {
               <div
                 className={`w-8 h-11 lg:w-12 lg:h-[4rem] rounded border-2 flex items-center justify-center text-xs lg:text-base font-stat font-bold ${
                   i === 0
-                    ? 'border-gold bg-gold/10 text-gold'
+                    ? 'border-accent bg-accent/10 text-accent'
                     : 'border-dashed border-base-600/40 text-base-600'
                 }`}
               >
@@ -50,15 +50,15 @@ export default function Strategy() {
 
       <div className="space-y-3 text-base-300 text-sm lg:text-base leading-relaxed">
         <p>
-          The unit in <span className="text-gold font-bold">position 1</span> (front) fights first.
+          The unit in <span className="text-accent font-bold">position 1</span> (front) fights first.
           When it falls, position 2 steps up, and so on.
         </p>
         <p>
-          Combat is <span className="text-gold font-bold">deterministic</span>.
+          Combat is <span className="text-accent font-bold">deterministic</span>.
           The same battle will always produce the same result. The only luck is which cards you draw.
         </p>
         <p>
-          When abilities trigger, <span className="text-gold font-bold">stronger units act first</span>:
+          When abilities trigger, <span className="text-accent font-bold">stronger units act first</span>:
           highest attack goes first, then highest health, then front position.
         </p>
         <p>

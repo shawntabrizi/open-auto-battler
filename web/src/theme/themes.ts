@@ -40,23 +40,23 @@ type ThemePalette = {
 
   // ── Semantic colors ──
   /** Primary accent — selected states, highlights, stars, CTA borders. The "brand" color. */
-  gold: string;
-  /** Resource color — mana cost badges, mana bar fill, info text */
-  manaBlue: string;
+  accent: string;
+  /** Mana color — mana cost badges, mana bar fill, info text */
+  mana: string;
   /** Attack/damage color — attack stat on cards, damage numbers */
   cardAttack: string;
   /** Burn value color — burn badges on cards, burn-related UI */
-  burnValue: string;
+  cardBurn: string;
   /** Secondary warm accent — bronze achievements, warm highlights */
-  accentAmber: string;
+  accentWarm: string;
   /** Positive accent — health stat on cards, connected indicators, success text */
-  accentEmerald: string;
+  positive: string;
   /** Special/rare accent — tournament UI, accent for unique elements */
-  accentViolet: string;
+  special: string;
   /** Win state color — victory screen title, win counters, perfect run text */
-  victoryGreen: string;
+  victory: string;
   /** Loss state color — defeat screen title, error messages, danger buttons, disconnect indicators */
-  defeatRed: string;
+  defeat: string;
 
   // ── Surface colors ──
   /** Card background — the base color behind card content */
@@ -135,21 +135,21 @@ type ThemeIconSvg = {
 
 type ThemeIcons = {
   // ── Icon colors (applied via CSS classes like "theme-icon-accent") ──
-  /** Primary icon tint — menu icons, star icons, ability sparkles. Related: palette.gold */
+  /** Primary icon tint — menu icons, star icons, ability sparkles. Related: palette.accent */
   accent: string;
   /** Muted icon tint — close buttons, secondary icons. Related: palette.base300 */
   muted: string;
-  /** Mana/info icon tint — mana bolt on cards. Related: palette.manaBlue */
+  /** Mana/info icon tint — mana bolt on cards. Related: palette.mana */
   mana: string;
   /** Attack icon tint — sword icon on unit cards. Related: palette.cardAttack */
   attack: string;
-  /** Health icon tint — heart icon on unit cards, lives icon. Related: palette.accentEmerald */
+  /** Health icon tint — heart icon on unit cards, lives icon. Related: palette.positive */
   health: string;
-  /** Warning icon tint — timer warnings, cost warnings. Related: palette.gold */
+  /** Warning icon tint — timer warnings, cost warnings. Related: palette.accent */
   warning: string;
-  /** Victory icon tint — trophy on game over screen. Related: palette.victoryGreen */
+  /** Victory icon tint — trophy on game over screen. Related: palette.victory */
   victory: string;
-  /** Defeat icon tint — skull on game over screen. Related: palette.defeatRed */
+  /** Defeat icon tint — skull on game over screen. Related: palette.defeat */
   defeat: string;
 
   // ── Icon SVG shapes (the actual icon graphics, customizable per theme) ──
@@ -573,15 +573,15 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
     base800: '#241f18',
     base900: '#1a1610',
     base950: '#100e0a',
-    gold: '#d4a843',
-    manaBlue: '#5b8faa',
+    accent: '#d4a843',
+    mana: '#5b8faa',
     cardAttack: '#b85c4a',
-    burnValue: '#d4a843',
-    accentAmber: '#c48a2a',
-    accentEmerald: '#5a9a6e',
-    accentViolet: '#8b6fb0',
-    victoryGreen: '#4a8c3a',
-    defeatRed: '#a83a2a',
+    cardBurn: '#d4a843',
+    accentWarm: '#c48a2a',
+    positive: '#5a9a6e',
+    special: '#8b6fb0',
+    victory: '#4a8c3a',
+    defeat: '#a83a2a',
     cardBg: '#1e1a14',
     boardBg: '#161310',
     shopBg: '#1a1712',
@@ -701,15 +701,15 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     base800: '#0b2436',
     base900: '#081420',
     base950: '#040812',
-    gold: '#00f6ff',
-    manaBlue: '#38bdf8',
+    accent: '#00f6ff',
+    mana: '#38bdf8',
     cardAttack: '#ff4d9d',
-    burnValue: '#f8ff66',
-    accentAmber: '#f8ff66',
-    accentEmerald: '#00ffa3',
-    accentViolet: '#d946ef',
-    victoryGreen: '#00ffa3',
-    defeatRed: '#ff4d9d',
+    cardBurn: '#f8ff66',
+    accentWarm: '#f8ff66',
+    positive: '#00ffa3',
+    special: '#d946ef',
+    victory: '#00ffa3',
+    defeat: '#ff4d9d',
     cardBg: '#10192b',
     boardBg: '#0a1730',
     shopBg: '#0d1d3d',
@@ -832,15 +832,15 @@ const PASTEL_THEME: ThemeDefinition = {
     base800: '#6f3348',
     base900: '#492331',
     base950: '#2e151f',
-    gold: '#ff9ec4',
-    manaBlue: '#a78bfa',
+    accent: '#ff9ec4',
+    mana: '#a78bfa',
     cardAttack: '#ff6b9f',
-    burnValue: '#ffc6de',
-    accentAmber: '#ffb3c7',
-    accentEmerald: '#7dd3c7',
-    accentViolet: '#c084fc',
-    victoryGreen: '#6ee7b7',
-    defeatRed: '#fb7185',
+    cardBurn: '#ffc6de',
+    accentWarm: '#ffb3c7',
+    positive: '#7dd3c7',
+    special: '#c084fc',
+    victory: '#6ee7b7',
+    defeat: '#fb7185',
     cardBg: '#432233',
     boardBg: '#3b1930',
     shopBg: '#4b2240',
@@ -1055,15 +1055,15 @@ export function applyThemeToDocument(
     ['--color-base-800', theme.palette.base800],
     ['--color-base-900', theme.palette.base900],
     ['--color-base-950', theme.palette.base950],
-    ['--color-gold', theme.palette.gold],
-    ['--color-mana-blue', theme.palette.manaBlue],
+    ['--color-accent', theme.palette.accent],
+    ['--color-mana', theme.palette.mana],
     ['--color-card-attack', theme.palette.cardAttack],
-    ['--color-burn-value', theme.palette.burnValue],
-    ['--color-accent-amber', theme.palette.accentAmber],
-    ['--color-accent-emerald', theme.palette.accentEmerald],
-    ['--color-accent-violet', theme.palette.accentViolet],
-    ['--color-victory-green', theme.palette.victoryGreen],
-    ['--color-defeat-red', theme.palette.defeatRed],
+    ['--color-card-burn', theme.palette.cardBurn],
+    ['--color-accent-warm', theme.palette.accentWarm],
+    ['--color-positive', theme.palette.positive],
+    ['--color-special', theme.palette.special],
+    ['--color-victory', theme.palette.victory],
+    ['--color-defeat', theme.palette.defeat],
     ['--color-card-bg', theme.palette.cardBg],
     ['--color-board-bg', theme.palette.boardBg],
     ['--color-shop-bg', theme.palette.shopBg],
@@ -1093,7 +1093,7 @@ export function applyThemeToDocument(
   const ov = theme.backgrounds.overlayOpacity;
   const sdRgb = hexToRgbChannels(theme.palette.surfaceDark);
   const smRgb = hexToRgbChannels(theme.palette.surfaceMid);
-  const acRgb = hexToRgbChannels(theme.palette.gold);
+  const acRgb = hexToRgbChannels(theme.palette.accent);
   setRootVariable(root, '--theme-board-overlay', `rgba(${sdRgb.replace(/ /g, ', ')}, ${ov})`);
   setRootVariable(root, '--theme-hand-overlay', `rgba(${sdRgb.replace(/ /g, ', ')}, ${Math.max(ov - 0.1, 0)})`);
   setRootVariable(

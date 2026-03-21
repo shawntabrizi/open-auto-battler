@@ -82,7 +82,7 @@ export const CreateSetPage: React.FC = () => {
             <div className="flex items-center justify-between mb-1">
               <Link
                 to="/creator/card"
-                className="theme-button theme-surface-button border-gold/40 px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center gap-1.5 text-xs lg:text-sm hover:border-gold/60 hover:text-gold"
+                className="theme-button theme-surface-button border-accent/40 px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center gap-1.5 text-xs lg:text-sm hover:border-accent/60 hover:text-accent"
               >
                 <span>+</span> MINT NEW CARDS
               </Link>
@@ -101,7 +101,7 @@ export const CreateSetPage: React.FC = () => {
               <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex flex-col h-[700px]">
                 <h2 className="text-xl font-bold mb-6 flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <span className="text-gold">01</span> Card Library
+                    <span className="text-accent">01</span> Card Library
                   </span>
                   <span className="text-xs text-base-500 uppercase font-bold tracking-widest">
                     {allCards.length} Total Cards
@@ -113,7 +113,7 @@ export const CreateSetPage: React.FC = () => {
                   placeholder="Search cards..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="theme-input w-full px-3 py-2 mb-4 bg-base-800 border border-white/10 rounded-lg text-white placeholder-base-500 text-sm focus:outline-none focus:border-gold/50"
+                  className="theme-input w-full px-3 py-2 mb-4 bg-base-800 border border-white/10 rounded-lg text-white placeholder-base-500 text-sm focus:outline-none focus:border-accent/50"
                 />
 
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -133,8 +133,8 @@ export const CreateSetPage: React.FC = () => {
                             key={card.id}
                             className={`
                             relative group flex flex-col items-center transition-all rounded-xl p-2
-                            ${isSelected ? 'bg-gold/10 scale-[1.02]' : ''}
-                            ${isDetailing ? 'ring-2 ring-mana-blue rounded-xl' : ''}
+                            ${isSelected ? 'bg-accent/10 scale-[1.02]' : ''}
+                            ${isDetailing ? 'ring-2 ring-mana rounded-xl' : ''}
                           `}
                           >
                             <div className="w-full aspect-[3/4]">
@@ -149,7 +149,7 @@ export const CreateSetPage: React.FC = () => {
                             </div>
 
                             {isSelected && (
-                              <div className="absolute -top-2 -right-2 z-10 bg-gold text-surface-dark rounded-full p-1 shadow-lg">
+                              <div className="absolute -top-2 -right-2 z-10 bg-accent text-surface-dark rounded-full p-1 shadow-lg">
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
                                   className="h-4 w-4"
@@ -182,9 +182,9 @@ export const CreateSetPage: React.FC = () => {
               <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex flex-col h-[700px]">
                 <h2 className="text-xl font-bold mb-6 flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <span className="text-gold">02</span> Set Configuration
+                    <span className="text-accent">02</span> Set Configuration
                   </span>
-                  <span className="theme-pill text-xs bg-gold/10 text-gold px-3 py-1.5 font-bold">
+                  <span className="theme-pill text-xs bg-accent/10 text-accent px-3 py-1.5 font-bold">
                     {selectedCards.length} SELECTED
                   </span>
                 </h2>
@@ -198,7 +198,7 @@ export const CreateSetPage: React.FC = () => {
                     placeholder="Name your set..."
                     value={setName}
                     onChange={(e) => setSetName(e.target.value)}
-                    className="theme-input w-full px-3 py-2 bg-base-800 border border-white/10 rounded-lg text-white placeholder-base-500 text-sm focus:outline-none focus:border-gold/50"
+                    className="theme-input w-full px-3 py-2 bg-base-800 border border-white/10 rounded-lg text-white placeholder-base-500 text-sm focus:outline-none focus:border-accent/50"
                   />
                 </div>
 
@@ -239,11 +239,11 @@ export const CreateSetPage: React.FC = () => {
                                     )
                                   );
                                 }}
-                                className="theme-input w-16 bg-base-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-gold/50 text-center font-bold"
+                                className="theme-input w-16 bg-base-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-accent/50 text-center font-bold"
                               />
                               <button
                                 onClick={() => toggleCardSelection(card.id)}
-                                className="text-base-600 hover:text-defeat-red transition-colors"
+                                className="text-base-600 hover:text-defeat transition-colors"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"

@@ -338,7 +338,7 @@ export function GhostBrowserPage() {
               This view reads the active ghost pool directly from the blockchain.
             </p>
             {connectionError && (
-              <p className="mt-3 rounded-xl theme-error-panel border px-3 py-2 text-xs text-defeat-red">
+              <p className="mt-3 rounded-xl theme-error-panel border px-3 py-2 text-xs text-defeat">
                 {connectionError}
               </p>
             )}
@@ -411,7 +411,7 @@ export function GhostBrowserPage() {
                       value={selectedSetId ?? ''}
                       onChange={(event) => setSelectedSetId(Number(event.target.value))}
                       disabled={sortedSets.length === 0}
-                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 disabled:cursor-not-allowed disabled:text-base-600 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-accent/50 disabled:cursor-not-allowed disabled:text-base-600 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       {sortedSets.length === 0 ? (
                         <option value="">No sets available</option>
@@ -432,7 +432,7 @@ export function GhostBrowserPage() {
                     <select
                       value={roundFilter}
                       onChange={(event) => setRoundFilter(event.target.value)}
-                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-accent/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       <option value={ALL_FILTER}>All rounds</option>
                       {filterOptions.rounds.map((round) => (
@@ -450,7 +450,7 @@ export function GhostBrowserPage() {
                     <select
                       value={winsFilter}
                       onChange={(event) => setWinsFilter(event.target.value)}
-                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-accent/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       <option value={ALL_FILTER}>All wins</option>
                       {filterOptions.wins.map((wins) => (
@@ -468,7 +468,7 @@ export function GhostBrowserPage() {
                     <select
                       value={livesFilter}
                       onChange={(event) => setLivesFilter(event.target.value)}
-                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-accent/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       <option value={ALL_FILTER}>All lives</option>
                       {filterOptions.lives.map((lives) => (
@@ -493,7 +493,7 @@ export function GhostBrowserPage() {
                   <span className="hidden lg:inline-flex rounded-full border border-base-700 bg-base-950/70 px-3 py-1.5">
                     {totalBracketCount} set brackets
                   </span>
-                  <span className="rounded-full border border-gold/30 bg-gold/10 px-2 py-1 text-gold lg:px-3 lg:py-1.5">
+                  <span className="rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-accent lg:px-3 lg:py-1.5">
                     Inspect left
                   </span>
                 </div>
@@ -503,7 +503,7 @@ export function GhostBrowserPage() {
 
           <div className="w-full max-w-none lg:max-w-6xl mx-auto p-2 lg:p-4 pb-6">
             {ghostError && (
-              <div className="rounded-2xl theme-error-panel border px-4 py-3 text-sm text-defeat-red">
+              <div className="rounded-2xl theme-error-panel border px-4 py-3 text-sm text-defeat">
                 {ghostError}
               </div>
             )}
@@ -555,10 +555,10 @@ export function GhostBrowserPage() {
                       </h2>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full border border-accent-emerald/30 bg-accent-emerald/10 px-3 py-1 text-xs font-bold text-accent-emerald">
+                      <span className="rounded-full border border-positive/30 bg-positive/10 px-3 py-1 text-xs font-bold text-positive">
                         {group.wins} wins
                       </span>
-                      <span className="rounded-full border border-defeat-red/30 bg-defeat-red/10 px-3 py-1 text-xs font-bold text-defeat-red">
+                      <span className="rounded-full border border-defeat/30 bg-defeat/10 px-3 py-1 text-xs font-bold text-defeat">
                         {group.lives} lives
                       </span>
                       <span className="rounded-full border border-base-700 bg-base-950/60 px-3 py-1 text-xs font-bold text-base-300">

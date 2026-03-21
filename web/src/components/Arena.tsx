@@ -24,8 +24,8 @@ const BOARD_HINT_TEXT = {
 const BOARD_HINT_TONE_CLASS = {
   default: 'text-base-200/90',
   selected: 'text-base-100',
-  warning: 'text-gold',
-  danger: 'text-defeat-red',
+  warning: 'text-accent',
+  danger: 'text-defeat',
 } as const;
 
 interface BoardHintParams {
@@ -169,7 +169,7 @@ export function Arena() {
   if (!view) return null;
 
   if (!view.board || !Array.isArray(view.board)) {
-    return <div className="text-defeat-red">Error: Board data not available</div>;
+    return <div className="text-defeat">Error: Board data not available</div>;
   }
 
   const unitCount = view.board.filter(Boolean).length;
@@ -236,7 +236,7 @@ export function Arena() {
       {/* Arena surface — visual frame that gives the board a sense of place */}
       <div className="arena-surface relative z-10 px-2 lg:px-12 py-1 lg:py-5 rounded-xl w-full h-full min-h-0">
         {/* Board header */}
-        <div className="board-helper board-helper--header theme-panel hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 z-20 items-center gap-3 lg:gap-4 rounded-full border border-gold/20 bg-surface-dark/55 px-3 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm">
+        <div className="board-helper board-helper--header theme-panel hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 z-20 items-center gap-3 lg:gap-4 rounded-full border border-accent/20 bg-surface-dark/55 px-3 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm">
           <div className="h-px w-8 lg:w-16 bg-gradient-to-r from-transparent to-base-600/40" />
           <span className="board-label theme-title-text font-title text-sm lg:text-xl font-bold uppercase tracking-[0.28em] text-transparent bg-clip-text [text-shadow:0_1px_8px_rgba(0,0,0,0.45)]">
             Board
@@ -351,7 +351,7 @@ export function Arena() {
                     <div
                       className={`board-helper board-helper--positions hidden lg:flex absolute left-1/2 top-full mt-2 -translate-x-1/2 w-[92%] justify-center rounded-full border px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm ${
                         arrayIndex === 0
-                          ? 'theme-pill border-gold/30 bg-gold/10 text-gold font-bold'
+                          ? 'theme-pill border-accent/30 bg-accent/10 text-accent font-bold'
                           : 'theme-pill border-base-800/70 bg-surface-dark/45 text-base-300/80'
                       }`}
                     >

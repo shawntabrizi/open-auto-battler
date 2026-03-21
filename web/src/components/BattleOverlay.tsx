@@ -54,16 +54,16 @@ function formatEvent(
     case 'Clash':
       return {
         text: `Clash! (${event.payload.p_dmg} / ${event.payload.e_dmg} dmg)`,
-        color: 'text-gold',
+        color: 'text-accent',
       };
     case 'DamageTaken':
       return {
         text: `${getName(event.payload.target_instance_id)} hit (${event.payload.remaining_hp} HP left)`,
-        color: 'text-defeat-red',
+        color: 'text-defeat',
       };
     case 'UnitDeath': {
       const team = String(event.payload.team);
-      return { text: `${team} unit falls`, color: 'text-defeat-red' };
+      return { text: `${team} unit falls`, color: 'text-defeat' };
     }
     case 'AbilityTrigger':
       return {
@@ -73,12 +73,12 @@ function formatEvent(
           event.payload.ability_index,
           resolveCardName
         )}`,
-        color: 'text-gold',
+        color: 'text-accent',
       };
     case 'AbilityDamage':
       return {
         text: `${getName(event.payload.source_instance_id)} deals ${event.payload.damage} to ${getName(event.payload.target_instance_id)}`,
-        color: 'text-burn-value',
+        color: 'text-card-burn',
       };
     case 'AbilityModifyStats':
     case 'AbilityModifyStatsPermanent': {
@@ -88,28 +88,28 @@ function formatEvent(
       if (health_change) parts.push(`${health_change > 0 ? '+' : ''}${health_change} HP`);
       return {
         text: `${getName(event.payload.target_instance_id)} ${parts.join(', ')}`,
-        color: 'text-accent-emerald',
+        color: 'text-positive',
       };
     }
     case 'AbilityGainMana':
       return {
         text: `${getName(event.payload.source_instance_id)} +${event.payload.amount} mana`,
-        color: 'text-mana-blue',
+        color: 'text-mana',
       };
     case 'UnitSpawn':
       return {
         text: `${event.payload.spawned_unit.name} spawns (${event.payload.team})`,
-        color: 'text-accent-violet',
+        color: 'text-special',
       };
     case 'BattleEnd':
       return {
         text: `Battle ends: ${event.payload.result}`,
         color:
           event.payload.result === 'Victory'
-            ? 'text-victory-green'
+            ? 'text-victory'
             : event.payload.result === 'Defeat'
-              ? 'text-defeat-red'
-              : 'text-gold',
+              ? 'text-defeat'
+              : 'text-accent',
       };
     default:
       return null;
@@ -221,8 +221,8 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
   let resultText = 'DRAW';
   let resultKey: 'victory' | 'defeat' | 'draw' = 'draw';
   let impactText = '';
-  let impactColor = 'text-gold/80';
-  let flashColor = 'rgb(var(--color-gold) / 0.25)';
+  let impactColor = 'text-accent/80';
+  let flashColor = 'rgb(var(--color-accent) / 0.25)';
 
   if (result?.type === 'BattleEnd') {
     const res = result.payload.result;
@@ -230,14 +230,14 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
       resultText = 'VICTORY!';
       resultKey = 'victory';
       impactText = '+1 Win';
-      impactColor = 'text-victory-green/90';
-      flashColor = 'rgb(var(--color-victory-green) / 0.3)';
+      impactColor = 'text-victory/90';
+      flashColor = 'rgb(var(--color-victory) / 0.3)';
     } else if (res === 'Defeat') {
       resultText = 'DEFEAT';
       resultKey = 'defeat';
       impactText = '-1 Life';
-      impactColor = 'text-defeat-red/90';
-      flashColor = 'rgb(var(--color-defeat-red) / 0.3)';
+      impactColor = 'text-defeat/90';
+      flashColor = 'rgb(var(--color-defeat) / 0.3)';
     }
   }
 
@@ -265,7 +265,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
             className="theme-title-text font-title text-5xl lg:text-8xl font-bold text-transparent bg-clip-text animate-phase-splash"
             style={{
               textShadow:
-                '0 0 40px rgb(var(--color-gold) / 0.55), 0 0 80px rgb(var(--color-gold) / 0.24)',
+                '0 0 40px rgb(var(--color-accent) / 0.55), 0 0 80px rgb(var(--color-accent) / 0.24)',
             }}
           >
             BATTLE!

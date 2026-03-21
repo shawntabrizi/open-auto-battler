@@ -126,12 +126,12 @@ export function CustomizeCategoryPage() {
               : 'Connect to a blockchain node to browse NFTs.'}
           </p>
           {isConnected && (
-            <Link to="/creator/mint" className="mt-2 text-gold text-xs hover:underline">
+            <Link to="/creator/mint" className="mt-2 text-accent text-xs hover:underline">
               Mint one
             </Link>
           )}
           {!isConnected && (
-            <Link to="/network" className="mt-2 text-gold text-xs hover:underline">
+            <Link to="/network" className="mt-2 text-accent text-xs hover:underline">
               Network Settings
             </Link>
           )}
@@ -227,7 +227,7 @@ function NftTile({
       onClick={onClick}
       className={`theme-panel shrink-0 ${isLg ? 'p-3 rounded-xl' : 'p-1.5 rounded-lg'} border-2 transition-all text-center ${
         isSelected
-          ? 'border-gold bg-gold/10'
+          ? 'border-accent bg-accent/10'
           : 'border-white/10 bg-base-800/50 hover:border-white/20'
       }`}
     >

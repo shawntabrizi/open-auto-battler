@@ -124,7 +124,7 @@ export function SetsPage() {
               <div className="mt-4 lg:mt-8 text-center">
                 <Link
                   to="/creator"
-                  className="text-base-500 hover:text-gold text-xs lg:text-sm transition-colors"
+                  className="text-base-500 hover:text-accent text-xs lg:text-sm transition-colors"
                 >
                   Want to create your own set? Visit the Creator Studio &rarr;
                 </Link>

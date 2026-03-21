@@ -6,8 +6,8 @@ export default function Shop() {
         <div className="rounded-xl border border-base-700/50 bg-base-950 w-48 lg:w-64 shrink-0 aspect-video flex flex-col">
           {/* HUD bar — star, heart, round */}
           <div className="h-[8%] bg-base-900/80 border-b border-base-700 flex items-center px-2 gap-1.5 shrink-0">
-            <span className="text-gold text-[7px]">&#9733; 2</span>
-            <span className="text-defeat-red text-[7px]">&#9829; 3</span>
+            <span className="text-accent text-[7px]">&#9733; 2</span>
+            <span className="text-defeat text-[7px]">&#9829; 3</span>
             <span className="text-base-400 text-[7px]">Round 3</span>
           </div>
 
@@ -32,9 +32,9 @@ export default function Shop() {
 
           {/* Mana bar */}
           <div className="h-[6%] bg-base-800 flex items-center px-2 gap-1 shrink-0">
-            <span className="text-[6px] text-mana-blue font-bold">MANA</span>
+            <span className="text-[6px] text-mana font-bold">MANA</span>
             <div className="flex-1 h-1 bg-base-700 rounded-full overflow-hidden">
-              <div className="w-3/5 h-full bg-mana-blue rounded-full" />
+              <div className="w-3/5 h-full bg-mana rounded-full" />
             </div>
             <span className="text-[6px] text-base-400">3/5</span>
           </div>
@@ -63,7 +63,7 @@ export default function Shop() {
         <div className="space-y-2 lg:space-y-3 text-base-300 text-sm lg:text-base leading-relaxed">
           <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white">The Shop Phase</h2>
           <p>
-            Each round starts with the <span className="text-gold font-bold">Shop Phase</span>
+            Each round starts with the <span className="text-accent font-bold">Shop Phase</span>
             .
           </p>
           <p>
@@ -71,11 +71,11 @@ export default function Shop() {
             your hand.
           </p>
           <p>
-            <span className="text-defeat-red font-bold">Burn</span> cards from your hand or your board
-            to gain <span className="text-mana-blue font-bold">mana</span>.
+            <span className="text-defeat font-bold">Burn</span> cards from your hand or your board
+            to gain <span className="text-mana font-bold">mana</span>.
           </p>
           <p>
-            <span className="text-accent-emerald font-bold">Play</span> cards from your hand onto the
+            <span className="text-positive font-bold">Play</span> cards from your hand onto the
             board by spending mana.
           </p>
           <p>

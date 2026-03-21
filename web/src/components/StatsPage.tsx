@@ -118,26 +118,26 @@ export function StatsPage() {
                 icon="💰"
                 label="Balance"
                 value={formatBalance(stats.freeBalance)}
-                color="text-victory-green"
+                color="text-victory"
               />
               <StatCard
                 icon="⭐"
                 label="Victory Achievements"
                 value={stats.achievementCount}
-                color="text-gold"
+                color="text-accent"
               />
               <StatCard icon="🏟️" label="Tournament Games" value={stats.tournamentGames} />
               <StatCard
                 icon="🏆"
                 label="Tournament Wins"
                 value={stats.tournamentWins}
-                color="text-gold"
+                color="text-accent"
               />
               <StatCard
                 icon="💎"
                 label="Perfect Runs"
                 value={stats.tournamentPerfectRuns}
-                color="text-accent-violet"
+                color="text-special"
               />
             </div>
           )}

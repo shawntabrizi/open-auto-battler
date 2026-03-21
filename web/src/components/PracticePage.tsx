@@ -76,7 +76,7 @@ export function PracticePage() {
               starting.
             </p>
             {connectionError && (
-              <p className="mt-3 rounded-xl theme-error-panel border px-3 py-2 text-xs text-defeat-red">
+              <p className="mt-3 rounded-xl theme-error-panel border px-3 py-2 text-xs text-defeat">
                 {connectionError}
               </p>
             )}

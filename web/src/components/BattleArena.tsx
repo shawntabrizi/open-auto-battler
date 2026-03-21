@@ -424,11 +424,11 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
         const res = event.payload.result;
 
         if (res === 'Victory') {
-          setColorFlash('bg-victory-green');
+          setColorFlash('bg-victory');
         } else if (res === 'Defeat') {
-          setColorFlash('bg-defeat-red');
+          setColorFlash('bg-defeat');
         } else {
-          setColorFlash('bg-gold');
+          setColorFlash('bg-accent');
         }
         setTimeout(() => setColorFlash(null), 300);
         break;
@@ -838,7 +838,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
               isAtEnd
                 ? 'text-base-600 cursor-not-allowed'
                 : playMode === 'step'
-                  ? 'text-gold bg-base-700'
+                  ? 'text-accent bg-base-700'
                   : 'text-base-200 hover:bg-base-700 hover:text-base-100'
             }`}
             title="Step forward"
@@ -866,7 +866,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
               onClick={() => selectSpeed(option.value)}
               className={`px-1.5 lg:px-2.5 py-0.5 lg:py-1.5 text-[10px] lg:text-sm font-medium rounded-md transition-colors ${
                 playMode === 'auto' && playbackSpeed === option.value
-                  ? 'bg-accent-amber text-base-950 shadow-sm'
+                  ? 'bg-accent-warm text-base-950 shadow-sm'
                   : 'text-base-300 hover:bg-base-700 hover:text-base-100'
               }`}
               title={`${option.value}x speed`}
@@ -881,7 +881,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
       <div className="flex items-center justify-center gap-1.5 lg:gap-12 w-full min-w-0">
         {/* Player side (left) */}
         <div className="flex-1 min-w-0 flex flex-col items-center gap-1 lg:gap-3">
-          <span className="text-[0.6rem] lg:text-sm text-accent-emerald font-heading uppercase tracking-[0.15em]">
+          <span className="text-[0.6rem] lg:text-sm text-positive font-heading uppercase tracking-[0.15em]">
             Your Team
           </span>
           <div className="flex gap-0.5 lg:gap-3 px-1 lg:px-6 py-1 lg:py-4 rounded-xl team-zone-player min-w-0 w-full">
@@ -895,8 +895,8 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
 
         <div className="flex flex-col items-center">
           <div
-            className="text-lg lg:text-5xl font-title font-bold text-gold"
-            style={{ textShadow: '0 0 20px rgb(var(--color-gold) / 0.4)' }}
+            className="text-lg lg:text-5xl font-title font-bold text-accent"
+            style={{ textShadow: '0 0 20px rgb(var(--color-accent) / 0.4)' }}
           >
             VS
           </div>

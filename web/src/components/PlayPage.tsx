@@ -46,7 +46,7 @@ export function PlayPage() {
               </div>
               {isConnected && (
                 <div className="mt-2 flex items-center justify-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-positive animate-pulse" />
                   <span className="text-[10px] text-base-500 font-mono">
                     {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'live'}
                   </span>
@@ -58,12 +58,12 @@ export function PlayPage() {
             {activeTournament && isConnected && (
               <Link
                 to="/tournament"
-                className="theme-panel group block w-full p-3 lg:p-4 rounded-xl border border-accent-violet/40 bg-gradient-to-br from-accent-violet/12 to-surface-dark/10 hover:border-accent-violet active:scale-[0.98] transition-all text-center"
+                className="theme-panel group block w-full p-3 lg:p-4 rounded-xl border border-special/40 bg-gradient-to-br from-special/12 to-surface-dark/10 hover:border-special active:scale-[0.98] transition-all text-center"
               >
                 <h2 className="font-button text-base lg:text-lg font-bold text-white">
                   TOURNAMENT LIVE
                 </h2>
-                <p className="text-accent-violet text-[10px] lg:text-sm">
+                <p className="text-special text-[10px] lg:text-sm">
                   Entry: {formatBalance(activeTournament.config.entry_fee)} | Pool:{' '}
                   {formatBalance(activeTournament.state.total_pot)}
                 </p>

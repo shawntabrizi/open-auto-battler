@@ -118,8 +118,8 @@ export function TopBar({
       ) : selectedAccount && isLoggedIn ? (
         <span className="inline-flex items-center gap-1.5 lg:gap-2 text-xs lg:text-sm text-base-300 z-10 min-w-0">
           <span className="relative flex h-2 w-2 lg:h-2.5 lg:w-2.5 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-emerald opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-full w-full bg-accent-emerald"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-positive opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-full w-full bg-positive"></span>
           </span>
           <span className="flex flex-col leading-tight min-w-0">
             <span>
