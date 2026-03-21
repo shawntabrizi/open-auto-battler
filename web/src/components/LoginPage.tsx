@@ -140,37 +140,31 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen min-h-svh bg-surface-dark flex flex-col text-white overflow-hidden relative">
+    <div className="app-shell min-h-screen min-h-svh flex flex-col text-white overflow-hidden relative">
       {/* Atmospheric background */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          background:
-            'radial-gradient(ellipse at 50% 30%, rgba(196, 138, 42, 0.08), transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(184, 92, 74, 0.06), transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(91, 143, 170, 0.05), transparent 50%)',
-        }}
-      />
+      <div className="absolute inset-0 z-0" style={{ background: 'var(--theme-app-background)' }} />
       <ParticleBackground />
 
       <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-3 lg:p-4">
         <div className="relative z-10 flex flex-col items-center w-full max-w-sm lg:max-w-md">
           {/* Title */}
           <div className="mb-6 lg:mb-10 text-center">
-            <h1 className="font-title text-3xl lg:text-5xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 mb-1 lg:mb-2">
+            <h1 className="theme-title-text font-decorative text-3xl lg:text-5xl font-bold tracking-wide text-transparent bg-clip-text mb-1 lg:mb-2">
               OPEN AUTO BATTLER
             </h1>
-            <p className="font-heading text-warm-400 text-xs lg:text-sm tracking-widest uppercase">
+            <p className="theme-hero-subtitle font-heading text-xs lg:text-sm tracking-widest uppercase">
               Roguelike Deck-Building Auto-Battler
             </p>
           </div>
 
           {/* Connection status */}
           <div className="w-full mb-4">
-            <div className="p-3 rounded-xl border border-warm-800 bg-warm-900/30">
+            <div className="theme-panel p-3 rounded-xl border border-warm-800 bg-warm-900/30">
               <div className="flex items-center gap-2 text-xs lg:text-sm">
                 <div
                   className={`w-2 h-2 rounded-full ${
                     isConnecting
-                      ? 'bg-yellow-500 animate-pulse'
+                      ? 'bg-gold animate-pulse'
                       : isConnected
                         ? 'bg-green-500 animate-pulse'
                         : 'bg-red-500'
@@ -180,16 +174,16 @@ export function LoginPage() {
                   {isConnecting ? 'Connecting...' : isConnected ? `Connected to` : 'Disconnected'}
                 </span>
                 {(isConnected || isConnecting) && (
-                  <span className="text-warm-500 font-mono text-[10px] truncate max-w-[180px]">{endpoint}</span>
+                  <span className="text-warm-500 font-mono text-[10px] truncate max-w-[180px]">
+                    {endpoint}
+                  </span>
                 )}
                 {isConnected && blockNumber !== null && (
-                  <span className="text-warm-600 font-mono">
-                    #{blockNumber.toLocaleString()}
-                  </span>
+                  <span className="text-warm-600 font-mono">#{blockNumber.toLocaleString()}</span>
                 )}
                 <button
                   onClick={() => setShowNetworkPicker(!showNetworkPicker)}
-                  className="ml-auto text-yellow-500 hover:text-yellow-400 text-xs transition-colors shrink-0"
+                  className="ml-auto text-gold hover:text-warm-200 text-xs transition-colors shrink-0"
                 >
                   {showNetworkPicker ? 'Hide' : 'Configure'}
                 </button>
@@ -206,9 +200,9 @@ export function LoginPage() {
                   <button
                     key={opt.key}
                     onClick={() => setSelected(opt.key)}
-                    className={`w-full text-left p-3 rounded-xl border transition-all ${
+                    className={`theme-panel w-full text-left p-3 rounded-xl border transition-all ${
                       selected === opt.key
-                        ? 'border-yellow-500/60 bg-yellow-500/10'
+                        ? 'border-gold/60 bg-gold/10'
                         : 'border-warm-700 bg-warm-900/30 hover:border-warm-600'
                     }`}
                   >
@@ -219,12 +213,10 @@ export function LoginPage() {
                       </div>
                       <div
                         className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          selected === opt.key ? 'border-yellow-500' : 'border-warm-600'
+                          selected === opt.key ? 'border-gold' : 'border-warm-600'
                         }`}
                       >
-                        {selected === opt.key && (
-                          <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                        )}
+                        {selected === opt.key && <div className="w-2 h-2 rounded-full bg-gold" />}
                       </div>
                     </div>
                   </button>
@@ -236,7 +228,7 @@ export function LoginPage() {
                     value={customUrl}
                     onChange={(e) => setCustomUrl(e.target.value)}
                     placeholder="ws://..."
-                    className="w-full p-3 rounded-xl border border-warm-700 bg-warm-900/50 text-sm font-mono text-white placeholder-warm-600 focus:outline-none focus:border-yellow-500/60"
+                    className="theme-input w-full p-3 rounded-xl border border-warm-700 bg-warm-900/50 text-sm font-mono text-white placeholder-warm-600 focus:outline-none focus:border-gold/60"
                   />
                 )}
 
@@ -245,7 +237,7 @@ export function LoginPage() {
                   disabled={!canConnect}
                   className={`w-full p-3 rounded-xl font-bold text-sm transition-all ${
                     canConnect
-                      ? 'bg-yellow-500 hover:bg-yellow-400 text-black active:scale-[0.98]'
+                      ? 'theme-button btn-primary active:scale-[0.98]'
                       : 'bg-warm-800 text-warm-500 cursor-not-allowed'
                   }`}
                 >
@@ -269,7 +261,7 @@ export function LoginPage() {
                     onChange={(e) =>
                       selectAccount(accounts.find((a) => a.address === e.target.value))
                     }
-                    className="w-full bg-warm-900/50 border border-warm-700 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-yellow-500/60"
+                    className="theme-input w-full bg-warm-900/50 border border-warm-700 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-gold/60"
                   >
                     {accounts.map((acc) => (
                       <option key={acc.address} value={acc.address}>
@@ -283,7 +275,7 @@ export function LoginPage() {
 
               {/* Balance display */}
               {selectedAccount && (
-                <div className="p-3 rounded-xl border border-warm-800 bg-warm-900/30">
+                <div className="theme-panel p-3 rounded-xl border border-warm-800 bg-warm-900/30">
                   <div className="flex items-center justify-between text-xs lg:text-sm">
                     <span className="text-warm-500">Balance</span>
                     <span
@@ -312,7 +304,7 @@ export function LoginPage() {
                   {hasFunds ? (
                     <button
                       onClick={handleLogin}
-                      className="w-full p-4 rounded-xl font-bold text-base bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-black active:scale-[0.98] transition-all"
+                      className="theme-button btn-primary w-full p-4 rounded-xl font-bold text-base active:scale-[0.98] transition-all"
                     >
                       Log In
                     </button>
@@ -320,7 +312,7 @@ export function LoginPage() {
                     <button
                       onClick={handleFundAccount}
                       disabled={isSubmitting}
-                      className="w-full p-4 rounded-xl font-bold text-base bg-gradient-to-r from-accent-violet to-purple-600 hover:from-purple-500 hover:to-purple-500 text-white active:scale-[0.98] transition-all disabled:opacity-50"
+                      className="theme-button btn-primary w-full p-4 rounded-xl font-bold text-base active:scale-[0.98] transition-all disabled:opacity-50"
                     >
                       Fund Account
                     </button>
@@ -341,7 +333,7 @@ export function LoginPage() {
               <button
                 onClick={handleCreateAccount}
                 disabled={isSubmitting}
-                className="w-full p-3 rounded-xl font-bold text-sm border border-warm-700 bg-warm-900/30 hover:border-warm-600 hover:bg-warm-800/50 text-warm-300 transition-all disabled:opacity-50"
+                className="theme-button theme-surface-button w-full p-3 rounded-xl font-bold text-sm border transition-all disabled:opacity-50"
               >
                 Create Game Account
               </button>

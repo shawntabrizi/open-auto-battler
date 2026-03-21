@@ -58,10 +58,10 @@ export function TutorialOverlay() {
       {/* Close button — floats above content */}
       <button
         onClick={close}
-        className="absolute top-3 right-3 z-[1] p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors"
+        className="theme-button theme-surface-button absolute top-3 right-3 z-[1] rounded-lg border p-2 transition-colors"
         aria-label="Close tutorial"
       >
-        <CloseIcon className="w-5 h-5" />
+        <CloseIcon className="theme-icon-muted w-5 h-5" />
       </button>
 
       {/* Slide content */}

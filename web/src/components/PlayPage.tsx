@@ -34,10 +34,10 @@ export function PlayPage() {
               <div className="flex items-center justify-center gap-3 lg:gap-5">
                 <img src={swordsIcon} alt="" className="h-16 lg:h-24 w-auto" />
                 <div className="text-left">
-                  <h2 className="font-heading text-2xl lg:text-3xl font-bold text-white tracking-wide">
+                  <h2 className="font-button text-2xl lg:text-3xl font-bold text-white tracking-wide">
                     ONLINE ARENA
                   </h2>
-                  <p className="text-warm-400 text-xs lg:text-sm mt-0.5">
+                  <p className="theme-secondary-text mt-0.5 text-xs lg:text-sm">
                     {isConnected ? 'Compete on the blockchain' : 'Requires blockchain connection'}
                   </p>
                 </div>
@@ -56,12 +56,12 @@ export function PlayPage() {
             {activeTournament && isConnected && (
               <Link
                 to="/tournament"
-                className="theme-panel group block w-full p-3 lg:p-4 rounded-xl border border-purple-500/40 bg-gradient-to-br from-purple-500/10 to-pink-500/5 hover:border-purple-400 active:scale-[0.98] transition-all text-center"
+                className="theme-panel group block w-full p-3 lg:p-4 rounded-xl border border-accent-violet/40 bg-gradient-to-br from-accent-violet/12 to-surface-dark/10 hover:border-accent-violet active:scale-[0.98] transition-all text-center"
               >
-                <h2 className="font-heading text-base lg:text-lg font-bold text-white">
+                <h2 className="font-button text-base lg:text-lg font-bold text-white">
                   TOURNAMENT LIVE
                 </h2>
-                <p className="text-purple-300 text-[10px] lg:text-sm">
+                <p className="text-accent-violet text-[10px] lg:text-sm">
                   Entry: {formatBalance(activeTournament.config.entry_fee)} | Pool:{' '}
                   {formatBalance(activeTournament.state.total_pot)}
                 </p>
@@ -78,18 +78,18 @@ export function PlayPage() {
                     : 'border-warm-700/50 bg-warm-900/30 hover:border-warm-600'
                 }`}
               >
-                <h3 className="font-heading text-base lg:text-lg font-bold text-white">OFFLINE</h3>
-                <p className="text-warm-500 text-[10px] lg:text-xs mt-1">Single player</p>
+                <h3 className="font-button text-base lg:text-lg font-bold text-white">OFFLINE</h3>
+                <p className="theme-secondary-text mt-1 text-[10px] lg:text-xs">Single player</p>
               </Link>
 
               <Link
                 to="/versus"
                 className="theme-panel group block p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30 hover:border-warm-500 hover:bg-warm-800/40 active:scale-[0.98] transition-all text-center"
               >
-                <h3 className="font-heading text-base lg:text-lg font-bold text-white">
+                <h3 className="font-button text-base lg:text-lg font-bold text-white">
                   PEER-TO-PEER
                 </h3>
-                <p className="text-warm-500 text-[10px] lg:text-xs mt-1">Direct connect</p>
+                <p className="theme-secondary-text mt-1 text-[10px] lg:text-xs">Direct connect</p>
               </Link>
             </div>
 
@@ -98,10 +98,10 @@ export function PlayPage() {
               onClick={() => openTutorial('how-to-play')}
               className="theme-panel theme-button block w-full p-3 lg:p-4 rounded-xl border border-warm-700/30 bg-warm-900/20 hover:border-warm-600 hover:bg-warm-800/30 active:scale-[0.99] transition-all text-center"
             >
-              <h3 className="font-heading text-sm lg:text-base font-bold text-warm-300">
-                TUTORIAL
-              </h3>
-              <p className="text-warm-500 text-[10px] lg:text-xs mt-0.5">Learn how to play</p>
+              <h3 className="font-button text-sm lg:text-base font-bold text-warm-300">TUTORIAL</h3>
+              <p className="theme-secondary-text mt-0.5 text-[10px] lg:text-xs">
+                Learn how to play
+              </p>
             </button>
           </div>
         </div>

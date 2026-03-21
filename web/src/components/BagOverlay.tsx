@@ -54,9 +54,9 @@ export function BagOverlay() {
       <button
         onClick={() => setShowBag(false)}
         aria-label="Close Draw Pool"
-        className="absolute top-3 right-3 lg:top-4 lg:right-4 z-10 p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors"
+        className="theme-button theme-surface-button absolute top-3 right-3 z-10 rounded-lg border p-2 transition-colors lg:top-4 lg:right-4"
       >
-        <CloseIcon className="w-4 h-4 lg:w-5 lg:h-5" />
+        <CloseIcon className="theme-icon-muted w-4 h-4 lg:w-5 lg:h-5" />
       </button>
       <div className="flex items-center mb-3 lg:mb-8 border-b border-warm-700 pb-2 lg:pb-4 pr-10 lg:pr-12">
         <div className="flex flex-col">

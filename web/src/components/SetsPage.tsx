@@ -35,25 +35,25 @@ function SetCard({
       aria-checked={isSelected}
       aria-label={`${name}, ${cardCountLabel}`}
       tabIndex={0}
-      className={`set-tile relative flex flex-col items-center text-center rounded-xl border p-3 lg:p-5 cursor-pointer transition-all ${
+      className={`theme-panel set-tile relative flex flex-col items-center text-center rounded-xl border p-3 lg:p-5 cursor-pointer transition-all ${
         isSelected
-          ? 'border-2 border-yellow-400 bg-yellow-500/10'
-          : 'border-warm-700/40 bg-warm-900/50 hover:border-warm-500'
+          ? 'set-tile-selected border-2'
+          : 'border-warm-700/40 bg-surface-dark/60 hover:border-warm-500/80 hover:bg-surface-mid/20'
       }`}
     >
       {/* Radio indicator — top right */}
       <div className="absolute top-2.5 right-2.5 lg:top-3 lg:right-3">
         <div
           className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-            isSelected ? 'border-yellow-400' : 'border-warm-600'
+            isSelected ? 'set-radio-selected' : 'border-warm-600'
           }`}
         >
-          {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />}
+          {isSelected && <div className="set-radio-dot h-2.5 w-2.5 rounded-full" />}
         </div>
       </div>
 
       {/* Set name */}
-      <h3 className="font-heading font-bold text-sm lg:text-xl text-white">{name}</h3>
+      <h3 className="font-button font-bold text-sm lg:text-xl text-white">{name}</h3>
       <p className="text-warm-500 text-[10px] lg:text-sm">{cards?.length ?? '?'} cards</p>
 
       {/* Card fan */}
@@ -69,7 +69,7 @@ function SetCard({
       <Link
         to={`/sets/${id}`}
         onClick={(e) => e.stopPropagation()}
-        className="mt-1 lg:mt-2 w-full text-center text-xs lg:text-sm py-1.5 lg:py-2 bg-warm-800 hover:bg-warm-700 border border-warm-600/50 hover:border-warm-500 text-warm-200 font-bold rounded-lg transition-all"
+        className="theme-button theme-surface-button mt-1 lg:mt-2 w-full text-center text-xs lg:text-sm py-1.5 lg:py-2 border font-bold rounded-lg transition-all"
       >
         Preview Cards
       </Link>
@@ -94,7 +94,7 @@ export function SetsPage() {
   const sorted = [...setMetas].sort((a, b) => a.id - b.id);
 
   return (
-    <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
+    <div className="app-shell fixed inset-0 text-white flex flex-col">
       <TopBar backTo="/" backLabel="Menu" title="Card Sets" />
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-5xl mx-auto px-3 lg:px-6 py-6 lg:py-12">
@@ -124,7 +124,7 @@ export function SetsPage() {
               <div className="mt-4 lg:mt-8 text-center">
                 <Link
                   to="/creator"
-                  className="text-warm-500 hover:text-warm-300 text-xs lg:text-sm transition-colors"
+                  className="text-warm-500 hover:text-gold text-xs lg:text-sm transition-colors"
                 >
                   Want to create your own set? Visit the Creator Studio &rarr;
                 </Link>

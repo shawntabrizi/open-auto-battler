@@ -54,7 +54,7 @@ function formatEvent(
     case 'Clash':
       return {
         text: `Clash! (${event.payload.p_dmg} / ${event.payload.e_dmg} dmg)`,
-        color: 'text-amber-400',
+        color: 'text-gold',
       };
     case 'DamageTaken':
       return {
@@ -73,12 +73,12 @@ function formatEvent(
           event.payload.ability_index,
           resolveCardName
         )}`,
-        color: 'text-yellow-400',
+        color: 'text-gold',
       };
     case 'AbilityDamage':
       return {
         text: `${getName(event.payload.source_instance_id)} deals ${event.payload.damage} to ${getName(event.payload.target_instance_id)}`,
-        color: 'text-orange-400',
+        color: 'text-burn-gold',
       };
     case 'AbilityModifyStats':
     case 'AbilityModifyStatsPermanent': {
@@ -94,12 +94,12 @@ function formatEvent(
     case 'AbilityGainMana':
       return {
         text: `${getName(event.payload.source_instance_id)} +${event.payload.amount} mana`,
-        color: 'text-blue-400',
+        color: 'text-mana-blue',
       };
     case 'UnitSpawn':
       return {
         text: `${event.payload.spawned_unit.name} spawns (${event.payload.team})`,
-        color: 'text-cyan-400',
+        color: 'text-accent-violet',
       };
     case 'BattleEnd':
       return {
@@ -109,7 +109,7 @@ function formatEvent(
             ? 'text-green-400'
             : event.payload.result === 'Defeat'
               ? 'text-red-400'
-              : 'text-yellow-400',
+              : 'text-gold',
       };
     default:
       return null;
@@ -221,7 +221,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
   let resultText = 'DRAW';
   let resultKey: 'victory' | 'defeat' | 'draw' = 'draw';
   let impactText = '';
-  let impactColor = 'text-amber-400/80';
+  let impactColor = 'text-gold/80';
   let flashColor = 'rgba(212, 168, 67, 0.25)';
 
   if (result?.type === 'BattleEnd') {
@@ -262,9 +262,10 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
           style={{ zIndex: UI_LAYERS.inGameOverlay }}
         >
           <span
-            className="font-title text-5xl lg:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 animate-phase-splash"
+            className="theme-title-text font-title text-5xl lg:text-8xl font-bold text-transparent bg-clip-text animate-phase-splash"
             style={{
-              textShadow: '0 0 40px rgba(245, 158, 11, 0.6), 0 0 80px rgba(245, 158, 11, 0.3)',
+              textShadow:
+                '0 0 40px rgb(var(--color-gold) / 0.55), 0 0 80px rgb(var(--color-gold) / 0.24)',
             }}
           >
             BATTLE!
@@ -277,9 +278,9 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
         <button
           onClick={onContinue}
           aria-label="Close (Esc)"
-          className="absolute top-3 right-3 lg:top-4 lg:right-4 z-10 p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors"
+          className="theme-button theme-surface-button absolute top-3 right-3 z-10 rounded-lg border p-2 transition-colors lg:top-4 lg:right-4"
         >
-          <CloseIcon className="w-4 h-4 lg:w-5 lg:h-5" />
+          <CloseIcon className="theme-icon-muted w-4 h-4 lg:w-5 lg:h-5" />
         </button>
       )}
       <div className="relative z-10 flex items-center justify-center px-4 lg:px-8 py-1.5 lg:py-4">
@@ -335,13 +336,13 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
                 <div className="flex items-center gap-4 animate-battle-continue">
                   <button
                     onClick={handleReplay}
-                    className="px-6 lg:px-12 py-2.5 lg:py-3 rounded-lg font-semibold text-sm lg:text-lg text-warm-100 bg-gradient-to-b from-warm-600 to-warm-700 border border-warm-500/50 hover:from-warm-500 hover:to-warm-600 transition-all shadow-[0_0_15px_rgba(234,179,8,0.15)]"
+                    className="theme-button theme-surface-button rounded-lg border px-6 py-2.5 text-sm font-semibold transition-all lg:px-12 lg:py-3 lg:text-lg"
                   >
                     Replay
                   </button>
                   <button
                     onClick={onContinue}
-                    className="px-10 lg:px-20 py-2.5 lg:py-3 rounded-lg font-semibold text-sm lg:text-lg text-warm-950 bg-gradient-to-b from-[#d4a843] to-[#c48a2a] border border-amber-600/60 hover:from-[#f0c050] hover:to-[#d4a843] transition-all shadow-[0_0_20px_rgba(234,179,8,0.3)]"
+                    className="theme-button btn-primary px-10 lg:px-20 py-2.5 lg:py-3 rounded-lg font-semibold text-sm lg:text-lg transition-all"
                   >
                     {isSandbox ? 'Close' : 'Continue'}
                   </button>
@@ -371,7 +372,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
               })
             ) : (
               <div className="text-warm-600 italic flex items-center gap-2 h-full justify-center">
-                <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-ping"></span>
+                <span className="theme-icon-warning inline-block h-1.5 w-1.5 rounded-full bg-current animate-ping"></span>
                 Waiting for battle...
               </div>
             )}

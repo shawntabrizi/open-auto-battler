@@ -21,14 +21,14 @@ export function SandboxPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-board-bg flex items-center justify-center">
+      <div className="app-shell min-h-screen flex items-center justify-center">
         <div className="text-2xl text-warm-400">Loading Sandbox...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen h-svh bg-board-bg flex flex-col overflow-hidden">
+    <div className="app-shell h-screen h-svh flex flex-col overflow-hidden">
       {/* Header */}
       <SandboxHeader />
 
@@ -53,7 +53,6 @@ export function SandboxPage() {
 
       {/* Battle Overlay - Sandbox Mode */}
       <BattleOverlay mode="sandbox" />
-
     </div>
   );
 }
@@ -72,20 +71,18 @@ function SandboxHeader() {
     <>
       <TopBar backTo="/" backLabel="Menu" title="Card Sandbox" hasCardPanel />
       {/* Action bar below TopBar */}
-      <div className="flex-shrink-0 bg-warm-900 border-b border-warm-700 px-3 lg:px-4 py-1.5 lg:py-2 ml-44 lg:ml-80 flex items-center justify-center gap-2 lg:gap-3">
+      <div className="theme-panel flex-shrink-0 border-b border-warm-700 px-3 lg:px-4 py-1.5 lg:py-2 ml-44 lg:ml-80 flex items-center justify-center gap-2 lg:gap-3">
         <button
           onClick={clearAllBoards}
-          className="px-2 lg:px-3 py-1 bg-warm-700 hover:bg-warm-600 rounded text-white text-xs lg:text-sm transition-colors"
+          className="theme-button theme-surface-button px-2 lg:px-3 py-1 rounded text-white text-xs lg:text-sm transition-colors"
         >
           Clear
         </button>
         <button
           onClick={runBattle}
           disabled={!hasUnits}
-          className={`px-4 lg:px-6 py-1 rounded-lg font-bold text-xs lg:text-sm transition-colors ${
-            hasUnits
-              ? 'bg-gold text-black hover:bg-yellow-400'
-              : 'bg-warm-600 text-warm-400 cursor-not-allowed'
+          className={`theme-button px-4 lg:px-6 py-1 rounded-lg font-bold text-xs lg:text-sm transition-colors ${
+            hasUnits ? 'btn-primary text-white' : 'bg-warm-600 text-warm-400 cursor-not-allowed'
           }`}
         >
           Battle!
@@ -96,7 +93,7 @@ function SandboxHeader() {
             type="number"
             value={battleSeed}
             onChange={(e) => setBattleSeed(parseInt(e.target.value) || 0)}
-            className="w-16 px-2 py-1 bg-warm-800 border border-warm-600 rounded text-white text-xs"
+            className="theme-input w-16 px-2 py-1 bg-warm-800 border border-warm-600 rounded text-white text-xs"
           />
         </div>
       </div>
@@ -147,7 +144,12 @@ function SandboxArena() {
           <>
             <UnitCard card={unit} showCost={false} showBurn={false} />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none z-20">
-              <span className="text-red-500 text-3xl lg:text-5xl font-black" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>×</span>
+              <span
+                className="text-red-500 text-3xl lg:text-5xl font-black"
+                style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}
+              >
+                ×
+              </span>
             </div>
           </>
         ) : (
@@ -160,11 +162,11 @@ function SandboxArena() {
   };
 
   return (
-    <div className="bg-warm-800 rounded-lg p-2 lg:p-4">
+    <div className="theme-panel bg-warm-800 rounded-lg p-2 lg:p-4">
       <div className="flex items-center gap-1 lg:gap-2">
         {/* Player side (left) - display 5 4 3 2 1 */}
         <div className="flex-1 min-w-0 flex flex-col items-center gap-0.5">
-          <div className="text-[7px] lg:text-xs text-blue-400 font-bold">PLAYER</div>
+          <div className="text-[7px] lg:text-xs text-mana-blue font-bold">PLAYER</div>
           <div className="flex gap-0.5 lg:gap-1 w-full">
             {[4, 3, 2, 1, 0].map((i) => (
               <div key={`p-${i}`} className="flex-1 min-w-0">
@@ -191,7 +193,7 @@ function SandboxArena() {
 
       {selectedTemplate && (
         <div className="mt-1 lg:mt-2 text-center text-[9px] lg:text-xs text-warm-400">
-          Placing: <span className="text-yellow-400">{selectedTemplate.name}</span>
+          Placing: <span className="text-gold">{selectedTemplate.name}</span>
         </div>
       )}
     </div>

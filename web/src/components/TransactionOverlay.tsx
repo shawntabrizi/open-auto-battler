@@ -29,9 +29,9 @@ export function TransactionOverlay() {
       className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
       style={{ zIndex: UI_LAYERS.transaction }}
     >
-      <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-warm-900/90 border border-warm-700/50 shadow-2xl max-w-xs text-center">
+      <div className="theme-panel flex flex-col items-center gap-4 p-8 rounded-2xl bg-surface-dark/90 border border-warm-700/50 shadow-2xl max-w-xs text-center">
         {/* Spinner */}
-        <div className="w-12 h-12 border-[3px] border-warm-600 border-t-yellow-400 rounded-full animate-spin" />
+        <div className="w-12 h-12 border-[3px] border-warm-600 border-t-gold rounded-full animate-spin" />
 
         {/* Label (e.g. "Starting Game...") */}
         {label && (
@@ -45,8 +45,8 @@ export function TransactionOverlay() {
 
         {/* Wallet prompt for extension signers */}
         {status === 'signing' && isExtensionSigner && (
-          <div className="mt-1 px-3 py-1.5 bg-yellow-900/30 border border-yellow-700/40 rounded-lg">
-            <p className="text-[10px] text-yellow-300/80">
+          <div className="theme-panel mt-1 px-3 py-1.5 bg-gold/10 border border-gold/20 rounded-lg">
+            <p className="text-[10px] text-gold/80">
               A signing request has been sent to your wallet extension
             </p>
           </div>

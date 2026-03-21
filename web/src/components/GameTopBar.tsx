@@ -101,9 +101,9 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
               className={`flex items-center gap-2 px-3 py-1 rounded-lg ${
                 opponentWaiting
                   ? displayTimer <= 5
-                    ? 'bg-red-600 animate-pulse'
-                    : 'bg-orange-600'
-                  : 'bg-blue-600'
+                    ? 'bg-defeat-red animate-pulse'
+                    : 'bg-burn-red'
+                  : 'bg-mana-blue'
               }`}
             >
               <span className="text-white text-sm font-bold flex items-center gap-1">
@@ -118,7 +118,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
                 )}
               </span>
               <span
-                className={`text-white text-lg font-bold ${displayTimer <= 5 ? 'text-yellow-300' : ''}`}
+                className={`text-white text-lg font-bold ${displayTimer <= 5 ? 'text-gold' : ''}`}
               >
                 {displayTimer}s
               </span>
@@ -130,14 +130,14 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
             data-game-end-turn-action="true"
             aria-keyshortcuts={GAME_SHORTCUTS.commit}
             title={`Focus ${isWaiting ? 'Waiting' : battleConfirmation.isConfirming ? 'Are you sure' : 'Battle'} button (${GAME_SHORTCUTS.commit})`}
-            className={`theme-button rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
+            className={`theme-button rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-button uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
               isWaiting
                 ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
                 : battleConfirmation.isConfirming
                   ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
                   : opponentWaiting && displayTimer !== null && displayTimer <= 5
-                    ? 'animate-pulse bg-red-500 hover:bg-red-400 border-warm-700'
-                    : 'battle-btn border-warm-700'
+                    ? 'animate-pulse bg-defeat-red hover:bg-defeat-red border-defeat-red/50'
+                    : 'battle-btn border-gold/40'
             }`}
           >
             {isWaiting
@@ -160,14 +160,14 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
           data-game-custom-action="true"
           aria-keyshortcuts={GAME_SHORTCUTS.commit}
           title={`Focus ${customActionConfirmation.isConfirming ? 'Are you sure' : customAction.label} button (${GAME_SHORTCUTS.commit})`}
-          className={`theme-button rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
+          className={`theme-button rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-button uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
             customAction.disabled
               ? 'bg-warm-600 border-warm-600 scale-95 opacity-80 cursor-not-allowed'
               : customActionConfirmation.isConfirming
                 ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
                 : customAction.variant === 'chain'
                   ? 'btn-primary'
-                  : 'battle-btn border-warm-700'
+                  : 'battle-btn border-gold/40'
           }`}
         >
           {customActionConfirmation.isConfirming ? 'Are you sure?' : customAction.label}
@@ -192,7 +192,7 @@ export function GameTopBar({
   return (
     <nav
       aria-label="Game controls"
-      className={`game-top-bar h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 flex items-center px-2 lg:px-6 relative z-20 overflow-hidden ${className}`}
+      className={`game-top-bar theme-panel h-12 lg:h-16 bg-surface-dark/90 border-b border-warm-800/60 flex items-center px-2 lg:px-6 relative z-20 overflow-hidden ${className}`}
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
       onClick={(event) => {
         if (!selection) return;
@@ -223,13 +223,13 @@ export function GameTopBar({
             title={`View your draw pool (${GAME_SHORTCUTS.bag})`}
             aria-keyshortcuts={GAME_SHORTCUTS.bag}
           >
-            <BagIcon className="w-3.5 h-3.5 lg:w-5 lg:h-5 text-gold" />
+            <BagIcon className="theme-icon-accent w-3.5 h-3.5 lg:w-5 lg:h-5" />
             <span className="font-bold text-xs lg:text-sm font-stat">{view.bag_count}</span>
           </button>
         )}
 
         {/* Round */}
-        <div className="theme-pill bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10">
+        <div className="theme-panel theme-pill bg-surface-dark/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10">
           <span className="text-[10px] lg:text-xs text-warm-400 font-heading uppercase tracking-wider">
             Round
           </span>
@@ -237,16 +237,16 @@ export function GameTopBar({
         </div>
 
         {/* Wins */}
-        <div className="theme-pill bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
-          <StarIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-gold" />
+        <div className="theme-panel theme-pill bg-surface-dark/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
+          <StarIcon className="theme-icon-accent w-3.5 h-3.5 lg:w-4 lg:h-4" />
           <span className="font-bold text-xs lg:text-sm font-stat">
             {view.wins}/{winsToVictory}
           </span>
         </div>
 
         {/* Lives */}
-        <div className="theme-pill bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
-          <HeartIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-burn-red" />
+        <div className="theme-panel theme-pill bg-surface-dark/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
+          <HeartIcon className="theme-icon-health w-3.5 h-3.5 lg:w-4 lg:h-4" />
           <span className="font-bold text-xs lg:text-sm font-stat">
             {view.lives}/{startingLives}
           </span>
@@ -348,7 +348,7 @@ export function BattleAction({
                 ? 'bg-warm-800 border-warm-700 opacity-50 cursor-not-allowed'
                 : battleConfirmation.isConfirming
                   ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
-                  : 'battle-btn border-amber-500/60 active:scale-95'
+                  : 'battle-btn border-gold/40 active:scale-95'
             }`}
           >
             {isWaiting ? (
@@ -356,7 +356,7 @@ export function BattleAction({
                 <span className="font-bold text-xs text-warm-400">Wait</span>
                 {displayTimer !== null && (
                   <span
-                    className={`font-bold text-sm ${displayTimer <= 5 ? 'text-yellow-300' : 'text-white'}`}
+                    className={`font-bold text-sm ${displayTimer <= 5 ? 'text-gold' : 'text-white'}`}
                   >
                     {displayTimer}s
                   </span>
@@ -395,7 +395,7 @@ export function BattleAction({
                   ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
                   : customAction.variant === 'chain'
                     ? 'btn-primary'
-                    : 'btn-primary border-amber-500/60'
+                    : 'btn-primary border-gold/40'
             }`}
           >
             {customActionConfirmation.isConfirming ? 'Are you sure?' : customAction.label}
@@ -415,9 +415,9 @@ export function BattleAction({
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
                   opponentWaiting
                     ? displayTimer <= 5
-                      ? 'bg-red-600 animate-pulse'
-                      : 'bg-orange-600'
-                    : 'bg-blue-600'
+                      ? 'bg-defeat-red animate-pulse'
+                      : 'bg-burn-red'
+                    : 'bg-mana-blue'
                 }`}
               >
                 <span className="text-white text-sm lg:text-base font-bold flex items-center gap-1">
@@ -432,7 +432,7 @@ export function BattleAction({
                   )}
                 </span>
                 <span
-                  className={`text-white text-lg lg:text-xl font-bold ${displayTimer <= 5 ? 'text-yellow-300' : ''}`}
+                  className={`text-white text-lg lg:text-xl font-bold ${displayTimer <= 5 ? 'text-gold' : ''}`}
                 >
                   {displayTimer}s
                 </span>
@@ -447,7 +447,7 @@ export function BattleAction({
                   : battleConfirmation.isConfirming
                     ? 'bg-red-700 hover:bg-red-600 text-white border border-red-400/70 px-5 lg:px-10 py-3 lg:py-4'
                     : opponentWaiting && displayTimer !== null && displayTimer <= 5
-                      ? 'animate-pulse bg-red-500 hover:bg-red-400 px-2 lg:px-4 py-0.5 lg:py-1'
+                      ? 'animate-pulse bg-defeat-red hover:bg-defeat-red px-2 lg:px-4 py-0.5 lg:py-1'
                       : 'px-2 lg:px-4 py-0.5 lg:py-1'
               }`}
             >

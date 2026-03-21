@@ -14,9 +14,9 @@ function loadStoredTheme(): ThemeId {
   }
 
   try {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY) as ThemeId | null;
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
     if (stored && stored in THEMES) {
-      return stored;
+      return stored as ThemeId;
     }
   } catch {}
 

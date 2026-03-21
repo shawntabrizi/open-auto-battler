@@ -139,16 +139,16 @@ export function DevPage() {
   const route = PAGES[activePage] ?? '/';
 
   return (
-    <div className="h-screen flex flex-col bg-warm-950 text-white overflow-hidden">
+    <div className="app-shell h-screen flex flex-col text-white overflow-hidden">
       {/* Toolbar */}
-      <div className="flex-shrink-0 flex items-center gap-4 px-4 py-2 bg-warm-900 border-b border-warm-700">
-        <span className="text-sm font-bold text-amber-400 mr-2">DEV</span>
+      <div className="theme-panel flex-shrink-0 flex items-center gap-4 px-4 py-2 border-b border-warm-700">
+        <span className="text-sm font-bold text-gold mr-2">DEV</span>
 
         <label className="text-xs text-warm-400">Page:</label>
         <select
           value={activePage}
           onChange={(e) => handlePageChange(e.target.value)}
-          className="bg-warm-800 text-white text-sm rounded px-2 py-1 border border-warm-600"
+          className="theme-input bg-warm-800 text-white text-sm rounded px-2 py-1 border border-warm-600"
         >
           {Object.keys(PAGES).map((name) => (
             <option key={name} value={name}>
@@ -164,7 +164,7 @@ export function DevPage() {
             <select
               value={vp.preset}
               onChange={(e) => updateViewport(i, e.target.value as PresetName)}
-              className="bg-warm-800 text-white text-xs rounded px-2 py-1 border border-warm-600"
+              className="theme-input bg-warm-800 text-white text-xs rounded px-2 py-1 border border-warm-600"
             >
               {Object.keys(PRESETS).map((name) => (
                 <option key={name} value={name}>
@@ -185,7 +185,7 @@ export function DevPage() {
 
         <button
           onClick={addViewport}
-          className="text-xs text-warm-400 hover:text-white border border-warm-600 rounded px-2 py-1"
+          className="theme-button theme-surface-button text-xs border rounded px-2 py-1"
         >
           + Add
         </button>

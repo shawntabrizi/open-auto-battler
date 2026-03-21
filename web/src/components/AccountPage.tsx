@@ -97,16 +97,18 @@ export function AccountPage() {
   };
 
   return (
-    <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
+    <div className="app-shell fixed inset-0 text-white flex flex-col">
       <TopBar backTo="/" backLabel="Menu" title="Account" />
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-md lg:max-w-lg mx-auto p-3 lg:p-4 lg:mt-[10vh]">
           {!isConnected || !selectedAccount ? (
-            <div className="text-center py-12 text-warm-500 text-sm">No account connected.</div>
+            <div className="theme-panel border border-warm-700 bg-warm-900/30 p-6 text-center text-sm text-warm-500">
+              No account connected.
+            </div>
           ) : (
             <div className="flex flex-col gap-4 lg:gap-5">
               {/* Name */}
-              <section className="p-4 rounded-xl border border-warm-700 bg-warm-900/30">
+              <section className="theme-panel p-4 rounded-xl border border-warm-700 bg-warm-900/30">
                 <div className="text-xs text-warm-500 mb-1">Name</div>
                 {editingName ? (
                   <div className="flex gap-2">
@@ -114,7 +116,7 @@ export function AccountPage() {
                       type="text"
                       value={nameInput}
                       onChange={(e) => setNameInput(e.target.value)}
-                      className="flex-1 bg-warm-900/50 border border-warm-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-yellow-500/60"
+                      className="theme-input flex-1 bg-warm-900/50 border border-warm-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-gold/60"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleSaveName();
@@ -126,7 +128,7 @@ export function AccountPage() {
                     />
                     <button
                       onClick={handleSaveName}
-                      className="px-3 py-1.5 text-xs font-bold bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg transition-colors"
+                      className="theme-button btn-primary px-3 py-1.5 text-xs font-bold rounded-lg transition-colors"
                     >
                       Save
                     </button>
@@ -135,7 +137,7 @@ export function AccountPage() {
                         setNameInput(selectedAccount.name ?? '');
                         setEditingName(false);
                       }}
-                      className="px-3 py-1.5 text-xs text-warm-400 hover:text-white transition-colors"
+                      className="theme-button theme-surface-button px-3 py-1.5 text-xs rounded-lg border transition-colors"
                     >
                       Cancel
                     </button>
@@ -145,7 +147,7 @@ export function AccountPage() {
                     <span className="text-sm lg:text-base text-white">{selectedAccount.name}</span>
                     <button
                       onClick={() => setEditingName(true)}
-                      className="text-xs text-warm-500 hover:text-yellow-500 transition-colors"
+                      className="text-xs text-warm-500 hover:text-gold transition-colors"
                     >
                       Edit
                     </button>
@@ -154,7 +156,7 @@ export function AccountPage() {
               </section>
 
               {/* Address */}
-              <section className="p-4 rounded-xl border border-warm-700 bg-warm-900/30">
+              <section className="theme-panel p-4 rounded-xl border border-warm-700 bg-warm-900/30">
                 <div className="text-xs text-warm-500 mb-1">Address</div>
                 <button
                   onClick={() => {
@@ -176,11 +178,11 @@ export function AccountPage() {
 
               {/* Export mnemonic — local accounts only */}
               {selectedAccount.source === 'local' && (
-                <section className="p-4 rounded-xl border border-warm-700 bg-warm-900/30">
+                <section className="theme-panel p-4 rounded-xl border border-warm-700 bg-warm-900/30">
                   <div className="text-xs text-warm-500 mb-2">Secret Recovery Phrase</div>
                   {showMnemonic ? (
                     <>
-                      <div className="bg-warm-950 border border-warm-700 rounded-lg p-3 font-mono text-xs lg:text-sm text-amber-400 break-all select-all">
+                      <div className="theme-panel bg-warm-950 border border-warm-700 rounded-lg p-3 font-mono text-xs lg:text-sm text-gold break-all select-all">
                         {getLocalAccountMnemonic(selectedAccount.address) || 'Not found'}
                       </div>
                       <p className="text-[10px] text-red-400/80 mt-2">
@@ -197,7 +199,7 @@ export function AccountPage() {
                   ) : (
                     <button
                       onClick={() => setShowMnemonic(true)}
-                      className="px-4 py-2 rounded-lg border border-warm-600 bg-warm-800 text-warm-200 hover:text-white hover:border-warm-500 transition-colors text-xs lg:text-sm font-semibold"
+                      className="theme-button theme-surface-button px-4 py-2 rounded-lg border transition-colors text-xs lg:text-sm font-semibold"
                     >
                       Reveal Recovery Phrase
                     </button>
@@ -206,7 +208,7 @@ export function AccountPage() {
               )}
 
               {/* On-chain info */}
-              <section className="p-4 rounded-xl border border-warm-700 bg-warm-900/30">
+              <section className="theme-panel p-4 rounded-xl border border-warm-700 bg-warm-900/30">
                 <div className="text-xs text-warm-500 mb-3">On-Chain Info</div>
 
                 {loading ? (
@@ -229,7 +231,7 @@ export function AccountPage() {
                       <div className="text-[10px] text-warm-600 uppercase tracking-wider">
                         Reserved
                       </div>
-                      <div className="text-sm lg:text-base font-mono text-yellow-400">
+                      <div className="text-sm lg:text-base font-mono text-gold">
                         {formatBalance(info.reserved)}
                       </div>
                     </div>
@@ -237,7 +239,7 @@ export function AccountPage() {
                       <div className="text-[10px] text-warm-600 uppercase tracking-wider">
                         Frozen
                       </div>
-                      <div className="text-sm lg:text-base font-mono text-blue-400">
+                      <div className="text-sm lg:text-base font-mono text-mana-blue">
                         {formatBalance(info.frozen)}
                       </div>
                     </div>
@@ -250,7 +252,7 @@ export function AccountPage() {
                   <button
                     onClick={() => void fetchInfo()}
                     disabled={loading}
-                    className="text-xs text-warm-500 hover:text-yellow-500 transition-colors disabled:opacity-50"
+                    className="theme-button theme-surface-button px-3 py-1.5 text-xs rounded-lg border transition-colors disabled:opacity-50"
                   >
                     Refresh
                   </button>
@@ -265,7 +267,7 @@ export function AccountPage() {
                       }
                     }}
                     disabled={isFunding}
-                    className="px-4 py-1.5 rounded-lg bg-gradient-to-b from-amber-500 to-amber-600 text-warm-950 font-bold text-xs hover:from-amber-400 hover:to-amber-500 transition-colors disabled:opacity-50"
+                    className="theme-button btn-primary px-4 py-1.5 rounded-lg font-bold text-xs transition-colors disabled:opacity-50"
                   >
                     {isFunding ? 'Funding...' : 'Fund Account'}
                   </button>
@@ -278,7 +280,7 @@ export function AccountPage() {
                   logout();
                   void navigate('/');
                 }}
-                className="w-full p-3 rounded-xl border border-red-800/60 bg-red-900/20 text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors text-sm font-semibold"
+                className="theme-button w-full p-3 rounded-xl border border-red-800/60 bg-red-900/20 text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors text-sm font-semibold"
               >
                 Log Out
               </button>
@@ -286,14 +288,14 @@ export function AccountPage() {
               {/* Forget Account — local accounts only */}
               {selectedAccount.source === 'local' &&
                 (showForgetConfirm ? (
-                  <div className="w-full p-4 rounded-xl border border-red-700/60 bg-red-950/30">
+                  <div className="theme-panel w-full p-4 rounded-xl border border-red-700/60 bg-red-950/30">
                     <p className="text-sm text-warm-300 mb-3 text-center">
                       Forget this account? The private key will be permanently deleted.
                     </p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setShowForgetConfirm(false)}
-                        className="flex-1 p-2.5 rounded-lg border border-warm-700 text-warm-300 hover:border-warm-500 text-sm font-semibold transition-colors"
+                        className="theme-button theme-surface-button flex-1 p-2.5 rounded-lg border text-sm font-semibold transition-colors"
                       >
                         Cancel
                       </button>
@@ -303,7 +305,7 @@ export function AccountPage() {
                           logout();
                           void navigate('/');
                         }}
-                        className="flex-1 p-2.5 rounded-lg bg-red-900/50 hover:bg-red-900/70 border border-red-700 text-red-300 text-sm font-semibold transition-colors"
+                        className="theme-button flex-1 p-2.5 rounded-lg bg-red-900/50 hover:bg-red-900/70 border border-red-700 text-red-300 text-sm font-semibold transition-colors"
                       >
                         Forget
                       </button>
@@ -312,7 +314,7 @@ export function AccountPage() {
                 ) : (
                   <button
                     onClick={() => setShowForgetConfirm(true)}
-                    className="w-full p-3 rounded-xl border border-red-900/40 text-red-500/70 hover:text-red-400 hover:border-red-800/60 transition-colors text-sm"
+                    className="theme-button w-full p-3 rounded-xl border border-red-900/40 text-red-500/70 hover:text-red-400 hover:border-red-800/60 transition-colors text-sm"
                   >
                     Forget Account
                   </button>

@@ -58,16 +58,16 @@ export function ArenaPage() {
   // Not connected
   if (!isConnected) {
     return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col text-white">
+      <div className="app-shell min-h-screen min-h-svh flex flex-col text-white">
         <TopBar backTo="/play" backLabel="Play" title="Online Arena" />
         <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
-          <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600">
+          <h1 className="theme-title-text text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text">
             ONLINE ARENA
           </h1>
           <button
             onClick={() => void connect()}
             disabled={isConnecting}
-            className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
+            className="theme-button btn-primary font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
           >
             {isConnecting ? 'CONNECTING...' : 'RETRY CONNECTION'}
           </button>
@@ -97,7 +97,7 @@ export function ArenaPage() {
   const cards = selectedSetId !== null ? setPreviewCards[selectedSetId] : undefined;
 
   return (
-    <div className="min-h-screen min-h-svh bg-warm-950 flex flex-col text-white">
+    <div className="app-shell min-h-screen min-h-svh flex flex-col text-white">
       <TopBar backTo="/play" backLabel="Play" title="Online Arena" />
       <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
@@ -106,7 +106,7 @@ export function ArenaPage() {
               <p className="text-warm-400 text-sm mb-4">No set selected.</p>
               <Link
                 to="/sets"
-                className="inline-block bg-yellow-500 hover:bg-yellow-400 text-warm-950 font-bold py-3 px-8 rounded-xl text-sm transition-all"
+                className="theme-button btn-primary inline-block font-bold py-3 px-8 rounded-xl text-sm transition-all"
               >
                 Choose a Set
               </Link>
@@ -116,9 +116,7 @@ export function ArenaPage() {
               <h2 className="text-xl lg:text-2xl font-heading font-bold text-white">
                 {setMeta.name}
               </h2>
-              <p className="text-warm-500 text-xs lg:text-sm">
-                {cards?.length ?? '?'} cards
-              </p>
+              <p className="text-warm-500 text-xs lg:text-sm">{cards?.length ?? '?'} cards</p>
               <div className="set-tile">
                 {cards && cards.length > 0 ? (
                   <CardFan cards={cards} />
@@ -133,7 +131,7 @@ export function ArenaPage() {
                 <button
                   onClick={() => void startGame(selectedSetId)}
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-warm-950 font-black py-3 lg:py-4 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50 shadow-lg shadow-yellow-500/20 uppercase tracking-wider"
+                  className="theme-button btn-primary w-full font-black py-3 lg:py-4 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50 uppercase tracking-wider"
                 >
                   Start Game
                 </button>

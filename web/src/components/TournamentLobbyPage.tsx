@@ -104,11 +104,11 @@ export function TournamentLobbyPage() {
   if (tournamentGameOver) {
     const isPerfect = lastGameWins >= 10;
     return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col text-white">
+      <div className="app-shell min-h-screen min-h-svh flex flex-col text-white">
         <TopBar backTo="/play" backLabel="Play" title="Tournament" />
         <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
           <div
-            className={`p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm lg:max-w-none ${
+            className={`theme-panel p-6 lg:p-12 rounded-xl lg:rounded-2xl text-center max-w-sm lg:max-w-none ${
               isPerfect
                 ? 'bg-green-900/30 border-2 border-green-500'
                 : 'bg-red-900/30 border-2 border-red-500'
@@ -139,7 +139,7 @@ export function TournamentLobbyPage() {
                 <button
                   onClick={handlePlayAgain}
                   disabled={isSubmitting}
-                  className="bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 px-8 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
+                  className="theme-button btn-primary font-bold py-3 px-8 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
                 >
                   PLAY AGAIN
                 </button>
@@ -160,16 +160,16 @@ export function TournamentLobbyPage() {
   // ── Not Connected ──
   if (!isConnected) {
     return (
-      <div className="min-h-screen min-h-svh bg-warm-900 flex flex-col text-white">
+      <div className="app-shell min-h-screen min-h-svh flex flex-col text-white">
         <TopBar backTo="/play" backLabel="Play" title="Tournament" />
         <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
-          <h1 className="text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+          <h1 className="theme-title-text text-2xl lg:text-4xl font-black mb-6 lg:mb-8 italic tracking-tighter text-transparent bg-clip-text">
             TOURNAMENT
           </h1>
           <button
             onClick={() => void connect()}
             disabled={isConnecting}
-            className="bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
+            className="theme-button btn-primary font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
           >
             {isConnecting ? 'CONNECTING...' : 'RETRY CONNECTION'}
           </button>
@@ -198,8 +198,8 @@ export function TournamentLobbyPage() {
     <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans flex flex-col">
       <TopBar backTo="/play" backLabel="Play" title="Tournament" />
       <div className="flex-1 flex items-center justify-center overflow-y-auto p-4">
-        <div className="text-center bg-warm-900 p-3 lg:p-6 rounded-xl lg:rounded-2xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-lg">
-          <h3 className="text-lg lg:text-2xl font-black mb-1 italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+        <div className="theme-panel text-center bg-warm-900 p-3 lg:p-6 rounded-xl lg:rounded-2xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-lg">
+          <h3 className="theme-title-text text-lg lg:text-2xl font-black mb-1 italic tracking-tighter text-transparent bg-clip-text">
             TOURNAMENT
           </h3>
 
@@ -212,8 +212,10 @@ export function TournamentLobbyPage() {
             </div>
             <select
               value={selectedAccount?.address}
-              onChange={(e) => selectAccount(accounts.find((a: any) => a.address === e.target.value))}
-              className="bg-warm-800 border border-white/10 rounded lg:rounded-lg px-1.5 lg:px-2 py-1 lg:py-1.5 text-[10px] lg:text-xs outline-none focus:border-purple-500/50"
+              onChange={(e) =>
+                selectAccount(accounts.find((a: any) => a.address === e.target.value))
+              }
+              className="theme-input bg-warm-800 border border-white/10 rounded lg:rounded-lg px-1.5 lg:px-2 py-1 lg:py-1.5 text-[10px] lg:text-xs outline-none focus:border-gold/50"
             >
               {accounts.map((acc: any) => (
                 <option key={acc.address} value={acc.address}>
@@ -241,7 +243,7 @@ export function TournamentLobbyPage() {
                 </span>
                 <button
                   onClick={() => navigate(`/sets/${activeTournament.config.set_id}`)}
-                  className="px-1.5 lg:px-2 py-0.5 lg:py-1 text-[9px] lg:text-[10px] font-bold border border-warm-600 text-warm-300 hover:text-white hover:border-warm-400 rounded transition-all"
+                  className="theme-button theme-surface-button px-1.5 lg:px-2 py-0.5 lg:py-1 text-[9px] lg:text-[10px] font-bold border rounded transition-all"
                 >
                   PREVIEW
                 </button>
@@ -249,64 +251,130 @@ export function TournamentLobbyPage() {
 
               <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5 lg:gap-3 mb-2 lg:mb-4 text-center lg:text-left">
                 <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">Fee</div>
-                  <div className="text-xs lg:text-sm font-bold text-white">{formatBalance(activeTournament.config.entry_fee)}</div>
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
+                    Fee
+                  </div>
+                  <div className="text-xs lg:text-sm font-bold text-white">
+                    {formatBalance(activeTournament.config.entry_fee)}
+                  </div>
+                </div>
+                <div className="theme-panel bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
+                    Pool
+                  </div>
+                  <div className="text-xs lg:text-sm font-bold text-accent-violet">
+                    {formatBalance(activeTournament.state.total_pot)}
+                  </div>
                 </div>
                 <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">Pool</div>
-                  <div className="text-xs lg:text-sm font-bold text-purple-300">{formatBalance(activeTournament.state.total_pot)}</div>
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
+                    Entries
+                  </div>
+                  <div className="text-xs lg:text-sm font-bold text-white">
+                    {activeTournament.state.total_entries}
+                  </div>
                 </div>
                 <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">Entries</div>
-                  <div className="text-xs lg:text-sm font-bold text-white">{activeTournament.state.total_entries}</div>
-                </div>
-                <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">Perfect</div>
-                  <div className="text-xs lg:text-sm font-bold text-green-400">{activeTournament.state.total_perfect_runs}</div>
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
+                    Perfect
+                  </div>
+                  <div className="text-xs lg:text-sm font-bold text-green-400">
+                    {activeTournament.state.total_perfect_runs}
+                  </div>
                 </div>
               </div>
 
               <div className="bg-warm-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
-                <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">Prize Distribution</div>
+                <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">
+                  Prize Distribution
+                </div>
                 <div className="flex gap-2 lg:gap-4 text-[10px] lg:text-xs">
-                  <div><span className="text-warm-400">Players: </span><span className="text-white font-bold">{formatPerbill(activeTournament.config.prize_config.player_share)}</span></div>
-                  <div><span className="text-warm-400">Set Creator: </span><span className="text-white font-bold">{formatPerbill(activeTournament.config.prize_config.set_creator_share)}</span></div>
-                  <div><span className="text-warm-400">Card Creators: </span><span className="text-white font-bold">{formatPerbill(activeTournament.config.prize_config.card_creators_share)}</span></div>
+                  <div>
+                    <span className="text-warm-400">Players: </span>
+                    <span className="text-white font-bold">
+                      {formatPerbill(activeTournament.config.prize_config.player_share)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-warm-400">Set Creator: </span>
+                    <span className="text-white font-bold">
+                      {formatPerbill(activeTournament.config.prize_config.set_creator_share)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-warm-400">Card Creators: </span>
+                    <span className="text-white font-bold">
+                      {formatPerbill(activeTournament.config.prize_config.card_creators_share)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {playerStats && playerStats.total_games > 0 && (
-                <div className="bg-purple-900/20 rounded lg:rounded-lg p-2 lg:p-3 border border-purple-500/20 mb-2 lg:mb-4 text-left">
-                  <div className="text-[8px] lg:text-[10px] text-purple-400 uppercase font-bold mb-1 lg:mb-2">Your Stats</div>
+                <div className="theme-panel bg-accent-violet/10 rounded lg:rounded-lg p-2 lg:p-3 border border-accent-violet/20 mb-2 lg:mb-4 text-left">
+                  <div className="text-[8px] lg:text-[10px] text-accent-violet uppercase font-bold mb-1 lg:mb-2">
+                    Your Stats
+                  </div>
                   <div className="flex gap-2 lg:gap-4 text-[10px] lg:text-xs">
-                    <div><span className="text-warm-400">Games: </span><span className="text-white font-bold">{playerStats.total_games}</span></div>
-                    <div><span className="text-warm-400">Wins: </span><span className="text-white font-bold">{playerStats.total_wins}</span></div>
-                    <div><span className="text-warm-400">Perfect Runs: </span><span className="text-green-400 font-bold">{playerStats.perfect_runs}</span></div>
+                    <div>
+                      <span className="text-warm-400">Games: </span>
+                      <span className="text-white font-bold">{playerStats.total_games}</span>
+                    </div>
+                    <div>
+                      <span className="text-warm-400">Wins: </span>
+                      <span className="text-white font-bold">{playerStats.total_wins}</span>
+                    </div>
+                    <div>
+                      <span className="text-warm-400">Perfect Runs: </span>
+                      <span className="text-green-400 font-bold">{playerStats.perfect_runs}</span>
+                    </div>
                   </div>
                 </div>
               )}
 
               {allPlayerStats.length > 0 && (
                 <div className="bg-warm-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">Leaderboard</div>
+                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">
+                    Leaderboard
+                  </div>
                   <table className="w-full text-[10px] lg:text-xs">
                     <thead>
                       <tr className="text-warm-500">
                         <th className="text-left pb-0.5 lg:pb-1">#</th>
                         <th className="text-left pb-0.5 lg:pb-1">Player</th>
-                        <th className="text-right pb-0.5 lg:pb-1"><span className="hidden lg:inline">Games</span><span className="lg:hidden">G</span></th>
-                        <th className="text-right pb-0.5 lg:pb-1"><span className="hidden lg:inline">Wins</span><span className="lg:hidden">W</span></th>
-                        <th className="text-right pb-0.5 lg:pb-1"><span className="hidden lg:inline">Perfect</span><span className="lg:hidden">P</span></th>
+                        <th className="text-right pb-0.5 lg:pb-1">
+                          <span className="hidden lg:inline">Games</span>
+                          <span className="lg:hidden">G</span>
+                        </th>
+                        <th className="text-right pb-0.5 lg:pb-1">
+                          <span className="hidden lg:inline">Wins</span>
+                          <span className="lg:hidden">W</span>
+                        </th>
+                        <th className="text-right pb-0.5 lg:pb-1">
+                          <span className="hidden lg:inline">Perfect</span>
+                          <span className="lg:hidden">P</span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {allPlayerStats.slice(0, 10).map((entry, i) => (
-                        <tr key={entry.account} className={entry.account === selectedAccount?.address ? 'text-purple-300' : 'text-warm-300'}>
+                        <tr
+                          key={entry.account}
+                          className={
+                            entry.account === selectedAccount?.address
+                              ? 'text-accent-violet'
+                              : 'text-warm-300'
+                          }
+                        >
                           <td className="py-px lg:py-0.5">{i + 1}</td>
-                          <td className="py-px lg:py-0.5 font-mono">{entry.account.slice(0, 6)}...{entry.account.slice(-4)}</td>
+                          <td className="py-px lg:py-0.5 font-mono">
+                            {entry.account.slice(0, 6)}...{entry.account.slice(-4)}
+                          </td>
                           <td className="text-right py-px lg:py-0.5">{entry.stats.total_games}</td>
                           <td className="text-right py-px lg:py-0.5">{entry.stats.total_wins}</td>
-                          <td className="text-right py-px lg:py-0.5 text-green-400">{entry.stats.perfect_runs}</td>
+                          <td className="text-right py-px lg:py-0.5 text-green-400">
+                            {entry.stats.perfect_runs}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -317,7 +385,7 @@ export function TournamentLobbyPage() {
               <button
                 onClick={handleJoinTournament}
                 disabled={isSubmitting}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-black px-6 lg:px-12 py-2.5 lg:py-4 rounded-full text-xs lg:text-base transition-all transform hover:scale-105 disabled:opacity-50 shadow-lg shadow-purple-500/20"
+                className="theme-button btn-primary font-black px-6 lg:px-12 py-2.5 lg:py-4 rounded-full text-xs lg:text-base transition-all transform hover:scale-105 disabled:opacity-50"
               >
                 JOIN TOURNAMENT
               </button>
@@ -375,24 +443,32 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
     <div className="text-center">
       <p className="text-warm-400 text-sm mb-4">No active tournament found.</p>
       <div className="bg-warm-800/50 rounded-lg p-4 border border-white/5 mb-4 text-left">
-        <div className="text-[10px] text-warm-500 uppercase font-bold mb-3">Create Test Tournament (Sudo)</div>
+        <div className="text-[10px] text-warm-500 uppercase font-bold mb-3">
+          Create Test Tournament (Sudo)
+        </div>
         <div className="flex items-center gap-2 mb-3">
           <label className="text-xs text-warm-400 shrink-0">Card Set:</label>
           <select
             value={selectedSetId}
             onChange={(e) => setSelectedSetId(Number(e.target.value))}
-            className="flex-1 bg-warm-700 border border-white/10 text-white text-xs rounded px-2 py-1.5 outline-none"
+            className="theme-input flex-1 bg-warm-700 border border-white/10 text-white text-xs rounded px-2 py-1.5 outline-none"
           >
-            {[...availableSets].sort((a, b) => a.id - b.id).map((s) => (
-              <option key={s.id} value={s.id}>{s.name} (#{s.id})</option>
-            ))}
+            {[...availableSets]
+              .sort((a, b) => a.id - b.id)
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} (#{s.id})
+                </option>
+              ))}
           </select>
         </div>
-        <div className="text-[10px] text-warm-500 mb-3">Entry: 1 unit | Duration: 1000 blocks | Prize: 70/20/10</div>
+        <div className="text-[10px] text-warm-500 mb-3">
+          Entry: 1 unit | Duration: 1000 blocks | Prize: 70/20/10
+        </div>
         <button
           onClick={handleCreate}
           disabled={isSubmittingTx || !alice}
-          className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded text-xs transition-all disabled:opacity-50"
+          className="theme-button btn-primary w-full font-bold py-2 px-4 rounded text-xs transition-all disabled:opacity-50"
         >
           CREATE TOURNAMENT
         </button>

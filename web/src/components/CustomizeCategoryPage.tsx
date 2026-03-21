@@ -103,7 +103,7 @@ export function CustomizeCategoryPage() {
   const handleDeselect = () => selectCustomization(cat.type, null);
 
   return (
-    <div className="h-screen h-svh bg-warm-950 text-warm-200 flex flex-col overflow-hidden">
+    <div className="app-shell h-screen h-svh text-warm-200 flex flex-col overflow-hidden">
       <TopBar backTo="/customize" backLabel="Customize" title={cat.label} />
 
       {/* Preview bar — desktop only */}
@@ -126,15 +126,12 @@ export function CustomizeCategoryPage() {
               : 'Connect to a blockchain node to browse NFTs.'}
           </p>
           {isConnected && (
-            <Link
-              to="/creator/mint"
-              className="mt-2 text-yellow-500 text-xs hover:underline"
-            >
+            <Link to="/creator/mint" className="mt-2 text-gold text-xs hover:underline">
               Mint one
             </Link>
           )}
           {!isConnected && (
-            <Link to="/network" className="mt-2 text-yellow-500 text-xs hover:underline">
+            <Link to="/network" className="mt-2 text-gold text-xs hover:underline">
               Network Settings
             </Link>
           )}
@@ -228,9 +225,9 @@ function NftTile({
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 ${isLg ? 'p-3 rounded-xl' : 'p-1.5 rounded-lg'} border-2 transition-all text-center ${
+      className={`theme-panel shrink-0 ${isLg ? 'p-3 rounded-xl' : 'p-1.5 rounded-lg'} border-2 transition-all text-center ${
         isSelected
-          ? 'border-yellow-400 bg-yellow-400/10'
+          ? 'border-gold bg-gold/10'
           : 'border-white/10 bg-warm-800/50 hover:border-white/20'
       }`}
     >

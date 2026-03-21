@@ -7,7 +7,12 @@ interface CardFilterBarProps {
   onSortChange: (sort: SortOption) => void;
 }
 
-export function CardFilterBar({ searchQuery, onSearchChange, sortBy, onSortChange }: CardFilterBarProps) {
+export function CardFilterBar({
+  searchQuery,
+  onSearchChange,
+  sortBy,
+  onSortChange,
+}: CardFilterBarProps) {
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 relative">
@@ -16,12 +21,13 @@ export function CardFilterBar({ searchQuery, onSearchChange, sortBy, onSortChang
           placeholder="Search cards..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full px-2 lg:px-3 py-1.5 lg:py-2 pr-7 bg-warm-800 border border-warm-600 rounded text-white placeholder-warm-400 text-xs lg:text-sm focus:outline-none focus:border-blue-500"
+          className="theme-input theme-panel w-full rounded-lg border border-warm-700/70 bg-surface-dark/80 px-2 py-1.5 pr-7 text-xs text-warm-100 placeholder:text-warm-500 shadow-elevation-rest transition-colors focus:border-gold/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-inset lg:px-3 lg:py-2 lg:text-sm"
         />
         {searchQuery && (
           <button
+            type="button"
             onClick={() => onSearchChange('')}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-warm-400 hover:text-white text-sm leading-none p-0.5"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 text-sm leading-none text-warm-500 transition-colors hover:text-gold"
             aria-label="Clear search"
           >
             ✕
@@ -31,7 +37,7 @@ export function CardFilterBar({ searchQuery, onSearchChange, sortBy, onSortChang
       <select
         value={sortBy}
         onChange={(e) => onSortChange(e.target.value as SortOption)}
-        className="px-2 py-1.5 lg:py-2 bg-warm-800 border border-warm-600 rounded text-white text-xs lg:text-sm focus:outline-none focus:border-blue-500"
+        className="theme-input theme-panel rounded-lg border border-warm-700/70 bg-surface-dark/80 px-2 py-1.5 text-xs text-warm-100 shadow-elevation-rest transition-colors focus:border-gold/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-inset lg:py-2 lg:text-sm"
       >
         <option value="cost">Sort: Mana Cost</option>
         <option value="name">Sort: Name</option>

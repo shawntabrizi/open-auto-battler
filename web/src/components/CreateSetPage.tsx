@@ -36,7 +36,6 @@ export const CreateSetPage: React.FC = () => {
     });
   };
 
-
   const handleCreateSet = async () => {
     if (selectedCards.length === 0) {
       toast.error('Select at least one card');
@@ -55,12 +54,12 @@ export const CreateSetPage: React.FC = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-warm-900 flex flex-col text-white">
+      <div className="app-shell min-h-screen flex flex-col text-white">
         <TopBar backTo="/creator" backLabel="Creator" title="Set Creator" />
         <div className="flex-1 flex flex-col items-center justify-center p-4">
           <button
             onClick={connect}
-            className="bg-yellow-500 hover:bg-yellow-400 text-warm-900 font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105"
+            className="theme-button btn-primary font-bold py-3 px-6 lg:py-4 lg:px-8 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105"
           >
             CONNECT WALLET TO START
           </button>
@@ -70,7 +69,7 @@ export const CreateSetPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-warm-950 text-warm-200 flex flex-col">
+    <div className="app-shell min-h-screen text-warm-200 flex flex-col">
       {/* Side Panel Integration - Always Visible */}
       <CardDetailPanel card={detailCard} isVisible={true} mode={{ type: 'readOnly' }} />
 
@@ -83,12 +82,12 @@ export const CreateSetPage: React.FC = () => {
             <div className="flex items-center justify-between mb-1">
               <Link
                 to="/creator/card"
-                className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center gap-1.5 text-xs lg:text-sm"
+                className="theme-button theme-surface-button border-gold/40 px-3 py-1.5 rounded-lg transition-colors font-bold flex items-center gap-1.5 text-xs lg:text-sm hover:border-gold/60 hover:text-gold"
               >
                 <span>+</span> MINT NEW CARDS
               </Link>
             </div>
-            <h1 className="text-xl lg:text-3xl font-black italic tracking-tighter text-yellow-500 uppercase mt-1">
+            <h1 className="theme-title-text text-xl lg:text-3xl font-black italic tracking-tighter text-transparent bg-clip-text uppercase mt-1">
               Set Creator
             </h1>
             <p className="text-warm-500 text-xs lg:text-sm mt-0.5">
@@ -99,10 +98,10 @@ export const CreateSetPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Column 1 & 2: Library */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-warm-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex flex-col h-[700px]">
+              <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex flex-col h-[700px]">
                 <h2 className="text-xl font-bold mb-6 flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <span className="text-yellow-500">01</span> Card Library
+                    <span className="text-gold">01</span> Card Library
                   </span>
                   <span className="text-xs text-warm-500 uppercase font-bold tracking-widest">
                     {allCards.length} Total Cards
@@ -114,7 +113,7 @@ export const CreateSetPage: React.FC = () => {
                   placeholder="Search cards..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-3 py-2 mb-4 bg-warm-800 border border-white/10 rounded-lg text-white placeholder-warm-500 text-sm focus:outline-none focus:border-yellow-500/50"
+                  className="theme-input w-full px-3 py-2 mb-4 bg-warm-800 border border-white/10 rounded-lg text-white placeholder-warm-500 text-sm focus:outline-none focus:border-gold/50"
                 />
 
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -134,8 +133,8 @@ export const CreateSetPage: React.FC = () => {
                             key={card.id}
                             className={`
                             relative group flex flex-col items-center transition-all rounded-xl p-2
-                            ${isSelected ? 'bg-yellow-500/10 scale-[1.02]' : ''}
-                            ${isDetailing ? 'ring-2 ring-blue-500 rounded-xl' : ''}
+                            ${isSelected ? 'bg-gold/10 scale-[1.02]' : ''}
+                            ${isDetailing ? 'ring-2 ring-mana-blue rounded-xl' : ''}
                           `}
                           >
                             <div className="w-full aspect-[3/4]">
@@ -150,7 +149,7 @@ export const CreateSetPage: React.FC = () => {
                             </div>
 
                             {isSelected && (
-                              <div className="absolute -top-2 -right-2 z-10 bg-yellow-500 text-warm-950 rounded-full p-1 shadow-lg">
+                              <div className="absolute -top-2 -right-2 z-10 bg-gold text-surface-dark rounded-full p-1 shadow-lg">
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
                                   className="h-4 w-4"
@@ -180,12 +179,12 @@ export const CreateSetPage: React.FC = () => {
 
             {/* Column 3: Set Configuration */}
             <div className="space-y-6">
-              <div className="bg-warm-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex flex-col h-[700px]">
+              <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex flex-col h-[700px]">
                 <h2 className="text-xl font-bold mb-6 flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <span className="text-yellow-500">02</span> Set Configuration
+                    <span className="text-gold">02</span> Set Configuration
                   </span>
-                  <span className="text-xs bg-yellow-500/10 text-yellow-500 px-3 py-1.5 rounded-full font-bold">
+                  <span className="theme-pill text-xs bg-gold/10 text-gold px-3 py-1.5 font-bold">
                     {selectedCards.length} SELECTED
                   </span>
                 </h2>
@@ -199,7 +198,7 @@ export const CreateSetPage: React.FC = () => {
                     placeholder="Name your set..."
                     value={setName}
                     onChange={(e) => setSetName(e.target.value)}
-                    className="w-full px-3 py-2 bg-warm-800 border border-white/10 rounded-lg text-white placeholder-warm-500 text-sm focus:outline-none focus:border-yellow-500/50"
+                    className="theme-input w-full px-3 py-2 bg-warm-800 border border-white/10 rounded-lg text-white placeholder-warm-500 text-sm focus:outline-none focus:border-gold/50"
                   />
                 </div>
 
@@ -240,7 +239,7 @@ export const CreateSetPage: React.FC = () => {
                                     )
                                   );
                                 }}
-                                className="w-16 bg-warm-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-yellow-500/50 text-center font-bold"
+                                className="theme-input w-16 bg-warm-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-gold/50 text-center font-bold"
                               />
                               <button
                                 onClick={() => toggleCardSelection(card.id)}
@@ -278,7 +277,7 @@ export const CreateSetPage: React.FC = () => {
                   <button
                     onClick={handleCreateSet}
                     disabled={isSubmitting || selectedCards.length === 0}
-                    className="w-full bg-yellow-500 hover:bg-yellow-400 text-warm-950 font-black py-4 rounded-2xl transition-all disabled:opacity-50 shadow-xl shadow-yellow-500/10 uppercase tracking-widest"
+                    className="theme-button btn-primary w-full font-black py-4 rounded-2xl transition-all disabled:opacity-50 uppercase tracking-widest"
                   >
                     DEPLOY CARD SET
                   </button>

@@ -204,7 +204,7 @@ export function UnitCard({
         unit-card card relative w-full h-full ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none rounded-lg border-2 transition-all duration-200
         bg-black ${rarityStyle.border} ${rarityStyle.glow}
         ${isHolographic ? 'card-holographic' : ''}
-        ${isSelected ? 'card-selected ring-2 ring-yellow-400' : ''}
+        ${isSelected ? 'card-selected ring-2 ring-gold' : ''}
         ${enableWobble ? 'wobble-card' : ''}
         ${enableTilt ? 'card-tilt' : ''}
       `}
@@ -252,7 +252,7 @@ export function UnitCard({
           style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
         >
           <div className={`flex items-center ${text.stat} font-stat`}>
-            <SwordIcon className={`${text.statIcon} text-red-400 mr-0.5`} />
+            <SwordIcon className={`${text.statIcon} theme-icon-attack mr-0.5`} />
             <span className="font-bold text-white">{card.attack}</span>
           </div>
           {(() => {
@@ -261,13 +261,17 @@ export function UnitCard({
               ...((card as any).battle_abilities ?? []),
             ];
             return abils.length > 0 ? (
-              <svg viewBox="0 0 24 24" fill="#eab308" className="w-3 h-3 lg:w-4 lg:h-4 drop-shadow">
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="theme-icon-accent w-3 h-3 lg:w-4 lg:h-4 drop-shadow"
+              >
                 <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
               </svg>
             ) : null;
           })()}
           <div className={`flex items-center ${text.stat} font-stat`}>
-            <HeartIcon className={`${text.statIcon} text-green-400`} />
+            <HeartIcon className={`${text.statIcon} theme-icon-health`} />
             <span className="font-bold text-white ml-0.5">{card.health}</span>
           </div>
         </div>
@@ -397,7 +401,7 @@ export function EmptySlot({
       `}
     >
       {isTarget && !label && (
-        <span className="slot-place-icon text-amber-400/70 text-lg lg:text-2xl font-bold leading-none">
+        <span className="slot-place-icon text-gold/70 text-lg lg:text-2xl font-bold leading-none">
           +
         </span>
       )}

@@ -1,4 +1,4 @@
-export type ThemeId = 'warm' | 'cyberpunk' | 'girly';
+export type ThemeId = 'warm' | 'cyberpunk' | 'pastel';
 
 type ThemePalette = {
   warm50: string;
@@ -48,6 +48,18 @@ type ThemeBackgrounds = {
   titleGradient: string;
   boardOverlay: string;
   handOverlay: string;
+  handSurface: string;
+};
+
+type ThemeIcons = {
+  accent: string;
+  muted: string;
+  mana: string;
+  attack: string;
+  health: string;
+  warning: string;
+  victory: string;
+  defeat: string;
 };
 
 type ThemeButtons = {
@@ -78,6 +90,21 @@ type ThemeButtons = {
   manaGlow: string;
 };
 
+type ThemeFonts = {
+  decorative: string;
+  title: string;
+  heading: string;
+  button: string;
+  body: string;
+  stat: string;
+  mono: string;
+};
+
+type ThemeTextColors = {
+  heroSubtitle: string;
+  secondary: string;
+};
+
 export interface ThemeDefinition {
   id: ThemeId;
   label: string;
@@ -85,7 +112,10 @@ export interface ThemeDefinition {
   shape: ThemeShape;
   effects: ThemeEffects;
   backgrounds: ThemeBackgrounds;
+  icons: ThemeIcons;
   buttons: ThemeButtons;
+  fonts: ThemeFonts;
+  text: ThemeTextColors;
 }
 
 type ThemeMap = Record<ThemeId, ThemeDefinition>;
@@ -141,6 +171,18 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
     titleGradient: 'linear-gradient(to right, #facc15, #f59e0b, #f97316)',
     boardOverlay: 'rgba(26, 22, 16, 0.5)',
     handOverlay: 'rgba(26, 22, 16, 0.4)',
+    handSurface:
+      'radial-gradient(ellipse at 50% 0%, rgba(212, 168, 67, 0.12), transparent 52%), radial-gradient(ellipse at 20% 78%, rgba(90, 154, 110, 0.08), transparent 40%), linear-gradient(180deg, rgba(16, 14, 10, 0.96) 0%, rgba(26, 23, 18, 0.98) 26%, rgba(16, 14, 10, 1) 100%)',
+  },
+  icons: {
+    accent: '#d4a843',
+    muted: '#a08a6c',
+    mana: '#5b8faa',
+    attack: '#b85c4a',
+    health: '#5a9a6e',
+    warning: '#d4a843',
+    victory: '#4a8c3a',
+    defeat: '#a83a2a',
   },
   buttons: {
     surfaceBackground: 'rgba(26, 22, 16, 0.8)',
@@ -173,6 +215,19 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
     manaFill: 'linear-gradient(to top, #5b8faa, #60a5fa)',
     manaGlow: '0 0 6px rgba(59, 130, 246, 0.5)',
   },
+  fonts: {
+    decorative: '"Cinzel Decorative", serif',
+    title: '"Cinzel Decorative", serif',
+    heading: 'Cinzel, serif',
+    button: 'Cinzel, serif',
+    body: '"Crimson Pro", Georgia, "Times New Roman", serif',
+    stat: 'Teko, sans-serif',
+    mono: '"IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace',
+  },
+  text: {
+    heroSubtitle: '#c4b498',
+    secondary: '#a08a6c',
+  },
 };
 
 const CYBERPUNK_THEME: ThemeDefinition = {
@@ -200,10 +255,10 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     victoryGreen: '#00ffa3',
     defeatRed: '#ff4d9d',
     cardBg: '#10192b',
-    boardBg: '#070d1c',
-    shopBg: '#0b1224',
-    surfaceDark: '#050913',
-    surfaceMid: '#0b1222',
+    boardBg: '#0a1730',
+    shopBg: '#0d1d3d',
+    surfaceDark: '#07101f',
+    surfaceMid: '#10284d',
   },
   shape: {
     buttonRadius: '0.4rem',
@@ -224,8 +279,20 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     appBackground:
       'radial-gradient(ellipse at 50% 10%, rgba(0, 246, 255, 0.18), transparent 55%), radial-gradient(ellipse at 15% 80%, rgba(217, 70, 239, 0.16), transparent 45%), radial-gradient(ellipse at 85% 65%, rgba(56, 189, 248, 0.12), transparent 50%)',
     titleGradient: 'linear-gradient(to right, #67e8f9, #00f6ff, #f472b6)',
-    boardOverlay: 'rgba(6, 9, 19, 0.58)',
-    handOverlay: 'rgba(8, 12, 24, 0.5)',
+    boardOverlay: 'rgba(7, 16, 31, 0.24)',
+    handOverlay: 'rgba(7, 16, 31, 0.18)',
+    handSurface:
+      'radial-gradient(ellipse at 50% 0%, rgba(0, 246, 255, 0.18), transparent 54%), radial-gradient(ellipse at 18% 82%, rgba(217, 70, 239, 0.12), transparent 42%), linear-gradient(180deg, rgba(7, 16, 31, 0.96) 0%, rgba(13, 29, 61, 0.98) 28%, rgba(7, 16, 31, 1) 100%)',
+  },
+  icons: {
+    accent: '#00f6ff',
+    muted: '#8fe8ff',
+    mana: '#38bdf8',
+    attack: '#ff4d9d',
+    health: '#00ffa3',
+    warning: '#f8ff66',
+    victory: '#00ffa3',
+    defeat: '#ff4d9d',
   },
   buttons: {
     surfaceBackground: 'rgba(8, 20, 32, 0.82)',
@@ -261,11 +328,24 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     manaFill: 'linear-gradient(to top, #0ea5e9, #22d3ee)',
     manaGlow: '0 0 8px rgba(34, 211, 238, 0.55)',
   },
+  fonts: {
+    decorative: 'Orbitron, sans-serif',
+    title: 'Rajdhani, sans-serif',
+    heading: 'Rajdhani, sans-serif',
+    button: 'Oxanium, sans-serif',
+    body: '"Space Grotesk", sans-serif',
+    stat: 'Oxanium, sans-serif',
+    mono: '"Space Mono", "IBM Plex Mono", ui-monospace, monospace',
+  },
+  text: {
+    heroSubtitle: '#67e8f9',
+    secondary: '#8fe8ff',
+  },
 };
 
-const GIRLY_THEME: ThemeDefinition = {
-  id: 'girly',
-  label: 'Girly',
+const PASTEL_THEME: ThemeDefinition = {
+  id: 'pastel',
+  label: 'Pastel',
   palette: {
     warm50: '#fff7fb',
     warm100: '#ffe5f1',
@@ -288,10 +368,10 @@ const GIRLY_THEME: ThemeDefinition = {
     victoryGreen: '#6ee7b7',
     defeatRed: '#fb7185',
     cardBg: '#432233',
-    boardBg: '#2d1421',
-    shopBg: '#3a1b2b',
-    surfaceDark: '#241019',
-    surfaceMid: '#311624',
+    boardBg: '#3b1930',
+    shopBg: '#4b2240',
+    surfaceDark: '#2b1321',
+    surfaceMid: '#4b2240',
   },
   shape: {
     buttonRadius: '1rem',
@@ -310,8 +390,20 @@ const GIRLY_THEME: ThemeDefinition = {
     appBackground:
       'radial-gradient(ellipse at 50% 12%, rgba(255, 196, 222, 0.22), transparent 58%), radial-gradient(ellipse at 20% 78%, rgba(192, 132, 252, 0.14), transparent 42%), radial-gradient(ellipse at 82% 72%, rgba(125, 211, 199, 0.12), transparent 44%)',
     titleGradient: 'linear-gradient(to right, #f9a8d4, #fda4af, #c084fc)',
-    boardOverlay: 'rgba(73, 35, 49, 0.34)',
-    handOverlay: 'rgba(73, 35, 49, 0.28)',
+    boardOverlay: 'rgba(43, 19, 33, 0.18)',
+    handOverlay: 'rgba(43, 19, 33, 0.12)',
+    handSurface:
+      'radial-gradient(ellipse at 50% 0%, rgba(249, 168, 212, 0.18), transparent 54%), radial-gradient(ellipse at 82% 78%, rgba(192, 132, 252, 0.12), transparent 42%), linear-gradient(180deg, rgba(43, 19, 33, 0.95) 0%, rgba(75, 34, 64, 0.98) 28%, rgba(43, 19, 33, 1) 100%)',
+  },
+  icons: {
+    accent: '#ff9ec4',
+    muted: '#ffcadd',
+    mana: '#a78bfa',
+    attack: '#c084fc',
+    health: '#f88eb4',
+    warning: '#ffb3c7',
+    victory: '#7dd3c7',
+    defeat: '#fb7185',
   },
   buttons: {
     surfaceBackground: 'rgba(73, 35, 49, 0.7)',
@@ -347,6 +439,19 @@ const GIRLY_THEME: ThemeDefinition = {
     manaFill: 'linear-gradient(to top, #a78bfa, #f9a8d4)',
     manaGlow: '0 0 8px rgba(249, 168, 212, 0.42)',
   },
+  fonts: {
+    decorative: '"Cormorant Unicase", serif',
+    title: '"Josefin Sans", sans-serif',
+    heading: '"Josefin Sans", sans-serif',
+    button: 'Jost, sans-serif',
+    body: 'Lora, Georgia, serif',
+    stat: 'Jost, sans-serif',
+    mono: '"JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace',
+  },
+  text: {
+    heroSubtitle: '#ffe5f1',
+    secondary: '#ffcadd',
+  },
 };
 
 export const DEFAULT_THEME_ID: ThemeId = 'warm';
@@ -354,7 +459,7 @@ export const DEFAULT_THEME_ID: ThemeId = 'warm';
 export const THEMES: ThemeMap = {
   warm: DEFAULT_WARM_THEME,
   cyberpunk: CYBERPUNK_THEME,
-  girly: GIRLY_THEME,
+  pastel: PASTEL_THEME,
 };
 
 export const THEME_OPTIONS = (Object.values(THEMES) as ThemeDefinition[]).map((theme) => ({
@@ -440,6 +545,15 @@ export function applyThemeToDocument(
   setRootVariable(root, '--theme-title-gradient', theme.backgrounds.titleGradient);
   setRootVariable(root, '--theme-board-overlay', theme.backgrounds.boardOverlay);
   setRootVariable(root, '--theme-hand-overlay', theme.backgrounds.handOverlay);
+  setRootVariable(root, '--theme-hand-surface', theme.backgrounds.handSurface);
+  setRootVariable(root, '--theme-icon-accent', theme.icons.accent);
+  setRootVariable(root, '--theme-icon-muted', theme.icons.muted);
+  setRootVariable(root, '--theme-icon-mana', theme.icons.mana);
+  setRootVariable(root, '--theme-icon-attack', theme.icons.attack);
+  setRootVariable(root, '--theme-icon-health', theme.icons.health);
+  setRootVariable(root, '--theme-icon-warning', theme.icons.warning);
+  setRootVariable(root, '--theme-icon-victory', theme.icons.victory);
+  setRootVariable(root, '--theme-icon-defeat', theme.icons.defeat);
 
   setRootVariable(root, '--theme-surface-button-bg', theme.buttons.surfaceBackground);
   setRootVariable(root, '--theme-surface-button-bg-hover', theme.buttons.surfaceHoverBackground);
@@ -469,6 +583,16 @@ export function applyThemeToDocument(
 
   setRootVariable(root, '--theme-mana-fill', theme.buttons.manaFill);
   setRootVariable(root, '--theme-mana-glow', theme.buttons.manaGlow);
+
+  setRootVariable(root, '--font-decorative', theme.fonts.decorative);
+  setRootVariable(root, '--font-title', theme.fonts.title);
+  setRootVariable(root, '--font-heading', theme.fonts.heading);
+  setRootVariable(root, '--font-button', theme.fonts.button);
+  setRootVariable(root, '--font-body', theme.fonts.body);
+  setRootVariable(root, '--font-stat', theme.fonts.stat);
+  setRootVariable(root, '--font-mono', theme.fonts.mono);
+  setRootVariable(root, '--theme-hero-subtitle', theme.text.heroSubtitle);
+  setRootVariable(root, '--theme-secondary-text', theme.text.secondary);
 
   root.dataset.theme = theme.id;
 }

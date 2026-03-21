@@ -41,7 +41,7 @@ export function PracticeGamePage() {
 
   if (!view) {
     return (
-      <div className="h-screen h-svh flex items-center justify-center bg-warm-950">
+      <div className="app-shell h-screen h-svh flex items-center justify-center">
         <div className="text-xl text-warm-400">Initializing game...</div>
       </div>
     );
@@ -74,7 +74,7 @@ export function PracticeGamePage() {
   };
 
   return (
-    <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans selection:bg-yellow-500/30 flex flex-col">
+    <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans selection:bg-gold/30 flex flex-col">
       <GameShell
         hideEndTurn={true}
         customAction={{

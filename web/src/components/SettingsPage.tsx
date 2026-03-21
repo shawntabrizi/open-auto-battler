@@ -50,7 +50,7 @@ export function SettingsPage() {
                 <div className="text-left mb-2">
                   <div className="text-sm text-warm-200">Theme</div>
                   <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
-                    Switch between the built-in warm, cyberpunk, and girly themes.
+                    Switch between the built-in warm, cyberpunk, and pastel themes.
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5">

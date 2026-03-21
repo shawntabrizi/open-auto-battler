@@ -28,13 +28,13 @@ export function CreatorPage() {
   const { isConnected } = useArenaStore();
 
   return (
-    <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
+    <div className="app-shell fixed inset-0 text-white flex flex-col">
       <TopBar backTo="/" backLabel="Menu" title="Creator Studio" />
       <DesktopRecommendedBanner />
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-lg mx-auto p-4 lg:p-8">
           <div className="text-center mb-6 lg:mb-10">
-            <h1 className="text-2xl lg:text-4xl font-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
+            <h1 className="theme-title-text text-2xl lg:text-4xl font-heading font-bold text-transparent bg-clip-text">
               Creator Studio
             </h1>
             <p className="text-warm-400 text-xs lg:text-sm mt-2">
@@ -43,13 +43,13 @@ export function CreatorPage() {
           </div>
 
           {!isConnected && (
-            <div className="mb-6 p-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 text-center">
-              <p className="text-yellow-300 text-xs lg:text-sm">
+            <div className="theme-panel mb-6 p-3 rounded-xl border border-gold/30 bg-gold/5 text-center">
+              <p className="text-gold text-xs lg:text-sm">
                 Connect to the blockchain to use creator tools
               </p>
               <Link
                 to="/network"
-                className="inline-block mt-2 text-xs text-yellow-400 hover:text-yellow-300 underline"
+                className="inline-block mt-2 text-xs text-gold hover:text-warm-200 underline"
               >
                 Network Settings
               </Link>
@@ -61,12 +61,12 @@ export function CreatorPage() {
               <Link
                 key={tool.to}
                 to={tool.to}
-                className="group block p-4 lg:p-6 rounded-xl border border-warm-700/40 bg-warm-900/60 hover:border-warm-500 hover:bg-warm-800/60 transition-all active:scale-[0.99]"
+                className="theme-panel group block p-4 lg:p-6 rounded-xl border border-warm-700/40 bg-warm-900/60 hover:border-warm-500 hover:bg-warm-800/60 transition-all active:scale-[0.99]"
               >
                 <div className="flex items-start gap-4">
                   <span className="text-2xl lg:text-3xl">{tool.icon}</span>
                   <div>
-                    <h2 className="font-heading font-bold text-base lg:text-lg text-white group-hover:text-yellow-400 transition-colors">
+                    <h2 className="font-button font-bold text-base lg:text-lg text-white group-hover:text-gold transition-colors">
                       {tool.label}
                     </h2>
                     <p className="text-warm-400 text-xs lg:text-sm mt-0.5 leading-relaxed">

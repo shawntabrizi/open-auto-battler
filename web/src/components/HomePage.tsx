@@ -8,32 +8,29 @@ const MENU_BUTTONS = [
     to: '/sets',
     label: 'Sets',
     description: 'Browse & select card sets',
-    gradient: 'from-gold/10 to-yellow-900/5',
-    border: 'border-gold/40 hover:border-gold hover:shadow-[0_0_20px_rgba(196,138,42,0.12)]',
+    gradient: 'from-gold/10 to-surface-dark/10',
+    border: 'border-gold/40 hover:border-gold hover:shadow-elevation-hover',
   },
   {
     to: '/cards',
     label: 'Cards',
     description: 'Card Sandbox',
-    gradient: 'from-accent-violet/10 to-purple-900/5',
-    border:
-      'border-accent-violet/40 hover:border-accent-violet hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]',
+    gradient: 'from-accent-violet/10 to-surface-dark/10',
+    border: 'border-accent-violet/40 hover:border-accent-violet hover:shadow-elevation-hover',
   },
   {
     to: '/customize',
     label: 'Customize',
     description: 'Art, backgrounds & avatars',
-    gradient: 'from-accent-emerald/10 to-green-900/5',
-    border:
-      'border-accent-emerald/40 hover:border-accent-emerald hover:shadow-[0_0_20px_rgba(90,154,110,0.12)]',
+    gradient: 'from-accent-emerald/10 to-surface-dark/10',
+    border: 'border-accent-emerald/40 hover:border-accent-emerald hover:shadow-elevation-hover',
   },
   {
     to: '/history',
     label: 'History',
     description: 'Achievements & stats',
-    gradient: 'from-mana-blue/10 to-blue-900/5',
-    border:
-      'border-mana-blue/40 hover:border-mana-blue hover:shadow-[0_0_20px_rgba(91,143,170,0.12)]',
+    gradient: 'from-mana-blue/10 to-surface-dark/10',
+    border: 'border-mana-blue/40 hover:border-mana-blue hover:shadow-elevation-hover',
   },
 ];
 
@@ -53,10 +50,10 @@ export function HomePage() {
             className="mb-6 lg:mb-10 text-center opacity-0 animate-stagger-fade-in stagger-1"
             style={{ animationFillMode: 'forwards' }}
           >
-            <h1 className="theme-title-text font-title text-3xl lg:text-5xl font-bold tracking-wide text-transparent bg-clip-text mb-1 lg:mb-2">
+            <h1 className="theme-title-text font-decorative text-3xl lg:text-5xl font-bold tracking-wide text-transparent bg-clip-text mb-1 lg:mb-2">
               OPEN AUTO BATTLER
             </h1>
-            <p className="font-heading text-warm-400 text-xs lg:text-sm tracking-widest uppercase">
+            <p className="theme-hero-subtitle font-heading text-xs lg:text-sm tracking-widest uppercase">
               Roguelike Deck-Building Auto-Battler
             </p>
           </div>
@@ -72,10 +69,10 @@ export function HomePage() {
               <div className="flex items-center justify-center gap-3 lg:gap-5">
                 <img src={swordsIcon} alt="" className="h-16 lg:h-24 w-auto" />
                 <div className="text-left">
-                  <h2 className="font-heading text-2xl lg:text-3xl font-bold text-white tracking-wide">
+                  <h2 className="font-button text-2xl lg:text-3xl font-bold text-white tracking-wide">
                     PLAY
                   </h2>
-                  <p className="text-warm-400 text-[10px] lg:text-sm mt-0.5">
+                  <p className="theme-secondary-text mt-0.5 text-[10px] lg:text-sm">
                     Online Arena, Offline, Peer-to-Peer
                   </p>
                 </div>
@@ -91,10 +88,10 @@ export function HomePage() {
                   className={`theme-panel opacity-0 animate-stagger-fade-in stagger-${i + 3} group block p-3 lg:p-4 rounded-xl border transition-all active:scale-[0.98] text-center bg-gradient-to-br ${btn.gradient} ${btn.border}`}
                   style={{ animationFillMode: 'forwards' }}
                 >
-                  <h3 className="font-heading text-sm lg:text-base font-bold text-white tracking-wide">
+                  <h3 className="font-button text-sm lg:text-base font-bold text-white tracking-wide">
                     {btn.label}
                   </h3>
-                  <p className="text-warm-500 text-[8px] lg:text-xs mt-0.5 leading-tight">
+                  <p className="theme-secondary-text text-[8px] lg:text-xs mt-0.5 leading-tight">
                     {btn.description}
                   </p>
                 </Link>

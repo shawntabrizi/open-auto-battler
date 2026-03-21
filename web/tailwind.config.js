@@ -4,10 +4,13 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        title: ['"Cinzel Decorative"', 'serif'],
-        heading: ['Cinzel', 'serif'],
-        body: ['"Crimson Pro"', 'Georgia', 'serif'],
-        stat: ['Teko', 'sans-serif'],
+        decorative: ['var(--font-decorative)'],
+        title: ['var(--font-title)'],
+        heading: ['var(--font-heading)'],
+        button: ['var(--font-button)'],
+        body: ['var(--font-body)'],
+        stat: ['var(--font-stat)'],
+        mono: ['var(--font-mono)'],
       },
       colors: {
         'mana-blue': 'rgb(var(--color-mana-blue) / <alpha-value>)',

@@ -18,10 +18,10 @@ function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
   );
 
   return (
-    <div className="relative w-full aspect-[3/4] bg-warm-800 rounded-lg lg:rounded-xl border-2 border-warm-700 overflow-hidden shadow-inner">
+    <div className="theme-panel relative w-full aspect-[3/4] overflow-hidden rounded-lg border-2 border-warm-700/70 bg-gradient-to-b from-surface-mid/75 to-surface-dark shadow-elevation-rest lg:rounded-xl">
       {/* Emoji shown while loading or on error */}
       {status !== 'loaded' && (
-        <div className="absolute inset-0 flex items-center justify-center bg-warm-800">
+        <div className="absolute inset-0 flex items-center justify-center bg-surface-mid/80">
           <span className={`text-5xl ${status === 'loading' ? 'animate-pulse' : ''}`}>
             {getCardEmoji(card.id)}
           </span>
@@ -46,10 +46,10 @@ function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
           {card.name}
         </h2>
         <div className="flex gap-1.5 mt-1">
-          <span className="px-1.5 py-0.5 bg-red-900/60 text-red-400 border border-red-800/50 rounded text-[10px] lg:text-xs font-bold">
+          <span className="px-1.5 py-0.5 bg-burn-red/15 text-burn-red border border-burn-red/40 rounded text-[10px] lg:text-xs font-bold">
             ATK: {card.attack}
           </span>
-          <span className="px-1.5 py-0.5 bg-green-900/60 text-green-400 border border-green-800/50 rounded text-[10px] lg:text-xs font-bold">
+          <span className="px-1.5 py-0.5 bg-victory-green/15 text-victory-green border border-victory-green/40 rounded text-[10px] lg:text-xs font-bold">
             HP: {card.health}
           </span>
         </div>
@@ -120,7 +120,7 @@ export function CardDetailPanel({
           subtitle: 'Your tournament journey ends here.',
           confirmation: 'All progress will be sealed. There is no returning to this battle.',
           success: 'You have surrendered.',
-          accent: 'from-fuchsia-500/20 via-red-500/10 to-transparent',
+          accent: 'from-accent-violet/20 via-defeat-red/10 to-transparent',
         }
       : resolvedMode.type === 'blockchain'
         ? {
@@ -128,14 +128,14 @@ export function CardDetailPanel({
             subtitle: 'Your battle record ends here.',
             confirmation: 'This run will be lost to the chain forever. There is no turning back.',
             success: 'You have surrendered.',
-            accent: 'from-yellow-500/20 via-red-500/10 to-transparent',
+            accent: 'from-gold/20 via-defeat-red/10 to-transparent',
           }
         : {
             title: 'Surrender?',
             subtitle: 'Your current run will be lost.',
             confirmation: 'All progress is gone. You will start fresh from the beginning.',
             success: 'You have surrendered.',
-            accent: 'from-amber-500/20 via-red-500/10 to-transparent',
+            accent: 'from-gold/15 via-defeat-red/10 to-transparent',
           };
 
   React.useEffect(() => {
@@ -192,8 +192,10 @@ export function CardDetailPanel({
     if (!card) {
       return (
         <div className="flex min-h-full flex-col items-center justify-center py-6 lg:py-12 text-center">
-          <div className="text-2xl lg:text-4xl mb-2 lg:mb-4">👆</div>
-          <h3 className="text-sm lg:text-lg font-bold text-warm-300 mb-1 lg:mb-2">Select a Card</h3>
+          <div className="theme-icon-warning text-2xl lg:text-4xl mb-2 lg:mb-4">👆</div>
+          <h3 className="theme-title-text mb-1 bg-clip-text text-sm font-bold text-transparent lg:mb-2 lg:text-lg">
+            Select a Card
+          </h3>
           <p className="text-[10px] lg:text-sm text-warm-400">Tap any card to view details.</p>
         </div>
       );
@@ -209,21 +211,20 @@ export function CardDetailPanel({
       <div className="space-y-3 lg:space-y-6">
         {/* Economy Section */}
         <div className="flex gap-1.5 lg:gap-3">
-          <div className="flex-1 min-w-0 p-1.5 lg:p-3 bg-blue-900/20 border border-blue-800/50 rounded-lg">
-            <div className="text-[8px] lg:text-[10px] text-blue-400 uppercase font-bold mb-0.5 lg:mb-1">
+          <div className="theme-panel flex-1 min-w-0 p-1.5 lg:p-3 bg-mana-blue/10 border border-mana-blue/30 rounded-lg">
+            <div className="text-[8px] lg:text-[10px] text-mana-blue uppercase font-bold mb-0.5 lg:mb-1">
               Cost
             </div>
             <div className="text-sm lg:text-xl font-bold text-white">
-              {card.play_cost} <span className="text-blue-400 text-[10px] lg:text-sm">Mana</span>
+              {card.play_cost} <span className="text-mana-blue text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
-          <div className="flex-1 min-w-0 p-1.5 lg:p-3 bg-orange-900/20 border border-orange-800/50 rounded-lg">
-            <div className="text-[8px] lg:text-[10px] text-orange-400 uppercase font-bold mb-0.5 lg:mb-1">
+          <div className="theme-panel flex-1 min-w-0 p-1.5 lg:p-3 bg-burn-gold/10 border border-burn-gold/30 rounded-lg">
+            <div className="text-[8px] lg:text-[10px] text-burn-gold uppercase font-bold mb-0.5 lg:mb-1">
               Burn
             </div>
             <div className="text-sm lg:text-xl font-bold text-white">
-              +{card.burn_value}{' '}
-              <span className="text-orange-400 text-[10px] lg:text-sm">Mana</span>
+              +{card.burn_value} <span className="text-burn-gold text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
         </div>
@@ -234,12 +235,12 @@ export function CardDetailPanel({
             {allAbilities.map((ability, index) => (
               <div
                 key={index}
-                className="mb-2 last:mb-0 lg:mb-4 p-2 lg:p-3 bg-warm-800/50 rounded-lg border border-warm-700"
+                className="theme-panel mb-2 rounded-lg border border-warm-700/70 bg-surface-mid/25 p-2 shadow-elevation-rest last:mb-0 lg:mb-4 lg:p-3"
               >
-                <h3 className="text-xs lg:text-md font-bold text-yellow-400 mb-1 lg:mb-2">
+                <h3 className="text-xs lg:text-md font-bold text-gold mb-1 lg:mb-2">
                   {allAbilities.length > 1 ? `Ability ${index + 1}` : 'Ability'}
                 </h3>
-                <div className="text-[10px] lg:text-sm text-warm-200 bg-warm-950/50 p-1.5 lg:p-2 rounded border border-warm-700/50 italic">
+                <div className="rounded border border-warm-700/50 bg-surface-dark/70 p-1.5 text-[10px] italic text-warm-100 lg:p-2 lg:text-sm">
                   {formatAbilitySentence(ability, { resolveCardName })}
                 </div>
               </div>
@@ -248,23 +249,23 @@ export function CardDetailPanel({
         )}
 
         {/* Metadata */}
-        <div className="text-[10px] text-warm-500 font-mono flex flex-col gap-1 border-t border-warm-800 pt-4">
+        <div className="flex flex-col gap-1 border-t border-warm-700/60 pt-4 font-mono text-[10px] text-warm-500">
           <div>CARD_ID: {card.id}</div>
         </div>
 
         {/* Card Raw JSON */}
         {showRawJson && (
-          <div className="mt-4 p-2 bg-black/50 rounded border border-warm-800">
+          <div className="mt-4 rounded border border-warm-700/60 bg-surface-dark/70 p-2">
             <div className="text-[10px] text-warm-500 mb-1 flex justify-between items-center">
               <span>CARD_DATA.JSON</span>
               <button
                 onClick={() => navigator.clipboard.writeText(cardRawJson)}
-                className="text-blue-500 hover:text-blue-400 font-mono text-[9px]"
+                className="text-mana-blue hover:text-white font-mono text-[9px]"
               >
                 Copy
               </button>
             </div>
-            <pre className="text-[9px] text-blue-400/80 custom-scrollbar max-h-48 overflow-auto">
+            <pre className="text-[9px] text-mana-blue/80 custom-scrollbar max-h-48 overflow-auto">
               {cardRawJson}
             </pre>
           </div>
@@ -294,15 +295,15 @@ export function CardDetailPanel({
       <div
         className={`card-detail-panel ${
           isContainedLayout ? 'card-detail-panel--contained' : 'card-detail-panel--fixed'
-        } ${containerClassName} ${frameClassName} bg-warm-950 shadow-2xl flex flex-col z-30`}
+        } ${containerClassName} ${frameClassName} theme-panel app-shell bg-surface-dark/95 shadow-2xl flex flex-col z-30`}
       >
         {/* Header */}
         <div
-          className={`border-b border-warm-800 py-2 lg:py-3 px-3 lg:px-5 flex items-center ${
+          className={`border-b border-warm-700/70 bg-gradient-to-r from-surface-mid/30 via-surface-dark/40 to-surface-dark/75 py-2 px-3 lg:px-5 lg:py-3 flex items-center ${
             isContainedLayout ? 'justify-between' : ''
           }`}
         >
-          <div className="text-xs font-bold uppercase tracking-wider text-yellow-500">
+          <div className="theme-title-text bg-clip-text text-xs font-bold uppercase tracking-wider text-transparent">
             Card Details
           </div>
           {isContainedLayout && (
@@ -322,13 +323,13 @@ export function CardDetailPanel({
           role="region"
           aria-label="Card details"
           tabIndex={0}
-          className={`flex-1 overflow-y-auto custom-scrollbar outline-none focus-visible:ring-2 focus-visible:ring-yellow-300 focus-visible:ring-inset ${contentPaddingClass}`}
+          className={`flex-1 overflow-y-auto custom-scrollbar outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-inset ${contentPaddingClass}`}
         >
           {renderCardTab()}
         </div>
 
         {/* Footer */}
-        <div className="p-1 lg:p-4 border-t border-warm-800 bg-black/20 text-[6px] lg:text-[10px] text-warm-600 text-center uppercase tracking-tighter">
+        <div className="border-t border-warm-700/60 bg-surface-dark/70 p-1 text-center text-[6px] uppercase tracking-tighter text-warm-600 lg:p-4 lg:text-[10px]">
           Open Auto Battler Engine v0.2.0
         </div>
       </div>
@@ -346,13 +347,13 @@ export function CardDetailPanel({
               }
             }}
           />
-          <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-warm-700/60 bg-warm-950 shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
+          <div className="theme-panel relative w-full max-w-sm overflow-hidden rounded-2xl border border-warm-700/60 bg-surface-dark shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
             <div className={`absolute inset-0 bg-gradient-to-br ${forfeitContext.accent}`} />
             <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-warm-400/30 to-transparent" />
 
             <div className="relative p-6 lg:p-7 flex flex-col items-center text-center">
               <h2
-                className="font-title text-3xl lg:text-4xl font-bold tracking-wide uppercase text-red-300"
+                className="font-title text-3xl lg:text-4xl font-bold tracking-wide uppercase text-defeat-red"
                 style={{
                   textShadow: '0 2px 12px rgba(168, 58, 42, 0.5), 0 0 40px rgba(168, 58, 42, 0.2)',
                 }}

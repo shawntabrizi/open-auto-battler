@@ -41,20 +41,20 @@ export function GameOverScreen() {
     {
       value: view.wins,
       label: 'Wins',
-      color: 'text-gold',
-      icon: <StarIcon className="w-4 h-4 lg:w-5 lg:h-5 text-gold" />,
+      color: 'theme-icon-accent',
+      icon: <StarIcon className="theme-icon-accent w-4 h-4 lg:w-5 lg:h-5" />,
     },
     {
       value: view.round,
       label: 'Round',
       color: 'text-warm-200',
-      icon: <HourglassIcon className="w-4 h-4 lg:w-5 lg:h-5 text-warm-300" />,
+      icon: <HourglassIcon className="theme-icon-muted w-4 h-4 lg:w-5 lg:h-5" />,
     },
     {
       value: view.lives,
       label: 'Lives Left',
-      color: 'text-red-400',
-      icon: <HeartIcon className="w-4 h-4 lg:w-5 lg:h-5 text-red-400" />,
+      color: 'theme-icon-health',
+      icon: <HeartIcon className="theme-icon-health w-4 h-4 lg:w-5 lg:h-5" />,
     },
   ];
 
@@ -107,15 +107,15 @@ export function GameOverScreen() {
               <span className="flex items-center justify-center gap-3 lg:gap-5">
                 {isVictory ? (
                   <>
-                    <TrophyIcon className="w-8 h-8 lg:w-12 lg:h-12 text-yellow-400" />
+                    <TrophyIcon className="theme-icon-victory w-8 h-8 lg:w-12 lg:h-12" />
                     Victory
-                    <TrophyIcon className="w-8 h-8 lg:w-12 lg:h-12 text-yellow-400" />
+                    <TrophyIcon className="theme-icon-victory w-8 h-8 lg:w-12 lg:h-12" />
                   </>
                 ) : (
                   <>
-                    <SkullIcon className="w-8 h-8 lg:w-12 lg:h-12 text-red-400" />
+                    <SkullIcon className="theme-icon-defeat w-8 h-8 lg:w-12 lg:h-12" />
                     Defeat
-                    <SkullIcon className="w-8 h-8 lg:w-12 lg:h-12 text-red-400" />
+                    <SkullIcon className="theme-icon-defeat w-8 h-8 lg:w-12 lg:h-12" />
                   </>
                 )}
               </span>
@@ -196,7 +196,7 @@ export function GameOverScreen() {
                 newRun();
               }}
               disabled={isSubmitting}
-              className="battle-btn font-heading font-bold text-sm lg:text-xl px-8 lg:px-14 py-2.5 lg:py-4 rounded-xl tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed"
+              className="battle-btn font-button font-bold text-sm lg:text-xl px-8 lg:px-14 py-2.5 lg:py-4 rounded-xl tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed"
             >
               New Run
             </button>

@@ -25,9 +25,6 @@ interface CustomizationStore {
   ownedNfts: NftItem[];
   selections: CustomizationSelections;
   isLoading: boolean;
-  /** Slots the user has explicitly set to "no customization" — auto-equip will skip these. */
-  userCleared: Set<keyof CustomizationSelections>;
-
   fetchUserNfts: (api: any, accountAddress: string) => Promise<void>;
   selectCustomization: (type: CustomizationType, nft: NftItem | null) => void;
   clearSelections: () => void;
@@ -77,7 +74,6 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
   ownedNfts: [],
   selections: { ...emptySelections },
   isLoading: false,
-  userCleared: new Set(),
 
   fetchUserNfts: async (api: any, accountAddress: string) => {
     if (!api || !accountAddress) return;
@@ -132,21 +128,11 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
         }
       }
 
-      // Keep currently equipped items that are still owned, then auto-equip first owned item for empty slots
-      // (but skip slots the user has explicitly cleared)
       const filtered = filterSelectionsByOwnership(get().selections, nfts);
-      const { userCleared } = get();
-      const autoEquipped = { ...filtered };
-      for (const [type, slotKey] of Object.entries(SLOT_MAP) as [CustomizationType, keyof CustomizationSelections][]) {
-        if (!autoEquipped[slotKey] && !userCleared.has(slotKey)) {
-          const firstOwned = nfts.find((n) => n.type === type);
-          if (firstOwned) autoEquipped[slotKey] = firstOwned;
-        }
-      }
 
       set({
         ownedNfts: nfts,
-        selections: autoEquipped,
+        selections: filtered,
         isLoading: false,
       });
     } catch (err) {
@@ -158,16 +144,10 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
   selectCustomization: (type, nft) => {
     const slotKey = SLOT_MAP[type];
     const selections = { ...get().selections, [slotKey]: nft };
-    const userCleared = new Set(get().userCleared);
-    if (nft === null) {
-      userCleared.add(slotKey);
-    } else {
-      userCleared.delete(slotKey);
-    }
-    set({ selections, userCleared });
+    set({ selections });
   },
 
   clearSelections: () => {
-    set({ selections: { ...emptySelections }, userCleared: new Set() });
+    set({ selections: { ...emptySelections } });
   },
 }));

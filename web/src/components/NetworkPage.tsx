@@ -63,7 +63,7 @@ export function NetworkPage() {
   ];
 
   return (
-    <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
+    <div className="app-shell fixed inset-0 text-white flex flex-col">
       <TopBar backTo="/" backLabel="Menu" title="Network" />
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[15vh]">
@@ -77,9 +77,9 @@ export function NetworkPage() {
                 <button
                   key={opt.key}
                   onClick={() => setSelected(opt.key)}
-                  className={`w-full text-left p-3 lg:p-4 rounded-xl border transition-all ${
+                  className={`theme-panel w-full text-left p-3 lg:p-4 rounded-xl border transition-all ${
                     selected === opt.key
-                      ? 'border-yellow-500/60 bg-yellow-500/10'
+                      ? 'border-gold/60 bg-gold/10'
                       : 'border-warm-700 bg-warm-900/30 hover:border-warm-600'
                   }`}
                 >
@@ -90,12 +90,10 @@ export function NetworkPage() {
                     </div>
                     <div
                       className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                        selected === opt.key ? 'border-yellow-500' : 'border-warm-600'
+                        selected === opt.key ? 'border-gold' : 'border-warm-600'
                       }`}
                     >
-                      {selected === opt.key && (
-                        <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                      )}
+                      {selected === opt.key && <div className="w-2 h-2 rounded-full bg-gold" />}
                     </div>
                   </div>
                   {opt.url && selected === opt.key && (
@@ -114,7 +112,7 @@ export function NetworkPage() {
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
                 placeholder="ws://..."
-                className="w-full mt-2 p-3 rounded-xl border border-warm-700 bg-warm-900/50 text-sm font-mono text-white placeholder-warm-600 focus:outline-none focus:border-yellow-500/60"
+                className="theme-input w-full mt-2 p-3 rounded-xl border border-warm-700 bg-warm-900/50 text-sm font-mono text-white placeholder-warm-600 focus:outline-none focus:border-gold/60"
               />
             )}
           </div>
@@ -125,7 +123,7 @@ export function NetworkPage() {
             disabled={!canConnect}
             className={`w-full p-3 lg:p-4 rounded-xl font-bold text-sm lg:text-base transition-all ${
               canConnect
-                ? 'bg-yellow-500 hover:bg-yellow-400 text-black active:scale-[0.98]'
+                ? 'theme-button btn-primary active:scale-[0.98]'
                 : 'bg-warm-800 text-warm-500 cursor-not-allowed'
             }`}
           >
@@ -133,7 +131,7 @@ export function NetworkPage() {
           </button>
 
           {/* Connection status */}
-          <div className="mt-3 lg:mt-4 p-3 rounded-xl border border-warm-800 bg-warm-900/30">
+          <div className="theme-panel mt-3 lg:mt-4 p-3 rounded-xl border border-warm-800 bg-warm-900/30">
             <div className="flex items-center gap-2 text-xs lg:text-sm">
               <div
                 className={`w-2 h-2 rounded-full ${

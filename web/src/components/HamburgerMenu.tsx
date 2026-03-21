@@ -126,6 +126,10 @@ export function HamburgerMenu() {
   const openShortcutHelp = useShortcutHelpStore((s) => s.open);
 
   const inGame = isGameRoute(location.pathname);
+  const menuItemClassName =
+    'theme-button theme-surface-button mx-2 flex items-center gap-3 rounded-xl border px-4 py-3 text-warm-200 transition-all hover:text-white';
+  const dangerMenuItemClassName =
+    'theme-button mx-2 flex items-center gap-3 rounded-xl border border-red-900/50 bg-red-950/20 px-4 py-3 text-red-400 transition-colors hover:border-red-700/70 hover:bg-red-900/30 hover:text-red-300';
 
   useFocusTrap({
     containerRef: panelRef,
@@ -182,37 +186,35 @@ export function HamburgerMenu() {
             aria-modal="true"
             aria-label={inGame ? 'Game Menu' : 'Menu'}
             tabIndex={-1}
-            className="absolute top-0 right-0 h-full w-72 lg:w-80 bg-warm-950 border-l border-warm-800 shadow-2xl flex flex-col animate-slide-in-right"
+            className="theme-panel absolute top-0 right-0 flex h-full w-72 animate-slide-in-right flex-col border-l border-warm-700/70 bg-surface-mid/95 shadow-2xl backdrop-blur-md lg:w-80"
           >
             {/* Panel header */}
-            <div className="flex items-center justify-between p-4 border-b border-warm-800">
-              <span className="font-heading text-sm lg:text-base tracking-widest uppercase text-warm-300">
+            <div className="flex items-center justify-between border-b border-warm-700/60 px-4 py-4">
+              <span className="font-heading text-sm tracking-widest uppercase text-warm-200 lg:text-base">
                 {inGame ? 'Game Menu' : 'Menu'}
               </span>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close menu"
-                className="p-1.5 rounded-lg text-warm-500 hover:text-white hover:bg-warm-800 transition-colors"
+                className="theme-button theme-surface-button rounded-lg border p-1.5 transition-colors"
               >
-                <CloseIcon className="w-5 h-5" />
+                <CloseIcon className="theme-icon-muted w-5 h-5" />
               </button>
             </div>
 
             {inGame ? (
               <>
                 {/* In-game menu items */}
-                <nav className="flex-1 py-2">
+                <nav className="flex-1 space-y-2 overflow-y-auto px-2 py-3">
                   <Link
                     to="/settings"
                     state={{ returnTo: location.pathname }}
                     data-menu-autofocus="true"
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
+                    className={menuItemClassName}
                   >
-                    <GearIcon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
-                    <span className="font-heading text-sm lg:text-base tracking-wide">
-                      Settings
-                    </span>
+                    <GearIcon className="theme-icon-accent w-5 h-5 transition-colors" />
+                    <span className="font-button text-sm lg:text-base tracking-wide">Settings</span>
                   </Link>
 
                   <button
@@ -222,12 +224,10 @@ export function HamburgerMenu() {
                     }}
                     title={`Tutorial (${GAME_SHORTCUTS.tutorial})`}
                     aria-keyshortcuts={GAME_SHORTCUTS.tutorial}
-                    className="flex items-center gap-3 w-full px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
+                    className={`${menuItemClassName} w-full`}
                   >
-                    <TutorialIcon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
-                    <span className="font-heading text-sm lg:text-base tracking-wide">
-                      Tutorial
-                    </span>
+                    <TutorialIcon className="theme-icon-accent w-5 h-5 transition-colors" />
+                    <span className="font-button text-sm lg:text-base tracking-wide">Tutorial</span>
                   </button>
 
                   <button
@@ -237,42 +237,39 @@ export function HamburgerMenu() {
                     }}
                     title={`Keyboard shortcuts (${GAME_SHORTCUTS.help})`}
                     aria-keyshortcuts={GAME_SHORTCUTS.help}
-                    className="flex items-center gap-3 w-full px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
+                    className={`${menuItemClassName} w-full`}
                   >
-                    <KeyboardIcon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
-                    <span className="font-heading text-sm lg:text-base tracking-wide">
+                    <KeyboardIcon className="theme-icon-accent w-5 h-5 transition-colors" />
+                    <span className="font-button text-sm lg:text-base tracking-wide">
                       Keyboard Shortcuts
                     </span>
                   </button>
 
-                  <button
-                    onClick={handleReturnToMenu}
-                    className="flex items-center gap-3 w-full px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
-                  >
-                    <HomeIcon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
-                    <span className="font-heading text-sm lg:text-base tracking-wide">
+                  <button onClick={handleReturnToMenu} className={`${menuItemClassName} w-full`}>
+                    <HomeIcon className="theme-icon-accent w-5 h-5 transition-colors" />
+                    <span className="font-button text-sm lg:text-base tracking-wide">
                       Return to Menu
                     </span>
                   </button>
                 </nav>
 
                 {/* Abandon at bottom */}
-                <div className="border-t border-warm-800 p-2">
+                <div className="border-t border-warm-700/60 p-2">
                   {showAbandonConfirm ? (
-                    <div className="p-3 text-center">
+                    <div className="theme-panel rounded-xl border border-red-900/40 bg-red-950/20 p-3 text-center">
                       <p className="text-warm-300 text-sm mb-3">
                         Abandon this run? All progress will be lost.
                       </p>
                       <div className="flex gap-2">
                         <button
                           onClick={() => setShowAbandonConfirm(false)}
-                          className="flex-1 px-3 py-2 text-sm font-bold border border-warm-700 text-warm-300 hover:border-warm-500 rounded-lg transition-colors"
+                          className="theme-button theme-surface-button flex-1 rounded-lg border px-3 py-2 text-sm font-bold transition-colors"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={() => void handleAbandon()}
-                          className="flex-1 px-3 py-2 text-sm font-bold bg-red-900/50 hover:bg-red-900/70 border border-red-700 text-red-300 rounded-lg transition-colors"
+                          className="theme-button flex-1 rounded-lg border border-red-700 bg-red-900/50 px-3 py-2 text-sm font-bold text-red-300 transition-colors hover:bg-red-900/70"
                         >
                           Abandon
                         </button>
@@ -281,10 +278,10 @@ export function HamburgerMenu() {
                   ) : (
                     <button
                       onClick={() => setShowAbandonConfirm(true)}
-                      className="flex items-center gap-3 w-full px-5 py-3.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors group"
+                      className={`${dangerMenuItemClassName} w-full`}
                     >
-                      <AbandonIcon className="w-5 h-5 text-red-500/70 group-hover:text-red-400 transition-colors" />
-                      <span className="font-heading text-sm lg:text-base tracking-wide">
+                      <AbandonIcon className="theme-icon-defeat w-5 h-5 transition-colors" />
+                      <span className="font-button text-sm lg:text-base tracking-wide">
                         Abandon
                       </span>
                     </button>
@@ -294,17 +291,17 @@ export function HamburgerMenu() {
             ) : (
               <>
                 {/* Standard menu items */}
-                <nav className="flex-1 py-2 overflow-y-auto min-h-0">
+                <nav className="flex-1 min-h-0 space-y-2 overflow-y-auto px-2 py-3">
                   {MENU_ITEMS.map(({ to, icon: Icon, label }) => (
                     <Link
                       key={to}
                       to={to}
                       data-menu-autofocus={to === MENU_ITEMS[0].to ? 'true' : undefined}
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 px-5 py-3.5 text-warm-300 hover:text-white hover:bg-warm-800/50 transition-colors group"
+                      className={menuItemClassName}
                     >
-                      <Icon className="w-5 h-5 text-warm-500 group-hover:text-warm-300 transition-colors" />
-                      <span className="font-heading text-sm lg:text-base tracking-wide">
+                      <Icon className="theme-icon-accent w-5 h-5 transition-colors" />
+                      <span className="font-button text-sm lg:text-base tracking-wide">
                         {label}
                       </span>
                     </Link>
@@ -313,33 +310,32 @@ export function HamburgerMenu() {
 
                 {/* Network status */}
                 {isConnected && (
-                  <div className="border-t border-warm-800 px-5 py-3 shrink-0">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500"></span>
-                      </span>
-                      <span className="text-[10px] text-emerald-400 font-medium uppercase tracking-wider">
-                        Connected
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-warm-500 font-mono truncate">{endpoint}</div>
-                    {blockNumber != null && (
-                      <div className="text-[10px] text-warm-500">
-                        Block #{blockNumber.toLocaleString()}
+                  <div className="border-t border-warm-700/60 px-4 py-3 shrink-0">
+                    <div className="theme-panel rounded-xl border border-warm-700/50 bg-warm-900/30 px-4 py-3">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500"></span>
+                        </span>
+                        <span className="text-[10px] text-emerald-400 font-medium uppercase tracking-wider">
+                          Connected
+                        </span>
                       </div>
-                    )}
+                      <div className="text-[10px] text-warm-500 font-mono truncate">{endpoint}</div>
+                      {blockNumber != null && (
+                        <div className="text-[10px] text-warm-500">
+                          Block #{blockNumber.toLocaleString()}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
                 {/* Logout at bottom */}
-                <div className="border-t border-warm-800 p-2 shrink-0">
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 w-full px-5 py-3.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors group"
-                  >
-                    <LogoutIcon className="w-5 h-5 text-red-500/70 group-hover:text-red-400 transition-colors" />
-                    <span className="font-heading text-sm lg:text-base tracking-wide">Log Out</span>
+                <div className="border-t border-warm-700/60 p-2 shrink-0">
+                  <button onClick={handleLogout} className={`${dangerMenuItemClassName} w-full`}>
+                    <LogoutIcon className="theme-icon-defeat w-5 h-5 transition-colors" />
+                    <span className="font-button text-sm lg:text-base tracking-wide">Log Out</span>
                   </button>
                 </div>
               </>

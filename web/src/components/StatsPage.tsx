@@ -30,7 +30,7 @@ function StatCard({
   color?: string;
 }) {
   return (
-    <div className="bg-warm-900/60 border border-warm-700/40 rounded-xl p-3 lg:p-4 flex flex-col items-center text-center">
+    <div className="theme-panel bg-warm-900/60 border border-warm-700/40 rounded-xl p-3 lg:p-4 flex flex-col items-center text-center">
       <span className="text-xl lg:text-3xl mb-1 lg:mb-2">{icon}</span>
       <span className={`text-lg lg:text-2xl font-stat font-bold ${color}`}>{value}</span>
       <span className="text-[9px] lg:text-xs text-warm-500 mt-0.5 uppercase tracking-wider">
@@ -105,7 +105,7 @@ export function StatsPage() {
   }, [api, selectedAccount, achievements]);
 
   return (
-    <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
+    <div className="app-shell fixed inset-0 text-white flex flex-col">
       <TopBar backTo="/history" backLabel="History" title="Stats" />
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-lg lg:max-w-2xl mx-auto p-3 lg:p-6">
@@ -124,20 +124,20 @@ export function StatsPage() {
                 icon="⭐"
                 label="Victory Achievements"
                 value={stats.achievementCount}
-                color="text-yellow-400"
+                color="text-gold"
               />
               <StatCard icon="🏟️" label="Tournament Games" value={stats.tournamentGames} />
               <StatCard
                 icon="🏆"
                 label="Tournament Wins"
                 value={stats.tournamentWins}
-                color="text-amber-400"
+                color="text-gold"
               />
               <StatCard
                 icon="💎"
                 label="Perfect Runs"
                 value={stats.tournamentPerfectRuns}
-                color="text-purple-400"
+                color="text-accent-violet"
               />
             </div>
           )}

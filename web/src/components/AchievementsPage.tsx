@@ -17,7 +17,7 @@ function TrophyIcon({ tier, earned }: { tier: TrophyTier; earned: boolean }) {
   const colors: Record<TrophyTier, { bg: string; dim: string }> = {
     bronze: { bg: 'bg-amber-800', dim: 'text-warm-700' },
     silver: { bg: 'bg-gray-400', dim: 'text-warm-700' },
-    gold: { bg: 'bg-yellow-400', dim: 'text-warm-700' },
+    gold: { bg: 'bg-gold', dim: 'text-warm-700' },
   };
   const c = colors[tier];
 
@@ -84,7 +84,9 @@ export function AchievementsPage() {
   const [sortBy, setSortBy] = useState<SortOption>('name');
 
   const sorted = [...allCards].sort((a, b) =>
-    sortBy === 'name' ? a.name.localeCompare(b.name) : a.play_cost - b.play_cost || a.name.localeCompare(b.name)
+    sortBy === 'name'
+      ? a.name.localeCompare(b.name)
+      : a.play_cost - b.play_cost || a.name.localeCompare(b.name)
   );
 
   type FilterMode = 'all' | 'earned' | 'missing';
@@ -117,16 +119,19 @@ export function AchievementsPage() {
     }
     // Achievement tier filter
     if (filterTier && filterMode !== 'all') {
-      const has = filterTier === 'bronze' ? hasBronze(c.id)
-        : filterTier === 'silver' ? hasSilver(c.id)
-        : hasGold(c.id);
+      const has =
+        filterTier === 'bronze'
+          ? hasBronze(c.id)
+          : filterTier === 'silver'
+            ? hasSilver(c.id)
+            : hasGold(c.id);
       return filterMode === 'earned' ? has : !has;
     }
     return true;
   });
 
   return (
-    <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
+    <div className="app-shell fixed inset-0 text-white flex flex-col">
       {/* Card Detail Panel — left side, full height */}
       <CardDetailPanel card={selectedCard} isVisible={true} mode={{ type: 'readOnly' }} />
 
@@ -144,11 +149,32 @@ export function AchievementsPage() {
             <>
               {/* Achievement tiers */}
               <div className="mb-4 lg:mb-6 grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-3">
-                {([
-                  { tier: 'bronze' as FilterTier, label: 'Win', desc: 'Win a battle with this card', count: bronzeCount, activeColor: 'border-amber-700 bg-amber-900/20', segActive: 'bg-amber-800 text-white' },
-                  { tier: 'silver' as FilterTier, label: 'Victory', desc: '10-win run with this card', count: silverCount, activeColor: 'border-gray-500 bg-gray-900/20', segActive: 'bg-gray-600 text-white' },
-                  { tier: 'gold' as FilterTier, label: 'Perfect', desc: 'Perfect run, no losses', count: goldCount, activeColor: 'border-yellow-500 bg-yellow-900/20', segActive: 'bg-yellow-700 text-white' },
-                ]).map(({ tier, label, desc, count, activeColor, segActive }) => {
+                {[
+                  {
+                    tier: 'bronze' as FilterTier,
+                    label: 'Win',
+                    desc: 'Win a battle with this card',
+                    count: bronzeCount,
+                    activeColor: 'border-amber-700 bg-amber-900/20',
+                    segActive: 'bg-amber-800 text-white',
+                  },
+                  {
+                    tier: 'silver' as FilterTier,
+                    label: 'Victory',
+                    desc: '10-win run with this card',
+                    count: silverCount,
+                    activeColor: 'border-gray-500 bg-gray-900/20',
+                    segActive: 'bg-gray-600 text-white',
+                  },
+                  {
+                    tier: 'gold' as FilterTier,
+                    label: 'Perfect',
+                    desc: 'Perfect run, no losses',
+                    count: goldCount,
+                    activeColor: 'border-gold bg-gold/10',
+                    segActive: 'bg-gold text-surface-dark',
+                  },
+                ].map(({ tier, label, desc, count, activeColor, segActive }) => {
                   const isActive = filterTier === tier;
                   const modes: { mode: FilterMode; text: string }[] = [
                     { mode: 'all', text: 'All' },
@@ -156,17 +182,28 @@ export function AchievementsPage() {
                     { mode: 'missing', text: 'Missing' },
                   ];
                   return (
-                    <div key={tier} className={`p-2.5 lg:p-4 bg-warm-900/60 border rounded-xl transition-colors flex sm:flex-col items-center sm:items-stretch gap-3 sm:gap-0 sm:text-center ${
-                      isActive ? activeColor : 'border-warm-700/40'
-                    }`}>
+                    <div
+                      key={tier}
+                      className={`theme-panel p-2.5 lg:p-4 bg-warm-900/60 border rounded-xl transition-colors flex sm:flex-col items-center sm:items-stretch gap-3 sm:gap-0 sm:text-center ${
+                        isActive ? activeColor : 'border-warm-700/40'
+                      }`}
+                    >
                       <div className="flex items-center gap-1.5 sm:justify-center sm:mb-1">
                         <TrophyIcon tier={tier} earned={true} />
-                        <span className="text-sm lg:text-lg font-stat font-bold">{count}/{totalCards}</span>
+                        <span className="text-sm lg:text-lg font-stat font-bold">
+                          {count}/{totalCards}
+                        </span>
                       </div>
                       <div className="flex flex-col sm:items-center">
-                        <div className={`text-[10px] lg:text-xs font-heading font-bold uppercase tracking-wider mb-0.5 ${
-                          tier === 'bronze' ? 'text-amber-400' : tier === 'silver' ? 'text-gray-300' : 'text-yellow-400'
-                        }`}>
+                        <div
+                          className={`text-[10px] lg:text-xs font-heading font-bold uppercase tracking-wider mb-0.5 ${
+                            tier === 'bronze'
+                              ? 'text-gold'
+                              : tier === 'silver'
+                                ? 'text-gray-300'
+                                : 'text-gold'
+                          }`}
+                        >
                           {label}
                         </div>
                         <p className="text-[9px] lg:text-[10px] text-warm-500 leading-tight mb-2">
@@ -175,13 +212,16 @@ export function AchievementsPage() {
                       </div>
                       <div className="inline-flex rounded border border-warm-700/60 overflow-hidden ml-auto sm:ml-0 sm:self-center">
                         {modes.map(({ mode, text }) => {
-                          const active = isActive && filterMode === mode || (!isActive && mode === 'all');
+                          const active =
+                            (isActive && filterMode === mode) || (!isActive && mode === 'all');
                           return (
                             <button
                               key={mode}
                               onClick={() => setFilter(tier, mode)}
                               className={`text-[8px] lg:text-[10px] px-1.5 lg:px-2 py-0.5 transition-colors ${
-                                active ? segActive : 'text-warm-600 hover:text-warm-300 hover:bg-warm-800/50'
+                                active
+                                  ? segActive
+                                  : 'text-warm-600 hover:text-warm-300 hover:bg-warm-800/50'
                               }`}
                             >
                               {text}
@@ -218,7 +258,7 @@ export function AchievementsPage() {
                       <button
                         onClick={() => setSelectedCard(isSelected ? null : card)}
                         className={`card relative ${CARD_SIZES.compact.tw} overflow-hidden bg-black cursor-pointer flex flex-col ${
-                          isSelected ? 'card-selected ring-2 ring-yellow-400' : ''
+                          isSelected ? 'card-selected ring-2 ring-gold' : ''
                         }`}
                       >
                         {art ? (

@@ -324,14 +324,14 @@ export function GhostBrowserPage() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen min-h-svh bg-warm-950 text-white flex flex-col">
+      <div className="app-shell min-h-screen min-h-svh text-white flex flex-col">
         <TopBar backTo="/history" backLabel="History" title="Ghost Browser" />
         <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl border border-warm-800 bg-warm-900/70 p-6 lg:p-8 text-center">
+          <div className="theme-panel w-full max-w-md rounded-3xl border border-warm-800 bg-warm-900/70 p-6 lg:p-8 text-center">
             <div className="text-[10px] lg:text-xs font-heading tracking-[0.35em] text-warm-500 uppercase">
               Ghost Opponents
             </div>
-            <h1 className="mt-2 text-2xl lg:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500">
+            <h1 className="theme-title-text mt-2 text-2xl lg:text-4xl font-black tracking-tight text-transparent bg-clip-text">
               Blockchain Required
             </h1>
             <p className="mt-3 text-sm lg:text-base text-warm-300">
@@ -346,13 +346,13 @@ export function GhostBrowserPage() {
               <button
                 onClick={() => void connect()}
                 disabled={isConnecting}
-                className="rounded-xl bg-yellow-500 px-4 py-3 text-sm font-bold text-warm-950 transition-colors hover:bg-yellow-400 disabled:cursor-not-allowed disabled:bg-warm-700 disabled:text-warm-400"
+                className="theme-button btn-primary rounded-xl px-4 py-3 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:bg-warm-700 disabled:text-warm-400"
               >
                 {isConnecting ? 'CONNECTING...' : 'RETRY CONNECTION'}
               </button>
               <Link
                 to="/network"
-                className="rounded-xl border border-warm-700 px-4 py-3 text-sm font-bold text-warm-200 transition-colors hover:border-warm-500 hover:text-white"
+                className="theme-button theme-surface-button rounded-xl border px-4 py-3 text-sm font-bold transition-colors"
               >
                 NETWORK SETTINGS
               </Link>
@@ -364,26 +364,26 @@ export function GhostBrowserPage() {
   }
 
   return (
-    <div className="h-screen h-svh bg-warm-950 text-white overflow-hidden flex flex-col">
+    <div className="app-shell h-screen h-svh text-white overflow-hidden flex flex-col">
       <TopBar backTo="/history" backLabel="History" title="Ghost Browser" hasCardPanel />
 
       <CardDetailPanel card={detailCard} isVisible={true} mode={{ type: 'readOnly' }} />
 
       <div className="flex-1 min-h-0 ml-44 lg:ml-80">
         <div className="h-full overflow-y-auto">
-          <div className="sticky top-0 z-20 border-b border-warm-900/80 bg-warm-950/95 backdrop-blur-sm">
+          <div className="sticky top-0 z-20 border-b border-warm-900/80 bg-surface-dark/95 backdrop-blur-sm">
             <div className="flex items-center justify-end px-2 pt-2 lg:px-4 lg:pt-3">
               <button
                 onClick={() => setRefreshNonce((value) => value + 1)}
                 disabled={isLoadingGhosts || selectedSetId === null}
-                className="rounded-lg border border-warm-600 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-warm-200 transition-colors hover:border-warm-400 hover:text-white disabled:cursor-not-allowed disabled:border-warm-800 disabled:text-warm-600 lg:px-3 lg:py-1.5 lg:text-xs"
+                className="theme-button theme-surface-button rounded-lg border px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] transition-colors disabled:cursor-not-allowed disabled:border-warm-800 disabled:text-warm-600 lg:px-3 lg:py-1.5 lg:text-xs"
               >
                 {isLoadingGhosts ? 'Refreshing...' : 'Refresh'}
               </button>
             </div>
 
             <div className="px-2 pb-2 lg:px-4 lg:pb-3">
-              <div className="rounded-2xl border border-warm-800 bg-warm-900/40 p-2 lg:p-3">
+              <div className="theme-panel rounded-2xl border border-warm-800 bg-warm-900/40 p-2 lg:p-3">
                 <div className="flex flex-wrap items-center gap-1.5 text-[9px] text-warm-400 uppercase tracking-[0.18em] lg:gap-2 lg:text-[11px] lg:tracking-[0.25em]">
                   <span>Live Ghost Pool</span>
                   <span className="text-warm-700">•</span>
@@ -411,7 +411,7 @@ export function GhostBrowserPage() {
                       value={selectedSetId ?? ''}
                       onChange={(event) => setSelectedSetId(Number(event.target.value))}
                       disabled={sortedSets.length === 0}
-                      className="min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-yellow-500/50 disabled:cursor-not-allowed disabled:text-warm-600 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 disabled:cursor-not-allowed disabled:text-warm-600 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       {sortedSets.length === 0 ? (
                         <option value="">No sets available</option>
@@ -432,7 +432,7 @@ export function GhostBrowserPage() {
                     <select
                       value={roundFilter}
                       onChange={(event) => setRoundFilter(event.target.value)}
-                      className="min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-yellow-500/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       <option value={ALL_FILTER}>All rounds</option>
                       {filterOptions.rounds.map((round) => (
@@ -450,7 +450,7 @@ export function GhostBrowserPage() {
                     <select
                       value={winsFilter}
                       onChange={(event) => setWinsFilter(event.target.value)}
-                      className="min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-yellow-500/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       <option value={ALL_FILTER}>All wins</option>
                       {filterOptions.wins.map((wins) => (
@@ -468,7 +468,7 @@ export function GhostBrowserPage() {
                     <select
                       value={livesFilter}
                       onChange={(event) => setLivesFilter(event.target.value)}
-                      className="min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-yellow-500/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       <option value={ALL_FILTER}>All lives</option>
                       {filterOptions.lives.map((lives) => (
@@ -493,7 +493,7 @@ export function GhostBrowserPage() {
                   <span className="hidden lg:inline-flex rounded-full border border-warm-700 bg-warm-950/70 px-3 py-1.5">
                     {totalBracketCount} set brackets
                   </span>
-                  <span className="rounded-full border border-yellow-500/30 bg-yellow-500/10 px-2 py-1 text-yellow-100 lg:px-3 lg:py-1.5">
+                  <span className="rounded-full border border-gold/30 bg-gold/10 px-2 py-1 text-gold lg:px-3 lg:py-1.5">
                     Inspect left
                   </span>
                 </div>
@@ -509,7 +509,7 @@ export function GhostBrowserPage() {
             )}
 
             {!ghostError && sortedSets.length === 0 && (
-              <div className="rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
+              <div className="theme-panel rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
                 <div className="text-sm font-bold text-white">No blockchain sets found</div>
                 <p className="mt-2 text-sm text-warm-400">
                   Create or sync a set on-chain before browsing active ghosts.
@@ -518,7 +518,7 @@ export function GhostBrowserPage() {
             )}
 
             {!ghostError && sortedSets.length > 0 && isLoadingGhosts && ghosts.length === 0 && (
-              <div className="rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center text-warm-400">
+              <div className="theme-panel rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center text-warm-400">
                 Loading active ghost opponents...
               </div>
             )}
@@ -528,7 +528,7 @@ export function GhostBrowserPage() {
               !isLoadingGhosts &&
               bracketGroups.length === 0 &&
               selectedSetId !== null && (
-                <div className="rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
+                <div className="theme-panel rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
                   <div className="text-sm font-bold text-white">
                     No active ghosts match these filters
                   </div>
@@ -543,7 +543,7 @@ export function GhostBrowserPage() {
               {bracketGroups.map((group) => (
                 <section
                   key={group.key}
-                  className="rounded-2xl border border-warm-800 bg-gradient-to-br from-warm-900/70 to-warm-950/70 p-2.5 lg:rounded-3xl lg:p-5"
+                  className="theme-panel rounded-2xl border border-warm-800 bg-gradient-to-br from-warm-900/70 to-warm-950/70 p-2.5 lg:rounded-3xl lg:p-5"
                 >
                   <div className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
                     <div>
@@ -558,7 +558,7 @@ export function GhostBrowserPage() {
                       <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-200">
                         {group.wins} wins
                       </span>
-                      <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-bold text-rose-200">
+                      <span className="rounded-full border border-defeat-red/30 bg-defeat-red/10 px-3 py-1 text-xs font-bold text-defeat-red">
                         {group.lives} lives
                       </span>
                       <span className="rounded-full border border-warm-700 bg-warm-950/60 px-3 py-1 text-xs font-bold text-warm-300">
@@ -574,7 +574,7 @@ export function GhostBrowserPage() {
                       return (
                         <article
                           key={ghost.id}
-                          className="rounded-2xl border border-white/5 bg-warm-950/60 p-2 lg:p-4"
+                          className="theme-panel rounded-2xl border border-white/5 bg-warm-950/60 p-2 lg:p-4"
                         >
                           <div className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
                             <div className="min-w-0">

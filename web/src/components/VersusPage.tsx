@@ -84,21 +84,21 @@ export function VersusPage() {
   };
 
   return (
-    <div className="min-h-screen min-h-svh bg-surface-dark flex flex-col overflow-hidden relative">
+    <div className="app-shell min-h-screen min-h-svh flex flex-col overflow-hidden relative">
       <TopBar backTo="/play" backLabel="Play" title="P2P Versus" />
       {/* Atmospheric background */}
       <div
         className="absolute inset-0 z-0"
         style={{
           background:
-            'radial-gradient(ellipse at 50% 30%, rgba(59, 130, 246, 0.08), transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(91, 143, 170, 0.05), transparent 50%)',
+            'radial-gradient(ellipse at 50% 30%, rgb(var(--color-mana-blue) / 0.08), transparent 60%), radial-gradient(ellipse at 80% 70%, rgb(var(--color-accent-violet) / 0.06), transparent 50%)',
         }}
       />
 
       <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-3 lg:p-4">
         <div className="relative z-10 flex flex-col items-center w-full max-w-sm lg:max-w-lg">
           {/* Main Card */}
-          <div className="w-full bg-warm-900/60 border border-warm-700/40 rounded-xl lg:rounded-2xl p-3 lg:p-8 backdrop-blur-sm relative">
+          <div className="theme-panel w-full bg-warm-900/60 border border-warm-700/40 rounded-xl lg:rounded-2xl p-3 lg:p-8 backdrop-blur-sm relative">
             {/* Connected State */}
             {status === 'connected' || status === 'in-game' ? (
               <div className="text-center pt-2">
@@ -125,8 +125,8 @@ export function VersusPage() {
                           onClick={() => setLives(n)}
                           className={`w-10 h-10 lg:w-12 lg:h-12 rounded-lg font-bold text-sm lg:text-base transition-all ${
                             lives === n
-                              ? 'bg-red-500/20 text-red-400 border-2 border-red-500/60'
-                              : 'bg-warm-800 text-warm-400 border border-warm-700 hover:border-warm-500'
+                              ? 'theme-selected-button border'
+                              : 'theme-button theme-surface-button border'
                           }`}
                         >
                           {n}
@@ -138,7 +138,7 @@ export function VersusPage() {
 
                 <button
                   onClick={handleGoToGame}
-                  className="w-full max-w-xs mx-auto bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 text-white font-heading font-bold py-2.5 lg:py-3 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 shadow-lg shadow-blue-500/20 uppercase tracking-wider"
+                  className="theme-button btn-primary w-full max-w-xs mx-auto font-button font-bold py-2.5 lg:py-3 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 uppercase tracking-wider"
                 >
                   {status === 'in-game' ? 'Return to Board' : 'Start Game'}
                 </button>
@@ -148,13 +148,15 @@ export function VersusPage() {
               joinIdFromUrl ? (
                 /* Auto-joining from QR */
                 <div className="text-center py-8 lg:py-12">
-                  <div className="w-12 h-12 lg:w-16 lg:h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                  <div className="w-12 h-12 lg:w-16 lg:h-16 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                   <h3 className="text-base lg:text-xl font-heading font-bold text-white mb-2">
                     Connecting...
                   </h3>
                   <p className="text-[10px] lg:text-sm text-warm-400">
                     Joining game:{' '}
-                    <span className="font-mono text-blue-400">{joinIdFromUrl.slice(0, 12)}...</span>
+                    <span className="font-mono text-mana-blue">
+                      {joinIdFromUrl.slice(0, 12)}...
+                    </span>
                   </p>
                 </div>
               ) : (
@@ -164,7 +166,7 @@ export function VersusPage() {
                   <button
                     onClick={handleHost}
                     disabled={initializing}
-                    className="w-full max-w-xs mx-auto bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 disabled:from-warm-700 disabled:to-warm-700 text-white font-heading font-bold py-3 lg:py-4 rounded-xl text-sm lg:text-lg transition-all active:scale-95 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 uppercase tracking-wider"
+                    className="theme-button btn-primary w-full max-w-xs mx-auto text-white font-button font-bold py-3 lg:py-4 rounded-xl text-sm lg:text-lg transition-all active:scale-95 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-wider"
                   >
                     {initializing ? (
                       <>
@@ -186,7 +188,7 @@ export function VersusPage() {
                 {/* Left: QR + ID */}
                 <div className="flex flex-col gap-2 lg:gap-4 flex-shrink-0">
                   {/* QR Code */}
-                  <div className="bg-warm-950/60 p-2 lg:p-5 rounded-xl border border-warm-700/40 text-center">
+                  <div className="theme-panel bg-warm-950/60 p-2 lg:p-5 rounded-xl border border-warm-700/40 text-center">
                     <div className="text-[8px] lg:text-xs text-warm-500 uppercase tracking-widest font-heading mb-1 lg:mb-3">
                       Scan to Join
                     </div>
@@ -208,7 +210,7 @@ export function VersusPage() {
                     <button
                       onClick={handleCopyLink}
                       className={`text-[10px] lg:text-sm transition-colors ${
-                        copiedLink ? 'text-green-400' : 'text-blue-400 hover:text-blue-300'
+                        copiedLink ? 'text-victory-green' : 'text-mana-blue hover:text-white'
                       }`}
                     >
                       {copiedLink ? '✓ Copied!' : 'Copy Link'}
@@ -216,11 +218,11 @@ export function VersusPage() {
                   </div>
 
                   {/* Peer ID */}
-                  <div className="bg-warm-950/60 p-2 lg:p-4 rounded-xl border border-warm-700/40 text-center">
+                  <div className="theme-panel bg-warm-950/60 p-2 lg:p-4 rounded-xl border border-warm-700/40 text-center">
                     <div className="text-[8px] lg:text-xs text-warm-500 uppercase tracking-widest font-heading mb-0.5 lg:mb-1">
                       Your ID
                     </div>
-                    <div className="text-[10px] lg:text-base font-mono text-blue-400 select-all break-all leading-tight">
+                    <div className="text-[10px] lg:text-base font-mono text-mana-blue select-all break-all leading-tight">
                       {myPeerId}
                     </div>
                     <button
@@ -247,12 +249,12 @@ export function VersusPage() {
                         value={targetId}
                         onChange={(e) => setTargetId(e.target.value)}
                         placeholder="Opponent ID"
-                        className="flex-1 min-w-0 bg-warm-950/60 border border-warm-700/40 rounded-lg px-2 lg:px-4 py-1.5 lg:py-2.5 font-mono text-[10px] lg:text-sm text-white placeholder-warm-600 focus:outline-none focus:border-blue-500/50"
+                        className="theme-input flex-1 min-w-0 bg-warm-950/60 border border-warm-700/40 rounded-lg px-2 lg:px-4 py-1.5 lg:py-2.5 font-mono text-[10px] lg:text-sm text-white placeholder-warm-600 focus:outline-none focus:border-gold/50"
                       />
                       <button
                         onClick={handleJoin}
                         disabled={!targetId || status === 'connecting'}
-                        className="bg-green-600 hover:bg-green-500 px-3 lg:px-6 rounded-lg font-heading font-bold disabled:opacity-50 transition-colors text-xs lg:text-sm flex-shrink-0 uppercase tracking-wider"
+                        className="theme-button btn-primary px-3 lg:px-6 rounded-lg font-button font-bold disabled:opacity-50 transition-colors text-xs lg:text-sm flex-shrink-0 uppercase tracking-wider"
                       >
                         Join
                       </button>
@@ -260,7 +262,7 @@ export function VersusPage() {
                   </div>
 
                   {status === 'connecting' && (
-                    <div className="text-center text-yellow-400 animate-pulse font-medium text-xs mt-3">
+                    <div className="text-center text-gold animate-pulse font-medium text-xs mt-3">
                       Connecting...
                     </div>
                   )}
@@ -269,12 +271,12 @@ export function VersusPage() {
                   <div className="mt-3 lg:mt-6 pt-2 lg:pt-4 border-t border-warm-700/40">
                     <button
                       onClick={() => setShowLogs(!showLogs)}
-                      className="text-[8px] lg:text-xs text-warm-500 hover:text-warm-300 transition-colors flex items-center gap-1 font-heading uppercase tracking-wider"
+                      className="text-[8px] lg:text-xs text-warm-500 hover:text-warm-300 transition-colors flex items-center gap-1 font-button uppercase tracking-wider"
                     >
                       {showLogs ? '▼' : '▶'} Logs
                     </button>
                     {showLogs && (
-                      <div className="mt-1 lg:mt-2 h-16 lg:h-32 overflow-y-auto bg-black/40 p-1.5 lg:p-3 text-[7px] lg:text-[10px] font-mono text-warm-400 rounded-lg border border-warm-800/50">
+                      <div className="theme-panel mt-1 lg:mt-2 h-16 lg:h-32 overflow-y-auto bg-black/40 p-1.5 lg:p-3 text-[7px] lg:text-[10px] font-mono text-warm-400 rounded-lg border border-warm-800/50">
                         {logs.map((l, i) => (
                           <div
                             key={i}
@@ -308,7 +310,6 @@ export function VersusPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
