@@ -121,9 +121,20 @@ type ThemeAchievements = {
   goldText: string;
 };
 
+export type ParticleShape = 'ember' | 'bokeh' | 'heart';
+
+export type ParticleConfig = {
+  shape: ParticleShape;
+  /** Base size multiplier (default 1). Higher = bigger particles. */
+  size: number;
+  /** Number of particles (default ~40) */
+  count: number;
+};
+
 type ThemeAssets = {
   playIcon: string;
   burnIcon: string;
+  particles: ParticleConfig;
 };
 
 type ThemeBattleEffects = {
@@ -269,6 +280,7 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
   assets: {
     playIcon: swordsWarm,
     burnIcon: burnWarm,
+    particles: { shape: 'ember', size: 1, count: 40 },
   },
   battleEffects: {
     ability: '#eab308',
@@ -399,6 +411,7 @@ const CYBERPUNK_THEME: ThemeDefinition = {
   assets: {
     playIcon: swordsCyberpunk,
     burnIcon: burnCyberpunk,
+    particles: { shape: 'bokeh', size: 1.5, count: 25 },
   },
   battleEffects: {
     ability: '#f8ff66',
@@ -527,6 +540,7 @@ const PASTEL_THEME: ThemeDefinition = {
   assets: {
     playIcon: swordsPastel,
     burnIcon: burnPastel,
+    particles: { shape: 'heart', size: 2.5, count: 30 },
   },
   battleEffects: {
     ability: '#fbbf24',
@@ -572,6 +586,55 @@ function setRootVariable(root: HTMLElement, name: string, value: string) {
 export function getTheme(themeId: ThemeId | null | undefined) {
   if (!themeId) return THEMES[DEFAULT_THEME_ID];
   return THEMES[themeId] ?? THEMES[DEFAULT_THEME_ID];
+}
+
+// ── Safety helpers for user-provided themes ──
+
+const VALID_PARTICLE_SHAPES: ParticleShape[] = ['ember', 'bokeh', 'heart'];
+
+/** Sanitize a URL to prevent javascript: / data: URI injection. Only allow http(s) and relative paths. */
+function sanitizeAssetUrl(url: string, fallback: string): string {
+  if (!url || typeof url !== 'string') return fallback;
+  const trimmed = url.trim().toLowerCase();
+  if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:')) return fallback;
+  return url;
+}
+
+/** Clamp a number within safe bounds */
+function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+  return Math.min(Math.max(value, min), max);
+}
+
+/**
+ * Sanitize an untrusted theme definition (e.g. loaded from an NFT).
+ * Validates asset URLs, clamps numeric values, and enforces enum choices.
+ * CSS string values (colors, gradients, fonts) are safe since they're applied
+ * via CSS custom properties which cannot execute code.
+ */
+export function sanitizeTheme(
+  untrusted: ThemeDefinition,
+  base: ThemeDefinition = DEFAULT_WARM_THEME
+): ThemeDefinition {
+  return {
+    ...untrusted,
+    assets: {
+      playIcon: sanitizeAssetUrl(untrusted.assets?.playIcon, base.assets.playIcon),
+      burnIcon: sanitizeAssetUrl(untrusted.assets?.burnIcon, base.assets.burnIcon),
+      particles: {
+        shape: VALID_PARTICLE_SHAPES.includes(untrusted.assets?.particles?.shape)
+          ? untrusted.assets.particles.shape
+          : base.assets.particles.shape,
+        size: clampNumber(untrusted.assets?.particles?.size, 0.1, 10, base.assets.particles.size),
+        count: clampNumber(untrusted.assets?.particles?.count, 0, 200, base.assets.particles.count),
+      },
+    },
+    battleEffects: {
+      ability: untrusted.battleEffects?.ability ?? base.battleEffects.ability,
+      positive: untrusted.battleEffects?.positive ?? base.battleEffects.positive,
+      negative: untrusted.battleEffects?.negative ?? base.battleEffects.negative,
+    },
+  };
 }
 
 export function applyThemeToDocument(
