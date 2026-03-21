@@ -287,9 +287,8 @@ body {
   /* Small viewport height - accounts for mobile URL bar */
 }
 
-/* Shared theme-driven shells */
+/* Shared theme-driven shells — no opaque bg so ParticleBackground canvas shows through */
 .app-shell {
-  background-color: rgb(var(--color-surface-dark));
   background-image: var(--theme-app-background);
   color: rgb(var(--color-warm-100));
 }

@@ -39,6 +39,7 @@ import { TournamentRedirect } from './components/TournamentRedirect.tsx';
 import { TournamentLobbyPage } from './components/TournamentLobbyPage.tsx';
 import { TournamentGamePage } from './components/TournamentGamePage.tsx';
 import { ThemeController } from './theme/ThemeController.tsx';
+import { ParticleBackground } from './components/ParticleBackground.tsx';
 import { applyThemeToDocument } from './theme/themes.ts';
 import { useThemeStore } from './store/themeStore.ts';
 
@@ -55,6 +56,7 @@ createRoot(document.getElementById('root')!).render(
     <TutorialOverlay />
     <HashRouter>
       <ThemeController />
+      <ParticleBackground />
       <AuthGate>
         <HamburgerMenu />
         <Routes>

@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { ParticleBackground } from './ParticleBackground';
 import { TopBar } from './TopBar';
 import { useThemeStore } from '../store/themeStore';
 import { getTheme } from '../theme/themes';
@@ -40,10 +39,6 @@ export function HomePage() {
   return (
     <div className="app-shell min-h-screen min-h-svh flex flex-col text-white overflow-hidden relative">
       <TopBar />
-      {/* Atmospheric background */}
-      <div className="absolute inset-0 z-0" style={{ background: 'var(--theme-app-background)' }} />
-      <ParticleBackground />
-
       {/* Main content */}
       <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-3 lg:p-4">
         <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-sm lg:max-w-md">

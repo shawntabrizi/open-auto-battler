@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useArenaStore } from '../store/arenaStore';
 import { useIsSubmitting } from '../store/txStore';
 import { useSettingsStore, PRESET_ENDPOINTS } from '../store/settingsStore';
-import { ParticleBackground } from './ParticleBackground';
 
 import { useInitGuard } from '../hooks';
 import toast from 'react-hot-toast';
@@ -141,10 +140,6 @@ export function LoginPage() {
 
   return (
     <div className="app-shell min-h-screen min-h-svh flex flex-col text-white overflow-hidden relative">
-      {/* Atmospheric background */}
-      <div className="absolute inset-0 z-0" style={{ background: 'var(--theme-app-background)' }} />
-      <ParticleBackground />
-
       <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-3 lg:p-4">
         <div className="relative z-10 flex flex-col items-center w-full max-w-sm lg:max-w-md">
           {/* Title */}

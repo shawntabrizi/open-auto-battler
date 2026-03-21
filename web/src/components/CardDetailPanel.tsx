@@ -40,16 +40,16 @@ function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
       {/* Name overlay at bottom */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 lg:p-3">
         <h2
-          className="text-sm lg:text-xl font-bold text-white leading-tight truncate"
+          className="text-sm lg:text-xl font-heading font-bold text-white leading-tight truncate"
           style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
         >
           {card.name}
         </h2>
         <div className="flex gap-1.5 mt-1">
-          <span className="px-1.5 py-0.5 bg-burn-red/15 text-burn-red border border-burn-red/40 rounded text-[10px] lg:text-xs font-bold">
+          <span className="px-1.5 py-0.5 bg-burn-red/15 text-burn-red border border-burn-red/40 rounded text-[10px] lg:text-xs font-stat font-bold">
             ATK: {card.attack}
           </span>
-          <span className="px-1.5 py-0.5 bg-victory-green/15 text-victory-green border border-victory-green/40 rounded text-[10px] lg:text-xs font-bold">
+          <span className="px-1.5 py-0.5 bg-victory-green/15 text-victory-green border border-victory-green/40 rounded text-[10px] lg:text-xs font-stat font-bold">
             HP: {card.health}
           </span>
         </div>
@@ -193,7 +193,7 @@ export function CardDetailPanel({
       return (
         <div className="flex min-h-full flex-col items-center justify-center py-6 lg:py-12 text-center">
           <div className="theme-icon-warning text-2xl lg:text-4xl mb-2 lg:mb-4">👆</div>
-          <h3 className="theme-title-text mb-1 bg-clip-text text-sm font-bold text-transparent lg:mb-2 lg:text-lg">
+          <h3 className="theme-title-text font-heading mb-1 bg-clip-text text-sm font-bold text-transparent lg:mb-2 lg:text-lg">
             Select a Card
           </h3>
           <p className="text-[10px] lg:text-sm text-warm-400">Tap any card to view details.</p>
@@ -212,18 +212,18 @@ export function CardDetailPanel({
         {/* Economy Section */}
         <div className="flex gap-1.5 lg:gap-3">
           <div className="theme-panel flex-1 min-w-0 p-1.5 lg:p-3 bg-mana-blue/10 border border-mana-blue/30 rounded-lg">
-            <div className="text-[8px] lg:text-[10px] text-mana-blue uppercase font-bold mb-0.5 lg:mb-1">
+            <div className="text-[8px] lg:text-[10px] text-mana-blue uppercase font-heading font-bold mb-0.5 lg:mb-1">
               Cost
             </div>
-            <div className="text-sm lg:text-xl font-bold text-white">
+            <div className="text-sm lg:text-xl font-stat font-bold text-white">
               {card.play_cost} <span className="text-mana-blue text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
           <div className="theme-panel flex-1 min-w-0 p-1.5 lg:p-3 bg-burn-gold/10 border border-burn-gold/30 rounded-lg">
-            <div className="text-[8px] lg:text-[10px] text-burn-gold uppercase font-bold mb-0.5 lg:mb-1">
+            <div className="text-[8px] lg:text-[10px] text-burn-gold uppercase font-heading font-bold mb-0.5 lg:mb-1">
               Burn
             </div>
-            <div className="text-sm lg:text-xl font-bold text-white">
+            <div className="text-sm lg:text-xl font-stat font-bold text-white">
               +{card.burn_value} <span className="text-burn-gold text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
@@ -237,10 +237,10 @@ export function CardDetailPanel({
                 key={index}
                 className="theme-panel mb-2 rounded-lg border border-warm-700/70 bg-surface-mid/25 p-2 shadow-elevation-rest last:mb-0 lg:mb-4 lg:p-3"
               >
-                <h3 className="text-xs lg:text-md font-bold text-gold mb-1 lg:mb-2">
+                <h3 className="text-xs lg:text-md font-heading font-bold text-gold mb-1 lg:mb-2">
                   {allAbilities.length > 1 ? `Ability ${index + 1}` : 'Ability'}
                 </h3>
-                <div className="rounded border border-warm-700/50 bg-surface-dark/70 p-1.5 text-[10px] italic text-warm-100 lg:p-2 lg:text-sm">
+                <div className="rounded border border-warm-700/50 bg-surface-dark/70 p-1.5 text-[10px] italic text-warm-100 font-body lg:p-2 lg:text-sm">
                   {formatAbilitySentence(ability, { resolveCardName })}
                 </div>
               </div>
@@ -303,7 +303,7 @@ export function CardDetailPanel({
             isContainedLayout ? 'justify-between' : ''
           }`}
         >
-          <div className="theme-title-text bg-clip-text text-xs font-bold uppercase tracking-wider text-transparent">
+          <div className="theme-title-text font-heading bg-clip-text text-xs font-bold uppercase tracking-wider text-transparent lg:text-sm">
             Card Details
           </div>
           {isContainedLayout && (
@@ -329,7 +329,7 @@ export function CardDetailPanel({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-warm-700/60 bg-surface-dark/70 p-1 text-center text-[6px] uppercase tracking-tighter text-warm-600 lg:p-4 lg:text-[10px]">
+        <div className="border-t border-warm-700/60 bg-surface-dark/70 p-1 text-center text-[6px] uppercase tracking-tighter text-warm-600 font-mono lg:p-4 lg:text-[10px]">
           Open Auto Battler Engine v0.2.0
         </div>
       </div>
@@ -355,16 +355,17 @@ export function CardDetailPanel({
               <h2
                 className="font-title text-3xl lg:text-4xl font-bold tracking-wide uppercase text-defeat-red"
                 style={{
-                  textShadow: '0 2px 12px rgba(168, 58, 42, 0.5), 0 0 40px rgba(168, 58, 42, 0.2)',
+                  textShadow:
+                    '0 2px 12px rgb(var(--color-defeat-red) / 0.5), 0 0 40px rgb(var(--color-defeat-red) / 0.2)',
                 }}
               >
                 {forfeitContext.title}
               </h2>
 
-              <p className="mt-4 text-base font-semibold text-warm-200">
+              <p className="mt-4 text-base font-heading font-semibold text-warm-200">
                 {forfeitContext.subtitle}
               </p>
-              <p className="mt-1 text-sm leading-relaxed text-warm-400">
+              <p className="mt-1 text-sm font-body leading-relaxed text-warm-400">
                 {forfeitContext.confirmation}
               </p>
 
