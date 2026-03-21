@@ -53,9 +53,8 @@ type ThemeEffects = {
 type ThemeBackgrounds = {
   appBackground: string;
   titleGradient: string;
-  boardOverlay: string;
-  handOverlay: string;
-  handSurface: string;
+  /** 0-1 opacity for board/hand overlays. App computes actual rgba from palette. */
+  overlayOpacity: number;
 };
 
 type ThemeIconSvg = {
@@ -393,10 +392,7 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
     appBackground:
       'radial-gradient(ellipse at 50% 30%, rgba(196, 138, 42, 0.08), transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(184, 92, 74, 0.06), transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(91, 143, 170, 0.05), transparent 50%)',
     titleGradient: 'linear-gradient(to right, #facc15, #f59e0b, #f97316)',
-    boardOverlay: 'rgba(26, 22, 16, 0.5)',
-    handOverlay: 'rgba(26, 22, 16, 0.4)',
-    handSurface:
-      'radial-gradient(ellipse at 50% 0%, rgba(212, 168, 67, 0.12), transparent 52%), radial-gradient(ellipse at 20% 78%, rgba(90, 154, 110, 0.08), transparent 40%), linear-gradient(180deg, rgba(16, 14, 10, 0.96) 0%, rgba(26, 23, 18, 0.98) 26%, rgba(16, 14, 10, 1) 100%)',
+    overlayOpacity: 0.45,
   },
   icons: {
     accent: '#d4a843',
@@ -522,10 +518,7 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     appBackground:
       'radial-gradient(ellipse at 50% 10%, rgba(0, 246, 255, 0.18), transparent 55%), radial-gradient(ellipse at 15% 80%, rgba(217, 70, 239, 0.16), transparent 45%), radial-gradient(ellipse at 85% 65%, rgba(56, 189, 248, 0.12), transparent 50%)',
     titleGradient: 'linear-gradient(to right, #67e8f9, #00f6ff, #f472b6)',
-    boardOverlay: 'rgba(7, 16, 31, 0.24)',
-    handOverlay: 'rgba(7, 16, 31, 0.18)',
-    handSurface:
-      'radial-gradient(ellipse at 50% 0%, rgba(0, 246, 255, 0.18), transparent 54%), radial-gradient(ellipse at 18% 82%, rgba(217, 70, 239, 0.12), transparent 42%), linear-gradient(180deg, rgba(7, 16, 31, 0.96) 0%, rgba(13, 29, 61, 0.98) 28%, rgba(7, 16, 31, 1) 100%)',
+    overlayOpacity: 0.2,
   },
   icons: {
     accent: '#00f6ff',
@@ -652,10 +645,7 @@ const PASTEL_THEME: ThemeDefinition = {
     appBackground:
       'radial-gradient(ellipse at 50% 12%, rgba(255, 196, 222, 0.22), transparent 58%), radial-gradient(ellipse at 20% 78%, rgba(192, 132, 252, 0.14), transparent 42%), radial-gradient(ellipse at 82% 72%, rgba(125, 211, 199, 0.12), transparent 44%)',
     titleGradient: 'linear-gradient(to right, #f9a8d4, #fda4af, #c084fc)',
-    boardOverlay: 'rgba(43, 19, 33, 0.18)',
-    handOverlay: 'rgba(43, 19, 33, 0.12)',
-    handSurface:
-      'radial-gradient(ellipse at 50% 0%, rgba(249, 168, 212, 0.18), transparent 54%), radial-gradient(ellipse at 82% 78%, rgba(192, 132, 252, 0.12), transparent 42%), linear-gradient(180deg, rgba(43, 19, 33, 0.95) 0%, rgba(75, 34, 64, 0.98) 28%, rgba(43, 19, 33, 1) 100%)',
+    overlayOpacity: 0.15,
   },
   icons: {
     accent: '#ff9ec4',
@@ -804,6 +794,10 @@ export function sanitizeTheme(
 ): ThemeDefinition {
   return {
     ...untrusted,
+    backgrounds: {
+      ...untrusted.backgrounds,
+      overlayOpacity: clampNumber(untrusted.backgrounds?.overlayOpacity, 0, 1, base.backgrounds.overlayOpacity),
+    },
     assets: {
       playIcon: sanitizeAssetUrl(untrusted.assets?.playIcon, base.assets.playIcon),
       burnIcon: sanitizeAssetUrl(untrusted.assets?.burnIcon, base.assets.burnIcon),
@@ -873,9 +867,19 @@ export function applyThemeToDocument(
 
   setRootVariable(root, '--theme-app-background', theme.backgrounds.appBackground);
   setRootVariable(root, '--theme-title-gradient', theme.backgrounds.titleGradient);
-  setRootVariable(root, '--theme-board-overlay', theme.backgrounds.boardOverlay);
-  setRootVariable(root, '--theme-hand-overlay', theme.backgrounds.handOverlay);
-  setRootVariable(root, '--theme-hand-surface', theme.backgrounds.handSurface);
+
+  // Compute overlay and hand surface from overlayOpacity + palette
+  const ov = theme.backgrounds.overlayOpacity;
+  const sdRgb = hexToRgbChannels(theme.palette.surfaceDark);
+  const smRgb = hexToRgbChannels(theme.palette.surfaceMid);
+  const acRgb = hexToRgbChannels(theme.palette.gold);
+  setRootVariable(root, '--theme-board-overlay', `rgba(${sdRgb.replace(/ /g, ', ')}, ${ov})`);
+  setRootVariable(root, '--theme-hand-overlay', `rgba(${sdRgb.replace(/ /g, ', ')}, ${Math.max(ov - 0.1, 0)})`);
+  setRootVariable(
+    root,
+    '--theme-hand-surface',
+    `radial-gradient(ellipse at 50% 0%, rgba(${acRgb.replace(/ /g, ', ')}, ${ov * 0.3}), transparent 52%), linear-gradient(180deg, rgba(${sdRgb.replace(/ /g, ', ')}, 0.96) 0%, rgba(${smRgb.replace(/ /g, ', ')}, 0.98) 26%, rgba(${sdRgb.replace(/ /g, ', ')}, 1) 100%)`
+  );
   setRootVariable(root, '--theme-icon-accent', theme.icons.accent);
   setRootVariable(root, '--theme-icon-muted', theme.icons.muted);
   setRootVariable(root, '--theme-icon-mana', theme.icons.mana);

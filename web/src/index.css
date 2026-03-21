@@ -139,17 +139,11 @@
     radial-gradient(ellipse at 20% 80%, rgba(184, 92, 74, 0.06), transparent 50%),
     radial-gradient(ellipse at 80% 70%, rgba(91, 143, 170, 0.05), transparent 50%);
   --theme-title-gradient: linear-gradient(to right, #facc15, #f59e0b, #f97316);
-  --theme-board-overlay: rgba(26, 22, 16, 0.5);
-  --theme-hand-overlay: rgba(26, 22, 16, 0.4);
+  --theme-board-overlay: rgba(14, 12, 9, 0.45);
+  --theme-hand-overlay: rgba(14, 12, 9, 0.35);
   --theme-hand-surface:
-    radial-gradient(ellipse at 50% 0%, rgba(212, 168, 67, 0.12), transparent 52%),
-    radial-gradient(ellipse at 20% 78%, rgba(90, 154, 110, 0.08), transparent 40%),
-    linear-gradient(
-      180deg,
-      rgba(16, 14, 10, 0.96) 0%,
-      rgba(26, 23, 18, 0.98) 26%,
-      rgba(16, 14, 10, 1) 100%
-    );
+    radial-gradient(ellipse at 50% 0%, rgba(212, 168, 67, 0.14), transparent 52%),
+    linear-gradient(180deg, rgba(14, 12, 9, 0.96) 0%, rgba(20, 18, 16, 0.98) 26%, rgba(14, 12, 9, 1) 100%);
   --theme-icon-accent: #d4a843;
   --theme-icon-muted: #a08a6c;
   --theme-icon-mana: #5b8faa;
