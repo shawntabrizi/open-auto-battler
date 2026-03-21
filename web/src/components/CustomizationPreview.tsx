@@ -5,15 +5,15 @@ export function CustomizationPreview() {
   const selections = useCustomizationStore((s) => s.selections);
 
   return (
-    <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-lg lg:rounded-2xl p-2 lg:p-4 backdrop-blur-sm w-full">
-      <h3 className="text-[8px] lg:text-sm font-bold text-warm-400 uppercase mb-1 lg:mb-3">
+    <div className="theme-panel bg-base-900/50 border border-white/5 rounded-lg lg:rounded-2xl p-2 lg:p-4 backdrop-blur-sm w-full">
+      <h3 className="text-[8px] lg:text-sm font-bold text-base-400 uppercase mb-1 lg:mb-3">
         Live Preview
       </h3>
 
       {/* Mini game mockup — 16:9 landscape aspect ratio */}
       <div className="rounded-lg lg:rounded-xl overflow-hidden border border-white/10 aspect-video flex flex-col">
         {/* HUD bar */}
-        <div className="h-[8%] bg-warm-900/80 border-b border-warm-700 flex items-center px-2 gap-2 shrink-0">
+        <div className="h-[8%] bg-base-900/80 border-b border-base-700 flex items-center px-2 gap-2 shrink-0">
           {selections.playerAvatar && (
             <div className="w-4 h-4 rounded-full overflow-hidden border border-gold/50 flex-shrink-0">
               <IpfsImage
@@ -24,7 +24,7 @@ export function CustomizationPreview() {
             </div>
           )}
           <span className="text-burn-red text-[8px]">&#9829;&#9829;&#9829;</span>
-          <span className="text-[8px] text-warm-400 ml-auto">R1</span>
+          <span className="text-[8px] text-base-400 ml-auto">R1</span>
           <span className="text-gold text-[8px]">&#9733;</span>
         </div>
 
@@ -45,7 +45,7 @@ export function CustomizationPreview() {
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className="relative w-[15%] aspect-[2/3] bg-warm-800/80 rounded border border-warm-600 flex items-center justify-center z-10"
+              className="relative w-[15%] aspect-[2/3] bg-base-800/80 rounded border border-base-600 flex items-center justify-center z-10"
             >
               {i <= 3 && (
                 <>
@@ -64,13 +64,13 @@ export function CustomizationPreview() {
         </div>
 
         {/* Mana bar */}
-        <div className="h-[4%] bg-warm-800 flex items-center px-2 shrink-0">
+        <div className="h-[4%] bg-base-800 flex items-center px-2 shrink-0">
           <div className="mana-segment-filled w-8 h-1.5 rounded-full" />
         </div>
 
         {/* Hand area */}
         <div
-          className="flex-[2] relative flex items-center justify-center gap-1 p-2 border-t border-warm-600"
+          className="flex-[2] relative flex items-center justify-center gap-1 p-2 border-t border-base-600"
           style={
             selections.handBackground
               ? {
@@ -85,7 +85,7 @@ export function CustomizationPreview() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="relative w-[12%] aspect-[2/3] bg-warm-800/80 rounded border border-warm-600 flex items-center justify-center z-10"
+              className="relative w-[12%] aspect-[2/3] bg-base-800/80 rounded border border-base-600 flex items-center justify-center z-10"
             >
               <span className="text-[6px]">&#127183;</span>
               {selections.cardStyle && (

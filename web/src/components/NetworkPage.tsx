@@ -69,7 +69,7 @@ export function NetworkPage() {
         <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[15vh]">
           {/* Endpoint selection */}
           <div className="mb-4 lg:mb-6">
-            <h2 className="text-sm lg:text-base font-semibold text-warm-300 mb-2 lg:mb-3">
+            <h2 className="text-sm lg:text-base font-semibold text-base-300 mb-2 lg:mb-3">
               WebSocket Endpoint
             </h2>
             <div className="flex flex-col gap-2">
@@ -80,24 +80,24 @@ export function NetworkPage() {
                   className={`theme-panel w-full text-left p-3 lg:p-4 rounded-xl border transition-all ${
                     selected === opt.key
                       ? 'border-gold/60 bg-gold/10'
-                      : 'border-warm-700 bg-warm-900/30 hover:border-warm-600'
+                      : 'border-base-700 bg-base-900/30 hover:border-base-600'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-semibold text-sm lg:text-base">{opt.label}</div>
-                      <div className="text-warm-500 text-[10px] lg:text-xs">{opt.description}</div>
+                      <div className="text-base-500 text-[10px] lg:text-xs">{opt.description}</div>
                     </div>
                     <div
                       className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                        selected === opt.key ? 'border-gold' : 'border-warm-600'
+                        selected === opt.key ? 'border-gold' : 'border-base-600'
                       }`}
                     >
                       {selected === opt.key && <div className="w-2 h-2 rounded-full bg-gold" />}
                     </div>
                   </div>
                   {opt.url && selected === opt.key && (
-                    <div className="mt-2 text-[10px] lg:text-xs font-mono text-warm-500">
+                    <div className="mt-2 text-[10px] lg:text-xs font-mono text-base-500">
                       {opt.url}
                     </div>
                   )}
@@ -112,7 +112,7 @@ export function NetworkPage() {
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
                 placeholder="ws://..."
-                className="theme-input w-full mt-2 p-3 rounded-xl border border-warm-700 bg-warm-900/50 text-sm font-mono text-white placeholder-warm-600 focus:outline-none focus:border-gold/60"
+                className="theme-input w-full mt-2 p-3 rounded-xl border border-base-700 bg-base-900/50 text-sm font-mono text-white placeholder-base-600 focus:outline-none focus:border-gold/60"
               />
             )}
           </div>
@@ -124,23 +124,23 @@ export function NetworkPage() {
             className={`w-full p-3 lg:p-4 rounded-xl font-bold text-sm lg:text-base transition-all ${
               canConnect
                 ? 'theme-button btn-primary active:scale-[0.98]'
-                : 'bg-warm-800 text-warm-500 cursor-not-allowed'
+                : 'bg-base-800 text-base-500 cursor-not-allowed'
             }`}
           >
             {isCurrentEndpoint && isConnected ? 'Reconnect' : 'Connect'}
           </button>
 
           {/* Connection status */}
-          <div className="theme-panel mt-3 lg:mt-4 p-3 rounded-xl border border-warm-800 bg-warm-900/30">
+          <div className="theme-panel mt-3 lg:mt-4 p-3 rounded-xl border border-base-800 bg-base-900/30">
             <div className="flex items-center gap-2 text-xs lg:text-sm">
               <div
                 className={`w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-accent-emerald animate-pulse' : 'bg-warm-600'
+                  isConnected ? 'bg-accent-emerald animate-pulse' : 'bg-base-600'
                 }`}
               />
-              <span className="text-warm-400">{isConnected ? 'Connected' : 'Disconnected'}</span>
+              <span className="text-base-400">{isConnected ? 'Connected' : 'Disconnected'}</span>
               {isConnected && blockNumber !== null && (
-                <span className="text-warm-600 font-mono ml-auto">
+                <span className="text-base-600 font-mono ml-auto">
                   Block #{blockNumber.toLocaleString()}
                 </span>
               )}
@@ -149,7 +149,7 @@ export function NetworkPage() {
               <div className="mt-2 text-[10px] lg:text-xs text-defeat-red">{connectionError}</div>
             )}
             {isConnected && (
-              <div className="mt-1 text-[10px] lg:text-xs font-mono text-warm-600 truncate">
+              <div className="mt-1 text-[10px] lg:text-xs font-mono text-base-600 truncate">
                 {endpoint}
               </div>
             )}

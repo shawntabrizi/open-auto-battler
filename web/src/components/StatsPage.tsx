@@ -30,10 +30,10 @@ function StatCard({
   color?: string;
 }) {
   return (
-    <div className="theme-panel bg-warm-900/60 border border-warm-700/40 rounded-xl p-3 lg:p-4 flex flex-col items-center text-center">
+    <div className="theme-panel bg-base-900/60 border border-base-700/40 rounded-xl p-3 lg:p-4 flex flex-col items-center text-center">
       <span className="text-xl lg:text-3xl mb-1 lg:mb-2">{icon}</span>
       <span className={`text-lg lg:text-2xl font-stat font-bold ${color}`}>{value}</span>
-      <span className="text-[9px] lg:text-xs text-warm-500 mt-0.5 uppercase tracking-wider">
+      <span className="text-[9px] lg:text-xs text-base-500 mt-0.5 uppercase tracking-wider">
         {label}
       </span>
     </div>
@@ -110,7 +110,7 @@ export function StatsPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-lg lg:max-w-2xl mx-auto p-3 lg:p-6">
           {loading || !stats ? (
-            <div className="text-center py-16 text-warm-500 text-sm">Loading stats...</div>
+            <div className="text-center py-16 text-base-500 text-sm">Loading stats...</div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 lg:gap-4">
               <StatCard icon="🎮" label="Transactions" value={stats.nonce} />

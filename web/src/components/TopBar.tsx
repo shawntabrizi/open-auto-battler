@@ -101,7 +101,7 @@ export function TopBar({
 
   return (
     <div
-      className={`relative flex items-center justify-between px-3 lg:px-6 h-12 lg:h-16 bg-warm-950/90 border-b border-warm-800/60 shrink-0 ${
+      className={`relative flex items-center justify-between px-3 lg:px-6 h-12 lg:h-16 bg-base-950/90 border-b border-base-800/60 shrink-0 ${
         hasCardPanel ? 'ml-44 lg:ml-80' : ''
       }`}
     >
@@ -116,7 +116,7 @@ export function TopBar({
           <span>{backLabel}</span>
         </Link>
       ) : selectedAccount && isLoggedIn ? (
-        <span className="inline-flex items-center gap-1.5 lg:gap-2 text-xs lg:text-sm text-warm-300 z-10 min-w-0">
+        <span className="inline-flex items-center gap-1.5 lg:gap-2 text-xs lg:text-sm text-base-300 z-10 min-w-0">
           <span className="relative flex h-2 w-2 lg:h-2.5 lg:w-2.5 shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-emerald opacity-75"></span>
             <span className="relative inline-flex rounded-full h-full w-full bg-accent-emerald"></span>
@@ -126,12 +126,12 @@ export function TopBar({
               Signed in as{' '}
               <span className="text-white font-medium">{selectedAccount.name || 'Unknown'}</span>
               {showBalance && balance !== null && (
-                <span className="text-warm-400"> ({formatBalance(balance)})</span>
+                <span className="text-base-400"> ({formatBalance(balance)})</span>
               )}
             </span>
             {showAddress && (
               <span
-                className="text-warm-500 text-[9px] lg:text-xs font-mono break-all cursor-pointer hover:text-warm-300 transition-colors"
+                className="text-base-500 text-[9px] lg:text-xs font-mono break-all cursor-pointer hover:text-base-300 transition-colors"
                 onClick={() => {
                   navigator.clipboard.writeText(selectedAccount.address);
                   setCopied(true);
@@ -169,15 +169,15 @@ export function TopBar({
       {/* Zero balance fund popup */}
       {showFundPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="theme-panel bg-warm-900 border border-warm-700 rounded-xl p-6 lg:p-8 max-w-md lg:max-w-lg mx-4 text-center shadow-xl">
+          <div className="theme-panel bg-base-900 border border-base-700 rounded-xl p-6 lg:p-8 max-w-md lg:max-w-lg mx-4 text-center shadow-xl">
             <h3 className="text-lg lg:text-xl font-heading font-bold text-white mb-1">
               Account Balance: 0
             </h3>
             <p className="text-sm text-white font-medium">{selectedAccount?.name || 'Unknown'}</p>
-            <p className="text-[10px] lg:text-xs text-warm-500 font-mono break-all mb-4">
+            <p className="text-[10px] lg:text-xs text-base-500 font-mono break-all mb-4">
               {selectedAccount?.address}
             </p>
-            <p className="text-sm text-warm-400 mb-5">
+            <p className="text-sm text-base-400 mb-5">
               Your account has zero balance. Fund it to start playing.
             </p>
             <div className="flex gap-3 justify-center">

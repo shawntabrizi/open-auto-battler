@@ -98,7 +98,7 @@ export function HomePage() {
 
           {/* Version */}
           <div
-            className="mt-6 lg:mt-10 text-[9px] lg:text-[10px] text-warm-600 font-mono opacity-0 animate-stagger-fade-in stagger-7"
+            className="mt-6 lg:mt-10 text-[9px] lg:text-[10px] text-base-600 font-mono opacity-0 animate-stagger-fade-in stagger-7"
             style={{ animationFillMode: 'forwards' }}
           >
             v0.1.0

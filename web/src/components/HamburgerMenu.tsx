@@ -127,7 +127,7 @@ export function HamburgerMenu() {
 
   const inGame = isGameRoute(location.pathname);
   const menuItemClassName =
-    'theme-button theme-surface-button mx-2 flex items-center gap-3 rounded-xl border px-4 py-3 text-warm-200 transition-all hover:text-white';
+    'theme-button theme-surface-button mx-2 flex items-center gap-3 rounded-xl border px-4 py-3 text-base-200 transition-all hover:text-white';
   const dangerMenuItemClassName =
     'theme-button theme-danger-button mx-2 flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors';
 
@@ -186,11 +186,11 @@ export function HamburgerMenu() {
             aria-modal="true"
             aria-label={inGame ? 'Game Menu' : 'Menu'}
             tabIndex={-1}
-            className="theme-panel absolute top-0 right-0 flex h-full w-72 animate-slide-in-right flex-col border-l border-warm-700/70 bg-surface-mid/95 shadow-2xl backdrop-blur-md lg:w-80"
+            className="theme-panel absolute top-0 right-0 flex h-full w-72 animate-slide-in-right flex-col border-l border-base-700/70 bg-surface-mid/95 shadow-2xl backdrop-blur-md lg:w-80"
           >
             {/* Panel header */}
-            <div className="flex items-center justify-between border-b border-warm-700/60 px-4 py-4">
-              <span className="font-heading text-sm tracking-widest uppercase text-warm-200 lg:text-base">
+            <div className="flex items-center justify-between border-b border-base-700/60 px-4 py-4">
+              <span className="font-heading text-sm tracking-widest uppercase text-base-200 lg:text-base">
                 {inGame ? 'Game Menu' : 'Menu'}
               </span>
               <button
@@ -254,10 +254,10 @@ export function HamburgerMenu() {
                 </nav>
 
                 {/* Abandon at bottom */}
-                <div className="border-t border-warm-700/60 p-2">
+                <div className="border-t border-base-700/60 p-2">
                   {showAbandonConfirm ? (
                     <div className="theme-panel theme-error-panel rounded-xl border p-3 text-center">
-                      <p className="text-warm-300 text-sm mb-3">
+                      <p className="text-base-300 text-sm mb-3">
                         Abandon this run? All progress will be lost.
                       </p>
                       <div className="flex gap-2">
@@ -310,8 +310,8 @@ export function HamburgerMenu() {
 
                 {/* Network status */}
                 {isConnected && (
-                  <div className="border-t border-warm-700/60 px-4 py-3 shrink-0">
-                    <div className="theme-panel rounded-xl border border-warm-700/50 bg-warm-900/30 px-4 py-3">
+                  <div className="border-t border-base-700/60 px-4 py-3 shrink-0">
+                    <div className="theme-panel rounded-xl border border-base-700/50 bg-base-900/30 px-4 py-3">
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <span className="relative flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-emerald opacity-75"></span>
@@ -321,9 +321,9 @@ export function HamburgerMenu() {
                           Connected
                         </span>
                       </div>
-                      <div className="text-[10px] text-warm-500 font-mono truncate">{endpoint}</div>
+                      <div className="text-[10px] text-base-500 font-mono truncate">{endpoint}</div>
                       {blockNumber != null && (
-                        <div className="text-[10px] text-warm-500">
+                        <div className="text-[10px] text-base-500">
                           Block #{blockNumber.toLocaleString()}
                         </div>
                       )}
@@ -332,7 +332,7 @@ export function HamburgerMenu() {
                 )}
 
                 {/* Logout at bottom */}
-                <div className="border-t border-warm-700/60 p-2 shrink-0">
+                <div className="border-t border-base-700/60 p-2 shrink-0">
                   <button onClick={handleLogout} className={`${dangerMenuItemClassName} w-full`}>
                     <LogoutIcon className="theme-icon-defeat w-5 h-5 transition-colors" />
                     <span className="font-button text-sm lg:text-base tracking-wide">Log Out</span>

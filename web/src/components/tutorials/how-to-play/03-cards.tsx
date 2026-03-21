@@ -30,7 +30,7 @@ export default function Cards() {
             </div>
             <div>
               <span className="text-mana-blue font-bold">Mana Cost</span>
-              <span className="text-warm-400"> — the mana required to play this card onto your board.</span>
+              <span className="text-base-400"> — the mana required to play this card onto your board.</span>
             </div>
           </div>
 
@@ -40,7 +40,7 @@ export default function Cards() {
             </div>
             <div>
               <span className="text-accent-amber font-bold">Burn Value</span>
-              <span className="text-warm-400"> — burn this card from your hand or board to gain this much mana.</span>
+              <span className="text-base-400"> — burn this card from your hand or board to gain this much mana.</span>
             </div>
           </div>
 
@@ -51,7 +51,7 @@ export default function Cards() {
             </div>
             <div>
               <span className="text-defeat-red font-bold">Attack</span>
-              <span className="text-warm-400"> — damage dealt to the front enemy unit in each clash.</span>
+              <span className="text-base-400"> — damage dealt to the front enemy unit in each clash.</span>
             </div>
           </div>
 
@@ -62,7 +62,7 @@ export default function Cards() {
             </div>
             <div>
               <span className="text-accent-emerald font-bold">Health</span>
-              <span className="text-warm-400"> — how much damage this unit can take before being destroyed.</span>
+              <span className="text-base-400"> — how much damage this unit can take before being destroyed.</span>
             </div>
           </div>
 
@@ -72,7 +72,7 @@ export default function Cards() {
             </div>
             <div>
               <span className="text-gold font-bold">Abilities</span>
-              <span className="text-warm-400"> — special effects that trigger during battle or in the shop. Read the card text carefully!</span>
+              <span className="text-base-400"> — special effects that trigger during battle or in the shop. Read the card text carefully!</span>
             </div>
           </div>
         </div>

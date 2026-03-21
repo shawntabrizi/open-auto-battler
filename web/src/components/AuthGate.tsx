@@ -53,7 +53,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           <h1 className="theme-title-text font-decorative text-2xl lg:text-4xl font-bold tracking-wide text-transparent bg-clip-text mb-3">
             OPEN AUTO BATTLER
           </h1>
-          <p className="text-warm-500 text-xs lg:text-sm animate-pulse">Connecting...</p>
+          <p className="text-base-500 text-xs lg:text-sm animate-pulse">Connecting...</p>
         </div>
       </div>
     );

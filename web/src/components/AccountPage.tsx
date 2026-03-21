@@ -102,21 +102,21 @@ export function AccountPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-md lg:max-w-lg mx-auto p-3 lg:p-4 lg:mt-[10vh]">
           {!isConnected || !selectedAccount ? (
-            <div className="theme-panel border border-warm-700 bg-warm-900/30 p-6 text-center text-sm text-warm-500">
+            <div className="theme-panel border border-base-700 bg-base-900/30 p-6 text-center text-sm text-base-500">
               No account connected.
             </div>
           ) : (
             <div className="flex flex-col gap-4 lg:gap-5">
               {/* Name */}
-              <section className="theme-panel p-4 rounded-xl border border-warm-700 bg-warm-900/30">
-                <div className="text-xs text-warm-500 mb-1">Name</div>
+              <section className="theme-panel p-4 rounded-xl border border-base-700 bg-base-900/30">
+                <div className="text-xs text-base-500 mb-1">Name</div>
                 {editingName ? (
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={nameInput}
                       onChange={(e) => setNameInput(e.target.value)}
-                      className="theme-input flex-1 bg-warm-900/50 border border-warm-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-gold/60"
+                      className="theme-input flex-1 bg-base-900/50 border border-base-600 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-gold/60"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleSaveName();
@@ -147,7 +147,7 @@ export function AccountPage() {
                     <span className="text-sm lg:text-base text-white">{selectedAccount.name}</span>
                     <button
                       onClick={() => setEditingName(true)}
-                      className="text-xs text-warm-500 hover:text-gold transition-colors"
+                      className="text-xs text-base-500 hover:text-gold transition-colors"
                     >
                       Edit
                     </button>
@@ -156,33 +156,33 @@ export function AccountPage() {
               </section>
 
               {/* Address */}
-              <section className="theme-panel p-4 rounded-xl border border-warm-700 bg-warm-900/30">
-                <div className="text-xs text-warm-500 mb-1">Address</div>
+              <section className="theme-panel p-4 rounded-xl border border-base-700 bg-base-900/30">
+                <div className="text-xs text-base-500 mb-1">Address</div>
                 <button
                   onClick={() => {
                     void navigator.clipboard.writeText(selectedAccount.address);
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
                   }}
-                  className="text-xs lg:text-sm font-mono text-warm-300 break-all text-left hover:text-white transition-colors w-full"
+                  className="text-xs lg:text-sm font-mono text-base-300 break-all text-left hover:text-white transition-colors w-full"
                   title="Click to copy"
                 >
                   <span className="block">{selectedAccount.address}</span>
-                  <span className="mt-1 block text-[10px] text-warm-500">
+                  <span className="mt-1 block text-[10px] text-base-500">
                     {copied ? 'Copied!' : 'Tap to copy'}
                   </span>
                 </button>
-                <div className="text-xs text-warm-500 mt-3 mb-1">Source</div>
-                <div className="text-sm text-warm-300 capitalize">{selectedAccount.source}</div>
+                <div className="text-xs text-base-500 mt-3 mb-1">Source</div>
+                <div className="text-sm text-base-300 capitalize">{selectedAccount.source}</div>
               </section>
 
               {/* Export mnemonic — local accounts only */}
               {selectedAccount.source === 'local' && (
-                <section className="theme-panel p-4 rounded-xl border border-warm-700 bg-warm-900/30">
-                  <div className="text-xs text-warm-500 mb-2">Secret Recovery Phrase</div>
+                <section className="theme-panel p-4 rounded-xl border border-base-700 bg-base-900/30">
+                  <div className="text-xs text-base-500 mb-2">Secret Recovery Phrase</div>
                   {showMnemonic ? (
                     <>
-                      <div className="theme-panel bg-warm-950 border border-warm-700 rounded-lg p-3 font-mono text-xs lg:text-sm text-gold break-all select-all">
+                      <div className="theme-panel bg-base-950 border border-base-700 rounded-lg p-3 font-mono text-xs lg:text-sm text-gold break-all select-all">
                         {getLocalAccountMnemonic(selectedAccount.address) || 'Not found'}
                       </div>
                       <p className="text-[10px] text-defeat-red/80 mt-2">
@@ -191,7 +191,7 @@ export function AccountPage() {
                       </p>
                       <button
                         onClick={() => setShowMnemonic(false)}
-                        className="text-xs text-warm-500 hover:text-warm-300 mt-2 transition-colors"
+                        className="text-xs text-base-500 hover:text-base-300 mt-2 transition-colors"
                       >
                         Hide
                       </button>
@@ -208,27 +208,27 @@ export function AccountPage() {
               )}
 
               {/* On-chain info */}
-              <section className="theme-panel p-4 rounded-xl border border-warm-700 bg-warm-900/30">
-                <div className="text-xs text-warm-500 mb-3">On-Chain Info</div>
+              <section className="theme-panel p-4 rounded-xl border border-base-700 bg-base-900/30">
+                <div className="text-xs text-base-500 mb-3">On-Chain Info</div>
 
                 {loading ? (
-                  <div className="text-warm-600 text-sm">Loading...</div>
+                  <div className="text-base-600 text-sm">Loading...</div>
                 ) : info ? (
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="text-[10px] text-warm-600 uppercase tracking-wider">
+                      <div className="text-[10px] text-base-600 uppercase tracking-wider">
                         Nonce
                       </div>
                       <div className="text-sm lg:text-base font-mono text-white">{info.nonce}</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-warm-600 uppercase tracking-wider">Free</div>
+                      <div className="text-[10px] text-base-600 uppercase tracking-wider">Free</div>
                       <div className="text-sm lg:text-base font-mono text-accent-emerald">
                         {formatBalance(info.free)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-warm-600 uppercase tracking-wider">
+                      <div className="text-[10px] text-base-600 uppercase tracking-wider">
                         Reserved
                       </div>
                       <div className="text-sm lg:text-base font-mono text-gold">
@@ -236,7 +236,7 @@ export function AccountPage() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-warm-600 uppercase tracking-wider">
+                      <div className="text-[10px] text-base-600 uppercase tracking-wider">
                         Frozen
                       </div>
                       <div className="text-sm lg:text-base font-mono text-mana-blue">
@@ -245,7 +245,7 @@ export function AccountPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-warm-600 text-sm">Unable to fetch account info.</div>
+                  <div className="text-base-600 text-sm">Unable to fetch account info.</div>
                 )}
 
                 <div className="flex items-center gap-3 mt-3">
@@ -289,7 +289,7 @@ export function AccountPage() {
               {selectedAccount.source === 'local' &&
                 (showForgetConfirm ? (
                   <div className="theme-panel theme-error-panel w-full p-4 rounded-xl border">
-                    <p className="text-sm text-warm-300 mb-3 text-center">
+                    <p className="text-sm text-base-300 mb-3 text-center">
                       Forget this account? The private key will be permanently deleted.
                     </p>
                     <div className="flex gap-2">

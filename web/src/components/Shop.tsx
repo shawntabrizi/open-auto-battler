@@ -75,7 +75,7 @@ export function Shop() {
     <div
       role="region"
       aria-label="Your Hand"
-      className="shop h-full border-t border-warm-800/60 relative"
+      className="shop h-full border-t border-base-800/60 relative"
       style={
         handBg
           ? {
@@ -89,7 +89,7 @@ export function Shop() {
       {handBg && <div className="theme-hand-overlay absolute inset-0" />}
       <div className="flex h-full relative z-10">
         {/* Left: Undo Button */}
-        <div className="shop-side theme-panel w-14 lg:w-32 h-full flex flex-col items-center justify-center border-r border-warm-700/50 bg-surface-dark/35 backdrop-blur-sm">
+        <div className="shop-side theme-panel w-14 lg:w-32 h-full flex flex-col items-center justify-center border-r border-base-700/50 bg-surface-dark/35 backdrop-blur-sm">
           <button
             onClick={undo}
             disabled={!view.can_undo}
@@ -97,7 +97,7 @@ export function Shop() {
             className={`action-circle theme-button w-10 h-10 lg:w-16 lg:h-16 rounded-full flex items-center justify-center transition-all border-2 ${
               view.can_undo
                 ? 'theme-surface-button border-gold/30 text-gold hover:border-gold/60 hover:text-white cursor-pointer shadow-elevation-rest hover:shadow-elevation-hover'
-                : 'bg-surface-dark/80 border-warm-700 text-warm-500 cursor-not-allowed'
+                : 'bg-surface-dark/80 border-base-700 text-base-500 cursor-not-allowed'
             }`}
             title={`Undo last action (${GAME_SHORTCUTS.undo})`}
           >
@@ -114,7 +114,7 @@ export function Shop() {
               />
             </svg>
           </button>
-          <div className="hidden lg:block text-[10px] text-warm-500 mt-2">
+          <div className="hidden lg:block text-[10px] text-base-500 mt-2">
             Undo ({GAME_SHORTCUTS.undo})
           </div>
         </div>
@@ -165,7 +165,7 @@ export function Shop() {
                       isSelected={selection?.type === 'hand' && selection.index === i}
                       onClick={() => handleHandSlotClick(i)}
                     />
-                    <div className="board-helper theme-pill hidden lg:flex absolute left-1/2 top-full mt-2 -translate-x-1/2 w-[92%] justify-center border border-warm-800/70 bg-surface-dark/45 px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider text-warm-300/80 shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm">
+                    <div className="board-helper theme-pill hidden lg:flex absolute left-1/2 top-full mt-2 -translate-x-1/2 w-[92%] justify-center border border-base-800/70 bg-surface-dark/45 px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider text-base-300/80 shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm">
                       {i + 1}
                     </div>
                   </div>
@@ -182,11 +182,11 @@ export function Shop() {
                   }}
                 >
                   <div
-                    className="theme-panel relative aspect-[3/4] rounded-lg border-2 border-dashed border-warm-700/50 bg-surface-dark/20 flex items-center justify-center"
+                    className="theme-panel relative aspect-[3/4] rounded-lg border-2 border-dashed border-base-700/50 bg-surface-dark/20 flex items-center justify-center"
                     style={{ width: 'min(100cqw, calc(100cqh * 3 / 4))' }}
                   >
-                    <span className="text-warm-700/40 text-lg">&#9724;</span>
-                    <div className="board-helper theme-pill hidden lg:flex absolute left-1/2 top-full mt-2 -translate-x-1/2 w-[92%] justify-center border border-warm-800/70 bg-surface-dark/45 px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider text-warm-300/80 shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm">
+                    <span className="text-base-700/40 text-lg">&#9724;</span>
+                    <div className="board-helper theme-pill hidden lg:flex absolute left-1/2 top-full mt-2 -translate-x-1/2 w-[92%] justify-center border border-base-800/70 bg-surface-dark/45 px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider text-base-300/80 shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm">
                       {i + 1}
                     </div>
                   </div>
@@ -204,7 +204,7 @@ export function Shop() {
             disabled={!canBurn}
             aria-keyshortcuts={GAME_SHORTCUTS.burn}
             title={`Burn selected card or unit (${GAME_SHORTCUTS.burn})`}
-            className={`shop-side theme-panel ${burnZoneClass} w-14 lg:w-32 h-full flex flex-col items-center justify-center border-l border-warm-700/50 bg-surface-dark/35 backdrop-blur-sm transition-all duration-200 ${
+            className={`shop-side theme-panel ${burnZoneClass} w-14 lg:w-32 h-full flex flex-col items-center justify-center border-l border-base-700/50 bg-surface-dark/35 backdrop-blur-sm transition-all duration-200 ${
               canBurn ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
             }`}
           >
@@ -232,7 +232,7 @@ export function Shop() {
                   ? 'text-burn-gold font-bold'
                   : shouldHighlightBurn
                     ? 'text-gold font-semibold'
-                    : 'text-warm-500'
+                    : 'text-base-500'
               }`}
             >
               {burnHintText}

@@ -7,7 +7,7 @@ export function ManaBar() {
 
   return (
     <div
-      className="mana-bar-container theme-panel w-full px-4 py-1.5 bg-surface-dark/75 border-y border-warm-700"
+      className="mana-bar-container theme-panel w-full px-4 py-1.5 bg-surface-dark/75 border-y border-base-700"
       aria-label={`Mana: ${view.mana} of ${view.mana_limit}`}
     >
       <div className="flex items-center gap-3">
@@ -22,7 +22,7 @@ export function ManaBar() {
             <div
               key={i}
               className={`flex-1 h-2.5 lg:h-3 rounded-full transition-all duration-200 ${
-                i < view.mana ? 'mana-segment-filled' : 'bg-surface-mid/80 border border-warm-700'
+                i < view.mana ? 'mana-segment-filled' : 'bg-surface-mid/80 border border-base-700'
               }`}
             />
           ))}
@@ -31,7 +31,7 @@ export function ManaBar() {
         {/* Mana count */}
         <div className="text-xs lg:text-sm font-bold text-white whitespace-nowrap">
           <span className="text-mana-blue">{view.mana}</span>
-          <span className="text-warm-400">/{view.mana_limit}</span>
+          <span className="text-base-400">/{view.mana_limit}</span>
         </div>
       </div>
     </div>

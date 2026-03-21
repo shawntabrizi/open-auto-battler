@@ -3,18 +3,18 @@ export default function RoundProgression() {
     <div>
       <div className="flex flex-row items-center gap-4 lg:gap-8">
         {/* Round / Mana table (vertical) */}
-        <div className="shrink-0 rounded-xl border border-warm-700/50 bg-warm-950 p-2 lg:p-3">
+        <div className="shrink-0 rounded-xl border border-base-700/50 bg-base-950 p-2 lg:p-3">
           <table className="text-xs lg:text-sm border-collapse">
             <thead>
               <tr>
-                <th className="px-2 lg:px-3 py-1 text-gold font-bold border-b border-warm-700 text-left">Round</th>
-                <th className="px-2 lg:px-3 py-1 text-mana-blue font-bold border-b border-warm-700 text-left">Mana</th>
+                <th className="px-2 lg:px-3 py-1 text-gold font-bold border-b border-base-700 text-left">Round</th>
+                <th className="px-2 lg:px-3 py-1 text-mana-blue font-bold border-b border-base-700 text-left">Mana</th>
               </tr>
             </thead>
             <tbody>
               {Array.from({ length: 8 }, (_, i) => (
                 <tr key={i}>
-                  <td className="px-2 lg:px-3 py-0.5 text-warm-400 font-mono text-center">{i < 7 ? i + 1 : '8+'}</td>
+                  <td className="px-2 lg:px-3 py-0.5 text-base-400 font-mono text-center">{i < 7 ? i + 1 : '8+'}</td>
                   <td className="px-2 lg:px-3 py-0.5 text-white font-mono text-center">{i + 3}</td>
                 </tr>
               ))}
@@ -23,7 +23,7 @@ export default function RoundProgression() {
         </div>
 
         {/* Text */}
-        <div className="space-y-2 lg:space-y-3 text-warm-300 text-sm lg:text-base leading-relaxed">
+        <div className="space-y-2 lg:space-y-3 text-base-300 text-sm lg:text-base leading-relaxed">
           <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white">
             Round Progression
           </h2>

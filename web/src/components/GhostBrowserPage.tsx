@@ -327,14 +327,14 @@ export function GhostBrowserPage() {
       <div className="app-shell min-h-screen min-h-svh text-white flex flex-col">
         <TopBar backTo="/history" backLabel="History" title="Ghost Browser" />
         <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
-          <div className="theme-panel w-full max-w-md rounded-3xl border border-warm-800 bg-warm-900/70 p-6 lg:p-8 text-center">
-            <div className="text-[10px] lg:text-xs font-heading tracking-[0.35em] text-warm-500 uppercase">
+          <div className="theme-panel w-full max-w-md rounded-3xl border border-base-800 bg-base-900/70 p-6 lg:p-8 text-center">
+            <div className="text-[10px] lg:text-xs font-heading tracking-[0.35em] text-base-500 uppercase">
               Ghost Opponents
             </div>
             <h1 className="theme-title-text mt-2 text-2xl lg:text-4xl font-black tracking-tight text-transparent bg-clip-text">
               Blockchain Required
             </h1>
-            <p className="mt-3 text-sm lg:text-base text-warm-300">
+            <p className="mt-3 text-sm lg:text-base text-base-300">
               This view reads the active ghost pool directly from the blockchain.
             </p>
             {connectionError && (
@@ -346,7 +346,7 @@ export function GhostBrowserPage() {
               <button
                 onClick={() => void connect()}
                 disabled={isConnecting}
-                className="theme-button btn-primary rounded-xl px-4 py-3 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:bg-warm-700 disabled:text-warm-400"
+                className="theme-button btn-primary rounded-xl px-4 py-3 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:bg-base-700 disabled:text-base-400"
               >
                 {isConnecting ? 'CONNECTING...' : 'RETRY CONNECTION'}
               </button>
@@ -371,28 +371,28 @@ export function GhostBrowserPage() {
 
       <div className="flex-1 min-h-0 ml-44 lg:ml-80">
         <div className="h-full overflow-y-auto">
-          <div className="sticky top-0 z-20 border-b border-warm-900/80 bg-surface-dark/95 backdrop-blur-sm">
+          <div className="sticky top-0 z-20 border-b border-base-900/80 bg-surface-dark/95 backdrop-blur-sm">
             <div className="flex items-center justify-end px-2 pt-2 lg:px-4 lg:pt-3">
               <button
                 onClick={() => setRefreshNonce((value) => value + 1)}
                 disabled={isLoadingGhosts || selectedSetId === null}
-                className="theme-button theme-surface-button rounded-lg border px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] transition-colors disabled:cursor-not-allowed disabled:border-warm-800 disabled:text-warm-600 lg:px-3 lg:py-1.5 lg:text-xs"
+                className="theme-button theme-surface-button rounded-lg border px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] transition-colors disabled:cursor-not-allowed disabled:border-base-800 disabled:text-base-600 lg:px-3 lg:py-1.5 lg:text-xs"
               >
                 {isLoadingGhosts ? 'Refreshing...' : 'Refresh'}
               </button>
             </div>
 
             <div className="px-2 pb-2 lg:px-4 lg:pb-3">
-              <div className="theme-panel rounded-2xl border border-warm-800 bg-warm-900/40 p-2 lg:p-3">
-                <div className="flex flex-wrap items-center gap-1.5 text-[9px] text-warm-400 uppercase tracking-[0.18em] lg:gap-2 lg:text-[11px] lg:tracking-[0.25em]">
+              <div className="theme-panel rounded-2xl border border-base-800 bg-base-900/40 p-2 lg:p-3">
+                <div className="flex flex-wrap items-center gap-1.5 text-[9px] text-base-400 uppercase tracking-[0.18em] lg:gap-2 lg:text-[11px] lg:tracking-[0.25em]">
                   <span>Live Ghost Pool</span>
-                  <span className="text-warm-700">•</span>
+                  <span className="text-base-700">•</span>
                   <span>
                     {blockNumber !== null ? `Block #${blockNumber.toLocaleString()}` : 'Connected'}
                   </span>
                   {selectedSet && (
                     <>
-                      <span className="text-warm-700">•</span>
+                      <span className="text-base-700">•</span>
                       <span>
                         {selectedSet.name} (
                         {Array.isArray(selectedSet.cards) ? selectedSet.cards.length : 0} cards)
@@ -403,7 +403,7 @@ export function GhostBrowserPage() {
 
                 <div className="mt-2 grid grid-cols-4 gap-1 lg:mt-3 lg:gap-2">
                   <label className="flex min-w-0 flex-col gap-1 lg:gap-2">
-                    <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-warm-500 lg:text-[11px] lg:tracking-[0.2em]">
+                    <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-base-500 lg:text-[11px] lg:tracking-[0.2em]">
                       <span className="lg:hidden">Set</span>
                       <span className="hidden lg:inline">Set</span>
                     </span>
@@ -411,7 +411,7 @@ export function GhostBrowserPage() {
                       value={selectedSetId ?? ''}
                       onChange={(event) => setSelectedSetId(Number(event.target.value))}
                       disabled={sortedSets.length === 0}
-                      className="theme-input min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 disabled:cursor-not-allowed disabled:text-warm-600 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 disabled:cursor-not-allowed disabled:text-base-600 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       {sortedSets.length === 0 ? (
                         <option value="">No sets available</option>
@@ -426,13 +426,13 @@ export function GhostBrowserPage() {
                   </label>
 
                   <label className="flex min-w-0 flex-col gap-1 lg:gap-2">
-                    <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-warm-500 lg:text-[11px] lg:tracking-[0.2em]">
+                    <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-base-500 lg:text-[11px] lg:tracking-[0.2em]">
                       Round
                     </span>
                     <select
                       value={roundFilter}
                       onChange={(event) => setRoundFilter(event.target.value)}
-                      className="theme-input min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       <option value={ALL_FILTER}>All rounds</option>
                       {filterOptions.rounds.map((round) => (
@@ -444,13 +444,13 @@ export function GhostBrowserPage() {
                   </label>
 
                   <label className="flex min-w-0 flex-col gap-1 lg:gap-2">
-                    <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-warm-500 lg:text-[11px] lg:tracking-[0.2em]">
+                    <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-base-500 lg:text-[11px] lg:tracking-[0.2em]">
                       Wins
                     </span>
                     <select
                       value={winsFilter}
                       onChange={(event) => setWinsFilter(event.target.value)}
-                      className="theme-input min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       <option value={ALL_FILTER}>All wins</option>
                       {filterOptions.wins.map((wins) => (
@@ -462,13 +462,13 @@ export function GhostBrowserPage() {
                   </label>
 
                   <label className="flex min-w-0 flex-col gap-1 lg:gap-2">
-                    <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-warm-500 lg:text-[11px] lg:tracking-[0.2em]">
+                    <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-base-500 lg:text-[11px] lg:tracking-[0.2em]">
                       Lives
                     </span>
                     <select
                       value={livesFilter}
                       onChange={(event) => setLivesFilter(event.target.value)}
-                      className="theme-input min-w-0 rounded-lg border border-warm-700 bg-warm-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
+                      className="theme-input min-w-0 rounded-lg border border-base-700 bg-base-950/70 px-1.5 py-1.5 text-[9px] leading-tight text-white outline-none transition-colors focus:border-gold/50 lg:rounded-xl lg:px-3 lg:py-2.5 lg:text-sm"
                     >
                       <option value={ALL_FILTER}>All lives</option>
                       {filterOptions.lives.map((lives) => (
@@ -480,17 +480,17 @@ export function GhostBrowserPage() {
                   </label>
                 </div>
 
-                <div className="mt-2 flex flex-wrap items-center gap-1 text-[9px] text-warm-300 lg:mt-3 lg:gap-2 lg:text-xs">
-                  <span className="rounded-full border border-warm-700 bg-warm-950/70 px-2 py-1 lg:px-3 lg:py-1.5">
+                <div className="mt-2 flex flex-wrap items-center gap-1 text-[9px] text-base-300 lg:mt-3 lg:gap-2 lg:text-xs">
+                  <span className="rounded-full border border-base-700 bg-base-950/70 px-2 py-1 lg:px-3 lg:py-1.5">
                     {filteredGhosts.length} shown
                   </span>
-                  <span className="rounded-full border border-warm-700 bg-warm-950/70 px-2 py-1 lg:px-3 lg:py-1.5">
+                  <span className="rounded-full border border-base-700 bg-base-950/70 px-2 py-1 lg:px-3 lg:py-1.5">
                     {bracketGroups.length} brackets
                   </span>
-                  <span className="hidden sm:inline-flex rounded-full border border-warm-700 bg-warm-950/70 px-2 py-1 lg:px-3 lg:py-1.5">
+                  <span className="hidden sm:inline-flex rounded-full border border-base-700 bg-base-950/70 px-2 py-1 lg:px-3 lg:py-1.5">
                     {ghosts.length} in set
                   </span>
-                  <span className="hidden lg:inline-flex rounded-full border border-warm-700 bg-warm-950/70 px-3 py-1.5">
+                  <span className="hidden lg:inline-flex rounded-full border border-base-700 bg-base-950/70 px-3 py-1.5">
                     {totalBracketCount} set brackets
                   </span>
                   <span className="rounded-full border border-gold/30 bg-gold/10 px-2 py-1 text-gold lg:px-3 lg:py-1.5">
@@ -509,16 +509,16 @@ export function GhostBrowserPage() {
             )}
 
             {!ghostError && sortedSets.length === 0 && (
-              <div className="theme-panel rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
+              <div className="theme-panel rounded-2xl border border-base-800 bg-base-900/40 px-4 py-10 text-center">
                 <div className="text-sm font-bold text-white">No blockchain sets found</div>
-                <p className="mt-2 text-sm text-warm-400">
+                <p className="mt-2 text-sm text-base-400">
                   Create or sync a set on-chain before browsing active ghosts.
                 </p>
               </div>
             )}
 
             {!ghostError && sortedSets.length > 0 && isLoadingGhosts && ghosts.length === 0 && (
-              <div className="theme-panel rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center text-warm-400">
+              <div className="theme-panel rounded-2xl border border-base-800 bg-base-900/40 px-4 py-10 text-center text-base-400">
                 Loading active ghost opponents...
               </div>
             )}
@@ -528,11 +528,11 @@ export function GhostBrowserPage() {
               !isLoadingGhosts &&
               bracketGroups.length === 0 &&
               selectedSetId !== null && (
-                <div className="theme-panel rounded-2xl border border-warm-800 bg-warm-900/40 px-4 py-10 text-center">
+                <div className="theme-panel rounded-2xl border border-base-800 bg-base-900/40 px-4 py-10 text-center">
                   <div className="text-sm font-bold text-white">
                     No active ghosts match these filters
                   </div>
-                  <p className="mt-2 text-sm text-warm-400">
+                  <p className="mt-2 text-sm text-base-400">
                     Set #{selectedSetId} has no active ghost boards for the current round, wins, and
                     lives filter combination.
                   </p>
@@ -543,11 +543,11 @@ export function GhostBrowserPage() {
               {bracketGroups.map((group) => (
                 <section
                   key={group.key}
-                  className="theme-panel rounded-2xl border border-warm-800 bg-gradient-to-br from-warm-900/70 to-warm-950/70 p-2.5 lg:rounded-3xl lg:p-5"
+                  className="theme-panel rounded-2xl border border-base-800 bg-gradient-to-br from-base-900/70 to-base-950/70 p-2.5 lg:rounded-3xl lg:p-5"
                 >
                   <div className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <div className="text-[10px] font-heading uppercase tracking-[0.35em] text-warm-500">
+                      <div className="text-[10px] font-heading uppercase tracking-[0.35em] text-base-500">
                         Matchmaking Bracket
                       </div>
                       <h2 className="mt-1 text-lg lg:text-2xl font-black text-white">
@@ -561,7 +561,7 @@ export function GhostBrowserPage() {
                       <span className="rounded-full border border-defeat-red/30 bg-defeat-red/10 px-3 py-1 text-xs font-bold text-defeat-red">
                         {group.lives} lives
                       </span>
-                      <span className="rounded-full border border-warm-700 bg-warm-950/60 px-3 py-1 text-xs font-bold text-warm-300">
+                      <span className="rounded-full border border-base-700 bg-base-950/60 px-3 py-1 text-xs font-bold text-base-300">
                         {group.ghosts.length} active boards
                       </span>
                     </div>
@@ -574,28 +574,28 @@ export function GhostBrowserPage() {
                       return (
                         <article
                           key={ghost.id}
-                          className="theme-panel rounded-2xl border border-white/5 bg-warm-950/60 p-2 lg:p-4"
+                          className="theme-panel rounded-2xl border border-white/5 bg-base-950/60 p-2 lg:p-4"
                         >
                           <div className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
                             <div className="min-w-0">
-                              <div className="text-[10px] font-heading uppercase tracking-[0.3em] text-warm-500">
+                              <div className="text-[10px] font-heading uppercase tracking-[0.3em] text-base-500">
                                 Pool Slot {ghost.poolIndex + 1}
                               </div>
                               <div className="mt-1 text-sm lg:text-base font-bold text-white">
                                 {owner.label}
                               </div>
-                              <div className="mt-1 break-all font-mono text-[11px] text-warm-500">
+                              <div className="mt-1 break-all font-mono text-[11px] text-base-500">
                                 {owner.address}
                               </div>
                             </div>
                             <div className="flex flex-wrap gap-2 text-xs">
-                              <span className="rounded-full border border-warm-700 bg-warm-900/70 px-3 py-1 text-warm-300">
+                              <span className="rounded-full border border-base-700 bg-base-900/70 px-3 py-1 text-base-300">
                                 Set #{ghost.setId}
                               </span>
-                              <span className="rounded-full border border-warm-700 bg-warm-900/70 px-3 py-1 text-warm-300">
+                              <span className="rounded-full border border-base-700 bg-base-900/70 px-3 py-1 text-base-300">
                                 Round {ghost.round}
                               </span>
-                              <span className="rounded-full border border-warm-700 bg-warm-900/70 px-3 py-1 text-warm-300">
+                              <span className="rounded-full border border-base-700 bg-base-900/70 px-3 py-1 text-base-300">
                                 {ghost.wins} wins / {ghost.lives} lives
                               </span>
                             </div>
@@ -642,11 +642,11 @@ export function GhostBrowserPage() {
                                         }}
                                       />
                                     </div>
-                                    <div className="mt-2 w-20 lg:w-28 rounded-xl border border-warm-800 bg-warm-900/70 px-2 py-1.5 text-center text-[10px] lg:text-[11px] text-warm-300">
+                                    <div className="mt-2 w-20 lg:w-28 rounded-xl border border-base-800 bg-base-900/70 px-2 py-1.5 text-center text-[10px] lg:text-[11px] text-base-300">
                                       <div className="font-bold text-white">
                                         {boardCard.attack}/{boardCard.health}
                                       </div>
-                                      <div className="mt-0.5 text-warm-500">
+                                      <div className="mt-0.5 text-base-500">
                                         {unit.permAttack >= 0 ? '+' : ''}
                                         {unit.permAttack} ATK, {unit.permHealth >= 0 ? '+' : ''}
                                         {unit.permHealth} HP

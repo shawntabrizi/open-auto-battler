@@ -22,8 +22,8 @@ const BOARD_HINT_TEXT = {
 } as const;
 
 const BOARD_HINT_TONE_CLASS = {
-  default: 'text-warm-200/90',
-  selected: 'text-warm-100',
+  default: 'text-base-200/90',
+  selected: 'text-base-100',
   warning: 'text-gold',
   danger: 'text-defeat-red',
 } as const;
@@ -237,16 +237,16 @@ export function Arena() {
       <div className="arena-surface relative z-10 px-2 lg:px-12 py-1 lg:py-5 rounded-xl w-full h-full min-h-0">
         {/* Board header */}
         <div className="board-helper board-helper--header theme-panel hidden lg:flex absolute top-3 left-1/2 -translate-x-1/2 z-20 items-center gap-3 lg:gap-4 rounded-full border border-gold/20 bg-surface-dark/55 px-3 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-sm">
-          <div className="h-px w-8 lg:w-16 bg-gradient-to-r from-transparent to-warm-600/40" />
+          <div className="h-px w-8 lg:w-16 bg-gradient-to-r from-transparent to-base-600/40" />
           <span className="board-label theme-title-text font-title text-sm lg:text-xl font-bold uppercase tracking-[0.28em] text-transparent bg-clip-text [text-shadow:0_1px_8px_rgba(0,0,0,0.45)]">
             Board
           </span>
-          <div className="h-px w-8 lg:w-16 bg-gradient-to-l from-transparent to-warm-600/40" />
+          <div className="h-px w-8 lg:w-16 bg-gradient-to-l from-transparent to-base-600/40" />
         </div>
 
         {/* Shortcut hint */}
         <div className="board-helper board-helper--shortcuts hidden lg:flex absolute top-14 lg:top-16 left-1/2 -translate-x-1/2 z-20 w-full lg:max-w-3xl justify-center">
-          <div className="theme-panel rounded-full border border-warm-800/70 bg-surface-dark/55 px-4 py-1.5 text-center text-[10px] lg:text-xs text-warm-200/85 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm">
+          <div className="theme-panel rounded-full border border-base-800/70 bg-surface-dark/55 px-4 py-1.5 text-center text-[10px] lg:text-xs text-base-200/85 shadow-[0_6px_18px_rgba(0,0,0,0.25)] backdrop-blur-sm">
             Select: {GAME_SHORTCUTS.board} • Move: {GAME_SHORTCUTS.boardMove}
           </div>
         </div>
@@ -254,7 +254,7 @@ export function Arena() {
         {showBoardHelper && (
           <div className="pointer-events-none absolute inset-x-0 bottom-3 z-30 flex justify-center px-2 lg:bottom-4">
             <div
-              className={`theme-panel w-fit max-w-full rounded-full border border-warm-800/70 bg-surface-dark/65 px-4 py-1.5 text-center text-[11px] font-semibold leading-tight shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-sm sm:px-5 sm:py-2 sm:text-sm ${
+              className={`theme-panel w-fit max-w-full rounded-full border border-base-800/70 bg-surface-dark/65 px-4 py-1.5 text-center text-[11px] font-semibold leading-tight shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-sm sm:px-5 sm:py-2 sm:text-sm ${
                 boardHint.toneClass
               }`}
             >
@@ -352,7 +352,7 @@ export function Arena() {
                       className={`board-helper board-helper--positions hidden lg:flex absolute left-1/2 top-full mt-2 -translate-x-1/2 w-[92%] justify-center rounded-full border px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm ${
                         arrayIndex === 0
                           ? 'theme-pill border-gold/30 bg-gold/10 text-gold font-bold'
-                          : 'theme-pill border-warm-800/70 bg-surface-dark/45 text-warm-300/80'
+                          : 'theme-pill border-base-800/70 bg-surface-dark/45 text-base-300/80'
                       }`}
                     >
                       {arrayIndex === 0 ? 'Front' : `${arrayIndex + 1}`}

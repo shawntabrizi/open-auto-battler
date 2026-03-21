@@ -13,7 +13,7 @@ export function DesktopRecommendedBanner() {
 
   return (
     <div className="bg-gold/15 border-b border-gold/30 px-3 py-2 flex items-center justify-between gap-3">
-      <p className="text-warm-200 text-xs lg:text-sm">
+      <p className="text-base-200 text-xs lg:text-sm">
         This tool is designed for desktop. For the best experience, use a larger screen.
       </p>
       <button
@@ -21,7 +21,7 @@ export function DesktopRecommendedBanner() {
           sessionStorage.setItem(DISMISSED_KEY, '1');
           setDismissed(true);
         }}
-        className="shrink-0 text-gold hover:text-warm-200 text-xs font-bold"
+        className="shrink-0 text-gold hover:text-base-200 text-xs font-bold"
       >
         Dismiss
       </button>

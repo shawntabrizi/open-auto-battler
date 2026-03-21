@@ -203,7 +203,7 @@ export const MintNftPage: React.FC = () => {
   }
 
   return (
-    <div className="app-shell min-h-screen text-warm-200 flex flex-col">
+    <div className="app-shell min-h-screen text-base-200 flex flex-col">
       <TopBar backTo="/creator" backLabel="Creator" title="Mint NFT" />
       <DesktopRecommendedBanner />
       <div className="flex-1 overflow-y-auto p-4 lg:p-8">
@@ -212,14 +212,14 @@ export const MintNftPage: React.FC = () => {
             {/* Left: Form */}
             <div className="space-y-6">
               {/* Type selector */}
-              <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
+              <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <span className="text-gold">01</span> Type
                 </h2>
                 <select
                   value={nftType}
                   onChange={(e) => setNftType(e.target.value as CustomizationType)}
-                  className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
+                  className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
                 >
                   {TYPE_OPTIONS.map((t) => (
                     <option key={t.value} value={t.value}>
@@ -227,11 +227,11 @@ export const MintNftPage: React.FC = () => {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-warm-500 mt-2">{selectedType.specs}</p>
+                <p className="text-xs text-base-500 mt-2">{selectedType.specs}</p>
               </div>
 
               {/* Image upload */}
-              <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
+              <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <span className="text-gold">02</span> Image
                 </h2>
@@ -263,7 +263,7 @@ export const MintNftPage: React.FC = () => {
                 {uploadTab === 'pinata' && (
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                      <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                         Pinata API Key (JWT)
                       </label>
                       <input
@@ -271,7 +271,7 @@ export const MintNftPage: React.FC = () => {
                         value={pinataKey}
                         onChange={(e) => handlePinataKeyChange(e.target.value)}
                         placeholder="eyJhbGciOi..."
-                        className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-gold/50"
+                        className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-gold/50"
                       />
                     </div>
                     <div
@@ -294,15 +294,15 @@ export const MintNftPage: React.FC = () => {
                         <p className="text-gold text-sm">Uploading...</p>
                       ) : (
                         <>
-                          <p className="text-warm-400 text-sm">
+                          <p className="text-base-400 text-sm">
                             Drop image here or click to select
                           </p>
-                          <p className="text-warm-600 text-xs mt-1">PNG or WebP</p>
+                          <p className="text-base-600 text-xs mt-1">PNG or WebP</p>
                         </>
                       )}
                     </div>
                     {cid && (
-                      <div className="theme-panel bg-warm-800/50 rounded-lg px-3 py-2 text-xs font-mono text-victory-green break-all">
+                      <div className="theme-panel bg-base-800/50 rounded-lg px-3 py-2 text-xs font-mono text-victory-green break-all">
                         CID: {cid}
                       </div>
                     )}
@@ -311,7 +311,7 @@ export const MintNftPage: React.FC = () => {
 
                 {uploadTab === 'manual' && (
                   <div>
-                    <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                    <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                       IPFS CID
                     </label>
                     <input
@@ -319,20 +319,20 @@ export const MintNftPage: React.FC = () => {
                       value={cid}
                       onChange={(e) => setCid(e.target.value.trim())}
                       placeholder="bafybeih5..."
-                      className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-gold/50 font-mono"
+                      className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-gold/50 font-mono"
                     />
                   </div>
                 )}
               </div>
 
               {/* Name & Description */}
-              <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
+              <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                   <span className="text-gold">03</span> Details
                 </h2>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                    <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                       Name <span className="text-defeat-red">*</span>
                     </label>
                     <input
@@ -340,34 +340,34 @@ export const MintNftPage: React.FC = () => {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Galaxy Arena"
-                      className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
+                      className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                    <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                       Description
                     </label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="A cosmic galaxy board background"
-                      className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50 h-16 resize-none text-sm"
+                      className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50 h-16 resize-none text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                    <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                       Collection ID
                     </label>
                     <input
                       type="number"
                       value={collectionId}
                       onChange={(e) => setCollectionId(parseInt(e.target.value) || 0)}
-                      className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
+                      className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
                       min="0"
                     />
                     {/* Collection status */}
                     {collectionExists === null && (
-                      <p className="text-[10px] text-warm-600 mt-1">Checking collection...</p>
+                      <p className="text-[10px] text-base-600 mt-1">Checking collection...</p>
                     )}
                     {collectionExists === true && (
                       <p className="text-[10px] text-accent-emerald mt-1">Collection exists</p>
@@ -403,8 +403,8 @@ export const MintNftPage: React.FC = () => {
             {/* Right: Image Preview */}
             <div>
               <div className="sticky top-8">
-                <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
-                  <h3 className="text-sm font-bold text-warm-400 uppercase mb-3">Image Preview</h3>
+                <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-4 lg:p-6 backdrop-blur-sm">
+                  <h3 className="text-sm font-bold text-base-400 uppercase mb-3">Image Preview</h3>
                   {resolvedImageUrl ? (
                     <div className="rounded-xl overflow-hidden border border-white/10">
                       <IpfsImage
@@ -412,25 +412,25 @@ export const MintNftPage: React.FC = () => {
                         alt={name || 'Preview'}
                         className="w-full"
                         fallback={
-                          <div className="w-full aspect-video bg-warm-800 flex items-center justify-center text-warm-500 text-sm">
+                          <div className="w-full aspect-video bg-base-800 flex items-center justify-center text-base-500 text-sm">
                             Failed to load image
                           </div>
                         }
                       />
                     </div>
                   ) : (
-                    <div className="w-full aspect-video bg-warm-800/50 rounded-xl border border-white/5 flex items-center justify-center">
-                      <span className="text-warm-600 text-sm">No image set</span>
+                    <div className="w-full aspect-video bg-base-800/50 rounded-xl border border-white/5 flex items-center justify-center">
+                      <span className="text-base-600 text-sm">No image set</span>
                     </div>
                   )}
 
                   {/* Metadata preview */}
                   {(cid || name) && (
                     <div className="mt-4">
-                      <h4 className="text-xs font-bold text-warm-500 uppercase mb-2">
+                      <h4 className="text-xs font-bold text-base-500 uppercase mb-2">
                         Metadata JSON
                       </h4>
-                      <pre className="bg-warm-950 border border-white/10 rounded-lg p-3 text-[10px] font-mono text-mana-blue overflow-auto max-h-32">
+                      <pre className="bg-base-950 border border-white/10 rounded-lg p-3 text-[10px] font-mono text-mana-blue overflow-auto max-h-32">
                         {JSON.stringify(
                           {
                             type: nftType,
@@ -451,7 +451,7 @@ export const MintNftPage: React.FC = () => {
                             description,
                           }).length > 256
                             ? 'text-defeat-red'
-                            : 'text-warm-600'
+                            : 'text-base-600'
                         }`}
                       >
                         {

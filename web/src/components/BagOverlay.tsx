@@ -58,12 +58,12 @@ export function BagOverlay() {
       >
         <CloseIcon className="theme-icon-muted w-4 h-4 lg:w-5 lg:h-5" />
       </button>
-      <div className="flex items-center mb-3 lg:mb-8 border-b border-warm-700 pb-2 lg:pb-4 pr-10 lg:pr-12">
+      <div className="flex items-center mb-3 lg:mb-8 border-b border-base-700 pb-2 lg:pb-4 pr-10 lg:pr-12">
         <div className="flex flex-col">
           <h2 className="text-lg lg:text-3xl font-bold text-white flex items-center gap-2 lg:gap-3">
             <BagIcon className="w-5 h-5 lg:w-7 lg:h-7 text-mana-blue" /> Draw Pool
           </h2>
-          <p className="text-warm-400 text-xs lg:text-base mt-0.5 lg:mt-1">
+          <p className="text-base-400 text-xs lg:text-base mt-0.5 lg:mt-1">
             <span className="text-white font-bold">{view.bag_count}</span> cards remaining
             <span className="hidden lg:inline"> in your bag (excluding your current hand)</span>.
           </p>
@@ -72,7 +72,7 @@ export function BagOverlay() {
 
       <div className="flex-1 min-h-0 pr-1 lg:pr-4">
         {bagCards.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-warm-500">
+          <div className="flex items-center justify-center h-full text-base-500">
             Loading bag...
           </div>
         ) : (
@@ -94,7 +94,7 @@ export function BagOverlay() {
         )}
       </div>
 
-      <div className="mt-2 lg:mt-6 text-center text-warm-500 text-[10px] lg:text-sm border-t border-warm-800 pt-2 lg:pt-4 uppercase tracking-wider lg:tracking-widest">
+      <div className="mt-2 lg:mt-6 text-center text-base-500 text-[10px] lg:text-sm border-t border-base-800 pt-2 lg:pt-4 uppercase tracking-wider lg:tracking-widest">
         Cards drawn into hand in future rounds
       </div>
     </div>

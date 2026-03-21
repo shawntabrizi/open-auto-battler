@@ -38,14 +38,14 @@ function SetCard({
       className={`theme-panel set-tile relative flex flex-col items-center text-center rounded-xl border p-3 lg:p-5 cursor-pointer transition-all ${
         isSelected
           ? 'set-tile-selected border-2'
-          : 'border-warm-700/40 bg-surface-dark/60 hover:border-warm-500/80 hover:bg-surface-mid/20'
+          : 'border-base-700/40 bg-surface-dark/60 hover:border-base-500/80 hover:bg-surface-mid/20'
       }`}
     >
       {/* Radio indicator — top right */}
       <div className="absolute top-2.5 right-2.5 lg:top-3 lg:right-3">
         <div
           className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-            isSelected ? 'set-radio-selected' : 'border-warm-600'
+            isSelected ? 'set-radio-selected' : 'border-base-600'
           }`}
         >
           {isSelected && <div className="set-radio-dot h-2.5 w-2.5 rounded-full" />}
@@ -54,14 +54,14 @@ function SetCard({
 
       {/* Set name */}
       <h3 className="font-button font-bold text-sm lg:text-xl text-white">{name}</h3>
-      <p className="text-warm-500 text-[10px] lg:text-sm">{cards?.length ?? '?'} cards</p>
+      <p className="text-base-500 text-[10px] lg:text-sm">{cards?.length ?? '?'} cards</p>
 
       {/* Card fan */}
       {cards && cards.length > 0 ? (
         <CardFan cards={cards} />
       ) : (
         <div className="set-card-fan flex items-center justify-center">
-          <span className="text-warm-600 text-sm">...</span>
+          <span className="text-base-600 text-sm">...</span>
         </div>
       )}
 
@@ -99,7 +99,7 @@ export function SetsPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-5xl mx-auto px-3 lg:px-6 py-6 lg:py-12">
           {sorted.length === 0 ? (
-            <div className="text-center py-16 text-warm-500 text-sm">
+            <div className="text-center py-16 text-base-500 text-sm">
               {engine ? 'No sets found.' : 'Loading...'}
             </div>
           ) : (
@@ -124,7 +124,7 @@ export function SetsPage() {
               <div className="mt-4 lg:mt-8 text-center">
                 <Link
                   to="/creator"
-                  className="text-warm-500 hover:text-gold text-xs lg:text-sm transition-colors"
+                  className="text-base-500 hover:text-gold text-xs lg:text-sm transition-colors"
                 >
                   Want to create your own set? Visit the Creator Studio &rarr;
                 </Link>

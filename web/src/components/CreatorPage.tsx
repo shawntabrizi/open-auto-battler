@@ -37,7 +37,7 @@ export function CreatorPage() {
             <h1 className="theme-title-text text-2xl lg:text-4xl font-heading font-bold text-transparent bg-clip-text">
               Creator Studio
             </h1>
-            <p className="text-warm-400 text-xs lg:text-sm mt-2">
+            <p className="text-base-400 text-xs lg:text-sm mt-2">
               Design cards, build sets, and mint cosmetic NFTs
             </p>
           </div>
@@ -49,7 +49,7 @@ export function CreatorPage() {
               </p>
               <Link
                 to="/network"
-                className="inline-block mt-2 text-xs text-gold hover:text-warm-200 underline"
+                className="inline-block mt-2 text-xs text-gold hover:text-base-200 underline"
               >
                 Network Settings
               </Link>
@@ -61,7 +61,7 @@ export function CreatorPage() {
               <Link
                 key={tool.to}
                 to={tool.to}
-                className="theme-panel group block p-4 lg:p-6 rounded-xl border border-warm-700/40 bg-warm-900/60 hover:border-warm-500 hover:bg-warm-800/60 transition-all active:scale-[0.99]"
+                className="theme-panel group block p-4 lg:p-6 rounded-xl border border-base-700/40 bg-base-900/60 hover:border-base-500 hover:bg-base-800/60 transition-all active:scale-[0.99]"
               >
                 <div className="flex items-start gap-4">
                   <span className="text-2xl lg:text-3xl">{tool.icon}</span>
@@ -69,7 +69,7 @@ export function CreatorPage() {
                     <h2 className="font-button font-bold text-base lg:text-lg text-white group-hover:text-gold transition-colors">
                       {tool.label}
                     </h2>
-                    <p className="text-warm-400 text-xs lg:text-sm mt-0.5 leading-relaxed">
+                    <p className="text-base-400 text-xs lg:text-sm mt-0.5 leading-relaxed">
                       {tool.description}
                     </p>
                   </div>

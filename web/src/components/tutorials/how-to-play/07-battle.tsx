@@ -28,7 +28,7 @@ export default function Battle() {
           {/* Clash indicator */}
           <div className="flex flex-col items-center shrink-0">
             <span className="text-lg lg:text-2xl">⚔️</span>
-            <span className="text-[8px] lg:text-[10px] text-warm-500 font-bold">CLASH</span>
+            <span className="text-[8px] lg:text-[10px] text-base-500 font-bold">CLASH</span>
           </div>
 
           {/* Enemy side */}
@@ -42,7 +42,7 @@ export default function Battle() {
         </div>
       )}
 
-      <div className="space-y-3 text-warm-300 text-sm lg:text-base leading-relaxed">
+      <div className="space-y-3 text-base-300 text-sm lg:text-base leading-relaxed">
         <p>
           After the shop, your board fights an opponent's board{' '}
           <span className="text-gold font-bold">automatically</span>. The

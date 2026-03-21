@@ -1,7 +1,7 @@
 import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { ThemedToaster } from './components/ThemedToaster.tsx';
 import './index.css';
 import { AuthGate } from './components/AuthGate.tsx';
 import { HomePage } from './components/HomePage.tsx';
@@ -51,7 +51,7 @@ applyThemeToDocument(useThemeStore.getState().selectedThemeId);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Toaster position="top-right" />
+    <ThemedToaster />
     <TransactionOverlay />
     <TutorialOverlay />
     <HashRouter>
@@ -95,7 +95,7 @@ createRoot(document.getElementById('root')!).render(
           <Route
             path="/embed"
             element={
-              <Suspense fallback={<div className="min-h-screen bg-warm-900" />}>
+              <Suspense fallback={<div className="min-h-screen bg-base-900" />}>
                 <EmbedPage />
               </Suspense>
             }
@@ -105,7 +105,7 @@ createRoot(document.getElementById('root')!).render(
             element={
               <Suspense
                 fallback={
-                  <div className="min-h-screen bg-warm-900 text-white flex items-center justify-center">
+                  <div className="min-h-screen bg-base-900 text-white flex items-center justify-center">
                     Loading...
                   </div>
                 }
@@ -119,7 +119,7 @@ createRoot(document.getElementById('root')!).render(
             element={
               <Suspense
                 fallback={
-                  <div className="min-h-screen bg-warm-900 text-white flex items-center justify-center">
+                  <div className="min-h-screen bg-base-900 text-white flex items-center justify-center">
                     Loading...
                   </div>
                 }
@@ -133,7 +133,7 @@ createRoot(document.getElementById('root')!).render(
             element={
               <Suspense
                 fallback={
-                  <div className="min-h-screen bg-warm-900 text-white flex items-center justify-center">
+                  <div className="min-h-screen bg-base-900 text-white flex items-center justify-center">
                     Loading...
                   </div>
                 }

@@ -31,14 +31,14 @@ export function KeyboardShortcutsOverlay() {
           aria-modal="true"
           aria-label="Keyboard Shortcuts"
           tabIndex={-1}
-          className="w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl border border-warm-700/70 bg-warm-950/95 shadow-2xl flex flex-col"
+          className="w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl border border-base-700/70 bg-base-950/95 shadow-2xl flex flex-col"
         >
-          <div className="flex items-center justify-between border-b border-warm-800 px-5 py-4 lg:px-6">
+          <div className="flex items-center justify-between border-b border-base-800 px-5 py-4 lg:px-6">
             <div>
               <h2 className="text-lg lg:text-2xl font-heading tracking-wide text-white">
                 Keyboard Shortcuts
               </h2>
-              <p className="mt-1 text-xs lg:text-sm text-warm-400">
+              <p className="mt-1 text-xs lg:text-sm text-base-400">
                 Game-mode controls for faster play.
               </p>
             </div>
@@ -61,19 +61,19 @@ export function KeyboardShortcutsOverlay() {
           >
             {GAME_SHORTCUT_SECTIONS.map((section) => (
               <section key={section.title} className="space-y-3">
-                <h3 className="text-xs lg:text-sm font-heading uppercase tracking-[0.2em] text-warm-400">
+                <h3 className="text-xs lg:text-sm font-heading uppercase tracking-[0.2em] text-base-400">
                   {section.title}
                 </h3>
                 <div className="grid gap-2">
                   {section.shortcuts.map((shortcut) => (
                     <div
                       key={`${section.title}-${shortcut.keys}`}
-                      className="grid grid-cols-[minmax(110px,160px)_1fr] lg:grid-cols-[180px_1fr] gap-3 items-start rounded-xl border border-warm-800/70 bg-warm-900/50 px-3 py-3"
+                      className="grid grid-cols-[minmax(110px,160px)_1fr] lg:grid-cols-[180px_1fr] gap-3 items-start rounded-xl border border-base-800/70 bg-base-900/50 px-3 py-3"
                     >
                       <div className="font-mono text-xs lg:text-sm text-gold">
                         {shortcut.keys}
                       </div>
-                      <div className="text-xs lg:text-sm text-warm-200 leading-relaxed">
+                      <div className="text-xs lg:text-sm text-base-200 leading-relaxed">
                         {shortcut.description}
                       </div>
                     </div>

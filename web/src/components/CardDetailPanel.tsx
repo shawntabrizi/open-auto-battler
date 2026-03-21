@@ -18,7 +18,7 @@ function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
   );
 
   return (
-    <div className="theme-panel relative w-full aspect-[3/4] overflow-hidden rounded-lg border-2 border-warm-700/70 bg-gradient-to-b from-surface-mid/75 to-surface-dark shadow-elevation-rest lg:rounded-xl">
+    <div className="theme-panel relative w-full aspect-[3/4] overflow-hidden rounded-lg border-2 border-base-700/70 bg-gradient-to-b from-surface-mid/75 to-surface-dark shadow-elevation-rest lg:rounded-xl">
       {/* Emoji shown while loading or on error */}
       {status !== 'loaded' && (
         <div className="absolute inset-0 flex items-center justify-center bg-surface-mid/80">
@@ -175,8 +175,8 @@ export function CardDetailPanel({
     ? 'relative h-full min-h-0 w-full shrink-0 rounded-none overflow-hidden sm:rounded-2xl'
     : 'fixed top-0 left-0 bottom-0 w-44 lg:w-80';
   const frameClassName = isContainedLayout
-    ? 'border-0 border-warm-700 rounded-none sm:border sm:rounded-2xl'
-    : 'border-r border-warm-700';
+    ? 'border-0 border-base-700 rounded-none sm:border sm:rounded-2xl'
+    : 'border-r border-base-700';
   const contentPaddingClass = isContainedLayout ? 'p-4 lg:p-6' : 'p-3 pr-5 lg:p-5 lg:pr-7';
 
   const handleClose = () => {
@@ -196,7 +196,7 @@ export function CardDetailPanel({
           <h3 className="theme-title-text font-heading mb-1 bg-clip-text text-sm font-bold text-transparent lg:mb-2 lg:text-lg">
             Select a Card
           </h3>
-          <p className="text-[10px] lg:text-sm text-warm-400">Tap any card to view details.</p>
+          <p className="text-[10px] lg:text-sm text-base-400">Tap any card to view details.</p>
         </div>
       );
     }
@@ -235,12 +235,12 @@ export function CardDetailPanel({
             {allAbilities.map((ability, index) => (
               <div
                 key={index}
-                className="theme-panel mb-2 rounded-lg border border-warm-700/70 bg-surface-mid/25 p-2 shadow-elevation-rest last:mb-0 lg:mb-4 lg:p-3"
+                className="theme-panel mb-2 rounded-lg border border-base-700/70 bg-surface-mid/25 p-2 shadow-elevation-rest last:mb-0 lg:mb-4 lg:p-3"
               >
                 <h3 className="text-xs lg:text-md font-heading font-bold text-gold mb-1 lg:mb-2">
                   {allAbilities.length > 1 ? `Ability ${index + 1}` : 'Ability'}
                 </h3>
-                <div className="rounded border border-warm-700/50 bg-surface-dark/70 p-1.5 text-[10px] italic text-warm-100 font-body lg:p-2 lg:text-sm">
+                <div className="rounded border border-base-700/50 bg-surface-dark/70 p-1.5 text-[10px] italic text-base-100 font-body lg:p-2 lg:text-sm">
                   {formatAbilitySentence(ability, { resolveCardName })}
                 </div>
               </div>
@@ -249,14 +249,14 @@ export function CardDetailPanel({
         )}
 
         {/* Metadata */}
-        <div className="flex flex-col gap-1 border-t border-warm-700/60 pt-4 font-mono text-[10px] text-warm-500">
+        <div className="flex flex-col gap-1 border-t border-base-700/60 pt-4 font-mono text-[10px] text-base-500">
           <div>CARD_ID: {card.id}</div>
         </div>
 
         {/* Card Raw JSON */}
         {showRawJson && (
-          <div className="mt-4 rounded border border-warm-700/60 bg-surface-dark/70 p-2">
-            <div className="text-[10px] text-warm-500 mb-1 flex justify-between items-center">
+          <div className="mt-4 rounded border border-base-700/60 bg-surface-dark/70 p-2">
+            <div className="text-[10px] text-base-500 mb-1 flex justify-between items-center">
               <span>CARD_DATA.JSON</span>
               <button
                 onClick={() => navigator.clipboard.writeText(cardRawJson)}
@@ -299,7 +299,7 @@ export function CardDetailPanel({
       >
         {/* Header */}
         <div
-          className={`border-b border-warm-700/70 bg-gradient-to-r from-surface-mid/30 via-surface-dark/40 to-surface-dark/75 py-2 px-3 lg:px-5 lg:py-3 flex items-center ${
+          className={`border-b border-base-700/70 bg-gradient-to-r from-surface-mid/30 via-surface-dark/40 to-surface-dark/75 py-2 px-3 lg:px-5 lg:py-3 flex items-center ${
             isContainedLayout ? 'justify-between' : ''
           }`}
         >
@@ -309,7 +309,7 @@ export function CardDetailPanel({
           {isContainedLayout && (
             <button
               onClick={handleClose}
-              className="text-warm-500 hover:text-warm-200 text-sm leading-none p-1 transition-colors"
+              className="text-base-500 hover:text-base-200 text-sm leading-none p-1 transition-colors"
               aria-label="Close card details"
             >
               &#x2715;
@@ -329,7 +329,7 @@ export function CardDetailPanel({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-warm-700/60 bg-surface-dark/70 p-1 text-center text-[6px] uppercase tracking-tighter text-warm-600 font-mono lg:p-4 lg:text-[10px]">
+        <div className="border-t border-base-700/60 bg-surface-dark/70 p-1 text-center text-[6px] uppercase tracking-tighter text-base-600 font-mono lg:p-4 lg:text-[10px]">
           Open Auto Battler Engine v0.2.0
         </div>
       </div>
@@ -347,9 +347,9 @@ export function CardDetailPanel({
               }
             }}
           />
-          <div className="theme-panel relative w-full max-w-sm overflow-hidden rounded-2xl border border-warm-700/60 bg-surface-dark shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
+          <div className="theme-panel relative w-full max-w-sm overflow-hidden rounded-2xl border border-base-700/60 bg-surface-dark shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
             <div className={`absolute inset-0 bg-gradient-to-br ${forfeitContext.accent}`} />
-            <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-warm-400/30 to-transparent" />
+            <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-base-400/30 to-transparent" />
 
             <div className="relative p-6 lg:p-7 flex flex-col items-center text-center">
               <h2
@@ -362,10 +362,10 @@ export function CardDetailPanel({
                 {forfeitContext.title}
               </h2>
 
-              <p className="mt-4 text-base font-heading font-semibold text-warm-200">
+              <p className="mt-4 text-base font-heading font-semibold text-base-200">
                 {forfeitContext.subtitle}
               </p>
-              <p className="mt-1 text-sm font-body leading-relaxed text-warm-400">
+              <p className="mt-1 text-sm font-body leading-relaxed text-base-400">
                 {forfeitContext.confirmation}
               </p>
 

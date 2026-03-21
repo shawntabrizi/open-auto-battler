@@ -73,7 +73,7 @@ export function ArenaPage() {
           </button>
           <Link
             to="/network"
-            className="mt-3 text-sm text-warm-400 hover:text-warm-200 transition-colors"
+            className="mt-3 text-sm text-base-400 hover:text-base-200 transition-colors"
           >
             Network Settings
           </Link>
@@ -103,7 +103,7 @@ export function ArenaPage() {
         <div className="w-full max-w-sm text-center">
           {selectedSetId === null || !setMeta ? (
             <>
-              <p className="text-warm-400 text-sm mb-4">No set selected.</p>
+              <p className="text-base-400 text-sm mb-4">No set selected.</p>
               <Link
                 to="/sets"
                 className="theme-button btn-primary inline-block font-bold py-3 px-8 rounded-xl text-sm transition-all"
@@ -116,13 +116,13 @@ export function ArenaPage() {
               <h2 className="text-xl lg:text-2xl font-heading font-bold text-white">
                 {setMeta.name}
               </h2>
-              <p className="text-warm-500 text-xs lg:text-sm">{cards?.length ?? '?'} cards</p>
+              <p className="text-base-500 text-xs lg:text-sm">{cards?.length ?? '?'} cards</p>
               <div className="set-tile">
                 {cards && cards.length > 0 ? (
                   <CardFan cards={cards} />
                 ) : (
                   <div className="set-card-fan flex items-center justify-center">
-                    <span className="text-warm-600 text-sm">...</span>
+                    <span className="text-base-600 text-sm">...</span>
                   </div>
                 )}
               </div>
@@ -137,7 +137,7 @@ export function ArenaPage() {
                 </button>
                 <Link
                   to="/sets"
-                  className="text-warm-400 hover:text-warm-200 text-sm transition-colors"
+                  className="text-base-400 hover:text-base-200 text-sm transition-colors"
                 >
                   Change Set
                 </Link>

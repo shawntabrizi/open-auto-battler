@@ -47,7 +47,7 @@ export function GameOverScreen() {
     {
       value: view.round,
       label: 'Round',
-      color: 'text-warm-200',
+      color: 'text-base-200',
       icon: <HourglassIcon className="theme-icon-muted w-4 h-4 lg:w-5 lg:h-5" />,
     },
     {
@@ -126,7 +126,7 @@ export function GameOverScreen() {
           <p
             className={`text-sm lg:text-lg font-body ${
               showSubtitle ? 'animate-stagger-fade-in' : 'opacity-0'
-            } ${isVictory ? 'text-warm-200' : 'text-warm-300/80'}`}
+            } ${isVictory ? 'text-base-200' : 'text-base-300/80'}`}
             style={{ animationDelay: '100ms', animationFillMode: 'both' }}
           >
             {isVictory ? 'Your army is undefeated!' : 'Your forces have fallen...'}
@@ -134,7 +134,7 @@ export function GameOverScreen() {
 
           {/* Stats panel */}
           <div
-            className={`w-full bg-black/40 border border-warm-700/50 rounded-xl px-3 lg:px-8 py-3 lg:py-6 ${
+            className={`w-full bg-black/40 border border-base-700/50 rounded-xl px-3 lg:px-8 py-3 lg:py-6 ${
               showStats ? 'animate-stagger-fade-in' : 'opacity-0'
             }`}
             style={{ animationDelay: '150ms', animationFillMode: 'both' }}
@@ -144,7 +144,7 @@ export function GameOverScreen() {
                 <div key={stat.label} className="flex flex-col items-center gap-1.5">
                   <div className="flex items-center gap-1.5">
                     {stat.icon}
-                    <span className="text-[0.6rem] lg:text-xs text-warm-400 uppercase tracking-wider font-heading">
+                    <span className="text-[0.6rem] lg:text-xs text-base-400 uppercase tracking-wider font-heading">
                       {stat.label}
                     </span>
                   </div>

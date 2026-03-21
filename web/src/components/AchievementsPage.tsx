@@ -15,16 +15,16 @@ type TrophyTier = 'bronze' | 'silver' | 'gold';
 
 function TrophyIcon({ tier, earned }: { tier: TrophyTier; earned: boolean }) {
   const colors: Record<TrophyTier, { bg: string; dim: string }> = {
-    bronze: { bg: 'achievement-bronze', dim: 'text-warm-700' },
-    silver: { bg: 'achievement-silver', dim: 'text-warm-700' },
-    gold: { bg: 'achievement-gold', dim: 'text-warm-700' },
+    bronze: { bg: 'achievement-bronze', dim: 'text-base-700' },
+    silver: { bg: 'achievement-silver', dim: 'text-base-700' },
+    gold: { bg: 'achievement-gold', dim: 'text-base-700' },
   };
   const c = colors[tier];
 
   return (
     <div
       className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full flex items-center justify-center ${
-        earned ? c.bg : 'bg-warm-800'
+        earned ? c.bg : 'bg-base-800'
       }`}
       title={`${tier === 'bronze' ? 'Win' : tier === 'silver' ? 'Victory' : 'Perfect'} — ${
         tier === 'bronze'
@@ -142,7 +142,7 @@ export function AchievementsPage() {
       <div className="flex-1 ml-44 lg:ml-80 overflow-y-auto">
         <div className="w-full max-w-5xl mx-auto p-3 lg:p-6">
           {sorted.length === 0 ? (
-            <div className="text-center py-16 text-warm-500 text-sm">
+            <div className="text-center py-16 text-base-500 text-sm">
               {engine ? 'No cards found.' : 'Loading...'}
             </div>
           ) : (
@@ -184,8 +184,8 @@ export function AchievementsPage() {
                   return (
                     <div
                       key={tier}
-                      className={`theme-panel p-2.5 lg:p-4 bg-warm-900/60 border rounded-xl transition-colors flex sm:flex-col items-center sm:items-stretch gap-3 sm:gap-0 sm:text-center ${
-                        isActive ? activeColor : 'border-warm-700/40'
+                      className={`theme-panel p-2.5 lg:p-4 bg-base-900/60 border rounded-xl transition-colors flex sm:flex-col items-center sm:items-stretch gap-3 sm:gap-0 sm:text-center ${
+                        isActive ? activeColor : 'border-base-700/40'
                       }`}
                     >
                       <div className="flex items-center gap-1.5 sm:justify-center sm:mb-1">
@@ -206,11 +206,11 @@ export function AchievementsPage() {
                         >
                           {label}
                         </div>
-                        <p className="text-[9px] lg:text-[10px] text-warm-500 leading-tight mb-2">
+                        <p className="text-[9px] lg:text-[10px] text-base-500 leading-tight mb-2">
                           {desc}
                         </p>
                       </div>
-                      <div className="inline-flex rounded border border-warm-700/60 overflow-hidden ml-auto sm:ml-0 sm:self-center">
+                      <div className="inline-flex rounded border border-base-700/60 overflow-hidden ml-auto sm:ml-0 sm:self-center">
                         {modes.map(({ mode, text }) => {
                           const active =
                             (isActive && filterMode === mode) || (!isActive && mode === 'all');
@@ -221,7 +221,7 @@ export function AchievementsPage() {
                               className={`text-[8px] lg:text-[10px] px-1.5 lg:px-2 py-0.5 transition-colors ${
                                 active
                                   ? segActive
-                                  : 'text-warm-600 hover:text-warm-300 hover:bg-warm-800/50'
+                                  : 'text-base-600 hover:text-base-300 hover:bg-base-800/50'
                               }`}
                             >
                               {text}

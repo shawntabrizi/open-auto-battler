@@ -39,16 +39,16 @@ export function HistoryPage() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="theme-panel flex items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-xl border border-warm-700 bg-warm-900/30 hover:border-warm-500 transition-all group"
+                className="theme-panel flex items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-xl border border-base-700 bg-base-900/30 hover:border-base-500 transition-all group"
               >
                 <span className="text-2xl lg:text-3xl">{item.icon}</span>
                 <div>
-                  <div className="font-button text-sm lg:text-base font-bold text-warm-200 group-hover:text-gold transition-colors">
+                  <div className="font-button text-sm lg:text-base font-bold text-base-200 group-hover:text-gold transition-colors">
                     {item.label}
                   </div>
-                  <div className="text-warm-500 text-[10px] lg:text-xs">{item.description}</div>
+                  <div className="text-base-500 text-[10px] lg:text-xs">{item.description}</div>
                 </div>
-                <span className="text-warm-600 text-lg ml-auto">&rarr;</span>
+                <span className="text-base-600 text-lg ml-auto">&rarr;</span>
               </Link>
             ))}
           </div>

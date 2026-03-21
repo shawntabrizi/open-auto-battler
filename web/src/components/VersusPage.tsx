@@ -98,7 +98,7 @@ export function VersusPage() {
       <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-3 lg:p-4">
         <div className="relative z-10 flex flex-col items-center w-full max-w-sm lg:max-w-lg">
           {/* Main Card */}
-          <div className="theme-panel w-full bg-warm-900/60 border border-warm-700/40 rounded-xl lg:rounded-2xl p-3 lg:p-8 backdrop-blur-sm relative">
+          <div className="theme-panel w-full bg-base-900/60 border border-base-700/40 rounded-xl lg:rounded-2xl p-3 lg:p-8 backdrop-blur-sm relative">
             {/* Connected State */}
             {status === 'connected' || status === 'in-game' ? (
               <div className="text-center pt-2">
@@ -108,14 +108,14 @@ export function VersusPage() {
                 <h2 className="text-lg lg:text-2xl font-heading font-bold text-accent-emerald mb-1 lg:mb-2">
                   Connected
                 </h2>
-                <p className="mb-4 lg:mb-6 text-warm-400 text-xs lg:text-sm">
+                <p className="mb-4 lg:mb-6 text-base-400 text-xs lg:text-sm">
                   Opponent:{' '}
-                  <span className="font-mono text-warm-200 break-all">{opponentPeerId}</span>
+                  <span className="font-mono text-base-200 break-all">{opponentPeerId}</span>
                 </p>
 
                 {isHost && status === 'connected' && (
                   <div className="mb-4 lg:mb-6">
-                    <label className="block text-[10px] lg:text-xs text-warm-500 uppercase tracking-wider font-heading mb-2">
+                    <label className="block text-[10px] lg:text-xs text-base-500 uppercase tracking-wider font-heading mb-2">
                       Lives
                     </label>
                     <div className="flex justify-center gap-2">
@@ -152,7 +152,7 @@ export function VersusPage() {
                   <h3 className="text-base lg:text-xl font-heading font-bold text-white mb-2">
                     Connecting...
                   </h3>
-                  <p className="text-[10px] lg:text-sm text-warm-400">
+                  <p className="text-[10px] lg:text-sm text-base-400">
                     Joining game:{' '}
                     <span className="font-mono text-mana-blue">
                       {joinIdFromUrl.slice(0, 12)}...
@@ -177,7 +177,7 @@ export function VersusPage() {
                       'Initialize Network'
                     )}
                   </button>
-                  <p className="text-[10px] lg:text-sm text-warm-500 mt-3 lg:mt-4">
+                  <p className="text-[10px] lg:text-sm text-base-500 mt-3 lg:mt-4">
                     Generate your ID to host or join a game.
                   </p>
                 </div>
@@ -188,8 +188,8 @@ export function VersusPage() {
                 {/* Left: QR + ID */}
                 <div className="flex flex-col gap-2 lg:gap-4 flex-shrink-0">
                   {/* QR Code */}
-                  <div className="theme-panel bg-warm-950/60 p-2 lg:p-5 rounded-xl border border-warm-700/40 text-center">
-                    <div className="text-[8px] lg:text-xs text-warm-500 uppercase tracking-widest font-heading mb-1 lg:mb-3">
+                  <div className="theme-panel bg-base-950/60 p-2 lg:p-5 rounded-xl border border-base-700/40 text-center">
+                    <div className="text-[8px] lg:text-xs text-base-500 uppercase tracking-widest font-heading mb-1 lg:mb-3">
                       Scan to Join
                     </div>
                     <div className="flex justify-center mb-1.5 lg:mb-3">
@@ -218,8 +218,8 @@ export function VersusPage() {
                   </div>
 
                   {/* Peer ID */}
-                  <div className="theme-panel bg-warm-950/60 p-2 lg:p-4 rounded-xl border border-warm-700/40 text-center">
-                    <div className="text-[8px] lg:text-xs text-warm-500 uppercase tracking-widest font-heading mb-0.5 lg:mb-1">
+                  <div className="theme-panel bg-base-950/60 p-2 lg:p-4 rounded-xl border border-base-700/40 text-center">
+                    <div className="text-[8px] lg:text-xs text-base-500 uppercase tracking-widest font-heading mb-0.5 lg:mb-1">
                       Your ID
                     </div>
                     <div className="text-[10px] lg:text-base font-mono text-mana-blue select-all break-all leading-tight">
@@ -228,7 +228,7 @@ export function VersusPage() {
                     <button
                       onClick={handleCopyId}
                       className={`text-[10px] lg:text-sm mt-1 transition-colors ${
-                        copiedId ? 'text-victory-green' : 'text-warm-400 hover:text-warm-200'
+                        copiedId ? 'text-victory-green' : 'text-base-400 hover:text-base-200'
                       }`}
                     >
                       {copiedId ? '✓ Copied!' : 'Copy ID'}
@@ -239,8 +239,8 @@ export function VersusPage() {
                 {/* Right: Join + Logs */}
                 <div className="flex-1 flex flex-col justify-center">
                   {/* Manual Join */}
-                  <div className="lg:border-t lg:border-warm-700/40 lg:pt-6">
-                    <label className="block text-[10px] lg:text-xs font-heading text-warm-500 uppercase tracking-wider mb-1.5 lg:mb-3">
+                  <div className="lg:border-t lg:border-base-700/40 lg:pt-6">
+                    <label className="block text-[10px] lg:text-xs font-heading text-base-500 uppercase tracking-wider mb-1.5 lg:mb-3">
                       Or Enter Opponent ID
                     </label>
                     <div className="flex gap-1.5 lg:gap-2">
@@ -249,7 +249,7 @@ export function VersusPage() {
                         value={targetId}
                         onChange={(e) => setTargetId(e.target.value)}
                         placeholder="Opponent ID"
-                        className="theme-input flex-1 min-w-0 bg-warm-950/60 border border-warm-700/40 rounded-lg px-2 lg:px-4 py-1.5 lg:py-2.5 font-mono text-[10px] lg:text-sm text-white placeholder-warm-600 focus:outline-none focus:border-gold/50"
+                        className="theme-input flex-1 min-w-0 bg-base-950/60 border border-base-700/40 rounded-lg px-2 lg:px-4 py-1.5 lg:py-2.5 font-mono text-[10px] lg:text-sm text-white placeholder-base-600 focus:outline-none focus:border-gold/50"
                       />
                       <button
                         onClick={handleJoin}
@@ -268,21 +268,21 @@ export function VersusPage() {
                   )}
 
                   {/* Logs */}
-                  <div className="mt-3 lg:mt-6 pt-2 lg:pt-4 border-t border-warm-700/40">
+                  <div className="mt-3 lg:mt-6 pt-2 lg:pt-4 border-t border-base-700/40">
                     <button
                       onClick={() => setShowLogs(!showLogs)}
-                      className="text-[8px] lg:text-xs text-warm-500 hover:text-warm-300 transition-colors flex items-center gap-1 font-button uppercase tracking-wider"
+                      className="text-[8px] lg:text-xs text-base-500 hover:text-base-300 transition-colors flex items-center gap-1 font-button uppercase tracking-wider"
                     >
                       {showLogs ? '▼' : '▶'} Logs
                     </button>
                     {showLogs && (
-                      <div className="theme-panel mt-1 lg:mt-2 h-16 lg:h-32 overflow-y-auto bg-black/40 p-1.5 lg:p-3 text-[7px] lg:text-[10px] font-mono text-warm-400 rounded-lg border border-warm-800/50">
+                      <div className="theme-panel mt-1 lg:mt-2 h-16 lg:h-32 overflow-y-auto bg-black/40 p-1.5 lg:p-3 text-[7px] lg:text-[10px] font-mono text-base-400 rounded-lg border border-base-800/50">
                         {logs.map((l, i) => (
                           <div
                             key={i}
-                            className="mb-0.5 lg:mb-1 border-b border-warm-800/30 pb-0.5 lg:pb-1 last:border-0"
+                            className="mb-0.5 lg:mb-1 border-b border-base-800/30 pb-0.5 lg:pb-1 last:border-0"
                           >
-                            <span className="text-warm-600">
+                            <span className="text-base-600">
                               [{new Date(l.timestamp).toLocaleTimeString()}]
                             </span>{' '}
                             {l.message}
@@ -306,7 +306,7 @@ export function VersusPage() {
         >
           <div className="bg-white p-4 lg:p-6 rounded-2xl" onClick={(e) => e.stopPropagation()}>
             <QRCodeSVG value={joinUrl} size={250} level="M" />
-            <p className="text-center text-warm-600 text-sm mt-3">Tap outside to close</p>
+            <p className="text-center text-base-600 text-sm mt-3">Tap outside to close</p>
           </div>
         </div>
       )}

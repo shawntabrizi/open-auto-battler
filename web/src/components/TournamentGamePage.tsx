@@ -62,7 +62,7 @@ export function TournamentGamePage() {
     // which will trigger the redirect above on re-render
     return (
       <div className="app-shell h-screen h-svh flex items-center justify-center">
-        <div className="text-xl text-warm-400">Saving results...</div>
+        <div className="text-xl text-base-400">Saving results...</div>
       </div>
     );
   }
@@ -70,13 +70,13 @@ export function TournamentGamePage() {
   if (!view) {
     return (
       <div className="app-shell h-screen h-svh flex items-center justify-center">
-        <div className="text-xl text-warm-400">Loading tournament game...</div>
+        <div className="text-xl text-base-400">Loading tournament game...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans selection:bg-gold/30 flex flex-col">
+    <div className="h-screen h-svh bg-board-bg text-base-200 overflow-hidden font-sans selection:bg-gold/30 flex flex-col">
       <GameShell
         hideEndTurn={true}
         customAction={{

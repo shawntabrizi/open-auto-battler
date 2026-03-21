@@ -324,13 +324,13 @@ export function UnitCard({
           >
             <div
               ref={tooltipRef}
-              className="bg-warm-950/95 border border-warm-600/60 rounded-lg px-3 py-2 shadow-xl backdrop-blur-sm min-w-[180px] max-w-[260px]"
+              className="bg-base-950/95 border border-base-600/60 rounded-lg px-3 py-2 shadow-xl backdrop-blur-sm min-w-[180px] max-w-[260px]"
             >
               <div className="text-[10px] lg:text-xs font-bold text-white mb-1">{card.name}</div>
               {abilities.map((ability: any, i: number) => (
                 <div
                   key={i}
-                  className="flex items-start gap-1.5 text-[9px] lg:text-[11px] text-warm-300 leading-snug"
+                  className="flex items-start gap-1.5 text-[9px] lg:text-[11px] text-base-300 leading-snug"
                 >
                   <AbilityIcon
                     className={`w-3 h-3 shrink-0 mt-0.5 ${ability._type === 'shop' ? 'text-mana-blue' : 'text-gold'}`}
@@ -396,7 +396,7 @@ export function EmptySlot({
         </span>
       )}
       {label && (
-        <span className="text-warm-600/60 text-[0.5rem] lg:text-xs font-heading uppercase tracking-widest">
+        <span className="text-base-600/60 text-[0.5rem] lg:text-xs font-heading uppercase tracking-widest">
           {label}
         </span>
       )}

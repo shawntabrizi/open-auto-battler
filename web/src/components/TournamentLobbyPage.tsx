@@ -121,7 +121,7 @@ export function TournamentLobbyPage() {
             >
               {isPerfect ? 'PERFECT RUN!' : 'RUN OVER'}
             </h1>
-            <p className="text-sm lg:text-xl text-warm-300 mb-4 lg:mb-8">
+            <p className="text-sm lg:text-xl text-base-300 mb-4 lg:mb-8">
               {isPerfect
                 ? 'Amazing! You achieved a perfect 10-win run in the tournament!'
                 : `You finished with ${lastGameWins} win${lastGameWins !== 1 ? 's' : ''}.`}
@@ -130,7 +130,7 @@ export function TournamentLobbyPage() {
             <div className="flex justify-center gap-6 lg:gap-12 mb-6 lg:mb-8">
               <div className="text-center">
                 <div className="text-2xl lg:text-4xl font-bold text-gold">{lastGameWins}</div>
-                <div className="text-xs lg:text-base text-warm-400">Wins</div>
+                <div className="text-xs lg:text-base text-base-400">Wins</div>
               </div>
             </div>
 
@@ -146,7 +146,7 @@ export function TournamentLobbyPage() {
               )}
               <button
                 onClick={handleBackToLobby}
-                className="text-warm-400 hover:text-warm-200 text-sm transition-colors"
+                className="text-base-400 hover:text-base-200 text-sm transition-colors"
               >
                 &larr; Back to Tournament
               </button>
@@ -175,7 +175,7 @@ export function TournamentLobbyPage() {
           </button>
           <Link
             to="/network"
-            className="mt-3 text-sm text-warm-400 hover:text-warm-200 transition-colors"
+            className="mt-3 text-sm text-base-400 hover:text-base-200 transition-colors"
           >
             Network Settings
           </Link>
@@ -195,18 +195,18 @@ export function TournamentLobbyPage() {
     `Set #${activeTournament?.config.set_id ?? '?'}`;
 
   return (
-    <div className="h-screen h-svh bg-board-bg text-warm-200 overflow-hidden font-sans flex flex-col">
+    <div className="h-screen h-svh bg-board-bg text-base-200 overflow-hidden font-sans flex flex-col">
       <TopBar backTo="/play" backLabel="Play" title="Tournament" />
       <div className="flex-1 flex items-center justify-center overflow-y-auto p-4">
-        <div className="theme-panel text-center bg-warm-900 p-3 lg:p-6 rounded-xl lg:rounded-2xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-lg">
+        <div className="theme-panel text-center bg-base-900 p-3 lg:p-6 rounded-xl lg:rounded-2xl border border-white/5 shadow-2xl w-full max-w-sm lg:max-w-lg">
           <h3 className="theme-title-text text-lg lg:text-2xl font-black mb-1 italic tracking-tighter text-transparent bg-clip-text">
             TOURNAMENT
           </h3>
 
           <div className="flex items-center justify-center gap-2 lg:gap-3 mb-2 lg:mb-6">
-            <div className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1 lg:py-1.5 bg-warm-800 rounded lg:rounded-lg border border-white/5">
+            <div className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1 lg:py-1.5 bg-base-800 rounded lg:rounded-lg border border-white/5">
               <div className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-accent-emerald animate-pulse" />
-              <span className="text-[10px] lg:text-xs font-mono text-warm-400">
+              <span className="text-[10px] lg:text-xs font-mono text-base-400">
                 {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'Connected'}
               </span>
             </div>
@@ -215,7 +215,7 @@ export function TournamentLobbyPage() {
               onChange={(e) =>
                 selectAccount(accounts.find((a: any) => a.address === e.target.value))
               }
-              className="theme-input bg-warm-800 border border-white/10 rounded lg:rounded-lg px-1.5 lg:px-2 py-1 lg:py-1.5 text-[10px] lg:text-xs outline-none focus:border-gold/50"
+              className="theme-input bg-base-800 border border-white/10 rounded lg:rounded-lg px-1.5 lg:px-2 py-1 lg:py-1.5 text-[10px] lg:text-xs outline-none focus:border-gold/50"
             >
               {accounts.map((acc: any) => (
                 <option key={acc.address} value={acc.address}>
@@ -227,7 +227,7 @@ export function TournamentLobbyPage() {
           </div>
 
           {isLoadingTournament ? (
-            <p className="text-warm-400 text-sm">Loading tournament...</p>
+            <p className="text-base-400 text-sm">Loading tournament...</p>
           ) : !activeTournament ? (
             <CreateTestTournament
               onCreated={() => {
@@ -238,7 +238,7 @@ export function TournamentLobbyPage() {
           ) : (
             <>
               <div className="flex items-center justify-center gap-2 mb-2 lg:mb-4">
-                <span className="text-xs lg:text-sm text-warm-300">
+                <span className="text-xs lg:text-sm text-base-300">
                   Card Set: <span className="font-bold text-white">{setName}</span>
                 </span>
                 <button
@@ -250,32 +250,32 @@ export function TournamentLobbyPage() {
               </div>
 
               <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5 lg:gap-3 mb-2 lg:mb-4 text-center lg:text-left">
-                <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
+                <div className="bg-base-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
+                  <div className="text-[8px] lg:text-[10px] text-base-500 uppercase font-bold lg:mb-1">
                     Fee
                   </div>
                   <div className="text-xs lg:text-sm font-bold text-white">
                     {formatBalance(activeTournament.config.entry_fee)}
                   </div>
                 </div>
-                <div className="theme-panel bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
+                <div className="theme-panel bg-base-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
+                  <div className="text-[8px] lg:text-[10px] text-base-500 uppercase font-bold lg:mb-1">
                     Pool
                   </div>
                   <div className="text-xs lg:text-sm font-bold text-accent-violet">
                     {formatBalance(activeTournament.state.total_pot)}
                   </div>
                 </div>
-                <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
+                <div className="bg-base-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
+                  <div className="text-[8px] lg:text-[10px] text-base-500 uppercase font-bold lg:mb-1">
                     Entries
                   </div>
                   <div className="text-xs lg:text-sm font-bold text-white">
                     {activeTournament.state.total_entries}
                   </div>
                 </div>
-                <div className="bg-warm-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold lg:mb-1">
+                <div className="bg-base-800/50 rounded lg:rounded-lg px-2 py-1.5 lg:p-3 border border-white/5">
+                  <div className="text-[8px] lg:text-[10px] text-base-500 uppercase font-bold lg:mb-1">
                     Perfect
                   </div>
                   <div className="text-xs lg:text-sm font-bold text-victory-green">
@@ -284,25 +284,25 @@ export function TournamentLobbyPage() {
                 </div>
               </div>
 
-              <div className="bg-warm-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
-                <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">
+              <div className="bg-base-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
+                <div className="text-[8px] lg:text-[10px] text-base-500 uppercase font-bold mb-1 lg:mb-2">
                   Prize Distribution
                 </div>
                 <div className="flex gap-2 lg:gap-4 text-[10px] lg:text-xs">
                   <div>
-                    <span className="text-warm-400">Players: </span>
+                    <span className="text-base-400">Players: </span>
                     <span className="text-white font-bold">
                       {formatPerbill(activeTournament.config.prize_config.player_share)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-warm-400">Set Creator: </span>
+                    <span className="text-base-400">Set Creator: </span>
                     <span className="text-white font-bold">
                       {formatPerbill(activeTournament.config.prize_config.set_creator_share)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-warm-400">Card Creators: </span>
+                    <span className="text-base-400">Card Creators: </span>
                     <span className="text-white font-bold">
                       {formatPerbill(activeTournament.config.prize_config.card_creators_share)}
                     </span>
@@ -317,15 +317,15 @@ export function TournamentLobbyPage() {
                   </div>
                   <div className="flex gap-2 lg:gap-4 text-[10px] lg:text-xs">
                     <div>
-                      <span className="text-warm-400">Games: </span>
+                      <span className="text-base-400">Games: </span>
                       <span className="text-white font-bold">{playerStats.total_games}</span>
                     </div>
                     <div>
-                      <span className="text-warm-400">Wins: </span>
+                      <span className="text-base-400">Wins: </span>
                       <span className="text-white font-bold">{playerStats.total_wins}</span>
                     </div>
                     <div>
-                      <span className="text-warm-400">Perfect Runs: </span>
+                      <span className="text-base-400">Perfect Runs: </span>
                       <span className="text-victory-green font-bold">{playerStats.perfect_runs}</span>
                     </div>
                   </div>
@@ -333,13 +333,13 @@ export function TournamentLobbyPage() {
               )}
 
               {allPlayerStats.length > 0 && (
-                <div className="bg-warm-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
-                  <div className="text-[8px] lg:text-[10px] text-warm-500 uppercase font-bold mb-1 lg:mb-2">
+                <div className="bg-base-800/50 rounded lg:rounded-lg p-2 lg:p-3 border border-white/5 mb-2 lg:mb-4 text-left">
+                  <div className="text-[8px] lg:text-[10px] text-base-500 uppercase font-bold mb-1 lg:mb-2">
                     Leaderboard
                   </div>
                   <table className="w-full text-[10px] lg:text-xs">
                     <thead>
-                      <tr className="text-warm-500">
+                      <tr className="text-base-500">
                         <th className="text-left pb-0.5 lg:pb-1">#</th>
                         <th className="text-left pb-0.5 lg:pb-1">Player</th>
                         <th className="text-right pb-0.5 lg:pb-1">
@@ -363,7 +363,7 @@ export function TournamentLobbyPage() {
                           className={
                             entry.account === selectedAccount?.address
                               ? 'text-accent-violet'
-                              : 'text-warm-300'
+                              : 'text-base-300'
                           }
                         >
                           <td className="py-px lg:py-0.5">{i + 1}</td>
@@ -441,17 +441,17 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
 
   return (
     <div className="text-center">
-      <p className="text-warm-400 text-sm mb-4">No active tournament found.</p>
-      <div className="bg-warm-800/50 rounded-lg p-4 border border-white/5 mb-4 text-left">
-        <div className="text-[10px] text-warm-500 uppercase font-bold mb-3">
+      <p className="text-base-400 text-sm mb-4">No active tournament found.</p>
+      <div className="bg-base-800/50 rounded-lg p-4 border border-white/5 mb-4 text-left">
+        <div className="text-[10px] text-base-500 uppercase font-bold mb-3">
           Create Test Tournament (Sudo)
         </div>
         <div className="flex items-center gap-2 mb-3">
-          <label className="text-xs text-warm-400 shrink-0">Card Set:</label>
+          <label className="text-xs text-base-400 shrink-0">Card Set:</label>
           <select
             value={selectedSetId}
             onChange={(e) => setSelectedSetId(Number(e.target.value))}
-            className="theme-input flex-1 bg-warm-700 border border-white/10 text-white text-xs rounded px-2 py-1.5 outline-none"
+            className="theme-input flex-1 bg-base-700 border border-white/10 text-white text-xs rounded px-2 py-1.5 outline-none"
           >
             {[...availableSets]
               .sort((a, b) => a.id - b.id)
@@ -462,7 +462,7 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
               ))}
           </select>
         </div>
-        <div className="text-[10px] text-warm-500 mb-3">
+        <div className="text-[10px] text-base-500 mb-3">
           Entry: 1 unit | Duration: 1000 blocks | Prize: 70/20/10
         </div>
         <button

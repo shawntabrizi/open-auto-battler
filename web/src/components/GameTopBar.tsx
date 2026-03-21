@@ -132,7 +132,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
             title={`Focus ${isWaiting ? 'Waiting' : battleConfirmation.isConfirming ? 'Are you sure' : 'Battle'} button (${GAME_SHORTCUTS.commit})`}
             className={`theme-button rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-button uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
               isWaiting
-                ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
+                ? 'bg-base-600 scale-95 opacity-80 cursor-not-allowed'
                 : battleConfirmation.isConfirming
                   ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
                   : opponentWaiting && displayTimer !== null && displayTimer <= 5
@@ -162,7 +162,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
           title={`Focus ${customActionConfirmation.isConfirming ? 'Are you sure' : customAction.label} button (${GAME_SHORTCUTS.commit})`}
           className={`theme-button rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-button uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
             customAction.disabled
-              ? 'bg-warm-600 border-warm-600 scale-95 opacity-80 cursor-not-allowed'
+              ? 'bg-base-600 border-base-600 scale-95 opacity-80 cursor-not-allowed'
               : customActionConfirmation.isConfirming
                 ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
                 : customAction.variant === 'chain'
@@ -192,7 +192,7 @@ export function GameTopBar({
   return (
     <nav
       aria-label="Game controls"
-      className={`game-top-bar theme-panel h-12 lg:h-16 bg-surface-dark/90 border-b border-warm-800/60 flex items-center px-2 lg:px-6 relative z-20 overflow-hidden ${className}`}
+      className={`game-top-bar theme-panel h-12 lg:h-16 bg-surface-dark/90 border-b border-base-800/60 flex items-center px-2 lg:px-6 relative z-20 overflow-hidden ${className}`}
       style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
       onClick={(event) => {
         if (!selection) return;
@@ -229,15 +229,15 @@ export function GameTopBar({
         )}
 
         {/* Round */}
-        <div className="theme-panel theme-pill bg-surface-dark/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10">
-          <span className="text-[10px] lg:text-xs text-warm-400 font-heading uppercase tracking-wider">
+        <div className="theme-panel theme-pill bg-surface-dark/60 border border-base-800/60 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10">
+          <span className="text-[10px] lg:text-xs text-base-400 font-heading uppercase tracking-wider">
             Round
           </span>
           <span className="text-xs lg:text-sm font-bold text-gold font-stat">{view.round}</span>
         </div>
 
         {/* Wins */}
-        <div className="theme-panel theme-pill bg-surface-dark/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
+        <div className="theme-panel theme-pill bg-surface-dark/60 border border-base-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
           <StarIcon className="theme-icon-accent w-3.5 h-3.5 lg:w-4 lg:h-4" />
           <span className="font-bold text-xs lg:text-sm font-stat">
             {view.wins}/{winsToVictory}
@@ -245,7 +245,7 @@ export function GameTopBar({
         </div>
 
         {/* Lives */}
-        <div className="theme-panel theme-pill bg-surface-dark/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
+        <div className="theme-panel theme-pill bg-surface-dark/60 border border-base-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
           <LivesIcon className="theme-icon-health w-3.5 h-3.5 lg:w-4 lg:h-4" />
           <span className="font-bold text-xs lg:text-sm font-stat">
             {view.lives}/{startingLives}
@@ -345,7 +345,7 @@ export function BattleAction({
             disabled={isWaiting}
             className={`theme-button flex-1 w-full flex flex-col items-center justify-center rounded-lg border transition-colors ${
               isWaiting
-                ? 'bg-warm-800 border-warm-700 opacity-50 cursor-not-allowed'
+                ? 'bg-base-800 border-base-700 opacity-50 cursor-not-allowed'
                 : battleConfirmation.isConfirming
                   ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
                   : 'battle-btn border-gold/40 active:scale-95'
@@ -353,7 +353,7 @@ export function BattleAction({
           >
             {isWaiting ? (
               <>
-                <span className="font-bold text-xs text-warm-400">Wait</span>
+                <span className="font-bold text-xs text-base-400">Wait</span>
                 {displayTimer !== null && (
                   <span
                     className={`font-bold text-sm ${displayTimer <= 5 ? 'text-gold' : 'text-white'}`}
@@ -390,7 +390,7 @@ export function BattleAction({
             disabled={customAction.disabled}
             className={`theme-button w-full rounded-lg text-[0.55rem] px-1 py-2 transition-all font-bold uppercase tracking-wide border ${
               customAction.disabled
-                ? 'bg-warm-800 border-warm-700 opacity-50 cursor-not-allowed text-warm-500'
+                ? 'bg-base-800 border-base-700 opacity-50 cursor-not-allowed text-base-500'
                 : customActionConfirmation.isConfirming
                   ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
                   : customAction.variant === 'chain'
@@ -443,7 +443,7 @@ export function BattleAction({
               disabled={isWaiting}
               className={`theme-button battle-btn rounded-xl transition-all flex items-center justify-center ${
                 isWaiting
-                  ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed px-4 lg:px-12 py-1.5 lg:py-4'
+                  ? 'bg-base-600 scale-95 opacity-80 cursor-not-allowed px-4 lg:px-12 py-1.5 lg:py-4'
                   : battleConfirmation.isConfirming
                     ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border border-defeat-red/50 px-5 lg:px-10 py-3 lg:py-4'
                     : opponentWaiting && displayTimer !== null && displayTimer <= 5
@@ -472,7 +472,7 @@ export function BattleAction({
             disabled={customAction.disabled}
             className={`theme-button btn rounded-xl text-base lg:text-xl px-6 lg:px-10 py-2.5 lg:py-4 transition-all font-bold ${
               customAction.disabled
-                ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
+                ? 'bg-base-600 scale-95 opacity-80 cursor-not-allowed'
                 : customActionConfirmation.isConfirming
                   ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border border-defeat-red/50'
                   : customAction.variant === 'chain'

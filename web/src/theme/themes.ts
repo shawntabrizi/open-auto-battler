@@ -8,17 +8,17 @@ import burnPastel from '../../burn-pastel.svg';
 export type ThemeId = 'warm' | 'cyberpunk' | 'pastel';
 
 type ThemePalette = {
-  warm50: string;
-  warm100: string;
-  warm200: string;
-  warm300: string;
-  warm400: string;
-  warm500: string;
-  warm600: string;
-  warm700: string;
-  warm800: string;
-  warm900: string;
-  warm950: string;
+  base50: string;
+  base100: string;
+  base200: string;
+  base300: string;
+  base400: string;
+  base500: string;
+  base600: string;
+  base700: string;
+  base800: string;
+  base900: string;
+  base950: string;
   gold: string;
   manaBlue: string;
   burnRed: string;
@@ -348,17 +348,17 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
   id: 'warm',
   label: 'Warm',
   palette: {
-    warm50: '#f5ede0',
-    warm100: '#e8dcc8',
-    warm200: '#c4b498',
-    warm300: '#a08a6c',
-    warm400: '#7d6b50',
-    warm500: '#5e4f3a',
-    warm600: '#453a2a',
-    warm700: '#332c20',
-    warm800: '#241f18',
-    warm900: '#1a1610',
-    warm950: '#100e0a',
+    base50: '#f5ede0',
+    base100: '#e8dcc8',
+    base200: '#c4b498',
+    base300: '#a08a6c',
+    base400: '#7d6b50',
+    base500: '#5e4f3a',
+    base600: '#453a2a',
+    base700: '#332c20',
+    base800: '#241f18',
+    base900: '#1a1610',
+    base950: '#100e0a',
     gold: '#d4a843',
     manaBlue: '#5b8faa',
     burnRed: '#b85c4a',
@@ -477,17 +477,17 @@ const CYBERPUNK_THEME: ThemeDefinition = {
   id: 'cyberpunk',
   label: 'Cyberpunk',
   palette: {
-    warm50: '#eafcff',
-    warm100: '#c9f6ff',
-    warm200: '#8fe8ff',
-    warm300: '#4dd0f6',
-    warm400: '#24b7db',
-    warm500: '#1896b6',
-    warm600: '#12718a',
-    warm700: '#0f4d61',
-    warm800: '#0b2436',
-    warm900: '#081420',
-    warm950: '#040812',
+    base50: '#eafcff',
+    base100: '#c9f6ff',
+    base200: '#8fe8ff',
+    base300: '#4dd0f6',
+    base400: '#24b7db',
+    base500: '#1896b6',
+    base600: '#12718a',
+    base700: '#0f4d61',
+    base800: '#0b2436',
+    base900: '#081420',
+    base950: '#040812',
     gold: '#00f6ff',
     manaBlue: '#38bdf8',
     burnRed: '#ff4d9d',
@@ -609,17 +609,17 @@ const PASTEL_THEME: ThemeDefinition = {
   id: 'pastel',
   label: 'Pastel',
   palette: {
-    warm50: '#fff7fb',
-    warm100: '#ffe5f1',
-    warm200: '#ffcadd',
-    warm300: '#ffadc9',
-    warm400: '#f88eb4',
-    warm500: '#e6749a',
-    warm600: '#c95d81',
-    warm700: '#9f4766',
-    warm800: '#6f3348',
-    warm900: '#492331',
-    warm950: '#2e151f',
+    base50: '#fff7fb',
+    base100: '#ffe5f1',
+    base200: '#ffcadd',
+    base300: '#ffadc9',
+    base400: '#f88eb4',
+    base500: '#e6749a',
+    base600: '#c95d81',
+    base700: '#9f4766',
+    base800: '#6f3348',
+    base900: '#492331',
+    base950: '#2e151f',
     gold: '#ff9ec4',
     manaBlue: '#a78bfa',
     burnRed: '#ff6b9f',
@@ -829,17 +829,17 @@ export function applyThemeToDocument(
 ) {
   const theme = getTheme(themeId);
   const paletteEntries: [string, string][] = [
-    ['--color-warm-50', theme.palette.warm50],
-    ['--color-warm-100', theme.palette.warm100],
-    ['--color-warm-200', theme.palette.warm200],
-    ['--color-warm-300', theme.palette.warm300],
-    ['--color-warm-400', theme.palette.warm400],
-    ['--color-warm-500', theme.palette.warm500],
-    ['--color-warm-600', theme.palette.warm600],
-    ['--color-warm-700', theme.palette.warm700],
-    ['--color-warm-800', theme.palette.warm800],
-    ['--color-warm-900', theme.palette.warm900],
-    ['--color-warm-950', theme.palette.warm950],
+    ['--color-base-50', theme.palette.base50],
+    ['--color-base-100', theme.palette.base100],
+    ['--color-base-200', theme.palette.base200],
+    ['--color-base-300', theme.palette.base300],
+    ['--color-base-400', theme.palette.base400],
+    ['--color-base-500', theme.palette.base500],
+    ['--color-base-600', theme.palette.base600],
+    ['--color-base-700', theme.palette.base700],
+    ['--color-base-800', theme.palette.base800],
+    ['--color-base-900', theme.palette.base900],
+    ['--color-base-950', theme.palette.base950],
     ['--color-gold', theme.palette.gold],
     ['--color-mana-blue', theme.palette.manaBlue],
     ['--color-burn-red', theme.palette.burnRed],

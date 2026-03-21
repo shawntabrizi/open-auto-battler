@@ -69,7 +69,7 @@ export const CreateSetPage: React.FC = () => {
   }
 
   return (
-    <div className="app-shell min-h-screen text-warm-200 flex flex-col">
+    <div className="app-shell min-h-screen text-base-200 flex flex-col">
       {/* Side Panel Integration - Always Visible */}
       <CardDetailPanel card={detailCard} isVisible={true} mode={{ type: 'readOnly' }} />
 
@@ -90,7 +90,7 @@ export const CreateSetPage: React.FC = () => {
             <h1 className="theme-title-text text-xl lg:text-3xl font-black italic tracking-tighter text-transparent bg-clip-text uppercase mt-1">
               Set Creator
             </h1>
-            <p className="text-warm-500 text-xs lg:text-sm mt-0.5">
+            <p className="text-base-500 text-xs lg:text-sm mt-0.5">
               Bundle cards into playable sets
             </p>
           </div>
@@ -98,12 +98,12 @@ export const CreateSetPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Column 1 & 2: Library */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex flex-col h-[700px]">
+              <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex flex-col h-[700px]">
                 <h2 className="text-xl font-bold mb-6 flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <span className="text-gold">01</span> Card Library
                   </span>
-                  <span className="text-xs text-warm-500 uppercase font-bold tracking-widest">
+                  <span className="text-xs text-base-500 uppercase font-bold tracking-widest">
                     {allCards.length} Total Cards
                   </span>
                 </h2>
@@ -113,7 +113,7 @@ export const CreateSetPage: React.FC = () => {
                   placeholder="Search cards..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="theme-input w-full px-3 py-2 mb-4 bg-warm-800 border border-white/10 rounded-lg text-white placeholder-warm-500 text-sm focus:outline-none focus:border-gold/50"
+                  className="theme-input w-full px-3 py-2 mb-4 bg-base-800 border border-white/10 rounded-lg text-white placeholder-base-500 text-sm focus:outline-none focus:border-gold/50"
                 />
 
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -168,7 +168,7 @@ export const CreateSetPage: React.FC = () => {
                         );
                       })}
                     {allCards.length === 0 && (
-                      <div className="col-span-full py-20 text-center text-warm-600 italic">
+                      <div className="col-span-full py-20 text-center text-base-600 italic">
                         No cards found on-chain. Go create some first!
                       </div>
                     )}
@@ -179,7 +179,7 @@ export const CreateSetPage: React.FC = () => {
 
             {/* Column 3: Set Configuration */}
             <div className="space-y-6">
-              <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex flex-col h-[700px]">
+              <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm flex flex-col h-[700px]">
                 <h2 className="text-xl font-bold mb-6 flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <span className="text-gold">02</span> Set Configuration
@@ -190,7 +190,7 @@ export const CreateSetPage: React.FC = () => {
                 </h2>
 
                 <div className="mb-4">
-                  <label className="text-[10px] font-black text-warm-500 uppercase tracking-widest block mb-2">
+                  <label className="text-[10px] font-black text-base-500 uppercase tracking-widest block mb-2">
                     Set Name
                   </label>
                   <input
@@ -198,14 +198,14 @@ export const CreateSetPage: React.FC = () => {
                     placeholder="Name your set..."
                     value={setName}
                     onChange={(e) => setSetName(e.target.value)}
-                    className="theme-input w-full px-3 py-2 bg-warm-800 border border-white/10 rounded-lg text-white placeholder-warm-500 text-sm focus:outline-none focus:border-gold/50"
+                    className="theme-input w-full px-3 py-2 bg-base-800 border border-white/10 rounded-lg text-white placeholder-base-500 text-sm focus:outline-none focus:border-gold/50"
                   />
                 </div>
 
                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                   {selectedCards.length > 0 ? (
                     <div className="space-y-3">
-                      <h3 className="text-[10px] font-black text-warm-500 uppercase tracking-widest mb-4">
+                      <h3 className="text-[10px] font-black text-base-500 uppercase tracking-widest mb-4">
                         Selected Cards & Rarity Weights
                       </h3>
                       {selectedCards.map((sc) => {
@@ -214,7 +214,7 @@ export const CreateSetPage: React.FC = () => {
                         return (
                           <div
                             key={sc.card_id}
-                            className="flex items-center justify-between bg-warm-800/50 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
+                            className="flex items-center justify-between bg-base-800/50 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
                           >
                             <div className="flex items-center gap-3">
                               <span className="text-xl">{card.metadata.emoji}</span>
@@ -222,7 +222,7 @@ export const CreateSetPage: React.FC = () => {
                                 <div className="text-xs font-bold truncate max-w-[100px]">
                                   {card.metadata.name}
                                 </div>
-                                <div className="text-[10px] text-warm-500 font-mono">
+                                <div className="text-[10px] text-base-500 font-mono">
                                   {card.data.stats.attack}/{card.data.stats.health}
                                 </div>
                               </div>
@@ -239,11 +239,11 @@ export const CreateSetPage: React.FC = () => {
                                     )
                                   );
                                 }}
-                                className="theme-input w-16 bg-warm-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-gold/50 text-center font-bold"
+                                className="theme-input w-16 bg-base-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-gold/50 text-center font-bold"
                               />
                               <button
                                 onClick={() => toggleCardSelection(card.id)}
-                                className="text-warm-600 hover:text-defeat-red transition-colors"
+                                className="text-base-600 hover:text-defeat-red transition-colors"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -266,7 +266,7 @@ export const CreateSetPage: React.FC = () => {
                       })}
                     </div>
                   ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-warm-600 italic text-sm text-center p-8">
+                    <div className="flex-1 flex flex-col items-center justify-center text-base-600 italic text-sm text-center p-8">
                       <div className="text-4xl mb-4 opacity-20">🗂️</div>
                       Select cards from the library to begin building your set.
                     </div>

@@ -154,7 +154,7 @@ export function LoginPage() {
 
           {/* Connection status */}
           <div className="w-full mb-4">
-            <div className="theme-panel p-3 rounded-xl border border-warm-800 bg-warm-900/30">
+            <div className="theme-panel p-3 rounded-xl border border-base-800 bg-base-900/30">
               <div className="flex items-center gap-2 text-xs lg:text-sm">
                 <div
                   className={`w-2 h-2 rounded-full ${
@@ -165,20 +165,20 @@ export function LoginPage() {
                         : 'bg-defeat-red'
                   }`}
                 />
-                <span className="text-warm-400">
+                <span className="text-base-400">
                   {isConnecting ? 'Connecting...' : isConnected ? `Connected to` : 'Disconnected'}
                 </span>
                 {(isConnected || isConnecting) && (
-                  <span className="text-warm-500 font-mono text-[10px] truncate max-w-[180px]">
+                  <span className="text-base-500 font-mono text-[10px] truncate max-w-[180px]">
                     {endpoint}
                   </span>
                 )}
                 {isConnected && blockNumber !== null && (
-                  <span className="text-warm-600 font-mono">#{blockNumber.toLocaleString()}</span>
+                  <span className="text-base-600 font-mono">#{blockNumber.toLocaleString()}</span>
                 )}
                 <button
                   onClick={() => setShowNetworkPicker(!showNetworkPicker)}
-                  className="ml-auto text-gold hover:text-warm-200 text-xs transition-colors shrink-0"
+                  className="ml-auto text-gold hover:text-base-200 text-xs transition-colors shrink-0"
                 >
                   {showNetworkPicker ? 'Hide' : 'Configure'}
                 </button>
@@ -198,17 +198,17 @@ export function LoginPage() {
                     className={`theme-panel w-full text-left p-3 rounded-xl border transition-all ${
                       selected === opt.key
                         ? 'border-gold/60 bg-gold/10'
-                        : 'border-warm-700 bg-warm-900/30 hover:border-warm-600'
+                        : 'border-base-700 bg-base-900/30 hover:border-base-600'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-semibold text-sm">{opt.label}</div>
-                        <div className="text-warm-500 text-[10px]">{opt.description}</div>
+                        <div className="text-base-500 text-[10px]">{opt.description}</div>
                       </div>
                       <div
                         className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          selected === opt.key ? 'border-gold' : 'border-warm-600'
+                          selected === opt.key ? 'border-gold' : 'border-base-600'
                         }`}
                       >
                         {selected === opt.key && <div className="w-2 h-2 rounded-full bg-gold" />}
@@ -223,7 +223,7 @@ export function LoginPage() {
                     value={customUrl}
                     onChange={(e) => setCustomUrl(e.target.value)}
                     placeholder="ws://..."
-                    className="theme-input w-full p-3 rounded-xl border border-warm-700 bg-warm-900/50 text-sm font-mono text-white placeholder-warm-600 focus:outline-none focus:border-gold/60"
+                    className="theme-input w-full p-3 rounded-xl border border-base-700 bg-base-900/50 text-sm font-mono text-white placeholder-base-600 focus:outline-none focus:border-gold/60"
                   />
                 )}
 
@@ -233,7 +233,7 @@ export function LoginPage() {
                   className={`w-full p-3 rounded-xl font-bold text-sm transition-all ${
                     canConnect
                       ? 'theme-button btn-primary active:scale-[0.98]'
-                      : 'bg-warm-800 text-warm-500 cursor-not-allowed'
+                      : 'bg-base-800 text-base-500 cursor-not-allowed'
                   }`}
                 >
                   Connect
@@ -248,7 +248,7 @@ export function LoginPage() {
               {/* Account selector */}
               {accounts.length > 0 && (
                 <div>
-                  <label className="text-xs font-bold text-warm-500 uppercase ml-1 mb-1 block">
+                  <label className="text-xs font-bold text-base-500 uppercase ml-1 mb-1 block">
                     Select Account
                   </label>
                   <select
@@ -256,7 +256,7 @@ export function LoginPage() {
                     onChange={(e) =>
                       selectAccount(accounts.find((a) => a.address === e.target.value))
                     }
-                    className="theme-input w-full bg-warm-900/50 border border-warm-700 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-gold/60"
+                    className="theme-input w-full bg-base-900/50 border border-base-700 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-gold/60"
                   >
                     {accounts.map((acc) => (
                       <option key={acc.address} value={acc.address}>
@@ -270,13 +270,13 @@ export function LoginPage() {
 
               {/* Balance display */}
               {selectedAccount && (
-                <div className="theme-panel p-3 rounded-xl border border-warm-800 bg-warm-900/30">
+                <div className="theme-panel p-3 rounded-xl border border-base-800 bg-base-900/30">
                   <div className="flex items-center justify-between text-xs lg:text-sm">
-                    <span className="text-warm-500">Balance</span>
+                    <span className="text-base-500">Balance</span>
                     <span
                       className={`font-mono ${
                         checkingBalance
-                          ? 'text-warm-600'
+                          ? 'text-base-600'
                           : hasFunds
                             ? 'text-accent-emerald'
                             : 'text-defeat-red'
@@ -286,7 +286,7 @@ export function LoginPage() {
                     </span>
                   </div>
                   {!checkingBalance && !hasFunds && balance !== null && (
-                    <div className="mt-2 text-[10px] lg:text-xs text-warm-500">
+                    <div className="mt-2 text-[10px] lg:text-xs text-base-500">
                       This account has no funds. Fund it to log in.
                     </div>
                   )}
@@ -318,9 +318,9 @@ export function LoginPage() {
               {/* Divider */}
               {accounts.length > 0 && (
                 <div className="flex items-center gap-3 my-1">
-                  <div className="flex-1 h-px bg-warm-800" />
-                  <span className="text-warm-600 text-[10px] uppercase tracking-wider">or</span>
-                  <div className="flex-1 h-px bg-warm-800" />
+                  <div className="flex-1 h-px bg-base-800" />
+                  <span className="text-base-600 text-[10px] uppercase tracking-wider">or</span>
+                  <div className="flex-1 h-px bg-base-800" />
                 </div>
               )}
 
@@ -336,7 +336,7 @@ export function LoginPage() {
           )}
 
           {/* Version */}
-          <div className="mt-6 text-[9px] lg:text-[10px] text-warm-600 font-mono">v0.1.0</div>
+          <div className="mt-6 text-[9px] lg:text-[10px] text-base-600 font-mono">v0.1.0</div>
         </div>
       </div>
     </div>

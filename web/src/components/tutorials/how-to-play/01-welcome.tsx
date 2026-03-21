@@ -14,7 +14,7 @@ export default function Welcome() {
       <h1 className="text-3xl lg:text-5xl font-title font-bold text-transparent bg-clip-text theme-title-text mb-4 lg:mb-6">
         Welcome to Open Auto Battler!
       </h1>
-      <p className="text-warm-300 text-sm lg:text-lg leading-relaxed max-w-lg mx-auto mb-6 lg:mb-10">
+      <p className="text-base-300 text-sm lg:text-lg leading-relaxed max-w-lg mx-auto mb-6 lg:mb-10">
         Draft cards, build a team, and watch them clash automatically.
         Each round you grow stronger, but so do your opponents. Can you rack up 10 wins before
         your lives run out?

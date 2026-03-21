@@ -15,7 +15,7 @@ export default function Strategy() {
                 className={`w-8 h-11 lg:w-12 lg:h-[4rem] rounded border-2 flex items-center justify-center text-xs lg:text-base font-stat font-bold ${
                   i === 4
                     ? 'border-gold bg-gold/10 text-gold'
-                    : 'border-dashed border-warm-600/40 text-warm-600'
+                    : 'border-dashed border-base-600/40 text-base-600'
                 }`}
               >
                 {pos}
@@ -38,7 +38,7 @@ export default function Strategy() {
                 className={`w-8 h-11 lg:w-12 lg:h-[4rem] rounded border-2 flex items-center justify-center text-xs lg:text-base font-stat font-bold ${
                   i === 0
                     ? 'border-gold bg-gold/10 text-gold'
-                    : 'border-dashed border-warm-600/40 text-warm-600'
+                    : 'border-dashed border-base-600/40 text-base-600'
                 }`}
               >
                 {pos}
@@ -48,7 +48,7 @@ export default function Strategy() {
         </div>
       </div>
 
-      <div className="space-y-3 text-warm-300 text-sm lg:text-base leading-relaxed">
+      <div className="space-y-3 text-base-300 text-sm lg:text-base leading-relaxed">
         <p>
           The unit in <span className="text-gold font-bold">position 1</span> (front) fights first.
           When it falls, position 2 steps up, and so on.

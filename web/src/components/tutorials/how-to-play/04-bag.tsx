@@ -3,26 +3,26 @@ export default function Bag() {
     <div>
       <div className="flex flex-row items-center gap-4 lg:gap-8">
         {/* Card gallery grid */}
-        <div className="shrink-0 rounded-xl border border-warm-700/50 bg-warm-950 p-2 lg:p-3">
+        <div className="shrink-0 rounded-xl border border-base-700/50 bg-base-950 p-2 lg:p-3">
           <div className="grid grid-cols-5 gap-1 lg:gap-1.5">
             {Array.from({ length: 20 }).map((_, i) => (
               <div
                 key={i}
-                className="w-6 h-8 lg:w-8 lg:h-11 rounded-sm bg-warm-800 border border-warm-600/60 flex items-center justify-center"
+                className="w-6 h-8 lg:w-8 lg:h-11 rounded-sm bg-base-800 border border-base-600/60 flex items-center justify-center"
               >
                 <span className="text-[7px] lg:text-[9px]">🃏</span>
               </div>
             ))}
           </div>
           <div className="text-center mt-1.5">
-            <span className="text-warm-500 text-[8px] lg:text-[10px] font-bold uppercase tracking-wider">
+            <span className="text-base-500 text-[8px] lg:text-[10px] font-bold uppercase tracking-wider">
               50 Cards
             </span>
           </div>
         </div>
 
         {/* Text */}
-        <div className="space-y-2 lg:space-y-3 text-warm-300 text-sm lg:text-base leading-relaxed">
+        <div className="space-y-2 lg:space-y-3 text-base-300 text-sm lg:text-base leading-relaxed">
           <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white">
             Your Bag
           </h2>

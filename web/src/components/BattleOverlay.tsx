@@ -284,11 +284,11 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
         </button>
       )}
       <div className="relative z-10 flex items-center justify-center px-4 lg:px-8 py-1.5 lg:py-4">
-        <h2 className="text-sm lg:text-xl font-heading font-bold text-warm-300/80 tracking-widest uppercase">
+        <h2 className="text-sm lg:text-xl font-heading font-bold text-base-300/80 tracking-widest uppercase">
           {title}
         </h2>
         {/* Fade line instead of hard border */}
-        <div className="absolute bottom-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-warm-600/30 to-transparent" />
+        <div className="absolute bottom-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-base-600/30 to-transparent" />
       </div>
 
       {/* Main battle area + result overlay */}
@@ -371,7 +371,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
                 );
               })
             ) : (
-              <div className="text-warm-600 italic flex items-center gap-2 h-full justify-center">
+              <div className="text-base-600 italic flex items-center gap-2 h-full justify-center">
                 <span className="theme-icon-warning inline-block h-1.5 w-1.5 rounded-full bg-current animate-ping"></span>
                 Waiting for battle...
               </div>

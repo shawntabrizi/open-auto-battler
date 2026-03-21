@@ -816,14 +816,14 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
       {/* Playback Controls — compact bar */}
       <div className="flex items-center gap-1.5 lg:gap-2 flex-wrap justify-center">
         {/* Transport controls */}
-        <div className="flex items-center bg-warm-900/60 rounded-lg border border-warm-700/50 p-0.5 lg:p-1 gap-0.5">
+        <div className="flex items-center bg-base-900/60 rounded-lg border border-base-700/50 p-0.5 lg:p-1 gap-0.5">
           <button
             onClick={stepBackward}
             disabled={isAtStart}
             className={`p-1.5 lg:p-2 rounded-md transition-colors ${
               isAtStart
-                ? 'text-warm-600 cursor-not-allowed'
-                : 'text-warm-200 hover:bg-warm-700 hover:text-warm-100'
+                ? 'text-base-600 cursor-not-allowed'
+                : 'text-base-200 hover:bg-base-700 hover:text-base-100'
             }`}
             title="Previous event"
           >
@@ -836,10 +836,10 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
             disabled={isAtEnd}
             className={`p-1.5 lg:p-2 rounded-md transition-colors ${
               isAtEnd
-                ? 'text-warm-600 cursor-not-allowed'
+                ? 'text-base-600 cursor-not-allowed'
                 : playMode === 'step'
-                  ? 'text-gold bg-warm-700'
-                  : 'text-warm-200 hover:bg-warm-700 hover:text-warm-100'
+                  ? 'text-gold bg-base-700'
+                  : 'text-base-200 hover:bg-base-700 hover:text-base-100'
             }`}
             title="Step forward"
           >
@@ -849,7 +849,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
           </button>
           <button
             onClick={skipToEnd}
-            className="p-1.5 lg:p-2 rounded-md text-warm-200 hover:bg-warm-700 hover:text-warm-100 transition-colors"
+            className="p-1.5 lg:p-2 rounded-md text-base-200 hover:bg-base-700 hover:text-base-100 transition-colors"
             title="Skip to end"
           >
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 lg:w-5 lg:h-5">
@@ -859,15 +859,15 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
         </div>
 
         {/* Speed controls */}
-        <div className="flex items-center bg-warm-900/60 rounded-lg border border-warm-700/50 p-0.5 lg:p-1 gap-0.5">
+        <div className="flex items-center bg-base-900/60 rounded-lg border border-base-700/50 p-0.5 lg:p-1 gap-0.5">
           {speedOptions.map((option) => (
             <button
               key={option.value}
               onClick={() => selectSpeed(option.value)}
               className={`px-1.5 lg:px-2.5 py-0.5 lg:py-1.5 text-[10px] lg:text-sm font-medium rounded-md transition-colors ${
                 playMode === 'auto' && playbackSpeed === option.value
-                  ? 'bg-accent-amber text-warm-950 shadow-sm'
-                  : 'text-warm-300 hover:bg-warm-700 hover:text-warm-100'
+                  ? 'bg-accent-amber text-base-950 shadow-sm'
+                  : 'text-base-300 hover:bg-base-700 hover:text-base-100'
               }`}
               title={`${option.value}x speed`}
             >

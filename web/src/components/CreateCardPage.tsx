@@ -317,7 +317,7 @@ export const CreateCardPage: React.FC = () => {
   }
 
   return (
-    <div className="app-shell min-h-screen text-warm-200 flex flex-col">
+    <div className="app-shell min-h-screen text-base-200 flex flex-col">
       <TopBar backTo="/creator" backLabel="Creator" title="Card Creator" />
       <DesktopRecommendedBanner />
       <div className="flex-1 p-4 lg:p-8 overflow-y-auto">
@@ -325,7 +325,7 @@ export const CreateCardPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Column 1: Card Basics */}
             <div className="space-y-6">
-              <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
+              <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                   <span className="text-gold">01</span> Card Basics
                 </h2>
@@ -333,7 +333,7 @@ export const CreateCardPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-3 gap-4">
                     <div className="col-span-2">
-                      <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                      <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                         Name <span className="text-defeat-red">*</span>
                       </label>
                       <input
@@ -341,7 +341,7 @@ export const CreateCardPage: React.FC = () => {
                         value={cardForm.name}
                         onChange={(e) => setCardForm({ ...cardForm, name: e.target.value })}
                         placeholder="Super Goblin"
-                        className={`theme-input w-full bg-warm-800 border rounded-lg px-3 py-2 outline-none focus:border-gold/50 ${triedSubmitCard && !cardForm.name ? 'border-defeat-red' : 'border-white/10'}`}
+                        className={`theme-input w-full bg-base-800 border rounded-lg px-3 py-2 outline-none focus:border-gold/50 ${triedSubmitCard && !cardForm.name ? 'border-defeat-red' : 'border-white/10'}`}
                       />
                       {triedSubmitCard && !cardForm.name && (
                         <span className="text-[10px] text-defeat-red mt-1 block font-bold uppercase">
@@ -350,14 +350,14 @@ export const CreateCardPage: React.FC = () => {
                       )}
                     </div>
                     <div className="col-span-1">
-                      <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                      <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                         Emoji
                       </label>
                       <div className="relative">
                         <button
                           type="button"
                           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                          className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50 text-xl flex items-center justify-center hover:bg-warm-700 transition-colors"
+                          className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50 text-xl flex items-center justify-center hover:bg-base-700 transition-colors"
                         >
                           {cardForm.emoji}
                         </button>
@@ -368,7 +368,7 @@ export const CreateCardPage: React.FC = () => {
                             style={{ zIndex: UI_LAYERS.editorPicker }}
                           >
                             <div
-                              className="absolute inset-0 bg-warm-950/80 backdrop-blur-sm"
+                              className="absolute inset-0 bg-base-950/80 backdrop-blur-sm"
                               onClick={() => setShowEmojiPicker(false)}
                             ></div>
                             <div className="relative shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -392,7 +392,7 @@ export const CreateCardPage: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                      <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                         Attack
                       </label>
                       <input
@@ -401,12 +401,12 @@ export const CreateCardPage: React.FC = () => {
                         onChange={(e) =>
                           setCardForm({ ...cardForm, attack: parseInt(e.target.value) || 0 })
                         }
-                        className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
+                        className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
                         min="0"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                      <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                         Health
                       </label>
                       <input
@@ -415,7 +415,7 @@ export const CreateCardPage: React.FC = () => {
                         onChange={(e) =>
                           setCardForm({ ...cardForm, health: parseInt(e.target.value) || 1 })
                         }
-                        className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
+                        className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
                         min="1"
                       />
                     </div>
@@ -423,7 +423,7 @@ export const CreateCardPage: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                      <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                         Play Cost
                       </label>
                       <input
@@ -432,12 +432,12 @@ export const CreateCardPage: React.FC = () => {
                         onChange={(e) =>
                           setCardForm({ ...cardForm, play_cost: parseInt(e.target.value) || 0 })
                         }
-                        className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
+                        className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
                         min="0"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                      <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                         Burn Value
                       </label>
                       <input
@@ -446,34 +446,34 @@ export const CreateCardPage: React.FC = () => {
                         onChange={(e) =>
                           setCardForm({ ...cardForm, burn_value: parseInt(e.target.value) || 0 })
                         }
-                        className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
+                        className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50"
                         min="0"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
+                    <label className="block text-xs font-bold text-base-500 uppercase mb-1">
                       Description
                     </label>
                     <textarea
                       value={cardForm.description}
                       onChange={(e) => setCardForm({ ...cardForm, description: e.target.value })}
-                      className="theme-input w-full bg-warm-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50 h-20 resize-none text-sm"
+                      className="theme-input w-full bg-base-800 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-gold/50 h-20 resize-none text-sm"
                       placeholder="General description of the card..."
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
+              <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
                 <h2 className="text-xl font-bold mb-4">Preview</h2>
-                <div className="flex justify-center p-4 bg-warm-800/50 rounded-xl border border-white/5">
-                  <div className="relative w-32 h-44 bg-warm-800 rounded-xl border-2 border-gold/50 p-3 shadow-2xl">
+                <div className="flex justify-center p-4 bg-base-800/50 rounded-xl border border-white/5">
+                  <div className="relative w-32 h-44 bg-base-800 rounded-xl border-2 border-gold/50 p-3 shadow-2xl">
                     <div className="text-[10px] font-bold text-center truncate mb-1 uppercase text-gold">
                       {cardForm.name || 'Unit Name'}
                     </div>
-                    <div className="w-full h-20 bg-warm-700/50 rounded-lg flex items-center justify-center text-4xl mb-2">
+                    <div className="w-full h-20 bg-base-700/50 rounded-lg flex items-center justify-center text-4xl mb-2">
                       {cardForm.emoji}
                     </div>
                     <div className="flex justify-between items-center">
@@ -507,7 +507,7 @@ export const CreateCardPage: React.FC = () => {
 
             {/* Column 2: Abilities Editor */}
             <div className="space-y-6">
-              <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
+              <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                   <span className="text-gold">02</span> Abilities
                 </h2>
@@ -517,23 +517,23 @@ export const CreateCardPage: React.FC = () => {
                   {allAbilities.map(({ lane, ability, index }) => (
                     <div
                       key={`${lane}-${index}`}
-                      className="bg-warm-800/50 border border-white/5 p-3 rounded-lg flex justify-between items-start"
+                      className="bg-base-800/50 border border-white/5 p-3 rounded-lg flex justify-between items-start"
                     >
                       <div>
                         <div className="text-sm font-bold text-gold">
                           Ability {index + 1}{' '}
-                          <span className="text-[10px] uppercase text-warm-400">[{lane}]</span>
+                          <span className="text-[10px] uppercase text-base-400">[{lane}]</span>
                         </div>
-                        <div className="text-xs text-warm-400 italic">
+                        <div className="text-xs text-base-400 italic">
                           {formatAbilityTrigger(ability.trigger)}
                         </div>
-                        <div className="text-xs text-warm-300 mt-1">
+                        <div className="text-xs text-base-300 mt-1">
                           {formatAbilitySummary(ability, { resolveCardName })}
                         </div>
                       </div>
                       <button
                         onClick={() => removeAbility(lane, index)}
-                        className="text-warm-500 hover:text-defeat-red"
+                        className="text-base-500 hover:text-defeat-red"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -551,17 +551,17 @@ export const CreateCardPage: React.FC = () => {
                     </div>
                   ))}
                   {allAbilities.length === 0 && (
-                    <div className="text-center py-4 text-warm-600 text-sm italic">
+                    <div className="text-center py-4 text-base-600 text-sm italic">
                       No abilities added yet
                     </div>
                   )}
                 </div>
 
                 {/* New Ability Form */}
-                <div className="bg-warm-800/30 border border-white/5 p-4 rounded-xl space-y-4">
+                <div className="bg-base-800/30 border border-white/5 p-4 rounded-xl space-y-4">
                   <div className="grid grid-cols-1 gap-3">
                     <div>
-                      <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                      <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                         Ability Lane
                       </label>
                       <select
@@ -573,12 +573,12 @@ export const CreateCardPage: React.FC = () => {
                             lane === 'battle' ? defaultBattleAbility() : defaultShopAbility()
                           );
                         }}
-                        className="theme-input w-full bg-warm-900 border border-white/10 rounded px-2 py-1.5 text-sm outline-none focus:border-gold/50 mb-2"
+                        className="theme-input w-full bg-base-900 border border-white/10 rounded px-2 py-1.5 text-sm outline-none focus:border-gold/50 mb-2"
                       >
                         <option value="battle">battle</option>
                         <option value="shop">shop</option>
                       </select>
-                      <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                      <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                         Trigger
                       </label>
                       <select
@@ -586,7 +586,7 @@ export const CreateCardPage: React.FC = () => {
                         onChange={(e) =>
                           setNewAbility({ ...newAbility, trigger: e.target.value as any })
                         }
-                        className="theme-input w-full bg-warm-900 border border-white/10 rounded px-2 py-1.5 text-sm outline-none focus:border-gold/50"
+                        className="theme-input w-full bg-base-900 border border-white/10 rounded px-2 py-1.5 text-sm outline-none focus:border-gold/50"
                       >
                         {(abilityLane === 'battle' ? BATTLE_TRIGGERS : SHOP_TRIGGERS).map((t) => (
                           <option key={t} value={t}>
@@ -597,12 +597,12 @@ export const CreateCardPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-gold/10 bg-gold/5 px-3 py-2 text-xs text-warm-300">
+                  <div className="rounded-lg border border-gold/10 bg-gold/5 px-3 py-2 text-xs text-base-300">
                     {formatAbilitySummary(newAbility, { resolveCardName })}
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                    <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                       Effect Type
                     </label>
                     <div className="grid grid-cols-4 gap-2">
@@ -620,7 +620,7 @@ export const CreateCardPage: React.FC = () => {
                         <button
                           key={type}
                           onClick={() => updateEffectType(type)}
-                          className={`text-[10px] py-1 rounded border ${newAbility.effect.type === type ? 'bg-gold/20 border-gold text-gold' : 'bg-warm-900 border-white/5 text-warm-400'}`}
+                          className={`text-[10px] py-1 rounded border ${newAbility.effect.type === type ? 'bg-gold/20 border-gold text-gold' : 'bg-base-900 border-white/5 text-base-400'}`}
                         >
                           {type}
                         </button>
@@ -629,10 +629,10 @@ export const CreateCardPage: React.FC = () => {
                   </div>
 
                   {/* Effect Specific Fields */}
-                  <div className="p-3 bg-warm-900/50 rounded-lg border border-white/5 space-y-3">
+                  <div className="p-3 bg-base-900/50 rounded-lg border border-white/5 space-y-3">
                     {newAbility.effect.type === 'Damage' && (
                       <div>
-                        <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                        <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                           Damage Amount
                         </label>
                         <input
@@ -647,14 +647,14 @@ export const CreateCardPage: React.FC = () => {
                               } as any,
                             })
                           }
-                          className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                          className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                         />
                       </div>
                     )}
                     {newAbility.effect.type === 'ModifyStats' && (
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                          <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                             Health Change
                           </label>
                           <input
@@ -669,11 +669,11 @@ export const CreateCardPage: React.FC = () => {
                                 } as any,
                               })
                             }
-                            className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                            className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                          <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                             Attack Change
                           </label>
                           <input
@@ -688,7 +688,7 @@ export const CreateCardPage: React.FC = () => {
                                 } as any,
                               })
                             }
-                            className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                            className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                           />
                         </div>
                       </div>
@@ -696,7 +696,7 @@ export const CreateCardPage: React.FC = () => {
                     {newAbility.effect.type === 'ModifyStatsPermanent' && (
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                          <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                             Health Change
                           </label>
                           <input
@@ -711,11 +711,11 @@ export const CreateCardPage: React.FC = () => {
                                 } as any,
                               })
                             }
-                            className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                            className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                          <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                             Attack Change
                           </label>
                           <input
@@ -730,14 +730,14 @@ export const CreateCardPage: React.FC = () => {
                                 } as any,
                               })
                             }
-                            className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                            className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                           />
                         </div>
                       </div>
                     )}
                     {newAbility.effect.type === 'SpawnUnit' && (
                       <div>
-                        <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                        <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                           Card ID
                         </label>
                         <input
@@ -752,7 +752,7 @@ export const CreateCardPage: React.FC = () => {
                               } as any,
                             })
                           }
-                          className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                          className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                           placeholder="2"
                         />
                       </div>
@@ -760,7 +760,7 @@ export const CreateCardPage: React.FC = () => {
 
                     {newAbility.effect.type === 'GainMana' && (
                       <div>
-                        <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                        <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                           Mana Amount
                         </label>
                         <input
@@ -775,7 +775,7 @@ export const CreateCardPage: React.FC = () => {
                               } as any,
                             })
                           }
-                          className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                          className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
                         />
                       </div>
                     )}
@@ -786,13 +786,13 @@ export const CreateCardPage: React.FC = () => {
                         <div className="space-y-3 pt-2 border-t border-white/5">
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                              <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                                 Target Type
                               </label>
                               <select
                                 value={(newAbility.effect as any).target.type}
                                 onChange={(e) => updateTargetType(e.target.value)}
-                                className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
+                                className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                               >
                                 <option value="All">All</option>
                                 <option value="Position">Position</option>
@@ -804,7 +804,7 @@ export const CreateCardPage: React.FC = () => {
                               </select>
                             </div>
                             <div>
-                              <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                              <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                                 Scope
                               </label>
                               <select
@@ -817,7 +817,7 @@ export const CreateCardPage: React.FC = () => {
                                     effect: { ...newAbility.effect, target } as any,
                                   });
                                 }}
-                                className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
+                                className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                               >
                                 {(abilityLane === 'battle' ? BATTLE_SCOPES : SHOP_SCOPES).map(
                                   (s) => (
@@ -833,7 +833,7 @@ export const CreateCardPage: React.FC = () => {
                           {/* Target Data Fields */}
                           {(newAbility.effect as any).target.type === 'Position' && (
                             <div>
-                              <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                              <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                                 Index (0-4)
                               </label>
                               <input
@@ -847,7 +847,7 @@ export const CreateCardPage: React.FC = () => {
                                     effect: { ...newAbility.effect, target } as any,
                                   });
                                 }}
-                                className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
+                                className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                                 min="0"
                                 max="4"
                               />
@@ -855,7 +855,7 @@ export const CreateCardPage: React.FC = () => {
                           )}
                           {(newAbility.effect as any).target.type === 'Random' && (
                             <div>
-                              <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                              <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                                 Count
                               </label>
                               <input
@@ -869,7 +869,7 @@ export const CreateCardPage: React.FC = () => {
                                     effect: { ...newAbility.effect, target } as any,
                                   });
                                 }}
-                                className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
+                                className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                                 min="1"
                               />
                             </div>
@@ -877,7 +877,7 @@ export const CreateCardPage: React.FC = () => {
                           {(newAbility.effect as any).target.type === 'Standard' && (
                             <div className="grid grid-cols-2 gap-2">
                               <div>
-                                <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                                <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                                   Stat
                                 </label>
                                 <select
@@ -890,7 +890,7 @@ export const CreateCardPage: React.FC = () => {
                                       effect: { ...newAbility.effect, target } as any,
                                     });
                                   }}
-                                  className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
+                                  className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                                 >
                                   {STATS.map((s) => (
                                     <option key={s} value={s}>
@@ -900,7 +900,7 @@ export const CreateCardPage: React.FC = () => {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-[10px] font-bold text-warm-500 uppercase mb-1">
+                                <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
                                   Order
                                 </label>
                                 <select
@@ -913,7 +913,7 @@ export const CreateCardPage: React.FC = () => {
                                       effect: { ...newAbility.effect, target } as any,
                                     });
                                   }}
-                                  className="w-full bg-warm-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
+                                  className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-xs outline-none"
                                 >
                                   <option value="Descending">Descending</option>
                                   <option value="Ascending">Ascending</option>
@@ -937,12 +937,12 @@ export const CreateCardPage: React.FC = () => {
 
             {/* Column 3: Raw JSON Output */}
             <div className="space-y-6">
-              <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm h-full flex flex-col">
+              <div className="theme-panel bg-base-900/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm h-full flex flex-col">
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                   <span className="text-gold">03</span> Raw JSON
                 </h2>
                 <div className="flex-1 relative">
-                  <pre className="absolute inset-0 bg-warm-950 border border-white/10 rounded-xl p-4 text-[10px] font-mono text-mana-blue overflow-auto custom-scrollbar">
+                  <pre className="absolute inset-0 bg-base-950 border border-white/10 rounded-xl p-4 text-[10px] font-mono text-mana-blue overflow-auto custom-scrollbar">
                     {rawJson}
                   </pre>
                 </div>

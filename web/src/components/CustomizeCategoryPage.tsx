@@ -103,11 +103,11 @@ export function CustomizeCategoryPage() {
   const handleDeselect = () => selectCustomization(cat.type, null);
 
   return (
-    <div className="app-shell h-screen h-svh text-warm-200 flex flex-col overflow-hidden">
+    <div className="app-shell h-screen h-svh text-base-200 flex flex-col overflow-hidden">
       <TopBar backTo="/customize" backLabel="Customize" title={cat.label} />
 
       {/* Preview bar — desktop only */}
-      <div className="hidden lg:flex shrink-0 border-b border-warm-800/40 px-6 py-3 justify-center">
+      <div className="hidden lg:flex shrink-0 border-b border-base-800/40 px-6 py-3 justify-center">
         <div className="w-full max-w-sm">
           <CustomizationPreview />
         </div>
@@ -115,11 +115,11 @@ export function CustomizeCategoryPage() {
 
       {/* NFT selection area */}
       {isLoading ? (
-        <div className="flex-1 flex items-center justify-center text-warm-400 text-xs lg:text-sm">
+        <div className="flex-1 flex items-center justify-center text-base-400 text-xs lg:text-sm">
           Loading your NFTs...
         </div>
       ) : filteredNfts.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-warm-500 text-xs lg:text-sm">
+        <div className="flex-1 flex flex-col items-center justify-center text-base-500 text-xs lg:text-sm">
           <p>
             {isConnected
               ? `No ${cat.label.toLowerCase()} NFTs found.`
@@ -228,11 +228,11 @@ function NftTile({
       className={`theme-panel shrink-0 ${isLg ? 'p-3 rounded-xl' : 'p-1.5 rounded-lg'} border-2 transition-all text-center ${
         isSelected
           ? 'border-gold bg-gold/10'
-          : 'border-white/10 bg-warm-800/50 hover:border-white/20'
+          : 'border-white/10 bg-base-800/50 hover:border-white/20'
       }`}
     >
       <div
-        className={`${isLg ? s.lg : s.sm} bg-warm-700/50 ${s.rounded} overflow-hidden ${isLg ? 'mb-2' : 'mb-0.5'} flex items-center justify-center`}
+        className={`${isLg ? s.lg : s.sm} bg-base-700/50 ${s.rounded} overflow-hidden ${isLg ? 'mb-2' : 'mb-0.5'} flex items-center justify-center`}
       >
         {imageUrl ? (
           <IpfsImage
@@ -241,7 +241,7 @@ function NftTile({
             className={`w-full h-full object-cover ${s.rounded}`}
           />
         ) : (
-          <span className={`text-warm-400 ${isLg ? 'text-2xl' : 'text-sm'}`}>{placeholder}</span>
+          <span className={`text-base-400 ${isLg ? 'text-2xl' : 'text-sm'}`}>{placeholder}</span>
         )}
       </div>
       <div
@@ -250,7 +250,7 @@ function NftTile({
         {label}
       </div>
       {subtitle && (
-        <div className={`text-warm-500 ${isLg ? 'text-[10px]' : 'text-[7px] hidden'}`}>
+        <div className={`text-base-500 ${isLg ? 'text-[10px]' : 'text-[7px] hidden'}`}>
           {subtitle}
         </div>
       )}

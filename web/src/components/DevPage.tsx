@@ -76,7 +76,7 @@ function IframeViewport({
 
   return (
     <div className="flex flex-col items-center gap-1 flex-shrink-0">
-      <div className="text-xs text-warm-400 font-mono">
+      <div className="text-xs text-base-400 font-mono">
         {label} ({width}x{height}) {scale < 1 && `@ ${Math.round(scale * 100)}%`}
       </div>
       <div
@@ -86,7 +86,7 @@ function IframeViewport({
           overflow: 'hidden',
           borderRadius: 8,
         }}
-        className="border border-warm-600 shadow-lg"
+        className="border border-base-600 shadow-lg"
       >
         <iframe
           src={src}
@@ -141,14 +141,14 @@ export function DevPage() {
   return (
     <div className="app-shell h-screen flex flex-col text-white overflow-hidden">
       {/* Toolbar */}
-      <div className="theme-panel flex-shrink-0 flex items-center gap-4 px-4 py-2 border-b border-warm-700">
+      <div className="theme-panel flex-shrink-0 flex items-center gap-4 px-4 py-2 border-b border-base-700">
         <span className="text-sm font-bold text-gold mr-2">DEV</span>
 
-        <label className="text-xs text-warm-400">Page:</label>
+        <label className="text-xs text-base-400">Page:</label>
         <select
           value={activePage}
           onChange={(e) => handlePageChange(e.target.value)}
-          className="theme-input bg-warm-800 text-white text-sm rounded px-2 py-1 border border-warm-600"
+          className="theme-input bg-base-800 text-white text-sm rounded px-2 py-1 border border-base-600"
         >
           {Object.keys(PAGES).map((name) => (
             <option key={name} value={name}>
@@ -157,14 +157,14 @@ export function DevPage() {
           ))}
         </select>
 
-        <div className="w-px h-5 bg-warm-700" />
+        <div className="w-px h-5 bg-base-700" />
 
         {viewports.map((vp, i) => (
           <div key={i} className="flex items-center gap-1">
             <select
               value={vp.preset}
               onChange={(e) => updateViewport(i, e.target.value as PresetName)}
-              className="theme-input bg-warm-800 text-white text-xs rounded px-2 py-1 border border-warm-600"
+              className="theme-input bg-base-800 text-white text-xs rounded px-2 py-1 border border-base-600"
             >
               {Object.keys(PRESETS).map((name) => (
                 <option key={name} value={name}>
@@ -175,7 +175,7 @@ export function DevPage() {
             {viewports.length > 1 && (
               <button
                 onClick={() => removeViewport(i)}
-                className="text-warm-500 hover:text-defeat-red text-xs px-1"
+                className="text-base-500 hover:text-defeat-red text-xs px-1"
               >
                 x
               </button>

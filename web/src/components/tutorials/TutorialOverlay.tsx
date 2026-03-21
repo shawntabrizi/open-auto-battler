@@ -76,12 +76,12 @@ export function TutorialOverlay() {
         <button
           onClick={prev}
           disabled={index === 0}
-          className="px-4 py-2 text-sm font-bold text-warm-400 hover:text-white disabled:text-warm-700 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 text-sm font-bold text-base-400 hover:text-white disabled:text-base-700 disabled:cursor-not-allowed transition-colors"
         >
           &larr; Previous
         </button>
 
-        <span className="text-xs text-warm-500 font-mono">
+        <span className="text-xs text-base-500 font-mono">
           {index + 1} / {total}
         </span>
 

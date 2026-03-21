@@ -22,17 +22,17 @@
   font-family: var(--font-body);
   line-height: 1.5;
   font-weight: 400;
-  --color-warm-50: 245 237 224;
-  --color-warm-100: 232 220 200;
-  --color-warm-200: 196 180 152;
-  --color-warm-300: 160 138 108;
-  --color-warm-400: 125 107 80;
-  --color-warm-500: 94 79 58;
-  --color-warm-600: 69 58 42;
-  --color-warm-700: 51 44 32;
-  --color-warm-800: 36 31 24;
-  --color-warm-900: 26 22 16;
-  --color-warm-950: 16 14 10;
+  --color-base-50: 245 237 224;
+  --color-base-100: 232 220 200;
+  --color-base-200: 196 180 152;
+  --color-base-300: 160 138 108;
+  --color-base-400: 125 107 80;
+  --color-base-500: 94 79 58;
+  --color-base-600: 69 58 42;
+  --color-base-700: 51 44 32;
+  --color-base-800: 36 31 24;
+  --color-base-900: 26 22 16;
+  --color-base-950: 16 14 10;
   --color-gold: 212 168 67;
   --color-mana-blue: 91 143 170;
   --color-burn-red: 184 92 74;
@@ -48,7 +48,7 @@
   --color-surface-dark: 14 12 9;
   --color-surface-mid: 20 18 16;
 
-  color: rgb(var(--color-warm-100));
+  color: rgb(var(--color-base-100));
   background-color: rgb(var(--color-surface-dark));
 
   --spring-bounce: linear(
@@ -271,7 +271,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   min-height: 100svh;
-  color: rgb(var(--color-warm-100));
+  color: rgb(var(--color-base-100));
   background-color: rgb(var(--color-surface-dark));
   /* Small viewport height - accounts for mobile URL bar */
   overscroll-behavior: none;
@@ -290,7 +290,7 @@ body {
 /* Shared theme-driven shells — no opaque bg so ParticleBackground canvas shows through */
 .app-shell {
   background-image: var(--theme-app-background);
-  color: rgb(var(--color-warm-100));
+  color: rgb(var(--color-base-100));
 }
 
 .theme-title-text {
@@ -390,7 +390,7 @@ body {
   box-shadow:
     var(--shadow-hover),
     var(--theme-selected-button-shadow),
-    inset 0 0 0 1px rgb(var(--color-warm-50) / 0.04);
+    inset 0 0 0 1px rgb(var(--color-base-50) / 0.04);
 }
 
 .set-tile-selected:hover {
@@ -398,14 +398,14 @@ body {
   box-shadow:
     var(--shadow-lifted),
     var(--theme-selected-button-shadow),
-    inset 0 0 0 1px rgb(var(--color-warm-50) / 0.05);
+    inset 0 0 0 1px rgb(var(--color-base-50) / 0.05);
 }
 
 .set-radio-selected {
   border-color: var(--theme-selected-button-border);
   background: rgb(var(--color-surface-dark) / 0.35);
   box-shadow:
-    inset 0 0 0 1px rgb(var(--color-warm-50) / 0.05),
+    inset 0 0 0 1px rgb(var(--color-base-50) / 0.05),
     var(--theme-selected-button-shadow);
 }
 
@@ -589,7 +589,7 @@ body {
   );
   border: 1.5px solid rgb(var(--color-mana-blue) / 0.45);
   box-shadow:
-    inset 0 1px 0 rgb(var(--color-warm-50) / 0.2),
+    inset 0 1px 0 rgb(var(--color-base-50) / 0.2),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15),
     0 0 6px rgb(var(--color-mana-blue) / 0.42);
 }
@@ -603,7 +603,7 @@ body {
   );
   border: 1.5px solid rgb(var(--color-burn-gold) / 0.5);
   box-shadow:
-    inset 0 1px 0 rgb(var(--color-warm-50) / 0.24),
+    inset 0 1px 0 rgb(var(--color-base-50) / 0.24),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15),
     0 0 6px rgb(var(--color-gold) / 0.42);
   color: rgb(var(--color-surface-dark));
@@ -615,14 +615,14 @@ body {
     rgb(var(--color-surface-mid) / 0.82) 0%,
     rgb(var(--color-surface-dark) / 0.96) 100%
   );
-  border: 1.5px solid rgb(var(--color-warm-700) / 0.6);
+  border: 1.5px solid rgb(var(--color-base-700) / 0.6);
   box-shadow: none;
-  color: rgb(var(--color-warm-400));
+  color: rgb(var(--color-base-400));
 }
 
 /* Card styles */
 .card {
-  @apply bg-card-bg border-2 border-warm-600 p-2 transition-all duration-200;
+  @apply bg-card-bg border-2 border-base-600 p-2 transition-all duration-200;
   border-radius: var(--theme-card-radius);
   box-shadow:
     inset 1px 1px 0 0 rgb(var(--color-gold) / 0.12),
@@ -938,7 +938,7 @@ body {
     rgb(var(--color-surface-dark) / 0.62) 50%,
     rgb(var(--color-surface-mid) / 0.3) 100%
   );
-  border: 1px solid rgb(var(--color-warm-700) / 0.25);
+  border: 1px solid rgb(var(--color-base-700) / 0.25);
   box-shadow:
     inset 0 1px 0 rgb(var(--color-gold) / 0.08),
     0 0 40px rgba(0, 0, 0, 0.3);
@@ -951,7 +951,7 @@ body {
     rgb(var(--color-surface-mid) / 0.84) 0%,
     rgb(var(--color-surface-dark) / 0.92) 100%
   );
-  border: 2px dashed rgb(var(--color-warm-700) / 0.3);
+  border: 2px dashed rgb(var(--color-base-700) / 0.3);
   box-shadow:
     inset 0 2px 4px rgba(0, 0, 0, 0.4),
     inset 0 -1px 0 rgb(var(--color-gold) / 0.05);
@@ -1393,7 +1393,7 @@ body {
 /* Slot styles */
 .slot {
   background: rgb(var(--color-surface-mid) / 0.5);
-  @apply rounded-lg border-2 border-dashed border-warm-600 flex items-center justify-center;
+  @apply rounded-lg border-2 border-dashed border-base-600 flex items-center justify-center;
 }
 
 .slot-empty {
@@ -1402,7 +1402,7 @@ body {
 
 /* Button styles */
 .btn {
-  @apply px-4 py-2 font-semibold transition-all duration-200 border border-warm-600;
+  @apply px-4 py-2 font-semibold transition-all duration-200 border border-base-600;
   font-family: var(--font-button);
   border-radius: var(--theme-button-radius);
   box-shadow: var(--shadow-resting);
@@ -1465,8 +1465,8 @@ body {
 
 .btn-disabled {
   background: rgb(var(--color-surface-mid) / 0.88);
-  color: rgb(var(--color-warm-500));
-  border-color: rgb(var(--color-warm-700));
+  color: rgb(var(--color-base-500));
+  border-color: rgb(var(--color-base-700));
   cursor: not-allowed;
   box-shadow: none;
 }

@@ -30,7 +30,7 @@ export function PlayPage() {
               className={`theme-panel group block w-full p-5 lg:p-7 rounded-xl border-2 transition-all text-center ${
                 isConnected
                   ? 'theme-cta-card active:scale-[0.98]'
-                  : 'border-warm-700/50 bg-warm-900/30 hover:border-warm-600'
+                  : 'border-base-700/50 bg-base-900/30 hover:border-base-600'
               }`}
             >
               <div className="flex items-center justify-center gap-3 lg:gap-5">
@@ -47,7 +47,7 @@ export function PlayPage() {
               {isConnected && (
                 <div className="mt-2 flex items-center justify-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse" />
-                  <span className="text-[10px] text-warm-500 font-mono">
+                  <span className="text-[10px] text-base-500 font-mono">
                     {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'live'}
                   </span>
                 </div>
@@ -76,8 +76,8 @@ export function PlayPage() {
                 to={isConnected ? '/practice' : '/network'}
                 className={`theme-panel group block p-4 lg:p-5 rounded-xl border transition-all text-center ${
                   isConnected
-                    ? 'border-warm-700 bg-warm-900/30 hover:border-warm-500 hover:bg-warm-800/40 active:scale-[0.98]'
-                    : 'border-warm-700/50 bg-warm-900/30 hover:border-warm-600'
+                    ? 'border-base-700 bg-base-900/30 hover:border-base-500 hover:bg-base-800/40 active:scale-[0.98]'
+                    : 'border-base-700/50 bg-base-900/30 hover:border-base-600'
                 }`}
               >
                 <h3 className="font-button text-base lg:text-lg font-bold text-white">OFFLINE</h3>
@@ -86,7 +86,7 @@ export function PlayPage() {
 
               <Link
                 to="/versus"
-                className="theme-panel group block p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30 hover:border-warm-500 hover:bg-warm-800/40 active:scale-[0.98] transition-all text-center"
+                className="theme-panel group block p-4 lg:p-5 rounded-xl border border-base-700 bg-base-900/30 hover:border-base-500 hover:bg-base-800/40 active:scale-[0.98] transition-all text-center"
               >
                 <h3 className="font-button text-base lg:text-lg font-bold text-white">
                   PEER-TO-PEER
@@ -98,9 +98,9 @@ export function PlayPage() {
             {/* Tutorial */}
             <button
               onClick={() => openTutorial('how-to-play')}
-              className="theme-panel theme-button block w-full p-3 lg:p-4 rounded-xl border border-warm-700/30 bg-warm-900/20 hover:border-warm-600 hover:bg-warm-800/30 active:scale-[0.99] transition-all text-center"
+              className="theme-panel theme-button block w-full p-3 lg:p-4 rounded-xl border border-base-700/30 bg-base-900/20 hover:border-base-600 hover:bg-base-800/30 active:scale-[0.99] transition-all text-center"
             >
-              <h3 className="font-button text-sm lg:text-base font-bold text-warm-300">TUTORIAL</h3>
+              <h3 className="font-button text-sm lg:text-base font-bold text-base-300">TUTORIAL</h3>
               <p className="theme-secondary-text mt-0.5 text-[10px] lg:text-xs">
                 Learn how to play
               </p>
