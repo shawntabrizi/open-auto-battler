@@ -3,9 +3,11 @@ import { useCustomizationStore } from '../store/customizationStore';
 import React, { useRef } from 'react';
 import { DraggableCard, DroppableBurnZone } from './DndComponents';
 import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
-import burnIcon from '../../burn.svg';
+import { useThemeStore } from '../store/themeStore';
+import { getTheme } from '../theme/themes';
 
 export function Shop() {
+  const theme = getTheme(useThemeStore((s) => s.selectedThemeId));
   const { view, selection, setSelection, burnHandCard, burnBoardUnit, undo } = useGameStore();
   const handBg = useCustomizationStore((s) => s.selections.handBackground);
   const [isBurnHovered, setIsBurnHovered] = React.useState(false);
@@ -207,7 +209,7 @@ export function Shop() {
             }`}
           >
             <img
-              src={burnIcon}
+              src={theme.assets.burnIcon}
               alt="Burn Card"
               className={`burn-circle w-10 h-10 lg:w-20 lg:h-20 transition-all duration-200 ${
                 isBurnHovered

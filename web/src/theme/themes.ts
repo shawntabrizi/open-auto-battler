@@ -1,3 +1,10 @@
+import swordsWarm from '../../swords.svg';
+import swordsCyberpunk from '../../swords-cyberpunk.svg';
+import swordsPastel from '../../swords-pastel.svg';
+import burnWarm from '../../burn.svg';
+import burnCyberpunk from '../../burn-cyberpunk.svg';
+import burnPastel from '../../burn-pastel.svg';
+
 export type ThemeId = 'warm' | 'cyberpunk' | 'pastel';
 
 type ThemePalette = {
@@ -114,6 +121,17 @@ type ThemeAchievements = {
   goldText: string;
 };
 
+type ThemeAssets = {
+  playIcon: string;
+  burnIcon: string;
+};
+
+type ThemeBattleEffects = {
+  ability: string;
+  positive: string;
+  negative: string;
+};
+
 export interface ThemeDefinition {
   id: ThemeId;
   label: string;
@@ -126,6 +144,8 @@ export interface ThemeDefinition {
   fonts: ThemeFonts;
   text: ThemeTextColors;
   achievements: ThemeAchievements;
+  assets: ThemeAssets;
+  battleEffects: ThemeBattleEffects;
 }
 
 type ThemeMap = Record<ThemeId, ThemeDefinition>;
@@ -245,6 +265,15 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
     silverText: '#c0c7d0',
     gold: '#d4a843',
     goldText: '#e8c44a',
+  },
+  assets: {
+    playIcon: swordsWarm,
+    burnIcon: burnWarm,
+  },
+  battleEffects: {
+    ability: '#eab308',
+    positive: '#22c55e',
+    negative: '#dc2626',
   },
 };
 
@@ -367,6 +396,15 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     gold: '#ffd700',
     goldText: '#ffe44d',
   },
+  assets: {
+    playIcon: swordsCyberpunk,
+    burnIcon: burnCyberpunk,
+  },
+  battleEffects: {
+    ability: '#f8ff66',
+    positive: '#00ffa3',
+    negative: '#ff4d9d',
+  },
 };
 
 const PASTEL_THEME: ThemeDefinition = {
@@ -485,6 +523,15 @@ const PASTEL_THEME: ThemeDefinition = {
     silverText: '#ddd6e8',
     gold: '#f0c27a',
     goldText: '#f5d49a',
+  },
+  assets: {
+    playIcon: swordsPastel,
+    burnIcon: burnPastel,
+  },
+  battleEffects: {
+    ability: '#fbbf24',
+    positive: '#6ee7b7',
+    negative: '#fb7185',
   },
 };
 
@@ -634,6 +681,10 @@ export function applyThemeToDocument(
   setRootVariable(root, '--theme-achievement-silver-text', theme.achievements.silverText);
   setRootVariable(root, '--theme-achievement-gold', theme.achievements.gold);
   setRootVariable(root, '--theme-achievement-gold-text', theme.achievements.goldText);
+
+  setRootVariable(root, '--theme-battle-ability', theme.battleEffects.ability);
+  setRootVariable(root, '--theme-battle-positive', theme.battleEffects.positive);
+  setRootVariable(root, '--theme-battle-negative', theme.battleEffects.negative);
 
   root.dataset.theme = theme.id;
 }

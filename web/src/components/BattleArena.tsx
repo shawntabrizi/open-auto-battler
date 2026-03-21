@@ -20,8 +20,8 @@ const DamageNumber = ({
       onAnimationEnd={onAnimationEnd}
     >
       <span
-        className="text-2xl lg:text-4xl font-stat font-bold text-defeat-red"
-        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgb(var(--color-defeat-red) / 0.5)' }}
+        className="text-2xl lg:text-4xl font-stat font-bold"
+        style={{ color: 'var(--theme-battle-negative)', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px color-mix(in srgb, var(--theme-battle-negative) 50%, transparent)' }}
       >
         -{amount}
       </span>
@@ -61,8 +61,8 @@ const StatChangeNumber = ({
       onAnimationEnd={onAnimationEnd}
     >
       <span
-        className="text-2xl lg:text-4xl font-stat font-bold text-accent-emerald"
-        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgb(var(--color-accent-emerald) / 0.5)' }}
+        className="text-2xl lg:text-4xl font-stat font-bold"
+        style={{ color: 'var(--theme-battle-positive)', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px color-mix(in srgb, var(--theme-battle-positive) 50%, transparent)' }}
       >
         {displayText}
       </span>

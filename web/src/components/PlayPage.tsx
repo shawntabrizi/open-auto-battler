@@ -3,7 +3,8 @@ import { useArenaStore } from '../store/arenaStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useTutorialStore } from '../store/tutorialStore';
 import { TopBar } from './TopBar';
-import swordsIcon from '../../swords.svg';
+import { useThemeStore } from '../store/themeStore';
+import { getTheme } from '../theme/themes';
 
 const formatBalance = (raw: bigint, decimals = 12) =>
   (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
@@ -12,6 +13,7 @@ const formatBalance = (raw: bigint, decimals = 12) =>
   });
 
 export function PlayPage() {
+  const theme = getTheme(useThemeStore((s) => s.selectedThemeId));
   const { isConnected, blockNumber } = useArenaStore();
   const { activeTournament } = useTournamentStore();
   const openTutorial = useTutorialStore((s) => s.open);
@@ -32,7 +34,7 @@ export function PlayPage() {
               }`}
             >
               <div className="flex items-center justify-center gap-3 lg:gap-5">
-                <img src={swordsIcon} alt="" className="h-16 lg:h-24 w-auto" />
+                <img src={theme.assets.playIcon} alt="" className="h-16 lg:h-24 w-auto" />
                 <div className="text-left">
                   <h2 className="font-button text-2xl lg:text-3xl font-bold text-white tracking-wide">
                     ONLINE ARENA

@@ -254,6 +254,9 @@
   --theme-achievement-silver-text: #c0c7d0;
   --theme-achievement-gold: #d4a843;
   --theme-achievement-gold-text: #e8c44a;
+  --theme-battle-ability: #eab308;
+  --theme-battle-positive: #22c55e;
+  --theme-battle-negative: #dc2626;
 }
 
 @media (min-width: 1024px) {
@@ -1305,64 +1308,64 @@ body {
     0 0 20px rgba(184, 92, 74, 0.05);
 }
 
-/* Target highlight pulse — units receiving damage or ability effects (red glow) */
+/* Target highlight pulse — units receiving damage or ability effects */
 @keyframes target-highlight {
   0% {
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--theme-battle-negative) 70%, transparent);
   }
 
   50% {
-    box-shadow: 0 0 14px 5px rgba(220, 38, 38, 0.5);
+    box-shadow: 0 0 14px 5px color-mix(in srgb, var(--theme-battle-negative) 50%, transparent);
   }
 
   100% {
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+    box-shadow: 0 0 0 0 transparent;
   }
 }
 
 .unit-target-highlight {
   animation: target-highlight 0.8s ease-out;
-  border-radius: 8px;
+  border-radius: var(--theme-card-radius);
 }
 
-/* Positive target highlight (green glow for buffs/heals) */
+/* Positive target highlight (buffs/heals) */
 @keyframes target-highlight-positive {
   0% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--theme-battle-positive) 70%, transparent);
   }
 
   50% {
-    box-shadow: 0 0 14px 5px rgba(34, 197, 94, 0.5);
+    box-shadow: 0 0 14px 5px color-mix(in srgb, var(--theme-battle-positive) 50%, transparent);
   }
 
   100% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    box-shadow: 0 0 0 0 transparent;
   }
 }
 
 .unit-target-highlight-positive {
   animation: target-highlight-positive 0.8s ease-out;
-  border-radius: 8px;
+  border-radius: var(--theme-card-radius);
 }
 
-/* Source glow — unit that triggered an ability (yellow glow) */
+/* Source glow — unit that triggered an ability */
 @keyframes source-glow {
   0% {
-    box-shadow: 0 0 0 2px rgba(234, 179, 8, 0);
+    box-shadow: 0 0 0 2px transparent;
   }
 
   30% {
-    box-shadow: 0 0 10px 3px rgba(234, 179, 8, 0.6);
+    box-shadow: 0 0 10px 3px color-mix(in srgb, var(--theme-battle-ability) 60%, transparent);
   }
 
   100% {
-    box-shadow: 0 0 0 2px rgba(234, 179, 8, 0);
+    box-shadow: 0 0 0 2px transparent;
   }
 }
 
 .unit-source-glow {
   animation: source-glow 0.8s ease-out;
-  border-radius: 8px;
+  border-radius: var(--theme-card-radius);
 }
 
 /* Ornamental divider between game zones */
@@ -1545,27 +1548,32 @@ body {
 /* Ability toast — skill trigger indicator above units */
 .ability-toast {
   animation: ability-toast-pop calc(1s * var(--battle-speed, 1)) ease-out forwards;
-  filter: drop-shadow(0 0 8px rgba(234, 179, 8, 0.5)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--theme-battle-ability) 50%, transparent))
+    drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
   pointer-events: none;
 }
 
 .ability-toast-inner {
-  background: linear-gradient(135deg, rgba(30, 25, 15, 0.92) 0%, rgba(45, 35, 15, 0.95) 100%);
-  border: 1px solid rgba(234, 179, 8, 0.6);
-  border-top-color: rgba(255, 215, 60, 0.7);
+  background: linear-gradient(
+    135deg,
+    rgb(var(--color-surface-dark) / 0.92) 0%,
+    rgb(var(--color-surface-mid) / 0.95) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--theme-battle-ability) 60%, transparent);
+  border-top-color: color-mix(in srgb, var(--theme-battle-ability) 70%, transparent);
   border-radius: 8px;
-  color: #fcd34d;
+  color: var(--theme-battle-ability);
   text-shadow:
-    0 0 6px rgba(234, 179, 8, 0.4),
+    0 0 6px color-mix(in srgb, var(--theme-battle-ability) 40%, transparent),
     0 1px 2px rgba(0, 0, 0, 0.8);
   box-shadow:
-    inset 0 1px 0 rgba(255, 215, 60, 0.15),
-    inset 0 0 12px rgba(234, 179, 8, 0.08);
+    inset 0 1px 0 color-mix(in srgb, var(--theme-battle-ability) 15%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--theme-battle-ability) 8%, transparent);
 }
 
 .ability-toast-icon {
-  color: #fbbf24;
-  filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.6));
+  color: var(--theme-battle-ability);
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--theme-battle-ability) 60%, transparent));
 }
 
 @keyframes ability-toast-pop {

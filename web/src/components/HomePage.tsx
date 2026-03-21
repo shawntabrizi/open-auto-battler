@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ParticleBackground } from './ParticleBackground';
 import { TopBar } from './TopBar';
-import swordsIcon from '../../swords.svg';
+import { useThemeStore } from '../store/themeStore';
+import { getTheme } from '../theme/themes';
 
 const MENU_BUTTONS = [
   {
@@ -35,6 +36,7 @@ const MENU_BUTTONS = [
 ];
 
 export function HomePage() {
+  const theme = getTheme(useThemeStore((s) => s.selectedThemeId));
   return (
     <div className="app-shell min-h-screen min-h-svh flex flex-col text-white overflow-hidden relative">
       <TopBar />
@@ -67,7 +69,7 @@ export function HomePage() {
               style={{ animationFillMode: 'forwards' }}
             >
               <div className="flex items-center justify-center gap-3 lg:gap-5">
-                <img src={swordsIcon} alt="" className="h-16 lg:h-24 w-auto" />
+                <img src={theme.assets.playIcon} alt="" className="h-16 lg:h-24 w-auto" />
                 <div className="text-left">
                   <h2 className="font-button text-2xl lg:text-3xl font-bold text-white tracking-wide">
                     PLAY
