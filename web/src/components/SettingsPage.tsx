@@ -36,7 +36,7 @@ export function SettingsPage() {
     <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
       <TopBar backTo={returnTo ?? '/'} backLabel={returnTo ? 'Game' : 'Menu'} title="Settings" />
       <div className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[8vh]">
+        <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[4vh]">
           {/* Options */}
           <div className="flex flex-col gap-3 lg:gap-4">
             {/* Display section */}
