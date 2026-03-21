@@ -102,10 +102,10 @@ export function VersusPage() {
             {/* Connected State */}
             {status === 'connected' || status === 'in-game' ? (
               <div className="text-center pt-2">
-                <div className="w-14 h-14 lg:w-20 lg:h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3 lg:mb-4 border-2 border-green-500/50">
+                <div className="w-14 h-14 lg:w-20 lg:h-20 bg-accent-emerald/10 rounded-full flex items-center justify-center mx-auto mb-3 lg:mb-4 border-2 border-accent-emerald/50">
                   <span className="text-2xl lg:text-4xl">🔗</span>
                 </div>
-                <h2 className="text-lg lg:text-2xl font-heading font-bold text-green-400 mb-1 lg:mb-2">
+                <h2 className="text-lg lg:text-2xl font-heading font-bold text-accent-emerald mb-1 lg:mb-2">
                   Connected
                 </h2>
                 <p className="mb-4 lg:mb-6 text-warm-400 text-xs lg:text-sm">
@@ -228,7 +228,7 @@ export function VersusPage() {
                     <button
                       onClick={handleCopyId}
                       className={`text-[10px] lg:text-sm mt-1 transition-colors ${
-                        copiedId ? 'text-green-400' : 'text-warm-400 hover:text-warm-200'
+                        copiedId ? 'text-victory-green' : 'text-warm-400 hover:text-warm-200'
                       }`}
                     >
                       {copiedId ? '✓ Copied!' : 'Copy ID'}

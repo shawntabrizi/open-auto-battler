@@ -78,7 +78,7 @@ export function ArenaPage() {
             Network Settings
           </Link>
           {connectionError && (
-            <p className="mt-3 max-w-md rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-center text-xs text-red-200">
+            <p className="mt-3 max-w-md rounded-xl theme-error-panel border px-3 py-2 text-center text-xs text-defeat-red">
               {connectionError}
             </p>
           )}

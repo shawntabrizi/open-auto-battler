@@ -243,7 +243,7 @@ export const CreateSetPage: React.FC = () => {
                               />
                               <button
                                 onClick={() => toggleCardSelection(card.id)}
-                                className="text-warm-600 hover:text-red-500 transition-colors"
+                                className="text-warm-600 hover:text-defeat-red transition-colors"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"

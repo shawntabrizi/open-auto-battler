@@ -135,7 +135,7 @@ export function NetworkPage() {
             <div className="flex items-center gap-2 text-xs lg:text-sm">
               <div
                 className={`w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-green-500 animate-pulse' : 'bg-warm-600'
+                  isConnected ? 'bg-accent-emerald animate-pulse' : 'bg-warm-600'
                 }`}
               />
               <span className="text-warm-400">{isConnected ? 'Connected' : 'Disconnected'}</span>
@@ -146,7 +146,7 @@ export function NetworkPage() {
               )}
             </div>
             {connectionError && (
-              <div className="mt-2 text-[10px] lg:text-xs text-red-300">{connectionError}</div>
+              <div className="mt-2 text-[10px] lg:text-xs text-defeat-red">{connectionError}</div>
             )}
             {isConnected && (
               <div className="mt-1 text-[10px] lg:text-xs font-mono text-warm-600 truncate">

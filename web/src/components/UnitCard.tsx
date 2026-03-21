@@ -29,19 +29,19 @@ export function getRarityTier(
 /** Border and glow styles per rarity tier. */
 export const RARITY_STYLES = {
   common: {
-    border: 'border-amber-900/60',
+    border: 'border-accent-amber/40',
     glow: '',
   },
   uncommon: {
-    border: 'border-emerald-700/70',
+    border: 'border-accent-emerald/50',
     glow: '',
   },
   rare: {
-    border: 'border-sky-500/70',
+    border: 'border-mana-blue/60',
     glow: 'card-rare-glow',
   },
   legendary: {
-    border: 'border-amber-400/80',
+    border: 'border-gold/70',
     glow: 'card-legendary-glow',
   },
 } as const;

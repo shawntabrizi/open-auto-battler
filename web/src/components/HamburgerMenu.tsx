@@ -129,7 +129,7 @@ export function HamburgerMenu() {
   const menuItemClassName =
     'theme-button theme-surface-button mx-2 flex items-center gap-3 rounded-xl border px-4 py-3 text-warm-200 transition-all hover:text-white';
   const dangerMenuItemClassName =
-    'theme-button mx-2 flex items-center gap-3 rounded-xl border border-red-900/50 bg-red-950/20 px-4 py-3 text-red-400 transition-colors hover:border-red-700/70 hover:bg-red-900/30 hover:text-red-300';
+    'theme-button theme-danger-button mx-2 flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors';
 
   useFocusTrap({
     containerRef: panelRef,
@@ -256,7 +256,7 @@ export function HamburgerMenu() {
                 {/* Abandon at bottom */}
                 <div className="border-t border-warm-700/60 p-2">
                   {showAbandonConfirm ? (
-                    <div className="theme-panel rounded-xl border border-red-900/40 bg-red-950/20 p-3 text-center">
+                    <div className="theme-panel theme-error-panel rounded-xl border p-3 text-center">
                       <p className="text-warm-300 text-sm mb-3">
                         Abandon this run? All progress will be lost.
                       </p>
@@ -269,7 +269,7 @@ export function HamburgerMenu() {
                         </button>
                         <button
                           onClick={() => void handleAbandon()}
-                          className="theme-button flex-1 rounded-lg border border-red-700 bg-red-900/50 px-3 py-2 text-sm font-bold text-red-300 transition-colors hover:bg-red-900/70"
+                          className="theme-button theme-danger-solid flex-1 rounded-lg border px-3 py-2 text-sm font-bold transition-colors"
                         >
                           Abandon
                         </button>
@@ -314,10 +314,10 @@ export function HamburgerMenu() {
                     <div className="theme-panel rounded-xl border border-warm-700/50 bg-warm-900/30 px-4 py-3">
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500"></span>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-emerald opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-full w-full bg-accent-emerald"></span>
                         </span>
-                        <span className="text-[10px] text-emerald-400 font-medium uppercase tracking-wider">
+                        <span className="text-[10px] text-accent-emerald font-medium uppercase tracking-wider">
                           Connected
                         </span>
                       </div>

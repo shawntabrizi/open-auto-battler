@@ -22,6 +22,14 @@ export function ParticleBackground() {
     const particles: Particle[] = [];
     const count = 40;
 
+    // Read theme accent color from CSS variable (hex like #d4a843)
+    const accentHex = getComputedStyle(document.documentElement).getPropertyValue('--theme-icon-accent').trim() || '#d4a843';
+    // Parse hex to r,g,b
+    const hex = accentHex.replace('#', '');
+    const ar = parseInt(hex.slice(0, 2), 16);
+    const ag = parseInt(hex.slice(2, 4), 16);
+    const ab = parseInt(hex.slice(4, 6), 16);
+
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -54,9 +62,9 @@ export function ParticleBackground() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(245, 158, 11, ${p.alpha})`;
+        ctx.fillStyle = `rgba(${ar}, ${ag}, ${ab}, ${p.alpha})`;
         ctx.shadowBlur = 8;
-        ctx.shadowColor = 'rgba(245, 158, 11, 0.3)';
+        ctx.shadowColor = `rgba(${ar}, ${ag}, ${ab}, 0.3)`;
         ctx.fill();
       }
 

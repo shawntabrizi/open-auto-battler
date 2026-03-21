@@ -11,7 +11,7 @@ export default function Welcome() {
 
   return (
     <div className="text-center">
-      <h1 className="text-3xl lg:text-5xl font-title font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-4 lg:mb-6">
+      <h1 className="text-3xl lg:text-5xl font-title font-bold text-transparent bg-clip-text theme-title-text mb-4 lg:mb-6">
         Welcome to Open Auto Battler!
       </h1>
       <p className="text-warm-300 text-sm lg:text-lg leading-relaxed max-w-lg mx-auto mb-6 lg:mb-10">

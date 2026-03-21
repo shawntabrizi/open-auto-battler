@@ -59,11 +59,11 @@ function formatEvent(
     case 'DamageTaken':
       return {
         text: `${getName(event.payload.target_instance_id)} hit (${event.payload.remaining_hp} HP left)`,
-        color: 'text-red-400',
+        color: 'text-defeat-red',
       };
     case 'UnitDeath': {
       const team = String(event.payload.team);
-      return { text: `${team} unit falls`, color: 'text-red-300' };
+      return { text: `${team} unit falls`, color: 'text-defeat-red' };
     }
     case 'AbilityTrigger':
       return {
@@ -88,7 +88,7 @@ function formatEvent(
       if (health_change) parts.push(`${health_change > 0 ? '+' : ''}${health_change} HP`);
       return {
         text: `${getName(event.payload.target_instance_id)} ${parts.join(', ')}`,
-        color: 'text-green-400',
+        color: 'text-accent-emerald',
       };
     }
     case 'AbilityGainMana':
@@ -106,9 +106,9 @@ function formatEvent(
         text: `Battle ends: ${event.payload.result}`,
         color:
           event.payload.result === 'Victory'
-            ? 'text-green-400'
+            ? 'text-victory-green'
             : event.payload.result === 'Defeat'
-              ? 'text-red-400'
+              ? 'text-defeat-red'
               : 'text-gold',
       };
     default:
@@ -222,7 +222,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
   let resultKey: 'victory' | 'defeat' | 'draw' = 'draw';
   let impactText = '';
   let impactColor = 'text-gold/80';
-  let flashColor = 'rgba(212, 168, 67, 0.25)';
+  let flashColor = 'rgb(var(--color-gold) / 0.25)';
 
   if (result?.type === 'BattleEnd') {
     const res = result.payload.result;
@@ -230,14 +230,14 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
       resultText = 'VICTORY!';
       resultKey = 'victory';
       impactText = '+1 Win';
-      impactColor = 'text-green-400/90';
-      flashColor = 'rgba(74, 140, 58, 0.3)';
+      impactColor = 'text-victory-green/90';
+      flashColor = 'rgb(var(--color-victory-green) / 0.3)';
     } else if (res === 'Defeat') {
       resultText = 'DEFEAT';
       resultKey = 'defeat';
       impactText = '-1 Life';
-      impactColor = 'text-red-400/90';
-      flashColor = 'rgba(168, 58, 42, 0.3)';
+      impactColor = 'text-defeat-red/90';
+      flashColor = 'rgb(var(--color-defeat-red) / 0.3)';
     }
   }
 

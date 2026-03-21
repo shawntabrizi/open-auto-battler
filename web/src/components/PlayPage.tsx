@@ -44,7 +44,7 @@ export function PlayPage() {
               </div>
               {isConnected && (
                 <div className="mt-2 flex items-center justify-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse" />
                   <span className="text-[10px] text-warm-500 font-mono">
                     {blockNumber !== null ? `#${blockNumber.toLocaleString()}` : 'live'}
                   </span>

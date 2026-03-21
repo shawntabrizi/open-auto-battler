@@ -134,7 +134,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
               isWaiting
                 ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
                 : battleConfirmation.isConfirming
-                  ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
+                  ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
                   : opponentWaiting && displayTimer !== null && displayTimer <= 5
                     ? 'animate-pulse bg-defeat-red hover:bg-defeat-red border-defeat-red/50'
                     : 'battle-btn border-gold/40'
@@ -164,7 +164,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
             customAction.disabled
               ? 'bg-warm-600 border-warm-600 scale-95 opacity-80 cursor-not-allowed'
               : customActionConfirmation.isConfirming
-                ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
+                ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
                 : customAction.variant === 'chain'
                   ? 'btn-primary'
                   : 'battle-btn border-gold/40'
@@ -347,7 +347,7 @@ export function BattleAction({
               isWaiting
                 ? 'bg-warm-800 border-warm-700 opacity-50 cursor-not-allowed'
                 : battleConfirmation.isConfirming
-                  ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
+                  ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
                   : 'battle-btn border-gold/40 active:scale-95'
             }`}
           >
@@ -392,7 +392,7 @@ export function BattleAction({
               customAction.disabled
                 ? 'bg-warm-800 border-warm-700 opacity-50 cursor-not-allowed text-warm-500'
                 : customActionConfirmation.isConfirming
-                  ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
+                  ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border-defeat-red/50'
                   : customAction.variant === 'chain'
                     ? 'btn-primary'
                     : 'btn-primary border-gold/40'
@@ -445,7 +445,7 @@ export function BattleAction({
                 isWaiting
                   ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed px-4 lg:px-12 py-1.5 lg:py-4'
                   : battleConfirmation.isConfirming
-                    ? 'bg-red-700 hover:bg-red-600 text-white border border-red-400/70 px-5 lg:px-10 py-3 lg:py-4'
+                    ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border border-defeat-red/50 px-5 lg:px-10 py-3 lg:py-4'
                     : opponentWaiting && displayTimer !== null && displayTimer <= 5
                       ? 'animate-pulse bg-defeat-red hover:bg-defeat-red px-2 lg:px-4 py-0.5 lg:py-1'
                       : 'px-2 lg:px-4 py-0.5 lg:py-1'
@@ -474,7 +474,7 @@ export function BattleAction({
               customAction.disabled
                 ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
                 : customActionConfirmation.isConfirming
-                  ? 'bg-red-700 hover:bg-red-600 text-white border border-red-400/70'
+                  ? 'bg-defeat-red hover:bg-defeat-red/85 text-white border border-defeat-red/50'
                   : customAction.variant === 'chain'
                     ? 'btn-primary'
                     : 'btn-primary'

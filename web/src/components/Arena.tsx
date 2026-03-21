@@ -169,7 +169,7 @@ export function Arena() {
   if (!view) return null;
 
   if (!view.board || !Array.isArray(view.board)) {
-    return <div className="text-red-500">Error: Board data not available</div>;
+    return <div className="text-defeat-red">Error: Board data not available</div>;
   }
 
   const unitCount = view.board.filter(Boolean).length;

@@ -105,6 +105,15 @@ type ThemeTextColors = {
   secondary: string;
 };
 
+type ThemeAchievements = {
+  bronze: string;
+  bronzeText: string;
+  silver: string;
+  silverText: string;
+  gold: string;
+  goldText: string;
+};
+
 export interface ThemeDefinition {
   id: ThemeId;
   label: string;
@@ -116,6 +125,7 @@ export interface ThemeDefinition {
   buttons: ThemeButtons;
   fonts: ThemeFonts;
   text: ThemeTextColors;
+  achievements: ThemeAchievements;
 }
 
 type ThemeMap = Record<ThemeId, ThemeDefinition>;
@@ -227,6 +237,14 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
   text: {
     heroSubtitle: '#c4b498',
     secondary: '#a08a6c',
+  },
+  achievements: {
+    bronze: '#b87333',
+    bronzeText: '#d4956a',
+    silver: '#9ca3af',
+    silverText: '#c0c7d0',
+    gold: '#d4a843',
+    goldText: '#e8c44a',
   },
 };
 
@@ -341,6 +359,14 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     heroSubtitle: '#67e8f9',
     secondary: '#8fe8ff',
   },
+  achievements: {
+    bronze: '#f97316',
+    bronzeText: '#fb923c',
+    silver: '#94a3b8',
+    silverText: '#cbd5e1',
+    gold: '#ffd700',
+    goldText: '#ffe44d',
+  },
 };
 
 const PASTEL_THEME: ThemeDefinition = {
@@ -440,7 +466,7 @@ const PASTEL_THEME: ThemeDefinition = {
     manaGlow: '0 0 8px rgba(249, 168, 212, 0.42)',
   },
   fonts: {
-    decorative: '"Cormorant Unicase", serif',
+    decorative: 'Pacifico, cursive',
     title: '"Josefin Sans", sans-serif',
     heading: '"Josefin Sans", sans-serif',
     button: 'Jost, sans-serif',
@@ -451,6 +477,14 @@ const PASTEL_THEME: ThemeDefinition = {
   text: {
     heroSubtitle: '#ffe5f1',
     secondary: '#ffcadd',
+  },
+  achievements: {
+    bronze: '#dba06d',
+    bronzeText: '#e8b990',
+    silver: '#c9c0d3',
+    silverText: '#ddd6e8',
+    gold: '#f0c27a',
+    goldText: '#f5d49a',
   },
 };
 
@@ -593,6 +627,13 @@ export function applyThemeToDocument(
   setRootVariable(root, '--font-mono', theme.fonts.mono);
   setRootVariable(root, '--theme-hero-subtitle', theme.text.heroSubtitle);
   setRootVariable(root, '--theme-secondary-text', theme.text.secondary);
+
+  setRootVariable(root, '--theme-achievement-bronze', theme.achievements.bronze);
+  setRootVariable(root, '--theme-achievement-bronze-text', theme.achievements.bronzeText);
+  setRootVariable(root, '--theme-achievement-silver', theme.achievements.silver);
+  setRootVariable(root, '--theme-achievement-silver-text', theme.achievements.silverText);
+  setRootVariable(root, '--theme-achievement-gold', theme.achievements.gold);
+  setRootVariable(root, '--theme-achievement-gold-text', theme.achievements.goldText);
 
   root.dataset.theme = theme.id;
 }

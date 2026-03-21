@@ -15,9 +15,9 @@ type TrophyTier = 'bronze' | 'silver' | 'gold';
 
 function TrophyIcon({ tier, earned }: { tier: TrophyTier; earned: boolean }) {
   const colors: Record<TrophyTier, { bg: string; dim: string }> = {
-    bronze: { bg: 'bg-amber-800', dim: 'text-warm-700' },
-    silver: { bg: 'bg-gray-400', dim: 'text-warm-700' },
-    gold: { bg: 'bg-gold', dim: 'text-warm-700' },
+    bronze: { bg: 'achievement-bronze', dim: 'text-warm-700' },
+    silver: { bg: 'achievement-silver', dim: 'text-warm-700' },
+    gold: { bg: 'achievement-gold', dim: 'text-warm-700' },
   };
   const c = colors[tier];
 
@@ -155,24 +155,24 @@ export function AchievementsPage() {
                     label: 'Win',
                     desc: 'Win a battle with this card',
                     count: bronzeCount,
-                    activeColor: 'border-amber-700 bg-amber-900/20',
-                    segActive: 'bg-amber-800 text-white',
+                    activeColor: 'achievement-bronze-active',
+                    segActive: 'achievement-bronze-seg',
                   },
                   {
                     tier: 'silver' as FilterTier,
                     label: 'Victory',
                     desc: '10-win run with this card',
                     count: silverCount,
-                    activeColor: 'border-gray-500 bg-gray-900/20',
-                    segActive: 'bg-gray-600 text-white',
+                    activeColor: 'achievement-silver-active',
+                    segActive: 'achievement-silver-seg',
                   },
                   {
                     tier: 'gold' as FilterTier,
                     label: 'Perfect',
                     desc: 'Perfect run, no losses',
                     count: goldCount,
-                    activeColor: 'border-gold bg-gold/10',
-                    segActive: 'bg-gold text-surface-dark',
+                    activeColor: 'achievement-gold-active',
+                    segActive: 'achievement-gold-seg',
                   },
                 ].map(({ tier, label, desc, count, activeColor, segActive }) => {
                   const isActive = filterTier === tier;
@@ -198,10 +198,10 @@ export function AchievementsPage() {
                         <div
                           className={`text-[10px] lg:text-xs font-heading font-bold uppercase tracking-wider mb-0.5 ${
                             tier === 'bronze'
-                              ? 'text-gold'
+                              ? 'achievement-bronze-text'
                               : tier === 'silver'
-                                ? 'text-gray-300'
-                                : 'text-gold'
+                                ? 'achievement-silver-text'
+                                : 'achievement-gold-text'
                           }`}
                         >
                           {label}

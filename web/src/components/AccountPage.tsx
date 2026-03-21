@@ -185,7 +185,7 @@ export function AccountPage() {
                       <div className="theme-panel bg-warm-950 border border-warm-700 rounded-lg p-3 font-mono text-xs lg:text-sm text-gold break-all select-all">
                         {getLocalAccountMnemonic(selectedAccount.address) || 'Not found'}
                       </div>
-                      <p className="text-[10px] text-red-400/80 mt-2">
+                      <p className="text-[10px] text-defeat-red/80 mt-2">
                         Do not share this with anyone. Anyone with this phrase can access your
                         account.
                       </p>
@@ -223,7 +223,7 @@ export function AccountPage() {
                     </div>
                     <div>
                       <div className="text-[10px] text-warm-600 uppercase tracking-wider">Free</div>
-                      <div className="text-sm lg:text-base font-mono text-green-400">
+                      <div className="text-sm lg:text-base font-mono text-accent-emerald">
                         {formatBalance(info.free)}
                       </div>
                     </div>
@@ -280,7 +280,7 @@ export function AccountPage() {
                   logout();
                   void navigate('/');
                 }}
-                className="theme-button w-full p-3 rounded-xl border border-red-800/60 bg-red-900/20 text-red-400 hover:text-red-300 hover:bg-red-900/30 transition-colors text-sm font-semibold"
+                className="theme-button theme-danger-button w-full p-3 rounded-xl border transition-colors text-sm font-semibold"
               >
                 Log Out
               </button>
@@ -288,7 +288,7 @@ export function AccountPage() {
               {/* Forget Account — local accounts only */}
               {selectedAccount.source === 'local' &&
                 (showForgetConfirm ? (
-                  <div className="theme-panel w-full p-4 rounded-xl border border-red-700/60 bg-red-950/30">
+                  <div className="theme-panel theme-error-panel w-full p-4 rounded-xl border">
                     <p className="text-sm text-warm-300 mb-3 text-center">
                       Forget this account? The private key will be permanently deleted.
                     </p>
@@ -305,7 +305,7 @@ export function AccountPage() {
                           logout();
                           void navigate('/');
                         }}
-                        className="theme-button flex-1 p-2.5 rounded-lg bg-red-900/50 hover:bg-red-900/70 border border-red-700 text-red-300 text-sm font-semibold transition-colors"
+                        className="theme-button theme-danger-solid flex-1 p-2.5 rounded-lg border text-sm font-semibold transition-colors"
                       >
                         Forget
                       </button>
@@ -314,7 +314,7 @@ export function AccountPage() {
                 ) : (
                   <button
                     onClick={() => setShowForgetConfirm(true)}
-                    className="theme-button w-full p-3 rounded-xl border border-red-900/40 text-red-500/70 hover:text-red-400 hover:border-red-800/60 transition-colors text-sm"
+                    className="theme-button theme-danger-button w-full p-3 rounded-xl border transition-colors text-sm opacity-70 hover:opacity-100"
                   >
                     Forget Account
                   </button>

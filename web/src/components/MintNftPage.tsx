@@ -333,7 +333,7 @@ export const MintNftPage: React.FC = () => {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-xs font-bold text-warm-500 uppercase mb-1">
-                      Name <span className="text-red-500">*</span>
+                      Name <span className="text-defeat-red">*</span>
                     </label>
                     <input
                       type="text"
@@ -370,7 +370,7 @@ export const MintNftPage: React.FC = () => {
                       <p className="text-[10px] text-warm-600 mt-1">Checking collection...</p>
                     )}
                     {collectionExists === true && (
-                      <p className="text-[10px] text-green-500 mt-1">Collection exists</p>
+                      <p className="text-[10px] text-accent-emerald mt-1">Collection exists</p>
                     )}
                     {collectionExists === false && (
                       <div className="theme-panel mt-2 p-3 bg-gold/10 border border-gold/20 rounded-lg">
@@ -450,7 +450,7 @@ export const MintNftPage: React.FC = () => {
                             image: `ipfs://${cid}`,
                             description,
                           }).length > 256
-                            ? 'text-red-500'
+                            ? 'text-defeat-red'
                             : 'text-warm-600'
                         }`}
                       >

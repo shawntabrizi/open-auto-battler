@@ -31,7 +31,7 @@ export function Shop() {
   // Defensive check for hand array
   if (!view.hand || !Array.isArray(view.hand)) {
     console.error('Shop: view.hand is invalid:', view.hand);
-    return <div className="text-red-500">Error: Hand data not available</div>;
+    return <div className="text-defeat-red">Error: Hand data not available</div>;
   }
 
   const handleHandSlotClick = (index: number) => {

@@ -175,7 +175,7 @@ export function DevPage() {
             {viewports.length > 1 && (
               <button
                 onClick={() => removeViewport(i)}
-                className="text-warm-500 hover:text-red-400 text-xs px-1"
+                className="text-warm-500 hover:text-defeat-red text-xs px-1"
               >
                 x
               </button>

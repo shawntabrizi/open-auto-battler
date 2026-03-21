@@ -248,6 +248,12 @@
   --theme-battle-button-glow: 0 0 20px rgba(184, 137, 42, 0.3), 0 0 8px rgba(184, 137, 42, 0.2);
   --theme-mana-fill: linear-gradient(to top, #5b8faa, #60a5fa);
   --theme-mana-glow: 0 0 6px rgba(59, 130, 246, 0.5);
+  --theme-achievement-bronze: #b87333;
+  --theme-achievement-bronze-text: #d4956a;
+  --theme-achievement-silver: #9ca3af;
+  --theme-achievement-silver-text: #c0c7d0;
+  --theme-achievement-gold: #d4a843;
+  --theme-achievement-gold-text: #e8c44a;
 }
 
 @media (min-width: 1024px) {
@@ -432,6 +438,99 @@ body {
 
 .theme-secondary-text {
   color: var(--theme-secondary-text);
+}
+
+/* ── Danger / destructive action styles ── */
+.theme-danger-button {
+  border-color: rgb(var(--color-defeat-red) / 0.3);
+  background: rgb(var(--color-defeat-red) / 0.08);
+  color: rgb(var(--color-defeat-red));
+}
+
+.theme-danger-button:hover {
+  border-color: rgb(var(--color-defeat-red) / 0.5);
+  background: rgb(var(--color-defeat-red) / 0.15);
+}
+
+.theme-danger-solid {
+  border-color: rgb(var(--color-defeat-red) / 0.6);
+  background: rgb(var(--color-defeat-red) / 0.3);
+  color: white;
+}
+
+.theme-danger-solid:hover {
+  background: rgb(var(--color-defeat-red) / 0.45);
+}
+
+/* ── Alert panels ── */
+.theme-error-panel {
+  border-color: rgb(var(--color-defeat-red) / 0.3);
+  background: rgb(var(--color-defeat-red) / 0.1);
+}
+
+.theme-success-panel {
+  border-color: rgb(var(--color-accent-emerald) / 0.3);
+  background: rgb(var(--color-accent-emerald) / 0.1);
+}
+
+.theme-warning-panel {
+  border-color: rgb(var(--color-gold) / 0.3);
+  background: rgb(var(--color-gold) / 0.1);
+}
+
+/* ── Achievement badge colors ── */
+.achievement-bronze {
+  background-color: var(--theme-achievement-bronze);
+}
+
+.achievement-bronze-text {
+  color: var(--theme-achievement-bronze-text);
+}
+
+.achievement-bronze-active {
+  border-color: var(--theme-achievement-bronze);
+  background: color-mix(in srgb, var(--theme-achievement-bronze) 15%, transparent);
+}
+
+.achievement-bronze-seg {
+  background-color: var(--theme-achievement-bronze);
+  color: white;
+}
+
+.achievement-silver {
+  background-color: var(--theme-achievement-silver);
+}
+
+.achievement-silver-text {
+  color: var(--theme-achievement-silver-text);
+}
+
+.achievement-silver-active {
+  border-color: var(--theme-achievement-silver);
+  background: color-mix(in srgb, var(--theme-achievement-silver) 15%, transparent);
+}
+
+.achievement-silver-seg {
+  background-color: var(--theme-achievement-silver);
+  color: white;
+}
+
+.achievement-gold {
+  background-color: var(--theme-achievement-gold);
+}
+
+.achievement-gold-text {
+  color: var(--theme-achievement-gold-text);
+}
+
+.achievement-gold-active {
+  border-color: var(--theme-achievement-gold);
+  background: color-mix(in srgb, var(--theme-achievement-gold) 15%, transparent);
+}
+
+.achievement-gold-seg {
+  background-color: var(--theme-achievement-gold);
+  color: rgb(var(--color-surface-dark));
 }
 
 .shop {
@@ -1343,12 +1442,12 @@ body {
 }
 
 .btn-danger {
-  @apply bg-burn-red text-white;
-  border-color: rgba(127, 29, 29, 0.6);
+  @apply bg-defeat-red text-white;
+  border-color: rgb(var(--color-defeat-red) / 0.6);
 }
 
 .btn-danger:hover {
-  @apply bg-red-700;
+  background: rgb(var(--color-defeat-red) / 0.85);
 }
 
 .btn-burn {

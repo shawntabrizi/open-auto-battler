@@ -338,7 +338,7 @@ export function GhostBrowserPage() {
               This view reads the active ghost pool directly from the blockchain.
             </p>
             {connectionError && (
-              <p className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+              <p className="mt-3 rounded-xl theme-error-panel border px-3 py-2 text-xs text-defeat-red">
                 {connectionError}
               </p>
             )}
@@ -503,7 +503,7 @@ export function GhostBrowserPage() {
 
           <div className="w-full max-w-none lg:max-w-6xl mx-auto p-2 lg:p-4 pb-6">
             {ghostError && (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              <div className="rounded-2xl theme-error-panel border px-4 py-3 text-sm text-defeat-red">
                 {ghostError}
               </div>
             )}
@@ -555,7 +555,7 @@ export function GhostBrowserPage() {
                       </h2>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-200">
+                      <span className="rounded-full border border-accent-emerald/30 bg-accent-emerald/10 px-3 py-1 text-xs font-bold text-accent-emerald">
                         {group.wins} wins
                       </span>
                       <span className="rounded-full border border-defeat-red/30 bg-defeat-red/10 px-3 py-1 text-xs font-bold text-defeat-red">

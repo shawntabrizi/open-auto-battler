@@ -70,7 +70,7 @@ export function KeyboardShortcutsOverlay() {
                       key={`${section.title}-${shortcut.keys}`}
                       className="grid grid-cols-[minmax(110px,160px)_1fr] lg:grid-cols-[180px_1fr] gap-3 items-start rounded-xl border border-warm-800/70 bg-warm-900/50 px-3 py-3"
                     >
-                      <div className="font-mono text-xs lg:text-sm text-amber-300">
+                      <div className="font-mono text-xs lg:text-sm text-gold">
                         {shortcut.keys}
                       </div>
                       <div className="text-xs lg:text-sm text-warm-200 leading-relaxed">

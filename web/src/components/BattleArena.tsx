@@ -20,8 +20,8 @@ const DamageNumber = ({
       onAnimationEnd={onAnimationEnd}
     >
       <span
-        className="text-2xl lg:text-4xl font-stat font-bold text-red-500"
-        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(220,38,38,0.5)' }}
+        className="text-2xl lg:text-4xl font-stat font-bold text-defeat-red"
+        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgb(var(--color-defeat-red) / 0.5)' }}
       >
         -{amount}
       </span>
@@ -61,8 +61,8 @@ const StatChangeNumber = ({
       onAnimationEnd={onAnimationEnd}
     >
       <span
-        className="text-2xl lg:text-4xl font-stat font-bold text-green-500"
-        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(34,197,94,0.5)' }}
+        className="text-2xl lg:text-4xl font-stat font-bold text-accent-emerald"
+        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgb(var(--color-accent-emerald) / 0.5)' }}
       >
         {displayText}
       </span>
@@ -901,7 +901,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
         <div className="flex flex-col items-center">
           <div
             className="text-lg lg:text-5xl font-title font-bold text-gold"
-            style={{ textShadow: '0 0 20px rgba(212, 168, 67, 0.4)' }}
+            style={{ textShadow: '0 0 20px rgb(var(--color-gold) / 0.4)' }}
           >
             VS
           </div>

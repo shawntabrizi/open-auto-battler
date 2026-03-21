@@ -379,7 +379,7 @@ export function CardDetailPanel({
                 <button
                   onClick={() => void handleForfeit()}
                   disabled={isSubmitting}
-                  className="rounded-xl border border-red-800/70 bg-red-950/60 px-4 py-3 text-sm font-bold uppercase tracking-wider text-red-300 transition-all hover:bg-red-900/50 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="theme-danger-solid rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Surrender
                 </button>

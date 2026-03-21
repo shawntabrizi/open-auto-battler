@@ -45,17 +45,17 @@ export default function Battle() {
       <div className="space-y-3 text-warm-300 text-sm lg:text-base leading-relaxed">
         <p>
           After the shop, your board fights an opponent's board{' '}
-          <span className="text-yellow-400 font-bold">automatically</span>. The
+          <span className="text-gold font-bold">automatically</span>. The
           front unit on each side clashes first.
         </p>
         <p>
           Units deal damage equal to their{' '}
-          <span className="text-red-400 font-bold">attack</span> and lose{' '}
-          <span className="text-green-400 font-bold">health</span> when hit. A
+          <span className="text-defeat-red font-bold">attack</span> and lose{' '}
+          <span className="text-accent-emerald font-bold">health</span> when hit. A
           unit with 0 health is destroyed.
         </p>
         <p>
-          Watch for <span className="text-yellow-400 font-bold">abilities</span>!
+          Watch for <span className="text-gold font-bold">abilities</span>!
           They fire during combat and can completely turn the tide.
         </p>
       </div>

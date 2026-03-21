@@ -25,45 +25,45 @@ export default function Cards() {
             Cards
           </h2>
           <div className="flex items-start gap-3">
-            <div className="w-7 h-7 lg:w-8 lg:h-8 shrink-0 rounded bg-blue-900/40 border border-blue-700/50 flex items-center justify-center text-blue-400 font-stat font-bold text-sm lg:text-base">
+            <div className="w-7 h-7 lg:w-8 lg:h-8 shrink-0 rounded bg-mana-blue/15 border border-mana-blue/30 flex items-center justify-center text-mana-blue font-stat font-bold text-sm lg:text-base">
               {demoCard?.play_cost ?? '3'}
             </div>
             <div>
-              <span className="text-blue-400 font-bold">Mana Cost</span>
+              <span className="text-mana-blue font-bold">Mana Cost</span>
               <span className="text-warm-400"> — the mana required to play this card onto your board.</span>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-7 h-7 lg:w-8 lg:h-8 shrink-0 rounded bg-orange-900/40 border border-orange-700/50 flex items-center justify-center text-orange-400 font-stat font-bold text-sm lg:text-base">
+            <div className="w-7 h-7 lg:w-8 lg:h-8 shrink-0 rounded bg-accent-amber/15 border border-accent-amber/30 flex items-center justify-center text-accent-amber font-stat font-bold text-sm lg:text-base">
               {demoCard?.burn_value ?? '1'}
             </div>
             <div>
-              <span className="text-orange-400 font-bold">Burn Value</span>
+              <span className="text-accent-amber font-bold">Burn Value</span>
               <span className="text-warm-400"> — burn this card from your hand or board to gain this much mana.</span>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
             <div className="flex items-center gap-1 shrink-0">
-              <SwordIcon className="w-5 h-5 lg:w-6 lg:h-6 text-red-400" />
+              <SwordIcon className="w-5 h-5 lg:w-6 lg:h-6 text-defeat-red" />
               <span className="font-stat font-bold text-white text-base lg:text-lg">{demoCard?.attack ?? '3'}</span>
             </div>
             <div>
-              <span className="text-red-400 font-bold">Attack</span>
+              <span className="text-defeat-red font-bold">Attack</span>
               <span className="text-warm-400"> — damage dealt to the front enemy unit in each clash.</span>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
             <div className="flex items-center gap-1 shrink-0">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 lg:w-6 lg:h-6 text-green-400">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 lg:w-6 lg:h-6 text-accent-emerald">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
               </svg>
               <span className="font-stat font-bold text-white text-base lg:text-lg">{demoCard?.health ?? '5'}</span>
             </div>
             <div>
-              <span className="text-green-400 font-bold">Health</span>
+              <span className="text-accent-emerald font-bold">Health</span>
               <span className="text-warm-400"> — how much damage this unit can take before being destroyed.</span>
             </div>
           </div>
@@ -75,7 +75,7 @@ export default function Cards() {
               </svg>
             </div>
             <div>
-              <span className="text-yellow-400 font-bold">Abilities</span>
+              <span className="text-gold font-bold">Abilities</span>
               <span className="text-warm-400"> — special effects that trigger during battle or in the shop. Read the card text carefully!</span>
             </div>
           </div>

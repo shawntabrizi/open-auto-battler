@@ -97,11 +97,11 @@ export function GameOverScreen() {
             <h1
               className={`relative text-2xl lg:text-7xl font-title font-bold tracking-wider uppercase ${
                 showTitle ? 'animate-result-slam' : 'opacity-0'
-              } ${isVictory ? 'text-green-300' : 'text-red-300'}`}
+              } ${isVictory ? 'text-victory-green' : 'text-defeat-red'}`}
               style={{
                 textShadow: isVictory
-                  ? '0 2px 12px rgba(74, 140, 58, 0.5), 0 0 40px rgba(74, 140, 58, 0.2)'
-                  : '0 2px 12px rgba(168, 58, 42, 0.5), 0 0 40px rgba(168, 58, 42, 0.2)',
+                  ? '0 2px 12px rgb(var(--color-victory-green) / 0.5), 0 0 40px rgb(var(--color-victory-green) / 0.2)'
+                  : '0 2px 12px rgb(var(--color-defeat-red) / 0.5), 0 0 40px rgb(var(--color-defeat-red) / 0.2)',
               }}
             >
               <span className="flex items-center justify-center gap-3 lg:gap-5">

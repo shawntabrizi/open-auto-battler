@@ -118,7 +118,7 @@ export function StatsPage() {
                 icon="💰"
                 label="Balance"
                 value={formatBalance(stats.freeBalance)}
-                color="text-green-400"
+                color="text-victory-green"
               />
               <StatCard
                 icon="⭐"

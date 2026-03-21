@@ -48,9 +48,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (isRestoringSession) {
     return (
-      <div className="min-h-screen min-h-svh bg-surface-dark flex items-center justify-center">
+      <div className="app-shell min-h-screen min-h-svh flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-decorative text-2xl lg:text-4xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 mb-3">
+          <h1 className="theme-title-text font-decorative text-2xl lg:text-4xl font-bold tracking-wide text-transparent bg-clip-text mb-3">
             OPEN AUTO BATTLER
           </h1>
           <p className="text-warm-500 text-xs lg:text-sm animate-pulse">Connecting...</p>
