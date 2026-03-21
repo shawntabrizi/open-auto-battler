@@ -211,7 +211,7 @@ export function HamburgerMenu() {
                     state={{ returnTo: location.pathname }}
                     data-menu-autofocus="true"
                     onClick={() => setOpen(false)}
-                    className={menuItemClassName}
+                    className={`${menuItemClassName} w-full`}
                   >
                     <GearIcon className="theme-icon-accent w-5 h-5 transition-colors" />
                     <span className="font-button text-sm lg:text-base tracking-wide">Settings</span>

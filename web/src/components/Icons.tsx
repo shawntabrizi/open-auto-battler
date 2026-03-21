@@ -34,6 +34,11 @@ export function HeartIcon({ className = 'w-4 h-4' }: IconProps) {
   return <ThemedIcon iconKey="health" className={className} />;
 }
 
+/** Lives icon — themed per theme (shield-heart, battery, heart) */
+export function LivesIcon({ className = 'w-4 h-4' }: IconProps) {
+  return <ThemedIcon iconKey="lives" className={className} />;
+}
+
 /** Empty heart outline — lost lives */
 export function HeartOutlineIcon({ className = 'w-4 h-4' }: IconProps) {
   return (
@@ -74,15 +79,9 @@ export function FlameIcon({ className = 'w-4 h-4' }: IconProps) {
   );
 }
 
-/** Drawstring bag — draw pool */
+/** Bag icon — themed per theme (drawstring bag, data cube, gift box) */
 export function BagIcon({ className = 'w-4 h-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 2C9.24 2 7 4.24 7 7h2c0-1.66 1.34-3 3-3s3 1.34 3 3h2c0-2.76-2.24-5-5-5z" />
-      <path d="M5 9l1.5 12c.17 1.14 1.15 2 2.3 2h6.4c1.15 0 2.13-.86 2.3-2L19 9H5zm7 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" />
-      <circle cx="12" cy="15" r="2" />
-    </svg>
-  );
+  return <ThemedIcon iconKey="bag" className={className} />;
 }
 
 /** Speaker — audio on */
