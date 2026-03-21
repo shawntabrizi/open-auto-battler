@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { UnitCard, EmptySlot } from './UnitCard';
+import { AbilityIcon } from './Icons';
 import type { BattleOutput, UnitView, CombatEvent } from '../types';
 import { formatAbilitySummary } from '../utils/abilityText';
 
@@ -78,13 +79,7 @@ const AbilityToast = ({ name, onAnimationEnd }: { name: string; onAnimationEnd: 
       onAnimationEnd={onAnimationEnd}
     >
       <div className="ability-toast-inner px-2.5 lg:px-4 py-1 lg:py-1.5 whitespace-nowrap flex items-center gap-1 lg:gap-1.5">
-        <svg
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="ability-toast-icon w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0"
-        >
-          <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-        </svg>
+        <AbilityIcon className="ability-toast-icon w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
         <span className="text-[10px] lg:text-sm font-bold tracking-wide">{name}</span>
       </div>
     </div>

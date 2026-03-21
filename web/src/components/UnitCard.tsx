@@ -8,7 +8,7 @@ import { formatAbilitySentence } from '../utils/abilityText';
 import { UI_LAYERS } from '../constants/uiLayers';
 
 import { useCardTilt } from '../hooks/useCardTilt';
-import { SwordIcon, HeartIcon } from './Icons';
+import { SwordIcon, HeartIcon, AbilityIcon } from './Icons';
 import { CARD_TEXT, type CardSizeVariant } from '../constants/cardSizes';
 import { useAchievementStore } from '../store/achievementStore';
 import { useGameStore } from '../store/gameStore';
@@ -261,13 +261,7 @@ export function UnitCard({
               ...((card as any).battle_abilities ?? []),
             ];
             return abils.length > 0 ? (
-              <svg
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="theme-icon-accent w-3 h-3 lg:w-4 lg:h-4 drop-shadow"
-              >
-                <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-              </svg>
+              <AbilityIcon className="theme-icon-accent w-3 h-3 lg:w-4 lg:h-4 drop-shadow" />
             ) : null;
           })()}
           <div className={`flex items-center ${text.stat} font-stat`}>
@@ -338,13 +332,9 @@ export function UnitCard({
                   key={i}
                   className="flex items-start gap-1.5 text-[9px] lg:text-[11px] text-warm-300 leading-snug"
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill={ability._type === 'shop' ? '#60a5fa' : '#eab308'}
-                    className="w-3 h-3 shrink-0 mt-0.5"
-                  >
-                    <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-                  </svg>
+                  <AbilityIcon
+                    className={`w-3 h-3 shrink-0 mt-0.5 ${ability._type === 'shop' ? 'text-mana-blue' : 'text-gold'}`}
+                  />
                   <span>{formatAbilitySentence(ability, { resolveCardName })}</span>
                 </div>
               ))}

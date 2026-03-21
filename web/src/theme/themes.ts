@@ -58,6 +58,13 @@ type ThemeBackgrounds = {
   handSurface: string;
 };
 
+type ThemeIconSvg = {
+  /** SVG path d attributes (rendered as multiple <path> elements) */
+  paths: string[];
+  /** viewBox string (default "0 0 24 24") */
+  viewBox?: string;
+};
+
 type ThemeIcons = {
   accent: string;
   muted: string;
@@ -67,6 +74,15 @@ type ThemeIcons = {
   warning: string;
   victory: string;
   defeat: string;
+  /** SVG shape overrides for key game icons */
+  svg: {
+    attack: ThemeIconSvg;
+    health: ThemeIconSvg;
+    mana: ThemeIconSvg;
+    ability: ThemeIconSvg;
+    victory: ThemeIconSvg;
+    defeat: ThemeIconSvg;
+  };
 };
 
 type ThemeButtons = {
@@ -161,6 +177,130 @@ export interface ThemeDefinition {
 
 type ThemeMap = Record<ThemeId, ThemeDefinition>;
 
+// ── Icon SVG paths per theme ──
+
+/** Classic RPG icons — swords, hearts, trophies */
+const WARM_ICONS: ThemeIcons['svg'] = {
+  attack: {
+    paths: [
+      'M6.92 5L5 7l4.5 4.5-2.5 2.5 1.41 1.41L11 12.83l1.58 1.58L11.17 16l1.41 1.41 1.42-1.41 1.58 1.58-2.12 2.12 1.41 1.42 2.13-2.12 1.41 1.41L19.83 19 20 18.83l.59.59 1.41-1.42-.58-.58L23 16l-8.5-8.5L16 6l-2-2-1.5 1.5L11 4 6.92 5zM8.34 7.34L11 6l1.93 1.93-2.12 2.12L8.34 7.34z',
+      'M1 21l2.34-2.34 1.42 1.42L2.42 22.42z',
+      'M3 19l5-5 1.41 1.41-5 5z',
+    ],
+  },
+  health: {
+    paths: [
+      'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z',
+    ],
+  },
+  mana: {
+    paths: ['M13 3L4 14h7l-2 7 9-11h-7l2-7z'],
+  },
+  ability: {
+    paths: ['M12 2l1.09 6.9L20 10l-6.91 1.09L12 18l-1.09-6.91L4 10l6.91-1.1z'],
+  },
+  victory: {
+    paths: [
+      'M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z',
+    ],
+  },
+  defeat: {
+    paths: [
+      'M12 2C6.48 2 2 6.48 2 12c0 3.07 1.39 5.81 3.57 7.63L7 22h4v-2h2v2h4l1.43-2.37C20.61 17.81 22 15.07 22 12c0-5.52-4.48-10-10-10zM8.5 15c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm7 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z',
+      'M10 18h4v1h-4z',
+    ],
+  },
+};
+
+/** Cyberpunk tech icons — crosshair, shield, circuit, glitch */
+const CYBERPUNK_ICONS: ThemeIcons['svg'] = {
+  attack: {
+    // Crosshair / targeting reticle
+    paths: [
+      'M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z',
+      'M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7z',
+    ],
+  },
+  health: {
+    // Hexagonal shield
+    paths: [
+      'M12 2L4 6.5v5c0 4.55 3.4 8.82 8 9.5 4.6-.68 8-4.95 8-9.5v-5L12 2zm0 17.92c-3.72-.72-6-4.22-6-7.92V7.78l6-3.39 6 3.39v4.22c0 3.7-2.28 7.2-6 7.92z',
+      'M11 10h2v5h-2zm0-3h2v2h-2z',
+    ],
+  },
+  mana: {
+    // Circuit/energy node
+    paths: [
+      'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14c-2.33 0-4.32-1.45-5.12-3.5h1.67c.7 1.19 1.97 2 3.45 2s2.75-.81 3.45-2h1.67c-.8 2.05-2.79 3.5-5.12 3.5z',
+    ],
+  },
+  ability: {
+    // Lightning/data burst
+    paths: [
+      'M7 2v11h3v9l7-12h-4l4-8z',
+    ],
+  },
+  victory: {
+    // Crown
+    paths: [
+      'M2 19h20v3H2zm2-2l3-6 3 3 4-7 4 7 3-3v6H4z',
+    ],
+  },
+  defeat: {
+    // Glitch/error — broken screen
+    paths: [
+      'M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V5h16v14z',
+      'M7 8l3 3-3 3 1.41 1.41L12 12l-3.59-3.59z',
+      'M13 15h4v2h-4z',
+    ],
+  },
+};
+
+/** Pastel fairy icons — wand, flower, butterfly */
+const PASTEL_ICONS: ThemeIcons['svg'] = {
+  attack: {
+    // Magic wand with star tip
+    paths: [
+      'M15 1l-1.4 4.2L9.4 3.8 10.8 8 6.6 6.6 8 10.8l-4.2 1.4L8 13.6l-1.4 4.2L10.8 16l-1.4 4.2L13.6 16l4.2 1.4L16 13.2l4.2 1.4L18.8 10.8 23 9.4l-4.2-1.4L20.2 3.8 16 5.2z',
+    ],
+  },
+  health: {
+    // Flower / blossom
+    paths: [
+      'M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9zM5.6 10.25c0 1.38 1.12 2.5 2.5 2.5.53 0 1.01-.16 1.42-.44l-.02.19c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5l-.02-.19c.4.28.89.44 1.42.44 1.38 0 2.5-1.12 2.5-2.5 0-1-.59-1.85-1.43-2.25.84-.4 1.43-1.25 1.43-2.25 0-1.38-1.12-2.5-2.5-2.5-.53 0-1.01.16-1.42.44l.02-.19C14.5 2.12 13.38 1 12 1S9.5 2.12 9.5 3.5l.02.19c-.4-.28-.89-.44-1.42-.44-1.38 0-2.5 1.12-2.5 2.5 0 1 .59 1.85 1.43 2.25-.84.4-1.43 1.25-1.43 2.25zM12 5.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5S9.5 9.38 9.5 8s1.12-2.5 2.5-2.5z',
+      'M3 13c0 4.97 4.03 9 9 9 0-4.97-4.03-9-9-9z',
+    ],
+  },
+  mana: {
+    // Dewdrop / water drop
+    paths: [
+      'M12 2c-5.33 8.03-8 12.76-8 16 0 4.42 3.58 8 8 8s8-3.58 8-8c0-3.24-2.67-7.97-8-16zm0 22c-3.31 0-6-2.69-6-6 0-1 .25-2.26 1-4h10c.75 1.74 1 3 1 4 0 3.31-2.69 6-6 6z',
+    ],
+  },
+  ability: {
+    // Butterfly
+    paths: [
+      'M12 12c-1 0-2-.45-2-1s.9-1 2-1 2 .45 2 1-.9 1-2 1zm-5.44-.78C4.37 12.21 3 14 3 16c0 2.76 2.46 5 5.5 5 1.93 0 3.63-.94 4.5-2.35-.43-.2-.82-.47-1.16-.79C10.73 19.2 9.2 20 7.5 20 5.57 20 4 18.65 4 17c0-1.2.72-2.24 1.79-2.83L5.56 11.22zm10.88 0l-.23 2.95C18.28 14.76 19 15.8 19 17c0 1.65-1.57 3-3.5 3-1.7 0-3.23-.8-3.84-2.14-.34.32-.73.59-1.16.79.87 1.41 2.57 2.35 4.5 2.35 3.04 0 5.5-2.24 5.5-5 0-2-1.37-3.79-3.56-4.78z',
+      'M12 4C9 4 7 6 7 8c0 1.5.8 2.8 2 3.5V13c0 1 1.34 2 3 2s3-1 3-2v-1.5c1.2-.7 2-2 2-3.5 0-2-2-4-5-4z',
+    ],
+  },
+  victory: {
+    // Sparkle crown / tiara
+    paths: [
+      'M5 16h14v3H5z',
+      'M12 4l2 4 4-2-2 4 4 2H4l4-2-2-4 4 2z',
+    ],
+  },
+  defeat: {
+    // Broken heart
+    paths: [
+      'M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3z',
+      'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09V21.35z',
+      'M11 7l2 4-2 3 2 4',
+    ],
+  },
+};
+
 const DEFAULT_WARM_THEME: ThemeDefinition = {
   id: 'warm',
   label: 'Warm',
@@ -224,6 +364,7 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
     warning: '#d4a843',
     victory: '#4a8c3a',
     defeat: '#a83a2a',
+    svg: WARM_ICONS,
   },
   buttons: {
     surfaceBackground: 'rgba(26, 22, 16, 0.8)',
@@ -352,6 +493,7 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     warning: '#f8ff66',
     victory: '#00ffa3',
     defeat: '#ff4d9d',
+    svg: CYBERPUNK_ICONS,
   },
   buttons: {
     surfaceBackground: 'rgba(8, 20, 32, 0.82)',
@@ -481,6 +623,7 @@ const PASTEL_THEME: ThemeDefinition = {
     warning: '#ffb3c7',
     victory: '#7dd3c7',
     defeat: '#fb7185',
+    svg: PASTEL_ICONS,
   },
   buttons: {
     surfaceBackground: 'rgba(73, 35, 49, 0.7)',

@@ -1,25 +1,37 @@
+import { useThemeStore } from '../store/themeStore';
+import { getTheme, type ThemeDefinition } from '../theme/themes';
+
 interface IconProps {
   className?: string;
 }
 
-/** Crossed swords — attack stat */
-export function SwordIcon({ className = 'w-4 h-4' }: IconProps) {
+/** Renders an icon from the theme's SVG definitions */
+function ThemedIcon({
+  iconKey,
+  className = 'w-4 h-4',
+}: {
+  iconKey: keyof ThemeDefinition['icons']['svg'];
+  className?: string;
+}) {
+  const theme = getTheme(useThemeStore((s) => s.selectedThemeId));
+  const icon = theme.icons.svg[iconKey];
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M6.92 5L5 7l4.5 4.5-2.5 2.5 1.41 1.41L11 12.83l1.58 1.58L11.17 16l1.41 1.41 1.42-1.41 1.58 1.58-2.12 2.12 1.41 1.42 2.13-2.12 1.41 1.41L19.83 19 20 18.83l.59.59 1.41-1.42-.58-.58L23 16l-8.5-8.5L16 6l-2-2-1.5 1.5L11 4 6.92 5zM8.34 7.34L11 6l1.93 1.93-2.12 2.12L8.34 7.34z" />
-      <path d="M1 21l2.34-2.34 1.42 1.42L2.42 22.42z" />
-      <path d="M3 19l5-5 1.41 1.41-5 5z" />
+    <svg viewBox={icon.viewBox ?? '0 0 24 24'} fill="currentColor" className={className}>
+      {icon.paths.map((d, i) => (
+        <path key={i} d={d} />
+      ))}
     </svg>
   );
 }
 
-/** Solid heart — health stat / lives */
+/** Attack icon — themed per theme (swords, crosshair, wand) */
+export function SwordIcon({ className = 'w-4 h-4' }: IconProps) {
+  return <ThemedIcon iconKey="attack" className={className} />;
+}
+
+/** Health icon — themed per theme (heart, shield, flower) */
 export function HeartIcon({ className = 'w-4 h-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-    </svg>
-  );
+  return <ThemedIcon iconKey="health" className={className} />;
 }
 
 /** Empty heart outline — lost lives */
@@ -49,14 +61,9 @@ export function StarOutlineIcon({ className = 'w-4 h-4' }: IconProps) {
   );
 }
 
-/** Stylized flame — burn card */
-/** Mana bolt — cost indicator */
+/** Mana icon — themed per theme (bolt, circuit, dewdrop) */
 export function BoltIcon({ className = 'w-4 h-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
-    </svg>
-  );
+  return <ThemedIcon iconKey="mana" className={className} />;
 }
 
 export function FlameIcon({ className = 'w-4 h-4' }: IconProps) {
@@ -114,32 +121,19 @@ export function WarningIcon({ className = 'w-4 h-4' }: IconProps) {
   );
 }
 
-/** Trophy — victory */
+/** Victory icon — themed per theme (trophy, crown, tiara) */
 export function TrophyIcon({ className = 'w-4 h-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z" />
-    </svg>
-  );
+  return <ThemedIcon iconKey="victory" className={className} />;
 }
 
-/** Skull — defeat */
+/** Defeat icon — themed per theme (skull, error, broken heart) */
 export function SkullIcon({ className = 'w-4 h-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 2C6.48 2 2 6.48 2 12c0 3.07 1.39 5.81 3.57 7.63L7 22h4v-2h2v2h4l1.43-2.37C20.61 17.81 22 15.07 22 12c0-5.52-4.48-10-10-10zM8.5 15c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm7 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" />
-      <path d="M10 18h4v1h-4z" />
-    </svg>
-  );
+  return <ThemedIcon iconKey="defeat" className={className} />;
 }
 
-/** Small sparkle — ability indicator on cards */
+/** Ability indicator — themed per theme (sparkle, lightning, butterfly) */
 export function AbilityIcon({ className = 'w-4 h-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 2l1.09 6.9L20 10l-6.91 1.09L12 18l-1.09-6.91L4 10l6.91-1.1z" />
-    </svg>
-  );
+  return <ThemedIcon iconKey="ability" className={className} />;
 }
 
 /** X mark — close / dismiss */
