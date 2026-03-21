@@ -17,7 +17,7 @@ export function PlayPage() {
   const openTutorial = useTutorialStore((s) => s.open);
 
   return (
-    <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
+    <div className="app-shell fixed inset-0 text-white flex flex-col">
       <TopBar backTo="/" backLabel="Menu" title="Play" />
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[10vh]">
@@ -25,9 +25,9 @@ export function PlayPage() {
             {/* Online Arena — primary mode */}
             <Link
               to={isConnected ? '/arena' : '/network'}
-              className={`group block w-full p-5 lg:p-7 rounded-xl border-2 transition-all text-center ${
+              className={`theme-panel group block w-full p-5 lg:p-7 rounded-xl border-2 transition-all text-center ${
                 isConnected
-                  ? 'border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-orange-600/5 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] active:scale-[0.98]'
+                  ? 'theme-cta-card active:scale-[0.98]'
                   : 'border-warm-700/50 bg-warm-900/30 hover:border-warm-600'
               }`}
             >
@@ -56,7 +56,7 @@ export function PlayPage() {
             {activeTournament && isConnected && (
               <Link
                 to="/tournament"
-                className="group block w-full p-3 lg:p-4 rounded-xl border border-purple-500/40 bg-gradient-to-br from-purple-500/10 to-pink-500/5 hover:border-purple-400 active:scale-[0.98] transition-all text-center"
+                className="theme-panel group block w-full p-3 lg:p-4 rounded-xl border border-purple-500/40 bg-gradient-to-br from-purple-500/10 to-pink-500/5 hover:border-purple-400 active:scale-[0.98] transition-all text-center"
               >
                 <h2 className="font-heading text-base lg:text-lg font-bold text-white">
                   TOURNAMENT LIVE
@@ -72,7 +72,7 @@ export function PlayPage() {
             <div className="grid grid-cols-2 gap-3 lg:gap-4">
               <Link
                 to={isConnected ? '/practice' : '/network'}
-                className={`group block p-4 lg:p-5 rounded-xl border transition-all text-center ${
+                className={`theme-panel group block p-4 lg:p-5 rounded-xl border transition-all text-center ${
                   isConnected
                     ? 'border-warm-700 bg-warm-900/30 hover:border-warm-500 hover:bg-warm-800/40 active:scale-[0.98]'
                     : 'border-warm-700/50 bg-warm-900/30 hover:border-warm-600'
@@ -84,7 +84,7 @@ export function PlayPage() {
 
               <Link
                 to="/versus"
-                className="group block p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30 hover:border-warm-500 hover:bg-warm-800/40 active:scale-[0.98] transition-all text-center"
+                className="theme-panel group block p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30 hover:border-warm-500 hover:bg-warm-800/40 active:scale-[0.98] transition-all text-center"
               >
                 <h3 className="font-heading text-base lg:text-lg font-bold text-white">
                   PEER-TO-PEER
@@ -96,7 +96,7 @@ export function PlayPage() {
             {/* Tutorial */}
             <button
               onClick={() => openTutorial('how-to-play')}
-              className="block w-full p-3 lg:p-4 rounded-xl border border-warm-700/30 bg-warm-900/20 hover:border-warm-600 hover:bg-warm-800/30 active:scale-[0.99] transition-all text-center"
+              className="theme-panel theme-button block w-full p-3 lg:p-4 rounded-xl border border-warm-700/30 bg-warm-900/20 hover:border-warm-600 hover:bg-warm-800/30 active:scale-[0.99] transition-all text-center"
             >
               <h3 className="font-heading text-sm lg:text-base font-bold text-warm-300">
                 TUTORIAL

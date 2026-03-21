@@ -211,7 +211,7 @@ export function UnitCard({
       style={enableWobble ? { animationDelay: `${(card.id * 200) % 3500}ms` } : undefined}
     >
       {/* Inner clip container for art/content — badges sit outside this */}
-      <div className="absolute inset-0 overflow-hidden rounded-md">
+      <div className="card-inner-shell absolute inset-0 overflow-hidden">
         {showArt ? (
           <>
             {/* Full-bleed card art — brightness boost for vibrancy */}
@@ -302,7 +302,7 @@ export function UnitCard({
         <img
           src={cardStyle.imageUrl}
           alt=""
-          className="absolute inset-0 w-full h-full pointer-events-none z-[1] rounded-lg"
+          className="card-inner-shell absolute inset-0 w-full h-full pointer-events-none z-[1]"
           style={{ objectFit: 'fill' }}
         />
       )}

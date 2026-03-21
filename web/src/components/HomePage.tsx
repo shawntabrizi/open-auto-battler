@@ -9,8 +9,7 @@ const MENU_BUTTONS = [
     label: 'Sets',
     description: 'Browse & select card sets',
     gradient: 'from-gold/10 to-yellow-900/5',
-    border:
-      'border-gold/40 hover:border-gold hover:shadow-[0_0_20px_rgba(196,138,42,0.12)]',
+    border: 'border-gold/40 hover:border-gold hover:shadow-[0_0_20px_rgba(196,138,42,0.12)]',
   },
   {
     to: '/cards',
@@ -40,16 +39,10 @@ const MENU_BUTTONS = [
 
 export function HomePage() {
   return (
-    <div className="min-h-screen min-h-svh bg-surface-dark flex flex-col text-white overflow-hidden relative">
+    <div className="app-shell min-h-screen min-h-svh flex flex-col text-white overflow-hidden relative">
       <TopBar />
       {/* Atmospheric background */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          background:
-            'radial-gradient(ellipse at 50% 30%, rgba(196, 138, 42, 0.08), transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(184, 92, 74, 0.06), transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(91, 143, 170, 0.05), transparent 50%)',
-        }}
-      />
+      <div className="absolute inset-0 z-0" style={{ background: 'var(--theme-app-background)' }} />
       <ParticleBackground />
 
       {/* Main content */}
@@ -60,7 +53,7 @@ export function HomePage() {
             className="mb-6 lg:mb-10 text-center opacity-0 animate-stagger-fade-in stagger-1"
             style={{ animationFillMode: 'forwards' }}
           >
-            <h1 className="font-title text-3xl lg:text-5xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-500 mb-1 lg:mb-2">
+            <h1 className="theme-title-text font-title text-3xl lg:text-5xl font-bold tracking-wide text-transparent bg-clip-text mb-1 lg:mb-2">
               OPEN AUTO BATTLER
             </h1>
             <p className="font-heading text-warm-400 text-xs lg:text-sm tracking-widest uppercase">
@@ -73,7 +66,7 @@ export function HomePage() {
             {/* Play — primary CTA, larger */}
             <Link
               to="/play"
-              className="opacity-0 animate-stagger-fade-in stagger-2 group block w-full p-5 lg:p-7 rounded-xl border-2 transition-all active:scale-[0.98] text-center bg-gradient-to-br from-amber-500/10 to-orange-600/5 border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]"
+              className="theme-panel theme-cta-card opacity-0 animate-stagger-fade-in stagger-2 group block w-full p-5 lg:p-7 rounded-xl border-2 transition-all active:scale-[0.98] text-center"
               style={{ animationFillMode: 'forwards' }}
             >
               <div className="flex items-center justify-center gap-3 lg:gap-5">
@@ -95,7 +88,7 @@ export function HomePage() {
                 <Link
                   key={btn.to}
                   to={btn.to}
-                  className={`opacity-0 animate-stagger-fade-in stagger-${i + 3} group block p-3 lg:p-4 rounded-xl border transition-all active:scale-[0.98] text-center bg-gradient-to-br ${btn.gradient} ${btn.border}`}
+                  className={`theme-panel opacity-0 animate-stagger-fade-in stagger-${i + 3} group block p-3 lg:p-4 rounded-xl border transition-all active:scale-[0.98] text-center bg-gradient-to-br ${btn.gradient} ${btn.border}`}
                   style={{ animationFillMode: 'forwards' }}
                 >
                   <h3 className="font-heading text-sm lg:text-base font-bold text-white tracking-wide">
@@ -118,7 +111,6 @@ export function HomePage() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

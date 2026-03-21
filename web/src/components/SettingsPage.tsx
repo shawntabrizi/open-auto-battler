@@ -1,11 +1,15 @@
 import { useLocation } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
+import { useThemeStore } from '../store/themeStore';
+import { THEME_OPTIONS } from '../theme/themes';
 import { TopBar } from './TopBar';
 
 // ── Settings Hub ──
 
 export function SettingsPage() {
   const location = useLocation();
+  const selectedThemeId = useThemeStore((state) => state.selectedThemeId);
+  const setTheme = useThemeStore((state) => state.setTheme);
   const {
     showRawJson,
     toggleShowRawJson,
@@ -33,18 +37,42 @@ export function SettingsPage() {
       : null;
 
   return (
-    <div className="fixed inset-0 bg-warm-950 text-white flex flex-col">
+    <div className="app-shell fixed inset-0 text-white flex flex-col">
       <TopBar backTo={returnTo ?? '/'} backLabel={returnTo ? 'Game' : 'Menu'} title="Settings" />
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[4vh]">
           {/* Options */}
           <div className="flex flex-col gap-3 lg:gap-4">
             {/* Display section */}
-            <div className="w-full p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30">
+            <div className="theme-panel w-full p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30">
               <div className="font-bold text-base lg:text-lg text-white mb-3">Display</div>
+              <div className="theme-panel p-3 rounded-lg border border-warm-700 mb-2">
+                <div className="text-left mb-2">
+                  <div className="text-sm text-warm-200">Theme</div>
+                  <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
+                    Switch between the built-in warm, cyberpunk, and girly themes.
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {THEME_OPTIONS.map((theme) => (
+                    <button
+                      key={theme.id}
+                      onClick={() => setTheme(theme.id)}
+                      aria-pressed={selectedThemeId === theme.id}
+                      className={`theme-button px-2 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors border ${
+                        selectedThemeId === theme.id
+                          ? 'theme-selected-button'
+                          : 'bg-warm-800 text-warm-300 border-warm-700 hover:bg-warm-700'
+                      }`}
+                    >
+                      {theme.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <button
                 onClick={toggleShowCardNames}
-                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors"
+                className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors"
               >
                 <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Show Card Names</div>
@@ -54,7 +82,7 @@ export function SettingsPage() {
                 </div>
                 <div
                   className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
-                    showCardNames ? 'bg-yellow-500' : 'bg-warm-700'
+                    showCardNames ? 'theme-toggle-active' : 'bg-warm-700'
                   }`}
                 >
                   <div
@@ -66,7 +94,7 @@ export function SettingsPage() {
               </button>
               <button
                 onClick={toggleShowGameCardDetailsPanel}
-                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+                className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
               >
                 <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Show Game Card Details Panel</div>
@@ -77,7 +105,7 @@ export function SettingsPage() {
                 </div>
                 <div
                   className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
-                    showGameCardDetailsPanel ? 'bg-yellow-500' : 'bg-warm-700'
+                    showGameCardDetailsPanel ? 'theme-toggle-active' : 'bg-warm-700'
                   }`}
                 >
                   <div
@@ -89,7 +117,7 @@ export function SettingsPage() {
               </button>
               <button
                 onClick={toggleShowBoardHelper}
-                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+                className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
               >
                 <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Show Board Helper</div>
@@ -99,7 +127,7 @@ export function SettingsPage() {
                 </div>
                 <div
                   className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
-                    showBoardHelper ? 'bg-yellow-500' : 'bg-warm-700'
+                    showBoardHelper ? 'theme-toggle-active' : 'bg-warm-700'
                   }`}
                 >
                   <div
@@ -111,7 +139,7 @@ export function SettingsPage() {
               </button>
               <button
                 onClick={toggleShowAddress}
-                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+                className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
               >
                 <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Show Address</div>
@@ -121,7 +149,7 @@ export function SettingsPage() {
                 </div>
                 <div
                   className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
-                    showAddress ? 'bg-yellow-500' : 'bg-warm-700'
+                    showAddress ? 'theme-toggle-active' : 'bg-warm-700'
                   }`}
                 >
                   <div
@@ -133,7 +161,7 @@ export function SettingsPage() {
               </button>
               <button
                 onClick={toggleShowBalance}
-                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+                className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
               >
                 <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Show Balance</div>
@@ -143,7 +171,7 @@ export function SettingsPage() {
                 </div>
                 <div
                   className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
-                    showBalance ? 'bg-yellow-500' : 'bg-warm-700'
+                    showBalance ? 'theme-toggle-active' : 'bg-warm-700'
                   }`}
                 >
                   <div
@@ -156,10 +184,10 @@ export function SettingsPage() {
             </div>
 
             {/* Battle section */}
-            <div className="w-full p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30">
+            <div className="theme-panel w-full p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30">
               <div className="font-bold text-base lg:text-lg text-white mb-3">Battle</div>
               {/* Default battle speed */}
-              <div className="p-3 rounded-lg border border-warm-700">
+              <div className="theme-panel p-3 rounded-lg border border-warm-700">
                 <div className="text-left mb-2">
                   <div className="text-sm text-warm-200">Default Battle Speed</div>
                   <div className="text-[10px] lg:text-xs text-warm-500 mt-0.5">
@@ -171,9 +199,9 @@ export function SettingsPage() {
                     <button
                       key={speed}
                       onClick={() => setDefaultBattleSpeed(speed)}
-                      className={`flex-1 px-2 py-1.5 text-xs lg:text-sm font-medium rounded-md transition-colors ${
+                      className={`theme-button flex-1 px-2 py-1.5 text-xs lg:text-sm font-medium rounded-md transition-colors ${
                         defaultBattleSpeed === speed
-                          ? 'bg-yellow-500 text-warm-950'
+                          ? 'theme-selected-button'
                           : 'bg-warm-800 text-warm-300 hover:bg-warm-700'
                       }`}
                     >
@@ -185,7 +213,7 @@ export function SettingsPage() {
               {/* Reduced animations */}
               <button
                 onClick={toggleReducedAnimations}
-                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
+                className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors mt-2"
               >
                 <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Reduced Animations</div>
@@ -195,7 +223,7 @@ export function SettingsPage() {
                 </div>
                 <div
                   className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
-                    reducedAnimations ? 'bg-yellow-500' : 'bg-warm-700'
+                    reducedAnimations ? 'theme-toggle-active' : 'bg-warm-700'
                   }`}
                 >
                   <div
@@ -208,11 +236,11 @@ export function SettingsPage() {
             </div>
 
             {/* Debug section */}
-            <div className="w-full p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30">
+            <div className="theme-panel w-full p-4 lg:p-5 rounded-xl border border-warm-700 bg-warm-900/30">
               <div className="font-bold text-base lg:text-lg text-white mb-3">Debug</div>
               <button
                 onClick={toggleShowRawJson}
-                className="w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors"
+                className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-warm-700 hover:border-warm-600 transition-colors"
               >
                 <div className="flex-1 min-w-0 text-left">
                   <div className="text-sm text-warm-200">Show Raw JSON</div>
@@ -222,7 +250,7 @@ export function SettingsPage() {
                 </div>
                 <div
                   className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
-                    showRawJson ? 'bg-yellow-500' : 'bg-warm-700'
+                    showRawJson ? 'theme-toggle-active' : 'bg-warm-700'
                   }`}
                 >
                   <div

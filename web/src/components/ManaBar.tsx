@@ -7,7 +7,7 @@ export function ManaBar() {
 
   return (
     <div
-      className="mana-bar-container w-full px-4 py-1.5 bg-warm-900/70 border-y border-warm-700"
+      className="mana-bar-container theme-panel w-full px-4 py-1.5 bg-warm-900/70 border-y border-warm-700"
       aria-label={`Mana: ${view.mana} of ${view.mana_limit}`}
     >
       <div className="flex items-center gap-3">
@@ -22,9 +22,7 @@ export function ManaBar() {
             <div
               key={i}
               className={`flex-1 h-2.5 lg:h-3 rounded-full transition-all duration-200 ${
-                i < view.mana
-                  ? 'bg-gradient-to-t from-mana-blue to-blue-400 shadow-[0_0_6px_rgba(59,130,246,0.5)]'
-                  : 'bg-warm-700 border border-warm-600'
+                i < view.mana ? 'mana-segment-filled' : 'bg-warm-700 border border-warm-600'
               }`}
             />
           ))}

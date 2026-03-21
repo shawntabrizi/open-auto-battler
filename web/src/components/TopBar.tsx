@@ -110,7 +110,7 @@ export function TopBar({
         <Link
           to={backTo}
           state={backState}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-300 hover:text-white hover:border-warm-500 transition-colors text-xs lg:text-sm shrink-0 z-10"
+          className="theme-button theme-surface-button inline-flex items-center gap-1 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-lg border text-xs lg:text-sm shrink-0 z-10 transition-colors"
         >
           <span>&larr;</span>
           <span>{backLabel}</span>
@@ -122,16 +122,26 @@ export function TopBar({
             <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500"></span>
           </span>
           <span className="flex flex-col leading-tight min-w-0">
-            <span>Signed in as <span className="text-white font-medium">{selectedAccount.name || 'Unknown'}</span>{showBalance && balance !== null && <span className="text-warm-400"> ({formatBalance(balance)})</span>}</span>
-            {showAddress && <span
-              className="text-warm-500 text-[9px] lg:text-xs font-mono break-all cursor-pointer hover:text-warm-300 transition-colors"
-              onClick={() => {
-                navigator.clipboard.writeText(selectedAccount.address);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }}
-              title="Click to copy"
-            >{copied ? 'Copied!' : selectedAccount.address}</span>}
+            <span>
+              Signed in as{' '}
+              <span className="text-white font-medium">{selectedAccount.name || 'Unknown'}</span>
+              {showBalance && balance !== null && (
+                <span className="text-warm-400"> ({formatBalance(balance)})</span>
+              )}
+            </span>
+            {showAddress && (
+              <span
+                className="text-warm-500 text-[9px] lg:text-xs font-mono break-all cursor-pointer hover:text-warm-300 transition-colors"
+                onClick={() => {
+                  navigator.clipboard.writeText(selectedAccount.address);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                title="Click to copy"
+              >
+                {copied ? 'Copied!' : selectedAccount.address}
+              </span>
+            )}
           </span>
         </span>
       ) : (
@@ -141,7 +151,7 @@ export function TopBar({
       {/* Center: Title */}
       {title && (
         <h1 className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-sm lg:text-xl font-title font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 truncate px-24 lg:px-32">
+          <span className="theme-title-text text-sm lg:text-xl font-title font-bold tracking-wide text-transparent bg-clip-text truncate px-24 lg:px-32">
             {title}
           </span>
         </h1>
@@ -151,7 +161,7 @@ export function TopBar({
       <button
         onClick={openMenu}
         aria-label="Open menu"
-        className="p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors shrink-0 z-10"
+        className="theme-button theme-surface-button p-2 rounded-lg border transition-colors shrink-0 z-10"
       >
         <MenuIcon className="w-4 h-4 lg:w-5 lg:h-5" />
       </button>
@@ -159,24 +169,28 @@ export function TopBar({
       {/* Zero balance fund popup */}
       {showFundPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-warm-900 border border-warm-700 rounded-xl p-6 lg:p-8 max-w-md lg:max-w-lg mx-4 text-center shadow-xl">
-            <h3 className="text-lg lg:text-xl font-heading font-bold text-white mb-1">Account Balance: 0</h3>
+          <div className="theme-panel bg-warm-900 border border-warm-700 rounded-xl p-6 lg:p-8 max-w-md lg:max-w-lg mx-4 text-center shadow-xl">
+            <h3 className="text-lg lg:text-xl font-heading font-bold text-white mb-1">
+              Account Balance: 0
+            </h3>
             <p className="text-sm text-white font-medium">{selectedAccount?.name || 'Unknown'}</p>
-            <p className="text-[10px] lg:text-xs text-warm-500 font-mono break-all mb-4">{selectedAccount?.address}</p>
+            <p className="text-[10px] lg:text-xs text-warm-500 font-mono break-all mb-4">
+              {selectedAccount?.address}
+            </p>
             <p className="text-sm text-warm-400 mb-5">
               Your account has zero balance. Fund it to start playing.
             </p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setShowFundPopup(false)}
-                className="px-4 py-2 rounded-lg border border-warm-700 text-warm-300 hover:text-white hover:border-warm-500 transition-colors text-sm"
+                className="theme-button theme-surface-button px-4 py-2 rounded-lg border transition-colors text-sm"
               >
                 Dismiss
               </button>
               <button
                 onClick={handleFund}
                 disabled={isFunding}
-                className="px-6 py-2 rounded-lg bg-gradient-to-b from-amber-500 to-amber-600 text-warm-950 font-bold text-sm hover:from-amber-400 hover:to-amber-500 transition-colors disabled:opacity-50"
+                className="theme-button btn-primary px-6 py-2 rounded-lg font-bold text-sm transition-colors disabled:opacity-50"
               >
                 {isFunding ? 'Funding...' : 'Fund Account'}
               </button>

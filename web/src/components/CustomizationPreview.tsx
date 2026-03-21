@@ -5,7 +5,7 @@ export function CustomizationPreview() {
   const selections = useCustomizationStore((s) => s.selections);
 
   return (
-    <div className="bg-warm-900/50 border border-white/5 rounded-lg lg:rounded-2xl p-2 lg:p-4 backdrop-blur-sm w-full">
+    <div className="theme-panel bg-warm-900/50 border border-white/5 rounded-lg lg:rounded-2xl p-2 lg:p-4 backdrop-blur-sm w-full">
       <h3 className="text-[8px] lg:text-sm font-bold text-warm-400 uppercase mb-1 lg:mb-3">
         Live Preview
       </h3>
@@ -15,7 +15,7 @@ export function CustomizationPreview() {
         {/* HUD bar */}
         <div className="h-[8%] bg-warm-900/80 border-b border-warm-700 flex items-center px-2 gap-2 shrink-0">
           {selections.playerAvatar && (
-            <div className="w-4 h-4 rounded-full overflow-hidden border border-yellow-500/50 flex-shrink-0">
+            <div className="w-4 h-4 rounded-full overflow-hidden border border-gold/50 flex-shrink-0">
               <IpfsImage
                 src={selections.playerAvatar.imageUrl}
                 alt="avatar"
@@ -23,9 +23,9 @@ export function CustomizationPreview() {
               />
             </div>
           )}
-          <span className="text-red-500 text-[8px]">&#9829;&#9829;&#9829;</span>
+          <span className="text-burn-red text-[8px]">&#9829;&#9829;&#9829;</span>
           <span className="text-[8px] text-warm-400 ml-auto">R1</span>
-          <span className="text-yellow-500 text-[8px]">&#9733;</span>
+          <span className="text-gold text-[8px]">&#9733;</span>
         </div>
 
         {/* Board area */}
@@ -38,10 +38,10 @@ export function CustomizationPreview() {
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }
-              : { background: 'rgb(30 41 59)' }
+              : { background: 'rgb(var(--color-board-bg))' }
           }
         >
-          {selections.boardBackground && <div className="absolute inset-0 bg-warm-900/50" />}
+          {selections.boardBackground && <div className="theme-board-overlay absolute inset-0" />}
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
@@ -65,7 +65,7 @@ export function CustomizationPreview() {
 
         {/* Mana bar */}
         <div className="h-[4%] bg-warm-800 flex items-center px-2 shrink-0">
-          <div className="w-8 h-1.5 bg-blue-500 rounded-full" />
+          <div className="mana-segment-filled w-8 h-1.5 rounded-full" />
         </div>
 
         {/* Hand area */}
@@ -78,10 +78,10 @@ export function CustomizationPreview() {
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }
-              : { background: 'rgb(30 41 59)' }
+              : { background: 'rgb(var(--color-shop-bg))' }
           }
         >
-          {selections.handBackground && <div className="absolute inset-0 bg-warm-900/40" />}
+          {selections.handBackground && <div className="theme-hand-overlay absolute inset-0" />}
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}

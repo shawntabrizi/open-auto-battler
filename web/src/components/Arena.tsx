@@ -231,7 +231,7 @@ export function Arena() {
           : undefined
       }
     >
-      {boardBg && <div className="absolute inset-0 bg-board-bg/50" />}
+      {boardBg && <div className="theme-board-overlay absolute inset-0" />}
 
       {/* Arena surface — visual frame that gives the board a sense of place */}
       <div className="arena-surface relative z-10 px-2 lg:px-12 py-1 lg:py-5 rounded-xl w-full h-full min-h-0">

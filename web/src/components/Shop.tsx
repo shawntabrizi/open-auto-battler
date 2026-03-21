@@ -84,7 +84,7 @@ export function Shop() {
           : undefined
       }
     >
-      {handBg && <div className="absolute inset-0 bg-shop-bg/50" />}
+      {handBg && <div className="theme-hand-overlay absolute inset-0" />}
       <div className="flex h-full relative z-10">
         {/* Left: Undo Button */}
         <div className="shop-side w-14 lg:w-32 h-full flex flex-col items-center justify-center border-r border-warm-700/50">

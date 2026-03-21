@@ -130,7 +130,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
             data-game-end-turn-action="true"
             aria-keyshortcuts={GAME_SHORTCUTS.commit}
             title={`Focus ${isWaiting ? 'Waiting' : battleConfirmation.isConfirming ? 'Are you sure' : 'Battle'} button (${GAME_SHORTCUTS.commit})`}
-            className={`rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
+            className={`theme-button rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
               isWaiting
                 ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
                 : battleConfirmation.isConfirming
@@ -160,13 +160,13 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
           data-game-custom-action="true"
           aria-keyshortcuts={GAME_SHORTCUTS.commit}
           title={`Focus ${customActionConfirmation.isConfirming ? 'Are you sure' : customAction.label} button (${GAME_SHORTCUTS.commit})`}
-          className={`rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
+          className={`theme-button rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-heading uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
             customAction.disabled
               ? 'bg-warm-600 border-warm-600 scale-95 opacity-80 cursor-not-allowed'
               : customActionConfirmation.isConfirming
                 ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
                 : customAction.variant === 'chain'
-                  ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900 border-orange-500/60'
+                  ? 'btn-primary'
                   : 'battle-btn border-warm-700'
           }`}
         >
@@ -210,7 +210,7 @@ export function GameTopBar({
       {/* HUD items — all same height */}
       <div className="flex items-center gap-1.5 lg:gap-2">
         {playerAvatar && (
-          <div className="w-6 h-6 lg:w-10 lg:h-10 rounded-full overflow-hidden border-2 border-yellow-500/50 flex-shrink-0">
+          <div className="w-6 h-6 lg:w-10 lg:h-10 rounded-full overflow-hidden border-2 border-gold/50 flex-shrink-0">
             <img src={playerAvatar.imageUrl} alt="avatar" className="w-full h-full object-cover" />
           </div>
         )}
@@ -219,17 +219,17 @@ export function GameTopBar({
         {view.phase === 'shop' && (
           <button
             onClick={() => setShowBag(true)}
-            className="hud-pill bg-warm-800 hover:bg-warm-700 text-warm-100 border border-warm-700 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10"
+            className="hud-pill theme-button theme-surface-button theme-pill border flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10"
             title={`View your draw pool (${GAME_SHORTCUTS.bag})`}
             aria-keyshortcuts={GAME_SHORTCUTS.bag}
           >
-            <BagIcon className="w-3.5 h-3.5 lg:w-5 lg:h-5 text-amber-400" />
+            <BagIcon className="w-3.5 h-3.5 lg:w-5 lg:h-5 text-gold" />
             <span className="font-bold text-xs lg:text-sm font-stat">{view.bag_count}</span>
           </button>
         )}
 
         {/* Round */}
-        <div className="bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10">
+        <div className="theme-pill bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-2 px-2 lg:px-3 h-7 lg:h-10">
           <span className="text-[10px] lg:text-xs text-warm-400 font-heading uppercase tracking-wider">
             Round
           </span>
@@ -237,7 +237,7 @@ export function GameTopBar({
         </div>
 
         {/* Wins */}
-        <div className="bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
+        <div className="theme-pill bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
           <StarIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-gold" />
           <span className="font-bold text-xs lg:text-sm font-stat">
             {view.wins}/{winsToVictory}
@@ -245,8 +245,8 @@ export function GameTopBar({
         </div>
 
         {/* Lives */}
-        <div className="bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
-          <HeartIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-red-500" />
+        <div className="theme-pill bg-warm-900/60 border border-warm-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
+          <HeartIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-burn-red" />
           <span className="font-bold text-xs lg:text-sm font-stat">
             {view.lives}/{startingLives}
           </span>
@@ -264,7 +264,7 @@ export function GameTopBar({
         aria-label="Open menu"
         aria-keyshortcuts={GAME_SHORTCUTS.menu}
         title={`Open menu (${GAME_SHORTCUTS.menu})`}
-        className="ml-auto p-2 rounded-lg bg-warm-900/80 border border-warm-700/60 text-warm-400 hover:text-white hover:border-warm-500 transition-colors shrink-0"
+        className="theme-button theme-surface-button ml-auto p-2 rounded-lg border transition-colors shrink-0"
       >
         <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 lg:w-5 lg:h-5">
           <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
@@ -343,7 +343,7 @@ export function BattleAction({
           <button
             onClick={() => battleConfirmation.trigger(handleEndTurn)}
             disabled={isWaiting}
-            className={`flex-1 w-full flex flex-col items-center justify-center rounded-lg border transition-colors ${
+            className={`theme-button flex-1 w-full flex flex-col items-center justify-center rounded-lg border transition-colors ${
               isWaiting
                 ? 'bg-warm-800 border-warm-700 opacity-50 cursor-not-allowed'
                 : battleConfirmation.isConfirming
@@ -388,13 +388,13 @@ export function BattleAction({
               });
             }}
             disabled={customAction.disabled}
-            className={`w-full rounded-lg text-[0.55rem] px-1 py-2 transition-all font-bold uppercase tracking-wide border ${
+            className={`theme-button w-full rounded-lg text-[0.55rem] px-1 py-2 transition-all font-bold uppercase tracking-wide border ${
               customAction.disabled
                 ? 'bg-warm-800 border-warm-700 opacity-50 cursor-not-allowed text-warm-500'
                 : customActionConfirmation.isConfirming
                   ? 'bg-red-700 hover:bg-red-600 text-white border-red-400/70'
                   : customAction.variant === 'chain'
-                    ? 'bg-gradient-to-b from-yellow-400 to-orange-500 border-orange-400/60 text-warm-900'
+                    ? 'btn-primary'
                     : 'btn-primary border-amber-500/60'
             }`}
           >
@@ -441,7 +441,7 @@ export function BattleAction({
             <button
               onClick={() => battleConfirmation.trigger(handleEndTurn)}
               disabled={isWaiting}
-              className={`battle-btn rounded-xl transition-all flex items-center justify-center ${
+              className={`theme-button battle-btn rounded-xl transition-all flex items-center justify-center ${
                 isWaiting
                   ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed px-4 lg:px-12 py-1.5 lg:py-4'
                   : battleConfirmation.isConfirming
@@ -470,13 +470,13 @@ export function BattleAction({
               });
             }}
             disabled={customAction.disabled}
-            className={`btn rounded-xl text-base lg:text-xl px-6 lg:px-10 py-2.5 lg:py-4 transition-all font-bold ${
+            className={`theme-button btn rounded-xl text-base lg:text-xl px-6 lg:px-10 py-2.5 lg:py-4 transition-all font-bold ${
               customAction.disabled
                 ? 'bg-warm-600 scale-95 opacity-80 cursor-not-allowed'
                 : customActionConfirmation.isConfirming
                   ? 'bg-red-700 hover:bg-red-600 text-white border border-red-400/70'
                   : customAction.variant === 'chain'
-                    ? 'bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-warm-900'
+                    ? 'btn-primary'
                     : 'btn-primary'
             }`}
           >
