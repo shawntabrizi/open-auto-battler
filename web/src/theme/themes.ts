@@ -7,172 +7,387 @@ import burnPastel from '../../burn-pastel.svg';
 
 export type ThemeId = 'warm' | 'cyberpunk' | 'pastel';
 
+// ════════════════════════════════════════════════════════════════
+// PALETTE — the core color system. Every color in the UI derives from these.
+// ════════════════════════════════════════════════════════════════
+
 type ThemePalette = {
+  // ── Neutral scale (11 steps, lightest → darkest) ──
+  // Used for text, borders, backgrounds, and general UI chrome.
+  // base50 = lightest (near-white), base950 = darkest (near-black).
+  /** Lightest neutral — used for bright highlights, inset glows */
   base50: string;
+  /** Primary text color — card names, headings, body text */
   base100: string;
+  /** Subtitle text — hero subtitles, secondary descriptions */
   base200: string;
+  /** Muted text — labels, helper text, timestamps */
   base300: string;
+  /** Tertiary text — less important labels, stat labels */
   base400: string;
+  /** Placeholder text — input placeholders, disabled text */
   base500: string;
+  /** Default borders — card edges, panel borders, dividers */
   base600: string;
+  /** Subtle borders — panel borders, section dividers */
   base700: string;
+  /** Dark borders/backgrounds — input backgrounds, dark panels */
   base800: string;
+  /** Dark surfaces — panel backgrounds, card list backgrounds */
   base900: string;
+  /** Darkest surface — near-black, used for deep backgrounds */
   base950: string;
+
+  // ── Semantic colors ──
+  /** Primary accent — selected states, highlights, stars, CTA borders. The "brand" color. */
   gold: string;
+  /** Resource color — mana cost badges, mana bar fill, info text */
   manaBlue: string;
-  burnRed: string;
-  burnGold: string;
+  /** Attack/damage color — attack stat on cards, damage numbers */
+  attack: string;
+  /** Burn value color — burn badges on cards, burn-related UI */
+  burnValue: string;
+  /** Secondary warm accent — bronze achievements, warm highlights */
   accentAmber: string;
+  /** Positive accent — health stat on cards, connected indicators, success text */
   accentEmerald: string;
+  /** Special/rare accent — tournament UI, accent for unique elements */
   accentViolet: string;
+  /** Win state color — victory screen title, win counters, perfect run text */
   victoryGreen: string;
+  /** Loss state color — defeat screen title, error messages, danger buttons, disconnect indicators */
   defeatRed: string;
+
+  // ── Surface colors ──
+  /** Card background — the base color behind card content */
   cardBg: string;
+  /** Board background — the game board/arena surface */
   boardBg: string;
+  /** Shop/hand background — the hand area below the board */
   shopBg: string;
+  /** Deepest background — page background, root element background */
   surfaceDark: string;
+  /** Mid-tone surface — elevated panels, card slots, arena surface gradients */
   surfaceMid: string;
 };
 
+// ════════════════════════════════════════════════════════════════
+// SHAPE — border radii that define the visual personality (sharp vs rounded).
+// ════════════════════════════════════════════════════════════════
+
 type ThemeShape = {
+  /** Buttons, small interactive elements (e.g. "0.75rem") */
   buttonRadius: string;
+  /** Panels, modals, large containers (e.g. "1rem") */
   panelRadius: string;
+  /** Unit cards in hand and on board (e.g. "0.5rem") */
   cardRadius: string;
+  /** Text inputs, selects, form controls (e.g. "0.75rem") */
   inputRadius: string;
+  /** Pill-shaped elements — tags, status badges (e.g. "999px" for full pill) */
   pillRadius: string;
 };
 
+// ════════════════════════════════════════════════════════════════
+// EFFECTS — shadows and focus indicators.
+// Values are full CSS box-shadow strings.
+// ════════════════════════════════════════════════════════════════
+
 type ThemeEffects = {
+  /** Default shadow for cards, panels, buttons at rest */
   shadowResting: string;
+  /** Shadow on hover — slightly elevated, more prominent */
   shadowHover: string;
+  /** Shadow for dragged/lifted elements — most prominent */
   shadowLifted: string;
+  /** Focus ring for keyboard navigation — typically a colored outline glow */
   focusRing: string;
 };
 
+// ════════════════════════════════════════════════════════════════
+// BACKGROUNDS — ambient page backgrounds and overlays.
+// ════════════════════════════════════════════════════════════════
+
 type ThemeBackgrounds = {
+  /** CSS gradient for the ambient page background (radial gradients layered for atmosphere).
+   *  Applied behind all content on every page. */
   appBackground: string;
+  /** CSS gradient for the main title text ("OPEN AUTO BATTLER") — used with bg-clip-text.
+   *  Also used for section headings like "BOARD", "HAND", "Card Details". */
   titleGradient: string;
-  /** 0-1 opacity for board/hand overlays. App computes actual rgba from palette. */
+  /** Opacity (0–1) for board and hand area overlays when custom backgrounds are active.
+   *  Higher = darker overlay. App computes the actual rgba from surfaceDark + this value.
+   *  Also controls the hand surface gradient intensity. */
   overlayOpacity: number;
 };
 
+// ════════════════════════════════════════════════════════════════
+// ICONS — colors for icon tinting + SVG path data for icon shapes.
+// ════════════════════════════════════════════════════════════════
+
+/** SVG icon definition — paths rendered inside a 24×24 viewBox. */
 type ThemeIconSvg = {
-  /** SVG path d attributes (rendered as multiple <path> elements) */
+  /** One or more SVG `d` attributes — each becomes a <path> element */
   paths: string[];
-  /** viewBox string (default "0 0 24 24") */
+  /** Custom viewBox (default "0 0 24 24") */
   viewBox?: string;
 };
 
 type ThemeIcons = {
+  // ── Icon colors (applied via CSS classes like "theme-icon-accent") ──
+  /** Primary icon tint — menu icons, star icons, ability sparkles. Related: palette.gold */
   accent: string;
+  /** Muted icon tint — close buttons, secondary icons. Related: palette.base300 */
   muted: string;
+  /** Mana/info icon tint — mana bolt on cards. Related: palette.manaBlue */
   mana: string;
+  /** Attack icon tint — sword icon on unit cards. Related: palette.attack */
   attack: string;
+  /** Health icon tint — heart icon on unit cards, lives icon. Related: palette.accentEmerald */
   health: string;
+  /** Warning icon tint — timer warnings, cost warnings. Related: palette.gold */
   warning: string;
+  /** Victory icon tint — trophy on game over screen. Related: palette.victoryGreen */
   victory: string;
+  /** Defeat icon tint — skull on game over screen. Related: palette.defeatRed */
   defeat: string;
-  /** SVG shape overrides for key game icons */
+
+  // ── Icon SVG shapes (the actual icon graphics, customizable per theme) ──
   svg: {
+    /** Unit attack stat — swords (warm), crosshair (cyber), wand (pastel) */
     attack: ThemeIconSvg;
+    /** Unit health stat — heart (warm), shield (cyber), flower (pastel) */
     health: ThemeIconSvg;
+    /** Player lives counter — shield-heart (warm), battery (cyber), heart (pastel) */
     lives: ThemeIconSvg;
+    /** Mana cost indicator — lightning bolt (warm), circuit (cyber), dewdrop (pastel) */
     mana: ThemeIconSvg;
+    /** Ability indicator between stats — sparkle (warm), burst (cyber), butterfly (pastel) */
     ability: ThemeIconSvg;
+    /** Victory screen icon — trophy (warm), crown (cyber), tiara (pastel) */
     victory: ThemeIconSvg;
+    /** Defeat screen icon — skull (warm), error screen (cyber), broken heart (pastel) */
     defeat: ThemeIconSvg;
+    /** Draw pool / bag — drawstring bag (warm), data cube (cyber), gift box (pastel) */
     bag: ThemeIconSvg;
   };
 };
 
+// ════════════════════════════════════════════════════════════════
+// BUTTONS — styling for the 5 button types used throughout the UI.
+// Values are CSS strings (colors, gradients, box-shadows).
+// ════════════════════════════════════════════════════════════════
+
 type ThemeButtons = {
+  // ── Surface button: neutral, low-emphasis (menu items, back buttons, close, secondary actions) ──
+  /** Background at rest */
   surfaceBackground: string;
+  /** Background on hover */
   surfaceHoverBackground: string;
+  /** Border color at rest */
   surfaceBorder: string;
+  /** Border color on hover */
   surfaceHoverBorder: string;
+  /** Text color at rest (muted) */
   surfaceText: string;
+  /** Text color on hover (bright) */
   surfaceHoverText: string;
+
+  // ── Selected button: active choice indicator (theme picker, speed selector, lives selector) ──
+  /** Background when selected — typically a gradient */
   selectedBackground: string;
+  /** Background when selected + hovered */
   selectedHoverBackground: string;
+  /** Border when selected */
   selectedBorder: string;
+  /** Text color when selected (usually dark on bright background) */
   selectedText: string;
+  /** Glow/shadow around selected buttons */
   selectedShadow: string;
+
+  // ── Toggle switch: on/off toggles in settings (Show Card Names, Reduced Animations, etc.) ──
+  /** Background of the toggle track when active/on — typically matches selectedBackground */
   toggleActiveBackground: string;
+
+  // ── CTA (Call-to-Action): primary actions (Login, Connect, Start Game, Join Tournament) ──
+  /** Background at rest — typically a subtle gradient */
   ctaBackground: string;
+  /** Background on hover — slightly brighter */
   ctaHoverBackground: string;
+  /** Border color */
   ctaBorder: string;
+  /** Text color */
   ctaText: string;
+  /** Ambient glow shadow on hover */
   ctaShadow: string;
+
+  // ── Battle button: the main "COMMIT" / "BATTLE" button during gameplay ──
+  /** Background at rest — typically an elaborate metallic gradient */
   battleBackground: string;
+  /** Background on hover — brighter/shinier */
   battleHoverBackground: string;
+  /** Background when pressed/active — darker, pressed-in feel */
   battleActiveBackground: string;
+  /** Border color */
   battleBorder: string;
+  /** Text color (usually dark on bright metallic background) */
   battleText: string;
+  /** Ambient glow around the button */
   battleGlow: string;
-  manaFill: string;
-  manaGlow: string;
+
 };
 
+// ════════════════════════════════════════════════════════════════
+// MANA — styling for the segmented mana bar between board and hand.
+// ════════════════════════════════════════════════════════════════
+
+type ThemeMana = {
+  /** Fill gradient for filled mana segments */
+  fill: string;
+  /** Glow effect on filled mana segments */
+  glow: string;
+};
+
+// ════════════════════════════════════════════════════════════════
+// FONTS — font-family strings for each typographic role.
+// Must be valid CSS font-family values. Fonts must be loaded via index.html.
+// ════════════════════════════════════════════════════════════════
+
 type ThemeFonts = {
+  /** Large decorative display text — the "OPEN AUTO BATTLER" title on home/login.
+   *  Should be dramatic and eye-catching. */
   decorative: string;
+  /** Title/heading text — "BOARD", "HAND", "Card Details" headers, section titles.
+   *  Used with bg-clip-text gradient effect. */
   title: string;
+  /** Mid-level headings — card names, panel headers, form section labels */
   heading: string;
+  /** Button labels — all interactive button text across the UI */
   button: string;
+  /** Body text — descriptions, ability text, paragraphs, general content */
   body: string;
+  /** Numeric stats — attack/health values on cards, mana counts, win/loss numbers.
+   *  Should be clear and readable at small sizes. */
   stat: string;
+  /** Monospace — wallet addresses, card IDs, JSON data, technical info */
   mono: string;
 };
 
+// ════════════════════════════════════════════════════════════════
+// TEXT — semantic text colors for specific UI contexts.
+// ════════════════════════════════════════════════════════════════
+
 type ThemeTextColors = {
+  /** Hero subtitle color — the "Roguelike Deck-Building Auto-Battler" tagline.
+   *  Also used for page descriptions on home/login. */
   heroSubtitle: string;
+  /** Secondary description text — button descriptions ("Online Arena, Offline, Peer-to-Peer"),
+   *  card set descriptions, minor labels throughout the UI. */
   secondary: string;
 };
 
+// ════════════════════════════════════════════════════════════════
+// ACHIEVEMENTS — identity colors for bronze/silver/gold trophy tiers.
+// These represent real-world metals and should retain their identity across themes,
+// but can be adapted to fit the theme's palette (e.g. pastel bronze = soft peach).
+// ════════════════════════════════════════════════════════════════
+
 type ThemeAchievements = {
-  bronze: string;
-  bronzeText: string;
-  silver: string;
-  silverText: string;
-  gold: string;
-  goldText: string;
+  /** Bronze badge background — trophy circle for "Win a battle with this card" */
+  tier1: string;
+  /** Bronze label text color */
+  tier1Text: string;
+  /** Silver badge background — trophy circle for "10-win run with this card" */
+  tier2: string;
+  /** Silver label text color */
+  tier2Text: string;
+  /** Gold badge background — trophy circle for "Perfect 10-0 run" */
+  tier3: string;
+  /** Gold label text color */
+  tier3Text: string;
 };
 
+// ════════════════════════════════════════════════════════════════
+// PARTICLES — ambient floating particles on the background canvas.
+// ════════════════════════════════════════════════════════════════
+
+/** Built-in particle shapes. Drawing code is in ParticleBackground.tsx. */
 export type ParticleShape = 'ember' | 'bokeh' | 'heart';
 
 export type ParticleConfig = {
+  /** Which built-in shape to render: 'ember' (jagged ash), 'bokeh' (soft circles), 'heart' */
   shape: ParticleShape;
-  /** Base size multiplier (default 1). Higher = bigger particles. */
+  /** Size multiplier (1 = default). Larger = bigger particles. Range: 0.1–10. */
   size: number;
-  /** Number of particles (default ~40) */
+  /** Number of particles on screen. Range: 0–200. */
   count: number;
 };
 
+// ════════════════════════════════════════════════════════════════
+// ASSETS — image URLs and particle config.
+// URLs must be safe (http/https or relative paths, no javascript: or data: URIs).
+// ════════════════════════════════════════════════════════════════
+
 type ThemeAssets = {
+  /** Image for the PLAY button on home/play pages — swords (warm), energy blades (cyber), wands (pastel).
+   *  Rendered via <img src>, which blocks SVG script execution. */
   playIcon: string;
+  /** Image for the burn zone in the shop — campfire (warm), neon dissolve (cyber), fairy dust (pastel).
+   *  Rendered via <img src>. */
   burnIcon: string;
+  /** Ambient particle configuration for the background effect */
   particles: ParticleConfig;
 };
 
+// ════════════════════════════════════════════════════════════════
+// BATTLE EFFECTS — colors for combat animations and highlights.
+// Used by CSS animations on cards during battle replay.
+// ════════════════════════════════════════════════════════════════
+
 type ThemeBattleEffects = {
+  /** Ability trigger glow — yellow flash when a unit's ability activates.
+   *  Used for: source-glow animation, ability toast popup border/text. */
   ability: string;
+  /** Positive effect glow — green flash for buffs, heals, stat gains.
+   *  Used for: target-highlight-positive animation, floating +HP/+ATK numbers. */
   positive: string;
+  /** Negative effect glow — red flash for damage, debuffs.
+   *  Used for: target-highlight animation, floating damage numbers. */
   negative: string;
 };
 
+// ════════════════════════════════════════════════════════════════
+// THEME DEFINITION — the complete theme interface.
+// ════════════════════════════════════════════════════════════════
+
 export interface ThemeDefinition {
+  /** Unique identifier — 'warm', 'cyberpunk', 'pastel', or a custom string */
   id: ThemeId;
+  /** Display name shown in the theme picker UI */
   label: string;
+  /** Core color system — all UI colors derive from these */
   palette: ThemePalette;
+  /** Border radius values defining visual personality (sharp vs rounded) */
   shape: ThemeShape;
+  /** Box-shadow and focus ring styles */
   effects: ThemeEffects;
+  /** Page backgrounds, title gradients, overlay opacity */
   backgrounds: ThemeBackgrounds;
+  /** Icon tint colors + SVG shape definitions for game icons */
   icons: ThemeIcons;
+  /** Styling for the 5 button types: surface, selected, CTA, battle, toggle */
   buttons: ThemeButtons;
+  /** Mana bar fill and glow styling */
+  mana: ThemeMana;
+  /** Font-family strings for 7 typographic roles */
   fonts: ThemeFonts;
+  /** Semantic text colors for hero subtitle and secondary descriptions */
   text: ThemeTextColors;
+  /** Bronze/silver/gold trophy colors for the achievement system */
   achievements: ThemeAchievements;
+  /** Image assets (play icon, burn icon) and particle effect config */
   assets: ThemeAssets;
+  /** Combat animation highlight colors (ability trigger, buff, damage) */
   battleEffects: ThemeBattleEffects;
 }
 
@@ -360,8 +575,8 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
     base950: '#100e0a',
     gold: '#d4a843',
     manaBlue: '#5b8faa',
-    burnRed: '#b85c4a',
-    burnGold: '#d4a843',
+    attack: '#b85c4a',
+    burnValue: '#d4a843',
     accentAmber: '#c48a2a',
     accentEmerald: '#5a9a6e',
     accentViolet: '#8b6fb0',
@@ -433,8 +648,10 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
     battleBorder: '#7a5810',
     battleText: '#1a0f00',
     battleGlow: '0 0 20px rgba(184, 137, 42, 0.3), 0 0 8px rgba(184, 137, 42, 0.2)',
-    manaFill: 'linear-gradient(to top, #5b8faa, #60a5fa)',
-    manaGlow: '0 0 6px rgba(59, 130, 246, 0.5)',
+  },
+  mana: {
+    fill: 'linear-gradient(to top, #5b8faa, #60a5fa)',
+    glow: '0 0 6px rgba(59, 130, 246, 0.5)',
   },
   fonts: {
     decorative: '"Cinzel Decorative", serif',
@@ -450,12 +667,12 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
     secondary: '#a08a6c',
   },
   achievements: {
-    bronze: '#b87333',
-    bronzeText: '#d4956a',
-    silver: '#9ca3af',
-    silverText: '#c0c7d0',
-    gold: '#d4a843',
-    goldText: '#e8c44a',
+    tier1: '#b87333',
+    tier1Text: '#d4956a',
+    tier2: '#9ca3af',
+    tier2Text: '#c0c7d0',
+    tier3: '#d4a843',
+    tier3Text: '#e8c44a',
   },
   assets: {
     playIcon: swordsWarm,
@@ -486,8 +703,8 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     base950: '#040812',
     gold: '#00f6ff',
     manaBlue: '#38bdf8',
-    burnRed: '#ff4d9d',
-    burnGold: '#f8ff66',
+    attack: '#ff4d9d',
+    burnValue: '#f8ff66',
     accentAmber: '#f8ff66',
     accentEmerald: '#00ffa3',
     accentViolet: '#d946ef',
@@ -562,8 +779,10 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     battleBorder: '#00d8ff',
     battleText: '#f8fbff',
     battleGlow: '0 0 22px rgba(0, 246, 255, 0.24), 0 0 34px rgba(217, 70, 239, 0.14)',
-    manaFill: 'linear-gradient(to top, #0ea5e9, #22d3ee)',
-    manaGlow: '0 0 8px rgba(34, 211, 238, 0.55)',
+  },
+  mana: {
+    fill: 'linear-gradient(to top, #0ea5e9, #22d3ee)',
+    glow: '0 0 8px rgba(34, 211, 238, 0.55)',
   },
   fonts: {
     decorative: 'Orbitron, sans-serif',
@@ -579,12 +798,12 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     secondary: '#8fe8ff',
   },
   achievements: {
-    bronze: '#f97316',
-    bronzeText: '#fb923c',
-    silver: '#94a3b8',
-    silverText: '#cbd5e1',
-    gold: '#ffd700',
-    goldText: '#ffe44d',
+    tier1: '#f97316',
+    tier1Text: '#fb923c',
+    tier2: '#94a3b8',
+    tier2Text: '#cbd5e1',
+    tier3: '#ffd700',
+    tier3Text: '#ffe44d',
   },
   assets: {
     playIcon: swordsCyberpunk,
@@ -615,8 +834,8 @@ const PASTEL_THEME: ThemeDefinition = {
     base950: '#2e151f',
     gold: '#ff9ec4',
     manaBlue: '#a78bfa',
-    burnRed: '#ff6b9f',
-    burnGold: '#ffc6de',
+    attack: '#ff6b9f',
+    burnValue: '#ffc6de',
     accentAmber: '#ffb3c7',
     accentEmerald: '#7dd3c7',
     accentViolet: '#c084fc',
@@ -689,8 +908,10 @@ const PASTEL_THEME: ThemeDefinition = {
     battleBorder: '#f9a8d4',
     battleText: '#3a1022',
     battleGlow: '0 0 20px rgba(249, 168, 212, 0.2), 0 0 28px rgba(192, 132, 252, 0.12)',
-    manaFill: 'linear-gradient(to top, #a78bfa, #f9a8d4)',
-    manaGlow: '0 0 8px rgba(249, 168, 212, 0.42)',
+  },
+  mana: {
+    fill: 'linear-gradient(to top, #a78bfa, #f9a8d4)',
+    glow: '0 0 8px rgba(249, 168, 212, 0.42)',
   },
   fonts: {
     decorative: 'Pacifico, cursive',
@@ -706,12 +927,12 @@ const PASTEL_THEME: ThemeDefinition = {
     secondary: '#ffcadd',
   },
   achievements: {
-    bronze: '#dba06d',
-    bronzeText: '#e8b990',
-    silver: '#c9c0d3',
-    silverText: '#ddd6e8',
-    gold: '#f0c27a',
-    goldText: '#f5d49a',
+    tier1: '#dba06d',
+    tier1Text: '#e8b990',
+    tier2: '#c9c0d3',
+    tier2Text: '#ddd6e8',
+    tier3: '#f0c27a',
+    tier3Text: '#f5d49a',
   },
   assets: {
     playIcon: swordsPastel,
@@ -836,8 +1057,8 @@ export function applyThemeToDocument(
     ['--color-base-950', theme.palette.base950],
     ['--color-gold', theme.palette.gold],
     ['--color-mana-blue', theme.palette.manaBlue],
-    ['--color-burn-red', theme.palette.burnRed],
-    ['--color-burn-gold', theme.palette.burnGold],
+    ['--color-attack', theme.palette.attack],
+    ['--color-burn-value', theme.palette.burnValue],
     ['--color-accent-amber', theme.palette.accentAmber],
     ['--color-accent-emerald', theme.palette.accentEmerald],
     ['--color-accent-violet', theme.palette.accentViolet],
@@ -915,8 +1136,8 @@ export function applyThemeToDocument(
   setRootVariable(root, '--theme-battle-button-text', theme.buttons.battleText);
   setRootVariable(root, '--theme-battle-button-glow', theme.buttons.battleGlow);
 
-  setRootVariable(root, '--theme-mana-fill', theme.buttons.manaFill);
-  setRootVariable(root, '--theme-mana-glow', theme.buttons.manaGlow);
+  setRootVariable(root, '--theme-mana-fill', theme.mana.fill);
+  setRootVariable(root, '--theme-mana-glow', theme.mana.glow);
 
   setRootVariable(root, '--font-decorative', theme.fonts.decorative);
   setRootVariable(root, '--font-title', theme.fonts.title);
@@ -928,12 +1149,12 @@ export function applyThemeToDocument(
   setRootVariable(root, '--theme-hero-subtitle', theme.text.heroSubtitle);
   setRootVariable(root, '--theme-secondary-text', theme.text.secondary);
 
-  setRootVariable(root, '--theme-achievement-bronze', theme.achievements.bronze);
-  setRootVariable(root, '--theme-achievement-bronze-text', theme.achievements.bronzeText);
-  setRootVariable(root, '--theme-achievement-silver', theme.achievements.silver);
-  setRootVariable(root, '--theme-achievement-silver-text', theme.achievements.silverText);
-  setRootVariable(root, '--theme-achievement-gold', theme.achievements.gold);
-  setRootVariable(root, '--theme-achievement-gold-text', theme.achievements.goldText);
+  setRootVariable(root, '--theme-achievement-tier1', theme.achievements.tier1);
+  setRootVariable(root, '--theme-achievement-tier1-text', theme.achievements.tier1Text);
+  setRootVariable(root, '--theme-achievement-tier2', theme.achievements.tier2);
+  setRootVariable(root, '--theme-achievement-tier2-text', theme.achievements.tier2Text);
+  setRootVariable(root, '--theme-achievement-tier3', theme.achievements.tier3);
+  setRootVariable(root, '--theme-achievement-tier3-text', theme.achievements.tier3Text);
 
   setRootVariable(root, '--theme-battle-ability', theme.battleEffects.ability);
   setRootVariable(root, '--theme-battle-positive', theme.battleEffects.positive);

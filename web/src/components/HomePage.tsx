@@ -78,11 +78,12 @@ export function HomePage() {
 
             {/* Secondary menu row */}
             <div className="grid grid-cols-2 gap-2.5 lg:gap-4">
+              {/* stagger-3 | stagger-4 | stagger-5 | stagger-6 */}
               {MENU_BUTTONS.map((btn, i) => (
                 <Link
                   key={btn.to}
                   to={btn.to}
-                  className={`theme-panel opacity-0 animate-stagger-fade-in stagger-${i + 3} group block p-3 lg:p-4 rounded-xl border transition-all active:scale-[0.98] text-center bg-gradient-to-br ${btn.gradient} ${btn.border}`}
+                  className={`theme-panel opacity-0 animate-stagger-fade-in ${['stagger-3', 'stagger-4', 'stagger-5', 'stagger-6'][i]} group block p-3 lg:p-4 rounded-xl border transition-all active:scale-[0.98] text-center bg-gradient-to-br ${btn.gradient} ${btn.border}`}
                   style={{ animationFillMode: 'forwards' }}
                 >
                   <h3 className="font-button text-sm lg:text-base font-bold text-white tracking-wide">
