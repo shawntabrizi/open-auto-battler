@@ -20,9 +20,21 @@ function SetCard({
   isSelected: boolean;
   onSelect: () => void;
 }) {
+  const cardCountLabel = cards ? `${cards.length} cards` : 'cards loading';
+
   return (
     <div
       onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
+      role="radio"
+      aria-checked={isSelected}
+      aria-label={`${name}, ${cardCountLabel}`}
+      tabIndex={0}
       className={`set-tile relative flex flex-col items-center text-center rounded-xl border p-3 lg:p-5 cursor-pointer transition-all ${
         isSelected
           ? 'border-2 border-yellow-400 bg-yellow-500/10'
@@ -41,12 +53,8 @@ function SetCard({
       </div>
 
       {/* Set name */}
-      <h3 className="font-heading font-bold text-sm lg:text-xl text-white">
-        {name}
-      </h3>
-      <p className="text-warm-500 text-[10px] lg:text-sm">
-        {cards?.length ?? '?'} cards
-      </p>
+      <h3 className="font-heading font-bold text-sm lg:text-xl text-white">{name}</h3>
+      <p className="text-warm-500 text-[10px] lg:text-sm">{cards?.length ?? '?'} cards</p>
 
       {/* Card fan */}
       {cards && cards.length > 0 ? (
@@ -96,7 +104,11 @@ export function SetsPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-6">
+              <div
+                role="radiogroup"
+                aria-label="Available card sets"
+                className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-6"
+              >
                 {sorted.map((meta) => (
                   <SetCard
                     key={meta.id}
