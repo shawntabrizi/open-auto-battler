@@ -78,7 +78,7 @@ function formatEvent(
     case 'AbilityDamage':
       return {
         text: `${getName(event.payload.source_instance_id)} deals ${event.payload.damage} to ${getName(event.payload.target_instance_id)}`,
-        color: 'text-burn-gold',
+        color: 'text-burn-value',
       };
     case 'AbilityModifyStats':
     case 'AbilityModifyStatsPermanent': {

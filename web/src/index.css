@@ -35,8 +35,8 @@
   --color-base-950: 16 14 10;
   --color-gold: 212 168 67;
   --color-mana-blue: 91 143 170;
-  --color-burn-red: 184 92 74;
-  --color-burn-gold: 212 168 67;
+  --color-card-attack: 184 92 74;
+  --color-burn-value: 212 168 67;
   --color-accent-amber: 196 138 42;
   --color-accent-emerald: 90 154 110;
   --color-accent-violet: 139 111 176;
@@ -242,12 +242,12 @@
   --theme-battle-button-glow: 0 0 20px rgba(184, 137, 42, 0.3), 0 0 8px rgba(184, 137, 42, 0.2);
   --theme-mana-fill: linear-gradient(to top, #5b8faa, #60a5fa);
   --theme-mana-glow: 0 0 6px rgba(59, 130, 246, 0.5);
-  --theme-achievement-bronze: #b87333;
-  --theme-achievement-bronze-text: #d4956a;
-  --theme-achievement-silver: #9ca3af;
-  --theme-achievement-silver-text: #c0c7d0;
-  --theme-achievement-gold: #d4a843;
-  --theme-achievement-gold-text: #e8c44a;
+  --theme-achievement-tier1: #b87333;
+  --theme-achievement-tier1-text: #d4956a;
+  --theme-achievement-tier2: #9ca3af;
+  --theme-achievement-tier2-text: #c0c7d0;
+  --theme-achievement-tier3: #d4a843;
+  --theme-achievement-tier3-text: #e8c44a;
   --theme-battle-ability: #eab308;
   --theme-battle-positive: #22c55e;
   --theme-battle-negative: #dc2626;
@@ -465,57 +465,57 @@ body {
 }
 
 /* ── Achievement badge colors ── */
-.achievement-bronze {
-  background-color: var(--theme-achievement-bronze);
+.achievement-tier1 {
+  background-color: var(--theme-achievement-tier1);
 }
 
-.achievement-bronze-text {
-  color: var(--theme-achievement-bronze-text);
+.achievement-tier1-text {
+  color: var(--theme-achievement-tier1-text);
 }
 
-.achievement-bronze-active {
-  border-color: var(--theme-achievement-bronze);
-  background: color-mix(in srgb, var(--theme-achievement-bronze) 15%, transparent);
+.achievement-tier1-active {
+  border-color: var(--theme-achievement-tier1);
+  background: color-mix(in srgb, var(--theme-achievement-tier1) 15%, transparent);
 }
 
-.achievement-bronze-seg {
-  background-color: var(--theme-achievement-bronze);
+.achievement-tier1-seg {
+  background-color: var(--theme-achievement-tier1);
   color: white;
 }
 
-.achievement-silver {
-  background-color: var(--theme-achievement-silver);
+.achievement-tier2 {
+  background-color: var(--theme-achievement-tier2);
 }
 
-.achievement-silver-text {
-  color: var(--theme-achievement-silver-text);
+.achievement-tier2-text {
+  color: var(--theme-achievement-tier2-text);
 }
 
-.achievement-silver-active {
-  border-color: var(--theme-achievement-silver);
-  background: color-mix(in srgb, var(--theme-achievement-silver) 15%, transparent);
+.achievement-tier2-active {
+  border-color: var(--theme-achievement-tier2);
+  background: color-mix(in srgb, var(--theme-achievement-tier2) 15%, transparent);
 }
 
-.achievement-silver-seg {
-  background-color: var(--theme-achievement-silver);
+.achievement-tier2-seg {
+  background-color: var(--theme-achievement-tier2);
   color: white;
 }
 
-.achievement-gold {
-  background-color: var(--theme-achievement-gold);
+.achievement-tier3 {
+  background-color: var(--theme-achievement-tier3);
 }
 
-.achievement-gold-text {
-  color: var(--theme-achievement-gold-text);
+.achievement-tier3-text {
+  color: var(--theme-achievement-tier3-text);
 }
 
-.achievement-gold-active {
-  border-color: var(--theme-achievement-gold);
-  background: color-mix(in srgb, var(--theme-achievement-gold) 15%, transparent);
+.achievement-tier3-active {
+  border-color: var(--theme-achievement-tier3);
+  background: color-mix(in srgb, var(--theme-achievement-tier3) 15%, transparent);
 }
 
-.achievement-gold-seg {
-  background-color: var(--theme-achievement-gold);
+.achievement-tier3-seg {
+  background-color: var(--theme-achievement-tier3);
   color: rgb(var(--color-surface-dark));
 }
 
@@ -575,11 +575,11 @@ body {
 .burn-badge {
   background: linear-gradient(
     180deg,
-    rgb(var(--color-burn-gold) / 0.98) 0%,
+    rgb(var(--color-burn-value) / 0.98) 0%,
     rgb(var(--color-gold) / 0.88) 40%,
-    rgb(var(--color-burn-red) / 0.72) 100%
+    rgb(var(--color-card-attack) / 0.72) 100%
   );
-  border: 1.5px solid rgb(var(--color-burn-gold) / 0.5);
+  border: 1.5px solid rgb(var(--color-burn-value) / 0.5);
   box-shadow:
     inset 0 1px 0 rgb(var(--color-base-50) / 0.24),
     inset 0 -1px 0 rgba(0, 0, 0, 0.15),
@@ -678,19 +678,19 @@ body {
   0%,
   100% {
     box-shadow:
-      inset 1px 1px 0 0 rgb(var(--color-burn-gold) / 0.18),
+      inset 1px 1px 0 0 rgb(var(--color-burn-value) / 0.18),
       inset -1px -1px 0 0 rgba(0, 0, 0, 0.25),
       var(--shadow-resting),
-      0 0 8px rgb(var(--color-burn-gold) / 0.24),
+      0 0 8px rgb(var(--color-burn-value) / 0.24),
       0 0 2px rgb(var(--color-gold) / 0.15);
   }
 
   50% {
     box-shadow:
-      inset 1px 1px 0 0 rgb(var(--color-burn-gold) / 0.22),
+      inset 1px 1px 0 0 rgb(var(--color-burn-value) / 0.22),
       inset -1px -1px 0 0 rgba(0, 0, 0, 0.25),
       var(--shadow-hover),
-      0 0 16px rgb(var(--color-burn-gold) / 0.38),
+      0 0 16px rgb(var(--color-burn-value) / 0.38),
       0 0 4px rgb(var(--color-gold) / 0.22);
   }
 }
@@ -698,10 +698,10 @@ body {
 .card-legendary-glow:hover {
   animation: none;
   box-shadow:
-    inset 1px 1px 0 0 rgb(var(--color-burn-gold) / 0.22),
+    inset 1px 1px 0 0 rgb(var(--color-burn-value) / 0.22),
     inset -1px -1px 0 0 rgba(0, 0, 0, 0.25),
     var(--shadow-lifted),
-    0 0 20px rgb(var(--color-burn-gold) / 0.45),
+    0 0 20px rgb(var(--color-burn-value) / 0.45),
     0 0 4px rgb(var(--color-gold) / 0.26);
 }
 
@@ -943,7 +943,7 @@ body {
   box-shadow:
     inset 0 0 16px rgb(var(--color-gold) / 0.18),
     0 0 16px rgb(var(--color-gold) / 0.28),
-    0 0 28px rgb(var(--color-burn-gold) / 0.18) !important;
+    0 0 28px rgb(var(--color-burn-value) / 0.18) !important;
   filter: saturate(1.08) brightness(1.06);
 }
 
@@ -967,15 +967,15 @@ body {
   background-image: radial-gradient(
     circle at center,
     rgb(var(--color-gold) / 0.18) 0%,
-    rgb(var(--color-burn-gold) / 0.28) 24%,
-    rgb(var(--color-burn-red) / 0.24) 54%,
-    rgb(var(--color-burn-red) / 0.18) 78%,
+    rgb(var(--color-burn-value) / 0.28) 24%,
+    rgb(var(--color-card-attack) / 0.24) 54%,
+    rgb(var(--color-card-attack) / 0.18) 78%,
     rgb(var(--color-surface-dark) / 0.5) 100%
   );
   box-shadow:
-    inset 0 0 0 1px rgb(var(--color-burn-gold) / 0.24),
-    inset 0 0 36px rgb(var(--color-burn-gold) / 0.12),
-    0 0 18px rgb(var(--color-burn-red) / 0.14);
+    inset 0 0 0 1px rgb(var(--color-burn-value) / 0.24),
+    inset 0 0 36px rgb(var(--color-burn-value) / 0.12),
+    0 0 18px rgb(var(--color-card-attack) / 0.14);
   animation: burn-zone-pulse 1.8s ease-in-out infinite;
 }
 
@@ -983,9 +983,9 @@ body {
   background-image: radial-gradient(
     circle at center,
     rgb(var(--color-gold) / 0.24) 0%,
-    rgb(var(--color-burn-gold) / 0.38) 22%,
-    rgb(var(--color-burn-red) / 0.32) 50%,
-    rgb(var(--color-burn-red) / 0.22) 76%,
+    rgb(var(--color-burn-value) / 0.38) 22%,
+    rgb(var(--color-card-attack) / 0.32) 50%,
+    rgb(var(--color-card-attack) / 0.22) 76%,
     rgb(var(--color-surface-dark) / 0.56) 100%
   );
 }
@@ -994,17 +994,17 @@ body {
   0%,
   100% {
     box-shadow:
-      inset 0 0 0 1px rgb(var(--color-burn-gold) / 0.24),
-      inset 0 0 36px rgb(var(--color-burn-gold) / 0.12),
-      0 0 18px rgb(var(--color-burn-red) / 0.14);
+      inset 0 0 0 1px rgb(var(--color-burn-value) / 0.24),
+      inset 0 0 36px rgb(var(--color-burn-value) / 0.12),
+      0 0 18px rgb(var(--color-card-attack) / 0.14);
     filter: saturate(1) brightness(1);
   }
 
   50% {
     box-shadow:
-      inset 0 0 0 1px rgb(var(--color-burn-gold) / 0.36),
-      inset 0 0 52px rgb(var(--color-burn-gold) / 0.18),
-      0 0 30px rgb(var(--color-burn-red) / 0.18);
+      inset 0 0 0 1px rgb(var(--color-burn-value) / 0.36),
+      inset 0 0 52px rgb(var(--color-burn-value) / 0.18),
+      0 0 30px rgb(var(--color-card-attack) / 0.18);
     filter: saturate(1.14) brightness(1.08);
   }
 }

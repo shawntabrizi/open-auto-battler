@@ -220,16 +220,16 @@ export function Shop() {
               }`}
               style={{
                 filter: isBurnHovered
-                  ? 'drop-shadow(0 0 12px rgb(var(--color-burn-red) / 0.45))'
+                  ? 'drop-shadow(0 0 12px rgb(var(--color-card-attack) / 0.45))'
                   : shouldHighlightBurn
-                    ? 'drop-shadow(0 0 10px rgb(var(--color-burn-red) / 0.32))'
+                    ? 'drop-shadow(0 0 10px rgb(var(--color-card-attack) / 0.32))'
                     : undefined,
               }}
             />
             <div
               className={`burn-hint hidden lg:block text-[10px] mt-1 text-center px-2 ${
                 isBurnHovered
-                  ? 'text-burn-gold font-bold'
+                  ? 'text-burn-value font-bold'
                   : shouldHighlightBurn
                     ? 'text-gold font-semibold'
                     : 'text-base-500'

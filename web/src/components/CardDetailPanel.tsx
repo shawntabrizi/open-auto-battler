@@ -46,7 +46,7 @@ function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
           {card.name}
         </h2>
         <div className="flex gap-1.5 mt-1">
-          <span className="px-1.5 py-0.5 bg-burn-red/15 text-burn-red border border-burn-red/40 rounded text-[10px] lg:text-xs font-stat font-bold">
+          <span className="px-1.5 py-0.5 bg-card-attack/15 text-card-attack border border-card-attack/40 rounded text-[10px] lg:text-xs font-stat font-bold">
             ATK: {card.attack}
           </span>
           <span className="px-1.5 py-0.5 bg-victory-green/15 text-victory-green border border-victory-green/40 rounded text-[10px] lg:text-xs font-stat font-bold">
@@ -219,12 +219,12 @@ export function CardDetailPanel({
               {card.play_cost} <span className="text-mana-blue text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
-          <div className="theme-panel flex-1 min-w-0 p-1.5 lg:p-3 bg-burn-gold/10 border border-burn-gold/30 rounded-lg">
-            <div className="text-[8px] lg:text-[10px] text-burn-gold uppercase font-heading font-bold mb-0.5 lg:mb-1">
+          <div className="theme-panel flex-1 min-w-0 p-1.5 lg:p-3 bg-burn-value/10 border border-burn-value/30 rounded-lg">
+            <div className="text-[8px] lg:text-[10px] text-burn-value uppercase font-heading font-bold mb-0.5 lg:mb-1">
               Burn
             </div>
             <div className="text-sm lg:text-xl font-stat font-bold text-white">
-              +{card.burn_value} <span className="text-burn-gold text-[10px] lg:text-sm">Mana</span>
+              +{card.burn_value} <span className="text-burn-value text-[10px] lg:text-sm">Mana</span>
             </div>
           </div>
         </div>

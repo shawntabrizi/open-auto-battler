@@ -102,7 +102,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
                 opponentWaiting
                   ? displayTimer <= 5
                     ? 'bg-defeat-red animate-pulse'
-                    : 'bg-burn-red'
+                    : 'bg-card-attack'
                   : 'bg-mana-blue'
               }`}
             >
@@ -416,7 +416,7 @@ export function BattleAction({
                   opponentWaiting
                     ? displayTimer <= 5
                       ? 'bg-defeat-red animate-pulse'
-                      : 'bg-burn-red'
+                      : 'bg-card-attack'
                     : 'bg-mana-blue'
                 }`}
               >

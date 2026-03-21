@@ -44,7 +44,7 @@ type ThemePalette = {
   /** Resource color — mana cost badges, mana bar fill, info text */
   manaBlue: string;
   /** Attack/damage color — attack stat on cards, damage numbers */
-  attack: string;
+  cardAttack: string;
   /** Burn value color — burn badges on cards, burn-related UI */
   burnValue: string;
   /** Secondary warm accent — bronze achievements, warm highlights */
@@ -141,7 +141,7 @@ type ThemeIcons = {
   muted: string;
   /** Mana/info icon tint — mana bolt on cards. Related: palette.manaBlue */
   mana: string;
-  /** Attack icon tint — sword icon on unit cards. Related: palette.attack */
+  /** Attack icon tint — sword icon on unit cards. Related: palette.cardAttack */
   attack: string;
   /** Health icon tint — heart icon on unit cards, lives icon. Related: palette.accentEmerald */
   health: string;
@@ -575,7 +575,7 @@ const DEFAULT_WARM_THEME: ThemeDefinition = {
     base950: '#100e0a',
     gold: '#d4a843',
     manaBlue: '#5b8faa',
-    attack: '#b85c4a',
+    cardAttack: '#b85c4a',
     burnValue: '#d4a843',
     accentAmber: '#c48a2a',
     accentEmerald: '#5a9a6e',
@@ -703,7 +703,7 @@ const CYBERPUNK_THEME: ThemeDefinition = {
     base950: '#040812',
     gold: '#00f6ff',
     manaBlue: '#38bdf8',
-    attack: '#ff4d9d',
+    cardAttack: '#ff4d9d',
     burnValue: '#f8ff66',
     accentAmber: '#f8ff66',
     accentEmerald: '#00ffa3',
@@ -834,7 +834,7 @@ const PASTEL_THEME: ThemeDefinition = {
     base950: '#2e151f',
     gold: '#ff9ec4',
     manaBlue: '#a78bfa',
-    attack: '#ff6b9f',
+    cardAttack: '#ff6b9f',
     burnValue: '#ffc6de',
     accentAmber: '#ffb3c7',
     accentEmerald: '#7dd3c7',
@@ -1057,7 +1057,7 @@ export function applyThemeToDocument(
     ['--color-base-950', theme.palette.base950],
     ['--color-gold', theme.palette.gold],
     ['--color-mana-blue', theme.palette.manaBlue],
-    ['--color-attack', theme.palette.attack],
+    ['--color-card-attack', theme.palette.cardAttack],
     ['--color-burn-value', theme.palette.burnValue],
     ['--color-accent-amber', theme.palette.accentAmber],
     ['--color-accent-emerald', theme.palette.accentEmerald],

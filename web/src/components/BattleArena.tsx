@@ -904,7 +904,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
 
         {/* Enemy side (right) */}
         <div className="flex-1 min-w-0 flex flex-col items-center gap-1 lg:gap-3">
-          <span className="text-[0.6rem] lg:text-sm text-burn-red font-heading uppercase tracking-[0.15em]">
+          <span className="text-[0.6rem] lg:text-sm text-card-attack font-heading uppercase tracking-[0.15em]">
             Enemy
           </span>
           <div className="flex gap-0.5 lg:gap-3 px-1 lg:px-6 py-1 lg:py-4 rounded-xl team-zone-enemy min-w-0 w-full">

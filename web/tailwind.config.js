@@ -14,8 +14,8 @@ export default {
       },
       colors: {
         'mana-blue': 'rgb(var(--color-mana-blue) / <alpha-value>)',
-        'burn-red': 'rgb(var(--color-burn-red) / <alpha-value>)',
-        'burn-gold': 'rgb(var(--color-burn-gold) / <alpha-value>)',
+        'card-attack': 'rgb(var(--color-card-attack) / <alpha-value>)',
+        'burn-value': 'rgb(var(--color-burn-value) / <alpha-value>)',
         gold: 'rgb(var(--color-gold) / <alpha-value>)',
         'card-bg': 'rgb(var(--color-card-bg) / <alpha-value>)',
         'board-bg': 'rgb(var(--color-board-bg) / <alpha-value>)',

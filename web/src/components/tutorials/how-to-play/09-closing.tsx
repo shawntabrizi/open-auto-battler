@@ -7,32 +7,32 @@ export default function Closing() {
 
       <div className="flex justify-center gap-6 lg:gap-10 mb-4 lg:mb-6">
         <div className="flex flex-col items-center gap-1">
-          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full achievement-bronze flex items-center justify-center">
+          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full achievement-tier1 flex items-center justify-center">
             <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5 lg:w-6 lg:h-6">
               <path d="M12 2l2.94 6.34L22 9.27l-5.15 4.64L18.18 22 12 18.27 5.82 22l1.33-8.09L2 9.27l7.06-.93z" />
             </svg>
           </div>
-          <span className="achievement-bronze-text font-bold text-xs lg:text-sm">Bronze</span>
+          <span className="achievement-tier1-text font-bold text-xs lg:text-sm">Bronze</span>
           <span className="text-base-500 text-[10px] lg:text-xs">Win a battle with this card on board</span>
         </div>
 
         <div className="flex flex-col items-center gap-1">
-          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full achievement-silver flex items-center justify-center">
+          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full achievement-tier2 flex items-center justify-center">
             <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5 lg:w-6 lg:h-6">
               <path d="M12 2l2.94 6.34L22 9.27l-5.15 4.64L18.18 22 12 18.27 5.82 22l1.33-8.09L2 9.27l7.06-.93z" />
             </svg>
           </div>
-          <span className="achievement-silver-text font-bold text-xs lg:text-sm">Silver</span>
+          <span className="achievement-tier2-text font-bold text-xs lg:text-sm">Silver</span>
           <span className="text-base-500 text-[10px] lg:text-xs">Complete a 10-win run with this card</span>
         </div>
 
         <div className="flex flex-col items-center gap-1">
-          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full achievement-gold flex items-center justify-center">
+          <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full achievement-tier3 flex items-center justify-center">
             <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5 lg:w-6 lg:h-6">
               <path d="M12 2l2.94 6.34L22 9.27l-5.15 4.64L18.18 22 12 18.27 5.82 22l1.33-8.09L2 9.27l7.06-.93z" />
             </svg>
           </div>
-          <span className="achievement-gold-text font-bold text-xs lg:text-sm">Gold</span>
+          <span className="achievement-tier3-text font-bold text-xs lg:text-sm">Gold</span>
           <span className="text-base-500 text-[10px] lg:text-xs">Perfect 10-0 run with this card</span>
         </div>
       </div>

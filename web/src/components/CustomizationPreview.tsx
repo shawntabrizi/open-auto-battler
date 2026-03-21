@@ -23,7 +23,7 @@ export function CustomizationPreview() {
               />
             </div>
           )}
-          <span className="text-burn-red text-[8px]">&#9829;&#9829;&#9829;</span>
+          <span className="text-card-attack text-[8px]">&#9829;&#9829;&#9829;</span>
           <span className="text-[8px] text-base-400 ml-auto">R1</span>
           <span className="text-gold text-[8px]">&#9733;</span>
         </div>
