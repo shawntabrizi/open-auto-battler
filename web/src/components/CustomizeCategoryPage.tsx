@@ -306,7 +306,7 @@ function ThemeSwatch({ cid, name, className }: { cid: string; name: string; clas
         setData({
           colors: [
             b.accent || '#888',
-            b.mana || '#55a',
+            (json.battleShop && json.battleShop.mana) || '#55a',
             b.positive || '#5a5',
             b.defeat || '#a55',
             b.special || '#a5a',
@@ -365,7 +365,7 @@ function ThemeSwatch({ cid, name, className }: { cid: string; name: string; clas
 /** Renders the warm (default) theme swatch from built-in data — no fetch needed. */
 function WarmThemeSwatch({ className }: { className?: string }) {
   const b = DEFAULT_WARM_THEME.base;
-  const colors = [b.accent, b.mana, b.positive, b.defeat, b.special, DEFAULT_WARM_THEME.unitCard.cardBurn];
+  const colors = [b.accent, DEFAULT_WARM_THEME.battleShop.mana, b.positive, b.defeat, b.special, DEFAULT_WARM_THEME.unitCard.cardBurn];
 
   return (
     <div

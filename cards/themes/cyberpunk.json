@@ -14,8 +14,6 @@
     "base900": "#081420",
     "base950": "#040812",
     "accent": "#00f6ff",
-    "mana": "#38bdf8",
-
     "positive": "#00ffa3",
     "special": "#d946ef",
     "victory": "#00ffa3",
@@ -92,6 +90,7 @@
     }
   },
   "battleShop": {
+    "mana": "#38bdf8",
     "overlayOpacity": 0.2,
     "boardBg": "#0a1730",
     "shopBg": "#0d1d3d",
