@@ -2,7 +2,7 @@
 
 This document tracks the complete menu and navigation structure of the game. Use it as the source of truth when adding new screens or changing navigation paths.
 
-Last updated: 2026-03-19
+Last updated: 2026-03-22
 
 ## Navigation Flowchart
 
@@ -12,6 +12,7 @@ flowchart TD
   Login --> Main["Main Menu /"]
 
   Main --> Play["/play"]
+  Main --> Sets["/sets"]
   Main --> Cards["/cards"]
   Main --> Customize["/customize"]
   Main --> History["/history"]
@@ -20,8 +21,6 @@ flowchart TD
   Play --> Tournament["/tournament"]
   Play --> Practice["/practice"]
   Play --> Versus["/versus"]
-
-  Main --> Sets["/sets"]
 
   Arena --> ArenaGame["/arena/game"]
   Practice --> PracticeGame["/practice/game"]
@@ -38,7 +37,6 @@ flowchart TD
   ArenaGame --> Shop["Shop Phase"]
   PracticeGame --> Shop
   TournamentGame --> Shop
-  Tournament --> Shop
 
   Shop --> Battle["Battle Phase"]
   Battle --> Shop
@@ -50,11 +48,9 @@ flowchart TD
   Shop --> InGameHamburger
   Battle --> InGameHamburger
 
-
-  Cards --> Sandbox["/cards"]
-  Cards --> CreateCard["/creator/card"]
-  Cards --> CreateSet["/creator/set"]
-  Cards -.-> SetPreview["Set Preview Overlay"]
+  Creator --> CreateCard["/creator/card"]
+  Creator --> CreateSet["/creator/set"]
+  Creator --> MintNft["/creator/mint"]
 
   Customize --> CustBg["/customize/backgrounds"]
   Customize --> CustHand["/customize/hand"]
@@ -72,15 +68,17 @@ flowchart TD
   Hamburger --> Account["/account"]
   Hamburger --> Network["/network"]
   Hamburger --> Marketplace["/marketplace"]
+  Hamburger --> Creator["/creator"]
   Hamburger --> Logout["Log Out → Login"]
 
   InGameHamburger["In-Game Hamburger"]
   InGameHamburger --> InGameSettings["/settings (returnTo game)"]
-  InGameHamburger --> Tutorial["Tutorial (TODO)"]
+  InGameHamburger --> Tutorial["Tutorial"]
+  InGameHamburger --> Shortcuts["Keyboard Shortcuts"]
   InGameHamburger --> ReturnMenu["Return to Menu → /"]
   InGameHamburger --> Abandon["Abandon → /"]
 
-  Cards --> MintNft["/creator/mint"]
+  Sets --> SetPreview["/sets/:setId"]
 ```
 
 ## Global Elements
@@ -157,6 +155,7 @@ flowchart TD
 | Account | Person | `/account` | Account info, balances, name editing |
 | Network | Globe | `/network` | Blockchain endpoint picker |
 | Marketplace | Cart | `/marketplace` | Placeholder — coming soon |
+| Creator Studio | Pencil | `/creator` | Card/set/NFT creation tools |
 | Log Out | Exit arrow | — | Clears login session, returns to login page |
 
 **In-game menu** (on `/practice/game`, `/arena/game`, `/tournament/game`, `/versus/game`):
@@ -164,7 +163,8 @@ flowchart TD
 | Label | Icon | Route | Notes |
 |---|---|---|---|
 | Settings | Gear | `/settings` | Passes `returnTo` state so back returns to game |
-| Tutorial | Lightbulb | — | Placeholder (TODO) |
+| Tutorial | Lightbulb | — | Opens tutorial overlay (`how-to-play`) |
+| Keyboard Shortcuts | Keyboard | — | Opens keyboard shortcuts overlay |
 | Return to Menu | Home | `/` | Navigates to main menu |
 | Abandon | Warning | — | Confirmation dialog, then abandons game and navigates to `/` |
 
@@ -180,13 +180,13 @@ flowchart TD
 
 | Label | Route | Size | Color |
 |---|---|---|---|
-| Play | `/play` | Large (primary) | Amber/gold |
-| Cards | `/cards` | 1/3 width | Violet |
-| Customize | `/customize` | 1/3 width | Emerald |
-| History | `/history` | 1/3 width | Blue |
+| Play | `/play` | Large (primary CTA, full width) | Accent (themed) |
+| Sets | `/sets` | 2x2 grid, 1/2 width | Accent |
+| Cards | `/cards` | 2x2 grid, 1/2 width | Special |
+| Customize | `/customize` | 2x2 grid, 1/2 width | Positive |
+| History | `/history` | 2x2 grid, 1/2 width | Mana |
 
 - Version number at the bottom
-- Particle background animation
 
 ## Play
 
@@ -364,7 +364,7 @@ See [Card Sandbox](#card-sandbox) section above.
 
 **Route:** `/sets`
 
-**TopBar:** Back to `/play` (Play), title "Card Sets"
+**TopBar:** Back to `/` (Menu), title "Card Sets"
 
 **Contents:**
 - Grid of all available sets with card preview thumbnails
@@ -394,6 +394,8 @@ See [Card Sandbox](#card-sandbox) section above.
 **TopBar:** Back to `/` (Menu) or Game (via `returnTo` state), title "Settings"
 
 **Contents:**
+- **Display** section: Theme (read-only, shows active), Show Card Names, Show Game Card Details Panel, Show Board Helper, Show Address, Show Balance
+- **Battle** section: Default Battle Speed (1x–5x), Reduced Animations toggle
 - **Debug** section: Show Raw JSON toggle
 
 ### Account
@@ -463,9 +465,9 @@ See [Card Sandbox](#card-sandbox) section above.
 
 ### Set Page
 
-**Route:** `/set/:setId`
+**Route:** `/sets/:setId`
 
-**TopBar:** Back to `/cards` (Cards), title is set name, `hasCardPanel`
+**TopBar:** Back to `/sets` (Sets), title is set name, `hasCardPanel`
 
 **Contents:** Full set view with all cards and Card Detail Panel.
 
@@ -478,6 +480,10 @@ These are full-screen or partial overlays rendered on top of the current page. C
 | Set Preview | Click set in Cards page or Set Selection | Inline close button (absolute top-right within overlay) | Shows all cards in a set with Card Detail Panel |
 | Draw Pool (Bag) | Click bag icon in GameTopBar or press B | Inline close button (absolute top-right within overlay) | Shows remaining cards in bag during game |
 | Battle | End Turn / Battle button | Continue button (or inline close in sandbox) | Animated battle sequence |
+| Card Inspect | Click card (when Card Detail Panel is hidden) or press I | Close button / click outside | Full card details popup |
+| Transaction | On-chain transaction submission | Auto-closes on completion | Shows signing, broadcasting, and confirming states |
+| Tutorial | In-game hamburger → Tutorial, or keyboard shortcut | Close button within overlay | Multi-slide tutorial walkthrough |
+| Keyboard Shortcuts | In-game hamburger → Keyboard Shortcuts, or ? key | Close button / Escape | Reference card for game keyboard shortcuts |
 | Forfeit Confirmation | Abandon in hamburger menu | Cancel / Abandon buttons | Inline confirmation within the hamburger panel |
 
 ## Route Index
@@ -486,7 +492,7 @@ These are full-screen or partial overlays rendered on top of the current page. C
 |---|---|---|
 | `/` | Main Menu | — |
 | `/play` | Play | `/` |
-| `/cards` | Cards | `/` |
+| `/cards` | Card Sandbox | `/` |
 | `/customize` | Customize | `/` |
 | `/customize/backgrounds` | Customize: Background | `/customize` |
 | `/customize/hand` | Customize: Hand | `/customize` |
@@ -498,11 +504,10 @@ These are full-screen or partial overlays rendered on top of the current page. C
 | `/history/stats` | Stats | `/history` |
 | `/history/battles` | Battle History (placeholder) | `/history` |
 | `/history/ghosts` | Ghost Browser | `/history` |
-| `/sets` | Set Browser + Selection | `/play` |
+| `/sets` | Set Browser + Selection | `/` |
 | `/sets/:setId` | Set Preview | `/sets` |
 | `/practice` | Practice Pre-Game | `/play` |
 | `/practice/game` | Practice Game | `/practice` |
-| `/cards` | Card Sandbox | `/` |
 | `/versus` | Versus (redirect) | `/play` |
 | `/versus/lobby` | P2P Lobby | `/play` |
 | `/versus/game` | P2P Game | `/versus/lobby` |
@@ -519,9 +524,9 @@ These are full-screen or partial overlays rendered on top of the current page. C
 | `/creator/card` | Create Card | `/creator` |
 | `/creator/set` | Create Set | `/creator` |
 | `/creator/mint` | Mint NFT | `/creator` |
-| `/sets/:setId` | Set Preview | `/sets` |
 | `/dev` | Dev Preview | — |
 | `/dev/game-over` | Game Over Preview | — |
 | `/presentations` | Presentations | — |
 | `/presentations/:id` | Presentation Viewer | — |
+| `/presentations/:id/:slideNum` | Presentation Viewer (slide) | — |
 | `/embed` | Embed Page | — |
