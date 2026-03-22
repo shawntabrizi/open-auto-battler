@@ -14,30 +14,30 @@ export function ThemedToaster() {
       position="top-right"
       toastOptions={{
         style: {
-          background: theme.palette.base900,
-          color: theme.palette.base100,
-          border: `1px solid ${theme.palette.base700}`,
-          borderRadius: theme.shape.panelRadius,
-          fontFamily: theme.fonts.body,
+          background: theme.base.base900,
+          color: theme.base.base100,
+          border: `1px solid ${theme.base.base700}`,
+          borderRadius: theme.base.panelRadius,
+          fontFamily: theme.base.body,
           fontSize: '0.875rem',
-          boxShadow: theme.effects.shadowLifted,
+          boxShadow: theme.base.shadowLifted,
         },
         success: {
           iconTheme: {
-            primary: theme.palette.victory,
-            secondary: theme.palette.base900,
+            primary: theme.base.victory,
+            secondary: theme.base.base900,
           },
           style: {
-            borderColor: theme.palette.victory + '40',
+            borderColor: theme.toast.successBorder,
           },
         },
         error: {
           iconTheme: {
-            primary: theme.palette.defeat,
-            secondary: theme.palette.base900,
+            primary: theme.base.defeat,
+            secondary: theme.base.base900,
           },
           style: {
-            borderColor: theme.palette.defeat + '40',
+            borderColor: theme.toast.errorBorder,
           },
         },
       }}

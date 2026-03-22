@@ -1,5 +1,5 @@
 import { useThemeStore } from '../store/themeStore';
-import { getTheme, type ThemeDefinition } from '../theme/themes';
+import { getTheme, type ResolvedThemeDefinition } from '../theme/themes';
 
 interface IconProps {
   className?: string;
@@ -10,7 +10,7 @@ function ThemedIcon({
   iconKey,
   className = 'w-4 h-4',
 }: {
-  iconKey: keyof ThemeDefinition['icons']['svg'];
+  iconKey: keyof ResolvedThemeDefinition['icons']['svg'];
   className?: string;
 }) {
   const theme = getTheme(useThemeStore((s) => s.selectedThemeId));
