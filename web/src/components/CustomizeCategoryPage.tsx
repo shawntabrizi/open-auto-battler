@@ -9,7 +9,7 @@ import {
 import { CustomizationPreview } from './CustomizationPreview';
 import { TopBar } from './TopBar';
 import { IpfsImage } from './IpfsImage';
-import { ipfsUrl } from '../utils/ipfs';
+import { fetchIpfsJson } from '../utils/ipfs';
 import { DEFAULT_WARM_THEME } from '../theme/themes';
 
 type TileShape = 'landscape' | 'wide' | 'card' | 'circle';
@@ -296,12 +296,12 @@ interface ThemePreviewData {
 /** Fetches a theme JSON from IPFS and renders a mini theme preview. */
 function ThemeSwatch({ cid, name, className }: { cid: string; name: string; className?: string }) {
   const [data, setData] = useState<ThemePreviewData | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    const url = ipfsUrl(cid.startsWith('ipfs://') ? cid : `ipfs://${cid}`);
-    fetch(url)
-      .then((r) => r.json())
-      .then((json) => {
+    setFailed(false);
+    fetchIpfsJson(cid.startsWith('ipfs://') ? cid : `ipfs://${cid}`)
+      .then((json: any) => {
         const b = json.base || {};
         setData({
           colors: [
@@ -321,13 +321,15 @@ function ThemeSwatch({ cid, name, className }: { cid: string; name: string; clas
             `linear-gradient(to right, ${b.accent || '#888'}, ${b.accent || '#888'})`,
         });
       })
-      .catch(() => setData(null));
+      .catch(() => setFailed(true));
   }, [cid, name]);
 
   if (!data) {
     return (
       <div className={`${className} flex items-center justify-center`}>
-        <span className="text-base-400 animate-pulse text-sm">Loading...</span>
+        <span className={`text-base-400 text-sm ${failed ? '' : 'animate-pulse'}`}>
+          {failed ? name : 'Loading...'}
+        </span>
       </div>
     );
   }

@@ -1,9 +1,8 @@
 import { create } from 'zustand';
-import { ipfsUrl } from '../utils/ipfs';
+import { ipfsUrl, fetchIpfsJson } from '../utils/ipfs';
 import {
   sanitizeTheme,
   resolveTheme,
-  migrateLegacyTheme,
   type ThemeDefinition,
 } from '../theme/themes';
 import { useThemeStore } from './themeStore';
@@ -89,12 +88,10 @@ function filterSelectionsByOwnership(
 
 async function fetchAndApplyTheme(nft: NftItem): Promise<void> {
   try {
-    const url = ipfsUrl(nft.ipfsCid.startsWith('ipfs://') ? nft.ipfsCid : `ipfs://${nft.ipfsCid}`);
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const json = await response.json();
-    const migrated = migrateLegacyTheme(json) as ThemeDefinition;
-    const sanitized = sanitizeTheme(migrated);
+    const json = await fetchIpfsJson(
+      nft.ipfsCid.startsWith('ipfs://') ? nft.ipfsCid : `ipfs://${nft.ipfsCid}`
+    );
+    const sanitized = sanitizeTheme(json as ThemeDefinition);
     const resolved = resolveTheme(sanitized);
     useThemeStore.getState().setNftTheme(resolved, nft);
   } catch (err) {

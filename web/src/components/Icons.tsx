@@ -1,11 +1,25 @@
+import { useState } from 'react';
 import { useThemeStore } from '../store/themeStore';
 import { type ResolvedThemeDefinition } from '../theme/themes';
+import { ipfsUrl } from '../utils/ipfs';
 
 interface IconProps {
   className?: string;
 }
 
-/** Renders an icon from the theme's SVG definitions */
+/** Renders SVG paths inline (simple monochrome icon) */
+function SvgPathIcon({ paths, className }: { paths: string[]; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      {paths.map((d, i) => (
+        <path key={i} d={d} />
+      ))}
+    </svg>
+  );
+}
+
+/** Renders an icon from the theme's SVG definitions.
+ *  If the icon has a `url`, renders an <img> with the path-based SVG as fallback. */
 function ThemedIcon({
   iconKey,
   className = 'w-4 h-4',
@@ -15,13 +29,18 @@ function ThemedIcon({
 }) {
   const theme = useThemeStore((s) => s.activeTheme);
   const icon = theme.icons.svg[iconKey];
-  return (
-    <svg viewBox={icon.viewBox ?? '0 0 24 24'} fill="currentColor" className={className}>
-      {icon.paths.map((d, i) => (
-        <path key={i} d={d} />
-      ))}
-    </svg>
-  );
+  const [imgFailed, setImgFailed] = useState(false);
+
+  // If there's a URL and it hasn't failed, try to render as image
+  if (icon.url && !imgFailed) {
+    const resolvedUrl = ipfsUrl(icon.url);
+    return (
+      <img src={resolvedUrl} alt="" className={className} onError={() => setImgFailed(true)} />
+    );
+  }
+
+  // Fallback: inline SVG paths
+  return <SvgPathIcon paths={icon.paths} className={className} />;
 }
 
 /** Attack icon — themed per theme (swords, crosshair, wand) */
@@ -82,6 +101,16 @@ export function FlameIcon({ className = 'w-4 h-4' }: IconProps) {
 /** Bag icon — themed per theme (drawstring bag, data cube, gift box) */
 export function BagIcon({ className = 'w-4 h-4' }: IconProps) {
   return <ThemedIcon iconKey="bag" className={className} />;
+}
+
+/** Play/battle icon — themed per theme (shield+sword, etc.) */
+export function PlayBattleIcon({ className = 'w-4 h-4' }: IconProps) {
+  return <ThemedIcon iconKey="play" className={className} />;
+}
+
+/** Burn/discard icon — themed per theme (flame, etc.) */
+export function BurnIcon({ className = 'w-4 h-4' }: IconProps) {
+  return <ThemedIcon iconKey="burn" className={className} />;
 }
 
 /** Speaker — audio on */

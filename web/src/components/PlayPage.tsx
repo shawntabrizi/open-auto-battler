@@ -3,7 +3,7 @@ import { useArenaStore } from '../store/arenaStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useTutorialStore } from '../store/tutorialStore';
 import { TopBar } from './TopBar';
-import { useThemeStore } from '../store/themeStore';
+import { PlayBattleIcon } from './Icons';
 
 const formatBalance = (raw: bigint, decimals = 12) =>
   (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
@@ -12,7 +12,6 @@ const formatBalance = (raw: bigint, decimals = 12) =>
   });
 
 export function PlayPage() {
-  const theme = useThemeStore((s) => s.activeTheme);
   const { isConnected, blockNumber } = useArenaStore();
   const { activeTournament } = useTournamentStore();
   const openTutorial = useTutorialStore((s) => s.open);
@@ -33,7 +32,7 @@ export function PlayPage() {
               }`}
             >
               <div className="flex items-center justify-center gap-3 lg:gap-5">
-                <img src={theme.assets.playIcon} alt="" className="h-16 lg:h-24 w-auto" />
+                <PlayBattleIcon className="h-16 lg:h-24 w-auto theme-icon-accent" />
                 <div className="text-left">
                   <h2 className="font-button text-2xl lg:text-3xl font-bold text-white tracking-wide">
                     ONLINE ARENA

@@ -30,6 +30,25 @@ export function ipfsUrl(uri: string, gateway = DEFAULT_GATEWAY): string {
   return `${gateway}${uri}`;
 }
 
+/** Fetch JSON from IPFS, trying multiple gateways until one succeeds.
+ *  Some gateways (w3s.link, dweb.link) redirect to subdomain-style URLs
+ *  which break fetch() due to CORS. This helper falls back through the list. */
+export async function fetchIpfsJson(uri: string): Promise<unknown> {
+  const cid = extractCid(uri);
+  if (!cid) throw new Error(`Invalid IPFS URI: ${uri}`);
+
+  for (const gw of IPFS_GATEWAYS) {
+    try {
+      const res = await fetch(`${gw}${cid}`);
+      if (!res.ok) continue;
+      return await res.json();
+    } catch {
+      // Gateway failed (CORS, network, etc.) — try next
+    }
+  }
+  throw new Error(`All IPFS gateways failed for ${cid}`);
+}
+
 /** Upload a file to Pinata and return the IPFS CID */
 export async function uploadToPinata(file: File, apiKey: string): Promise<string> {
   const formData = new FormData();

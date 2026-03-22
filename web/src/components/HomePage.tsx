@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { TopBar } from './TopBar';
-import { useThemeStore } from '../store/themeStore';
+import { PlayBattleIcon } from './Icons';
 
 const MENU_BUTTONS = [
   {
@@ -34,7 +34,6 @@ const MENU_BUTTONS = [
 ];
 
 export function HomePage() {
-  const theme = useThemeStore((s) => s.activeTheme);
   return (
     <div className="app-shell min-h-screen min-h-svh flex flex-col text-white overflow-hidden relative">
       <TopBar />
@@ -63,7 +62,7 @@ export function HomePage() {
               style={{ animationFillMode: 'forwards' }}
             >
               <div className="flex items-center justify-center gap-3 lg:gap-5">
-                <img src={theme.assets.playIcon} alt="" className="h-16 lg:h-24 w-auto" />
+                <PlayBattleIcon className="h-16 lg:h-24 w-auto theme-icon-accent" />
                 <div className="text-left">
                   <h2 className="font-button text-2xl lg:text-3xl font-bold text-white tracking-wide">
                     PLAY

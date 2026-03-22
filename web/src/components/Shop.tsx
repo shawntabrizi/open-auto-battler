@@ -3,10 +3,9 @@ import { useCustomizationStore } from '../store/customizationStore';
 import React, { useRef } from 'react';
 import { DraggableCard, DroppableBurnZone } from './DndComponents';
 import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
-import { useThemeStore } from '../store/themeStore';
+import { BurnIcon } from './Icons';
 
 export function Shop() {
-  const theme = useThemeStore((s) => s.activeTheme);
   const { view, selection, setSelection, burnHandCard, burnBoardUnit, undo } = useGameStore();
   const handBg = useCustomizationStore((s) => s.selections.handBackground);
   const [isBurnHovered, setIsBurnHovered] = React.useState(false);
@@ -207,23 +206,14 @@ export function Shop() {
               canBurn ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
             }`}
           >
-            <img
-              src={theme.assets.burnIcon}
-              alt="Burn Card"
-              className={`burn-circle w-10 h-10 lg:w-20 lg:h-20 transition-all duration-200 ${
+            <BurnIcon
+              className={`burn-circle w-10 h-10 lg:w-20 lg:h-20 transition-all duration-200 text-card-attack ${
                 isBurnHovered
                   ? 'scale-115'
                   : shouldHighlightBurn
                     ? 'scale-105 opacity-100'
                     : 'opacity-80 hover:opacity-100 hover:scale-105'
               }`}
-              style={{
-                filter: isBurnHovered
-                  ? 'drop-shadow(0 0 12px rgb(var(--color-card-attack) / 0.45))'
-                  : shouldHighlightBurn
-                    ? 'drop-shadow(0 0 10px rgb(var(--color-card-attack) / 0.32))'
-                    : undefined,
-              }}
             />
             <div
               className={`burn-hint hidden lg:block text-[10px] mt-1 text-center px-2 ${

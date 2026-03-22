@@ -1,6 +1,3 @@
-import swordsWarm from '../../swords.svg';
-import burnWarm from '../../burn.svg';
-
 export type ThemeId = string;
 
 // ════════════════════════════════════════════════════════════════
@@ -186,12 +183,12 @@ type ThemeButtons = {
 // ICONS — colors for icon tinting + SVG path data for icon shapes.
 // ════════════════════════════════════════════════════════════════
 
-/** SVG icon definition — paths rendered inside a 24×24 viewBox. */
+/** SVG icon definition — paths rendered inside a 24×24 viewBox, with optional image URL override. */
 type ThemeIconSvg = {
-  /** One or more SVG `d` attributes — each becomes a <path> element */
+  /** One or more SVG `d` attributes — each becomes a <path> element (used as fallback when url is set) */
   paths: string[];
-  /** Custom viewBox (default "0 0 24 24") */
-  viewBox?: string;
+  /** Optional image URL (IPFS, HTTPS) for a richer icon. Paths are used as fallback while loading or on error. */
+  url?: string;
 };
 
 type ThemeIcons = {
@@ -231,6 +228,10 @@ type ThemeIcons = {
     defeat: ThemeIconSvg;
     /** Draw pool / bag — drawstring bag (warm), data cube (cyber), gift box (pastel) */
     bag: ThemeIconSvg;
+    /** Play/battle button — large icon on home and play pages */
+    play: ThemeIconSvg;
+    /** Burn zone — icon in the burn/discard area of the shop */
+    burn: ThemeIconSvg;
   };
 };
 
@@ -335,10 +336,6 @@ export type ParticleConfig = {
 // ════════════════════════════════════════════════════════════════
 
 type ThemeAssets = {
-  /** Image for the PLAY button on home/play pages */
-  playIcon: string;
-  /** Image for the burn zone in the shop */
-  burnIcon: string;
   /** Ambient particle configuration for the background effect */
   particles: ParticleConfig;
 };
@@ -508,6 +505,19 @@ const WARM_ICONS: ThemeIcons['svg'] = {
       'M12 13a2 2 0 100 4 2 2 0 000-4z',
     ],
   },
+  play: {
+    // Crossed swords with shield
+    paths: [
+      'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.4 9.36-7 10.5-3.6-1.14-7-5.67-7-10.5V6.3l7-3.12z',
+      'M9.5 8L7 10.5 10.5 14 7 17.5 8.5 19l5-5-2-2 2-2L15.5 8 14 6.5z',
+    ],
+  },
+  burn: {
+    // Flame
+    paths: [
+      'M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z',
+    ],
+  },
 };
 
 // ════════════════════════════════════════════════════════════════
@@ -644,8 +654,6 @@ export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
     tier3Text: '#e8c44a',
   },
   assets: {
-    playIcon: swordsWarm,
-    burnIcon: burnWarm,
     particles: { shape: 'ember', size: 1, count: 40 },
   },
   login: {},
@@ -719,76 +727,9 @@ export function resolveTheme(theme: ThemeDefinition): ResolvedThemeDefinition {
   };
 }
 
-// ════════════════════════════════════════════════════════════════
-// LEGACY MIGRATION — convert old theme format to new structure.
-// Old format had: palette, shape, effects, fonts, backgrounds, text, mana, battleEffects
-// New format flattens those into: base, battleShop, battleOverlay
-// ════════════════════════════════════════════════════════════════
-
-/** Shape of the pre-restructure theme format */
-interface LegacyThemeDefinition {
-  id: ThemeId;
-  label: string;
-  palette: Record<string, string>;
-  shape: Record<string, string>;
-  effects: Record<string, string>;
-  backgrounds: { appBackground: string; titleGradient: string; overlayOpacity: number };
-  icons: ThemeIcons;
-  buttons: ThemeButtons;
-  mana: { fill: string; glow: string };
-  fonts: Record<string, string>;
-  text: { heroSubtitle: string; secondary: string };
-  achievements: ThemeAchievements;
-  assets: ThemeAssets;
-  battleEffects: { ability: string; positive: string; negative: string };
-}
-
-/** Detect and convert legacy (pre-restructure) theme format to the new structure. */
-export function migrateLegacyTheme(input: Record<string, unknown>): ThemeDefinition {
-  // Already new format — has `base` and no `palette`
-  if ('base' in input && !('palette' in input)) {
-    return input as unknown as ThemeDefinition;
-  }
-
-  const legacy = input as unknown as LegacyThemeDefinition;
-  return {
-    id: legacy.id,
-    label: legacy.label,
-    base: {
-      ...legacy.palette,
-      ...legacy.shape,
-      ...legacy.effects,
-      ...legacy.fonts,
-      ...legacy.backgrounds,
-      ...legacy.text,
-    } as ThemeBase,
-    buttons: legacy.buttons,
-    icons: legacy.icons,
-    battleShop: {
-      manaFill: legacy.mana.fill,
-      manaGlow: legacy.mana.glow,
-    },
-    battleOverlay: {
-      abilityColor: legacy.battleEffects.ability,
-      positiveColor: legacy.battleEffects.positive,
-      negativeColor: legacy.battleEffects.negative,
-    },
-    achievements: legacy.achievements,
-    assets: legacy.assets,
-  };
-}
-
 // ── Safety helpers for user-provided themes ──
 
 const VALID_PARTICLE_SHAPES: ParticleShape[] = ['ember', 'bokeh', 'heart'];
-
-/** Sanitize a URL to prevent javascript: / data: URI injection. */
-function sanitizeAssetUrl(url: string, fallback: string): string {
-  if (!url || typeof url !== 'string') return fallback;
-  const trimmed = url.trim().toLowerCase();
-  if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:')) return fallback;
-  return url;
-}
 
 /** Clamp a number within safe bounds */
 function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
@@ -819,8 +760,6 @@ export function sanitizeTheme(
     },
     assets: untrusted.assets
       ? {
-          playIcon: sanitizeAssetUrl(untrusted.assets.playIcon ?? '', defaults.assets.playIcon),
-          burnIcon: sanitizeAssetUrl(untrusted.assets.burnIcon ?? '', defaults.assets.burnIcon),
           particles: untrusted.assets.particles
             ? {
                 shape: VALID_PARTICLE_SHAPES.includes(untrusted.assets.particles.shape)

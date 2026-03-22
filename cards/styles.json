@@ -14,8 +14,8 @@
     "id": 1,
     "name": "Themes",
     "items": [
-      { "id": 0, "type": "theme", "name": "Cyberpunk", "cid": "bafkreibius3tcnkxteqmu22rc7xpknlbvis2oj6vuh62xq3wzwftkjqlau" },
-      { "id": 1, "type": "theme", "name": "Pastel", "cid": "bafkreidwxrabksf6aixd3quaac7i44ybcx5vrn3grexnjt23ypfmwgslpa" }
+      { "id": 0, "type": "theme", "name": "Cyberpunk", "cid": "bafkreihqnb3ouk36t6x4eiv6bsjyzqwjhl4wfjcmr763v4o2mhdcmfp7vu" },
+      { "id": 1, "type": "theme", "name": "Pastel", "cid": "bafkreiaho64e3fazspquhr5glnhs4yi43bbuwptmhraij7tpdz2sj3kshm" }
     ]
   }
 ]

@@ -1106,8 +1106,8 @@ const GENESIS_STYLE_ITEMS: [number, string, string, string][] = [
   [0, 'card_style', 'Cosmic Vines', 'bafkreieiwi6hgi7bgg4vw5pdpr6fqaxijktk42gd7cq443slztqvkazwmy'],
   [0, 'board_bg', 'Cosmic Tree', 'bafybeicdlpsvd2hk3bv5a3uakmcnlehp7nmhkgksvvusr66lbbla35ennu'],
   [0, 'card_art', 'Cosmic Cards', 'bafybeialdf7cqyadsw2i57s6f5vdjyggotdtmcjzu7jr2oyp2ejuvkmxfy'],
-  [1, 'theme', 'Cyberpunk', 'bafkreibius3tcnkxteqmu22rc7xpknlbvis2oj6vuh62xq3wzwftkjqlau'],
-  [1, 'theme', 'Pastel', 'bafkreidwxrabksf6aixd3quaac7i44ybcx5vrn3grexnjt23ypfmwgslpa'],
+  [1, 'theme', 'Cyberpunk', 'bafkreihqnb3ouk36t6x4eiv6bsjyzqwjhl4wfjcmr763v4o2mhdcmfp7vu'],
+  [1, 'theme', 'Pastel', 'bafkreiaho64e3fazspquhr5glnhs4yi43bbuwptmhraij7tpdz2sj3kshm'],
 ];
 
 /** Deterministic item ID for a given target address + style item. */
