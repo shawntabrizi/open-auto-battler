@@ -293,12 +293,11 @@ type ThemeAchievements = {
 // PARTICLES — ambient floating particles on the background canvas.
 // ════════════════════════════════════════════════════════════════
 
-/** Built-in particle shapes. Drawing code is in ParticleBackground.tsx. */
-export type ParticleShape = 'ember' | 'bokeh' | 'heart';
-
 export type ParticleConfig = {
-  /** Which built-in shape to render: 'ember' (jagged ash), 'bokeh' (soft circles), 'heart' */
-  shape: ParticleShape;
+  /** Particle shape — SVG paths drawn via Path2D, optional url drawn via drawImage */
+  icon: ThemeIcon;
+  /** Particle color (hex). Defaults to the theme's accent color when omitted. */
+  color?: string;
   /** Size multiplier (1 = default). Larger = bigger particles. Range: 0.1–10. */
   size: number;
   /** Number of particles on screen. Range: 0–200. */
@@ -533,8 +532,6 @@ export function resolveTheme(theme: ThemeDefinition): ResolvedThemeDefinition {
 
 // ── Safety helpers for user-provided themes ──
 
-const VALID_PARTICLE_SHAPES: ParticleShape[] = ['ember', 'bokeh', 'heart'];
-
 /** Clamp a number within safe bounds */
 function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
@@ -569,9 +566,8 @@ export function sanitizeTheme(
       ? {
           particles: untrusted.assets.particles
             ? {
-                shape: VALID_PARTICLE_SHAPES.includes(untrusted.assets.particles.shape)
-                  ? untrusted.assets.particles.shape
-                  : defaults.assets.particles.shape,
+                icon: untrusted.assets.particles.icon ?? defaults.assets.particles.icon,
+                color: untrusted.assets.particles.color,
                 size: clampNumber(
                   untrusted.assets.particles.size,
                   0.1,

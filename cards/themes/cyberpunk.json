@@ -179,7 +179,9 @@
   },
   "assets": {
     "particles": {
-      "shape": "bokeh",
+      "icon": {
+        "paths": ["M12 2a10 10 0 100 20 10 10 0 000-20z"]
+      },
       "size": 1.5,
       "count": 25
     }

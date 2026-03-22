@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useThemeStore } from '../store/themeStore';
-import { type ParticleShape, type ParticleConfig } from '../theme/themes';
+import { type ParticleConfig, type ThemeIcon } from '../theme/themes';
+import { ipfsUrl } from '../utils/ipfs';
 
 interface Particle {
   x: number;
@@ -13,50 +14,47 @@ interface Particle {
   rotationSpeed: number;
 }
 
-/** Draw a small jagged ember / ash flake */
-function drawEmber(ctx: CanvasRenderingContext2D, p: Particle) {
+function hexToRgb(hex: string): [number, number, number] {
+  const normalized = hex.replace('#', '');
+  const value =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : normalized;
+  const int = Number.parseInt(value, 16);
+  return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
+}
+
+/** Build Path2D objects from ThemeIcon paths (cached once per effect cycle) */
+function buildPath2Ds(icon: ThemeIcon): Path2D[] {
+  return icon.paths.map((d) => new Path2D(d));
+}
+
+/** Draw a custom icon (Path2D) scaled to particle size */
+function drawIcon(ctx: CanvasRenderingContext2D, p: Particle, paths: Path2D[]) {
   ctx.save();
   ctx.translate(p.x, p.y);
   ctx.rotate(p.rotation);
-  // Irregular polygon — looks like a floating ash flake
-  const s = p.radius;
-  ctx.beginPath();
-  ctx.moveTo(-s * 0.8, -s * 0.3);
-  ctx.lineTo(-s * 0.2, -s);
-  ctx.lineTo(s * 0.6, -s * 0.5);
-  ctx.lineTo(s, s * 0.2);
-  ctx.lineTo(s * 0.3, s * 0.8);
-  ctx.lineTo(-s * 0.5, s * 0.6);
-  ctx.closePath();
-  ctx.fill();
+  // SVG paths are in a 24×24 viewBox — scale to particle size
+  const scale = (p.radius * 2) / 24;
+  ctx.scale(scale, scale);
+  ctx.translate(-12, -12); // center the 24×24 icon
+  for (const path of paths) {
+    ctx.fill(path);
+  }
   ctx.restore();
 }
 
-/** Draw a soft bokeh circle with radial gradient */
-function drawBokeh(ctx: CanvasRenderingContext2D, p: Particle, r: number, g: number, b: number) {
-  const size = p.radius * 3;
-  const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, size);
-  gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${p.alpha * 0.8})`);
-  gradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, ${p.alpha * 0.3})`);
-  gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
-  ctx.fillStyle = gradient;
-  ctx.fill();
-}
-
-/** Draw a small heart shape */
-function drawHeart(ctx: CanvasRenderingContext2D, p: Particle) {
+/** Draw an image scaled to particle size */
+function drawImage(ctx: CanvasRenderingContext2D, p: Particle, img: HTMLImageElement) {
+  const size = p.radius * 2;
   ctx.save();
+  ctx.globalAlpha = p.alpha;
   ctx.translate(p.x, p.y);
   ctx.rotate(p.rotation);
-  const s = p.radius * 1.5;
-  ctx.beginPath();
-  ctx.moveTo(0, s * 0.4);
-  ctx.bezierCurveTo(-s, -s * 0.4, -s * 0.5, -s * 1.2, 0, -s * 0.5);
-  ctx.bezierCurveTo(s * 0.5, -s * 1.2, s, -s * 0.4, 0, s * 0.4);
-  ctx.closePath();
-  ctx.fill();
+  ctx.drawImage(img, -size / 2, -size / 2, size, size);
   ctx.restore();
 }
 
@@ -72,10 +70,35 @@ export function ParticleBackground() {
 
     const theme = activeTheme;
     const pc: ParticleConfig = theme.assets.particles;
-    const shape: ParticleShape = pc.shape;
     const sizeMul = pc.size;
-    const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '212 168 67';
-    const [ar, ag, ab] = accentRgb.split(' ').map(Number);
+    const icon = pc.icon;
+
+    // Resolve particle color: custom color > accent
+    let ar: number, ag: number, ab: number;
+    if (pc.color) {
+      [ar, ag, ab] = hexToRgb(pc.color);
+    } else {
+      const accentRgb =
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--color-accent')
+          .trim() || '212 168 67';
+      [ar, ag, ab] = accentRgb.split(' ').map(Number);
+    }
+
+    // Pre-build Path2D objects
+    const paths = buildPath2Ds(icon);
+
+    // Pre-load image if url is set
+    let img: HTMLImageElement | null = null;
+    let imageReady = false;
+    if (icon.url) {
+      img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        imageReady = true;
+      };
+      img.src = ipfsUrl(icon.url);
+    }
 
     let animId: number;
     const particles: Particle[] = [];
@@ -93,12 +116,9 @@ export function ParticleBackground() {
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         vx: (Math.random() - 0.5) * 0.3,
-        vy:
-          shape === 'ember'
-            ? -(Math.random() * 0.2 + 0.05) // embers drift up
-            : (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
         radius: (Math.random() * 2 + 0.5) * sizeMul,
-        alpha: shape === 'bokeh' ? Math.random() * 0.15 + 0.05 : Math.random() * 0.4 + 0.1,
+        alpha: Math.random() * 0.4 + 0.1,
         rotation: Math.random() * Math.PI * 2,
         rotationSpeed: (Math.random() - 0.5) * 0.01,
       });
@@ -117,19 +137,13 @@ export function ParticleBackground() {
         if (p.y < 0) p.y = canvas.height;
         if (p.y > canvas.height) p.y = 0;
 
-        if (shape === 'bokeh') {
-          ctx.shadowBlur = 0;
-          drawBokeh(ctx, p, ar, ag, ab);
+        if (img && imageReady) {
+          drawImage(ctx, p, img);
         } else {
           ctx.fillStyle = `rgba(${ar}, ${ag}, ${ab}, ${p.alpha})`;
-          ctx.shadowBlur = shape === 'heart' ? 4 : 8;
+          ctx.shadowBlur = 4;
           ctx.shadowColor = `rgba(${ar}, ${ag}, ${ab}, 0.3)`;
-
-          if (shape === 'ember') {
-            drawEmber(ctx, p);
-          } else {
-            drawHeart(ctx, p);
-          }
+          drawIcon(ctx, p, paths);
         }
       }
 
