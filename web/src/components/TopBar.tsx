@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useMenuStore } from '../store/menuStore';
 import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
+
+
 
 const formatBalance = (raw: bigint, decimals = 12) =>
   (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
@@ -49,6 +51,7 @@ export function TopBar({
   title,
   hasCardPanel = false,
 }: TopBarProps) {
+  const location = useLocation();
   const openMenu = useMenuStore((s) => s.open);
   const selectedAccount = useArenaStore((s) => s.selectedAccount);
   const isConnected = useArenaStore((s) => s.isConnected);
@@ -57,6 +60,21 @@ export function TopBar({
   const showBalance = useGameStore((s) => s.showBalance);
   const getAccountBalance = useArenaStore((s) => s.getAccountBalance);
   const fundSelectedAccount = useArenaStore((s) => s.fundSelectedAccount);
+
+  // If the caller navigated here with returnTo state (e.g. from hamburger menu),
+  // use that as the back destination instead of the hardcoded backTo prop.
+  // Skip if an explicit backState prop was provided (caller is manually wiring state).
+  const returnTo =
+    !backState &&
+    location.state &&
+    typeof location.state === 'object' &&
+    'returnTo' in location.state &&
+    typeof location.state.returnTo === 'string'
+      ? (location.state.returnTo as string)
+      : null;
+
+  const effectiveBackTo = returnTo ?? backTo;
+  const effectiveBackLabel = returnTo ? 'Back' : backLabel;
   const [balance, setBalance] = useState<bigint | null>(null);
   const [showFundPopup, setShowFundPopup] = useState(false);
   const [isFunding, setIsFunding] = useState(false);
@@ -106,14 +124,14 @@ export function TopBar({
       }`}
     >
       {/* Left: Back button or signed-in info */}
-      {backTo ? (
+      {effectiveBackTo ? (
         <Link
-          to={backTo}
-          state={backState}
+          to={effectiveBackTo}
+          state={returnTo ? undefined : backState}
           className="theme-button theme-surface-button inline-flex items-center gap-1 px-2.5 py-1.5 lg:px-3 lg:py-2 rounded-lg border text-xs lg:text-sm shrink-0 z-10 transition-colors"
         >
           <span>&larr;</span>
-          <span>{backLabel}</span>
+          <span>{effectiveBackLabel}</span>
         </Link>
       ) : selectedAccount && isLoggedIn ? (
         <span className="inline-flex items-center gap-1.5 lg:gap-2 text-xs lg:text-sm text-base-300 z-10 min-w-0">

@@ -296,6 +296,7 @@ export function HamburgerMenu() {
                     <Link
                       key={to}
                       to={to}
+                      state={{ returnTo: location.pathname }}
                       data-menu-autofocus={to === MENU_ITEMS[0].to ? 'true' : undefined}
                       onClick={() => setOpen(false)}
                       className={menuItemClassName}

@@ -1,4 +1,3 @@
-import { useLocation } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { useThemeStore } from '../store/themeStore';
 import { TopBar } from './TopBar';
@@ -6,7 +5,6 @@ import { TopBar } from './TopBar';
 // ── Settings Hub ──
 
 export function SettingsPage() {
-  const location = useLocation();
   const activeTheme = useThemeStore((state) => state.activeTheme);
   const {
     showRawJson,
@@ -26,17 +24,10 @@ export function SettingsPage() {
     reducedAnimations,
     toggleReducedAnimations,
   } = useGameStore();
-  const returnTo =
-    location.state &&
-    typeof location.state === 'object' &&
-    'returnTo' in location.state &&
-    typeof location.state.returnTo === 'string'
-      ? location.state.returnTo
-      : null;
 
   return (
     <div className="app-shell fixed inset-0 text-white flex flex-col">
-      <TopBar backTo={returnTo ?? '/'} backLabel={returnTo ? 'Game' : 'Menu'} title="Settings" />
+      <TopBar backTo="/" backLabel="Menu" title="Settings" />
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-sm lg:max-w-md mx-auto p-3 lg:p-4 lg:mt-[4vh]">
           {/* Options */}
