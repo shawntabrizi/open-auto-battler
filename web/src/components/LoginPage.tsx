@@ -162,7 +162,7 @@ export function LoginPage() {
                       ? 'bg-accent animate-pulse'
                       : isConnected
                         ? 'bg-positive animate-pulse'
-                        : 'bg-defeat'
+                        : 'bg-negative'
                   }`}
                 />
                 <span className="text-base-400">
@@ -184,7 +184,7 @@ export function LoginPage() {
                 </button>
               </div>
               {connectionError && (
-                <div className="mt-2 text-[10px] lg:text-xs text-defeat">{connectionError}</div>
+                <div className="mt-2 text-[10px] lg:text-xs text-negative">{connectionError}</div>
               )}
             </div>
 
@@ -279,7 +279,7 @@ export function LoginPage() {
                           ? 'text-base-600'
                           : hasFunds
                             ? 'text-positive'
-                            : 'text-defeat'
+                            : 'text-negative'
                       }`}
                     >
                       {checkingBalance ? '...' : balance !== null ? formatBalance(balance) : '--'}

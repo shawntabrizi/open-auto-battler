@@ -185,7 +185,7 @@ export function AccountPage() {
                       <div className="theme-panel bg-base-950 border border-base-700 rounded-lg p-3 font-mono text-xs lg:text-sm text-accent break-all select-all">
                         {getLocalAccountMnemonic(selectedAccount.address) || 'Not found'}
                       </div>
-                      <p className="text-[10px] text-defeat/80 mt-2">
+                      <p className="text-[10px] text-negative/80 mt-2">
                         Do not share this with anyone. Anyone with this phrase can access your
                         account.
                       </p>

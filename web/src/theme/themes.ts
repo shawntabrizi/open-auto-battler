@@ -42,8 +42,10 @@ type ThemeBase = {
   special: string;
   /** Win state color — victory screen title, win counters, perfect run text */
   victory: string;
-  /** Loss state color — defeat screen title, error messages, danger buttons, disconnect indicators */
+  /** Loss state color — defeat screen title, loss pips, skull icon */
   defeat: string;
+  /** Negative/danger color — error messages, danger buttons, disconnect indicators, form validation */
+  negative: string;
 
   // ── Surface colors ──
   /** Deepest background — page background, root element background */
@@ -490,6 +492,7 @@ export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
     special: '#8b6fb0',
     victory: '#4a8c3a',
     defeat: '#a83a2a',
+    negative: '#a83a2a',
     surfaceDark: '#0e0c09',
     surfaceMid: '#141210',
     panelRadius: '1rem',
@@ -848,6 +851,7 @@ export function applyResolvedThemeToDocument(
     ['--color-special', theme.base.special],
     ['--color-victory', theme.base.victory],
     ['--color-defeat', theme.base.defeat],
+    ['--color-negative', theme.base.negative],
     ['--color-card-bg', theme.unitCard.cardBg],
     ['--color-board-bg', theme.battleShop.boardBg],
     ['--color-shop-bg', theme.battleShop.shopBg],

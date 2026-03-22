@@ -25,7 +25,7 @@ const BOARD_HINT_TONE_CLASS = {
   default: 'text-base-200/90',
   selected: 'text-base-100',
   warning: 'text-accent',
-  danger: 'text-defeat',
+  danger: 'text-negative',
 } as const;
 
 interface BoardHintParams {
@@ -169,7 +169,7 @@ export function Arena() {
   if (!view) return null;
 
   if (!view.board || !Array.isArray(view.board)) {
-    return <div className="text-defeat">Error: Board data not available</div>;
+    return <div className="text-negative">Error: Board data not available</div>;
   }
 
   const unitCount = view.board.filter(Boolean).length;

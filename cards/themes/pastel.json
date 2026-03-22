@@ -20,6 +20,7 @@
     "special": "#c084fc",
     "victory": "#6ee7b7",
     "defeat": "#fb7185",
+    "negative": "#fb7185",
     "surfaceDark": "#2b1321",
     "surfaceMid": "#4b2240",
     "panelRadius": "1.4rem",

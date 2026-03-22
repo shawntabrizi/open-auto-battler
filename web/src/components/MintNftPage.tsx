@@ -334,7 +334,7 @@ export const MintNftPage: React.FC = () => {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-xs font-bold text-base-500 uppercase mb-1">
-                      Name <span className="text-defeat">*</span>
+                      Name <span className="text-negative">*</span>
                     </label>
                     <input
                       type="text"
@@ -451,7 +451,7 @@ export const MintNftPage: React.FC = () => {
                             image: `ipfs://${cid}`,
                             description,
                           }).length > 256
-                            ? 'text-defeat'
+                            ? 'text-negative'
                             : 'text-base-600'
                         }`}
                       >

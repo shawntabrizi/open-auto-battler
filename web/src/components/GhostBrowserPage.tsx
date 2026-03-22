@@ -338,7 +338,7 @@ export function GhostBrowserPage() {
               This view reads the active ghost pool directly from the blockchain.
             </p>
             {connectionError && (
-              <p className="mt-3 rounded-xl theme-error-panel border px-3 py-2 text-xs text-defeat">
+              <p className="mt-3 rounded-xl theme-error-panel border px-3 py-2 text-xs text-negative">
                 {connectionError}
               </p>
             )}
@@ -503,7 +503,7 @@ export function GhostBrowserPage() {
 
           <div className="w-full max-w-none lg:max-w-6xl mx-auto p-2 lg:p-4 pb-6">
             {ghostError && (
-              <div className="rounded-2xl theme-error-panel border px-4 py-3 text-sm text-defeat">
+              <div className="rounded-2xl theme-error-panel border px-4 py-3 text-sm text-negative">
                 {ghostError}
               </div>
             )}

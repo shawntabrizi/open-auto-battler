@@ -145,7 +145,7 @@ function SandboxArena() {
             <UnitCard card={unit} showCost={false} showBurn={false} />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none z-20">
               <span
-                className="text-defeat text-3xl lg:text-5xl font-black"
+                className="text-negative text-3xl lg:text-5xl font-black"
                 style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}
               >
                 ×

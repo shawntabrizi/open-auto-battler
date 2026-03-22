@@ -26,6 +26,7 @@ export default {
         'special': 'rgb(var(--color-special) / <alpha-value>)',
         'victory': 'rgb(var(--color-victory) / <alpha-value>)',
         'defeat': 'rgb(var(--color-defeat) / <alpha-value>)',
+        'negative': 'rgb(var(--color-negative) / <alpha-value>)',
         // Base neutral scale
         'base-50': 'rgb(var(--color-base-50) / <alpha-value>)',
         'base-100': 'rgb(var(--color-base-100) / <alpha-value>)',

@@ -180,7 +180,7 @@ export function TournamentLobbyPage() {
             Network Settings
           </Link>
           {connectionError && (
-            <p className="mt-3 max-w-md rounded-xl theme-error-panel border px-3 py-2 text-center text-xs text-defeat">
+            <p className="mt-3 max-w-md rounded-xl theme-error-panel border px-3 py-2 text-center text-xs text-negative">
               {connectionError}
             </p>
           )}

@@ -334,17 +334,17 @@ export const CreateCardPage: React.FC = () => {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="col-span-2">
                       <label className="block text-xs font-bold text-base-500 uppercase mb-1">
-                        Name <span className="text-defeat">*</span>
+                        Name <span className="text-negative">*</span>
                       </label>
                       <input
                         type="text"
                         value={cardForm.name}
                         onChange={(e) => setCardForm({ ...cardForm, name: e.target.value })}
                         placeholder="Super Goblin"
-                        className={`theme-input w-full bg-base-800 border rounded-lg px-3 py-2 outline-none focus:border-accent/50 ${triedSubmitCard && !cardForm.name ? 'border-defeat' : 'border-white/10'}`}
+                        className={`theme-input w-full bg-base-800 border rounded-lg px-3 py-2 outline-none focus:border-accent/50 ${triedSubmitCard && !cardForm.name ? 'border-negative' : 'border-white/10'}`}
                       />
                       {triedSubmitCard && !cardForm.name && (
-                        <span className="text-[10px] text-defeat mt-1 block font-bold uppercase">
+                        <span className="text-[10px] text-negative mt-1 block font-bold uppercase">
                           Card name is required
                         </span>
                       )}
@@ -478,7 +478,7 @@ export const CreateCardPage: React.FC = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-1">
-                        <span className="text-defeat text-sm">⚔️</span>
+                        <span className="text-card-attack text-sm">⚔️</span>
                         <span className="font-bold">{cardForm.attack}</span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -489,7 +489,7 @@ export const CreateCardPage: React.FC = () => {
                     <div className="absolute -top-2 -left-2 w-7 h-7 bg-mana rounded-full flex items-center justify-center text-xs font-bold border-2 border-mana/70">
                       {cardForm.play_cost}
                     </div>
-                    <div className="absolute -top-2 -right-2 w-7 h-7 bg-defeat rounded-full flex items-center justify-center text-xs font-bold border-2 border-defeat">
+                    <div className="absolute -top-2 -right-2 w-7 h-7 bg-card-burn rounded-full flex items-center justify-center text-xs font-bold border-2 border-card-burn">
                       {cardForm.burn_value}
                     </div>
                   </div>
@@ -533,7 +533,7 @@ export const CreateCardPage: React.FC = () => {
                       </div>
                       <button
                         onClick={() => removeAbility(lane, index)}
-                        className="text-base-500 hover:text-defeat"
+                        className="text-base-500 hover:text-negative"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"

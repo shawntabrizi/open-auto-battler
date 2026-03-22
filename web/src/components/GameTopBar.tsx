@@ -101,7 +101,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
               className={`flex items-center gap-2 px-3 py-1 rounded-lg ${
                 opponentWaiting
                   ? displayTimer <= 5
-                    ? 'bg-defeat animate-pulse'
+                    ? 'bg-negative animate-pulse'
                     : 'bg-card-attack'
                   : 'bg-mana'
               }`}
@@ -134,9 +134,9 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
               isWaiting
                 ? 'bg-base-600 scale-95 opacity-80 cursor-not-allowed'
                 : battleConfirmation.isConfirming
-                  ? 'bg-defeat hover:bg-defeat/85 text-white border-defeat/50'
+                  ? 'bg-negative hover:bg-negative/85 text-white border-negative/50'
                   : opponentWaiting && displayTimer !== null && displayTimer <= 5
-                    ? 'animate-pulse bg-defeat hover:bg-defeat border-defeat/50'
+                    ? 'animate-pulse bg-negative hover:bg-negative border-negative/50'
                     : 'battle-btn border-accent/40'
             }`}
           >
@@ -164,7 +164,7 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
             customAction.disabled
               ? 'bg-base-600 border-base-600 scale-95 opacity-80 cursor-not-allowed'
               : customActionConfirmation.isConfirming
-                ? 'bg-defeat hover:bg-defeat/85 text-white border-defeat/50'
+                ? 'bg-negative hover:bg-negative/85 text-white border-negative/50'
                 : customAction.variant === 'chain'
                   ? 'btn-primary'
                   : 'battle-btn border-accent/40'
@@ -347,7 +347,7 @@ export function BattleAction({
               isWaiting
                 ? 'bg-base-800 border-base-700 opacity-50 cursor-not-allowed'
                 : battleConfirmation.isConfirming
-                  ? 'bg-defeat hover:bg-defeat/85 text-white border-defeat/50'
+                  ? 'bg-negative hover:bg-negative/85 text-white border-negative/50'
                   : 'battle-btn border-accent/40 active:scale-95'
             }`}
           >
@@ -392,7 +392,7 @@ export function BattleAction({
               customAction.disabled
                 ? 'bg-base-800 border-base-700 opacity-50 cursor-not-allowed text-base-500'
                 : customActionConfirmation.isConfirming
-                  ? 'bg-defeat hover:bg-defeat/85 text-white border-defeat/50'
+                  ? 'bg-negative hover:bg-negative/85 text-white border-negative/50'
                   : customAction.variant === 'chain'
                     ? 'btn-primary'
                     : 'btn-primary border-accent/40'
@@ -415,7 +415,7 @@ export function BattleAction({
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
                   opponentWaiting
                     ? displayTimer <= 5
-                      ? 'bg-defeat animate-pulse'
+                      ? 'bg-negative animate-pulse'
                       : 'bg-card-attack'
                     : 'bg-mana'
                 }`}
@@ -445,9 +445,9 @@ export function BattleAction({
                 isWaiting
                   ? 'bg-base-600 scale-95 opacity-80 cursor-not-allowed px-4 lg:px-12 py-1.5 lg:py-4'
                   : battleConfirmation.isConfirming
-                    ? 'bg-defeat hover:bg-defeat/85 text-white border border-defeat/50 px-5 lg:px-10 py-3 lg:py-4'
+                    ? 'bg-negative hover:bg-negative/85 text-white border border-negative/50 px-5 lg:px-10 py-3 lg:py-4'
                     : opponentWaiting && displayTimer !== null && displayTimer <= 5
-                      ? 'animate-pulse bg-defeat hover:bg-defeat px-2 lg:px-4 py-0.5 lg:py-1'
+                      ? 'animate-pulse bg-negative hover:bg-negative px-2 lg:px-4 py-0.5 lg:py-1'
                       : 'px-2 lg:px-4 py-0.5 lg:py-1'
               }`}
             >
@@ -474,7 +474,7 @@ export function BattleAction({
               customAction.disabled
                 ? 'bg-base-600 scale-95 opacity-80 cursor-not-allowed'
                 : customActionConfirmation.isConfirming
-                  ? 'bg-defeat hover:bg-defeat/85 text-white border border-defeat/50'
+                  ? 'bg-negative hover:bg-negative/85 text-white border border-negative/50'
                   : customAction.variant === 'chain'
                     ? 'btn-primary'
                     : 'btn-primary'

@@ -280,7 +280,7 @@ export function HamburgerMenu() {
                       onClick={() => setShowAbandonConfirm(true)}
                       className={`${dangerMenuItemClassName} w-full`}
                     >
-                      <AbandonIcon className="text-defeat w-5 h-5 transition-colors" />
+                      <AbandonIcon className="text-negative w-5 h-5 transition-colors" />
                       <span className="font-button text-sm lg:text-base tracking-wide">
                         Abandon
                       </span>
@@ -335,7 +335,7 @@ export function HamburgerMenu() {
                 {/* Logout at bottom */}
                 <div className="border-t border-base-700/60 p-2 shrink-0">
                   <button onClick={handleLogout} className={`${dangerMenuItemClassName} w-full`}>
-                    <LogoutIcon className="text-defeat w-5 h-5 transition-colors" />
+                    <LogoutIcon className="text-negative w-5 h-5 transition-colors" />
                     <span className="font-button text-sm lg:text-base tracking-wide">Log Out</span>
                   </button>
                 </div>

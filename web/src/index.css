@@ -52,6 +52,7 @@
   --color-special: 139 111 176;
   --color-victory: 74 140 58;
   --color-defeat: 168 58 42;
+  --color-negative: 168 58 42;
   --color-card-bg: 30 26 20;
   --color-board-bg: 22 19 16;
   --color-shop-bg: 26 23 18;
@@ -410,25 +411,25 @@ body {
 
 /* ── Danger / destructive action styles ── */
 .theme-danger-button {
-  border-color: rgb(var(--color-defeat) / 0.3);
-  background: rgb(var(--color-defeat) / 0.08);
-  color: rgb(var(--color-defeat));
+  border-color: rgb(var(--color-negative) / 0.3);
+  background: rgb(var(--color-negative) / 0.08);
+  color: rgb(var(--color-negative));
 }
 .theme-danger-button:hover {
-  border-color: rgb(var(--color-defeat) / 0.5);
-  background: rgb(var(--color-defeat) / 0.15);
+  border-color: rgb(var(--color-negative) / 0.5);
+  background: rgb(var(--color-negative) / 0.15);
 }
 .theme-danger-solid {
-  border-color: rgb(var(--color-defeat) / 0.6);
-  background: rgb(var(--color-defeat) / 0.3);
+  border-color: rgb(var(--color-negative) / 0.6);
+  background: rgb(var(--color-negative) / 0.3);
   color: white;
 }
 .theme-danger-solid:hover {
-  background: rgb(var(--color-defeat) / 0.45);
+  background: rgb(var(--color-negative) / 0.45);
 }
 .theme-error-panel {
-  border-color: rgb(var(--color-defeat) / 0.3);
-  background: rgb(var(--color-defeat) / 0.1);
+  border-color: rgb(var(--color-negative) / 0.3);
+  background: rgb(var(--color-negative) / 0.1);
 }
 
 /* ── Overlay backgrounds ── */

@@ -146,7 +146,7 @@ export function NetworkPage() {
               )}
             </div>
             {connectionError && (
-              <div className="mt-2 text-[10px] lg:text-xs text-defeat">{connectionError}</div>
+              <div className="mt-2 text-[10px] lg:text-xs text-negative">{connectionError}</div>
             )}
             {isConnected && (
               <div className="mt-1 text-[10px] lg:text-xs font-mono text-base-600 truncate">

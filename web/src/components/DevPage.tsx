@@ -37,7 +37,7 @@ const PAGES: Record<string, string> = {
   Marketplace: '/marketplace',
   Presentations: '/presentations',
   'Game Over (Victory)': '/dev/game-over?result=victory',
-  'Game Over (Defeat)': '/dev/game-over?result=defeat',
+  'Game Over (Defeat)': '/dev/game-over?result=negative',
 };
 
 const PRESETS = {
@@ -175,7 +175,7 @@ export function DevPage() {
             {viewports.length > 1 && (
               <button
                 onClick={() => removeViewport(i)}
-                className="text-base-500 hover:text-defeat text-xs px-1"
+                className="text-base-500 hover:text-negative text-xs px-1"
               >
                 x
               </button>

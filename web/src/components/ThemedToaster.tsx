@@ -32,7 +32,7 @@ export function ThemedToaster() {
         },
         error: {
           iconTheme: {
-            primary: theme.base.defeat,
+            primary: theme.base.negative,
             secondary: theme.base.base900,
           },
           style: {
