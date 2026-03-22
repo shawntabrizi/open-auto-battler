@@ -19,6 +19,7 @@ const TYPE_OPTIONS: { value: CustomizationType; label: string; specs: string }[]
     specs: '3:4, 256x352, PNG with alpha, max 500 KB',
   },
   { value: 'avatar', label: 'Player Avatar', specs: '1:1, 256x256, PNG/WebP, max 500 KB' },
+  { value: 'theme', label: 'Theme', specs: 'ThemeDefinition JSON on IPFS, ~6 KB' },
 ];
 
 const PINATA_KEY_STORAGE = 'oab_pinata_key';

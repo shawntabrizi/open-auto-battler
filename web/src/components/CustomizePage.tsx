@@ -10,6 +10,7 @@ const SECTIONS: { slug: string; type: CustomizationType; label: string; icon: st
   { slug: 'card-border', type: 'card_style', label: 'Card Border', icon: '🪟' },
   { slug: 'avatar', type: 'avatar', label: 'Avatar', icon: '👤' },
   { slug: 'card-art', type: 'card_art', label: 'Card Art', icon: '🎨' },
+  { slug: 'theme', type: 'theme', label: 'Theme', icon: '🎭' },
 ];
 
 const SLOT_MAP: Record<
@@ -21,6 +22,7 @@ const SLOT_MAP: Record<
   card_style: 'cardStyle',
   avatar: 'playerAvatar',
   card_art: 'cardArt',
+  theme: 'theme',
 };
 
 export const CustomizePage: React.FC = () => {

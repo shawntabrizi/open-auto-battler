@@ -1,13 +1,12 @@
 import { Toaster } from 'react-hot-toast';
 import { useThemeStore } from '../store/themeStore';
-import { getTheme } from '../theme/themes';
 
 /**
  * Themed toast notifications.
  * Reads base colors and fonts from the active theme so toasts match the UI.
  */
 export function ThemedToaster() {
-  const theme = getTheme(useThemeStore((s) => s.selectedThemeId));
+  const theme = useThemeStore((s) => s.activeTheme);
 
   return (
     <Toaster

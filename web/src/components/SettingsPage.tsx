@@ -1,15 +1,13 @@
 import { useLocation } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { useThemeStore } from '../store/themeStore';
-import { THEME_OPTIONS } from '../theme/themes';
 import { TopBar } from './TopBar';
 
 // ── Settings Hub ──
 
 export function SettingsPage() {
   const location = useLocation();
-  const selectedThemeId = useThemeStore((state) => state.selectedThemeId);
-  const setTheme = useThemeStore((state) => state.setTheme);
+  const activeTheme = useThemeStore((state) => state.activeTheme);
   const {
     showRawJson,
     toggleShowRawJson,
@@ -47,27 +45,12 @@ export function SettingsPage() {
             <div className="theme-panel w-full p-4 lg:p-5 rounded-xl border border-base-700 bg-base-900/30">
               <div className="font-bold text-base lg:text-lg text-white mb-3">Display</div>
               <div className="theme-panel p-3 rounded-lg border border-base-700 mb-2">
-                <div className="text-left mb-2">
+                <div className="text-left">
                   <div className="text-sm text-base-200">Theme</div>
                   <div className="text-[10px] lg:text-xs text-base-500 mt-0.5">
-                    Switch between the built-in warm, cyberpunk, and pastel themes.
+                    Active: <span className="text-base-300">{activeTheme.label}</span>. Equip theme
+                    NFTs in Customize.
                   </div>
-                </div>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {THEME_OPTIONS.map((theme) => (
-                    <button
-                      key={theme.id}
-                      onClick={() => setTheme(theme.id)}
-                      aria-pressed={selectedThemeId === theme.id}
-                      className={`theme-button px-2 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors border ${
-                        selectedThemeId === theme.id
-                          ? 'theme-selected-button'
-                          : 'bg-base-800 text-base-300 border-base-700 hover:bg-base-700'
-                      }`}
-                    >
-                      {theme.label}
-                    </button>
-                  ))}
                 </div>
               </div>
               <button

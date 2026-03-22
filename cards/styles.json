@@ -9,5 +9,13 @@
       { "id": 3, "type": "board_bg", "name": "Cosmic Tree", "cid": "bafybeicdlpsvd2hk3bv5a3uakmcnlehp7nmhkgksvvusr66lbbla35ennu" },
       { "id": 4, "type": "card_art", "name": "Cosmic Cards", "cid": "bafybeialdf7cqyadsw2i57s6f5vdjyggotdtmcjzu7jr2oyp2ejuvkmxfy" }
     ]
+  },
+  {
+    "id": 1,
+    "name": "Themes",
+    "items": [
+      { "id": 0, "type": "theme", "name": "Cyberpunk", "cid": "bafkreibius3tcnkxteqmu22rc7xpknlbvis2oj6vuh62xq3wzwftkjqlau" },
+      { "id": 1, "type": "theme", "name": "Pastel", "cid": "bafkreidwxrabksf6aixd3quaac7i44ybcx5vrn3grexnjt23ypfmwgslpa" }
+    ]
   }
 ]

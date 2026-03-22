@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { TopBar } from './TopBar';
 import { useThemeStore } from '../store/themeStore';
-import { getTheme } from '../theme/themes';
 
 const MENU_BUTTONS = [
   {
@@ -35,7 +34,7 @@ const MENU_BUTTONS = [
 ];
 
 export function HomePage() {
-  const theme = getTheme(useThemeStore((s) => s.selectedThemeId));
+  const theme = useThemeStore((s) => s.activeTheme);
   return (
     <div className="app-shell min-h-screen min-h-svh flex flex-col text-white overflow-hidden relative">
       <TopBar />

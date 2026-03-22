@@ -4,10 +4,9 @@ import React, { useRef } from 'react';
 import { DraggableCard, DroppableBurnZone } from './DndComponents';
 import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
 import { useThemeStore } from '../store/themeStore';
-import { getTheme } from '../theme/themes';
 
 export function Shop() {
-  const theme = getTheme(useThemeStore((s) => s.selectedThemeId));
+  const theme = useThemeStore((s) => s.activeTheme);
   const { view, selection, setSelection, burnHandCard, burnBoardUnit, undo } = useGameStore();
   const handBg = useCustomizationStore((s) => s.selections.handBackground);
   const [isBurnHovered, setIsBurnHovered] = React.useState(false);

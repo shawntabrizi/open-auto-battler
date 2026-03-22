@@ -1,5 +1,5 @@
 import { useThemeStore } from '../store/themeStore';
-import { getTheme, type ResolvedThemeDefinition } from '../theme/themes';
+import { type ResolvedThemeDefinition } from '../theme/themes';
 
 interface IconProps {
   className?: string;
@@ -13,7 +13,7 @@ function ThemedIcon({
   iconKey: keyof ResolvedThemeDefinition['icons']['svg'];
   className?: string;
 }) {
-  const theme = getTheme(useThemeStore((s) => s.selectedThemeId));
+  const theme = useThemeStore((s) => s.activeTheme);
   const icon = theme.icons.svg[iconKey];
   return (
     <svg viewBox={icon.viewBox ?? '0 0 24 24'} fill="currentColor" className={className}>

@@ -1,7 +1,20 @@
 import { create } from 'zustand';
 import { ipfsUrl } from '../utils/ipfs';
+import {
+  sanitizeTheme,
+  resolveTheme,
+  migrateLegacyTheme,
+  type ThemeDefinition,
+} from '../theme/themes';
+import { useThemeStore } from './themeStore';
 
-export type CustomizationType = 'board_bg' | 'hand_bg' | 'card_style' | 'avatar' | 'card_art';
+export type CustomizationType =
+  | 'board_bg'
+  | 'hand_bg'
+  | 'card_style'
+  | 'avatar'
+  | 'card_art'
+  | 'theme';
 
 export interface NftItem {
   collectionId: number;
@@ -19,6 +32,7 @@ export interface CustomizationSelections {
   cardStyle: NftItem | null;
   playerAvatar: NftItem | null;
   cardArt: NftItem | null;
+  theme: NftItem | null;
 }
 
 interface CustomizationStore {
@@ -36,6 +50,7 @@ const emptySelections: CustomizationSelections = {
   cardStyle: null,
   playerAvatar: null,
   cardArt: null,
+  theme: null,
 };
 
 const SLOT_MAP: Record<CustomizationType, keyof CustomizationSelections> = {
@@ -44,6 +59,7 @@ const SLOT_MAP: Record<CustomizationType, keyof CustomizationSelections> = {
   card_style: 'cardStyle',
   avatar: 'playerAvatar',
   card_art: 'cardArt',
+  theme: 'theme',
 };
 
 function nftKey(nft: NftItem | null): string | null {
@@ -67,7 +83,24 @@ function filterSelectionsByOwnership(
     cardStyle: ownedKeys.has(nftKey(selections.cardStyle)) ? selections.cardStyle : null,
     playerAvatar: ownedKeys.has(nftKey(selections.playerAvatar)) ? selections.playerAvatar : null,
     cardArt: ownedKeys.has(nftKey(selections.cardArt)) ? selections.cardArt : null,
+    theme: ownedKeys.has(nftKey(selections.theme)) ? selections.theme : null,
   };
+}
+
+async function fetchAndApplyTheme(nft: NftItem): Promise<void> {
+  try {
+    const url = ipfsUrl(nft.ipfsCid.startsWith('ipfs://') ? nft.ipfsCid : `ipfs://${nft.ipfsCid}`);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const json = await response.json();
+    const migrated = migrateLegacyTheme(json) as ThemeDefinition;
+    const sanitized = sanitizeTheme(migrated);
+    const resolved = resolveTheme(sanitized);
+    useThemeStore.getState().setNftTheme(resolved, nft);
+  } catch (err) {
+    console.error('Failed to load theme from IPFS:', err);
+    useThemeStore.getState().resetToWarm();
+  }
 }
 
 export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
@@ -105,6 +138,7 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
             'card_style',
             'avatar',
             'card_art',
+            'theme',
           ];
           if (!validTypes.includes(parsed.type)) continue;
 
@@ -145,6 +179,15 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
     const slotKey = SLOT_MAP[type];
     const selections = { ...get().selections, [slotKey]: nft };
     set({ selections });
+
+    // Theme NFTs: fetch JSON from IPFS and apply
+    if (type === 'theme') {
+      if (nft) {
+        void fetchAndApplyTheme(nft);
+      } else {
+        useThemeStore.getState().resetToWarm();
+      }
+    }
   },
 
   clearSelections: () => {

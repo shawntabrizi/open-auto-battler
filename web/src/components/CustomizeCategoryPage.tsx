@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { useArenaStore } from '../store/arenaStore';
 import {
@@ -9,6 +9,8 @@ import {
 import { CustomizationPreview } from './CustomizationPreview';
 import { TopBar } from './TopBar';
 import { IpfsImage } from './IpfsImage';
+import { ipfsUrl } from '../utils/ipfs';
+import { DEFAULT_WARM_THEME } from '../theme/themes';
 
 type TileShape = 'landscape' | 'wide' | 'card' | 'circle';
 
@@ -68,6 +70,15 @@ const CATEGORIES: Record<
     specs: 'IPFS directory with WebP images',
     shape: 'card',
     selectionKey: 'cardArt',
+  },
+  theme: {
+    type: 'theme',
+    label: 'Theme',
+    icon: '🎭',
+    description: 'Full UI theme with colors, fonts, and icons',
+    specs: 'ThemeDefinition JSON on IPFS',
+    shape: 'landscape',
+    selectionKey: 'theme',
   },
 };
 
@@ -144,8 +155,11 @@ export function CustomizeCategoryPage() {
               <NftTile
                 isSelected={selectedNft === null || selectedNft === undefined}
                 onClick={handleDeselect}
-                label="Default"
-                placeholder="--"
+                label={cat.type === 'theme' ? 'Warm' : 'Default'}
+                placeholder={cat.type === 'theme' ? undefined : '--'}
+                preview={
+                  cat.type === 'theme' ? <WarmThemeSwatch className="w-full h-full" /> : undefined
+                }
                 shape={cat.shape}
               />
               {filteredNfts.map((nft) => (
@@ -154,7 +168,12 @@ export function CustomizeCategoryPage() {
                   isSelected={selectedNft?.itemId === nft.itemId}
                   onClick={() => handleSelect(nft)}
                   label={nft.name}
-                  imageUrl={nft.imageUrl}
+                  imageUrl={nft.type === 'theme' ? undefined : nft.imageUrl}
+                  preview={
+                    nft.type === 'theme' ? (
+                      <ThemeSwatch cid={nft.ipfsCid} name={nft.name} className="w-full h-full" />
+                    ) : undefined
+                  }
                   subtitle={`#${nft.itemId}`}
                   shape={cat.shape}
                 />
@@ -174,8 +193,11 @@ export function CustomizeCategoryPage() {
               <NftTile
                 isSelected={selectedNft === null || selectedNft === undefined}
                 onClick={handleDeselect}
-                label="Default"
-                placeholder="--"
+                label={cat.type === 'theme' ? 'Warm' : 'Default'}
+                placeholder={cat.type === 'theme' ? undefined : '--'}
+                preview={
+                  cat.type === 'theme' ? <WarmThemeSwatch className="w-full h-full" /> : undefined
+                }
                 size="lg"
                 shape={cat.shape}
               />
@@ -207,6 +229,7 @@ function NftTile({
   label,
   imageUrl,
   placeholder,
+  preview,
   subtitle,
   size = 'sm',
   shape = 'card',
@@ -216,6 +239,7 @@ function NftTile({
   label: string;
   imageUrl?: string;
   placeholder?: string;
+  preview?: React.ReactNode;
   subtitle?: string;
   size?: 'sm' | 'lg';
   shape?: TileShape;
@@ -234,7 +258,9 @@ function NftTile({
       <div
         className={`${isLg ? s.lg : s.sm} bg-base-700/50 ${s.rounded} overflow-hidden ${isLg ? 'mb-2' : 'mb-0.5'} flex items-center justify-center`}
       >
-        {imageUrl ? (
+        {preview ? (
+          preview
+        ) : imageUrl ? (
           <IpfsImage
             src={imageUrl}
             alt={label}
@@ -255,5 +281,114 @@ function NftTile({
         </div>
       )}
     </button>
+  );
+}
+
+interface ThemePreviewData {
+  colors: string[];
+  font: string;
+  label: string;
+  accent: string;
+  bg: string;
+  titleGradient: string;
+}
+
+/** Fetches a theme JSON from IPFS and renders a mini theme preview. */
+function ThemeSwatch({ cid, name, className }: { cid: string; name: string; className?: string }) {
+  const [data, setData] = useState<ThemePreviewData | null>(null);
+
+  useEffect(() => {
+    const url = ipfsUrl(cid.startsWith('ipfs://') ? cid : `ipfs://${cid}`);
+    fetch(url)
+      .then((r) => r.json())
+      .then((json) => {
+        const b = json.base || {};
+        setData({
+          colors: [
+            b.accent || '#888',
+            b.mana || '#55a',
+            b.positive || '#5a5',
+            b.defeat || '#a55',
+            b.special || '#a5a',
+            b.cardBurn || '#aa5',
+          ],
+          font: b.decorative || 'serif',
+          label: json.label || name,
+          accent: b.accent || '#888',
+          bg: b.surfaceDark || '#111',
+          titleGradient:
+            b.titleGradient ||
+            `linear-gradient(to right, ${b.accent || '#888'}, ${b.accent || '#888'})`,
+        });
+      })
+      .catch(() => setData(null));
+  }, [cid, name]);
+
+  if (!data) {
+    return (
+      <div className={`${className} flex items-center justify-center`}>
+        <span className="text-base-400 animate-pulse text-sm">Loading...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`${className} flex flex-col items-center justify-center gap-1 p-2`}
+      style={{ backgroundColor: data.bg }}
+    >
+      <span
+        className="font-bold text-transparent bg-clip-text text-center leading-tight"
+        style={{
+          fontFamily: data.font,
+          backgroundImage: data.titleGradient,
+          fontSize: 'clamp(0.7rem, 2.5cqi, 1.2rem)',
+        }}
+      >
+        {data.label}
+      </span>
+      <div className="flex gap-1">
+        {data.colors.map((c, i) => (
+          <div
+            key={i}
+            className="rounded-full"
+            style={{ backgroundColor: c, width: 'clamp(6px, 1.5cqi, 12px)', aspectRatio: '1' }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Renders the warm (default) theme swatch from built-in data — no fetch needed. */
+function WarmThemeSwatch({ className }: { className?: string }) {
+  const b = DEFAULT_WARM_THEME.base;
+  const colors = [b.accent, b.mana, b.positive, b.defeat, b.special, b.cardBurn];
+
+  return (
+    <div
+      className={`${className} flex flex-col items-center justify-center gap-1 p-2`}
+      style={{ backgroundColor: b.surfaceDark }}
+    >
+      <span
+        className="font-bold text-transparent bg-clip-text text-center leading-tight"
+        style={{
+          fontFamily: b.decorative,
+          backgroundImage: b.titleGradient,
+          fontSize: 'clamp(0.7rem, 2.5cqi, 1.2rem)',
+        }}
+      >
+        Warm
+      </span>
+      <div className="flex gap-1">
+        {colors.map((c, i) => (
+          <div
+            key={i}
+            className="rounded-full"
+            style={{ backgroundColor: c, width: 'clamp(6px, 1.5cqi, 12px)', aspectRatio: '1' }}
+          />
+        ))}
+      </div>
+    </div>
   );
 }

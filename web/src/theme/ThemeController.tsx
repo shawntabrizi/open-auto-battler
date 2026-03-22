@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useThemeStore } from '../store/themeStore';
-import { applyThemeToDocument } from './themes';
+import { applyResolvedThemeToDocument } from './themes';
 
 export function ThemeController() {
-  const selectedThemeId = useThemeStore((state) => state.selectedThemeId);
+  const activeTheme = useThemeStore((state) => state.activeTheme);
 
   useEffect(() => {
-    applyThemeToDocument(selectedThemeId);
-  }, [selectedThemeId]);
+    applyResolvedThemeToDocument(activeTheme);
+  }, [activeTheme]);
 
   return null;
 }

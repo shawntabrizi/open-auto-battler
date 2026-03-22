@@ -4,7 +4,6 @@ import { useTournamentStore } from '../store/tournamentStore';
 import { useTutorialStore } from '../store/tutorialStore';
 import { TopBar } from './TopBar';
 import { useThemeStore } from '../store/themeStore';
-import { getTheme } from '../theme/themes';
 
 const formatBalance = (raw: bigint, decimals = 12) =>
   (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
@@ -13,7 +12,7 @@ const formatBalance = (raw: bigint, decimals = 12) =>
   });
 
 export function PlayPage() {
-  const theme = getTheme(useThemeStore((s) => s.selectedThemeId));
+  const theme = useThemeStore((s) => s.activeTheme);
   const { isConnected, blockNumber } = useArenaStore();
   const { activeTournament } = useTournamentStore();
   const openTutorial = useTutorialStore((s) => s.open);

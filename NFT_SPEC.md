@@ -23,8 +23,8 @@ JSON string stored via `set_metadata`:
 }
 ```
 
-- `type`: one of `board_bg`, `hand_bg`, `card_style`, `avatar`, `card_art`
-- `image`: IPFS CID URL pointing to the image
+- `type`: one of `board_bg`, `hand_bg`, `card_style`, `avatar`, `card_art`, `theme`
+- `image`: IPFS CID URL pointing to the asset (image for visual types, JSON for themes)
 - Must fit within 256 bytes (StringLimit)
 
 ## Customization Types
@@ -106,6 +106,23 @@ A complete set of card illustrations. The `image` field points to an IPFS direct
 ```
 
 Art is uploaded as a complete set (one directory per set) rather than per-card. Use `ipfs add -r` or Pinata directory upload to get a single directory CID.
+
+### Theme (`theme`)
+
+A complete UI theme definition. The `image` field points to an IPFS CID containing a `ThemeDefinition` JSON file. The frontend fetches this JSON, validates it via `sanitizeTheme()`, merges with warm defaults via `resolveTheme()`, and applies it as CSS custom properties.
+
+| Property | Value |
+|----------|-------|
+| IPFS Content | ThemeDefinition JSON |
+| Format | JSON (UTF-8) |
+| Max File Size | 20 KB |
+| Fallback | Warm theme (all unspecified fields inherit from warm) |
+
+**Theme JSON Structure:**
+
+The JSON follows the `ThemeDefinition` interface. Only `base` is required; all other sections (`buttons`, `icons`, `battleOverlay`, etc.) are optional and inherit from the warm default. The `assets.playIcon` and `assets.burnIcon` fields may be omitted to use the warm defaults; custom asset URLs must be HTTPS or IPFS gateway URLs.
+
+See `cards/themes/cyberpunk.json` and `cards/themes/pastel.json` for complete examples.
 
 ## Minting Flow
 

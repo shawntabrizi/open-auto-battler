@@ -40,14 +40,14 @@ import { TournamentLobbyPage } from './components/TournamentLobbyPage.tsx';
 import { TournamentGamePage } from './components/TournamentGamePage.tsx';
 import { ThemeController } from './theme/ThemeController.tsx';
 import { ParticleBackground } from './components/ParticleBackground.tsx';
-import { applyThemeToDocument } from './theme/themes.ts';
+import { applyResolvedThemeToDocument } from './theme/themes.ts';
 import { useThemeStore } from './store/themeStore.ts';
 
 // Lazy-loaded features (code-split, no impact on main bundle)
 import { PresentationsPage, PresentationViewer, EmbedPage } from './features/presentations';
 import { TutorialOverlay } from './components/tutorials/TutorialOverlay';
 
-applyThemeToDocument(useThemeStore.getState().selectedThemeId);
+applyResolvedThemeToDocument(useThemeStore.getState().activeTheme);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

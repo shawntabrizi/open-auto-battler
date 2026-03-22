@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useThemeStore } from '../store/themeStore';
-import { getTheme, type ParticleShape, type ParticleConfig } from '../theme/themes';
+import { type ParticleShape, type ParticleConfig } from '../theme/themes';
 
 interface Particle {
   x: number;
@@ -15,11 +15,7 @@ interface Particle {
 
 function parseHexColor(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
-  return [
-    parseInt(h.slice(0, 2), 16),
-    parseInt(h.slice(2, 4), 16),
-    parseInt(h.slice(4, 6), 16),
-  ];
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
 
 /** Draw a small jagged ember / ash flake */
@@ -71,7 +67,7 @@ function drawHeart(ctx: CanvasRenderingContext2D, p: Particle) {
 
 export function ParticleBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const themeId = useThemeStore((s) => s.selectedThemeId);
+  const activeTheme = useThemeStore((s) => s.activeTheme);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -79,14 +75,13 @@ export function ParticleBackground() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const theme = getTheme(themeId);
+    const theme = activeTheme;
     const pc: ParticleConfig = theme.assets.particles;
     const shape: ParticleShape = pc.shape;
     const sizeMul = pc.size;
     const accentHex =
-      getComputedStyle(document.documentElement)
-        .getPropertyValue('--theme-icon-accent')
-        .trim() || '#d4a843';
+      getComputedStyle(document.documentElement).getPropertyValue('--theme-icon-accent').trim() ||
+      '#d4a843';
     const [ar, ag, ab] = parseHexColor(accentHex);
 
     let animId: number;
@@ -110,10 +105,7 @@ export function ParticleBackground() {
             ? -(Math.random() * 0.2 + 0.05) // embers drift up
             : (Math.random() - 0.5) * 0.3,
         radius: (Math.random() * 2 + 0.5) * sizeMul,
-        alpha:
-          shape === 'bokeh'
-            ? Math.random() * 0.15 + 0.05
-            : Math.random() * 0.4 + 0.1,
+        alpha: shape === 'bokeh' ? Math.random() * 0.15 + 0.05 : Math.random() * 0.4 + 0.1,
         rotation: Math.random() * Math.PI * 2,
         rotationSpeed: (Math.random() - 0.5) * 0.01,
       });
@@ -158,13 +150,9 @@ export function ParticleBackground() {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', resize);
     };
-  }, [themeId]);
+  }, [activeTheme]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 z-0 pointer-events-none"
-      aria-hidden="true"
-    />
+    <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true" />
   );
 }

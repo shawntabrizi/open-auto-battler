@@ -1106,11 +1106,13 @@ const GENESIS_STYLE_ITEMS: [number, string, string, string][] = [
   [0, 'card_style', 'Cosmic Vines', 'bafkreieiwi6hgi7bgg4vw5pdpr6fqaxijktk42gd7cq443slztqvkazwmy'],
   [0, 'board_bg', 'Cosmic Tree', 'bafybeicdlpsvd2hk3bv5a3uakmcnlehp7nmhkgksvvusr66lbbla35ennu'],
   [0, 'card_art', 'Cosmic Cards', 'bafybeialdf7cqyadsw2i57s6f5vdjyggotdtmcjzu7jr2oyp2ejuvkmxfy'],
+  [1, 'theme', 'Cyberpunk', 'bafkreibius3tcnkxteqmu22rc7xpknlbvis2oj6vuh62xq3wzwftkjqlau'],
+  [1, 'theme', 'Pastel', 'bafkreidwxrabksf6aixd3quaac7i44ybcx5vrn3grexnjt23ypfmwgslpa'],
 ];
 
-/** Deterministic item ID for a given target address + style type. */
-function styleItemId(targetAddress: string, collectionId: number, type: string): number {
-  const idSeed = targetAddress + collectionId + type;
+/** Deterministic item ID for a given target address + style item. */
+function styleItemId(targetAddress: string, collectionId: number, type: string, name: string): number {
+  const idSeed = targetAddress + collectionId + type + name;
   let hash = 0;
   for (let i = 0; i < idSeed.length; i++) {
     hash = ((hash << 5) - hash + idSeed.charCodeAt(i)) | 0;
@@ -1133,10 +1135,33 @@ async function fundAndMintStyleNfts(
   });
   const sudoTx = api.tx.Sudo.sudo({ call: fundCall.decodedCall });
 
-  // 2. Batch mint + set_metadata for each style item (signed by Alice as collection admin)
+  // 2. Create any missing collections (Alice as admin)
+  const neededCollections = [...new Set(GENESIS_STYLE_ITEMS.map(([c]) => c))];
+  for (const collectionId of neededCollections) {
+    const existing = await api.query.Nfts.Collection.getValue(collectionId);
+    if (!existing) {
+      const createTx = api.tx.Nfts.create({
+        admin: { type: 'Id', value: alice.address },
+        config: {
+          settings: 0n,
+          max_supply: undefined,
+          mint_settings: {
+            mint_type: { type: 'Public' },
+            price: undefined,
+            start_block: undefined,
+            end_block: undefined,
+            default_item_settings: 0n,
+          },
+        },
+      });
+      await submitTx(createTx, alice.polkadotSigner, `Nfts.create(collection ${collectionId})`);
+    }
+  }
+
+  // 3. Batch mint + set_metadata for each style item (signed by Alice as collection admin)
   const mintCalls: any[] = [];
   for (const [collectionId, type, name, cid] of GENESIS_STYLE_ITEMS) {
-    const itemId = styleItemId(targetAddress, collectionId, type);
+    const itemId = styleItemId(targetAddress, collectionId, type, name);
     mintCalls.push(
       api.tx.Nfts.mint({
         collection: collectionId,

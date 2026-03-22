@@ -1,11 +1,7 @@
 import swordsWarm from '../../swords.svg';
-import swordsCyberpunk from '../../swords-cyberpunk.svg';
-import swordsPastel from '../../swords-pastel.svg';
 import burnWarm from '../../burn.svg';
-import burnCyberpunk from '../../burn-cyberpunk.svg';
-import burnPastel from '../../burn-pastel.svg';
 
-export type ThemeId = 'warm' | 'cyberpunk' | 'pastel';
+export type ThemeId = string;
 
 // ════════════════════════════════════════════════════════════════
 // BASE — the foundation of every theme.
@@ -514,103 +510,11 @@ const WARM_ICONS: ThemeIcons['svg'] = {
   },
 };
 
-/** Cyberpunk tech icons — crosshair, shield, circuit, glitch */
-const CYBERPUNK_ICONS: ThemeIcons['svg'] = {
-  attack: {
-    paths: [
-      'M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z',
-      'M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7z',
-    ],
-  },
-  health: {
-    paths: [
-      'M12 2L4 6.5v5c0 4.55 3.4 8.82 8 9.5 4.6-.68 8-4.95 8-9.5v-5L12 2zm0 17.92c-3.72-.72-6-4.22-6-7.92V7.78l6-3.39 6 3.39v4.22c0 3.7-2.28 7.2-6 7.92z',
-      'M11 10h2v5h-2zm0-3h2v2h-2z',
-    ],
-  },
-  lives: {
-    paths: [
-      'M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4zM15 18H9V6h6v12z',
-      'M10 8h4v4h-4z',
-    ],
-  },
-  mana: {
-    paths: [
-      'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14c-2.33 0-4.32-1.45-5.12-3.5h1.67c.7 1.19 1.97 2 3.45 2s2.75-.81 3.45-2h1.67c-.8 2.05-2.79 3.5-5.12 3.5z',
-    ],
-  },
-  ability: {
-    paths: ['M7 2v11h3v9l7-12h-4l4-8z'],
-  },
-  victory: {
-    paths: ['M2 19h20v3H2zm2-2l3-6 3 3 4-7 4 7 3-3v6H4z'],
-  },
-  defeat: {
-    paths: [
-      'M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V5h16v14z',
-      'M7 8l3 3-3 3 1.41 1.41L12 12l-3.59-3.59z',
-      'M13 15h4v2h-4z',
-    ],
-  },
-  bag: {
-    paths: [
-      'M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.36.2-.8.2-1.14 0l-7.9-4.44A.991.991 0 013 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.36-.2.8-.2 1.14 0l7.9 4.44c.32.17.53.5.53.88v9z',
-      'M12 12.5L3.5 7.5M12 12.5v9.5M12 12.5l8.5-5',
-    ],
-  },
-};
-
-/** Pastel fairy icons — wand, flower, butterfly */
-const PASTEL_ICONS: ThemeIcons['svg'] = {
-  attack: {
-    paths: [
-      'M15 1l-1.4 4.2L9.4 3.8 10.8 8 6.6 6.6 8 10.8l-4.2 1.4L8 13.6l-1.4 4.2L10.8 16l-1.4 4.2L13.6 16l4.2 1.4L16 13.2l4.2 1.4L18.8 10.8 23 9.4l-4.2-1.4L20.2 3.8 16 5.2z',
-    ],
-  },
-  health: {
-    paths: [
-      'M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9zM5.6 10.25c0 1.38 1.12 2.5 2.5 2.5.53 0 1.01-.16 1.42-.44l-.02.19c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5l-.02-.19c.4.28.89.44 1.42.44 1.38 0 2.5-1.12 2.5-2.5 0-1-.59-1.85-1.43-2.25.84-.4 1.43-1.25 1.43-2.25 0-1.38-1.12-2.5-2.5-2.5-.53 0-1.01.16-1.42.44l.02-.19C14.5 2.12 13.38 1 12 1S9.5 2.12 9.5 3.5l.02.19c-.4-.28-.89-.44-1.42-.44-1.38 0-2.5 1.12-2.5 2.5 0 1 .59 1.85 1.43 2.25-.84.4-1.43 1.25-1.43 2.25zM12 5.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5S9.5 9.38 9.5 8s1.12-2.5 2.5-2.5z',
-      'M3 13c0 4.97 4.03 9 9 9 0-4.97-4.03-9-9-9z',
-    ],
-  },
-  lives: {
-    paths: [
-      'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z',
-    ],
-  },
-  mana: {
-    paths: [
-      'M12 2c-5.33 8.03-8 12.76-8 16 0 4.42 3.58 8 8 8s8-3.58 8-8c0-3.24-2.67-7.97-8-16zm0 22c-3.31 0-6-2.69-6-6 0-1 .25-2.26 1-4h10c.75 1.74 1 3 1 4 0 3.31-2.69 6-6 6z',
-    ],
-  },
-  ability: {
-    paths: [
-      'M12 12c-1 0-2-.45-2-1s.9-1 2-1 2 .45 2 1-.9 1-2 1zm-5.44-.78C4.37 12.21 3 14 3 16c0 2.76 2.46 5 5.5 5 1.93 0 3.63-.94 4.5-2.35-.43-.2-.82-.47-1.16-.79C10.73 19.2 9.2 20 7.5 20 5.57 20 4 18.65 4 17c0-1.2.72-2.24 1.79-2.83L5.56 11.22zm10.88 0l-.23 2.95C18.28 14.76 19 15.8 19 17c0 1.65-1.57 3-3.5 3-1.7 0-3.23-.8-3.84-2.14-.34.32-.73.59-1.16.79.87 1.41 2.57 2.35 4.5 2.35 3.04 0 5.5-2.24 5.5-5 0-2-1.37-3.79-3.56-4.78z',
-      'M12 4C9 4 7 6 7 8c0 1.5.8 2.8 2 3.5V13c0 1 1.34 2 3 2s3-1 3-2v-1.5c1.2-.7 2-2 2-3.5 0-2-2-4-5-4z',
-    ],
-  },
-  victory: {
-    paths: ['M5 16h14v3H5z', 'M12 4l2 4 4-2-2 4 4 2H4l4-2-2-4 4 2z'],
-  },
-  defeat: {
-    paths: [
-      'M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3z',
-      'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09V21.35z',
-      'M11 7l2 4-2 3 2 4',
-    ],
-  },
-  bag: {
-    paths: [
-      'M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 00-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-1c0-.55.45-1 1-1s1 .45 1 1-.45 1-1 1-1-.45-1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z',
-    ],
-  },
-};
-
 // ════════════════════════════════════════════════════════════════
 // BUILT-IN THEMES
 // ════════════════════════════════════════════════════════════════
 
-const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
+export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
   id: 'warm',
   label: 'Warm',
   base: {
@@ -759,326 +663,15 @@ const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
   mobile: {},
 };
 
-const CYBERPUNK_THEME: ResolvedThemeDefinition = {
-  id: 'cyberpunk',
-  label: 'Cyberpunk',
-  base: {
-    base50: '#eafcff',
-    base100: '#c9f6ff',
-    base200: '#8fe8ff',
-    base300: '#4dd0f6',
-    base400: '#24b7db',
-    base500: '#1896b6',
-    base600: '#12718a',
-    base700: '#0f4d61',
-    base800: '#0b2436',
-    base900: '#081420',
-    base950: '#040812',
-    accent: '#00f6ff',
-    mana: '#38bdf8',
-    cardAttack: '#ff4d9d',
-    cardBurn: '#f8ff66',
-    accentWarm: '#f8ff66',
-    positive: '#00ffa3',
-    special: '#d946ef',
-    victory: '#00ffa3',
-    defeat: '#ff4d9d',
-    cardBg: '#10192b',
-    boardBg: '#0a1730',
-    shopBg: '#0d1d3d',
-    surfaceDark: '#07101f',
-    surfaceMid: '#10284d',
-    buttonRadius: '0.4rem',
-    panelRadius: '0.7rem',
-    cardRadius: '0.55rem',
-    inputRadius: '0.4rem',
-    pillRadius: '0.55rem',
-    shadowResting: '0 0 0 1px rgba(0, 246, 255, 0.12), 0 4px 20px rgba(0, 0, 0, 0.35)',
-    shadowHover:
-      '0 0 0 1px rgba(0, 246, 255, 0.28), 0 8px 28px rgba(0, 0, 0, 0.5), 0 0 22px rgba(217, 70, 239, 0.12)',
-    shadowLifted:
-      '0 0 0 1px rgba(0, 246, 255, 0.35), 0 12px 34px rgba(0, 0, 0, 0.55), 0 0 28px rgba(0, 246, 255, 0.18)',
-    focusRing: '0 0 0 2px rgba(0, 246, 255, 0.95), 0 0 18px rgba(0, 246, 255, 0.38)',
-    decorative: 'Orbitron, sans-serif',
-    title: 'Rajdhani, sans-serif',
-    heading: 'Rajdhani, sans-serif',
-    button: 'Oxanium, sans-serif',
-    body: '"Space Grotesk", sans-serif',
-    stat: 'Oxanium, sans-serif',
-    mono: '"Space Mono", "IBM Plex Mono", ui-monospace, monospace',
-    appBackground:
-      'radial-gradient(ellipse at 50% 10%, rgba(0, 246, 255, 0.18), transparent 55%), radial-gradient(ellipse at 15% 80%, rgba(217, 70, 239, 0.16), transparent 45%), radial-gradient(ellipse at 85% 65%, rgba(56, 189, 248, 0.12), transparent 50%)',
-    titleGradient: 'linear-gradient(to right, #67e8f9, #00f6ff, #f472b6)',
-    overlayOpacity: 0.2,
-    heroSubtitle: '#67e8f9',
-    secondary: '#8fe8ff',
-  },
-  buttons: {
-    surfaceBackground: 'rgba(8, 20, 32, 0.82)',
-    surfaceHoverBackground: 'rgba(11, 36, 54, 0.92)',
-    surfaceBorder: 'rgba(0, 246, 255, 0.24)',
-    surfaceHoverBorder: 'rgba(0, 246, 255, 0.6)',
-    surfaceText: 'rgb(201 246 255)',
-    surfaceHoverText: '#ffffff',
-    selectedBackground:
-      'linear-gradient(135deg, rgba(0, 246, 255, 0.92), rgba(217, 70, 239, 0.82))',
-    selectedHoverBackground:
-      'linear-gradient(135deg, rgba(103, 232, 249, 0.96), rgba(244, 114, 182, 0.88))',
-    selectedBorder: 'rgba(0, 246, 255, 0.82)',
-    selectedText: '#040812',
-    selectedShadow: '0 0 18px rgba(0, 246, 255, 0.26), 0 0 28px rgba(217, 70, 239, 0.12)',
-    toggleActiveBackground:
-      'linear-gradient(135deg, rgba(0, 246, 255, 0.92), rgba(217, 70, 239, 0.82))',
-    ctaBackground: 'linear-gradient(135deg, rgba(0, 246, 255, 0.2), rgba(217, 70, 239, 0.18))',
-    ctaHoverBackground:
-      'linear-gradient(135deg, rgba(0, 246, 255, 0.28), rgba(217, 70, 239, 0.24))',
-    ctaBorder: 'rgba(0, 246, 255, 0.55)',
-    ctaText: '#f8fbff',
-    ctaShadow: '0 0 28px rgba(0, 246, 255, 0.18)',
-    battleBackground:
-      'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 22%, rgba(0, 246, 255, 0.12) 45%, transparent 62%), linear-gradient(180deg, #113252 0%, #0b2038 24%, #111f46 48%, #41126d 76%, #8b1fa9 100%)',
-    battleHoverBackground:
-      'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 18%, rgba(0, 246, 255, 0.2) 45%, transparent 62%), linear-gradient(180deg, #153b62 0%, #0d2745 24%, #162b59 48%, #57198a 76%, #c026d3 100%)',
-    battleActiveBackground:
-      'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 20%, rgba(0, 246, 255, 0.1) 45%, transparent 60%), linear-gradient(180deg, #0a1b32 0%, #0c2140 40%, #3a1468 100%)',
-    battleBorder: '#00d8ff',
-    battleText: '#f8fbff',
-    battleGlow: '0 0 22px rgba(0, 246, 255, 0.24), 0 0 34px rgba(217, 70, 239, 0.14)',
-  },
-  icons: {
-    accent: '#00f6ff',
-    muted: '#8fe8ff',
-    mana: '#38bdf8',
-    attack: '#ff4d9d',
-    health: '#00ffa3',
-    warning: '#f8ff66',
-    victory: '#00ffa3',
-    defeat: '#ff4d9d',
-    svg: CYBERPUNK_ICONS,
-  },
-  unitCard: {
-    rarityRareGlow: 'rgba(0, 246, 255, 0.7)',
-    rarityLegendaryGlow: '#f8ff66',
-  },
-  battleShop: {
-    manaFill: 'linear-gradient(to top, #0ea5e9, #22d3ee)',
-    manaGlow: '0 0 8px rgba(34, 211, 238, 0.55)',
-  },
-  battleOverlay: {
-    abilityColor: '#f8ff66',
-    positiveColor: '#00ffa3',
-    negativeColor: '#ff4d9d',
-    resultVictory: '#00ffa3',
-    resultDefeat: '#ff4d9d',
-    resultDraw: '#00f6ff',
-    teamPlayerColor: 'rgba(0, 255, 163, 0.2)',
-    teamEnemyColor: 'rgba(255, 77, 157, 0.2)',
-  },
-  gameOver: {
-    victoryAtmosphere:
-      'radial-gradient(ellipse at 30% 20%, rgba(0, 246, 255, 0.1) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(0, 255, 163, 0.08) 0%, transparent 50%), radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.7) 100%)',
-    defeatAtmosphere:
-      'radial-gradient(ellipse at 50% 30%, rgba(255, 77, 157, 0.12) 0%, transparent 40%), radial-gradient(ellipse at center, transparent 20%, rgba(255, 77, 157, 0.15) 70%, rgba(0, 0, 0, 0.8) 100%)',
-    pipWin: '#00ffa3',
-    pipLoss: '#ff4d9d',
-  },
-  setSelection: {},
-  achievements: {
-    tier1: '#f97316',
-    tier1Text: '#fb923c',
-    tier2: '#94a3b8',
-    tier2Text: '#cbd5e1',
-    tier3: '#ffd700',
-    tier3Text: '#ffe44d',
-  },
-  assets: {
-    playIcon: swordsCyberpunk,
-    burnIcon: burnCyberpunk,
-    particles: { shape: 'bokeh', size: 1.5, count: 25 },
-  },
-  login: {},
-  mainMenu: {},
-  settings: {},
-  navigation: {},
-  cardDetailPanel: {},
-  tutorial: {},
-  toast: {
-    successBorder: 'rgba(0, 255, 163, 0.25)',
-    errorBorder: 'rgba(255, 77, 157, 0.25)',
-  },
-  transactions: {},
-  animations: {},
-  mobile: {},
-};
-
-const PASTEL_THEME: ResolvedThemeDefinition = {
-  id: 'pastel',
-  label: 'Pastel',
-  base: {
-    base50: '#fff7fb',
-    base100: '#ffe5f1',
-    base200: '#ffcadd',
-    base300: '#ffadc9',
-    base400: '#f88eb4',
-    base500: '#e6749a',
-    base600: '#c95d81',
-    base700: '#9f4766',
-    base800: '#6f3348',
-    base900: '#492331',
-    base950: '#2e151f',
-    accent: '#ff9ec4',
-    mana: '#a78bfa',
-    cardAttack: '#ff6b9f',
-    cardBurn: '#ffc6de',
-    accentWarm: '#ffb3c7',
-    positive: '#7dd3c7',
-    special: '#c084fc',
-    victory: '#6ee7b7',
-    defeat: '#fb7185',
-    cardBg: '#432233',
-    boardBg: '#3b1930',
-    shopBg: '#4b2240',
-    surfaceDark: '#2b1321',
-    surfaceMid: '#4b2240',
-    buttonRadius: '1rem',
-    panelRadius: '1.4rem',
-    cardRadius: '1rem',
-    inputRadius: '0.95rem',
-    pillRadius: '999px',
-    shadowResting: '0 6px 18px rgba(73, 35, 49, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.04)',
-    shadowHover: '0 10px 22px rgba(73, 35, 49, 0.34), 0 0 18px rgba(255, 158, 196, 0.12)',
-    shadowLifted: '0 16px 34px rgba(73, 35, 49, 0.38), 0 0 24px rgba(255, 158, 196, 0.15)',
-    focusRing: '0 0 0 2px rgba(255, 158, 196, 0.9), 0 0 14px rgba(255, 158, 196, 0.32)',
-    decorative: 'Pacifico, cursive',
-    title: '"Josefin Sans", sans-serif',
-    heading: '"Josefin Sans", sans-serif',
-    button: 'Jost, sans-serif',
-    body: 'Lora, Georgia, serif',
-    stat: 'Jost, sans-serif',
-    mono: '"JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace',
-    appBackground:
-      'radial-gradient(ellipse at 50% 12%, rgba(255, 196, 222, 0.22), transparent 58%), radial-gradient(ellipse at 20% 78%, rgba(192, 132, 252, 0.14), transparent 42%), radial-gradient(ellipse at 82% 72%, rgba(125, 211, 199, 0.12), transparent 44%)',
-    titleGradient: 'linear-gradient(to right, #f9a8d4, #fda4af, #c084fc)',
-    overlayOpacity: 0.15,
-    heroSubtitle: '#ffe5f1',
-    secondary: '#ffcadd',
-  },
-  buttons: {
-    surfaceBackground: 'rgba(73, 35, 49, 0.7)',
-    surfaceHoverBackground: 'rgba(111, 51, 72, 0.8)',
-    surfaceBorder: 'rgba(255, 202, 221, 0.28)',
-    surfaceHoverBorder: 'rgba(255, 202, 221, 0.56)',
-    surfaceText: 'rgb(255 229 241)',
-    surfaceHoverText: '#ffffff',
-    selectedBackground:
-      'linear-gradient(135deg, rgba(249, 168, 212, 0.96), rgba(192, 132, 252, 0.84))',
-    selectedHoverBackground:
-      'linear-gradient(135deg, rgba(251, 207, 232, 0.98), rgba(216, 180, 254, 0.88))',
-    selectedBorder: 'rgba(255, 182, 193, 0.72)',
-    selectedText: '#2e151f',
-    selectedShadow: '0 0 18px rgba(249, 168, 212, 0.18), 0 0 24px rgba(192, 132, 252, 0.12)',
-    toggleActiveBackground:
-      'linear-gradient(135deg, rgba(249, 168, 212, 0.96), rgba(192, 132, 252, 0.84))',
-    ctaBackground: 'linear-gradient(135deg, rgba(249, 168, 212, 0.24), rgba(192, 132, 252, 0.18))',
-    ctaHoverBackground:
-      'linear-gradient(135deg, rgba(249, 168, 212, 0.32), rgba(192, 132, 252, 0.24))',
-    ctaBorder: 'rgba(255, 182, 193, 0.54)',
-    ctaText: '#fff7fb',
-    ctaShadow: '0 0 24px rgba(249, 168, 212, 0.16)',
-    battleBackground:
-      'linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, transparent 34%, rgba(255, 255, 255, 0.08) 55%, transparent 80%), linear-gradient(180deg, #ffbfdc 0%, #fda4af 28%, #f38fb4 56%, #d08adf 100%)',
-    battleHoverBackground:
-      'linear-gradient(135deg, rgba(255, 255, 255, 0.24) 0%, transparent 32%, rgba(255, 255, 255, 0.12) 56%, transparent 82%), linear-gradient(180deg, #ffd1e6 0%, #fda4af 28%, #f58fbb 56%, #d8a0ff 100%)',
-    battleActiveBackground:
-      'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 36%, rgba(255, 255, 255, 0.06) 54%, transparent 78%), linear-gradient(180deg, #de7dac 0%, #d06c9d 40%, #b66bc4 100%)',
-    battleBorder: '#f9a8d4',
-    battleText: '#3a1022',
-    battleGlow: '0 0 20px rgba(249, 168, 212, 0.2), 0 0 28px rgba(192, 132, 252, 0.12)',
-  },
-  icons: {
-    accent: '#ff9ec4',
-    muted: '#ffcadd',
-    mana: '#a78bfa',
-    attack: '#c084fc',
-    health: '#f88eb4',
-    warning: '#ffb3c7',
-    victory: '#7dd3c7',
-    defeat: '#fb7185',
-    svg: PASTEL_ICONS,
-  },
-  unitCard: {
-    rarityRareGlow: 'rgba(167, 139, 250, 0.5)',
-    rarityLegendaryGlow: '#ffc6de',
-  },
-  battleShop: {
-    manaFill: 'linear-gradient(to top, #a78bfa, #f9a8d4)',
-    manaGlow: '0 0 8px rgba(249, 168, 212, 0.42)',
-  },
-  battleOverlay: {
-    abilityColor: '#fbbf24',
-    positiveColor: '#6ee7b7',
-    negativeColor: '#fb7185',
-    resultVictory: '#6ee7b7',
-    resultDefeat: '#fb7185',
-    resultDraw: '#ff9ec4',
-    teamPlayerColor: 'rgba(125, 211, 199, 0.2)',
-    teamEnemyColor: 'rgba(255, 107, 159, 0.2)',
-  },
-  gameOver: {
-    victoryAtmosphere:
-      'radial-gradient(ellipse at 30% 20%, rgba(255, 158, 196, 0.1) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(110, 231, 183, 0.08) 0%, transparent 50%), radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.7) 100%)',
-    defeatAtmosphere:
-      'radial-gradient(ellipse at 50% 30%, rgba(251, 113, 133, 0.12) 0%, transparent 40%), radial-gradient(ellipse at center, transparent 20%, rgba(251, 113, 133, 0.15) 70%, rgba(0, 0, 0, 0.8) 100%)',
-    pipWin: '#6ee7b7',
-    pipLoss: '#fb7185',
-  },
-  setSelection: {},
-  achievements: {
-    tier1: '#dba06d',
-    tier1Text: '#e8b990',
-    tier2: '#c9c0d3',
-    tier2Text: '#ddd6e8',
-    tier3: '#f0c27a',
-    tier3Text: '#f5d49a',
-  },
-  assets: {
-    playIcon: swordsPastel,
-    burnIcon: burnPastel,
-    particles: { shape: 'heart', size: 2.5, count: 30 },
-  },
-  login: {},
-  mainMenu: {},
-  settings: {},
-  navigation: {},
-  cardDetailPanel: {},
-  tutorial: {},
-  toast: {
-    successBorder: 'rgba(110, 231, 183, 0.25)',
-    errorBorder: 'rgba(251, 113, 133, 0.25)',
-  },
-  transactions: {},
-  animations: {},
-  mobile: {},
-};
-
 // ════════════════════════════════════════════════════════════════
 // THEME MAP & HELPERS
 // ════════════════════════════════════════════════════════════════
 
 export const DEFAULT_THEME_ID: ThemeId = 'warm';
 
-type ThemeMap = Record<ThemeId, ResolvedThemeDefinition>;
-
-export const THEMES: ThemeMap = {
+export const THEMES: Record<string, ResolvedThemeDefinition> = {
   warm: DEFAULT_WARM_THEME,
-  cyberpunk: CYBERPUNK_THEME,
-  pastel: PASTEL_THEME,
 };
-
-export const THEME_OPTIONS = (Object.values(THEMES) as ResolvedThemeDefinition[]).map((theme) => ({
-  id: theme.id,
-  label: theme.label,
-}));
 
 export function getTheme(themeId: ThemeId | null | undefined): ResolvedThemeDefinition {
   if (!themeId) return THEMES[DEFAULT_THEME_ID];
@@ -1282,8 +875,13 @@ export function applyThemeToDocument(
   themeId: ThemeId,
   root: HTMLElement = document.documentElement
 ) {
-  const theme = getTheme(themeId);
+  applyResolvedThemeToDocument(getTheme(themeId), root);
+}
 
+export function applyResolvedThemeToDocument(
+  theme: ResolvedThemeDefinition,
+  root: HTMLElement = document.documentElement
+) {
   // ── Palette colors (hex → RGB channels for Tailwind alpha support) ──
   const paletteEntries: [string, string][] = [
     ['--color-base-50', theme.base.base50],
