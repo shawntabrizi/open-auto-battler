@@ -14,8 +14,8 @@ export default function Goal() {
         <span className="text-accent font-bold">10 wins</span>
         <StarIcon className="w-5 h-5 lg:w-6 lg:h-6 inline-block text-accent" />
         <span>before you lose all</span>
-        <span className="text-defeat font-bold">3 lives</span>
-        <LivesIcon className="w-5 h-5 lg:w-6 lg:h-6 inline-block text-defeat" />
+        <span className="text-positive font-bold">3 lives</span>
+        <LivesIcon className="w-5 h-5 lg:w-6 lg:h-6 inline-block text-positive" />
         <span>!</span>
       </p>
 
