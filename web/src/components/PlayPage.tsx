@@ -96,10 +96,10 @@ export function PlayPage() {
             {/* Tutorial */}
             <button
               onClick={() => openTutorial('how-to-play')}
-              className="theme-panel theme-button block w-full p-3 lg:p-4 rounded-xl border border-base-700/30 bg-base-900/20 hover:border-base-600 hover:bg-base-800/30 active:scale-[0.99] transition-all text-center"
+              className="theme-panel theme-button block w-full p-3 lg:p-4 rounded-xl border border-special/30 bg-special/5 hover:border-special/50 hover:bg-special/10 active:scale-[0.99] transition-all text-center"
             >
-              <h3 className="font-button text-sm lg:text-base font-bold text-base-300">TUTORIAL</h3>
-              <p className="theme-secondary-text mt-0.5 text-[10px] lg:text-xs">
+              <h3 className="font-button text-sm lg:text-base font-bold text-special">TUTORIAL</h3>
+              <p className="text-special/60 mt-0.5 text-[10px] lg:text-xs">
                 Learn how to play
               </p>
             </button>
