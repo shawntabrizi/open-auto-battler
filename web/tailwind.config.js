@@ -22,7 +22,6 @@ export default {
         'shop-bg': 'rgb(var(--color-shop-bg) / <alpha-value>)',
         'surface-dark': 'rgb(var(--color-surface-dark) / <alpha-value>)',
         'surface-mid': 'rgb(var(--color-surface-mid) / <alpha-value>)',
-        'accent-warm': 'rgb(var(--color-accent-warm) / <alpha-value>)',
         'positive': 'rgb(var(--color-positive) / <alpha-value>)',
         'special': 'rgb(var(--color-special) / <alpha-value>)',
         'victory': 'rgb(var(--color-victory) / <alpha-value>)',

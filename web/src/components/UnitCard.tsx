@@ -29,7 +29,7 @@ export function getRarityTier(
 /** Border and glow styles per rarity tier. */
 export const RARITY_STYLES = {
   common: {
-    border: 'border-accent-warm/40',
+    border: 'border-card-burn/40',
     glow: '',
   },
   uncommon: {
@@ -252,7 +252,7 @@ export function UnitCard({
           style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
         >
           <div className={`flex items-center ${text.stat} font-stat`}>
-            <SwordIcon className={`${text.statIcon} theme-icon-attack mr-0.5`} />
+            <SwordIcon className={`${text.statIcon} text-card-attack mr-0.5`} />
             <span className="font-bold text-white">{card.attack}</span>
           </div>
           {(() => {
@@ -261,11 +261,11 @@ export function UnitCard({
               ...((card as any).battle_abilities ?? []),
             ];
             return abils.length > 0 ? (
-              <AbilityIcon className="theme-icon-accent w-3 h-3 lg:w-4 lg:h-4 drop-shadow" />
+              <AbilityIcon className="text-accent w-3 h-3 lg:w-4 lg:h-4 drop-shadow" />
             ) : null;
           })()}
           <div className={`flex items-center ${text.stat} font-stat`}>
-            <HeartIcon className={`${text.statIcon} theme-icon-health`} />
+            <HeartIcon className={`${text.statIcon} text-positive`} />
             <span className="font-bold text-white ml-0.5">{card.health}</span>
           </div>
         </div>

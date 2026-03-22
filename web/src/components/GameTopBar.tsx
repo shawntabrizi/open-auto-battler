@@ -223,7 +223,7 @@ export function GameTopBar({
             title={`View your draw pool (${GAME_SHORTCUTS.bag})`}
             aria-keyshortcuts={GAME_SHORTCUTS.bag}
           >
-            <BagIcon className="theme-icon-accent w-3.5 h-3.5 lg:w-5 lg:h-5" />
+            <BagIcon className="text-accent w-3.5 h-3.5 lg:w-5 lg:h-5" />
             <span className="font-bold text-xs lg:text-sm font-stat">{view.bag_count}</span>
           </button>
         )}
@@ -238,7 +238,7 @@ export function GameTopBar({
 
         {/* Wins */}
         <div className="theme-panel theme-pill bg-surface-dark/60 border border-base-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
-          <StarIcon className="theme-icon-accent w-3.5 h-3.5 lg:w-4 lg:h-4" />
+          <StarIcon className="text-accent w-3.5 h-3.5 lg:w-4 lg:h-4" />
           <span className="font-bold text-xs lg:text-sm font-stat">
             {view.wins}/{winsToVictory}
           </span>
@@ -246,7 +246,7 @@ export function GameTopBar({
 
         {/* Lives */}
         <div className="theme-panel theme-pill bg-surface-dark/60 border border-base-800/60 rounded-lg flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 h-7 lg:h-10">
-          <LivesIcon className="theme-icon-health w-3.5 h-3.5 lg:w-4 lg:h-4" />
+          <LivesIcon className="text-positive w-3.5 h-3.5 lg:w-4 lg:h-4" />
           <span className="font-bold text-xs lg:text-sm font-stat">
             {view.lives}/{startingLives}
           </span>

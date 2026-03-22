@@ -310,7 +310,7 @@ function ThemeSwatch({ cid, name, className }: { cid: string; name: string; clas
             b.positive || '#5a5',
             b.defeat || '#a55',
             b.special || '#a5a',
-            b.cardBurn || '#aa5',
+            (json.unitCard && json.unitCard.cardBurn) || '#aa5',
           ],
           font: b.decorative || 'serif',
           label: json.label || name,
@@ -365,7 +365,7 @@ function ThemeSwatch({ cid, name, className }: { cid: string; name: string; clas
 /** Renders the warm (default) theme swatch from built-in data — no fetch needed. */
 function WarmThemeSwatch({ className }: { className?: string }) {
   const b = DEFAULT_WARM_THEME.base;
-  const colors = [b.accent, b.mana, b.positive, b.defeat, b.special, b.cardBurn];
+  const colors = [b.accent, b.mana, b.positive, b.defeat, b.special, DEFAULT_WARM_THEME.unitCard.cardBurn];
 
   return (
     <div

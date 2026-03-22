@@ -48,7 +48,6 @@
   --color-mana: 91 143 170;
   --color-card-attack: 184 92 74;
   --color-card-burn: 212 168 67;
-  --color-accent-warm: 196 138 42;
   --color-positive: 90 154 110;
   --color-special: 139 111 176;
   --color-victory: 74 140 58;
@@ -96,16 +95,6 @@
       rgba(20, 18, 16, 0.98) 26%,
       rgba(14, 12, 9, 1) 100%
     );
-
-  /* ── Icon colors ── */
-  --theme-icon-accent: #d4a843;
-  --theme-icon-muted: #a08a6c;
-  --theme-icon-mana: #5b8faa;
-  --theme-icon-attack: #b85c4a;
-  --theme-icon-health: #5a9a6e;
-  --theme-icon-warning: #d4a843;
-  --theme-icon-victory: #4a8c3a;
-  --theme-icon-defeat: #a83a2a;
 
   /* ── Button: surface (neutral) ── */
   --theme-surface-button-bg: rgba(26, 22, 16, 0.8);
@@ -329,32 +318,6 @@ body {
 }
 .theme-secondary-text {
   color: var(--theme-secondary-text);
-}
-
-/* ── Icon color classes ── */
-.theme-icon-accent {
-  color: var(--theme-icon-accent);
-}
-.theme-icon-muted {
-  color: var(--theme-icon-muted);
-}
-.theme-icon-mana {
-  color: var(--theme-icon-mana);
-}
-.theme-icon-attack {
-  color: var(--theme-icon-attack);
-}
-.theme-icon-health {
-  color: var(--theme-icon-health);
-}
-.theme-icon-warning {
-  color: var(--theme-icon-warning);
-}
-.theme-icon-victory {
-  color: var(--theme-icon-victory);
-}
-.theme-icon-defeat {
-  color: var(--theme-icon-defeat);
 }
 
 /* ── Shape classes ── */

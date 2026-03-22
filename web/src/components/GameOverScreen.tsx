@@ -41,20 +41,20 @@ export function GameOverScreen() {
     {
       value: view.wins,
       label: 'Wins',
-      color: 'theme-icon-accent',
-      icon: <StarIcon className="theme-icon-accent w-4 h-4 lg:w-5 lg:h-5" />,
+      color: 'text-accent',
+      icon: <StarIcon className="text-accent w-4 h-4 lg:w-5 lg:h-5" />,
     },
     {
       value: view.round,
       label: 'Round',
       color: 'text-base-200',
-      icon: <HourglassIcon className="theme-icon-muted w-4 h-4 lg:w-5 lg:h-5" />,
+      icon: <HourglassIcon className="text-base-300 w-4 h-4 lg:w-5 lg:h-5" />,
     },
     {
       value: view.lives,
       label: 'Lives Left',
-      color: 'theme-icon-health',
-      icon: <LivesIcon className="theme-icon-health w-4 h-4 lg:w-5 lg:h-5" />,
+      color: 'text-positive',
+      icon: <LivesIcon className="text-positive w-4 h-4 lg:w-5 lg:h-5" />,
     },
   ];
 
@@ -107,15 +107,15 @@ export function GameOverScreen() {
               <span className="flex items-center justify-center gap-3 lg:gap-5">
                 {isVictory ? (
                   <>
-                    <TrophyIcon className="theme-icon-victory w-8 h-8 lg:w-12 lg:h-12" />
+                    <TrophyIcon className="text-victory w-8 h-8 lg:w-12 lg:h-12" />
                     Victory
-                    <TrophyIcon className="theme-icon-victory w-8 h-8 lg:w-12 lg:h-12" />
+                    <TrophyIcon className="text-victory w-8 h-8 lg:w-12 lg:h-12" />
                   </>
                 ) : (
                   <>
-                    <SkullIcon className="theme-icon-defeat w-8 h-8 lg:w-12 lg:h-12" />
+                    <SkullIcon className="text-defeat w-8 h-8 lg:w-12 lg:h-12" />
                     Defeat
-                    <SkullIcon className="theme-icon-defeat w-8 h-8 lg:w-12 lg:h-12" />
+                    <SkullIcon className="text-defeat w-8 h-8 lg:w-12 lg:h-12" />
                   </>
                 )}
               </span>

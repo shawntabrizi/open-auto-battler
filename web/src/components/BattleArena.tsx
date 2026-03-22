@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { UnitCard, EmptySlot } from './UnitCard';
-import { AbilityIcon } from './Icons';
+import { IconRenderer } from './Icons';
+import { useThemeStore } from '../store/themeStore';
 import type { BattleOutput, UnitView, CombatEvent } from '../types';
 import { formatAbilitySummary } from '../utils/abilityText';
 
@@ -22,7 +23,11 @@ const DamageNumber = ({
     >
       <span
         className="text-2xl lg:text-4xl font-stat font-bold"
-        style={{ color: 'var(--theme-battle-negative)', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px color-mix(in srgb, var(--theme-battle-negative) 50%, transparent)' }}
+        style={{
+          color: 'var(--theme-battle-negative)',
+          textShadow:
+            '0 2px 4px rgba(0,0,0,0.9), 0 0 8px color-mix(in srgb, var(--theme-battle-negative) 50%, transparent)',
+        }}
       >
         -{amount}
       </span>
@@ -63,7 +68,11 @@ const StatChangeNumber = ({
     >
       <span
         className="text-2xl lg:text-4xl font-stat font-bold"
-        style={{ color: 'var(--theme-battle-positive)', textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 8px color-mix(in srgb, var(--theme-battle-positive) 50%, transparent)' }}
+        style={{
+          color: 'var(--theme-battle-positive)',
+          textShadow:
+            '0 2px 4px rgba(0,0,0,0.9), 0 0 8px color-mix(in srgb, var(--theme-battle-positive) 50%, transparent)',
+        }}
       >
         {displayText}
       </span>
@@ -73,13 +82,17 @@ const StatChangeNumber = ({
 
 // Toast/bubble for ability triggers
 const AbilityToast = ({ name, onAnimationEnd }: { name: string; onAnimationEnd: () => void }) => {
+  const abilityIcon = useThemeStore((s) => s.activeTheme.battleOverlay.abilityIcon);
   return (
     <div
       className="ability-toast absolute -top-9 lg:-top-14 left-1/2 z-30"
       onAnimationEnd={onAnimationEnd}
     >
       <div className="ability-toast-inner px-2.5 lg:px-4 py-1 lg:py-1.5 whitespace-nowrap flex items-center gap-1 lg:gap-1.5">
-        <AbilityIcon className="ability-toast-icon w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
+        <IconRenderer
+          icon={abilityIcon}
+          className="ability-toast-icon w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0"
+        />
         <span className="text-[10px] lg:text-sm font-bold tracking-wide">{name}</span>
       </div>
     </div>
@@ -233,7 +246,12 @@ interface BattleArenaProps {
   paused?: boolean;
 }
 
-export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, paused }: BattleArenaProps) {
+export function BattleArena({
+  battleOutput,
+  onBattleEnd,
+  onEventProcessed,
+  paused,
+}: BattleArenaProps) {
   const cardNameMap = useGameStore((state) => state.cardNameMap);
   const reducedAnimations = useGameStore((state) => state.reducedAnimations);
   const defaultBattleSpeed = useGameStore((state) => state.defaultBattleSpeed);
@@ -255,7 +273,9 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
   const [shakeActive, setShakeActive] = useState(false);
   const [dyingUnitIds, setDyingUnitIds] = useState<Set<number>>(new Set());
   const [colorFlash, setColorFlash] = useState<string | null>(null);
-  const [targetHighlightIds, setTargetHighlightIds] = useState<Map<number, 'positive' | 'negative'>>(new Map());
+  const [targetHighlightIds, setTargetHighlightIds] = useState<
+    Map<number, 'positive' | 'negative'>
+  >(new Map());
   const [sourceGlowIds, setSourceGlowIds] = useState<Set<number>>(new Set());
 
   // Playback speed control
@@ -490,7 +510,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
           attack_change,
         } = event.payload;
 
-        const highlightType = (health_change >= 0 && attack_change >= 0) ? 'positive' : 'negative';
+        const highlightType = health_change >= 0 && attack_change >= 0 ? 'positive' : 'negative';
 
         // Clear and re-set so animation retrigers on consecutive effects
         setTargetHighlightIds((prev) => {
@@ -553,7 +573,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
           attack_change,
         } = event.payload;
 
-        const highlightType = (health_change >= 0 && attack_change >= 0) ? 'positive' : 'negative';
+        const highlightType = health_change >= 0 && attack_change >= 0 ? 'positive' : 'negative';
 
         // Clear and re-set so animation retrigers on consecutive effects
         setTargetHighlightIds((prev) => {
@@ -716,11 +736,12 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
     const targetHighlightType = targetHighlightIds.get(unit.instance_id);
     const isSourceGlowing = sourceGlowIds.has(unit.instance_id);
 
-    const targetHighlightClass = targetHighlightType === 'positive'
-      ? 'unit-target-highlight-positive'
-      : targetHighlightType === 'negative'
-        ? 'unit-target-highlight'
-        : '';
+    const targetHighlightClass =
+      targetHighlightType === 'positive'
+        ? 'unit-target-highlight-positive'
+        : targetHighlightType === 'negative'
+          ? 'unit-target-highlight'
+          : '';
 
     return (
       <div
@@ -866,7 +887,7 @@ export function BattleArena({ battleOutput, onBattleEnd, onEventProcessed, pause
               onClick={() => selectSpeed(option.value)}
               className={`px-1.5 lg:px-2.5 py-0.5 lg:py-1.5 text-[10px] lg:text-sm font-medium rounded-md transition-colors ${
                 playMode === 'auto' && playbackSpeed === option.value
-                  ? 'bg-accent-warm text-base-950 shadow-sm'
+                  ? 'bg-accent text-base-950 shadow-sm'
                   : 'text-base-300 hover:bg-base-700 hover:text-base-100'
               }`}
               title={`${option.value}x speed`}

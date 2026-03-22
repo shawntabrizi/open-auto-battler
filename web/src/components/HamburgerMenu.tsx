@@ -198,7 +198,7 @@ export function HamburgerMenu() {
                 aria-label="Close menu"
                 className="theme-button theme-surface-button rounded-lg border p-1.5 transition-colors"
               >
-                <CloseIcon className="theme-icon-muted w-5 h-5" />
+                <CloseIcon className="text-base-300 w-5 h-5" />
               </button>
             </div>
 
@@ -213,7 +213,7 @@ export function HamburgerMenu() {
                     onClick={() => setOpen(false)}
                     className={`${menuItemClassName} w-full`}
                   >
-                    <GearIcon className="theme-icon-accent w-5 h-5 transition-colors" />
+                    <GearIcon className="text-accent w-5 h-5 transition-colors" />
                     <span className="font-button text-sm lg:text-base tracking-wide">Settings</span>
                   </Link>
 
@@ -226,7 +226,7 @@ export function HamburgerMenu() {
                     aria-keyshortcuts={GAME_SHORTCUTS.tutorial}
                     className={`${menuItemClassName} w-full`}
                   >
-                    <TutorialIcon className="theme-icon-accent w-5 h-5 transition-colors" />
+                    <TutorialIcon className="text-accent w-5 h-5 transition-colors" />
                     <span className="font-button text-sm lg:text-base tracking-wide">Tutorial</span>
                   </button>
 
@@ -239,14 +239,14 @@ export function HamburgerMenu() {
                     aria-keyshortcuts={GAME_SHORTCUTS.help}
                     className={`${menuItemClassName} w-full`}
                   >
-                    <KeyboardIcon className="theme-icon-accent w-5 h-5 transition-colors" />
+                    <KeyboardIcon className="text-accent w-5 h-5 transition-colors" />
                     <span className="font-button text-sm lg:text-base tracking-wide">
                       Keyboard Shortcuts
                     </span>
                   </button>
 
                   <button onClick={handleReturnToMenu} className={`${menuItemClassName} w-full`}>
-                    <HomeIcon className="theme-icon-accent w-5 h-5 transition-colors" />
+                    <HomeIcon className="text-accent w-5 h-5 transition-colors" />
                     <span className="font-button text-sm lg:text-base tracking-wide">
                       Return to Menu
                     </span>
@@ -280,7 +280,7 @@ export function HamburgerMenu() {
                       onClick={() => setShowAbandonConfirm(true)}
                       className={`${dangerMenuItemClassName} w-full`}
                     >
-                      <AbandonIcon className="theme-icon-defeat w-5 h-5 transition-colors" />
+                      <AbandonIcon className="text-defeat w-5 h-5 transition-colors" />
                       <span className="font-button text-sm lg:text-base tracking-wide">
                         Abandon
                       </span>
@@ -301,7 +301,7 @@ export function HamburgerMenu() {
                       onClick={() => setOpen(false)}
                       className={menuItemClassName}
                     >
-                      <Icon className="theme-icon-accent w-5 h-5 transition-colors" />
+                      <Icon className="text-accent w-5 h-5 transition-colors" />
                       <span className="font-button text-sm lg:text-base tracking-wide">
                         {label}
                       </span>
@@ -335,7 +335,7 @@ export function HamburgerMenu() {
                 {/* Logout at bottom */}
                 <div className="border-t border-base-700/60 p-2 shrink-0">
                   <button onClick={handleLogout} className={`${dangerMenuItemClassName} w-full`}>
-                    <LogoutIcon className="theme-icon-defeat w-5 h-5 transition-colors" />
+                    <LogoutIcon className="text-defeat w-5 h-5 transition-colors" />
                     <span className="font-button text-sm lg:text-base tracking-wide">Log Out</span>
                   </button>
                 </div>

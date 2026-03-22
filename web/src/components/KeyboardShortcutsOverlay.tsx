@@ -48,7 +48,7 @@ export function KeyboardShortcutsOverlay() {
               aria-label="Close keyboard shortcuts"
               className="theme-button theme-surface-button rounded-lg border p-2 transition-colors"
             >
-              <CloseIcon className="theme-icon-muted w-5 h-5" />
+              <CloseIcon className="text-base-300 w-5 h-5" />
             </button>
           </div>
 

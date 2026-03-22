@@ -280,7 +280,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
           aria-label="Close (Esc)"
           className="theme-button theme-surface-button absolute top-3 right-3 z-10 rounded-lg border p-2 transition-colors lg:top-4 lg:right-4"
         >
-          <CloseIcon className="theme-icon-muted w-4 h-4 lg:w-5 lg:h-5" />
+          <CloseIcon className="text-base-300 w-4 h-4 lg:w-5 lg:h-5" />
         </button>
       )}
       <div className="relative z-10 flex items-center justify-center px-4 lg:px-8 py-1.5 lg:py-4">
@@ -374,7 +374,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
               })
             ) : (
               <div className="text-base-600 italic flex items-center gap-2 h-full justify-center">
-                <span className="theme-icon-warning inline-block h-1.5 w-1.5 rounded-full bg-current animate-ping"></span>
+                <span className="text-accent inline-block h-1.5 w-1.5 rounded-full bg-current animate-ping"></span>
                 Waiting for battle...
               </div>
             )}

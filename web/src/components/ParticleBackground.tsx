@@ -13,11 +13,6 @@ interface Particle {
   rotationSpeed: number;
 }
 
-function parseHexColor(hex: string): [number, number, number] {
-  const h = hex.replace('#', '');
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-}
-
 /** Draw a small jagged ember / ash flake */
 function drawEmber(ctx: CanvasRenderingContext2D, p: Particle) {
   ctx.save();
@@ -79,10 +74,8 @@ export function ParticleBackground() {
     const pc: ParticleConfig = theme.assets.particles;
     const shape: ParticleShape = pc.shape;
     const sizeMul = pc.size;
-    const accentHex =
-      getComputedStyle(document.documentElement).getPropertyValue('--theme-icon-accent').trim() ||
-      '#d4a843';
-    const [ar, ag, ab] = parseHexColor(accentHex);
+    const accentRgb = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '212 168 67';
+    const [ar, ag, ab] = accentRgb.split(' ').map(Number);
 
     let animId: number;
     const particles: Particle[] = [];

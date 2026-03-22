@@ -36,12 +36,6 @@ type ThemeBase = {
   accent: string;
   /** Mana color — mana cost badges, mana bar fill, info text */
   mana: string;
-  /** Attack/damage color — attack stat on cards, damage numbers */
-  cardAttack: string;
-  /** Burn value color — burn badges on cards, burn-related UI */
-  cardBurn: string;
-  /** Secondary warm accent — bronze achievements, warm highlights */
-  accentWarm: string;
   /** Positive accent — health stat on cards, connected indicators, success text */
   positive: string;
   /** Special/rare accent — tournament UI, accent for unique elements */
@@ -52,24 +46,14 @@ type ThemeBase = {
   defeat: string;
 
   // ── Surface colors ──
-  /** Card background — the base color behind card content */
-  cardBg: string;
-  /** Board background — the game board/arena surface */
-  boardBg: string;
-  /** Shop/hand background — the hand area below the board */
-  shopBg: string;
   /** Deepest background — page background, root element background */
   surfaceDark: string;
   /** Mid-tone surface — elevated panels, card slots, arena surface gradients */
   surfaceMid: string;
 
   // ── Shape — border radii that define the visual personality ──
-  /** Buttons, small interactive elements (e.g. "0.75rem") */
-  buttonRadius: string;
   /** Panels, modals, large containers (e.g. "1rem") */
   panelRadius: string;
-  /** Unit cards in hand and on board (e.g. "0.5rem") */
-  cardRadius: string;
   /** Text inputs, selects, form controls (e.g. "0.75rem") */
   inputRadius: string;
   /** Pill-shaped elements — tags, status badges (e.g. "999px" for full pill) */
@@ -106,22 +90,21 @@ type ThemeBase = {
   appBackground: string;
   /** CSS gradient for the main title text — used with bg-clip-text */
   titleGradient: string;
-  /** Opacity (0–1) for board and hand area overlays when custom backgrounds are active */
-  overlayOpacity: number;
-
   // ── Text colors ──
-  /** Hero subtitle color — the "Roguelike Deck-Building Auto-Battler" tagline */
-  heroSubtitle: string;
   /** Secondary description text — button descriptions, card set descriptions, minor labels */
   secondary: string;
 };
 
 // ════════════════════════════════════════════════════════════════
-// BUTTONS — styling for the 5 button types used throughout the UI.
+// BUTTONS — styling for the 4 button types used throughout the UI.
+// Battle button fields live in ThemeBattleShop.
 // Values are CSS strings (colors, gradients, box-shadows).
 // ════════════════════════════════════════════════════════════════
 
 type ThemeButtons = {
+  /** Buttons, small interactive elements (e.g. "0.75rem") */
+  buttonRadius: string;
+
   // ── Surface button: neutral, low-emphasis (menu items, back buttons, close, secondary actions) ──
   /** Background at rest */
   surfaceBackground: string;
@@ -163,98 +146,80 @@ type ThemeButtons = {
   ctaText: string;
   /** Ambient glow shadow on hover */
   ctaShadow: string;
-
-  // ── Battle button: the main "COMMIT" / "BATTLE" button during gameplay ──
-  /** Background at rest — typically an elaborate metallic gradient */
-  battleBackground: string;
-  /** Background on hover — brighter/shinier */
-  battleHoverBackground: string;
-  /** Background when pressed/active — darker, pressed-in feel */
-  battleActiveBackground: string;
-  /** Border color */
-  battleBorder: string;
-  /** Text color (usually dark on bright metallic background) */
-  battleText: string;
-  /** Ambient glow around the button */
-  battleGlow: string;
 };
 
 // ════════════════════════════════════════════════════════════════
-// ICONS — colors for icon tinting + SVG path data for icon shapes.
+// ICON — SVG icon definition for per-section icon customization.
 // ════════════════════════════════════════════════════════════════
 
 /** SVG icon definition — paths rendered inside a 24×24 viewBox, with optional image URL override. */
-type ThemeIconSvg = {
+export type ThemeIcon = {
   /** One or more SVG `d` attributes — each becomes a <path> element (used as fallback when url is set) */
   paths: string[];
   /** Optional image URL (IPFS, HTTPS) for a richer icon. Paths are used as fallback while loading or on error. */
   url?: string;
 };
 
-type ThemeIcons = {
-  // ── Icon colors (applied via CSS classes like "theme-icon-accent") ──
-  /** Primary icon tint — menu icons, star icons, ability sparkles */
-  accent: string;
-  /** Muted icon tint — close buttons, secondary icons */
-  muted: string;
-  /** Mana/info icon tint — mana bolt on cards */
-  mana: string;
-  /** Attack icon tint — sword icon on unit cards */
-  attack: string;
-  /** Health icon tint — heart icon on unit cards, lives icon */
-  health: string;
-  /** Warning icon tint — timer warnings, cost warnings */
-  warning: string;
-  /** Victory icon tint — trophy on game over screen */
-  victory: string;
-  /** Defeat icon tint — skull on game over screen */
-  defeat: string;
-
-  // ── Icon SVG shapes (the actual icon graphics, customizable per theme) ──
-  svg: {
-    /** Unit attack stat — swords (warm), crosshair (cyber), wand (pastel) */
-    attack: ThemeIconSvg;
-    /** Unit health stat — heart (warm), shield (cyber), flower (pastel) */
-    health: ThemeIconSvg;
-    /** Player lives counter — shield-heart (warm), battery (cyber), heart (pastel) */
-    lives: ThemeIconSvg;
-    /** Mana cost indicator — lightning bolt (warm), circuit (cyber), dewdrop (pastel) */
-    mana: ThemeIconSvg;
-    /** Ability indicator between stats — sparkle (warm), burst (cyber), butterfly (pastel) */
-    ability: ThemeIconSvg;
-    /** Victory screen icon — trophy (warm), crown (cyber), tiara (pastel) */
-    victory: ThemeIconSvg;
-    /** Defeat screen icon — skull (warm), error screen (cyber), broken heart (pastel) */
-    defeat: ThemeIconSvg;
-    /** Draw pool / bag — drawstring bag (warm), data cube (cyber), gift box (pastel) */
-    bag: ThemeIconSvg;
-    /** Play/battle button — large icon on home and play pages */
-    play: ThemeIconSvg;
-    /** Burn zone — icon in the burn/discard area of the shop */
-    burn: ThemeIconSvg;
-  };
-};
-
 // ════════════════════════════════════════════════════════════════
-// UNIT CARD — card-specific customization (rarity glows, etc.)
+// UNIT CARD — card-specific customization (rarity glows, stat icons)
 // ════════════════════════════════════════════════════════════════
 
 type ThemeUnitCard = {
+  /** Card background — the base color behind card content */
+  cardBg: string;
+  /** Attack/damage color — attack stat on cards, damage numbers */
+  cardAttack: string;
+  /** Burn value color — burn badges on cards, burn-related UI */
+  cardBurn: string;
+  /** Unit cards in hand and on board (e.g. "0.5rem") */
+  cardRadius: string;
   /** Rare card shimmer glow color (currently hardcoded rgba(56, 189, 248, *)) */
   rarityRareGlow: string;
   /** Legendary card pulse glow color (currently uses cardBurn) */
   rarityLegendaryGlow: string;
+  /** Attack stat icon — swords (warm), crosshair (cyber), wand (pastel) */
+  attackIcon: ThemeIcon;
+  /** Health stat icon — heart (warm), shield (cyber), flower (pastel) */
+  healthIcon: ThemeIcon;
+  /** Ability indicator icon — sparkle (warm), bolt (cyber), butterfly (pastel) */
+  abilityIcon: ThemeIcon;
+  /** Mana cost icon — lightning bolt (warm), circuit (cyber), dewdrop (pastel) */
+  manaIcon: ThemeIcon;
 };
 
 // ════════════════════════════════════════════════════════════════
-// BATTLE SHOP — mana bar and shop-phase styling.
+// BATTLE SHOP — mana bar, shop-phase icons, and battle button styling.
 // ════════════════════════════════════════════════════════════════
 
 type ThemeBattleShop = {
+  /** Opacity (0–1) for board and hand area overlays when custom backgrounds are active */
+  overlayOpacity: number;
+  /** Board background — the game board/arena surface */
+  boardBg: string;
+  /** Shop/hand background — the hand area below the board */
+  shopBg: string;
   /** Fill gradient for filled mana segments */
   manaFill: string;
   /** Glow effect on filled mana segments */
   manaGlow: string;
+  /** Burn zone icon — flame (warm), shield (cyber), star (pastel) */
+  burnIcon: ThemeIcon;
+  /** Draw pool / bag icon — bag (warm), cube (cyber), gift (pastel) */
+  bagIcon: ThemeIcon;
+  /** Player lives icon — shield-heart (warm), battery (cyber), heart (pastel) */
+  livesIcon: ThemeIcon;
+  /** Battle button background at rest — typically an elaborate metallic gradient */
+  battleBackground: string;
+  /** Battle button background on hover — brighter/shinier */
+  battleHoverBackground: string;
+  /** Battle button background when pressed/active — darker, pressed-in feel */
+  battleActiveBackground: string;
+  /** Battle button border color */
+  battleBorder: string;
+  /** Battle button text color (usually dark on bright metallic background) */
+  battleText: string;
+  /** Battle button ambient glow */
+  battleGlow: string;
 };
 
 // ════════════════════════════════════════════════════════════════
@@ -278,6 +243,8 @@ type ThemeBattleOverlay = {
   teamPlayerColor: string;
   /** Enemy team zone tint color */
   teamEnemyColor: string;
+  /** Ability toast icon — ability indicator for combat toasts */
+  abilityIcon: ThemeIcon;
 };
 
 // ════════════════════════════════════════════════════════════════
@@ -293,6 +260,12 @@ type ThemeGameOver = {
   pipWin: string;
   /** Loss pip color in the win/loss tracker */
   pipLoss: string;
+  /** Victory screen icon — trophy (warm), crown (cyber), tiara (pastel) */
+  victoryIcon: ThemeIcon;
+  /** Defeat screen icon — skull (warm), error (cyber), broken heart (pastel) */
+  defeatIcon: ThemeIcon;
+  /** Lives icon on game over stats */
+  livesIcon: ThemeIcon;
 };
 
 // ════════════════════════════════════════════════════════════════
@@ -360,8 +333,14 @@ type ThemeToast = {
 type ThemeSetSelection = {};
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type ThemeLogin = {};
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-type ThemeMainMenu = {};
+
+type ThemeMainMenu = {
+  /** Hero subtitle color — the "Roguelike Deck-Building Auto-Battler" tagline */
+  heroSubtitle: string;
+  /** Play/battle icon — large icon on home and play pages */
+  playIcon: ThemeIcon;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type ThemeSettings = {};
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -376,6 +355,18 @@ type ThemeTransactions = {};
 type ThemeAnimations = {};
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type ThemeMobile = {};
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type ThemeBagOverlay = {};
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type ThemeAccount = {};
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type ThemeNetwork = {};
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type ThemeHistory = {};
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type ThemeCreator = {};
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type ThemeMarketplace = {};
 
 // ════════════════════════════════════════════════════════════════
 // THEME DEFINITION — what theme creators provide.
@@ -389,13 +380,11 @@ export interface ThemeDefinition {
   label: string;
   /** Foundation colors, shapes, effects, fonts, backgrounds, and text */
   base: ThemeBase;
-  /** Styling for the 5 button types: surface, selected, CTA, battle, toggle */
+  /** Styling for the 4 button types: surface, selected, CTA, toggle */
   buttons?: Partial<ThemeButtons>;
-  /** Icon tint colors + SVG shape definitions for game icons */
-  icons?: Partial<ThemeIcons>;
-  /** Unit card customization (rarity glows) */
+  /** Unit card customization (rarity glows, stat icons) */
   unitCard?: Partial<ThemeUnitCard>;
-  /** Battle shop phase styling (mana bar) */
+  /** Battle shop phase styling (mana bar, icons, battle button) */
   battleShop?: Partial<ThemeBattleShop>;
   /** Battle overlay styling (combat effects, results, team zones) */
   battleOverlay?: Partial<ThemeBattleOverlay>;
@@ -427,6 +416,18 @@ export interface ThemeDefinition {
   animations?: Partial<ThemeAnimations>;
   /** Mobile-specific customization */
   mobile?: Partial<ThemeMobile>;
+  /** Bag overlay customization */
+  bagOverlay?: Partial<ThemeBagOverlay>;
+  /** Account page customization */
+  account?: Partial<ThemeAccount>;
+  /** Network page customization */
+  network?: Partial<ThemeNetwork>;
+  /** History page customization */
+  history?: Partial<ThemeHistory>;
+  /** Creator page customization */
+  creator?: Partial<ThemeCreator>;
+  /** Marketplace customization */
+  marketplace?: Partial<ThemeMarketplace>;
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -439,7 +440,6 @@ export interface ResolvedThemeDefinition {
   label: string;
   base: ThemeBase;
   buttons: ThemeButtons;
-  icons: ThemeIcons;
   unitCard: ThemeUnitCard;
   battleShop: ThemeBattleShop;
   battleOverlay: ThemeBattleOverlay;
@@ -457,68 +457,13 @@ export interface ResolvedThemeDefinition {
   transactions: ThemeTransactions;
   animations: ThemeAnimations;
   mobile: ThemeMobile;
+  bagOverlay: ThemeBagOverlay;
+  account: ThemeAccount;
+  network: ThemeNetwork;
+  history: ThemeHistory;
+  creator: ThemeCreator;
+  marketplace: ThemeMarketplace;
 }
-
-// ── Icon SVG paths per theme ──
-
-/** Classic RPG icons — swords, hearts, trophies */
-const WARM_ICONS: ThemeIcons['svg'] = {
-  attack: {
-    paths: [
-      'M6.92 5L5 7l4.5 4.5-2.5 2.5 1.41 1.41L11 12.83l1.58 1.58L11.17 16l1.41 1.41 1.42-1.41 1.58 1.58-2.12 2.12 1.41 1.42 2.13-2.12 1.41 1.41L19.83 19 20 18.83l.59.59 1.41-1.42-.58-.58L23 16l-8.5-8.5L16 6l-2-2-1.5 1.5L11 4 6.92 5zM8.34 7.34L11 6l1.93 1.93-2.12 2.12L8.34 7.34z',
-      'M1 21l2.34-2.34 1.42 1.42L2.42 22.42z',
-      'M3 19l5-5 1.41 1.41-5 5z',
-    ],
-  },
-  health: {
-    paths: [
-      'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z',
-    ],
-  },
-  lives: {
-    paths: [
-      'M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm0 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z',
-      'M12 9.5c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5z',
-    ],
-  },
-  mana: {
-    paths: ['M13 3L4 14h7l-2 7 9-11h-7l2-7z'],
-  },
-  ability: {
-    paths: ['M12 2l1.09 6.9L20 10l-6.91 1.09L12 18l-1.09-6.91L4 10l6.91-1.1z'],
-  },
-  victory: {
-    paths: [
-      'M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z',
-    ],
-  },
-  defeat: {
-    paths: [
-      'M12 2C6.48 2 2 6.48 2 12c0 3.07 1.39 5.81 3.57 7.63L7 22h4v-2h2v2h4l1.43-2.37C20.61 17.81 22 15.07 22 12c0-5.52-4.48-10-10-10zM8.5 15c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm7 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z',
-      'M10 18h4v1h-4z',
-    ],
-  },
-  bag: {
-    paths: [
-      'M12 2C9.24 2 7 4.24 7 7h2c0-1.66 1.34-3 3-3s3 1.34 3 3h2c0-2.76-2.24-5-5-5z',
-      'M5 9l1.5 12c.17 1.14 1.15 2 2.3 2h6.4c1.15 0 2.13-.86 2.3-2L19 9H5zm7 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z',
-      'M12 13a2 2 0 100 4 2 2 0 000-4z',
-    ],
-  },
-  play: {
-    // Crossed swords with shield
-    paths: [
-      'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.4 9.36-7 10.5-3.6-1.14-7-5.67-7-10.5V6.3l7-3.12z',
-      'M9.5 8L7 10.5 10.5 14 7 17.5 8.5 19l5-5-2-2 2-2L15.5 8 14 6.5z',
-    ],
-  },
-  burn: {
-    // Flame
-    paths: [
-      'M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z',
-    ],
-  },
-};
 
 // ════════════════════════════════════════════════════════════════
 // BUILT-IN THEMES
@@ -541,21 +486,13 @@ export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
     base950: '#100e0a',
     accent: '#d4a843',
     mana: '#5b8faa',
-    cardAttack: '#b85c4a',
-    cardBurn: '#d4a843',
-    accentWarm: '#c48a2a',
     positive: '#5a9a6e',
     special: '#8b6fb0',
     victory: '#4a8c3a',
     defeat: '#a83a2a',
-    cardBg: '#1e1a14',
-    boardBg: '#161310',
-    shopBg: '#1a1712',
     surfaceDark: '#0e0c09',
     surfaceMid: '#141210',
-    buttonRadius: '0.75rem',
     panelRadius: '1rem',
-    cardRadius: '0.5rem',
     inputRadius: '0.75rem',
     pillRadius: '999px',
     shadowResting: '0 1px 2px hsla(30, 40%, 12%, 0.4), 0 2px 6px hsla(30, 40%, 12%, 0.2)',
@@ -574,11 +511,10 @@ export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
     appBackground:
       'radial-gradient(ellipse at 50% 30%, rgba(196, 138, 42, 0.08), transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(184, 92, 74, 0.06), transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(91, 143, 170, 0.05), transparent 50%)',
     titleGradient: 'linear-gradient(to right, #facc15, #f59e0b, #f97316)',
-    overlayOpacity: 0.45,
-    heroSubtitle: '#c4b498',
     secondary: '#a08a6c',
   },
   buttons: {
+    buttonRadius: '0.75rem',
     surfaceBackground: 'rgba(26, 22, 16, 0.8)',
     surfaceHoverBackground: 'rgba(36, 31, 24, 0.92)',
     surfaceBorder: 'rgba(51, 44, 32, 0.6)',
@@ -597,6 +533,57 @@ export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
     ctaBorder: 'rgba(245, 158, 11, 0.4)',
     ctaText: '#ffffff',
     ctaShadow: '0 0 30px rgba(245, 158, 11, 0.15)',
+  },
+  unitCard: {
+    cardBg: '#1e1a14',
+    cardAttack: '#b85c4a',
+    cardBurn: '#d4a843',
+    cardRadius: '0.5rem',
+    rarityRareGlow: 'rgba(56, 189, 248, 0.6)',
+    rarityLegendaryGlow: '#d4a843',
+    attackIcon: {
+      paths: [
+        'M6.92 5L5 7l4.5 4.5-2.5 2.5 1.41 1.41L11 12.83l1.58 1.58L11.17 16l1.41 1.41 1.42-1.41 1.58 1.58-2.12 2.12 1.41 1.42 2.13-2.12 1.41 1.41L19.83 19 20 18.83l.59.59 1.41-1.42-.58-.58L23 16l-8.5-8.5L16 6l-2-2-1.5 1.5L11 4 6.92 5zM8.34 7.34L11 6l1.93 1.93-2.12 2.12L8.34 7.34z',
+        'M1 21l2.34-2.34 1.42 1.42L2.42 22.42z',
+        'M3 19l5-5 1.41 1.41-5 5z',
+      ],
+    },
+    healthIcon: {
+      paths: [
+        'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z',
+      ],
+    },
+    abilityIcon: {
+      paths: ['M12 2l1.09 6.9L20 10l-6.91 1.09L12 18l-1.09-6.91L4 10l6.91-1.1z'],
+    },
+    manaIcon: {
+      paths: ['M13 3L4 14h7l-2 7 9-11h-7l2-7z'],
+    },
+  },
+  battleShop: {
+    overlayOpacity: 0.45,
+    boardBg: '#161310',
+    shopBg: '#1a1712',
+    manaFill: 'linear-gradient(to top, #5b8faa, #60a5fa)',
+    manaGlow: '0 0 6px rgba(59, 130, 246, 0.5)',
+    burnIcon: {
+      paths: [
+        'M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z',
+      ],
+    },
+    bagIcon: {
+      paths: [
+        'M12 2C9.24 2 7 4.24 7 7h2c0-1.66 1.34-3 3-3s3 1.34 3 3h2c0-2.76-2.24-5-5-5z',
+        'M5 9l1.5 12c.17 1.14 1.15 2 2.3 2h6.4c1.15 0 2.13-.86 2.3-2L19 9H5zm7 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z',
+        'M12 13a2 2 0 100 4 2 2 0 000-4z',
+      ],
+    },
+    livesIcon: {
+      paths: [
+        'M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm0 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z',
+        'M12 9.5c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5z',
+      ],
+    },
     battleBackground:
       'linear-gradient(135deg, transparent 0%, transparent 35%, rgba(255, 255, 255, 0.22) 42%, rgba(255, 248, 220, 0.45) 50%, rgba(255, 255, 255, 0.22) 58%, transparent 65%, transparent 100%), linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 0%, transparent 8%, transparent 92%, rgba(0, 0, 0, 0.12) 100%), linear-gradient(180deg, #e8c44a 0%, #d4a830 15%, #b8892a 35%, #a07520 50%, #b8892a 65%, #d4a830 85%, #e8c44a 100%)',
     battleHoverBackground:
@@ -607,25 +594,6 @@ export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
     battleText: '#1a0f00',
     battleGlow: '0 0 20px rgba(184, 137, 42, 0.3), 0 0 8px rgba(184, 137, 42, 0.2)',
   },
-  icons: {
-    accent: '#d4a843',
-    muted: '#a08a6c',
-    mana: '#5b8faa',
-    attack: '#b85c4a',
-    health: '#5a9a6e',
-    warning: '#d4a843',
-    victory: '#4a8c3a',
-    defeat: '#a83a2a',
-    svg: WARM_ICONS,
-  },
-  unitCard: {
-    rarityRareGlow: 'rgba(56, 189, 248, 0.6)',
-    rarityLegendaryGlow: '#d4a843',
-  },
-  battleShop: {
-    manaFill: 'linear-gradient(to top, #5b8faa, #60a5fa)',
-    manaGlow: '0 0 6px rgba(59, 130, 246, 0.5)',
-  },
   battleOverlay: {
     abilityColor: '#eab308',
     positiveColor: '#22c55e',
@@ -635,6 +603,9 @@ export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
     resultDraw: '#fcd34d',
     teamPlayerColor: 'rgba(90, 154, 110, 0.2)',
     teamEnemyColor: 'rgba(184, 92, 74, 0.2)',
+    abilityIcon: {
+      paths: ['M12 2l1.09 6.9L20 10l-6.91 1.09L12 18l-1.09-6.91L4 10l6.91-1.1z'],
+    },
   },
   gameOver: {
     victoryAtmosphere:
@@ -643,6 +614,23 @@ export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
       'radial-gradient(ellipse at 50% 30%, rgba(168, 58, 42, 0.1) 0%, transparent 40%), radial-gradient(ellipse at center, transparent 20%, rgba(168, 58, 42, 0.15) 70%, rgba(0, 0, 0, 0.8) 100%)',
     pipWin: '#4a8c3a',
     pipLoss: '#a83a2a',
+    victoryIcon: {
+      paths: [
+        'M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z',
+      ],
+    },
+    defeatIcon: {
+      paths: [
+        'M12 2C6.48 2 2 6.48 2 12c0 3.07 1.39 5.81 3.57 7.63L7 22h4v-2h2v2h4l1.43-2.37C20.61 17.81 22 15.07 22 12c0-5.52-4.48-10-10-10zM8.5 15c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm7 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z',
+        'M10 18h4v1h-4z',
+      ],
+    },
+    livesIcon: {
+      paths: [
+        'M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm0 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z',
+        'M12 9.5c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5z',
+      ],
+    },
   },
   setSelection: {},
   achievements: {
@@ -657,7 +645,15 @@ export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
     particles: { shape: 'ember', size: 1, count: 40 },
   },
   login: {},
-  mainMenu: {},
+  mainMenu: {
+    heroSubtitle: '#c4b498',
+    playIcon: {
+      paths: [
+        'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.4 9.36-7 10.5-3.6-1.14-7-5.67-7-10.5V6.3l7-3.12z',
+        'M9.5 8L7 10.5 10.5 14 7 17.5 8.5 19l5-5-2-2 2-2L15.5 8 14 6.5z',
+      ],
+    },
+  },
   settings: {},
   navigation: {},
   cardDetailPanel: {},
@@ -669,6 +665,12 @@ export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
   transactions: {},
   animations: {},
   mobile: {},
+  bagOverlay: {},
+  account: {},
+  network: {},
+  history: {},
+  creator: {},
+  marketplace: {},
 };
 
 // ════════════════════════════════════════════════════════════════
@@ -698,11 +700,6 @@ export function resolveTheme(theme: ThemeDefinition): ResolvedThemeDefinition {
     label: theme.label,
     base: { ...d.base, ...theme.base },
     buttons: { ...d.buttons, ...theme.buttons },
-    icons: {
-      ...d.icons,
-      ...theme.icons,
-      svg: { ...d.icons.svg, ...theme.icons?.svg },
-    },
     unitCard: { ...d.unitCard, ...theme.unitCard },
     battleShop: { ...d.battleShop, ...theme.battleShop },
     battleOverlay: { ...d.battleOverlay, ...theme.battleOverlay },
@@ -724,6 +721,12 @@ export function resolveTheme(theme: ThemeDefinition): ResolvedThemeDefinition {
     transactions: { ...d.transactions, ...theme.transactions },
     animations: { ...d.animations, ...theme.animations },
     mobile: { ...d.mobile, ...theme.mobile },
+    bagOverlay: { ...d.bagOverlay, ...theme.bagOverlay },
+    account: { ...d.account, ...theme.account },
+    network: { ...d.network, ...theme.network },
+    history: { ...d.history, ...theme.history },
+    creator: { ...d.creator, ...theme.creator },
+    marketplace: { ...d.marketplace, ...theme.marketplace },
   };
 }
 
@@ -749,15 +752,18 @@ export function sanitizeTheme(
 ): ThemeDefinition {
   return {
     ...untrusted,
-    base: {
-      ...untrusted.base,
-      overlayOpacity: clampNumber(
-        untrusted.base?.overlayOpacity,
-        0,
-        1,
-        defaults.base.overlayOpacity
-      ),
-    },
+    base: untrusted.base,
+    battleShop: untrusted.battleShop
+      ? {
+          ...untrusted.battleShop,
+          overlayOpacity: clampNumber(
+            untrusted.battleShop.overlayOpacity,
+            0,
+            1,
+            defaults.battleShop.overlayOpacity
+          ),
+        }
+      : undefined,
     assets: untrusted.assets
       ? {
           particles: untrusted.assets.particles
@@ -836,16 +842,15 @@ export function applyResolvedThemeToDocument(
     ['--color-base-950', theme.base.base950],
     ['--color-accent', theme.base.accent],
     ['--color-mana', theme.base.mana],
-    ['--color-card-attack', theme.base.cardAttack],
-    ['--color-card-burn', theme.base.cardBurn],
-    ['--color-accent-warm', theme.base.accentWarm],
+    ['--color-card-attack', theme.unitCard.cardAttack],
+    ['--color-card-burn', theme.unitCard.cardBurn],
     ['--color-positive', theme.base.positive],
     ['--color-special', theme.base.special],
     ['--color-victory', theme.base.victory],
     ['--color-defeat', theme.base.defeat],
-    ['--color-card-bg', theme.base.cardBg],
-    ['--color-board-bg', theme.base.boardBg],
-    ['--color-shop-bg', theme.base.shopBg],
+    ['--color-card-bg', theme.unitCard.cardBg],
+    ['--color-board-bg', theme.battleShop.boardBg],
+    ['--color-shop-bg', theme.battleShop.shopBg],
     ['--color-surface-dark', theme.base.surfaceDark],
     ['--color-surface-mid', theme.base.surfaceMid],
   ];
@@ -855,9 +860,9 @@ export function applyResolvedThemeToDocument(
   }
 
   // ── Shape ──
-  setRootVariable(root, '--theme-button-radius', theme.base.buttonRadius);
+  setRootVariable(root, '--theme-button-radius', theme.buttons.buttonRadius);
   setRootVariable(root, '--theme-panel-radius', theme.base.panelRadius);
-  setRootVariable(root, '--theme-card-radius', theme.base.cardRadius);
+  setRootVariable(root, '--theme-card-radius', theme.unitCard.cardRadius);
   setRootVariable(root, '--theme-input-radius', theme.base.inputRadius);
   setRootVariable(root, '--theme-pill-radius', theme.base.pillRadius);
 
@@ -872,7 +877,7 @@ export function applyResolvedThemeToDocument(
   setRootVariable(root, '--theme-title-gradient', theme.base.titleGradient);
 
   // Compute overlay and hand surface from overlayOpacity + palette
-  const ov = theme.base.overlayOpacity;
+  const ov = theme.battleShop.overlayOpacity;
   const sdRgb = hexToRgbChannels(theme.base.surfaceDark);
   const smRgb = hexToRgbChannels(theme.base.surfaceMid);
   const acRgb = hexToRgbChannels(theme.base.accent);
@@ -887,16 +892,6 @@ export function applyResolvedThemeToDocument(
     '--theme-hand-surface',
     `radial-gradient(ellipse at 50% 0%, rgba(${acRgb.replace(/ /g, ', ')}, ${ov * 0.3}), transparent 52%), linear-gradient(180deg, rgba(${sdRgb.replace(/ /g, ', ')}, 0.96) 0%, rgba(${smRgb.replace(/ /g, ', ')}, 0.98) 26%, rgba(${sdRgb.replace(/ /g, ', ')}, 1) 100%)`
   );
-
-  // ── Icons ──
-  setRootVariable(root, '--theme-icon-accent', theme.icons.accent);
-  setRootVariable(root, '--theme-icon-muted', theme.icons.muted);
-  setRootVariable(root, '--theme-icon-mana', theme.icons.mana);
-  setRootVariable(root, '--theme-icon-attack', theme.icons.attack);
-  setRootVariable(root, '--theme-icon-health', theme.icons.health);
-  setRootVariable(root, '--theme-icon-warning', theme.icons.warning);
-  setRootVariable(root, '--theme-icon-victory', theme.icons.victory);
-  setRootVariable(root, '--theme-icon-defeat', theme.icons.defeat);
 
   // ── Buttons ──
   setRootVariable(root, '--theme-surface-button-bg', theme.buttons.surfaceBackground);
@@ -918,12 +913,12 @@ export function applyResolvedThemeToDocument(
   setRootVariable(root, '--theme-cta-text', theme.buttons.ctaText);
   setRootVariable(root, '--theme-cta-shadow', theme.buttons.ctaShadow);
 
-  setRootVariable(root, '--theme-battle-button-bg', theme.buttons.battleBackground);
-  setRootVariable(root, '--theme-battle-button-hover-bg', theme.buttons.battleHoverBackground);
-  setRootVariable(root, '--theme-battle-button-active-bg', theme.buttons.battleActiveBackground);
-  setRootVariable(root, '--theme-battle-button-border', theme.buttons.battleBorder);
-  setRootVariable(root, '--theme-battle-button-text', theme.buttons.battleText);
-  setRootVariable(root, '--theme-battle-button-glow', theme.buttons.battleGlow);
+  setRootVariable(root, '--theme-battle-button-bg', theme.battleShop.battleBackground);
+  setRootVariable(root, '--theme-battle-button-hover-bg', theme.battleShop.battleHoverBackground);
+  setRootVariable(root, '--theme-battle-button-active-bg', theme.battleShop.battleActiveBackground);
+  setRootVariable(root, '--theme-battle-button-border', theme.battleShop.battleBorder);
+  setRootVariable(root, '--theme-battle-button-text', theme.battleShop.battleText);
+  setRootVariable(root, '--theme-battle-button-glow', theme.battleShop.battleGlow);
 
   // ── Battle shop (mana bar) ──
   setRootVariable(root, '--theme-mana-fill', theme.battleShop.manaFill);
@@ -939,7 +934,7 @@ export function applyResolvedThemeToDocument(
   setRootVariable(root, '--font-mono', theme.base.mono);
 
   // ── Text colors ──
-  setRootVariable(root, '--theme-hero-subtitle', theme.base.heroSubtitle);
+  setRootVariable(root, '--theme-hero-subtitle', theme.mainMenu.heroSubtitle);
   setRootVariable(root, '--theme-secondary-text', theme.base.secondary);
 
   // ── Achievements ──

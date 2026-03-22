@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useThemeStore } from '../store/themeStore';
-import { type ResolvedThemeDefinition } from '../theme/themes';
+import { type ThemeIcon } from '../theme/themes';
 import { ipfsUrl } from '../utils/ipfs';
 
 interface IconProps {
@@ -18,17 +18,14 @@ function SvgPathIcon({ paths, className }: { paths: string[]; className?: string
   );
 }
 
-/** Renders an icon from the theme's SVG definitions.
- *  If the icon has a `url`, renders an <img> with the path-based SVG as fallback. */
-function ThemedIcon({
-  iconKey,
+/** Renders a ThemeIcon — tries url first (as <img>), falls back to inline SVG paths. */
+export function IconRenderer({
+  icon,
   className = 'w-4 h-4',
 }: {
-  iconKey: keyof ResolvedThemeDefinition['icons']['svg'];
+  icon: ThemeIcon;
   className?: string;
 }) {
-  const theme = useThemeStore((s) => s.activeTheme);
-  const icon = theme.icons.svg[iconKey];
   const [imgFailed, setImgFailed] = useState(false);
 
   // If there's a URL and it hasn't failed, try to render as image
@@ -45,17 +42,20 @@ function ThemedIcon({
 
 /** Attack icon — themed per theme (swords, crosshair, wand) */
 export function SwordIcon({ className = 'w-4 h-4' }: IconProps) {
-  return <ThemedIcon iconKey="attack" className={className} />;
+  const icon = useThemeStore((s) => s.activeTheme.unitCard.attackIcon);
+  return <IconRenderer icon={icon} className={className} />;
 }
 
 /** Health icon — themed per theme (heart, shield, flower) */
 export function HeartIcon({ className = 'w-4 h-4' }: IconProps) {
-  return <ThemedIcon iconKey="health" className={className} />;
+  const icon = useThemeStore((s) => s.activeTheme.unitCard.healthIcon);
+  return <IconRenderer icon={icon} className={className} />;
 }
 
 /** Lives icon — themed per theme (shield-heart, battery, heart) */
 export function LivesIcon({ className = 'w-4 h-4' }: IconProps) {
-  return <ThemedIcon iconKey="lives" className={className} />;
+  const icon = useThemeStore((s) => s.activeTheme.battleShop.livesIcon);
+  return <IconRenderer icon={icon} className={className} />;
 }
 
 /** Empty heart outline — lost lives */
@@ -87,7 +87,8 @@ export function StarOutlineIcon({ className = 'w-4 h-4' }: IconProps) {
 
 /** Mana icon — themed per theme (bolt, circuit, dewdrop) */
 export function BoltIcon({ className = 'w-4 h-4' }: IconProps) {
-  return <ThemedIcon iconKey="mana" className={className} />;
+  const icon = useThemeStore((s) => s.activeTheme.unitCard.manaIcon);
+  return <IconRenderer icon={icon} className={className} />;
 }
 
 export function FlameIcon({ className = 'w-4 h-4' }: IconProps) {
@@ -100,17 +101,20 @@ export function FlameIcon({ className = 'w-4 h-4' }: IconProps) {
 
 /** Bag icon — themed per theme (drawstring bag, data cube, gift box) */
 export function BagIcon({ className = 'w-4 h-4' }: IconProps) {
-  return <ThemedIcon iconKey="bag" className={className} />;
+  const icon = useThemeStore((s) => s.activeTheme.battleShop.bagIcon);
+  return <IconRenderer icon={icon} className={className} />;
 }
 
 /** Play/battle icon — themed per theme (shield+sword, etc.) */
 export function PlayBattleIcon({ className = 'w-4 h-4' }: IconProps) {
-  return <ThemedIcon iconKey="play" className={className} />;
+  const icon = useThemeStore((s) => s.activeTheme.mainMenu.playIcon);
+  return <IconRenderer icon={icon} className={className} />;
 }
 
 /** Burn/discard icon — themed per theme (flame, etc.) */
 export function BurnIcon({ className = 'w-4 h-4' }: IconProps) {
-  return <ThemedIcon iconKey="burn" className={className} />;
+  const icon = useThemeStore((s) => s.activeTheme.battleShop.burnIcon);
+  return <IconRenderer icon={icon} className={className} />;
 }
 
 /** Speaker — audio on */
@@ -151,17 +155,20 @@ export function WarningIcon({ className = 'w-4 h-4' }: IconProps) {
 
 /** Victory icon — themed per theme (trophy, crown, tiara) */
 export function TrophyIcon({ className = 'w-4 h-4' }: IconProps) {
-  return <ThemedIcon iconKey="victory" className={className} />;
+  const icon = useThemeStore((s) => s.activeTheme.gameOver.victoryIcon);
+  return <IconRenderer icon={icon} className={className} />;
 }
 
 /** Defeat icon — themed per theme (skull, error, broken heart) */
 export function SkullIcon({ className = 'w-4 h-4' }: IconProps) {
-  return <ThemedIcon iconKey="defeat" className={className} />;
+  const icon = useThemeStore((s) => s.activeTheme.gameOver.defeatIcon);
+  return <IconRenderer icon={icon} className={className} />;
 }
 
 /** Ability indicator — themed per theme (sparkle, lightning, butterfly) */
 export function AbilityIcon({ className = 'w-4 h-4' }: IconProps) {
-  return <ThemedIcon iconKey="ability" className={className} />;
+  const icon = useThemeStore((s) => s.activeTheme.unitCard.abilityIcon);
+  return <IconRenderer icon={icon} className={className} />;
 }
 
 /** X mark — close / dismiss */

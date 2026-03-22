@@ -35,11 +35,11 @@ export default function Cards() {
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-7 h-7 lg:w-8 lg:h-8 shrink-0 rounded bg-accent-warm/15 border border-accent-warm/30 flex items-center justify-center text-accent-warm font-stat font-bold text-sm lg:text-base">
+            <div className="w-7 h-7 lg:w-8 lg:h-8 shrink-0 rounded bg-card-burn/15 border border-card-burn/30 flex items-center justify-center text-card-burn font-stat font-bold text-sm lg:text-base">
               {demoCard?.burn_value ?? '1'}
             </div>
             <div>
-              <span className="text-accent-warm font-bold">Burn Value</span>
+              <span className="text-card-burn font-bold">Burn Value</span>
               <span className="text-base-400"> — burn this card from your hand or board to gain this much mana.</span>
             </div>
           </div>

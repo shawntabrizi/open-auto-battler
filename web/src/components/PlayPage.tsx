@@ -32,7 +32,7 @@ export function PlayPage() {
               }`}
             >
               <div className="flex items-center justify-center gap-3 lg:gap-5">
-                <PlayBattleIcon className="h-16 lg:h-24 w-auto theme-icon-accent" />
+                <PlayBattleIcon className="h-16 lg:h-24 w-auto text-accent" />
                 <div className="text-left">
                   <h2 className="font-button text-2xl lg:text-3xl font-bold text-white tracking-wide">
                     ONLINE ARENA

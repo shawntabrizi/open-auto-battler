@@ -61,7 +61,7 @@ export function TutorialOverlay() {
         className="theme-button theme-surface-button absolute top-3 right-3 z-[1] rounded-lg border p-2 transition-colors"
         aria-label="Close tutorial"
       >
-        <CloseIcon className="theme-icon-muted w-5 h-5" />
+        <CloseIcon className="text-base-300 w-5 h-5" />
       </button>
 
       {/* Slide content */}
