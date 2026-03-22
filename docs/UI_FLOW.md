@@ -115,7 +115,7 @@ flowchart TD
 
 **Layout:** `[<- Back]` ... `[Title]` ... `[Hamburger]`
 
-- **Back button** (left, optional): Navigates to the parent route. Hidden on root pages (Main Menu, Login).
+- **Back button** (left, optional): Navigates to the previous page. If the page was reached with `location.state.returnTo` (e.g. via the hamburger menu), the back button uses that as the destination. Otherwise it falls back to the hardcoded `backTo` prop. Hidden on root pages (Main Menu, Login).
 - **Title** (center, optional): Absolutely centered page title with gradient text.
 - **Hamburger trigger** (right): Opens the global slide-out menu via `menuStore`.
 - **`hasCardPanel`** prop: Adds left margin to clear the card detail sidebar when present.
@@ -147,6 +147,8 @@ flowchart TD
 
 **Close:** Click backdrop, click X button, or press Escape.
 
+**Back tracking:** All hamburger menu links pass `state={{ returnTo: location.pathname }}` so that the target page's TopBar can navigate back to where the user came from.
+
 **Standard menu** (non-game routes):
 
 | Label | Icon | Route | Notes |
@@ -162,7 +164,7 @@ flowchart TD
 
 | Label | Icon | Route | Notes |
 |---|---|---|---|
-| Settings | Gear | `/settings` | Passes `returnTo` state so back returns to game |
+| Settings | Gear | `/settings` | Back returns to game via `returnTo` state |
 | Tutorial | Lightbulb | — | Opens tutorial overlay (`how-to-play`) |
 | Keyboard Shortcuts | Keyboard | — | Opens keyboard shortcuts overlay |
 | Return to Menu | Home | `/` | Navigates to main menu |
