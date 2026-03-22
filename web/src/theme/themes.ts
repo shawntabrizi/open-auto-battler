@@ -716,17 +716,17 @@ const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
     abilityColor: '#eab308',
     positiveColor: '#22c55e',
     negativeColor: '#dc2626',
-    resultVictory: '#4a8c3a',
-    resultDefeat: '#a83a2a',
-    resultDraw: '#d4a843',
-    teamPlayerColor: 'rgba(91, 143, 170, 0.1)',
-    teamEnemyColor: 'rgba(184, 92, 74, 0.1)',
+    resultVictory: '#6ee7b7',
+    resultDefeat: '#fca5a5',
+    resultDraw: '#fcd34d',
+    teamPlayerColor: 'rgba(90, 154, 110, 0.2)',
+    teamEnemyColor: 'rgba(184, 92, 74, 0.2)',
   },
   gameOver: {
     victoryAtmosphere:
-      'radial-gradient(ellipse at 50% 40%, rgba(74, 140, 58, 0.3), transparent 70%)',
+      'radial-gradient(ellipse at 30% 20%, rgba(212, 168, 67, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(74, 140, 58, 0.06) 0%, transparent 50%), radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.7) 100%)',
     defeatAtmosphere:
-      'radial-gradient(ellipse at 50% 40%, rgba(168, 58, 42, 0.3), transparent 70%)',
+      'radial-gradient(ellipse at 50% 30%, rgba(168, 58, 42, 0.1) 0%, transparent 40%), radial-gradient(ellipse at center, transparent 20%, rgba(168, 58, 42, 0.15) 70%, rgba(0, 0, 0, 0.8) 100%)',
     pipWin: '#4a8c3a',
     pipLoss: '#a83a2a',
   },
@@ -871,14 +871,14 @@ const CYBERPUNK_THEME: ResolvedThemeDefinition = {
     resultVictory: '#00ffa3',
     resultDefeat: '#ff4d9d',
     resultDraw: '#00f6ff',
-    teamPlayerColor: 'rgba(56, 189, 248, 0.1)',
-    teamEnemyColor: 'rgba(255, 77, 157, 0.1)',
+    teamPlayerColor: 'rgba(0, 255, 163, 0.2)',
+    teamEnemyColor: 'rgba(255, 77, 157, 0.2)',
   },
   gameOver: {
     victoryAtmosphere:
-      'radial-gradient(ellipse at 50% 40%, rgba(0, 255, 163, 0.3), transparent 70%)',
+      'radial-gradient(ellipse at 30% 20%, rgba(0, 246, 255, 0.1) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(0, 255, 163, 0.08) 0%, transparent 50%), radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.7) 100%)',
     defeatAtmosphere:
-      'radial-gradient(ellipse at 50% 40%, rgba(255, 77, 157, 0.3), transparent 70%)',
+      'radial-gradient(ellipse at 50% 30%, rgba(255, 77, 157, 0.12) 0%, transparent 40%), radial-gradient(ellipse at center, transparent 20%, rgba(255, 77, 157, 0.15) 70%, rgba(0, 0, 0, 0.8) 100%)',
     pipWin: '#00ffa3',
     pipLoss: '#ff4d9d',
   },
@@ -1021,14 +1021,14 @@ const PASTEL_THEME: ResolvedThemeDefinition = {
     resultVictory: '#6ee7b7',
     resultDefeat: '#fb7185',
     resultDraw: '#ff9ec4',
-    teamPlayerColor: 'rgba(167, 139, 250, 0.08)',
-    teamEnemyColor: 'rgba(255, 107, 159, 0.08)',
+    teamPlayerColor: 'rgba(125, 211, 199, 0.2)',
+    teamEnemyColor: 'rgba(255, 107, 159, 0.2)',
   },
   gameOver: {
     victoryAtmosphere:
-      'radial-gradient(ellipse at 50% 40%, rgba(110, 231, 183, 0.25), transparent 70%)',
+      'radial-gradient(ellipse at 30% 20%, rgba(255, 158, 196, 0.1) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(110, 231, 183, 0.08) 0%, transparent 50%), radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.7) 100%)',
     defeatAtmosphere:
-      'radial-gradient(ellipse at 50% 40%, rgba(251, 113, 133, 0.25), transparent 70%)',
+      'radial-gradient(ellipse at 50% 30%, rgba(251, 113, 133, 0.12) 0%, transparent 40%), radial-gradient(ellipse at center, transparent 20%, rgba(251, 113, 133, 0.15) 70%, rgba(0, 0, 0, 0.8) 100%)',
     pipWin: '#6ee7b7',
     pipLoss: '#fb7185',
   },

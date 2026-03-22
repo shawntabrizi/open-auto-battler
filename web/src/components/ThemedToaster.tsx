@@ -4,7 +4,7 @@ import { getTheme } from '../theme/themes';
 
 /**
  * Themed toast notifications.
- * Reads palette and font from the active theme so toasts match the UI.
+ * Reads base colors and fonts from the active theme so toasts match the UI.
  */
 export function ThemedToaster() {
   const theme = getTheme(useThemeStore((s) => s.selectedThemeId));
