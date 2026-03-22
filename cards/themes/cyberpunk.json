@@ -90,10 +90,10 @@
     }
   },
   "battleShop": {
-    "mana": "#38bdf8",
-    "overlayOpacity": 0.2,
     "boardBg": "#0a1730",
     "shopBg": "#0d1d3d",
+    "overlayOpacity": 0.2,
+    "mana": "#38bdf8",
     "manaFill": "linear-gradient(to top, #0ea5e9, #22d3ee)",
     "manaGlow": "0 0 8px rgba(34, 211, 238, 0.55)",
     "burnIcon": {
@@ -123,18 +123,18 @@
   },
   "battleOverlay": {
     "abilityColor": "#f8ff66",
+    "abilityIcon": {
+      "paths": [
+        "M7 2v11h3v9l7-12h-4l4-8z"
+      ]
+    },
     "positiveColor": "#00ffa3",
     "negativeColor": "#ff4d9d",
     "resultVictory": "#00ffa3",
     "resultDefeat": "#ff4d9d",
     "resultDraw": "#00f6ff",
     "teamPlayerColor": "rgba(0, 255, 163, 0.2)",
-    "teamEnemyColor": "rgba(255, 77, 157, 0.2)",
-    "abilityIcon": {
-      "paths": [
-        "M7 2v11h3v9l7-12h-4l4-8z"
-      ]
-    }
+    "teamEnemyColor": "rgba(255, 77, 157, 0.2)"
   },
   "gameOver": {
     "victoryAtmosphere": "radial-gradient(ellipse at 30% 20%, rgba(0, 246, 255, 0.1) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(0, 255, 163, 0.08) 0%, transparent 50%), radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.7) 100%)",
