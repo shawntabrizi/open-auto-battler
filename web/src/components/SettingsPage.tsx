@@ -1,11 +1,10 @@
 import { useGameStore } from '../store/gameStore';
-import { useThemeStore } from '../store/themeStore';
+
 import { TopBar } from './TopBar';
 
 // ── Settings Hub ──
 
 export function SettingsPage() {
-  const activeTheme = useThemeStore((state) => state.activeTheme);
   const {
     showRawJson,
     toggleShowRawJson,
@@ -35,20 +34,11 @@ export function SettingsPage() {
             {/* Display section */}
             <div className="theme-panel w-full p-4 lg:p-5 rounded-xl border border-base-700 bg-base-900/30">
               <div className="font-bold text-base lg:text-lg text-white mb-3">Display</div>
-              <div className="theme-panel p-3 rounded-lg border border-base-700 mb-2">
-                <div className="text-left">
-                  <div className="text-sm text-base-200">Theme</div>
-                  <div className="text-[10px] lg:text-xs text-base-500 mt-0.5">
-                    Active: <span className="text-base-300">{activeTheme.label}</span>. Equip theme
-                    NFTs in Customize.
-                  </div>
-                </div>
-              </div>
               <button
                 onClick={toggleShowCardNames}
                 className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-base-700 hover:border-base-600 transition-colors"
               >
-                <div className="flex-1 min-w-0 text-left">
+                <div className="flex-1 min-w-0 text-left font-body">
                   <div className="text-sm text-base-200">Show Card Names</div>
                   <div className="text-[10px] lg:text-xs text-base-500 mt-0.5">
                     Display card names on unit cards
@@ -70,7 +60,7 @@ export function SettingsPage() {
                 onClick={toggleShowGameCardDetailsPanel}
                 className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-base-700 hover:border-base-600 transition-colors mt-2"
               >
-                <div className="flex-1 min-w-0 text-left">
+                <div className="flex-1 min-w-0 text-left font-body">
                   <div className="text-sm text-base-200">Show Game Card Details Panel</div>
                   <div className="text-[10px] lg:text-xs text-base-500 mt-0.5">
                     Keep the pinned card details sidebar visible during games. Use I to inspect
@@ -93,7 +83,7 @@ export function SettingsPage() {
                 onClick={toggleShowBoardHelper}
                 className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-base-700 hover:border-base-600 transition-colors mt-2"
               >
-                <div className="flex-1 min-w-0 text-left">
+                <div className="flex-1 min-w-0 text-left font-body">
                   <div className="text-sm text-base-200">Show Board Helper</div>
                   <div className="text-[10px] lg:text-xs text-base-500 mt-0.5">
                     Show the in-game board action hint above the battlefield.
@@ -115,7 +105,7 @@ export function SettingsPage() {
                 onClick={toggleShowAddress}
                 className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-base-700 hover:border-base-600 transition-colors mt-2"
               >
-                <div className="flex-1 min-w-0 text-left">
+                <div className="flex-1 min-w-0 text-left font-body">
                   <div className="text-sm text-base-200">Show Address</div>
                   <div className="text-[10px] lg:text-xs text-base-500 mt-0.5">
                     Display wallet address in the top bar
@@ -137,7 +127,7 @@ export function SettingsPage() {
                 onClick={toggleShowBalance}
                 className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-base-700 hover:border-base-600 transition-colors mt-2"
               >
-                <div className="flex-1 min-w-0 text-left">
+                <div className="flex-1 min-w-0 text-left font-body">
                   <div className="text-sm text-base-200">Show Balance</div>
                   <div className="text-[10px] lg:text-xs text-base-500 mt-0.5">
                     Display account balance in the top bar
@@ -189,7 +179,7 @@ export function SettingsPage() {
                 onClick={toggleReducedAnimations}
                 className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-base-700 hover:border-base-600 transition-colors mt-2"
               >
-                <div className="flex-1 min-w-0 text-left">
+                <div className="flex-1 min-w-0 text-left font-body">
                   <div className="text-sm text-base-200">Reduced Animations</div>
                   <div className="text-[10px] lg:text-xs text-base-500 mt-0.5">
                     Disable clash bumps and screen shake
@@ -216,7 +206,7 @@ export function SettingsPage() {
                 onClick={toggleShowRawJson}
                 className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-base-700 hover:border-base-600 transition-colors"
               >
-                <div className="flex-1 min-w-0 text-left">
+                <div className="flex-1 min-w-0 text-left font-body">
                   <div className="text-sm text-base-200">Show Raw JSON</div>
                   <div className="text-[10px] lg:text-xs text-base-500 mt-0.5">
                     Display raw card and game state data
