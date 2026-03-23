@@ -483,6 +483,40 @@ impl GameEngine {
         Ok(())
     }
 
+    /// Move a board unit from one slot to another, shifting intermediate units
+    #[wasm_bindgen]
+    pub fn move_board_position(&mut self, from: usize, to: usize) -> Result<(), String> {
+        log::action(
+            "move_board_position",
+            &format!("from={}, to={}", from, to),
+        );
+        if self.state.phase != GamePhase::Shop {
+            return Err("Can only move during shop phase".to_string());
+        }
+
+        if from >= self.state.board.len() || to >= self.state.board.len() {
+            return Err("Invalid board slot".to_string());
+        }
+
+        self.save_snapshot();
+
+        if from < to {
+            for i in from..to {
+                self.state.board.swap(i, i + 1);
+            }
+        } else {
+            for i in (to..from).rev() {
+                self.state.board.swap(i, i + 1);
+            }
+        }
+
+        self.action_log.push(TurnAction::MoveBoard {
+            from_slot: from as u32,
+            to_slot: to as u32,
+        });
+        Ok(())
+    }
+
     /// Burn a unit from the board
     #[wasm_bindgen]
     pub fn burn_board_unit(&mut self, board_slot: usize) -> Result<(), String> {

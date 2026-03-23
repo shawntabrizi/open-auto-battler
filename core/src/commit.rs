@@ -231,6 +231,29 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
                 // Swap positions
                 state.board.swap(sa, sb);
             }
+
+            TurnAction::MoveBoard { from_slot, to_slot } => {
+                let from = *from_slot as usize;
+                let to = *to_slot as usize;
+
+                if from >= BOARD_SIZE {
+                    return Err(GameError::InvalidBoardSlot { index: *from_slot });
+                }
+                if to >= BOARD_SIZE {
+                    return Err(GameError::InvalidBoardSlot { index: *to_slot });
+                }
+
+                // Shift intermediate units via adjacent swaps
+                if from < to {
+                    for i in from..to {
+                        state.board.swap(i, i + 1);
+                    }
+                } else {
+                    for i in (to..from).rev() {
+                        state.board.swap(i, i + 1);
+                    }
+                }
+            }
         }
     }
 

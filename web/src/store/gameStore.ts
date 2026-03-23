@@ -497,11 +497,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { engine } = get();
     if (!engine) return;
     try {
-      if (from < to) {
-        for (let i = from; i < to; i++) engine.swap_board_positions(i, i + 1);
-      } else {
-        for (let i = from; i > to; i--) engine.swap_board_positions(i, i - 1);
-      }
+      engine.move_board_position(from, to);
       set({ view: engine.get_view(), selection: { type: 'board', index: to } });
     } catch (err) {
       console.error(err);
