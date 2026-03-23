@@ -1,4 +1,4 @@
-import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
+import { DndContext, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { GameTopBar } from './GameTopBar';
 import { Arena } from './Arena';
 import { ManaBar } from './ManaBar';
@@ -78,7 +78,7 @@ export function GameShell({ hideEndTurn = false, customAction, className = '' }:
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={pointerWithin}
       modifiers={[restrictToContainer]}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
