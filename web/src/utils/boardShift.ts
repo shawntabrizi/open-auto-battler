@@ -6,8 +6,8 @@
  */
 
 /** Returns true when every board slot is occupied. */
-export function isBoardFull<T>(board: (T | null)[]): boolean {
-  return board.every((slot) => slot !== null);
+export function isBoardFull<T>(board: (T | null | undefined)[]): boolean {
+  return board.every((slot) => slot != null);
 }
 
 /**
@@ -17,17 +17,20 @@ export function isBoardFull<T>(board: (T | null)[]): boolean {
  *
  * Returns the slot index, or `null` if the board is full.
  */
-export function findNearestEmpty<T>(board: (T | null)[], targetSlot: number): number | null {
+export function findNearestEmpty<T>(
+  board: (T | null | undefined)[],
+  targetSlot: number
+): number | null {
   // If target itself is empty, return it directly
-  if (board[targetSlot] === null) return targetSlot;
+  if (board[targetSlot] == null) return targetSlot;
 
   const len = board.length;
   for (let distance = 1; distance < len; distance++) {
     const right = targetSlot + distance;
-    if (right < len && board[right] === null) return right;
+    if (right < len && board[right] == null) return right;
 
     const left = targetSlot - distance;
-    if (left >= 0 && board[left] === null) return left;
+    if (left >= 0 && board[left] == null) return left;
   }
 
   return null;
@@ -88,11 +91,11 @@ export function computeSlotShift(slot: number, source: number, target: number): 
  * Returns `null` when no shift is needed (target is empty or board is full).
  */
 export function computeHandInsertShift<T>(
-  board: (T | null)[],
+  board: (T | null | undefined)[],
   targetSlot: number
 ): Map<number, number> | null {
   // No shift needed if target is empty
-  if (board[targetSlot] === null) return null;
+  if (board[targetSlot] == null) return null;
 
   // No shift possible if board is full
   if (isBoardFull(board)) return null;

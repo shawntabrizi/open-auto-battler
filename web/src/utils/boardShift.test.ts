@@ -7,9 +7,10 @@ import {
   isBoardFull,
 } from './boardShift';
 
-// Helper: create board from shorthand. Letters are occupied, null is empty.
-type Board = (string | null)[];
+// Helper: create board from shorthand. Letters are occupied, null/undefined is empty.
+type Board = (string | null | undefined)[];
 const _ = null;
+const U = undefined; // serde_wasm_bindgen serializes Option::None as undefined
 
 /**
  * Simulate a full shop-to-board insert: find empty, apply swaps, place "X" at target.
@@ -26,7 +27,7 @@ function simulateInsert(board: Board, target: number): Board | null {
   }
 
   // target should now be empty
-  if (b[target] !== null) return null;
+  if (b[target] != null) return null;
   b[target] = 'X';
   return b;
 }
@@ -58,6 +59,12 @@ describe('isBoardFull', () => {
 
   it('returns true for full board', () => {
     expect(isBoardFull(['A', 'B', 'C', 'D', 'E'])).toBe(true);
+  });
+
+  // serde_wasm_bindgen returns undefined for Option::None
+  it('returns false for board with undefined empty slots', () => {
+    expect(isBoardFull([U, U, U, U, U])).toBe(false);
+    expect(isBoardFull(['A', U, 'C', U, U])).toBe(false);
   });
 });
 
@@ -111,6 +118,13 @@ describe('findNearestEmpty', () => {
 
   it('finds slot 1 from target 3 with [A,_,B,C,D]', () => {
     expect(findNearestEmpty(['A', _, 'B', 'C', 'D'], 3)).toBe(1);
+  });
+
+  // serde_wasm_bindgen returns undefined for Option::None
+  it('treats undefined slots as empty', () => {
+    expect(findNearestEmpty(['A', U, U, U, U], 0)).toBe(1);
+    expect(findNearestEmpty([U, U, U, U, U], 2)).toBe(2);
+    expect(findNearestEmpty(['A', 'B', U, 'D', 'E'], 3)).toBe(2);
   });
 });
 
@@ -204,6 +218,18 @@ describe('computeHandInsertShift', () => {
     expect(shifts.get(3)).toBe(-1);
     expect(shifts.has(0)).toBe(false);
     expect(shifts.has(1)).toBe(false);
+  });
+
+  // serde_wasm_bindgen returns undefined for Option::None
+  it('works with undefined empty slots', () => {
+    const shifts = computeHandInsertShift(['A', 'B', U, U, U], 0)!;
+    expect(shifts.get(0)).toBe(1);
+    expect(shifts.get(1)).toBe(1);
+    expect(shifts.has(2)).toBe(false);
+  });
+
+  it('returns null when target is undefined (empty)', () => {
+    expect(computeHandInsertShift(['A', U, U, U, U], 1)).toBeNull();
   });
 });
 
