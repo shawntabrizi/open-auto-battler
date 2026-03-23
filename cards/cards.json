@@ -2049,7 +2049,7 @@
           "target": {
             "type": "Adjacent",
             "data": {
-              "scope": "SelfUnit"
+              "scope": "All"
             }
           }
         },
@@ -2844,7 +2844,22 @@
       "burn_value": 3
     },
     "shop_abilities": [],
-    "battle_abilities": []
+    "battle_abilities": [
+      {
+        "trigger": "AfterUnitAttack",
+        "effect": {
+          "type": "Destroy",
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "TriggerSource"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
   },
   {
     "id": 94,
@@ -3224,7 +3239,7 @@
           "target": {
             "type": "Adjacent",
             "data": {
-              "scope": "SelfUnit"
+              "scope": "Allies"
             }
           }
         },
