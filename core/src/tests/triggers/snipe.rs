@@ -285,7 +285,7 @@ fn test_mana_reaper_dual_kill() {
     let dead_units: Vec<_> = events
         .iter()
         .filter_map(|e| {
-            if let CombatEvent::AbilityDamage {
+            if let CombatEvent::AbilityDestroy {
                 target_instance_id, ..
             } = e
             {

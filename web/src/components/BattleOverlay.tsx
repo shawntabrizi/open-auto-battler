@@ -80,6 +80,11 @@ function formatEvent(
         text: `${getName(event.payload.source_instance_id)} deals ${event.payload.damage} to ${getName(event.payload.target_instance_id)}`,
         color: 'text-card-burn',
       };
+    case 'AbilityDestroy':
+      return {
+        text: `${getName(event.payload.source_instance_id)} destroys ${getName(event.payload.target_instance_id)}`,
+        color: 'text-card-burn',
+      };
     case 'AbilityModifyStats':
     case 'AbilityModifyStatsPermanent': {
       const { attack_change, health_change } = event.payload;

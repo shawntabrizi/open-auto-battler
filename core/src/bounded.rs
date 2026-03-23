@@ -1494,6 +1494,10 @@ where
         new_attack: i32,
         new_health: i32,
     },
+    AbilityDestroy {
+        source_instance_id: UnitId,
+        target_instance_id: UnitId,
+    },
     AbilityGainMana {
         source_instance_id: UnitId,
         team: Team,
@@ -1592,6 +1596,13 @@ impl<
                 attack_change: *attack_change,
                 new_attack: *new_attack,
                 new_health: *new_health,
+            },
+            Self::AbilityDestroy {
+                source_instance_id,
+                target_instance_id,
+            } => Self::AbilityDestroy {
+                source_instance_id: *source_instance_id,
+                target_instance_id: *target_instance_id,
             },
             Self::AbilityGainMana {
                 source_instance_id,
@@ -1726,6 +1737,16 @@ impl<
                     new_health: nh2,
                 },
             ) => s1 == s2 && t1 == t2 && h1 == h2 && a1 == a2 && na1 == na2 && nh1 == nh2,
+            (
+                Self::AbilityDestroy {
+                    source_instance_id: s1,
+                    target_instance_id: t1,
+                },
+                Self::AbilityDestroy {
+                    source_instance_id: s2,
+                    target_instance_id: t2,
+                },
+            ) => s1 == s2 && t1 == t2,
             (
                 Self::AbilityGainMana {
                     source_instance_id: s1,
@@ -1865,6 +1886,14 @@ impl<
                 .field("new_attack", new_attack)
                 .field("new_health", new_health)
                 .finish(),
+            Self::AbilityDestroy {
+                source_instance_id,
+                target_instance_id,
+            } => f
+                .debug_struct("AbilityDestroy")
+                .field("source_instance_id", source_instance_id)
+                .field("target_instance_id", target_instance_id)
+                .finish(),
             Self::AbilityGainMana {
                 source_instance_id,
                 team,
@@ -1976,6 +2005,13 @@ where
                 attack_change,
                 new_attack,
                 new_health,
+            },
+            crate::battle::CombatEvent::AbilityDestroy {
+                source_instance_id,
+                target_instance_id,
+            } => Self::AbilityDestroy {
+                source_instance_id,
+                target_instance_id,
             },
             crate::battle::CombatEvent::AbilityGainMana {
                 source_instance_id,

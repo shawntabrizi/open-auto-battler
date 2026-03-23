@@ -168,6 +168,16 @@ function computeBoardState(
         enemy = update(enemy);
         break;
       }
+      case 'AbilityDestroy': {
+        const { target_instance_id } = event.payload;
+        const update = (board: UnitView[]) =>
+          board.map((u) =>
+            u.instance_id === target_instance_id ? { ...u, health: 0 } : u
+          );
+        player = update(player);
+        enemy = update(enemy);
+        break;
+      }
       case 'AbilityModifyStats': {
         const { target_instance_id, new_attack, new_health } = event.payload;
         const update = (board: UnitView[]) =>
@@ -221,6 +231,7 @@ function getEventDelay(events: CombatEvent[], index: number, playbackSpeed: numb
     case 'BattleEnd':
       return 1000 / playbackSpeed;
     case 'AbilityDamage':
+    case 'AbilityDestroy':
       return 400 / playbackSpeed;
     case 'AbilityModifyStats':
     case 'AbilityModifyStatsPermanent':
@@ -498,6 +509,46 @@ export function BattleArena({
 
         setPlayerBoard(updateBoard);
         setEnemyBoard(updateBoard);
+        break;
+      }
+
+      case 'AbilityDestroy': {
+        const { target_instance_id: destroyTarget, source_instance_id: destroySource } =
+          event.payload;
+
+        setTargetHighlightIds((prev) => {
+          const next = new Map(prev);
+          next.delete(destroyTarget);
+          return next;
+        });
+        setSourceGlowIds((prev) => {
+          const next = new Set(prev);
+          next.delete(destroySource);
+          return next;
+        });
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setTargetHighlightIds((prev) => new Map(prev).set(destroyTarget, 'negative'));
+            setSourceGlowIds((prev) => new Set(prev).add(destroySource));
+          });
+        });
+        setTimeout(() => {
+          setTargetHighlightIds((prev) => {
+            const next = new Map(prev);
+            next.delete(destroyTarget);
+            return next;
+          });
+          setSourceGlowIds((prev) => {
+            const next = new Set(prev);
+            next.delete(destroySource);
+            return next;
+          });
+        }, 600);
+
+        const updateDestroyed = (board: UnitView[]) =>
+          board.map((u) => (u.instance_id === destroyTarget ? { ...u, health: 0 } : u));
+        setPlayerBoard(updateDestroyed);
+        setEnemyBoard(updateDestroyed);
         break;
       }
 

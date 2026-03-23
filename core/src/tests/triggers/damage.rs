@@ -74,25 +74,15 @@ fn test_destroy_exact_health() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    let damage = events
-        .iter()
-        .find_map(|e| {
-            if let CombatEvent::AbilityDamage {
+    let destroyed = events.iter().any(|e| {
+        matches!(
+            e,
+            CombatEvent::AbilityDestroy {
+                source_instance_id,
                 target_instance_id,
-                damage,
-                ..
-            } = e
-            {
-                if *target_instance_id == UnitId::enemy(1) {
-                    return Some(*damage);
-                }
-            }
-            None
-        })
-        .expect("AbilityDamage event missing");
-
-    assert_eq!(
-        damage, 42,
-        "Destroy should deal exactly the current health of the target"
-    );
+            } if *source_instance_id == UnitId::player(1)
+                && *target_instance_id == UnitId::enemy(1)
+        )
+    });
+    assert!(destroyed, "Destroy should emit AbilityDestroy event");
 }

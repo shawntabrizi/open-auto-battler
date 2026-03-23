@@ -26,18 +26,15 @@ fn test_deathtouch_after_unit_attack_destroys_clash_target() {
     let events = run_battle(&p_board, &e_board, 42);
 
     // AfterUnitAttack fires for the surviving scorpion, targeting the tank
-    // via TriggerSource (the clash opponent). Destroy deals fatal damage.
+    // via TriggerSource (the clash opponent). Destroy sets HP to 0.
     let tank_destroyed = events.iter().any(|e| {
         matches!(
             e,
-            CombatEvent::AbilityDamage {
+            CombatEvent::AbilityDestroy {
                 source_instance_id,
                 target_instance_id,
-                remaining_hp,
-                ..
             } if *source_instance_id == UnitId::player(1)
                 && *target_instance_id == UnitId::enemy(1)
-                && *remaining_hp == 0
         )
     });
     assert!(
@@ -83,10 +80,9 @@ fn test_deathtouch_fizzles_if_target_already_dead() {
     let ability_hit_dead = events.iter().any(|e| {
         matches!(
             e,
-            CombatEvent::AbilityDamage {
+            CombatEvent::AbilityDestroy {
                 source_instance_id,
                 target_instance_id,
-                ..
             } if *source_instance_id == UnitId::player(1)
                 && *target_instance_id == UnitId::enemy(1)
         )
@@ -133,14 +129,11 @@ fn test_deathtouch_fires_even_when_scorpion_dies() {
     let tank_destroyed = events.iter().any(|e| {
         matches!(
             e,
-            CombatEvent::AbilityDamage {
+            CombatEvent::AbilityDestroy {
                 source_instance_id,
                 target_instance_id,
-                remaining_hp,
-                ..
             } if *source_instance_id == UnitId::player(1)
                 && *target_instance_id == UnitId::enemy(1)
-                && *remaining_hp == 0
         )
     });
     assert!(

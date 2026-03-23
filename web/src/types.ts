@@ -230,6 +230,13 @@ export type CombatEvent =
       };
     }
   | {
+      type: 'AbilityDestroy';
+      payload: {
+        source_instance_id: number;
+        target_instance_id: number;
+      };
+    }
+  | {
       type: 'AbilityGainMana';
       payload: {
         source_instance_id: number;
