@@ -16,6 +16,10 @@ export function isBoardFull<T>(board: (T | null | undefined)[]): boolean {
  * then falls back to lower indices (left).
  *
  * Returns the slot index, or `null` if the board is full.
+ *
+ * NOTE: This must stay in sync with `find_nearest_empty` in `client/src/engine.rs`.
+ * The Rust version is the authoritative engine implementation; this TypeScript
+ * version exists only for UI preview rendering during drag.
  */
 export function findNearestEmpty<T>(
   board: (T | null | undefined)[],
