@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
 import type { GameView, BattleOutput, Selection, CardView } from '../types';
+import type { GameEngine } from '../wasm/oab_client';
 import { initEmojiMap } from '../utils/emoji';
 
 export type CardDetailsPanelMode = 'always' | 'never' | 'auto';
@@ -31,42 +32,6 @@ interface PersistedLocalSession {
   version: 1;
   session: GameSessionSnapshot;
   savedAt: number;
-}
-
-interface GameEngine {
-  // Core methods
-  get_view: () => any;
-  get_battle_output: () => any;
-  burn_hand_card: (index: number) => void;
-  play_hand_card: (handIndex: number, boardSlot: number) => void;
-  swap_board_positions: (slotA: number, slotB: number) => void;
-  burn_board_unit: (boardSlot: number) => void;
-  undo: () => void;
-  end_turn: () => void;
-  continue_after_battle: () => void;
-  new_run: (seed: bigint) => void;
-  get_state: () => any;
-  get_local_session: () => GameSessionSnapshot;
-  get_board: () => any;
-  resolve_battle_p2p: (player_board: any, enemy_board: any, seed: bigint) => any;
-  get_commit_action: () => any;
-  get_commit_action_scale: () => Uint8Array;
-  get_bag: () => number[];
-  get_card_set: () => CardView[];
-  get_card_metas: () => Array<{ id: number; name: string; emoji: string }>;
-  get_set_metas: () => SetMeta[];
-  get_set_cards: (setId: number) => CardView[];
-  new_run_p2p: (seed: bigint, lives: number) => void;
-  get_starting_lives: () => number;
-  get_wins_to_victory: () => number;
-  load_card_set: (setId: number) => void;
-  add_card: (card: any) => void;
-  add_set: (setId: number, cards: any) => void;
-
-  // Universal Bridge methods
-  // Note: seed is bigint because wasm-bindgen binds Rust u64 to JS BigInt
-  init_from_scale: (session: Uint8Array, cardSet: Uint8Array) => void;
-  restore_local_session: (session: GameSessionSnapshot) => void;
 }
 
 interface WasmModule {
