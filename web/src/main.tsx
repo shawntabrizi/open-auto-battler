@@ -46,6 +46,7 @@ import { useThemeStore } from './store/themeStore.ts';
 // Lazy-loaded features (code-split, no impact on main bundle)
 import { PresentationsPage, PresentationViewer, EmbedPage } from './features/presentations';
 import { TutorialOverlay } from './components/tutorials/TutorialOverlay';
+import { CardInspectOverlay } from './components/CardInspectOverlay';
 
 applyResolvedThemeToDocument(useThemeStore.getState().activeTheme);
 
@@ -54,6 +55,7 @@ createRoot(document.getElementById('root')!).render(
     <ThemedToaster />
     <TransactionOverlay />
     <TutorialOverlay />
+    <CardInspectOverlay />
     <HashRouter>
       <ThemeController />
       <ParticleBackground />

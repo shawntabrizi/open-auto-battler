@@ -133,7 +133,7 @@ export function AchievementsPage() {
   return (
     <div className="app-shell fixed inset-0 text-white flex flex-col">
       {/* Card Detail Panel — left side, full height */}
-      <CardDetailPanel card={selectedCard} isVisible={true} mode={{ type: 'readOnly' }} />
+      <CardDetailPanel card={selectedCard} isVisible={true} />
 
       {/* Top bar — starts after card panel */}
       <TopBar backTo="/history" backLabel="History" title="Achievements" hasCardPanel />

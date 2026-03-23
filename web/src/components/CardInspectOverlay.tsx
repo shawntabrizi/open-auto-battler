@@ -1,14 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { CardDetailPanel, type CardDetailPanelMode } from './CardDetailPanel';
+import { CardDetailPanel } from './CardDetailPanel';
 import { UI_LAYERS } from '../constants/uiLayers';
 import { useFocusTrap } from '../hooks';
 import { useCardInspectStore } from '../store/cardInspectStore';
 
-interface CardInspectOverlayProps {
-  mode: CardDetailPanelMode;
-}
-
-export function CardInspectOverlay({ mode }: CardInspectOverlayProps) {
+export function CardInspectOverlay() {
   const isOpen = useCardInspectStore((state) => state.isOpen);
   const card = useCardInspectStore((state) => state.card);
   const close = useCardInspectStore((state) => state.close);
@@ -47,7 +43,6 @@ export function CardInspectOverlay({ mode }: CardInspectOverlayProps) {
           <CardDetailPanel
             card={card}
             isVisible={true}
-            mode={mode}
             layout="contained"
             onClose={close}
           />

@@ -367,7 +367,7 @@ export function GhostBrowserPage() {
     <div className="app-shell h-screen h-svh text-white overflow-hidden flex flex-col">
       <TopBar backTo="/history" backLabel="History" title="Ghost Browser" hasCardPanel />
 
-      <CardDetailPanel card={detailCard} isVisible={true} mode={{ type: 'readOnly' }} />
+      <CardDetailPanel card={detailCard} isVisible={true} />
 
       <div className="flex-1 min-h-0 ml-44 lg:ml-80">
         <div className="h-full overflow-y-auto">

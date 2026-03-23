@@ -10,11 +10,8 @@ import { Navigate } from 'react-router-dom';
 export function ArenaGamePage() {
   const {
     isConnected,
-    accounts,
     selectedAccount,
-    selectAccount,
     chainState,
-    blockNumber,
     refreshGameState,
     submitTurnOnChain,
     fetchSets,
@@ -65,11 +62,6 @@ export function ArenaGamePage() {
           disabled: isSubmitting,
           variant: 'chain',
         }}
-        blockchainMode={true}
-        blockNumber={blockNumber}
-        accounts={accounts}
-        selectedAccount={selectedAccount}
-        onSelectAccount={selectAccount}
       />
     </div>
   );

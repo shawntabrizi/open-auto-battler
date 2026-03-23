@@ -72,7 +72,7 @@ export function SetPage() {
         </div>
       </div>
 
-      <CardDetailPanel card={selectedCard} isVisible={true} mode={{ type: 'readOnly' }} />
+      <CardDetailPanel card={selectedCard} isVisible={true} />
     </div>
   );
 }

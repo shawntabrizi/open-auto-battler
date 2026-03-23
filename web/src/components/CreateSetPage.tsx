@@ -71,7 +71,7 @@ export const CreateSetPage: React.FC = () => {
   return (
     <div className="app-shell min-h-screen text-base-200 flex flex-col">
       {/* Side Panel Integration - Always Visible */}
-      <CardDetailPanel card={detailCard} isVisible={true} mode={{ type: 'readOnly' }} />
+      <CardDetailPanel card={detailCard} isVisible={true} />
 
       <TopBar backTo="/creator" backLabel="Creator" title="Set Creator" hasCardPanel />
       <DesktopRecommendedBanner />

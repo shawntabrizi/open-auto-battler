@@ -1,14 +1,9 @@
 import React from 'react';
-import { toast } from 'react-hot-toast';
 import { useGameStore } from '../store/gameStore';
-import { useArenaStore } from '../store/arenaStore';
-import { useTournamentStore } from '../store/tournamentStore';
-import { useIsSubmitting } from '../store/txStore';
 import type { BoardUnitView, CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import { getCardArtMd } from '../utils/cardArt';
 import { formatAbilitySentence } from '../utils/abilityText';
-import { UI_LAYERS } from '../constants/uiLayers';
 
 /** Card art image with loading state — remount via key={card.id} to reset on card change. */
 function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
@@ -62,37 +57,9 @@ function prettyJson(value: unknown): string {
   return JSON.stringify(value, null, 2) ?? 'null';
 }
 
-// Blockchain account type
-export interface BlockchainAccount {
-  address: string;
-  name?: string;
-  source?: string;
-}
-
-// Discriminated union for panel modes
-export type CardDetailPanelMode =
-  | { type: 'standard' }
-  | { type: 'sandbox' }
-  | { type: 'readOnly' }
-  | {
-      type: 'blockchain';
-      blockNumber: number | null;
-      accounts: BlockchainAccount[];
-      selectedAccount?: BlockchainAccount;
-      onSelectAccount?: (account: BlockchainAccount | undefined) => void;
-    }
-  | {
-      type: 'tournament';
-      blockNumber: number | null;
-      accounts: BlockchainAccount[];
-      selectedAccount?: BlockchainAccount;
-      onSelectAccount?: (account: BlockchainAccount | undefined) => void;
-    };
-
 export interface CardDetailPanelProps {
   card: CardView | BoardUnitView | null;
   isVisible: boolean;
-  mode?: CardDetailPanelMode;
   layout?: 'fixed' | 'contained';
   onClose?: () => void;
 }
@@ -100,73 +67,12 @@ export interface CardDetailPanelProps {
 export function CardDetailPanel({
   card,
   isVisible,
-  mode,
   layout = 'fixed',
   onClose,
 }: CardDetailPanelProps) {
-  const [showForfeitConfirm, setShowForfeitConfirm] = React.useState(false);
-  const isSubmitting = useIsSubmitting();
-  const { cardNameMap, setSelection, showRawJson, newRun } = useGameStore();
-  const abandonGame = useArenaStore((state) => state.abandonGame);
-  const abandonTournament = useTournamentStore((state) => state.abandonTournament);
-
-  const resolvedMode: CardDetailPanelMode = mode ?? { type: 'standard' };
+  const { cardNameMap, setSelection, showRawJson } = useGameStore();
   const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
   const cardRawJson = React.useMemo(() => prettyJson(card), [card]);
-  const forfeitContext =
-    resolvedMode.type === 'tournament'
-      ? {
-          title: 'Surrender?',
-          subtitle: 'Your tournament journey ends here.',
-          confirmation: 'All progress will be sealed. There is no returning to this battle.',
-          success: 'You have surrendered.',
-          accent: 'from-special/20 via-defeat/10 to-transparent',
-        }
-      : resolvedMode.type === 'blockchain'
-        ? {
-            title: 'Surrender?',
-            subtitle: 'Your battle record ends here.',
-            confirmation: 'This run will be lost to the chain forever. There is no turning back.',
-            success: 'You have surrendered.',
-            accent: 'from-accent/20 via-defeat/10 to-transparent',
-          }
-        : {
-            title: 'Surrender?',
-            subtitle: 'Your current run will be lost.',
-            confirmation: 'All progress is gone. You will start fresh from the beginning.',
-            success: 'You have surrendered.',
-            accent: 'from-accent/15 via-defeat/10 to-transparent',
-          };
-
-  React.useEffect(() => {
-    if (!isVisible && showForfeitConfirm) {
-      setShowForfeitConfirm(false);
-    }
-  }, [isVisible, showForfeitConfirm]);
-
-  const handleForfeit = React.useCallback(async () => {
-    try {
-      if (resolvedMode.type === 'blockchain') {
-        await abandonGame();
-      } else if (resolvedMode.type === 'tournament') {
-        await abandonTournament();
-      } else {
-        newRun();
-      }
-      toast.success(forfeitContext.success);
-      setShowForfeitConfirm(false);
-      setSelection(null);
-    } catch (err) {
-      console.error('Forfeit failed:', err);
-    }
-  }, [
-    abandonGame,
-    abandonTournament,
-    forfeitContext.success,
-    newRun,
-    resolvedMode.type,
-    setSelection,
-  ]);
 
   if (!isVisible) return null;
 
@@ -293,104 +199,46 @@ export function CardDetailPanel({
   };
 
   return (
-    <>
+    <div
+      className={`card-detail-panel ${
+        isContainedLayout ? 'card-detail-panel--contained' : 'card-detail-panel--fixed'
+      } ${containerClassName} ${frameClassName} theme-panel app-shell bg-surface-dark/95 shadow-2xl flex flex-col z-30`}
+    >
+      {/* Header */}
       <div
-        className={`card-detail-panel ${
-          isContainedLayout ? 'card-detail-panel--contained' : 'card-detail-panel--fixed'
-        } ${containerClassName} ${frameClassName} theme-panel app-shell bg-surface-dark/95 shadow-2xl flex flex-col z-30`}
+        className={`border-b border-base-700/70 bg-gradient-to-r from-surface-mid/30 via-surface-dark/40 to-surface-dark/75 py-2 px-3 lg:px-5 lg:py-3 flex items-center ${
+          isContainedLayout ? 'justify-between' : ''
+        }`}
       >
-        {/* Header */}
-        <div
-          className={`border-b border-base-700/70 bg-gradient-to-r from-surface-mid/30 via-surface-dark/40 to-surface-dark/75 py-2 px-3 lg:px-5 lg:py-3 flex items-center ${
-            isContainedLayout ? 'justify-between' : ''
-          }`}
-        >
-          <div className="theme-title-text font-heading bg-clip-text text-xs font-bold uppercase tracking-wider text-transparent lg:text-sm">
-            Card Details
-          </div>
-          {isContainedLayout && (
-            <button
-              onClick={handleClose}
-              className="text-base-500 hover:text-base-200 text-sm leading-none p-1 transition-colors"
-              aria-label="Close card details"
-            >
-              &#x2715;
-            </button>
-          )}
+        <div className="theme-title-text font-heading bg-clip-text text-xs font-bold uppercase tracking-wider text-transparent lg:text-sm">
+          Card Details
         </div>
-
-        {/* Content */}
-        <div
-          data-card-detail-scroll-region="true"
-          role="region"
-          aria-label="Card details"
-          tabIndex={0}
-          className={`flex-1 overflow-y-auto custom-scrollbar outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset ${contentPaddingClass}`}
-        >
-          {renderCardTab()}
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-base-700/60 bg-surface-dark/70 p-1 text-center text-[6px] uppercase tracking-tighter text-base-600 font-mono lg:p-4 lg:text-[10px]">
-          Open Auto Battler Engine v0.2.0
-        </div>
+        {isContainedLayout && (
+          <button
+            onClick={handleClose}
+            className="text-base-500 hover:text-base-200 text-sm leading-none p-1 transition-colors"
+            aria-label="Close card details"
+          >
+            &#x2715;
+          </button>
+        )}
       </div>
 
-      {showForfeitConfirm && (
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
-          style={{ zIndex: UI_LAYERS.confirmDialog }}
-        >
-          <div
-            className="absolute inset-0"
-            onClick={() => {
-              if (!isSubmitting) {
-                setShowForfeitConfirm(false);
-              }
-            }}
-          />
-          <div className="theme-panel relative w-full max-w-sm overflow-hidden rounded-2xl border border-base-700/60 bg-surface-dark shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
-            <div className={`absolute inset-0 bg-gradient-to-br ${forfeitContext.accent}`} />
-            <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-base-400/30 to-transparent" />
+      {/* Content */}
+      <div
+        data-card-detail-scroll-region="true"
+        role="region"
+        aria-label="Card details"
+        tabIndex={0}
+        className={`flex-1 overflow-y-auto custom-scrollbar outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset ${contentPaddingClass}`}
+      >
+        {renderCardTab()}
+      </div>
 
-            <div className="relative p-6 lg:p-7 flex flex-col items-center text-center">
-              <h2
-                className="font-title text-3xl lg:text-4xl font-bold tracking-wide uppercase text-defeat"
-                style={{
-                  textShadow:
-                    '0 2px 12px rgb(var(--color-defeat) / 0.5), 0 0 40px rgb(var(--color-defeat) / 0.2)',
-                }}
-              >
-                {forfeitContext.title}
-              </h2>
-
-              <p className="mt-4 text-base font-heading font-semibold text-base-200">
-                {forfeitContext.subtitle}
-              </p>
-              <p className="mt-1 text-sm font-body leading-relaxed text-base-400">
-                {forfeitContext.confirmation}
-              </p>
-
-              <div className="mt-6 grid grid-cols-2 gap-3 w-full">
-                <button
-                  onClick={() => setShowForfeitConfirm(false)}
-                  disabled={isSubmitting}
-                  className="battle-btn rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Fight On
-                </button>
-                <button
-                  onClick={() => void handleForfeit()}
-                  disabled={isSubmitting}
-                  className="theme-danger-solid rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-wider transition-all disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Surrender
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      {/* Footer */}
+      <div className="border-t border-base-700/60 bg-surface-dark/70 p-1 text-center text-[6px] uppercase tracking-tighter text-base-600 font-mono lg:p-4 lg:text-[10px]">
+        Open Auto Battler Engine v0.2.0
+      </div>
+    </div>
   );
 }

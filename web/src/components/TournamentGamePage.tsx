@@ -10,10 +10,7 @@ import { Navigate } from 'react-router-dom';
 export function TournamentGamePage() {
   const {
     isConnected,
-    accounts,
     selectedAccount,
-    selectAccount,
-    blockNumber,
     fetchSets,
     fetchCards,
     hydrateGameEngineFromChainData,
@@ -85,12 +82,6 @@ export function TournamentGamePage() {
           disabled: isSubmitting,
           variant: 'chain',
         }}
-        blockchainMode={true}
-        detailMode="tournament"
-        blockNumber={blockNumber}
-        accounts={accounts}
-        selectedAccount={selectedAccount}
-        onSelectAccount={selectAccount}
       />
     </div>
   );
