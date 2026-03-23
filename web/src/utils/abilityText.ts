@@ -1,13 +1,11 @@
 import type {
   AnyAbility,
-  BattleAbility,
   BattleCondition,
   BattleEffect,
   BattleMatcher,
   BattleScope,
   BattleTarget,
   CompareOp,
-  ShopAbility,
   ShopCondition,
   ShopEffect,
   ShopMatcher,
@@ -311,9 +309,3 @@ export function formatAbilitySentence(
   return `${trigger}, ${effect}${conditionText}${triggerLimit}.`;
 }
 
-export function formatNamedAbility(
-  ability: BattleAbility | ShopAbility,
-  options: AbilityTextOptions = {}
-): string {
-  return formatAbilitySummary(ability, options);
-}

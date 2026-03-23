@@ -180,15 +180,6 @@ export function CloseIcon({ className = 'w-4 h-4' }: IconProps) {
   );
 }
 
-/** Pointer hand — select prompt */
-export function PointerIcon({ className = 'w-4 h-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M13.64 2.36a1 1 0 00-1.28 0l-4 3.5A1 1 0 009 7h2v5H9a1 1 0 00-.64 1.77l4 3.5a1 1 0 001.28 0l4-3.5A1 1 0 0017 12h-2V7h2a1 1 0 00.64-1.77l-4-3.37z" />
-    </svg>
-  );
-}
-
 /** Playing card — card tab */
 export function CardIcon({ className = 'w-4 h-4' }: IconProps) {
   return (
