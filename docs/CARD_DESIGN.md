@@ -121,7 +121,12 @@ units, fill the board faster than the enemy can clear it.
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| | | | | | | | |
+| Cricket | 1 | 2 | 1 | 0 | 10 | OnFaint: Spawn 1/1 Zombie Cricket | Cheapest spawner |
+| Rat Swarm | 1 | 1 | 1 | 0 | 10 | OnFaint: Spawn 1/1 Rat Token | Ultra-fragile, two bodies for 1 mana |
+| Spider | 2 | 2 | 3 | 1 | 10 | OnFaint: Spawn 2/2 Spiderling | Mid spawner, token matches parent |
+| Horse | 2 | 1 | 2 | 1 | 10 | OnAllySpawn: +1 ATK to spawned unit | Makes tokens dangerous |
+| Dog | 2 | 3 | 3 | 1 | 10 | OnAllySpawn: +2 ATK +1 HP to self | Grows with every spawn |
+| Rooster | 4 | 4 | 5 | 2 | 10 | OnFaint: Spawn 3/1 Chick | Big body + strong token |
 
 ---
 
@@ -145,7 +150,12 @@ Kangaroo), stat stacking
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| | | | | | | | |
+| Worm | 1 | 2 | 1 | 0 | 10 | OnBuy: +1 ATK +1 HP to self (perm) | Self-investment on purchase |
+| Otter | 1 | 2 | 1 | 0 | 10 | OnBuy: +1 HP to random ally (perm) | Spread value on purchase |
+| Fish | 2 | 2 | 2 | 1 | 10 | OnBuy: +1 ATK +1 HP to random ally (perm) | Core scaling enabler |
+| Giraffe | 1 | 3 | 3 | 1 | 10 | OnShopStart: +1 ATK +1 HP to back unit (perm) | Recurring shop engine |
+| Penguin | 2 | 4 | 4 | 2 | 10 | OnShopStart: +1 ATK +1 HP to 2 random allies (perm) | Premium shop engine |
+| Cow | 3 | 5 | 5 | 2 | 10 | OnBuy: +1 ATK +1 HP to all allies (perm) | Mass buy buff |
 
 ---
 
@@ -170,7 +180,12 @@ single critical unit
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| | | | | | | | |
+| Mosquito | 1 | 2 | 1 | 0 | 10 | OnStart: Deal 1 damage to random enemy | Chip damage |
+| Archer | 1 | 3 | 2 | 1 | 10 | OnStart: Deal 2 damage to last enemy | Back-line sniper |
+| Dolphin | 2 | 3 | 3 | 1 | 10 | OnStart: Deal 3 damage to lowest HP enemy | Targeted removal |
+| Skunk | 3 | 4 | 4 | 2 | 10 | OnStart: Deal 3 damage to highest HP enemy | Tank buster |
+| Headhunter | 3 | 3 | 4 | 2 | 10 | OnStart: Deal 4 damage to lowest HP enemy | Assassin |
+| Crocodile | 4 | 4 | 5 | 2 | 10 | OnStart: Deal 6 damage to last enemy | Heavy back-line hit |
 
 ---
 
@@ -194,7 +209,12 @@ loses to Faint Chain (opponent gains value from dying)
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| | | | | | | | |
+| Scaredy Cat | 1 | 2 | 1 | 0 | 10 | OnStart: +2 HP to unit behind | Cheap positional HP buff |
+| Shield Bearer | 1 | 3 | 2 | 1 | 10 | OnStart: +2 HP to front ally | Front-line support |
+| Nurse Goblin | 1 | 3 | 2 | 1 | 10 | AfterUnitAttack (front ally): +1 HP to front ally (3x) | Heals survivors |
+| Medic | 1 | 4 | 4 | 2 | 10 | BeforeAnyAttack: +1 HP to all allies (3x) | AoE sustain |
+| Shield Squire | 2 | 4 | 4 | 2 | 10 | BeforeAnyAttack: +2 HP to back unit (3x) | Back-line protector |
+| Armadillo | 2 | 6 | 6 | 3 | 10 | OnStart: +4 HP to all allies | Mass HP buff |
 
 ---
 
@@ -219,7 +239,12 @@ don't die in the right order
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| | | | | | | | |
+| Ant | 1 | 2 | 1 | 0 | 10 | OnFaint: +1 ATK +1 HP to random ally (perm) | Basic faint buff |
+| Flamingo | 2 | 2 | 2 | 1 | 10 | OnFaint: +1 ATK +1 HP to 2 units behind (perm) | Positional faint buff |
+| Hedgehog | 2 | 2 | 2 | 1 | 10 | OnFaint: Deal 2 damage to all | AoE on death |
+| Martyr Knight | 2 | 3 | 3 | 1 | 10 | OnFaint: +2 ATK +2 HP to unit behind (perm) | Big single-target buff |
+| Badger | 3 | 3 | 3 | 1 | 10 | OnFaint: Deal 3 damage to adjacent | Risky directional AoE (hits own allies) |
+| Shark | 3 | 3 | 4 | 2 | 10 | OnAllyFaint: +2 ATK +1 HP to self | Faint consumer, snowballs |
 
 ---
 
@@ -243,7 +268,11 @@ being attacked)
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| | | | | | | | |
+| Spined Urchin | 1 | 3 | 2 | 1 | 10 | OnHurt: Deal 1 damage to attacker (3x) | Basic thorns |
+| Peacock | 1 | 4 | 3 | 1 | 10 | OnHurt: +2 ATK to self | Gets dangerous when hit |
+| Blowfish | 2 | 4 | 3 | 1 | 10 | OnHurt: Deal 3 damage to random enemy | Damage on hurt |
+| Porcupine | 3 | 5 | 4 | 2 | 10 | OnHurt: Deal 2 damage to attacker | Better thorns |
+| Snake | 3 | 5 | 5 | 2 | 10 | AfterUnitAttack (front ally): Deal 3 damage to random enemy | Punishes from behind |
 
 ---
 
@@ -267,7 +296,10 @@ mana
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| | | | | | | | |
+| Piggy Bank | 1 | 2 | 1 | 3 | 10 | None | High burn value, buy for 1 sell for 3 |
+| Swan | 1 | 3 | 3 | 1 | 10 | OnShopStart: +1 mana | Recurring mana engine |
+| Duck | 1 | 3 | 2 | 1 | 10 | OnSell: +1 HP to all allies (perm) | Sell for team HP |
+| Squirrel | 2 | 4 | 4 | 2 | 10 | OnShopStart: +1 mana | Premium recurring mana |
 
 ---
 
@@ -292,7 +324,13 @@ Chain (dying fuels their engine)
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| | | | | | | | |
+| Goblin Raider | 2 | 1 | 1 | 0 | 10 | BeforeUnitAttack: +1 ATK to self (3x) | Glass cannon, pumps ATK |
+| Kangaroo | 2 | 2 | 2 | 1 | 10 | BeforeUnitAttack: +1 ATK +1 HP to self | Combat snowball |
+| Dodo | 3 | 3 | 3 | 1 | 10 | OnStart: +2 ATK to unit behind | Aggro buffer |
+| Wolverine | 3 | 2 | 3 | 1 | 10 | OnStart: +2 ATK to adjacent allies | Spread ATK boost |
+| Lone Wolf | 2 | 3 | 3 | 1 | 10 | BeforeUnitAttack: +5 ATK if alone (3x) | Solo aggro, huge payoff |
+| Battle Hardened | 3 | 3 | 5 | 2 | 10 | BeforeUnitAttack: +2 ATK; AfterUnitAttack: +2 HP (3x ea) | Combat snowball |
+| Boar | 4 | 4 | 5 | 2 | 10 | BeforeUnitAttack: +3 ATK +1 HP | Premium aggro finisher |
 
 ---
 
@@ -315,7 +353,15 @@ and sell repeatedly, generating small advantages each cycle that compound over t
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| | | | | | | | |
+| Beaver | 2 | 1 | 1 | 0 | 10 | OnSell: +1 ATK to 2 random allies (perm) | Sell for spread ATK |
+| Worm | 1 | 2 | 1 | 0 | 10 | OnBuy: +1 ATK +1 HP to self (perm) | Buy-sell fodder (also Scaling) |
+| Duck | 1 | 3 | 2 | 1 | 10 | OnSell: +1 HP to all allies (perm) | Sell for team HP (also Economy) |
+| Fish | 2 | 2 | 2 | 1 | 10 | OnBuy: +1 ATK +1 HP to random ally (perm) | Buy trigger (also Scaling) |
+| Seal | 3 | 5 | 5 | 2 | 10 | OnBuy: +1 ATK to 3 random allies (perm) | Mass buy buff |
+
+> **Note:** Sell Cycling overlaps heavily with Economy (sell for mana) and Scaling (buy for
+> buffs). Its identity comes from running BOTH buy and sell triggers together, churning
+> through the shop for high transaction volume.
 
 ---
 
@@ -340,7 +386,11 @@ accidentally win early
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| | | | | | | | |
+| Snail | 1 | 2 | 1 | 0 | 10 | AfterLoss: +1 HP to all allies (perm) | Basic comeback, team HP |
+| Stray Dog | 2 | 2 | 2 | 1 | 10 | AfterLoss: +1 ATK +1 HP to self (perm) | Self-scaling on loss |
+| Rally Captain | 2 | 3 | 3 | 1 | 10 | AfterLoss: +1 ATK to all allies (perm) | Team ATK on loss |
+| Battle Scarred | 2 | 5 | 4 | 2 | 10 | AfterLoss: +2 ATK +1 HP to self (perm) | Premium self-scaler |
+| War Drummer | 3 | 5 | 5 | 2 | 10 | AfterLoss: +1 ATK +1 HP to all allies (perm) | Mass comeback buff |
 
 ---
 
@@ -357,7 +407,12 @@ pieces.
 
 | Name | ATK | HP | Cost | Burn | Rarity | Notes |
 |------|-----|----|------|------|--------|-------|
-| | | | | | | |
+| Goblin Scout | 1 | 3 | 1 | 0 | 10 | Cheap defensive body |
+| Goblin Grunt | 3 | 3 | 2 | 1 | 10 | Balanced early fighter |
+| Militia | 4 | 4 | 3 | 1 | 10 | Solid mid-game body |
+| Turtle | 5 | 5 | 4 | 2 | 10 | Reliable all-rounder |
+| Scorpion | 6 | 6 | 5 | 2 | 10 | Strong stat stick |
+| Gorilla | 7 | 7 | 6 | 3 | 10 | Premium vanilla, top-end stats |
 
 ---
 
@@ -374,7 +429,7 @@ a dedicated archetype card but provide flexibility and enable cross-archetype bu
 
 | Name | ATK | HP | Cost | Burn | Rarity | Archetypes | Abilities | Notes |
 |------|-----|----|------|------|--------|------------|-----------|-------|
-| | | | | | | | | |
+| *To be designed after commons are finalized* | | | | | | | | |
 
 ---
 
@@ -391,4 +446,7 @@ burn 0.
 
 | Name | ATK | HP | Spawned By | Abilities | Notes |
 |------|-----|----|------------|-----------|-------|
-| | | | | | |
+| Zombie Cricket | 1 | 1 | Cricket | None | Basic token |
+| Rat Token | 1 | 1 | Rat Swarm | None | Basic token |
+| Spiderling | 2 | 2 | Spider | None | Mid-tier token |
+| Chick | 3 | 1 | Rooster | None | Glass cannon token |
