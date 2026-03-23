@@ -859,8 +859,8 @@ fn apply_ability_effect<R: BattleRng>(
             } => {
                 limits.record_spawn(source_team)?;
 
-                // 1. Create the unit and determine its insertion point
-                let (new_unit, safe_idx) = {
+                // 1. Create the unit and insert into the board
+                let (spawned_id, safe_idx) = {
                     let my_board = match source_team {
                         Team::Player => &mut *player_units,
                         Team::Enemy => &mut *enemy_units,
@@ -881,25 +881,24 @@ fn apply_ability_effect<R: BattleRng>(
                     new_unit.instance_id = instance_id;
                     new_unit.team = source_team;
 
-                    // INSERTION LOGIC: Use override if provided (e.g. Zombie Cricket), otherwise Front (e.g. Spawner)
+                    // INSERTION LOGIC: Use override if provided (e.g. Zombie Cricket), otherwise Front
                     let insert_idx = spawn_index_override.unwrap_or(0);
                     let safe_idx = core::cmp::min(insert_idx, my_board.len());
 
-                    my_board.insert(safe_idx, new_unit.clone());
+                    my_board.insert(safe_idx, new_unit);
 
                     // Log Spawn
                     events.push(CombatEvent::UnitSpawn {
                         team: source_team,
-                        spawned_unit: new_unit.to_view(card_pool),
+                        spawned_unit: my_board[safe_idx].to_view(card_pool),
                         new_board_state: my_board.iter().map(|u| u.to_view(card_pool)).collect(),
                     });
 
-                    (new_unit, safe_idx)
+                    (instance_id, safe_idx)
                 };
 
                 // 2. TRIGGER REACTIONS: OnSpawn for the spawned unit, OnAllySpawn for others
                 let mut reactions = Vec::new();
-                let spawned_id = new_unit.instance_id;
 
                 {
                     let my_board = match source_team {
@@ -1648,46 +1647,34 @@ fn resolve_relative_position(
         Team::Enemy => enemy_units,
     };
 
-    let pos = allies
-        .iter()
-        .position(|u| u.instance_id == source_id)
-        .or(source_position_override);
+    // If unit is on the board, position() finds it (alive). Otherwise use override (dead).
+    let found_pos = allies.iter().position(|u| u.instance_id == source_id);
+    let is_alive = found_pos.is_some();
+    let pos = found_pos.or(source_position_override);
 
     if let Some(pos) = pos {
-        let is_alive = allies.iter().any(|u| u.instance_id == source_id);
         let target_idx = if index == -1 {
-            // Ahead
-            if is_alive {
-                if pos > 0 {
-                    Some(pos - 1)
-                } else {
-                    None
-                }
+            // Ahead — same logic alive or dead (pos-1)
+            if pos > 0 {
+                Some(pos - 1)
             } else {
-                // Dead unit removed, pos-1 is still pos-1
-                if pos > 0 {
-                    Some(pos - 1)
-                } else {
-                    None
-                }
+                None
             }
         } else if index == 1 {
-            // Behind
+            // Behind — if alive, pos+1; if dead (removed), pos (next unit slid in)
             if is_alive {
                 if pos + 1 < allies.len() {
                     Some(pos + 1)
                 } else {
                     None
                 }
+            } else if pos < allies.len() {
+                Some(pos)
             } else {
-                // Dead unit removed, pos+1 is now pos
-                if pos < allies.len() {
-                    Some(pos)
-                } else {
-                    None
-                }
+                None
             }
         } else if index == 0 {
+            // Self — only if alive
             if is_alive {
                 Some(pos)
             } else {
