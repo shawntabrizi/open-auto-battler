@@ -300,7 +300,14 @@ export function Arena() {
             ref={boardRowRef}
             className="board-row flex gap-1 lg:gap-4 w-full lg:max-w-3xl h-[clamp(10.5rem,28vh,13rem)] lg:h-[clamp(12.5rem,32vh,16rem)]"
           >
-            {Array.from({ length: 5 }).map((_, displayIndex) => {
+            {(() => {
+              // Hoist hand-insert shift map outside the loop — same for all slots
+              const handInsertShiftMap =
+                dragShift?.source === -1
+                  ? computeHandInsertShift(view.board, dragShift.target)
+                  : null;
+
+              return Array.from({ length: 5 }).map((_, displayIndex) => {
               const arrayIndex = 4 - displayIndex;
               const unit = view.board[arrayIndex];
               const slotId = `board-slot-${arrayIndex}`;
@@ -316,10 +323,8 @@ export function Arena() {
               // negate because display order is reversed from array order
               let shift = 0;
               if (dragShift) {
-                if (dragShift.source === -1) {
-                  // Hand-insert shift: use nearest-empty-based shift map
-                  const shiftMap = computeHandInsertShift(view.board, dragShift.target);
-                  shift = shiftMap?.get(arrayIndex) ?? 0;
+                if (handInsertShiftMap) {
+                  shift = handInsertShiftMap.get(arrayIndex) ?? 0;
                 } else {
                   // Board-rearrange shift
                   shift = computeSlotShift(arrayIndex, dragShift.source, dragShift.target);
@@ -400,7 +405,8 @@ export function Arena() {
                   </div>
                 </div>
               );
-            })}
+            });
+            })()}
           </div>
         </div>
       </div>
