@@ -110,12 +110,6 @@ export default {
           '70%': { transform: 'scale(1.02)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
-        'card-settle': {
-          '0%': {
-            transform: 'translateX(calc(var(--settle-slots, 0) * var(--slot-stride, 88px)))',
-          },
-          '100%': { transform: 'translateX(0)' },
-        },
         'card-exit': {
           '0%': { opacity: '1', transform: 'scale(1)' },
           '50%': { opacity: '0.6', transform: 'scale(0.85)' },
@@ -195,7 +189,6 @@ export default {
         'stagger-fade-in': 'stagger-fade-in 0.5s ease-out forwards',
         'color-flash': 'color-flash 0.3s ease-out forwards',
         'card-land': 'card-land 0.3s var(--spring-snappy) both',
-        'card-settle': 'card-settle 0.4s ease-out both',
         'card-exit': 'card-exit 0.3s ease-out forwards',
         'battle-continue': 'battle-continue 0.8s ease-out forwards',
         'stat-count-up': 'stat-count-up 0.5s var(--spring-bounce) forwards',

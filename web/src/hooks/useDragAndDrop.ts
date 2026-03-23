@@ -46,6 +46,11 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
     setDragShift,
   } = useGameStore();
 
+  // Keep a ref to the current view so callbacks can read it without
+  // needing view in their dependency arrays (avoids re-creating on every state change)
+  const viewRef = useRef(view);
+  viewRef.current = view;
+
   // Custom modifier to restrict dragging to the container
   const restrictToContainer: Modifier = useCallback(({ transform, draggingNodeRect }) => {
     if (!containerRef.current || !draggingNodeRect) {
@@ -91,13 +96,13 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
         setSelection({ type: type, index });
       }
       // Cache the card data for the overlay
-      if (type === 'board' && view?.board) {
-        draggedCardRef.current = view.board[index] ?? null;
+      if (type === 'board' && viewRef.current?.board) {
+        draggedCardRef.current = viewRef.current.board[index] ?? null;
       } else {
         draggedCardRef.current = null;
       }
     },
-    [setSelection, view]
+    [setSelection]
   );
 
   // Handle drag over — set drag shift for CSS transform-based card shifting
@@ -117,17 +122,19 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
 
       const hoverIndex = overData.index as number;
 
+      const board = viewRef.current?.board;
+
       if (activeData.type === 'board') {
         // Board-to-board: shift when target is occupied
         const sourceIndex = activeData.index as number;
-        if (sourceIndex === hoverIndex || !view?.board?.[hoverIndex]) {
+        if (sourceIndex === hoverIndex || !board?.[hoverIndex]) {
           setDragShift(null);
         } else {
           setDragShift({ source: sourceIndex, target: hoverIndex });
         }
       } else if (activeData.type === 'hand') {
         // Hand-to-board: shift when target is occupied and board has space
-        if (!view?.board?.[hoverIndex] || isBoardFull(view.board)) {
+        if (!board?.[hoverIndex] || isBoardFull(board)) {
           setDragShift(null);
         } else {
           // source=-1 sentinel signals "hand insert" to the rendering layer
@@ -137,7 +144,7 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
         setDragShift(null);
       }
     },
-    [setDragShift, view]
+    [setDragShift]
   );
 
   // Handle drag end - dispatch actions based on source and destination
@@ -193,7 +200,7 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
           // Play card from hand to board (engine handles shifting if occupied)
           playHandCard(sourceIndex, destIndex);
         } else if (sourceType === 'board' && sourceIndex !== destIndex) {
-          if (view?.board?.[destIndex]) {
+          if (viewRef.current?.board?.[destIndex]) {
             // Target occupied — SAP-style shift
             moveBoardPosition(sourceIndex, destIndex);
           } else {
@@ -213,7 +220,6 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
       swapBoardPositions,
       setSelection,
       setDragShift,
-      view,
     ]
   );
 
@@ -241,16 +247,16 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
 
   // Get the card being dragged for the overlay
   const getActiveCard = useCallback((): CardView | BoardUnitView | null => {
-    if (!activeId || !view) return null;
+    if (!activeId || !viewRef.current) return null;
     const [type, indexStr] = activeId.split('-');
     const index = parseInt(indexStr);
     if (type === 'hand') {
-      return view.hand[index] ?? null;
+      return viewRef.current.hand[index] ?? null;
     } else if (type === 'board') {
-      return draggedCardRef.current ?? view.board[index] ?? null;
+      return draggedCardRef.current ?? viewRef.current.board[index] ?? null;
     }
     return null;
-  }, [activeId, view]);
+  }, [activeId]);
 
   return {
     activeId,

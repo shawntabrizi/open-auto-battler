@@ -274,13 +274,6 @@
     1.001,
     1
   );
-  --slot-stride: 150px;
-}
-
-@media (min-width: 1024px) {
-  :root {
-    --slot-stride: 160px;
-  }
 }
 
 body {
