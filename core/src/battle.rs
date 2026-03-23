@@ -602,20 +602,12 @@ fn resolve_trigger_queue<R: BattleRng>(
                     continue; // Source gone entirely — skip
                 };
 
-                let (allies, enemies): (&[CombatUnit], &[CombatUnit]) = match trigger.team {
-                    Team::Player => (player_units.as_slice(), enemy_units.as_slice()),
-                    Team::Enemy => (enemy_units.as_slice(), player_units.as_slice()),
-                };
-
                 if !evaluate_condition(
                     &trigger.conditions,
-                    &ConditionContext {
-                        source,
-                        allies,
-                        enemies,
-                    },
+                    source,
                     player_units,
                     enemy_units,
+                    rng,
                     trigger.trigger_target_id,
                 ) {
                     continue;
@@ -771,7 +763,7 @@ fn apply_ability_effect<R: BattleRng>(
 
         match effect {
             AbilityEffect::Damage { amount, target } => {
-                let targets = get_targets(
+                let targets = resolve_targets(
                     source_instance_id,
                     source_team,
                     target,
@@ -803,7 +795,7 @@ fn apply_ability_effect<R: BattleRng>(
                 attack,
                 target,
             } => {
-                let targets = get_targets(
+                let targets = resolve_targets(
                     source_instance_id,
                     source_team,
                     target,
@@ -835,7 +827,7 @@ fn apply_ability_effect<R: BattleRng>(
                 attack,
                 target,
             } => {
-                let targets = get_targets(
+                let targets = resolve_targets(
                     source_instance_id,
                     source_team,
                     target,
@@ -980,7 +972,7 @@ fn apply_ability_effect<R: BattleRng>(
                 Ok(damaged_units)
             }
             AbilityEffect::Destroy { target } => {
-                let targets = get_targets(
+                let targets = resolve_targets(
                     source_instance_id,
                     source_team,
                     target,
@@ -1431,7 +1423,8 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
     )
 }
 
-fn get_targets<R: BattleRng>(
+/// Resolve target unit IDs for an ability target.
+fn resolve_targets<R: BattleRng>(
     source_instance_id: UnitInstanceId,
     source_team: Team,
     target: &AbilityTarget,
@@ -1481,80 +1474,6 @@ fn get_targets<R: BattleRng>(
             rng.shuffle(&mut results);
             results.truncate(actual_count);
             results
-        }
-        AbilityTarget::Standard {
-            scope,
-            stat,
-            order,
-            count,
-        } => resolve_stat_based(
-            *scope,
-            source_instance_id,
-            source_team,
-            *stat,
-            *order,
-            *count,
-            player_units,
-            enemy_units,
-            trigger_target_id,
-        ),
-        AbilityTarget::All { scope } => resolve_scope_ids(
-            *scope,
-            source_instance_id,
-            source_team,
-            player_units,
-            enemy_units,
-            trigger_target_id,
-        ),
-    }
-}
-
-fn get_condition_targets(
-    source_instance_id: UnitInstanceId,
-    source_team: Team,
-    target: &AbilityTarget,
-    player_units: &[CombatUnit],
-    enemy_units: &[CombatUnit],
-    trigger_target_id: Option<UnitInstanceId>,
-) -> Vec<UnitInstanceId> {
-    match target {
-        AbilityTarget::Position { scope, index } => {
-            if *scope == TargetScope::SelfUnit {
-                resolve_relative_position(
-                    source_instance_id,
-                    source_team,
-                    *index,
-                    player_units,
-                    enemy_units,
-                    None,
-                )
-            } else {
-                resolve_absolute_position(*scope, source_team, *index, player_units, enemy_units)
-            }
-        }
-        AbilityTarget::Adjacent { scope } => resolve_adjacent(
-            source_instance_id,
-            source_team,
-            *scope,
-            player_units,
-            enemy_units,
-            None,
-        ),
-        AbilityTarget::Random { scope, count } => {
-            let mut candidates = resolve_scope_ids(
-                *scope,
-                source_instance_id,
-                source_team,
-                player_units,
-                enemy_units,
-                trigger_target_id,
-            );
-            if candidates.is_empty() {
-                return vec![];
-            }
-            let actual_count = (*count as usize).min(candidates.len());
-            candidates.truncate(actual_count);
-            candidates
         }
         AbilityTarget::Standard {
             scope,
@@ -1868,36 +1787,40 @@ fn get_stat_value(unit: &CombatUnit, stat: StatType) -> i32 {
 // CONDITION EVALUATION
 // ==========================================
 
-/// Context for evaluating conditions.
-/// The `allies` and `enemies` fields are reserved for future condition types
-/// that need team-scoped evaluation without separate slice parameters.
-#[allow(dead_code)]
-struct ConditionContext<'a> {
-    source: &'a CombatUnit,
-    allies: &'a [CombatUnit],
-    enemies: &'a [CombatUnit],
-}
-
-/// Evaluates a list of conditions given the context (implicit AND).
-fn evaluate_condition(
+/// Evaluates a list of conditions (implicit AND).
+fn evaluate_condition<R: BattleRng>(
     conditions: &[Condition],
-    ctx: &ConditionContext,
+    source: &CombatUnit,
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
+    rng: &mut R,
     trigger_target_id: Option<UnitInstanceId>,
 ) -> bool {
     for condition in conditions {
         match condition {
             Condition::Is(matcher) => {
-                if !evaluate_matcher(matcher, ctx, player_units, enemy_units, trigger_target_id) {
+                if !evaluate_matcher(
+                    matcher,
+                    source,
+                    player_units,
+                    enemy_units,
+                    rng,
+                    trigger_target_id,
+                ) {
                     return false;
                 }
             }
             Condition::AnyOf(matchers) => {
                 let mut any_passed = false;
                 for matcher in matchers {
-                    if evaluate_matcher(matcher, ctx, player_units, enemy_units, trigger_target_id)
-                    {
+                    if evaluate_matcher(
+                        matcher,
+                        source,
+                        player_units,
+                        enemy_units,
+                        rng,
+                        trigger_target_id,
+                    ) {
                         any_passed = true;
                         break;
                     }
@@ -1912,11 +1835,12 @@ fn evaluate_condition(
 }
 
 /// Evaluates a single matcher.
-fn evaluate_matcher(
+fn evaluate_matcher<R: BattleRng>(
     matcher: &Matcher,
-    ctx: &ConditionContext,
+    source: &CombatUnit,
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
+    rng: &mut R,
     trigger_target_id: Option<UnitInstanceId>,
 ) -> bool {
     match matcher {
@@ -1927,12 +1851,12 @@ fn evaluate_matcher(
             value,
         } => {
             let scoped_targets: Vec<&CombatUnit> = if *scope == TargetScope::SelfUnit {
-                vec![ctx.source]
+                vec![source]
             } else {
                 resolve_scope_units(
                     *scope,
-                    ctx.source.instance_id,
-                    ctx.source.team,
+                    source.instance_id,
+                    source.team,
                     player_units,
                     enemy_units,
                     trigger_target_id,
@@ -1953,13 +1877,15 @@ fn evaluate_matcher(
             op,
             value,
         } => {
-            let target_ids = get_condition_targets(
-                ctx.source.instance_id,
-                ctx.source.team,
+            let target_ids = resolve_targets(
+                source.instance_id,
+                source.team,
                 target,
                 player_units,
                 enemy_units,
+                rng,
                 trigger_target_id,
+                None,
             );
             if target_ids.is_empty() {
                 return false;
@@ -1978,12 +1904,12 @@ fn evaluate_matcher(
             target_stat,
         } => {
             let scoped_targets: Vec<&CombatUnit> = if *target_scope == TargetScope::SelfUnit {
-                vec![ctx.source]
+                vec![source]
             } else {
                 resolve_scope_units(
                     *target_scope,
-                    ctx.source.instance_id,
-                    ctx.source.team,
+                    source.instance_id,
+                    source.team,
                     player_units,
                     enemy_units,
                     trigger_target_id,
@@ -1994,7 +1920,7 @@ fn evaluate_matcher(
                 return false;
             }
 
-            let source_val = get_stat_value(ctx.source, *source_stat);
+            let source_val = get_stat_value(source, *source_stat);
             scoped_targets.iter().any(|target_unit| {
                 compare_i32(source_val, *op, get_stat_value(target_unit, *target_stat))
             })
@@ -2002,8 +1928,8 @@ fn evaluate_matcher(
         Matcher::UnitCount { scope, op, value } => {
             let count = resolve_scope_ids(
                 *scope,
-                ctx.source.instance_id,
-                ctx.source.team,
+                source.instance_id,
+                source.team,
                 player_units,
                 enemy_units,
                 trigger_target_id,
@@ -2013,12 +1939,12 @@ fn evaluate_matcher(
         }
         Matcher::IsPosition { scope, index } => {
             let scoped_targets: Vec<&CombatUnit> = if *scope == TargetScope::SelfUnit {
-                vec![ctx.source]
+                vec![source]
             } else {
                 resolve_scope_units(
                     *scope,
-                    ctx.source.instance_id,
-                    ctx.source.team,
+                    source.instance_id,
+                    source.team,
                     player_units,
                     enemy_units,
                     trigger_target_id,
@@ -2039,7 +1965,7 @@ fn evaluate_matcher(
 
             scoped_targets
                 .get(actual_idx)
-                .map(|unit| unit.instance_id == ctx.source.instance_id)
+                .map(|unit| unit.instance_id == source.instance_id)
                 .unwrap_or(false)
         }
     }
