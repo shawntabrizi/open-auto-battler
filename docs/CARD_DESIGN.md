@@ -144,8 +144,8 @@ units, fill the board faster than the enemy can clear it.
 | Necromancer | 3 | 4 | 4 | 2 | 8 | OnAllySpawn: +2 ATK to spawned unit (3x) | Makes tokens hit harder |
 | Turkey | 4 | 5 | 6 | 3 | 6 | OnAllySpawn: +2 ATK +2 HP to spawned unit | THE spawn payoff, build-around |
 | Fly | 3 | 5 | 7 | 3 | 6 | OnAllyFaint: Spawn 3/3 Zombie Fly (3x) | Board refill machine |
-| Hive Mother | 5 | 7 | 9 | 3 | 6 | OnAllyFaint: Spawn 2/2 Drone at back (3x) | Swarm engine, spawns behind the line |
-| Brood Queen | 5 | 7 | 10 | 3 | 2 | OnFaint: Spawn 3x 1/1 Wasp at back (deathtouch) | Kill the queen, face 3 assassins |
+| Elephant | 5 | 7 | 9 | 3 | 6 | OnAllyFaint: Spawn 2/2 Calf at back (3x) | Swarm engine, spawns behind the line. **ART NOTE: token "Calf" needs art** |
+| Whale | 5 | 7 | 10 | 3 | 2 | OnFaint: Spawn 3x 1/1 Scorpion at back (deathtouch) | Kill the whale, face 3 assassins |
 
 ---
 
@@ -177,9 +177,9 @@ Kangaroo), stat stacking
 | Ox | 4 | 6 | 7 | 3 | 8 | AfterUnitAttack: +2 ATK +2 HP to self | Durable combat scaler |
 | Monkey | 3 | 5 | 7 | 3 | 6 | OnShopStart: +2 ATK +2 HP to random ally (perm) | Premium shop scaler |
 | Hippo | 4 | 5 | 7 | 3 | 6 | AfterUnitAttack: +3 ATK +3 HP to self | Combat snowball, must survive |
-| Titan | 5 | 7 | 8 | 3 | 6 | OnShopStart: +1 ATK +1 HP to self (perm); AfterUnitAttack: +2 ATK +2 HP to self | Scales in shop AND combat |
+| Ogre Mauler | 5 | 7 | 8 | 3 | 6 | OnShopStart: +1 ATK +1 HP to self (perm); AfterUnitAttack: +2 ATK +2 HP to self | Scales in shop AND combat |
 | Dragon | 4 | 6 | 9 | 3 | 6 | OnBuy: +1 ATK +1 HP to ALL allies (perm) | Mass scaling, best buy trigger |
-| Ancient Wyrm | 5 | 8 | 10 | 3 | 2 | OnShopStart: +2 ATK +2 HP to ALL allies (perm) | Team-wide scaling every round |
+| Behemoth | 5 | 8 | 10 | 3 | 2 | OnShopStart: +2 ATK +2 HP to ALL allies (perm) | Team-wide scaling every round |
 
 ---
 
@@ -209,12 +209,12 @@ single critical unit
 | Dolphin | 2 | 3 | 3 | 1 | 10 | OnStart: Deal 3 damage to lowest HP enemy | Targeted removal |
 | Skunk | 3 | 4 | 4 | 2 | 10 | OnStart: Deal 3 damage to highest HP enemy | Tank buster |
 | Crocodile | 4 | 4 | 5 | 2 | 10 | OnStart: Deal 6 damage to last enemy | Heavy back-line hit |
-| Fire Mage | 3 | 5 | 6 | 3 | 8 | OnStart: Deal 4 damage to 2 random enemies | Multi-target burst |
+| Abyssal Bomber | 3 | 5 | 6 | 3 | 8 | OnStart: Deal 4 damage to 2 random enemies | Multi-target burst |
 | Leopard | 4 | 5 | 7 | 3 | 6 | OnStart: Deal 5 damage to random enemy | Heavy single-target burst |
 | Artillery Mage | 4 | 4 | 7 | 3 | 6 | OnStart: Deal 3 damage to ALL enemies | AoE nuke |
-| Executioner | 5 | 6 | 8 | 3 | 6 | OnStart: Deal 8 damage to highest ATK enemy | Carry killer |
+| Headhunter | 5 | 6 | 8 | 3 | 6 | OnStart: Deal 8 damage to highest ATK enemy | Carry killer |
 | Dragon Tyrant | 5 | 7 | 9 | 3 | 6 | OnStart: Deal 4 damage to ALL enemies | Premium AoE nuke |
-| Apocalypse Dragon | 6 | 8 | 10 | 3 | 2 | OnStart: Deal 6 damage to ALL enemies | Wipes weak boards outright |
+| Giant Crusher | 6 | 8 | 10 | 3 | 2 | OnStart: Deal 6 damage to ALL enemies | Wipes weak boards outright |
 
 ---
 
@@ -241,14 +241,14 @@ loses to Faint Chain (opponent gains value from dying)
 | Scaredy Cat | 1 | 3 | 2 | 1 | 10 | OnStart: +2 HP to unit behind | Positional HP buff |
 | Shield Bearer | 1 | 3 | 2 | 1 | 10 | OnStart: +2 HP to front ally | Front-line support |
 | Nurse Goblin | 1 | 3 | 2 | 1 | 10 | AfterUnitAttack (front ally): +1 HP to front ally (3x) | Heals survivors |
-| Tortoise | 1 | 4 | 3 | 1 | 8 | OnStart: +2 HP to adjacent allies | Positional HP buff |
+| Crab | 1 | 4 | 3 | 1 | 8 | OnStart: +2 HP to adjacent allies | Positional HP buff |
 | Shield Squire | 2 | 4 | 4 | 2 | 10 | BeforeAnyAttack: +2 HP to back unit (3x) | Back-line protector |
-| Cleric | 2 | 6 | 5 | 2 | 8 | BeforeAnyAttack: +2 HP to front ally (3x) | Focused front-line healer |
+| Sheep | 2 | 6 | 5 | 2 | 8 | BeforeAnyAttack: +2 HP to front ally (3x) | Focused front-line healer |
 | Armadillo | 2 | 6 | 6 | 3 | 10 | OnStart: +4 HP to all allies | Mass HP buff |
-| Guardian | 3 | 6 | 6 | 3 | 6 | BeforeUnitAttack: +3 HP to self | Unkillable front-liner |
-| Stone Golem | 2 | 8 | 7 | 3 | 6 | OnStart: +3 HP to all allies | Massive HP wall |
+| Seal | 3 | 6 | 6 | 3 | 6 | BeforeUnitAttack: +3 HP to self | Unkillable front-liner |
+| Golem | 2 | 8 | 7 | 3 | 6 | OnStart: +3 HP to all allies | Massive HP wall |
 | Shield Master | 3 | 8 | 8 | 3 | 6 | BeforeAnyAttack: +2 HP to all allies (3x) | Premium AoE healer |
-| World Turtle | 3 | 12 | 10 | 3 | 2 | BeforeAnyAttack: +2 HP to all allies | Endless team healing, unkillable wall |
+| Boar | 3 | 12 | 10 | 3 | 2 | BeforeAnyAttack: +2 HP to all allies | Endless team healing, unkillable wall. **ART NOTE: Boar art as legendary tank is a weak fit** |
 
 ---
 
@@ -280,10 +280,10 @@ don't die in the right order
 | Badger | 3 | 3 | 3 | 1 | 10 | OnFaint: Deal 3 damage to adjacent | Risky directional AoE (hits own allies) |
 | Shark | 3 | 3 | 4 | 2 | 10 | OnAllyFaint: +2 ATK +1 HP to self | Faint consumer, snowballs |
 | Wolf Rider | 3 | 4 | 5 | 2 | 8 | OnFaint: Deal 5 damage to front enemy | Big damage on death |
-| Grave Knight | 4 | 5 | 6 | 3 | 8 | OnAllyFaint: +2 ATK +2 HP to self (perm) | Premium faint consumer |
+| Zombie Soldier | 4 | 5 | 6 | 3 | 8 | OnAllyFaint: +2 ATK +2 HP to self (perm) | Premium faint consumer |
 | Mammoth | 3 | 6 | 7 | 3 | 6 | OnFaint: +2 ATK +2 HP to ALL allies (perm) | Board-wide death buff |
 | Phoenix | 3 | 4 | 8 | 3 | 6 | OnFaint: Spawn Phoenix Egg (OnStart: Spawn 3/4 Phoenix) | Comes back from death |
-| Lich King | 5 | 8 | 10 | 3 | 2 | OnAllyFaint: +3 ATK +3 HP to ALL other allies (perm) | Every death supercharges the team |
+| Lich | 5 | 8 | 10 | 3 | 2 | OnAllyFaint: +3 ATK +3 HP to ALL other allies (perm) | Every death supercharges the team |
 
 ---
 
@@ -311,14 +311,14 @@ being attacked)
 | Peacock | 1 | 4 | 3 | 1 | 10 | OnHurt: +2 ATK to self | Gets dangerous when hit |
 | Blowfish | 2 | 4 | 3 | 1 | 10 | OnHurt: Deal 3 damage to random enemy | Damage on hurt |
 | Snake | 3 | 5 | 5 | 2 | 10 | AfterUnitAttack (front ally): Deal 3 damage to random enemy | Punishes from behind |
-| Cactus | 2 | 5 | 4 | 2 | 8 | OnHurt: Deal 1 damage to ALL enemies (3x) | AoE thorns lite |
-| Iron Maiden | 3 | 6 | 6 | 3 | 8 | OnHurt: Deal 3 damage to attacker | Heavy direct thorns |
+| Rear Guard | 2 | 5 | 4 | 2 | 8 | OnHurt: Deal 1 damage to ALL enemies (3x) | AoE thorns lite |
+| Vampire | 3 | 6 | 6 | 3 | 8 | OnHurt: Deal 3 damage to attacker | Heavy direct thorns |
 | Camel | 2 | 6 | 6 | 3 | 6 | OnHurt: +2 ATK +2 HP to unit behind (unlimited) | Cascading buffs on hit |
 | Fire Elemental | 3 | 7 | 7 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies | AoE retaliation |
-| Hydra | 3 | 10 | 8 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies; +1 ATK to self | Grows and retaliates every hit |
-| Venom Drake | 4 | 8 | 9 | 3 | 6 | OnHurt: Deal 3 damage to attacker AND random enemy | Double retaliation |
-| Wasp | 1 | 1 | 5 | 2 | 10 | **Deathtouch** | Kills anything it damages, glass cannon |
-| Magma Titan | 4 | 12 | 9 | 3 | 2 | OnHurt: Deal 4 damage to ALL enemies | AoE nuke on every hit taken |
+| Rabbit | 3 | 10 | 8 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies; +1 ATK to self | Grows and retaliates every hit. **ART NOTE: "Killer rabbit" is a weak fit** |
+| Giant Slayer | 4 | 8 | 9 | 3 | 6 | OnHurt: Deal 3 damage to attacker AND random enemy | Double retaliation |
+| Scorpion | 1 | 1 | 5 | 2 | 10 | **Deathtouch** | Kills anything it damages, glass cannon |
+| Troll Brute | 4 | 12 | 9 | 3 | 2 | OnHurt: Deal 4 damage to ALL enemies | AoE nuke on every hit taken |
 
 ---
 
@@ -342,17 +342,17 @@ mana
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Piggy Bank | 1 | 2 | 1 | 3 | 10 | None | High burn value, buy for 1 sell for 3 |
+| Pig | 1 | 2 | 1 | 3 | 10 | None | High burn value, buy for 1 sell for 3 |
 | Beaver | 2 | 2 | 2 | 1 | 10 | OnSell: +1 ATK to 2 random allies (perm) | Sell for spread ATK |
 | Swan | 1 | 3 | 3 | 1 | 10 | OnShopStart: +1 mana | Recurring mana engine |
 | Duck | 1 | 3 | 2 | 1 | 10 | OnSell: +1 HP to all allies (perm) | Sell for team HP |
 | Squirrel | 2 | 4 | 4 | 2 | 10 | OnShopStart: +1 mana | Premium recurring mana |
-| Gold Miner | 3 | 4 | 5 | 3 | 8 | None | High burn, buy for 5 sell for 3, decent body |
-| Tax Collector | 2 | 5 | 6 | 3 | 8 | OnShopStart: +1 mana | Bigger mana engine |
-| Alchemist | 2 | 4 | 5 | 3 | 6 | OnShopStart: +1 mana | Mana engine + high burn value |
+| Otter | 3 | 4 | 5 | 3 | 8 | None | High burn, buy for 5 sell for 3, decent body |
+| Parrot | 2 | 5 | 6 | 3 | 8 | OnShopStart: +1 mana | Bigger mana engine |
+| Mana Reaper | 2 | 4 | 5 | 3 | 6 | OnShopStart: +1 mana | Mana engine + high burn value |
 | Cat | 3 | 5 | 7 | 3 | 6 | OnShopStart: +2 mana | Premium double mana engine |
-| Merchant Prince | 4 | 6 | 9 | 3 | 6 | OnShopStart: +1 mana per ally on board | Up to +4 mana with full board |
-| Midas | 5 | 8 | 10 | 3 | 2 | OnShopStart: +3 mana | Absurd mana generation, enables anything |
+| Deer | 4 | 6 | 9 | 3 | 6 | OnShopStart: +1 mana per ally on board | Up to +4 mana with full board |
+| Mouse | 5 | 8 | 10 | 3 | 2 | OnShopStart: +3 mana | Absurd mana generation, enables anything. **ART NOTE: Mouse as legendary economy is a weak fit** |
 
 ---
 
@@ -377,17 +377,17 @@ Chain (dying fuels their engine)
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Goblin Raider | 2 | 1 | 1 | 0 | 10 | BeforeUnitAttack: +1 ATK to self (3x) | Glass cannon, pumps ATK |
+| Rat Swarm | 2 | 1 | 1 | 0 | 10 | BeforeUnitAttack: +1 ATK to self (3x) | Glass cannon, pumps ATK |
 | Kangaroo | 2 | 2 | 2 | 1 | 10 | BeforeUnitAttack: +1 ATK +1 HP to self | Combat snowball |
 | Dodo | 3 | 3 | 3 | 1 | 10 | OnStart: +2 ATK to unit behind | Aggro buffer |
 | Lone Wolf | 2 | 3 | 3 | 1 | 10 | BeforeUnitAttack: +5 ATK if alone (3x) | Solo aggro, huge payoff |
 | Battle Hardened | 3 | 3 | 5 | 2 | 10 | BeforeUnitAttack: +2 ATK; AfterUnitAttack: +2 HP (3x ea) | Combat snowball |
-| Gladiator | 5 | 3 | 4 | 2 | 8 | OnStart: +2 ATK to self | Glass cannon, opens at 7 ATK |
-| War Hound | 5 | 4 | 6 | 3 | 8 | BeforeUnitAttack: +2 ATK +1 HP to self (3x) | Aggressive self-buffer |
+| Raging Orc | 5 | 3 | 4 | 2 | 8 | OnStart: +2 ATK to self | Glass cannon, opens at 7 ATK |
+| Wolverine | 5 | 4 | 6 | 3 | 8 | BeforeUnitAttack: +2 ATK +1 HP to self (3x) | Aggressive self-buffer |
 | Tiger | 5 | 4 | 6 | 3 | 6 | OnStart: +3 ATK +2 HP to unit behind | Big aggro opener |
 | Rhino | 5 | 6 | 7 | 3 | 6 | AfterUnitAttack: Deal 4 damage to front enemy | Double tap |
-| Berserker | 6 | 5 | 8 | 3 | 6 | BeforeUnitAttack: +4 ATK to self (3x) | Massive damage escalation |
-| Warlord | 8 | 6 | 9 | 3 | 2 | OnStart: +4 ATK to ALL allies | Entire team hits like a truck |
+| Assassin | 6 | 5 | 8 | 3 | 6 | BeforeUnitAttack: +4 ATK to self (3x) | Massive damage escalation |
+| Pack Leader | 8 | 6 | 9 | 3 | 2 | OnStart: +4 ATK to ALL allies | Entire team hits like a truck |
 
 ---
 
@@ -413,15 +413,15 @@ accidentally win early
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
 | Snail | 1 | 2 | 1 | 0 | 10 | AfterLoss: +1 HP to all allies (perm) | Basic comeback, team HP |
-| Stray Dog | 2 | 2 | 2 | 1 | 10 | AfterLoss: +1 ATK +1 HP to self (perm) | Self-scaling on loss |
-| Rally Captain | 2 | 3 | 3 | 1 | 10 | AfterLoss: +1 ATK to all allies (perm) | Team ATK on loss |
-| Battle Scarred | 2 | 5 | 4 | 2 | 10 | AfterLoss: +2 ATK +1 HP to self (perm) | Premium self-scaler |
-| War Drummer | 3 | 5 | 5 | 2 | 10 | AfterLoss: +1 ATK +1 HP to all allies (perm) | Mass comeback buff |
-| Resilient Knight | 3 | 7 | 7 | 3 | 8 | AfterLoss: +1 ATK +2 HP to all allies (perm) | Tank-style comeback |
-| Vengeful Spirit | 3 | 6 | 7 | 3 | 6 | AfterLoss: +2 ATK +2 HP to all allies (perm) | Massive comeback swing |
-| Ironclad | 4 | 8 | 8 | 3 | 6 | AfterLoss: +2 ATK +2 HP to self AND +1 ATK to all allies (perm) | Heavy loss payoff |
-| Phoenix Warrior | 4 | 7 | 9 | 3 | 6 | AfterLoss: +3 ATK +2 HP to self (perm) | Self-scaling monster |
-| Avatar of Vengeance | 5 | 10 | 9 | 3 | 2 | AfterLoss: +3 ATK +3 HP to ALL allies (perm) | Lose once, team becomes unstoppable |
+| Rat | 2 | 2 | 2 | 1 | 10 | AfterLoss: +1 ATK +1 HP to self (perm) | Scrappy underdog, self-scaling on loss |
+| Brave Commander | 2 | 3 | 3 | 1 | 10 | AfterLoss: +1 ATK to all allies (perm) | Rallies troops after defeat |
+| Ram | 2 | 5 | 4 | 2 | 10 | AfterLoss: +2 ATK +1 HP to self (perm) | Stubborn, keeps charging |
+| Bison | 3 | 5 | 5 | 2 | 10 | AfterLoss: +1 ATK +1 HP to all allies (perm) | Resilient herd animal |
+| Warder | 3 | 7 | 7 | 3 | 8 | AfterLoss: +1 ATK +2 HP to all allies (perm) | Tank-style comeback |
+| Void Walker | 3 | 6 | 7 | 3 | 6 | AfterLoss: +2 ATK +2 HP to all allies (perm) | Dark, vengeful entity |
+| Skeleton Archer | 4 | 8 | 8 | 3 | 6 | AfterLoss: +2 ATK +2 HP to self AND +1 ATK to all allies (perm) | Undead hardened by defeat |
+| Sniper | 4 | 7 | 9 | 3 | 6 | AfterLoss: +3 ATK +2 HP to self (perm) | Precision warrior, grows from defeat. **ART NOTE: Sniper as comeback is an OK fit** |
+| Zombie Captain | 5 | 10 | 9 | 3 | 2 | AfterLoss: +3 ATK +3 HP to ALL allies (perm) | Undead leader, team becomes unstoppable |
 
 ---
 
@@ -480,9 +480,9 @@ burn 0.
 | Spiderling | 2 | 2 | Spider | None | Mid-tier token |
 | Chick | 3 | 1 | Rooster | None | Glass cannon token |
 | Zombie Fly | 3 | 3 | Fly | None | Mid-tier token |
-| Drone | 2 | 2 | Hive Mother | None | Swarm token |
+| Bus | 2 | 2 | Elephant | None | Swarm token. **ART NOTE: Bus art as elephant calf is a weak fit** |
 | Phoenix Egg | 0 | 5 | Phoenix | OnStart: Spawn 3/4 Phoenix | Delayed rebirth |
-| Wasp Token | 1 | 1 | Brood Queen | Deathtouch | Assassin token |
+| Rat Token | 1 | 1 | Whale | Deathtouch | Assassin token. **ART NOTE: Rat art as scorpion spawn is a weak fit** |
 
 ---
 
