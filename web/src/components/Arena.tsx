@@ -16,7 +16,7 @@ const BOARD_HINT_TEXT = {
   placeFirstUnit: 'Now tap a board slot to place your unit',
   placeUnit: 'Tap a board slot to place your unit',
   repositionBoardCard: 'Reposition this board card or burn it for mana',
-  boardFull: 'Board full - burn a unit to make room',
+  boardFullCanAfford: 'Board full - burn a board unit to make space to place this unit',
   notEnoughMana: 'Not enough mana to buy - burn a card or unit for mana',
   cannotBuyThisRound:
     'Cannot buy this card this round - burn it for mana or let it return to your bag next round',
@@ -31,7 +31,6 @@ const BOARD_HINT_TONE_CLASS = {
 
 interface BoardHintParams {
   unitCount: number;
-  handCount: number;
   hasHandSelection: boolean;
   hasBoardSelection: boolean;
   canPlaceSelectedHand: boolean;
@@ -40,7 +39,6 @@ interface BoardHintParams {
 
 function getBoardHintState({
   unitCount,
-  handCount,
   hasHandSelection,
   hasBoardSelection,
   canPlaceSelectedHand,
@@ -62,6 +60,12 @@ function getBoardHintState({
     }
 
     if (canPlaceSelectedHand) {
+      if (unitCount >= 5) {
+        return {
+          text: BOARD_HINT_TEXT.boardFullCanAfford,
+          toneClass: BOARD_HINT_TONE_CLASS.warning,
+        };
+      }
       return {
         text: unitCount === 0 ? BOARD_HINT_TEXT.placeFirstUnit : BOARD_HINT_TEXT.placeUnit,
         toneClass: BOARD_HINT_TONE_CLASS.default,
@@ -71,13 +75,6 @@ function getBoardHintState({
     return {
       text: BOARD_HINT_TEXT.notEnoughMana,
       toneClass: BOARD_HINT_TONE_CLASS.warning,
-    };
-  }
-
-  if (unitCount >= 5 && handCount > 0) {
-    return {
-      text: BOARD_HINT_TEXT.boardFull,
-      toneClass: BOARD_HINT_TONE_CLASS.default,
     };
   }
 
@@ -194,7 +191,6 @@ export function Arena() {
 
   // Use committed board for hint calculations (not preview)
   const unitCount = view.board.filter(Boolean).length;
-  const handCount = view.hand?.filter(Boolean).length ?? 0;
   const hasHandSelection = selection?.type === 'hand';
   const hasBoardSelection = selection?.type === 'board';
   const selectedHandCard = selection?.type === 'hand' ? view.hand[selection.index] : null;
@@ -205,7 +201,6 @@ export function Arena() {
   );
   const boardHint = getBoardHintState({
     unitCount,
-    handCount,
     hasHandSelection,
     hasBoardSelection,
     canPlaceSelectedHand,
