@@ -1,4 +1,4 @@
-import { DndContext, DragOverlay, pointerWithin } from '@dnd-kit/core';
+import { DndContext, DragOverlay, pointerWithin, type CollisionDetection } from '@dnd-kit/core';
 import { GameTopBar } from './GameTopBar';
 import { Arena } from './Arena';
 import { ManaBar } from './ManaBar';
@@ -14,6 +14,46 @@ import { KeyboardShortcutsOverlay } from './KeyboardShortcutsOverlay';
 import { useGameStore } from '../store/gameStore';
 import { useDragAndDrop } from '../hooks';
 import { useIsNarrowScreen } from '../hooks/useIsNarrowScreen';
+
+/**
+ * Custom collision detection: precise for burn zone, gap-tolerant for board slots.
+ *
+ * Uses pointerWithin as the primary strategy (pointer must be inside the droppable).
+ * When the pointer falls in a gap between board slots, falls back to finding the
+ * nearest board-slot droppable within a small pixel tolerance.
+ */
+const GAP_TOLERANCE_PX = 24; // covers gap-4 (16px) + breathing room
+
+const boardAwareCollision: CollisionDetection = (args) => {
+  // Primary: precise pointer-inside-rect matching
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) return pointerCollisions;
+
+  // Fallback: find closest board-slot within gap tolerance
+  const pointer = args.pointerCoordinates;
+  if (!pointer) return [];
+
+  let closestId: string | number | null = null;
+  let closestDist = Infinity;
+
+  for (const container of args.droppableContainers) {
+    if (container.data?.current?.type !== 'board-slot') continue;
+    const rect = args.droppableRects.get(container.id);
+    if (!rect) continue;
+
+    // Distance from pointer to nearest edge of the rect
+    const dx = Math.max(rect.left - pointer.x, 0, pointer.x - (rect.left + rect.width));
+    const dy = Math.max(rect.top - pointer.y, 0, pointer.y - (rect.top + rect.height));
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist <= GAP_TOLERANCE_PX && dist < closestDist) {
+      closestDist = dist;
+      closestId = container.id;
+    }
+  }
+
+  return closestId != null ? [{ id: closestId }] : [];
+};
 
 export interface CustomActionConfig {
   label: string;
@@ -78,7 +118,7 @@ export function GameShell({ hideEndTurn = false, customAction, className = '' }:
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={pointerWithin}
+      collisionDetection={boardAwareCollision}
       modifiers={[restrictToContainer]}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
