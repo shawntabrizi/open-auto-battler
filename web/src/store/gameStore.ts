@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
 import type { GameView, BattleOutput, Selection, CardView } from '../types';
-import type { GameEngine } from '../wasm/oab_client';
 import { initEmojiMap } from '../utils/emoji';
 
 export type CardDetailsPanelMode = 'always' | 'never' | 'auto';
@@ -34,14 +33,8 @@ interface PersistedLocalSession {
   savedAt: number;
 }
 
-interface WasmModule {
-  default: () => Promise<void>;
-  GameEngine: { new (seed?: bigint): GameEngine };
-  greet: () => string;
-}
-
 interface GameStore {
-  engine: GameEngine | null;
+  engine: import('oab-client').GameEngine | null;
   view: GameView | null;
   battleOutput: BattleOutput | null;
   cardSet: CardView[] | null; // Full set of unique cards (fetched once)
@@ -277,7 +270,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       try {
         set({ isLoading: true, error: null });
 
-        const wasm = (await import('oab-client')) as unknown as WasmModule;
+        const wasm = await import('oab-client');
 
         if (!wasmInitialized) {
           await wasm.default();
@@ -347,7 +340,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       try {
         set({ isLoading: true, error: null });
 
-        const wasm = (await import('oab-client')) as unknown as WasmModule;
+        const wasm = await import('oab-client');
 
         if (!wasmInitialized) {
           await wasm.default();

@@ -3,18 +3,7 @@ import type { BattleOutput, SandboxUnit, CardView } from '../types';
 import { initEmojiMap } from '../utils/emoji';
 import { useGameStore } from './gameStore';
 
-interface WasmModule {
-  default: () => Promise<void>;
-  get_unit_templates: () => CardView[];
-  run_sandbox_battle: (
-    playerUnits: SandboxUnit[],
-    enemyUnits: SandboxUnit[],
-    seed: bigint
-  ) => BattleOutput;
-  GameEngine: new (seed?: bigint | null) => {
-    get_card_metas: () => Array<{ id: number; name: string; emoji: string }>;
-  };
-}
+type WasmModule = typeof import('oab-client');
 
 let wasmModule: WasmModule | null = null;
 
@@ -73,7 +62,7 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
     try {
       set({ isLoading: true });
 
-      const wasm = (await import('oab-client')) as unknown as WasmModule;
+      const wasm = await import('oab-client');
 
       if (!wasmInitialized) {
         await wasm.default();
