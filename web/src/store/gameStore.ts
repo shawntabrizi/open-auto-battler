@@ -425,7 +425,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   playHandCard: (handIndex: number, boardSlot: number) => {
-    const { engine } = get();
+    const { engine, view } = get();
     if (!engine) return;
     try {
       engine.play_hand_card(handIndex, boardSlot);
@@ -435,7 +435,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
         mobileTab: 'board',
       });
     } catch (err) {
-      toast.error('Not enough mana!');
+      const card = view?.hand[handIndex];
+      if (view?.board && view.board.every((slot) => slot != null)) {
+        toast.error('Board full — burn a unit to make room');
+      } else if (card && view && card.play_cost > view.mana_limit) {
+        toast.error('Cannot buy this card this round');
+      } else {
+        toast.error('Not enough mana — burn cards or units for mana');
+      }
       console.error(err);
     }
   },

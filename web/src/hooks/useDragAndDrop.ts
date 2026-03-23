@@ -29,6 +29,28 @@ export interface UseDragAndDropReturn {
   getActiveCard: () => CardView | BoardUnitView | null;
 }
 
+/** Build a context-aware hint for a hand card dropped outside a valid target. */
+function getHandDropHint(
+  view: { board: (BoardUnitView | null)[]; hand: (CardView | null)[]; can_afford: boolean[]; mana_limit: number } | null,
+  handIndex: number
+): string {
+  if (!view) return 'Drop on the board to play or the flame to burn';
+
+  const card = view.hand[handIndex];
+  const boardFull = isBoardFull(view.board);
+
+  if (boardFull) {
+    return 'Board full — burn a unit to make room, or drop on the flame to burn this card';
+  }
+  if (card && card.play_cost > view.mana_limit) {
+    return 'Cannot buy this card this round — drop on the flame to burn it for mana';
+  }
+  if (!view.can_afford[handIndex]) {
+    return 'Not enough mana — drop on the flame to burn cards or units for mana';
+  }
+  return 'Drop on the board to play or the flame to burn';
+}
+
 export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndDropReturn {
   const [activeId, setActiveId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -164,7 +186,10 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
       if (!over) {
         const sourceType = active.data.current?.type as string | undefined;
         if (sourceType === 'hand') {
-          toast('Drop on the board to play or the flame to burn', {
+          const handIndex = active.data.current?.index as number;
+          const currentView = viewRef.current;
+          const hint = getHandDropHint(currentView, handIndex);
+          toast(hint, {
             icon: '\u{1F4A1}',
             id: 'drop-hint',
           });
