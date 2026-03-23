@@ -137,7 +137,6 @@ units, fill the board faster than the enemy can clear it.
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
 | Cricket | 1 | 2 | 1 | 0 | 10 | OnFaint: Spawn 1/1 Zombie Cricket | Cheapest spawner |
-| Rat Swarm | 1 | 1 | 1 | 0 | 10 | OnFaint: Spawn 1/1 Rat Token | Ultra-fragile, two bodies for 1 mana |
 | Spider | 2 | 2 | 3 | 1 | 10 | OnFaint: Spawn 2/2 Spiderling | Mid spawner, token matches parent |
 | Horse | 2 | 1 | 2 | 1 | 10 | OnAllySpawn: +1 ATK to spawned unit | Makes tokens dangerous |
 | Dog | 2 | 3 | 3 | 1 | 10 | OnAllySpawn: +2 ATK +1 HP to self | Grows with every spawn |
@@ -172,7 +171,6 @@ Kangaroo), stat stacking
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
 | Worm | 1 | 2 | 1 | 0 | 10 | OnBuy: +1 ATK +1 HP to self (perm) | Self-investment on purchase |
-| Otter | 1 | 2 | 1 | 0 | 10 | OnBuy: +1 HP to random ally (perm) | Spread value on purchase |
 | Fish | 2 | 2 | 2 | 1 | 10 | OnBuy: +1 ATK +1 HP to random ally (perm) | Core scaling enabler |
 | Giraffe | 1 | 3 | 3 | 1 | 10 | OnShopStart: +1 ATK +1 HP to back unit (perm) | Recurring shop engine |
 | Penguin | 2 | 4 | 4 | 2 | 10 | OnShopStart: +1 ATK +1 HP to 2 random allies (perm) | Premium shop engine |
@@ -181,6 +179,7 @@ Kangaroo), stat stacking
 | Ox | 4 | 6 | 7 | 3 | 8 | AfterUnitAttack: +2 ATK +2 HP to self | Durable combat scaler |
 | Monkey | 3 | 5 | 7 | 3 | 6 | OnShopStart: +2 ATK +2 HP to random ally (perm) | Premium shop scaler |
 | Hippo | 4 | 5 | 7 | 3 | 6 | AfterUnitAttack: +3 ATK +3 HP to self | Combat snowball, must survive |
+| Titan | 5 | 7 | 8 | 3 | 6 | OnShopStart: +1 ATK +1 HP to self (perm); AfterUnitAttack: +2 ATK +2 HP to self | Scales in shop AND combat |
 | Dragon | 4 | 6 | 9 | 3 | 6 | OnBuy: +1 ATK +1 HP to ALL allies (perm) | Mass scaling, best buy trigger |
 | Ancient Wyrm | 5 | 8 | 10 | 3 | 2 | OnShopStart: +2 ATK +2 HP to ALL allies (perm) | Team-wide scaling every round |
 
@@ -217,6 +216,7 @@ single critical unit
 | Fire Mage | 3 | 5 | 6 | 3 | 8 | OnStart: Deal 4 damage to 2 random enemies | Multi-target burst |
 | Leopard | 4 | 5 | 7 | 3 | 6 | OnStart: Deal 5 damage to random enemy | Heavy single-target burst |
 | Artillery Mage | 4 | 4 | 7 | 3 | 6 | OnStart: Deal 3 damage to ALL enemies | AoE nuke |
+| Executioner | 5 | 6 | 8 | 3 | 6 | OnStart: Deal 8 damage to highest ATK enemy | Carry killer |
 | Dragon Tyrant | 5 | 7 | 9 | 3 | 6 | OnStart: Deal 4 damage to ALL enemies | Premium AoE nuke |
 | Apocalypse Dragon | 6 | 8 | 10 | 3 | 2 | OnStart: Deal 6 damage to ALL enemies | Wipes weak boards outright |
 
@@ -242,7 +242,7 @@ loses to Faint Chain (opponent gains value from dying)
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Scaredy Cat | 1 | 2 | 1 | 0 | 10 | OnStart: +2 HP to unit behind | Cheap positional HP buff |
+| Scaredy Cat | 1 | 3 | 2 | 1 | 10 | OnStart: +2 HP to unit behind | Positional HP buff |
 | Shield Bearer | 1 | 3 | 2 | 1 | 10 | OnStart: +2 HP to front ally | Front-line support |
 | Nurse Goblin | 1 | 3 | 2 | 1 | 10 | AfterUnitAttack (front ally): +1 HP to front ally (3x) | Heals survivors |
 | Tortoise | 1 | 4 | 3 | 1 | 8 | OnStart: +2 HP to adjacent allies | Positional HP buff |
@@ -322,6 +322,7 @@ being attacked)
 | Iron Maiden | 3 | 6 | 6 | 3 | 8 | OnHurt: Deal 3 damage to attacker | Heavy direct thorns |
 | Camel | 2 | 6 | 6 | 3 | 6 | OnHurt: +2 ATK +2 HP to unit behind (unlimited) | Cascading buffs on hit |
 | Fire Elemental | 3 | 7 | 7 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies | AoE retaliation |
+| Hydra | 3 | 10 | 8 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies; +1 ATK to self | Grows and retaliates every hit |
 | Venom Drake | 4 | 8 | 9 | 3 | 6 | OnHurt: Deal 3 damage to attacker AND random enemy | Double retaliation |
 | Wasp | 1 | 1 | 5 | 2 | 10 | **Deathtouch** | Kills anything it damages, glass cannon |
 | Magma Titan | 4 | 12 | 9 | 3 | 2 | OnHurt: Deal 4 damage to ALL enemies | AoE nuke on every hit taken |
@@ -417,7 +418,7 @@ and sell repeatedly, generating small advantages each cycle that compound over t
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Beaver | 2 | 1 | 1 | 0 | 10 | OnSell: +1 ATK to 2 random allies (perm) | Sell for spread ATK |
+| Beaver | 2 | 2 | 2 | 1 | 10 | OnSell: +1 ATK to 2 random allies (perm) | Sell for spread ATK |
 | Worm | 1 | 2 | 1 | 0 | 10 | OnBuy: +1 ATK +1 HP to self (perm) | Buy-sell fodder (also Scaling) |
 | Duck | 1 | 3 | 2 | 1 | 10 | OnSell: +1 HP to all allies (perm) | Sell for team HP (also Economy) |
 | Fish | 2 | 2 | 2 | 1 | 10 | OnBuy: +1 ATK +1 HP to random ally (perm) | Buy trigger (also Scaling) |
@@ -464,6 +465,7 @@ accidentally win early
 | Survivor | 3 | 5 | 5 | 2 | 8 | AfterLoss: +2 ATK +1 HP to self AND +1 HP to all (perm) | Dual comeback |
 | Resilient Knight | 3 | 7 | 7 | 3 | 8 | AfterLoss: +1 ATK +2 HP to all allies (perm) | Tank-style comeback |
 | Vengeful Spirit | 3 | 6 | 7 | 3 | 6 | AfterLoss: +2 ATK +2 HP to all allies (perm) | Massive comeback swing |
+| Ironclad | 4 | 8 | 8 | 3 | 6 | AfterLoss: +2 ATK +2 HP to self AND +1 ATK to all allies (perm) | Heavy loss payoff |
 | Phoenix Warrior | 4 | 7 | 9 | 3 | 6 | AfterLoss: +3 ATK +2 HP to self (perm) | Self-scaling monster |
 | Last Stand | 3 | 5 | 6 | 3 | 6 | AfterLoss: +1 ATK +1 HP to all AND +2 ATK to self (perm) | Dual buff on loss |
 | Avatar of Vengeance | 5 | 10 | 9 | 3 | 2 | AfterLoss: +3 ATK +3 HP to ALL allies (perm) | Lose once, team becomes unstoppable |
@@ -523,7 +525,7 @@ burn 0.
 | Name | ATK | HP | Spawned By | Abilities | Notes |
 |------|-----|----|------------|-----------|-------|
 | Zombie Cricket | 1 | 1 | Cricket | None | Basic token |
-| Rat Token | 1 | 1 | Rat Swarm | None | Basic token |
+| Rat Token | 1 | 1 | Rat King | None | Basic token |
 | Spiderling | 2 | 2 | Spider | None | Mid-tier token |
 | Chick | 3 | 1 | Rooster | None | Glass cannon token |
 | Zombie Fly | 3 | 3 | Fly | None | Mid-tier token |
@@ -535,21 +537,21 @@ burn 0.
 
 ## Card Distribution
 
-**120 unique cards** + 8 tokens across the full mana curve.
+**122 unique cards** + 8 tokens across the full mana curve.
 
 ### Mana Cost Histogram
 
 ```
 Cost  Count  Distribution                           Rarity Breakdown
 ----  -----  -----------                            -----------------
-  1     12   ████████████                            12 Common
-  2     12   ████████████                            12 Common
+  1      8   ████████                                8 Common
+  2     14   ██████████████                          14 Common
   3     16   ████████████████                        14 Common, 2 Uncommon
   4     14   ██████████████                          10 Common, 4 Uncommon
   5     18   ██████████████████                      10 Common, 6 Uncommon, 2 Rare
   6     14   ██████████████                          2 Common, 6 Uncommon, 6 Rare
   7     15   ███████████████                         2 Uncommon, 13 Rare
-  8      3   ███  ← GAP                             3 Rare
+  8      7   ███████                                 7 Rare
   9     10   ██████████                              6 Rare, 4 Legendary
  10      6   ██████                                  6 Legendary
 ```
@@ -558,19 +560,18 @@ Cost  Count  Distribution                           Rarity Breakdown
 
 | Rarity | Count | Percentage |
 |--------|-------|------------|
-| Common (10) | 60 | 50% |
-| Uncommon (8) | 20 | 17% |
-| Rare (6) | 30 | 25% |
+| Common (10) | 58 | 48% |
+| Uncommon (8) | 20 | 16% |
+| Rare (6) | 34 | 28% |
 | Legendary (2) | 10 | 8% |
 
 ### Notes
 
-- **Cost 8 is thin** — only Shield Master, Phoenix, and Berserker. Consider adding
-  2-3 more cards here (one per archetype that needs a high-cost option).
-- **Cost 5 is heavy** — 18 cards compete for the same mana slot. This is OK since
-  round 3-4 (mana 5-6) is the mid-game pivot where players transition from cheap
-  cards to archetype payoffs.
+- **Cost 4-6 is the core** — 46 cards (38% of the pool) live in the mid-game pivot
+  where players build their archetype identity.
 - **Cost 1-2 are all common** — intentional, since early game should be accessible
   and consistent regardless of luck.
 - **Cost 7+ has no commons** — late-game cards are all uncommon+ rarity, creating
   natural scarcity for powerful finishers.
+- **Cost 8-10 are rare+ only** — these are aspirational cards players work toward,
+  enabled by economy cards or late-game mana limits.
