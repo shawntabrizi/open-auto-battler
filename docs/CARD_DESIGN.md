@@ -46,6 +46,21 @@ fewer raw stats than a vanilla card at the same mana cost.
 | Strong       | 5-7 pts   | AoE buffs, deal 5+ damage, spawn a 3/3+ |
 | Extreme      | 8+ pts    | Board-wide scaling, repeated AoE triggers, game-warping effects |
 
+### Keyword Abilities
+
+Keywords are passive abilities that don't use the trigger system. They are always active
+on the unit.
+
+| Keyword | Effect | Stat Cost | Implementation |
+|---------|--------|-----------|----------------|
+| Deathtouch | Kills any unit this unit deals damage to, regardless of remaining HP | ~10 pts | Destroy target after damage is applied if damage > 0 |
+
+> **Future keywords to consider:**
+> - **Taunt** — enemies must attack this unit first
+> - **Shield** — absorb the first instance of damage, then break
+> - **Stealth** — cannot be targeted by OnStart damage abilities
+> - **Poison** — deal 1 damage to this unit at the start of each attack phase
+
 ## Rarity System
 
 The `rarity` field in `sets.json` is used directly as a **weight** in the bag-building
@@ -129,7 +144,8 @@ units, fill the board faster than the enemy can clear it.
 | Rooster | 4 | 4 | 5 | 2 | 10 | OnFaint: Spawn 3/1 Chick | Big body + strong token |
 | Turkey | 4 | 5 | 6 | 3 | 6 | OnAllySpawn: +2 ATK +2 HP to spawned unit | THE spawn payoff, build-around |
 | Fly | 3 | 5 | 7 | 3 | 6 | OnAllyFaint: Spawn 3/3 Zombie Fly (3x) | Board refill machine |
-| Hive Mother | 5 | 7 | 9 | 3 | 6 | OnAllyFaint: Spawn 2/2 Drone | Endless swarm engine |
+| Hive Mother | 5 | 7 | 9 | 3 | 6 | OnAllyFaint: Spawn 2/2 Drone at back (3x) | Swarm engine, spawns behind the line |
+| Brood Queen | 5 | 7 | 10 | 3 | 2 | OnFaint: Spawn 3x 1/1 Wasp at back (deathtouch) | Kill the queen, face 3 assassins |
 
 ---
 
@@ -162,6 +178,7 @@ Kangaroo), stat stacking
 | Monkey | 3 | 5 | 7 | 3 | 6 | OnShopStart: +2 ATK +2 HP to random ally (perm) | Premium shop scaler |
 | Hippo | 4 | 5 | 7 | 3 | 6 | AfterUnitAttack: +3 ATK +3 HP to self | Combat snowball, must survive |
 | Dragon | 4 | 6 | 9 | 3 | 6 | OnBuy: +1 ATK +1 HP to ALL allies (perm) | Mass scaling, best buy trigger |
+| Ancient Wyrm | 5 | 8 | 10 | 3 | 2 | OnShopStart: +2 ATK +2 HP to ALL allies (perm) | Team-wide scaling every round |
 
 ---
 
@@ -195,6 +212,7 @@ single critical unit
 | Leopard | 4 | 5 | 7 | 3 | 6 | OnStart: Deal 5 damage to random enemy | Heavy single-target burst |
 | Artillery Mage | 4 | 4 | 7 | 3 | 6 | OnStart: Deal 3 damage to ALL enemies | AoE nuke |
 | Dragon Tyrant | 5 | 7 | 9 | 3 | 6 | OnStart: Deal 4 damage to ALL enemies | Premium AoE nuke |
+| Apocalypse Dragon | 6 | 8 | 10 | 3 | 2 | OnStart: Deal 6 damage to ALL enemies | Wipes weak boards outright |
 
 ---
 
@@ -227,6 +245,7 @@ loses to Faint Chain (opponent gains value from dying)
 | Guardian | 3 | 6 | 6 | 3 | 6 | BeforeUnitAttack: +3 HP to self | Unkillable front-liner |
 | Stone Golem | 2 | 8 | 7 | 3 | 6 | OnStart: +3 HP to all allies | Massive HP wall |
 | Shield Master | 3 | 8 | 8 | 3 | 6 | BeforeAnyAttack: +2 HP to all allies (3x) | Premium AoE healer |
+| World Turtle | 3 | 12 | 10 | 3 | 2 | BeforeAnyAttack: +2 HP to all allies | Endless team healing, unkillable wall |
 
 ---
 
@@ -260,6 +279,7 @@ don't die in the right order
 | Mammoth | 3 | 6 | 7 | 3 | 6 | OnFaint: +2 ATK +2 HP to ALL allies (perm) | Board-wide death buff |
 | Vulture | 4 | 5 | 6 | 3 | 6 | OnAllyFaint: Deal 3 damage to random enemy | Death triggers damage |
 | Phoenix | 3 | 4 | 8 | 3 | 6 | OnFaint: Spawn Phoenix Egg (OnStart: Spawn 3/4 Phoenix) | Comes back from death |
+| Lich King | 5 | 8 | 10 | 3 | 2 | OnAllyFaint: +3 ATK +3 HP to ALL other allies (perm) | Every death supercharges the team |
 
 ---
 
@@ -291,6 +311,8 @@ being attacked)
 | Camel | 2 | 6 | 5 | 2 | 6 | OnHurt: +2 ATK +2 HP to unit behind (unlimited) | Cascading buffs on hit |
 | Fire Elemental | 3 | 7 | 7 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies | AoE retaliation |
 | Venom Drake | 4 | 8 | 9 | 3 | 6 | OnHurt: Deal 3 damage to attacker AND random enemy | Double retaliation |
+| Wasp | 1 | 1 | 5 | 2 | 10 | **Deathtouch** | Kills anything it damages, glass cannon |
+| Magma Titan | 4 | 12 | 9 | 3 | 2 | OnHurt: Deal 4 damage to ALL enemies | AoE nuke on every hit taken |
 
 ---
 
@@ -321,6 +343,7 @@ mana
 | Alchemist | 2 | 4 | 5 | 3 | 6 | OnShopStart: +1 mana | Mana engine + high burn value |
 | Cat | 3 | 5 | 7 | 3 | 6 | OnShopStart: +2 mana | Premium double mana engine |
 | Merchant Prince | 4 | 6 | 9 | 3 | 6 | OnShopStart: +1 mana per ally on board | Up to +4 mana with full board |
+| Midas | 5 | 8 | 10 | 3 | 2 | OnShopStart: +3 mana | Absurd mana generation, enables anything |
 
 ---
 
@@ -355,6 +378,7 @@ Chain (dying fuels their engine)
 | Tiger | 5 | 4 | 6 | 3 | 6 | OnStart: +3 ATK +2 HP to unit behind | Big aggro opener |
 | Rhino | 5 | 6 | 7 | 3 | 6 | AfterUnitAttack: Deal 4 damage to front enemy | Double tap |
 | Berserker | 6 | 5 | 8 | 3 | 6 | BeforeUnitAttack: +4 ATK to self (3x) | Massive damage escalation |
+| Warlord | 8 | 6 | 9 | 3 | 2 | OnStart: +4 ATK to ALL allies | Entire team hits like a truck |
 
 ---
 
@@ -385,6 +409,7 @@ and sell repeatedly, generating small advantages each cycle that compound over t
 | Broker | 3 | 5 | 7 | 3 | 6 | OnBuy: +2 ATK +2 HP to 2 random allies (perm) | Premium buy payoff |
 | Auctioneer | 3 | 5 | 7 | 3 | 6 | OnSell: +2 ATK +2 HP to all allies (perm) | Premium sell payoff |
 | Collector | 3 | 5 | 5 | 3 | 6 | OnBuy: +2 ATK +1 HP to self (perm) | Self-scaling + high burn |
+| Grand Bazaar | 4 | 6 | 9 | 3 | 2 | OnBuy: +2 ATK +2 HP to all allies (perm); OnSell: +2 ATK +2 HP to all allies (perm) | Buy it, buff team; sell it, buff again |
 
 > **Note:** Sell Cycling overlaps heavily with Economy (sell for mana) and Scaling (buy for
 > buffs). Its identity comes from running BOTH buy and sell triggers together, churning
@@ -421,6 +446,7 @@ accidentally win early
 | Vengeful Spirit | 3 | 6 | 7 | 3 | 6 | AfterLoss: +2 ATK +2 HP to all allies (perm) | Massive comeback swing |
 | Phoenix Warrior | 4 | 7 | 9 | 3 | 6 | AfterLoss: +3 ATK +2 HP to self (perm) | Self-scaling monster |
 | Last Stand | 3 | 5 | 6 | 3 | 6 | AfterLoss: +1 ATK +1 HP to all AND +2 ATK to self (perm) | Dual buff on loss |
+| Avatar of Vengeance | 5 | 10 | 9 | 3 | 2 | AfterLoss: +3 ATK +3 HP to ALL allies (perm) | Lose once, team becomes unstoppable |
 
 ---
 
@@ -483,3 +509,4 @@ burn 0.
 | Zombie Fly | 3 | 3 | Fly | None | Mid-tier token |
 | Drone | 2 | 2 | Hive Mother | None | Swarm token |
 | Phoenix Egg | 0 | 5 | Phoenix | OnStart: Spawn 3/4 Phoenix | Delayed rebirth |
+| Wasp Token | 1 | 1 | Brood Queen | Deathtouch | Assassin token |
