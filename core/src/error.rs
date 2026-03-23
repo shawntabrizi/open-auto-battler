@@ -22,6 +22,8 @@ pub enum GameError {
     InvalidBoardSlot { index: u32 },
     /// Board slot is already occupied
     BoardSlotOccupied { index: u32 },
+    /// Board slot is empty
+    BoardSlotEmpty { index: u32 },
     /// Attempted to interact with empty slot
     EmptySlot,
     /// Action not allowed in current phase
@@ -36,6 +38,8 @@ pub enum GameError {
     CardAlreadyUsed { index: u32 },
     /// Invalid board slot burned (empty or out of bounds)
     InvalidBoardBurn { index: u32 },
+    /// Invalid board move action
+    InvalidBoardMove { from_slot: u32, to_slot: u32 },
     /// Board state mismatch: a unit in new_board doesn't match any valid source
     BoardMismatch,
     /// Wrong board size submitted

@@ -42,7 +42,7 @@ fn test_turn_error_invalid_hand_index_burn_and_play() {
 }
 
 #[test]
-fn test_turn_error_play_into_occupied_slot() {
+fn test_play_into_occupied_slot_shifts_board() {
     let mut state = GameState::new(2);
     state.mana_limit = 10;
     state.shop_mana = 10;
@@ -59,15 +59,45 @@ fn test_turn_error_play_into_occupied_slot() {
         }],
     };
 
+    let result = verify_and_apply_turn(&mut state, &action);
+    assert!(
+        result.is_ok(),
+        "occupied-slot insert should succeed: {:?}",
+        result
+    );
+    assert_eq!(state.board[0].as_ref().unwrap().card_id, hand_id);
+    assert_eq!(state.board[1].as_ref().unwrap().card_id, occupied_id);
+}
+
+#[test]
+fn test_turn_error_play_into_occupied_slot_on_full_board() {
+    let mut state = GameState::new(3);
+    state.mana_limit = 10;
+    state.shop_mana = 10;
+
+    let hand_id = add_card(&mut state, "Hand", 2, 2, 1, 0);
+    state.hand = vec![hand_id];
+    for slot in 0..5 {
+        let occupant = add_card(&mut state, "Occupied", 1, 1, 0, 0);
+        state.board[slot] = Some(BoardUnit::new(occupant));
+    }
+
+    let action = CommitTurnAction {
+        actions: vec![TurnAction::PlayFromHand {
+            hand_index: 0,
+            board_slot: 0,
+        }],
+    };
+
     assert_eq!(
         verify_and_apply_turn(&mut state, &action),
-        Err(GameError::BoardSlotOccupied { index: 0 })
+        Err(GameError::BoardFull)
     );
 }
 
 #[test]
 fn test_turn_error_not_enough_mana() {
-    let mut state = GameState::new(3);
+    let mut state = GameState::new(4);
     state.mana_limit = 10;
     state.shop_mana = 1;
 
@@ -89,7 +119,7 @@ fn test_turn_error_not_enough_mana() {
 
 #[test]
 fn test_turn_error_invalid_board_burn_paths() {
-    let mut state = GameState::new(4);
+    let mut state = GameState::new(5);
 
     let out_of_bounds = CommitTurnAction {
         actions: vec![TurnAction::BurnFromBoard { board_slot: 5 }],
@@ -110,7 +140,7 @@ fn test_turn_error_invalid_board_burn_paths() {
 
 #[test]
 fn test_turn_error_invalid_swap_slot() {
-    let mut state = GameState::new(5);
+    let mut state = GameState::new(6);
     let action = CommitTurnAction {
         actions: vec![TurnAction::SwapBoard {
             slot_a: 0,
@@ -124,8 +154,54 @@ fn test_turn_error_invalid_swap_slot() {
 }
 
 #[test]
+fn test_turn_error_move_board_requires_distinct_occupied_slots() {
+    let mut state = GameState::new(7);
+    let from_id = add_card(&mut state, "From", 2, 2, 0, 0);
+    let to_id = add_card(&mut state, "To", 3, 3, 0, 0);
+
+    state.board[0] = Some(BoardUnit::new(from_id));
+    state.board[2] = Some(BoardUnit::new(to_id));
+
+    let same_slot = CommitTurnAction {
+        actions: vec![TurnAction::MoveBoard {
+            from_slot: 0,
+            to_slot: 0,
+        }],
+    };
+    assert_eq!(
+        verify_and_apply_turn(&mut state, &same_slot),
+        Err(GameError::InvalidBoardMove {
+            from_slot: 0,
+            to_slot: 0,
+        })
+    );
+
+    let empty_source = CommitTurnAction {
+        actions: vec![TurnAction::MoveBoard {
+            from_slot: 1,
+            to_slot: 2,
+        }],
+    };
+    assert_eq!(
+        verify_and_apply_turn(&mut state, &empty_source),
+        Err(GameError::BoardSlotEmpty { index: 1 })
+    );
+
+    let empty_target = CommitTurnAction {
+        actions: vec![TurnAction::MoveBoard {
+            from_slot: 0,
+            to_slot: 1,
+        }],
+    };
+    assert_eq!(
+        verify_and_apply_turn(&mut state, &empty_target),
+        Err(GameError::BoardSlotEmpty { index: 1 })
+    );
+}
+
+#[test]
 fn test_on_buy_damage_trigger_source_removes_bought_unit() {
-    let mut state = GameState::new(6);
+    let mut state = GameState::new(8);
     state.mana_limit = 10;
     state.shop_mana = 10;
 
@@ -165,7 +241,7 @@ fn test_on_buy_damage_trigger_source_removes_bought_unit() {
 
 #[test]
 fn test_on_buy_destroy_standard_target_selects_highest_attack() {
-    let mut state = GameState::new(7);
+    let mut state = GameState::new(9);
     state.mana_limit = 10;
     state.shop_mana = 10;
 
@@ -212,7 +288,7 @@ fn test_on_buy_destroy_standard_target_selects_highest_attack() {
 
 #[test]
 fn test_on_sell_self_position_zero_fizzles_when_source_is_removed() {
-    let mut state = GameState::new(8);
+    let mut state = GameState::new(10);
     state.mana_limit = 10;
 
     let seller_id = state.generate_card_id();
@@ -246,7 +322,7 @@ fn test_on_sell_self_position_zero_fizzles_when_source_is_removed() {
 
 #[test]
 fn test_on_sell_allies_other_targets_survivors_when_source_is_removed() {
-    let mut state = GameState::new(9);
+    let mut state = GameState::new(11);
     state.mana_limit = 10;
 
     let seller_id = state.generate_card_id();

@@ -93,6 +93,110 @@ pub fn apply_on_sell_triggers(
     );
 }
 
+/// Find the nearest empty board slot to `target`, preferring higher indices first.
+pub fn find_nearest_empty_board_slot<T>(board: &[Option<T>], target: usize) -> Option<usize> {
+    if target >= board.len() {
+        return None;
+    }
+    if board[target].is_none() {
+        return Some(target);
+    }
+
+    let len = board.len();
+    for distance in 1..len {
+        let right = target + distance;
+        if right < len && board[right].is_none() {
+            return Some(right);
+        }
+
+        if distance <= target {
+            let left = target - distance;
+            if board[left].is_none() {
+                return Some(left);
+            }
+        }
+    }
+
+    None
+}
+
+/// Validate a hand-to-board insert and return the empty slot that should be
+/// shifted toward `target`, if any.
+pub fn prepare_board_slot_for_insert<T>(
+    board: &[Option<T>],
+    target: usize,
+) -> GameResult<Option<usize>> {
+    if target >= BOARD_SIZE || target >= board.len() {
+        return Err(GameError::InvalidBoardSlot {
+            index: target as u32,
+        });
+    }
+    if board[target].is_none() {
+        return Ok(None);
+    }
+
+    let empty_slot = find_nearest_empty_board_slot(board, target).ok_or(GameError::BoardFull)?;
+    Ok(Some(empty_slot))
+}
+
+/// Shift board units toward `target` to make room for an insert.
+pub fn apply_board_insert_shift<T>(board: &mut [Option<T>], empty_slot: usize, target: usize) {
+    if empty_slot > target {
+        for i in (target..empty_slot).rev() {
+            board.swap(i + 1, i);
+        }
+    } else {
+        for i in empty_slot..target {
+            board.swap(i, i + 1);
+        }
+    }
+}
+
+/// Validate that a `MoveBoard` action represents an occupied-to-occupied reorder.
+///
+/// `MoveBoard` is reserved for shifting a unit into another occupied slot while
+/// sliding intermediate units. Direct moves into empty slots should use
+/// `SwapBoard` instead.
+pub fn validate_move_board_positions<T>(
+    board: &[Option<T>],
+    from: usize,
+    to: usize,
+) -> GameResult<()> {
+    if from >= BOARD_SIZE {
+        return Err(GameError::InvalidBoardSlot { index: from as u32 });
+    }
+    if to >= BOARD_SIZE {
+        return Err(GameError::InvalidBoardSlot { index: to as u32 });
+    }
+    if from == to {
+        return Err(GameError::InvalidBoardMove {
+            from_slot: from as u32,
+            to_slot: to as u32,
+        });
+    }
+    if board[from].is_none() {
+        return Err(GameError::BoardSlotEmpty { index: from as u32 });
+    }
+    if board[to].is_none() {
+        return Err(GameError::BoardSlotEmpty { index: to as u32 });
+    }
+
+    Ok(())
+}
+
+/// Apply a validated `MoveBoard` action by shifting intermediate units.
+pub fn apply_move_board_positions<T>(board: &mut [Option<T>], from: usize, to: usize) {
+    if from < to {
+        for i in from..to {
+            board.swap(i, i + 1);
+        }
+    } else {
+        for i in (to..from).rev() {
+            board.swap(i, i + 1);
+        }
+    }
+}
+
 /// Verify and apply a committed turn action to the game state.
 ///
 /// This function executes actions sequentially in order:
@@ -158,11 +262,6 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
                     return Err(GameError::InvalidBoardSlot { index: *board_slot });
                 }
 
-                // Check slot is empty
-                if state.board[bs].is_some() {
-                    return Err(GameError::BoardSlotOccupied { index: *board_slot });
-                }
-
                 // Get card info
                 let card_id = state.hand[hi];
                 let play_cost = state
@@ -177,6 +276,11 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
                         have: current_mana,
                         need: play_cost,
                     });
+                }
+
+                let insert_shift = prepare_board_slot_for_insert(&state.board, bs)?;
+                if let Some(empty_slot) = insert_shift {
+                    apply_board_insert_shift(&mut state.board, empty_slot, bs);
                 }
 
                 // Deduct mana and place unit
@@ -236,23 +340,8 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
                 let from = *from_slot as usize;
                 let to = *to_slot as usize;
 
-                if from >= BOARD_SIZE {
-                    return Err(GameError::InvalidBoardSlot { index: *from_slot });
-                }
-                if to >= BOARD_SIZE {
-                    return Err(GameError::InvalidBoardSlot { index: *to_slot });
-                }
-
-                // Shift intermediate units via adjacent swaps
-                if from < to {
-                    for i in from..to {
-                        state.board.swap(i, i + 1);
-                    }
-                } else {
-                    for i in (to..from).rev() {
-                        state.board.swap(i, i + 1);
-                    }
-                }
+                validate_move_board_positions(&state.board, from, to)?;
+                apply_move_board_positions(&mut state.board, from, to);
             }
         }
     }

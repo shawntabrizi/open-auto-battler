@@ -378,11 +378,7 @@ impl<T: Config> Pallet<T> {
 
     /// Finalize a completed game: archive victory ghost and grant silver/gold achievements.
     /// Shared by both `end_game` and `end_tournament_game`.
-    pub(crate) fn finalize_game(
-        who: &T::AccountId,
-        set_id: u32,
-        state: &BoundedLocalGameState<T>,
-    ) {
+    pub(crate) fn finalize_game(who: &T::AccountId, set_id: u32, state: &BoundedLocalGameState<T>) {
         let wins = state.wins;
         let lives = state.lives;
 

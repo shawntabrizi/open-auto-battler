@@ -14,8 +14,9 @@ use oab_core::battle::{
 };
 use oab_core::bounded::{BoundedCardSet, BoundedGameSession};
 use oab_core::commit::{
-    apply_on_buy_triggers, apply_on_sell_triggers, apply_shop_start_triggers,
-    apply_shop_start_triggers_with_result, verify_and_apply_turn,
+    apply_board_insert_shift, apply_move_board_positions, apply_on_buy_triggers,
+    apply_on_sell_triggers, apply_shop_start_triggers, apply_shop_start_triggers_with_result,
+    prepare_board_slot_for_insert, validate_move_board_positions, verify_and_apply_turn,
 };
 use oab_core::log;
 use oab_core::opponents::get_opponent_for_round;
@@ -23,6 +24,7 @@ use oab_core::rng::XorShiftRng;
 use oab_core::state::*;
 use oab_core::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
 use oab_core::view::{CardView, GameView};
+use oab_core::GameError;
 use parity_scale_codec::Decode;
 use parity_scale_codec::Encode;
 use serde::{Deserialize, Serialize};
@@ -50,28 +52,6 @@ struct TurnSnapshot {
     hand_used: Vec<bool>,
     action_log: Vec<TurnAction>,
     board: Vec<Option<BoardUnit>>,
-}
-
-/// Find the nearest empty slot to `target`, preferring right (higher index) first.
-/// Returns `None` if the board is full.
-fn find_nearest_empty<T>(board: &[Option<T>], target: usize) -> Option<usize> {
-    if board[target].is_none() {
-        return Some(target);
-    }
-    let len = board.len();
-    for distance in 1..len {
-        let right = target + distance;
-        if right < len && board[right].is_none() {
-            return Some(right);
-        }
-        if distance <= target {
-            let left = target - distance;
-            if board[left].is_none() {
-                return Some(left);
-            }
-        }
-    }
-    None
 }
 
 /// The main game engine exposed to WASM
@@ -413,34 +393,17 @@ impl GameEngine {
             ));
         }
 
-        // If the target slot is occupied, shift units to make room (SAP-style insert).
-        // Find the nearest empty slot (prefer right, then left) and swap toward target.
-        if self.state.board[board_slot].is_some() {
-            let empty_slot = find_nearest_empty(&self.state.board, board_slot)
-                .ok_or("Board is full")?;
+        let insert_shift = prepare_board_slot_for_insert(&self.state.board, board_slot).map_err(
+            |err| match err {
+                GameError::InvalidBoardSlot { .. } => "Invalid board slot".to_string(),
+                GameError::BoardFull => "Board is full".to_string(),
+                _ => "Invalid board slot".to_string(),
+            },
+        )?;
 
-            self.save_snapshot();
-
-            // Shift units: swap adjacent slots from empty toward target
-            if empty_slot > board_slot {
-                for i in (board_slot..empty_slot).rev() {
-                    self.state.board.swap(i + 1, i);
-                    self.action_log.push(TurnAction::SwapBoard {
-                        slot_a: (i + 1) as u32,
-                        slot_b: i as u32,
-                    });
-                }
-            } else {
-                for i in empty_slot..board_slot {
-                    self.state.board.swap(i, i + 1);
-                    self.action_log.push(TurnAction::SwapBoard {
-                        slot_a: i as u32,
-                        slot_b: (i + 1) as u32,
-                    });
-                }
-            }
-        } else {
-            self.save_snapshot();
+        self.save_snapshot();
+        if let Some(empty_slot) = insert_shift {
+            apply_board_insert_shift(&mut self.state.board, empty_slot, board_slot);
         }
 
         self.state.shop_mana -= play_cost;
@@ -486,10 +449,7 @@ impl GameEngine {
     /// Move a board unit from one slot to another, shifting intermediate units
     #[wasm_bindgen]
     pub fn move_board_position(&mut self, from: usize, to: usize) -> Result<(), String> {
-        log::action(
-            "move_board_position",
-            &format!("from={}, to={}", from, to),
-        );
+        log::action("move_board_position", &format!("from={}, to={}", from, to));
         if self.state.phase != GamePhase::Shop {
             return Err("Can only move during shop phase".to_string());
         }
@@ -498,17 +458,20 @@ impl GameEngine {
             return Err("Invalid board slot".to_string());
         }
 
-        self.save_snapshot();
+        validate_move_board_positions(&self.state.board, from, to).map_err(|err| match err {
+            GameError::InvalidBoardSlot { .. } => "Invalid board slot".to_string(),
+            GameError::InvalidBoardMove { .. } => "Source and target slots must differ".to_string(),
+            GameError::BoardSlotEmpty { index } if index == from as u32 => {
+                "Source board slot is empty".to_string()
+            }
+            GameError::BoardSlotEmpty { .. } => {
+                "Target board slot is empty; use swap_board_positions for direct moves".to_string()
+            }
+            _ => "Invalid board move".to_string(),
+        })?;
 
-        if from < to {
-            for i in from..to {
-                self.state.board.swap(i, i + 1);
-            }
-        } else {
-            for i in (to..from).rev() {
-                self.state.board.swap(i, i + 1);
-            }
-        }
+        self.save_snapshot();
+        apply_move_board_positions(&mut self.state.board, from, to);
 
         self.action_log.push(TurnAction::MoveBoard {
             from_slot: from as u32,
@@ -1130,15 +1093,13 @@ impl GameEngine {
             get_opponent_for_round(self.state.round, battle_seed + 999, &self.state.card_pool)
                 .unwrap()
                 .into_iter()
-                .map(|cu| {
-                    UnitView {
-                        instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
-                        card_id: cu.card_id,
-                        name: cu.name,
-                        attack: cu.attack,
-                        health: cu.health,
-                        battle_abilities: cu.abilities,
-                    }
+                .map(|cu| UnitView {
+                    instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
+                    card_id: cu.card_id,
+                    name: cu.name,
+                    attack: cu.attack,
+                    health: cu.health,
+                    battle_abilities: cu.abilities,
                 })
                 .collect();
 

@@ -205,6 +205,43 @@ fn test_swap_board_positions() {
 }
 
 #[test]
+fn test_move_board_positions_shifts_intermediate_units() {
+    use crate::commit::verify_and_apply_turn;
+
+    let mut state = GameState::new(42);
+
+    let card_a = state.generate_card_id();
+    let card_b = state.generate_card_id();
+    let card_c = state.generate_card_id();
+    state
+        .card_pool
+        .insert(card_a, UnitCard::new(card_a, "A", 1, 1, 0, 0));
+    state
+        .card_pool
+        .insert(card_b, UnitCard::new(card_b, "B", 1, 1, 0, 0));
+    state
+        .card_pool
+        .insert(card_c, UnitCard::new(card_c, "C", 1, 1, 0, 0));
+
+    state.board[0] = Some(BoardUnit::new(card_a));
+    state.board[1] = Some(BoardUnit::new(card_b));
+    state.board[2] = Some(BoardUnit::new(card_c));
+
+    let action = CommitTurnAction {
+        actions: vec![TurnAction::MoveBoard {
+            from_slot: 0,
+            to_slot: 2,
+        }],
+    };
+
+    let result = verify_and_apply_turn(&mut state, &action);
+    assert!(result.is_ok(), "MoveBoard should succeed: {:?}", result);
+    assert_eq!(state.board[0].as_ref().unwrap().card_id, card_b);
+    assert_eq!(state.board[1].as_ref().unwrap().card_id, card_c);
+    assert_eq!(state.board[2].as_ref().unwrap().card_id, card_a);
+}
+
+#[test]
 fn test_burn_from_board() {
     use crate::commit::verify_and_apply_turn;
 

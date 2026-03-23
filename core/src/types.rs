@@ -505,7 +505,7 @@ pub enum TurnAction {
     BurnFromBoard { board_slot: u32 },
     /// Swap two board positions
     SwapBoard { slot_a: u32, slot_b: u32 },
-    /// Move a unit from one board slot to another (shift intermediate units)
+    /// Reorder an occupied board slot into another occupied slot (shift intermediate units)
     MoveBoard { from_slot: u32, to_slot: u32 },
 }
 

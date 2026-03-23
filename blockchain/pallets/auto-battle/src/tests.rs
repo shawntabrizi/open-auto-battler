@@ -718,11 +718,14 @@ fn test_tournament_game_over_records_stats() {
         ));
 
         // Game should be in Completed phase
-        let session = ActiveTournamentGame::<Test>::get(player).expect("session should still exist");
+        let session =
+            ActiveTournamentGame::<Test>::get(player).expect("session should still exist");
         assert_eq!(session.state.phase, GamePhase::Completed);
 
         // end_tournament_game finalizes and removes it
-        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(player)));
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(
+            player
+        )));
         assert!(ActiveTournamentGame::<Test>::get(player).is_none());
 
         // Stats should be recorded
@@ -782,7 +785,9 @@ fn test_tournament_perfect_run_stats() {
         ));
 
         // Finalize the completed game
-        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(player)));
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(
+            player
+        )));
 
         // Verify stats for defeat
         let stats = crate::TournamentPlayerStats::<Test>::get(0, player);
@@ -823,7 +828,9 @@ fn test_tournament_perfect_run_stats() {
         assert_eq!(session.state.phase, GamePhase::Completed);
 
         // Finalize the completed game
-        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(player)));
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(
+            player
+        )));
         assert!(ActiveTournamentGame::<Test>::get(player).is_none());
 
         let stats = crate::TournamentPlayerStats::<Test>::get(0, player);
@@ -1232,7 +1239,9 @@ fn test_claim_prize_perfect_run_player() {
             RuntimeOrigin::signed(player),
             action.into()
         ));
-        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(player)));
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(
+            player
+        )));
 
         // Verify perfect run recorded
         let stats = crate::TournamentPlayerStats::<Test>::get(0, player);
@@ -1371,9 +1380,7 @@ fn test_end_game_grants_achievements() {
         // Place a unit on the board and set wins to 10 so game ends as victory
         ActiveGame::<Test>::mutate(player, |session| {
             let s = session.as_mut().unwrap();
-            s.state.board[0] = Some(oab_core::types::BoardUnit::new(
-                oab_core::types::CardId(0),
-            ));
+            s.state.board[0] = Some(oab_core::types::BoardUnit::new(oab_core::types::CardId(0)));
             s.state.wins = 10;
             s.state.lives = 100;
         });
@@ -1405,9 +1412,19 @@ fn test_end_game_grants_achievements() {
         // Bronze requires winning a battle — this battle was lost (empty board) so no bronze.
         // Silver and gold granted by end_game (wins >= 10, lives >= 3).
         let bits = crate::VictoryAchievements::<Test>::get(player, 0);
-        assert_eq!(bits & crate::pallet::ACHIEVEMENT_BRONZE, 0, "no bronze from lost battle");
-        assert!(bits & crate::pallet::ACHIEVEMENT_SILVER != 0, "should have silver");
-        assert!(bits & crate::pallet::ACHIEVEMENT_GOLD != 0, "should have gold");
+        assert_eq!(
+            bits & crate::pallet::ACHIEVEMENT_BRONZE,
+            0,
+            "no bronze from lost battle"
+        );
+        assert!(
+            bits & crate::pallet::ACHIEVEMENT_SILVER != 0,
+            "should have silver"
+        );
+        assert!(
+            bits & crate::pallet::ACHIEVEMENT_GOLD != 0,
+            "should have gold"
+        );
     });
 }
 
@@ -1420,9 +1437,7 @@ fn test_end_game_no_silver_gold_on_loss() {
         // Place a unit and set lives to 1 so next loss ends game
         ActiveGame::<Test>::mutate(player, |session| {
             let s = session.as_mut().unwrap();
-            s.state.board[0] = Some(oab_core::types::BoardUnit::new(
-                oab_core::types::CardId(0),
-            ));
+            s.state.board[0] = Some(oab_core::types::BoardUnit::new(oab_core::types::CardId(0)));
             s.state.lives = 1;
         });
 
@@ -1469,9 +1484,7 @@ fn test_end_tournament_game_archives_and_records_stats() {
         // Place a unit and set wins to 10 for victory
         ActiveTournamentGame::<Test>::mutate(player, |session| {
             let s = session.as_mut().unwrap();
-            s.state.board[0] = Some(oab_core::types::BoardUnit::new(
-                oab_core::types::CardId(0),
-            ));
+            s.state.board[0] = Some(oab_core::types::BoardUnit::new(oab_core::types::CardId(0)));
             s.state.wins = 10;
             s.state.lives = 100;
         });
@@ -1489,7 +1502,9 @@ fn test_end_tournament_game_archives_and_records_stats() {
         assert_eq!(session.state.phase, GamePhase::Completed);
 
         // end_tournament_game finalizes
-        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(player)));
+        assert_ok!(AutoBattle::end_tournament_game(RuntimeOrigin::signed(
+            player
+        )));
         assert!(ActiveTournamentGame::<Test>::get(player).is_none());
 
         // Victory ghost archived by end_tournament_game
@@ -1505,8 +1520,18 @@ fn test_end_tournament_game_archives_and_records_stats() {
 
         // Bronze requires winning — this battle was lost (empty board). Silver/gold from end_tournament_game.
         let bits = crate::VictoryAchievements::<Test>::get(player, 0);
-        assert_eq!(bits & crate::pallet::ACHIEVEMENT_BRONZE, 0, "no bronze from lost battle");
-        assert!(bits & crate::pallet::ACHIEVEMENT_SILVER != 0, "should have silver");
-        assert!(bits & crate::pallet::ACHIEVEMENT_GOLD != 0, "should have gold");
+        assert_eq!(
+            bits & crate::pallet::ACHIEVEMENT_BRONZE,
+            0,
+            "no bronze from lost battle"
+        );
+        assert!(
+            bits & crate::pallet::ACHIEVEMENT_SILVER != 0,
+            "should have silver"
+        );
+        assert!(
+            bits & crate::pallet::ACHIEVEMENT_GOLD != 0,
+            "should have gold"
+        );
     });
 }
