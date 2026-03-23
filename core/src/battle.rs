@@ -184,7 +184,6 @@ pub enum BattlePhase {
     Start,
     BeforeAttack,
     Attack,
-    AfterAttack,
     End,
 }
 
@@ -571,25 +570,8 @@ fn resolve_trigger_queue<R: BattleRng>(
 
     // 2. Iterate — all captured triggers fire (stack semantics).
     while let Some(trigger) = queue.pop() {
-        // A. Trigger Count Check: Has this ability reached its max triggers?
-        if let Some(max) = trigger.max_triggers {
-            // For living units, check current count
-            if let Some(unit) = find_unit_mut(trigger.source_id, player_units, enemy_units) {
-                if unit
-                    .ability_trigger_counts
-                    .get(trigger.ability_index)
-                    .copied()
-                    .unwrap_or(0)
-                    >= max
-                {
-                    continue; // Already triggered max times
-                }
-            }
-            // For dead/removed units, we can't track — allow it
-        }
-
-        // B. Condition Check: Does the condition pass?
-        if !trigger.conditions.is_empty() {
+        // A. Trigger Count Check + B. Condition Check (single lookup scope)
+        {
             // Look up source on the board, or in the graveyard if dead.
             let source = find_unit(trigger.source_id, player_units, enemy_units).or_else(|| {
                 graveyard
@@ -597,40 +579,56 @@ fn resolve_trigger_queue<R: BattleRng>(
                     .find(|u| u.instance_id == trigger.source_id)
             });
 
-            let Some(source) = source else {
-                continue; // Source gone entirely — skip
-            };
+            // Check max_triggers (if source is found; dead/gone units are allowed)
+            if let Some(max) = trigger.max_triggers {
+                if let Some(unit) = source {
+                    if unit
+                        .ability_trigger_counts
+                        .get(trigger.ability_index)
+                        .copied()
+                        .unwrap_or(0)
+                        >= max
+                    {
+                        continue;
+                    }
+                }
+            }
 
-            let (allies, enemies): (&[CombatUnit], &[CombatUnit]) = match trigger.team {
-                Team::Player => (player_units.as_slice(), enemy_units.as_slice()),
-                Team::Enemy => (enemy_units.as_slice(), player_units.as_slice()),
-            };
+            // Check conditions
+            if !trigger.conditions.is_empty() {
+                let Some(source) = source else {
+                    continue; // Source gone entirely — skip
+                };
 
-            let ctx = ConditionContext {
-                source,
-                allies,
-                enemies,
-            };
+                let (allies, enemies): (&[CombatUnit], &[CombatUnit]) = match trigger.team {
+                    Team::Player => (player_units.as_slice(), enemy_units.as_slice()),
+                    Team::Enemy => (enemy_units.as_slice(), player_units.as_slice()),
+                };
 
-            if !evaluate_condition(
-                &trigger.conditions,
-                &ctx,
-                player_units,
-                enemy_units,
-                trigger.trigger_target_id,
-            ) {
-                continue; // Condition not met, skip this trigger
+                if !evaluate_condition(
+                    &trigger.conditions,
+                    &ConditionContext {
+                        source,
+                        allies,
+                        enemies,
+                    },
+                    player_units,
+                    enemy_units,
+                    trigger.trigger_target_id,
+                ) {
+                    continue;
+                }
             }
         }
 
-        // D. Emit Trigger Event
+        // C. Emit Trigger Event
         limits.record_trigger(trigger.team)?;
         events.push(CombatEvent::AbilityTrigger {
             source_instance_id: trigger.source_id,
             ability_index: trigger.ability_index as u32,
         });
 
-        // E. Increment trigger count for this ability (if unit is still alive)
+        // D. Increment trigger count for this ability (if unit is still alive)
         if let Some(unit) = find_unit_mut(trigger.source_id, player_units, enemy_units) {
             if let Some(count) = unit.ability_trigger_counts.get_mut(trigger.ability_index) {
                 *count += 1;
@@ -657,20 +655,15 @@ fn resolve_trigger_queue<R: BattleRng>(
 
         // Capture OnHurt BEFORE death check so fatally-damaged units still fire.
         for unit_id in damaged_ids {
-            let (idx, team) = if let Some(pos) =
-                player_units.iter().position(|u| u.instance_id == unit_id)
-            {
-                (pos, Team::Player)
-            } else if let Some(pos) = enemy_units.iter().position(|u| u.instance_id == unit_id) {
-                (pos, Team::Enemy)
-            } else {
-                continue;
-            };
+            let (idx, team, unit) =
+                if let Some((i, u)) = find_unit_with_position(unit_id, player_units) {
+                    (i, Team::Player, u)
+                } else if let Some((i, u)) = find_unit_with_position(unit_id, enemy_units) {
+                    (i, Team::Enemy, u)
+                } else {
+                    continue;
+                };
 
-            let unit = match team {
-                Team::Player => &player_units[idx],
-                Team::Enemy => &enemy_units[idx],
-            };
             let is_fatal = unit.health <= 0;
             reaction_queue.extend(capture_triggers_for_unit(
                 unit,
@@ -1070,7 +1063,7 @@ fn execute_phase<R: BattleRng>(
         }
         BattlePhase::Attack => {
             let clash_outcome = execute_attack_clash(player_units, enemy_units, events);
-            // After clash, all triggers (OnHurt, AfterAttack, OnFaint, etc.)
+            // After clash, all triggers (OnHurt, AfterUnitAttack, AfterAnyAttack, OnFaint, etc.)
             // are captured eagerly before the death check.
             resolve_hurt_and_faint_loop(
                 player_units,
@@ -1081,11 +1074,6 @@ fn execute_phase<R: BattleRng>(
                 limits,
                 card_pool,
             )?;
-        }
-        BattlePhase::AfterAttack => {
-            // AfterAttack triggers are now captured eagerly inside
-            // resolve_hurt_and_faint_loop. This arm is kept for
-            // BattlePhase enum exhaustiveness but should not be called.
         }
         BattlePhase::End => {
             let result = match (player_units.is_empty(), enemy_units.is_empty()) {
@@ -1133,7 +1121,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
                     u,
                     i,
                     team,
-                    trigger_type.clone(),
+                    *trigger_type,
                     target_id,
                     None,
                 ));
@@ -1158,7 +1146,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
 }
 
 /// Captures the instance IDs of the two front units involved in a clash.
-/// Used to populate `trigger_target_id` for Before/AfterAttack triggers.
+/// Used to populate `trigger_target_id` for BeforeAttack triggers.
 #[derive(Debug, Clone, Copy)]
 struct ClashContext {
     player_id: Option<UnitInstanceId>,
@@ -1183,8 +1171,8 @@ struct ClashOutcome {
 }
 
 fn execute_attack_clash(
-    player_units: &mut Vec<CombatUnit>,
-    enemy_units: &mut Vec<CombatUnit>,
+    player_units: &mut [CombatUnit],
+    enemy_units: &mut [CombatUnit],
     events: &mut Vec<CombatEvent>,
 ) -> ClashOutcome {
     let mut outcome = ClashOutcome {
@@ -1876,7 +1864,9 @@ fn get_stat_value(unit: &CombatUnit, stat: StatType) -> i32 {
 // CONDITION EVALUATION
 // ==========================================
 
-/// Context for evaluating conditions
+/// Context for evaluating conditions.
+/// The `allies` and `enemies` fields are reserved for future condition types
+/// that need team-scoped evaluation without separate slice parameters.
 #[allow(dead_code)]
 struct ConditionContext<'a> {
     source: &'a CombatUnit,
@@ -2073,8 +2063,8 @@ fn compare_u32(a: u32, op: CompareOp, b: u32) -> bool {
 
 fn find_unit<'a>(
     instance_id: UnitInstanceId,
-    player_units: &'a Vec<CombatUnit>,
-    enemy_units: &'a Vec<CombatUnit>,
+    player_units: &'a [CombatUnit],
+    enemy_units: &'a [CombatUnit],
 ) -> Option<&'a CombatUnit> {
     player_units
         .iter()
@@ -2084,8 +2074,8 @@ fn find_unit<'a>(
 
 fn find_unit_mut<'a>(
     instance_id: UnitInstanceId,
-    player_units: &'a mut Vec<CombatUnit>,
-    enemy_units: &'a mut Vec<CombatUnit>,
+    player_units: &'a mut [CombatUnit],
+    enemy_units: &'a mut [CombatUnit],
 ) -> Option<&'a mut CombatUnit> {
     player_units
         .iter_mut()

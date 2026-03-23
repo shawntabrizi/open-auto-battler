@@ -178,7 +178,7 @@ export interface UnitView {
 
 export type Team = 'Player' | 'Enemy';
 export type BattleResult = 'Victory' | 'Defeat' | 'Draw';
-export type BattlePhase = 'Start' | 'BeforeAttack' | 'Attack' | 'AfterAttack' | 'End';
+export type BattlePhase = 'Start' | 'BeforeAttack' | 'Attack' | 'End';
 
 export type LimitReason =
   | { type: 'RoundLimit'; payload: { current: number; max: number } }
