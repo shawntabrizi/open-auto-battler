@@ -142,6 +142,8 @@ units, fill the board faster than the enemy can clear it.
 | Horse | 2 | 1 | 2 | 1 | 10 | OnAllySpawn: +1 ATK to spawned unit | Makes tokens dangerous |
 | Dog | 2 | 3 | 3 | 1 | 10 | OnAllySpawn: +2 ATK +1 HP to self | Grows with every spawn |
 | Rooster | 4 | 4 | 5 | 2 | 10 | OnFaint: Spawn 3/1 Chick | Big body + strong token |
+| Necromancer | 3 | 4 | 4 | 2 | 8 | OnAllySpawn: +2 ATK to spawned unit (3x) | Makes tokens hit harder |
+| Rat King | 4 | 6 | 6 | 3 | 8 | OnAllyFaint: Spawn 1/1 Rat Token at back (3x) | Steady reinforcements |
 | Turkey | 4 | 5 | 6 | 3 | 6 | OnAllySpawn: +2 ATK +2 HP to spawned unit | THE spawn payoff, build-around |
 | Fly | 3 | 5 | 7 | 3 | 6 | OnAllyFaint: Spawn 3/3 Zombie Fly (3x) | Board refill machine |
 | Hive Mother | 5 | 7 | 9 | 3 | 6 | OnAllyFaint: Spawn 2/2 Drone at back (3x) | Swarm engine, spawns behind the line |
@@ -175,6 +177,8 @@ Kangaroo), stat stacking
 | Giraffe | 1 | 3 | 3 | 1 | 10 | OnShopStart: +1 ATK +1 HP to back unit (perm) | Recurring shop engine |
 | Penguin | 2 | 4 | 4 | 2 | 10 | OnShopStart: +1 ATK +1 HP to 2 random allies (perm) | Premium shop engine |
 | Cow | 3 | 5 | 5 | 2 | 10 | OnBuy: +1 ATK +1 HP to all allies (perm) | Mass buy buff |
+| Bison | 4 | 4 | 5 | 2 | 8 | OnBuy: +2 ATK +1 HP to 2 random allies (perm) | Focused buy buff |
+| Ox | 4 | 6 | 7 | 3 | 8 | AfterUnitAttack: +2 ATK +2 HP to self | Durable combat scaler |
 | Monkey | 3 | 5 | 7 | 3 | 6 | OnShopStart: +2 ATK +2 HP to random ally (perm) | Premium shop scaler |
 | Hippo | 4 | 5 | 7 | 3 | 6 | AfterUnitAttack: +3 ATK +3 HP to self | Combat snowball, must survive |
 | Dragon | 4 | 6 | 9 | 3 | 6 | OnBuy: +1 ATK +1 HP to ALL allies (perm) | Mass scaling, best buy trigger |
@@ -209,6 +213,8 @@ single critical unit
 | Skunk | 3 | 4 | 4 | 2 | 10 | OnStart: Deal 3 damage to highest HP enemy | Tank buster |
 | Headhunter | 3 | 3 | 4 | 2 | 10 | OnStart: Deal 4 damage to lowest HP enemy | Assassin |
 | Crocodile | 4 | 4 | 5 | 2 | 10 | OnStart: Deal 6 damage to last enemy | Heavy back-line hit |
+| Sniper | 3 | 5 | 5 | 2 | 8 | OnStart: Deal 4 damage to last enemy | Stronger back-line hit |
+| Fire Mage | 3 | 5 | 6 | 3 | 8 | OnStart: Deal 4 damage to 2 random enemies | Multi-target burst |
 | Leopard | 4 | 5 | 7 | 3 | 6 | OnStart: Deal 5 damage to random enemy | Heavy single-target burst |
 | Artillery Mage | 4 | 4 | 7 | 3 | 6 | OnStart: Deal 3 damage to ALL enemies | AoE nuke |
 | Dragon Tyrant | 5 | 7 | 9 | 3 | 6 | OnStart: Deal 4 damage to ALL enemies | Premium AoE nuke |
@@ -239,8 +245,10 @@ loses to Faint Chain (opponent gains value from dying)
 | Scaredy Cat | 1 | 2 | 1 | 0 | 10 | OnStart: +2 HP to unit behind | Cheap positional HP buff |
 | Shield Bearer | 1 | 3 | 2 | 1 | 10 | OnStart: +2 HP to front ally | Front-line support |
 | Nurse Goblin | 1 | 3 | 2 | 1 | 10 | AfterUnitAttack (front ally): +1 HP to front ally (3x) | Heals survivors |
+| Tortoise | 1 | 4 | 3 | 1 | 8 | OnStart: +2 HP to adjacent allies | Positional HP buff |
 | Medic | 1 | 4 | 4 | 2 | 10 | BeforeAnyAttack: +1 HP to all allies (3x) | AoE sustain |
 | Shield Squire | 2 | 4 | 4 | 2 | 10 | BeforeAnyAttack: +2 HP to back unit (3x) | Back-line protector |
+| Cleric | 2 | 6 | 5 | 2 | 8 | BeforeAnyAttack: +2 HP to front ally (3x) | Focused front-line healer |
 | Armadillo | 2 | 6 | 6 | 3 | 10 | OnStart: +4 HP to all allies | Mass HP buff |
 | Guardian | 3 | 6 | 6 | 3 | 6 | BeforeUnitAttack: +3 HP to self | Unkillable front-liner |
 | Stone Golem | 2 | 8 | 7 | 3 | 6 | OnStart: +3 HP to all allies | Massive HP wall |
@@ -276,6 +284,8 @@ don't die in the right order
 | Martyr Knight | 2 | 3 | 3 | 1 | 10 | OnFaint: +2 ATK +2 HP to unit behind (perm) | Big single-target buff |
 | Badger | 3 | 3 | 3 | 1 | 10 | OnFaint: Deal 3 damage to adjacent | Risky directional AoE (hits own allies) |
 | Shark | 3 | 3 | 4 | 2 | 10 | OnAllyFaint: +2 ATK +1 HP to self | Faint consumer, snowballs |
+| Wolf Rider | 3 | 4 | 5 | 2 | 8 | OnFaint: Deal 5 damage to front enemy | Big damage on death |
+| Grave Knight | 4 | 5 | 6 | 3 | 8 | OnAllyFaint: +2 ATK +2 HP to self (perm) | Premium faint consumer |
 | Mammoth | 3 | 6 | 7 | 3 | 6 | OnFaint: +2 ATK +2 HP to ALL allies (perm) | Board-wide death buff |
 | Vulture | 4 | 5 | 6 | 3 | 6 | OnAllyFaint: Deal 3 damage to random enemy | Death triggers damage |
 | Phoenix | 3 | 4 | 8 | 3 | 6 | OnFaint: Spawn Phoenix Egg (OnStart: Spawn 3/4 Phoenix) | Comes back from death |
@@ -308,7 +318,9 @@ being attacked)
 | Blowfish | 2 | 4 | 3 | 1 | 10 | OnHurt: Deal 3 damage to random enemy | Damage on hurt |
 | Porcupine | 3 | 5 | 4 | 2 | 10 | OnHurt: Deal 2 damage to attacker | Better thorns |
 | Snake | 3 | 5 | 5 | 2 | 10 | AfterUnitAttack (front ally): Deal 3 damage to random enemy | Punishes from behind |
-| Camel | 2 | 6 | 5 | 2 | 6 | OnHurt: +2 ATK +2 HP to unit behind (unlimited) | Cascading buffs on hit |
+| Cactus | 2 | 5 | 4 | 2 | 8 | OnHurt: Deal 1 damage to ALL enemies (3x) | AoE thorns lite |
+| Iron Maiden | 3 | 6 | 6 | 3 | 8 | OnHurt: Deal 3 damage to attacker | Heavy direct thorns |
+| Camel | 2 | 6 | 6 | 3 | 6 | OnHurt: +2 ATK +2 HP to unit behind (unlimited) | Cascading buffs on hit |
 | Fire Elemental | 3 | 7 | 7 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies | AoE retaliation |
 | Venom Drake | 4 | 8 | 9 | 3 | 6 | OnHurt: Deal 3 damage to attacker AND random enemy | Double retaliation |
 | Wasp | 1 | 1 | 5 | 2 | 10 | **Deathtouch** | Kills anything it damages, glass cannon |
@@ -340,6 +352,8 @@ mana
 | Swan | 1 | 3 | 3 | 1 | 10 | OnShopStart: +1 mana | Recurring mana engine |
 | Duck | 1 | 3 | 2 | 1 | 10 | OnSell: +1 HP to all allies (perm) | Sell for team HP |
 | Squirrel | 2 | 4 | 4 | 2 | 10 | OnShopStart: +1 mana | Premium recurring mana |
+| Gold Miner | 3 | 4 | 5 | 3 | 8 | None | High burn, buy for 5 sell for 3, decent body |
+| Tax Collector | 2 | 5 | 6 | 3 | 8 | OnShopStart: +1 mana | Bigger mana engine |
 | Alchemist | 2 | 4 | 5 | 3 | 6 | OnShopStart: +1 mana | Mana engine + high burn value |
 | Cat | 3 | 5 | 7 | 3 | 6 | OnShopStart: +2 mana | Premium double mana engine |
 | Merchant Prince | 4 | 6 | 9 | 3 | 6 | OnShopStart: +1 mana per ally on board | Up to +4 mana with full board |
@@ -375,6 +389,8 @@ Chain (dying fuels their engine)
 | Lone Wolf | 2 | 3 | 3 | 1 | 10 | BeforeUnitAttack: +5 ATK if alone (3x) | Solo aggro, huge payoff |
 | Battle Hardened | 3 | 3 | 5 | 2 | 10 | BeforeUnitAttack: +2 ATK; AfterUnitAttack: +2 HP (3x ea) | Combat snowball |
 | Boar | 4 | 4 | 5 | 2 | 10 | BeforeUnitAttack: +3 ATK +1 HP | Premium aggro finisher |
+| Gladiator | 5 | 3 | 4 | 2 | 8 | OnStart: +2 ATK to self | Glass cannon, opens at 7 ATK |
+| War Hound | 5 | 4 | 6 | 3 | 8 | BeforeUnitAttack: +2 ATK +1 HP to self (3x) | Aggressive self-buffer |
 | Tiger | 5 | 4 | 6 | 3 | 6 | OnStart: +3 ATK +2 HP to unit behind | Big aggro opener |
 | Rhino | 5 | 6 | 7 | 3 | 6 | AfterUnitAttack: Deal 4 damage to front enemy | Double tap |
 | Berserker | 6 | 5 | 8 | 3 | 6 | BeforeUnitAttack: +4 ATK to self (3x) | Massive damage escalation |
@@ -405,6 +421,8 @@ and sell repeatedly, generating small advantages each cycle that compound over t
 | Worm | 1 | 2 | 1 | 0 | 10 | OnBuy: +1 ATK +1 HP to self (perm) | Buy-sell fodder (also Scaling) |
 | Duck | 1 | 3 | 2 | 1 | 10 | OnSell: +1 HP to all allies (perm) | Sell for team HP (also Economy) |
 | Fish | 2 | 2 | 2 | 1 | 10 | OnBuy: +1 ATK +1 HP to random ally (perm) | Buy trigger (also Scaling) |
+| Peddler | 2 | 3 | 3 | 1 | 8 | OnBuy: +1 ATK +1 HP to 2 random allies (perm) | Better Fish, hits 2 targets |
+| Haggler | 2 | 4 | 4 | 2 | 8 | OnSell: +1 ATK +1 HP to all allies (perm) | Premium sell payoff |
 | Seal | 3 | 5 | 5 | 2 | 10 | OnBuy: +1 ATK to 3 random allies (perm) | Mass buy buff |
 | Broker | 3 | 5 | 7 | 3 | 6 | OnBuy: +2 ATK +2 HP to 2 random allies (perm) | Premium buy payoff |
 | Auctioneer | 3 | 5 | 7 | 3 | 6 | OnSell: +2 ATK +2 HP to all allies (perm) | Premium sell payoff |
@@ -443,6 +461,8 @@ accidentally win early
 | Rally Captain | 2 | 3 | 3 | 1 | 10 | AfterLoss: +1 ATK to all allies (perm) | Team ATK on loss |
 | Battle Scarred | 2 | 5 | 4 | 2 | 10 | AfterLoss: +2 ATK +1 HP to self (perm) | Premium self-scaler |
 | War Drummer | 3 | 5 | 5 | 2 | 10 | AfterLoss: +1 ATK +1 HP to all allies (perm) | Mass comeback buff |
+| Survivor | 3 | 5 | 5 | 2 | 8 | AfterLoss: +2 ATK +1 HP to self AND +1 HP to all (perm) | Dual comeback |
+| Resilient Knight | 3 | 7 | 7 | 3 | 8 | AfterLoss: +1 ATK +2 HP to all allies (perm) | Tank-style comeback |
 | Vengeful Spirit | 3 | 6 | 7 | 3 | 6 | AfterLoss: +2 ATK +2 HP to all allies (perm) | Massive comeback swing |
 | Phoenix Warrior | 4 | 7 | 9 | 3 | 6 | AfterLoss: +3 ATK +2 HP to self (perm) | Self-scaling monster |
 | Last Stand | 3 | 5 | 6 | 3 | 6 | AfterLoss: +1 ATK +1 HP to all AND +2 ATK to self (perm) | Dual buff on loss |
@@ -510,3 +530,47 @@ burn 0.
 | Drone | 2 | 2 | Hive Mother | None | Swarm token |
 | Phoenix Egg | 0 | 5 | Phoenix | OnStart: Spawn 3/4 Phoenix | Delayed rebirth |
 | Wasp Token | 1 | 1 | Brood Queen | Deathtouch | Assassin token |
+
+---
+
+## Card Distribution
+
+**120 unique cards** + 8 tokens across the full mana curve.
+
+### Mana Cost Histogram
+
+```
+Cost  Count  Distribution                           Rarity Breakdown
+----  -----  -----------                            -----------------
+  1     12   ████████████                            12 Common
+  2     12   ████████████                            12 Common
+  3     16   ████████████████                        14 Common, 2 Uncommon
+  4     14   ██████████████                          10 Common, 4 Uncommon
+  5     18   ██████████████████                      10 Common, 6 Uncommon, 2 Rare
+  6     14   ██████████████                          2 Common, 6 Uncommon, 6 Rare
+  7     15   ███████████████                         2 Uncommon, 13 Rare
+  8      3   ███  ← GAP                             3 Rare
+  9     10   ██████████                              6 Rare, 4 Legendary
+ 10      6   ██████                                  6 Legendary
+```
+
+### By Rarity
+
+| Rarity | Count | Percentage |
+|--------|-------|------------|
+| Common (10) | 60 | 50% |
+| Uncommon (8) | 20 | 17% |
+| Rare (6) | 30 | 25% |
+| Legendary (2) | 10 | 8% |
+
+### Notes
+
+- **Cost 8 is thin** — only Shield Master, Phoenix, and Berserker. Consider adding
+  2-3 more cards here (one per archetype that needs a high-cost option).
+- **Cost 5 is heavy** — 18 cards compete for the same mana slot. This is OK since
+  round 3-4 (mana 5-6) is the mid-game pivot where players transition from cheap
+  cards to archetype payoffs.
+- **Cost 1-2 are all common** — intentional, since early game should be accessible
+  and consistent regardless of luck.
+- **Cost 7+ has no commons** — late-game cards are all uncommon+ rarity, creating
+  natural scarcity for powerful finishers.
