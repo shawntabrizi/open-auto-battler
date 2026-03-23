@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { useArenaStore } from '../store/arenaStore';
 import {
   useCustomizationStore,
   type CustomizationType,
   type NftItem,
+  type ThemePreviewData,
 } from '../store/customizationStore';
 import { CustomizationPreview } from './CustomizationPreview';
 import { TopBar } from './TopBar';
 import { IpfsImage } from './IpfsImage';
-import { fetchIpfsJson } from '../utils/ipfs';
 import { DEFAULT_WARM_THEME } from '../theme/themes';
 
 type TileShape = 'landscape' | 'wide' | 'card' | 'circle';
@@ -171,7 +171,7 @@ export function CustomizeCategoryPage() {
                   imageUrl={nft.type === 'theme' ? undefined : nft.imageUrl}
                   preview={
                     nft.type === 'theme' ? (
-                      <ThemeSwatch cid={nft.ipfsCid} name={nft.name} className="w-full h-full" />
+                      <ThemeSwatch data={nft.themePreview} name={nft.name} className="w-full h-full" />
                     ) : undefined
                   }
                   subtitle={`#${nft.itemId}`}
@@ -207,7 +207,12 @@ export function CustomizeCategoryPage() {
                   isSelected={selectedNft?.itemId === nft.itemId}
                   onClick={() => handleSelect(nft)}
                   label={nft.name}
-                  imageUrl={nft.imageUrl}
+                  imageUrl={nft.type === 'theme' ? undefined : nft.imageUrl}
+                  preview={
+                    nft.type === 'theme' ? (
+                      <ThemeSwatch data={nft.themePreview} name={nft.name} className="w-full h-full" />
+                    ) : undefined
+                  }
                   subtitle={`#${nft.itemId}`}
                   size="lg"
                   shape={cat.shape}
@@ -284,52 +289,12 @@ function NftTile({
   );
 }
 
-interface ThemePreviewData {
-  colors: string[];
-  font: string;
-  label: string;
-  accent: string;
-  bg: string;
-  titleGradient: string;
-}
-
-/** Fetches a theme JSON from IPFS and renders a mini theme preview. */
-function ThemeSwatch({ cid, name, className }: { cid: string; name: string; className?: string }) {
-  const [data, setData] = useState<ThemePreviewData | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    setFailed(false);
-    fetchIpfsJson(cid.startsWith('ipfs://') ? cid : `ipfs://${cid}`)
-      .then((json: any) => {
-        const b = json.base || {};
-        setData({
-          colors: [
-            b.accent || '#888',
-            (json.battleShop && json.battleShop.mana) || '#55a',
-            b.positive || '#5a5',
-            b.defeat || '#a55',
-            b.special || '#a5a',
-            (json.unitCard && json.unitCard.cardBurn) || '#aa5',
-          ],
-          font: b.decorative || 'serif',
-          label: json.label || name,
-          accent: b.accent || '#888',
-          bg: b.surfaceDark || '#111',
-          titleGradient:
-            b.titleGradient ||
-            `linear-gradient(to right, ${b.accent || '#888'}, ${b.accent || '#888'})`,
-        });
-      })
-      .catch(() => setFailed(true));
-  }, [cid, name]);
-
+/** Renders a mini theme preview from cached preview data. */
+function ThemeSwatch({ data, name, className }: { data?: ThemePreviewData; name: string; className?: string }) {
   if (!data) {
     return (
       <div className={`${className} flex items-center justify-center`}>
-        <span className={`text-base-400 text-sm ${failed ? '' : 'animate-pulse'}`}>
-          {failed ? name : 'Loading...'}
-        </span>
+        <span className="text-base-400 text-sm animate-pulse">{name}</span>
       </div>
     );
   }

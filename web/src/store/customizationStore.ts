@@ -15,6 +15,14 @@ export type CustomizationType =
   | 'card_art'
   | 'theme';
 
+export interface ThemePreviewData {
+  colors: string[];
+  bg: string;
+  font: string;
+  titleGradient: string;
+  label: string;
+}
+
 export interface NftItem {
   collectionId: number;
   itemId: number;
@@ -23,6 +31,7 @@ export interface NftItem {
   imageUrl: string; // resolved gateway URL
   ipfsCid: string;
   description?: string;
+  themePreview?: ThemePreviewData;
 }
 
 export interface CustomizationSelections {
@@ -84,6 +93,47 @@ function filterSelectionsByOwnership(
     cardArt: ownedKeys.has(nftKey(selections.cardArt)) ? selections.cardArt : null,
     theme: ownedKeys.has(nftKey(selections.theme)) ? selections.theme : null,
   };
+}
+
+function extractThemePreview(json: any, name: string): ThemePreviewData {
+  const b = json.base || {};
+  return {
+    colors: [
+      b.accent || '#888',
+      (json.battleShop && json.battleShop.mana) || '#55a',
+      b.positive || '#5a5',
+      b.defeat || '#a55',
+      b.special || '#a5a',
+      (json.unitCard && json.unitCard.cardBurn) || '#aa5',
+    ],
+    bg: b.surfaceDark || '#111',
+    font: b.decorative || 'serif',
+    titleGradient:
+      b.titleGradient ||
+      `linear-gradient(to right, ${b.accent || '#888'}, ${b.accent || '#888'})`,
+    label: json.label || name,
+  };
+}
+
+/** Pre-fetch theme preview data for all theme NFTs in the background. */
+function prefetchThemePreviews(nfts: NftItem[], set: (fn: (s: any) => any) => void): void {
+  for (const nft of nfts) {
+    if (nft.type !== 'theme' || nft.themePreview) continue;
+    fetchIpfsJson(nft.ipfsCid.startsWith('ipfs://') ? nft.ipfsCid : `ipfs://${nft.ipfsCid}`)
+      .then((json: any) => {
+        const preview = extractThemePreview(json, nft.name);
+        set((state: any) => ({
+          ownedNfts: state.ownedNfts.map((n: NftItem) =>
+            n.collectionId === nft.collectionId && n.itemId === nft.itemId
+              ? { ...n, themePreview: preview }
+              : n
+          ),
+        }));
+      })
+      .catch(() => {
+        // Silently fail — preview will show name only
+      });
+  }
 }
 
 async function fetchAndApplyTheme(nft: NftItem): Promise<void> {
@@ -166,6 +216,9 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
         selections: filtered,
         isLoading: false,
       });
+
+      // Pre-fetch theme preview data in the background
+      prefetchThemePreviews(nfts, set);
     } catch (err) {
       console.error('Failed to fetch user NFTs:', err);
       set({ isLoading: false });
