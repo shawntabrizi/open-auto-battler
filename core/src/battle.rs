@@ -195,14 +195,14 @@ struct TriggerPriority {
     tiebreaker: u32,
 }
 
-/// Trigger struct with support for location-based spawning
+/// Trigger struct with support for location-based spawning.
+/// All captured triggers fire regardless of source liveness (stack semantics).
 #[derive(Debug)]
 struct PendingTrigger {
     source_id: UnitInstanceId,
     team: Team,
     effect: AbilityEffect,
     priority: TriggerPriority,
-    is_from_dead: bool,
     spawn_index_override: Option<usize>,
     trigger_target_id: Option<UnitInstanceId>,
     conditions: Vec<Condition>,
@@ -276,6 +276,65 @@ impl CombatUnit {
 }
 
 // ==========================================
+// TRIGGER CAPTURE HELPERS
+// ==========================================
+
+/// Build PendingTrigger entries for all abilities on `unit` that match `trigger_type`.
+/// Checks `max_triggers` before queuing. Replaces all manual trigger-collection loops.
+fn capture_triggers_for_unit(
+    unit: &CombatUnit,
+    unit_position: usize,
+    team: Team,
+    trigger_type: AbilityTrigger,
+    trigger_target_id: Option<UnitInstanceId>,
+    spawn_index_override: Option<usize>,
+) -> Vec<PendingTrigger> {
+    let mut triggers = Vec::new();
+    for (sub_idx, ability) in unit.abilities.iter().enumerate() {
+        if ability.trigger != trigger_type {
+            continue;
+        }
+        if let Some(max) = ability.max_triggers {
+            if unit
+                .ability_trigger_counts
+                .get(sub_idx)
+                .copied()
+                .unwrap_or(0)
+                >= max
+            {
+                continue;
+            }
+        }
+        triggers.push(PendingTrigger {
+            source_id: unit.instance_id,
+            team,
+            effect: ability.effect.clone(),
+            priority: TriggerPriority {
+                attack: unit.effective_attack(),
+                health: unit.effective_health(),
+                unit_position,
+                ability_order: sub_idx,
+                tiebreaker: 0,
+            },
+            spawn_index_override,
+            trigger_target_id,
+            conditions: ability.conditions.clone(),
+            ability_index: sub_idx,
+            max_triggers: ability.max_triggers,
+        });
+    }
+    triggers
+}
+
+/// Find a unit by instance ID and return its position and a reference.
+fn find_unit_with_position(
+    id: UnitInstanceId,
+    units: &[CombatUnit],
+) -> Option<(usize, &CombatUnit)> {
+    units.iter().enumerate().find(|(_, u)| u.instance_id == id)
+}
+
+// ==========================================
 // MAIN BATTLE RESOLVER
 // ==========================================
 
@@ -344,9 +403,10 @@ pub fn resolve_battle<R: BattleRng>(
             return finalize_with_limit_exceeded(&mut events, &limits);
         }
 
-        // The Clash (Attack) — returns clash context of who actually clashed
+        // The Clash (Attack) — all after-attack triggers are captured eagerly
+        // inside resolve_hurt_and_faint_loop before the death check.
         limits.reset_phase_counters();
-        let clash_result = execute_phase(
+        if execute_phase(
             BattlePhase::Attack,
             &mut player_units,
             &mut enemy_units,
@@ -355,26 +415,6 @@ pub fn resolve_battle<R: BattleRng>(
             &mut limits,
             card_pool,
             None,
-        );
-        let post_clash = match clash_result {
-            Err(()) => return finalize_with_limit_exceeded(&mut events, &limits),
-            Ok(_) if limits.is_exceeded() => {
-                return finalize_with_limit_exceeded(&mut events, &limits)
-            }
-            Ok(ctx) => ctx,
-        };
-
-        // After Attack — clash context = who actually clashed
-        limits.reset_phase_counters();
-        if execute_phase(
-            BattlePhase::AfterAttack,
-            &mut player_units,
-            &mut enemy_units,
-            &mut events,
-            rng,
-            &mut limits,
-            card_pool,
-            post_clash,
         )
         .is_err()
             || limits.is_exceeded()
@@ -524,17 +564,9 @@ fn resolve_trigger_queue<R: BattleRng>(
             .then(b.priority.ability_order.cmp(&a.priority.ability_order))
     });
 
-    // 2. Iterate
+    // 2. Iterate — all captured triggers fire (stack semantics).
     while let Some(trigger) = queue.pop() {
-        // A. Validation: Is source still alive?
-        // (We allow dead units to trigger OnFaint, but not living units that died in queue)
-        if !trigger.is_from_dead
-            && find_unit(trigger.source_id, player_units, enemy_units).is_none()
-        {
-            continue;
-        }
-
-        // B. Trigger Count Check: Has this ability reached its max triggers?
+        // A. Trigger Count Check: Has this ability reached its max triggers?
         if let Some(max) = trigger.max_triggers {
             // For living units, check current count
             if let Some(unit) = find_unit_mut(trigger.source_id, player_units, enemy_units) {
@@ -548,28 +580,23 @@ fn resolve_trigger_queue<R: BattleRng>(
                     continue; // Already triggered max times
                 }
             }
-            // For dead units, we can't track (they're removed), so we allow it
-            // The count was captured before death if needed
+            // For dead/removed units, we can't track — allow it
         }
 
-        // C. Condition Check: Does the condition pass?
+        // B. Condition Check: Does the condition pass?
         if !trigger.conditions.is_empty() {
-            // Get source unit info for condition evaluation
             let source_opt = find_unit(trigger.source_id, player_units, enemy_units).cloned();
 
-            // For dead units triggering OnFaint, we need to construct a temporary context
-            // In this case, source stats are from the trigger priority (captured at death)
             let (allies, enemies): (&[CombatUnit], &[CombatUnit]) = match trigger.team {
                 Team::Player => (player_units.as_slice(), enemy_units.as_slice()),
                 Team::Enemy => (enemy_units.as_slice(), player_units.as_slice()),
             };
 
-            // Create a temporary source for dead units
+            // Use live unit if available, otherwise create temp from captured stats
             let temp_source;
             let source = if let Some(ref s) = source_opt {
                 s
-            } else if trigger.is_from_dead {
-                // For dead units, create a minimal CombatUnit with captured stats
+            } else {
                 temp_source = CombatUnit {
                     instance_id: trigger.source_id,
                     team: trigger.team,
@@ -584,8 +611,6 @@ fn resolve_trigger_queue<R: BattleRng>(
                     ability_trigger_counts: vec![],
                 };
                 &temp_source
-            } else {
-                continue; // Source not found and not from dead, skip
             };
 
             let ctx = ConditionContext {
@@ -636,162 +661,78 @@ fn resolve_trigger_queue<R: BattleRng>(
 
         let mut reaction_queue = Vec::new();
 
-        // Helper to queue OnDamageTaken
-        // We process this BEFORE death checks so we can catch units that took fatal damage.
+        // Capture OnHurt BEFORE death check so fatally-damaged units still fire.
         for unit_id in damaged_ids {
-            if let Some(unit) = find_unit(unit_id, player_units, enemy_units) {
-                let is_fatal = unit.health <= 0;
-                for (sub_idx, ability) in unit.abilities.iter().enumerate() {
-                    if ability.trigger == AbilityTrigger::OnHurt {
-                        // Check max_triggers before queuing
-                        if let Some(max) = ability.max_triggers {
-                            if unit
-                                .ability_trigger_counts
-                                .get(sub_idx)
-                                .copied()
-                                .unwrap_or(0)
-                                >= max
-                            {
-                                continue; // Already triggered max times
-                            }
-                        }
-                        // Find index of unit
-                        let (idx_in_team, team) = if let Some(pos) =
-                            player_units.iter().position(|u| u.instance_id == unit_id)
-                        {
-                            (pos, Team::Player)
-                        } else if let Some(pos) =
-                            enemy_units.iter().position(|u| u.instance_id == unit_id)
-                        {
-                            (pos, Team::Enemy)
-                        } else {
-                            continue;
-                        };
+            let (idx, team) = if let Some(pos) =
+                player_units.iter().position(|u| u.instance_id == unit_id)
+            {
+                (pos, Team::Player)
+            } else if let Some(pos) = enemy_units.iter().position(|u| u.instance_id == unit_id) {
+                (pos, Team::Enemy)
+            } else {
+                continue;
+            };
 
-                        reaction_queue.push(PendingTrigger {
-                            source_id: unit_id,
-                            team,
-                            effect: ability.effect.clone(),
-                            priority: TriggerPriority {
-                                attack: unit.effective_attack(),
-                                health: unit.effective_health(),
-                                unit_position: idx_in_team,
-                                ability_order: sub_idx,
-                                tiebreaker: 0, // Assigned before sorting
-                            },
-                            is_from_dead: is_fatal, // ALLOW execution if it died from this damage
-                            spawn_index_override: if is_fatal { Some(idx_in_team) } else { None },
-                            trigger_target_id: Some(trigger.source_id),
-                            conditions: ability.conditions.clone(),
-                            ability_index: sub_idx,
-                            max_triggers: ability.max_triggers,
-                        });
-                    }
-                }
-            }
+            let unit = match team {
+                Team::Player => &player_units[idx],
+                Team::Enemy => &enemy_units[idx],
+            };
+            let is_fatal = unit.health <= 0;
+            reaction_queue.extend(capture_triggers_for_unit(
+                unit,
+                idx,
+                team,
+                AbilityTrigger::OnHurt,
+                Some(trigger.source_id),
+                if is_fatal { Some(idx) } else { None },
+            ));
         }
 
-        // D. INTERRUPT CHECK: Did anyone die?
+        // Death check
         let (dead_player, dead_enemy) =
             execute_death_check_phase(player_units, enemy_units, events);
 
-        // Helper to queue OnFaint
-        let queue_on_faint =
-            |dead_unit: CombatUnit, index: usize, team: Team, q: &mut Vec<PendingTrigger>| {
-                for (sub_idx, ability) in dead_unit.abilities.iter().enumerate() {
-                    if ability.trigger == AbilityTrigger::OnFaint {
-                        // Check if max triggers already reached before death
-                        if let Some(max) = ability.max_triggers {
-                            if dead_unit
-                                .ability_trigger_counts
-                                .get(sub_idx)
-                                .copied()
-                                .unwrap_or(0)
-                                >= max
-                            {
-                                continue; // Already triggered max times
-                            }
-                        }
-                        q.push(PendingTrigger {
-                            source_id: dead_unit.instance_id,
-                            team,
-                            effect: ability.effect.clone(),
-                            priority: TriggerPriority {
-                                attack: dead_unit.effective_attack(),
-                                health: dead_unit.effective_health(),
-                                unit_position: index,
-                                ability_order: sub_idx,
-                                tiebreaker: 0, // Assigned before sorting
-                            },
-                            is_from_dead: true,
-                            spawn_index_override: Some(index), // Remember where it died!
-                            trigger_target_id: Some(dead_unit.instance_id),
-                            conditions: ability.conditions.clone(),
-                            ability_index: sub_idx,
-                            max_triggers: ability.max_triggers,
-                        });
-                    }
-                }
-            };
-
-        // Collect Player Deaths
+        // OnFaint and OnAllyFaint from dead lists
         for (idx, dead_unit) in dead_player {
             let dead_id = dead_unit.instance_id;
-            queue_on_faint(dead_unit, idx, Team::Player, &mut reaction_queue);
-            // Trigger OnAllyFaint for survivors
+            reaction_queue.extend(capture_triggers_for_unit(
+                &dead_unit,
+                idx,
+                Team::Player,
+                AbilityTrigger::OnFaint,
+                Some(dead_id),
+                Some(idx),
+            ));
             for (s_idx, survivor) in player_units.iter().enumerate() {
-                for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
-                    if ability.trigger == AbilityTrigger::OnAllyFaint {
-                        reaction_queue.push(PendingTrigger {
-                            source_id: survivor.instance_id,
-                            team: Team::Player,
-                            effect: ability.effect.clone(),
-                            priority: TriggerPriority {
-                                attack: survivor.effective_attack(),
-                                health: survivor.effective_health(),
-                                unit_position: s_idx,
-                                ability_order: sub_idx,
-                                tiebreaker: 0, // Assigned before sorting
-                            },
-                            is_from_dead: false,
-                            spawn_index_override: None,
-                            trigger_target_id: Some(dead_id),
-                            conditions: ability.conditions.clone(),
-                            ability_index: sub_idx,
-                            max_triggers: ability.max_triggers,
-                        });
-                    }
-                }
+                reaction_queue.extend(capture_triggers_for_unit(
+                    survivor,
+                    s_idx,
+                    Team::Player,
+                    AbilityTrigger::OnAllyFaint,
+                    Some(dead_id),
+                    None,
+                ));
             }
         }
-        // Collect Enemy Deaths
         for (idx, dead_unit) in dead_enemy {
             let dead_id = dead_unit.instance_id;
-            queue_on_faint(dead_unit, idx, Team::Enemy, &mut reaction_queue);
-            // Trigger OnAllyFaint for survivors
+            reaction_queue.extend(capture_triggers_for_unit(
+                &dead_unit,
+                idx,
+                Team::Enemy,
+                AbilityTrigger::OnFaint,
+                Some(dead_id),
+                Some(idx),
+            ));
             for (s_idx, survivor) in enemy_units.iter().enumerate() {
-                for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
-                    if ability.trigger == AbilityTrigger::OnAllyFaint {
-                        reaction_queue.push(PendingTrigger {
-                            source_id: survivor.instance_id,
-                            team: Team::Enemy,
-                            effect: ability.effect.clone(),
-                            priority: TriggerPriority {
-                                attack: survivor.effective_attack(),
-                                health: survivor.effective_health(),
-                                unit_position: s_idx,
-                                ability_order: sub_idx,
-                                tiebreaker: 0, // Assigned before sorting
-                            },
-                            is_from_dead: false,
-                            spawn_index_override: None,
-                            trigger_target_id: Some(dead_id),
-                            conditions: ability.conditions.clone(),
-                            ability_index: sub_idx,
-                            max_triggers: ability.max_triggers,
-                        });
-                    }
-                }
+                reaction_queue.extend(capture_triggers_for_unit(
+                    survivor,
+                    s_idx,
+                    Team::Enemy,
+                    AbilityTrigger::OnAllyFaint,
+                    Some(dead_id),
+                    None,
+                ));
             }
         }
 
@@ -997,7 +938,7 @@ fn apply_ability_effect<R: BattleRng>(
                                     ability_order: sub_idx,
                                     tiebreaker: 0, // Assigned before sorting
                                 },
-                                is_from_dead: false,
+
                                 spawn_index_override: None,
                                 trigger_target_id: Some(spawned_id),
                                 conditions: ability.conditions.clone(),
@@ -1025,7 +966,7 @@ fn apply_ability_effect<R: BattleRng>(
                                         ability_order: sub_idx,
                                         tiebreaker: 0, // Assigned before sorting
                                     },
-                                    is_from_dead: false,
+
                                     spawn_index_override: None,
                                     trigger_target_id: Some(spawned_id),
                                     conditions: ability.conditions.clone(),
@@ -1060,7 +1001,7 @@ fn apply_ability_effect<R: BattleRng>(
                                         ability_order: sub_idx,
                                         tiebreaker: 0, // Assigned before sorting
                                     },
-                                    is_from_dead: false,
+
                                     spawn_index_override: None,
                                     trigger_target_id: Some(spawned_id),
                                     conditions: ability.conditions.clone(),
@@ -1141,12 +1082,10 @@ fn execute_phase<R: BattleRng>(
     limits: &mut BattleLimits,
     card_pool: &BTreeMap<CardId, UnitCard>,
     clash_context: Option<ClashContext>,
-) -> Result<Option<ClashContext>, ()> {
+) -> Result<(), ()> {
     if phase != BattlePhase::End {
         events.push(CombatEvent::PhaseStart { phase });
     }
-
-    let mut out_clash_context = None;
 
     match phase {
         BattlePhase::Start => {
@@ -1178,11 +1117,8 @@ fn execute_phase<R: BattleRng>(
         }
         BattlePhase::Attack => {
             let clash_outcome = execute_attack_clash(player_units, enemy_units, events);
-            out_clash_context = Some(ClashContext {
-                player_id: clash_outcome.player_id,
-                enemy_id: clash_outcome.enemy_id,
-            });
-            // After clash, people might be dead or hurt. Resolve loop.
+            // After clash, all triggers (OnHurt, AfterAttack, OnFaint, etc.)
+            // are captured eagerly before the death check.
             resolve_hurt_and_faint_loop(
                 player_units,
                 enemy_units,
@@ -1194,19 +1130,9 @@ fn execute_phase<R: BattleRng>(
             )?;
         }
         BattlePhase::AfterAttack => {
-            collect_and_resolve_triggers(
-                &[
-                    AbilityTrigger::AfterAnyAttack,
-                    AbilityTrigger::AfterUnitAttack,
-                ],
-                player_units,
-                enemy_units,
-                events,
-                rng,
-                limits,
-                card_pool,
-                clash_context,
-            )?;
+            // AfterAttack triggers are now captured eagerly inside
+            // resolve_hurt_and_faint_loop. This arm is kept for
+            // BattlePhase enum exhaustiveness but should not be called.
         }
         BattlePhase::End => {
             let result = match (player_units.is_empty(), enemy_units.is_empty()) {
@@ -1221,7 +1147,7 @@ fn execute_phase<R: BattleRng>(
     if phase != BattlePhase::End {
         events.push(CombatEvent::PhaseEnd { phase });
     }
-    Ok(out_clash_context)
+    Ok(())
 }
 
 fn collect_and_resolve_triggers<R: BattleRng>(
@@ -1240,11 +1166,10 @@ fn collect_and_resolve_triggers<R: BattleRng>(
         for (i, u) in units.iter().enumerate() {
             for (sub_idx, ability) in u.abilities.iter().enumerate() {
                 if trigger_types.contains(&ability.trigger) {
-                    // Logic: UnitAttack triggers ONLY for the front unit (index 0).
-                    // AnyAttack triggers for everyone on the board.
+                    // BeforeUnitAttack triggers ONLY for the front unit (index 0).
+                    // All other triggers fire for everyone on the board.
                     let is_front = i == 0;
-                    let is_unit_trigger = ability.trigger == AbilityTrigger::BeforeUnitAttack
-                        || ability.trigger == AbilityTrigger::AfterUnitAttack;
+                    let is_unit_trigger = ability.trigger == AbilityTrigger::BeforeUnitAttack;
 
                     if is_unit_trigger && !is_front {
                         continue;
@@ -1268,7 +1193,6 @@ fn collect_and_resolve_triggers<R: BattleRng>(
                             ability_order: sub_idx,
                             tiebreaker: 0, // Assigned before sorting
                         },
-                        is_from_dead: false,
                         spawn_index_override: None,
                         trigger_target_id,
                         conditions: ability.conditions.clone(),
@@ -1428,205 +1352,135 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
     limits: &mut BattleLimits,
     card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> Result<(), ()> {
-    // CAPTURE clashing unit IDs before they potentially die or board slides
     let clashing_p_id = clash_outcome.player_id;
     let clashing_e_id = clash_outcome.enemy_id;
 
-    let (dead_player, dead_enemy) = execute_death_check_phase(player_units, enemy_units, events);
+    // ── EAGER CAPTURE: all triggers collected BEFORE death check ──
 
-    // Build the initial reaction queue from the Clash deaths AND DAMAGE
     let mut queue = Vec::new();
 
-    // Check for OnHurt for the clashing units
-    let mut check_clash_damage = |id: Option<UnitInstanceId>,
-                                  was_hurt: bool,
-                                  dealer_id: Option<UnitInstanceId>,
-                                  team: Team,
-                                  units: &[CombatUnit],
-                                  dead: &[(usize, CombatUnit)]| {
-        if !was_hurt {
+    // Helper: capture clash-related triggers for one team's front unit.
+    let mut capture_clash_triggers = |units: &[CombatUnit],
+                                      clash_id: Option<UnitInstanceId>,
+                                      opponent_id: Option<UnitInstanceId>,
+                                      was_hurt: bool,
+                                      team: Team| {
+        let Some(cid) = clash_id else { return };
+        let Some((idx, unit)) = find_unit_with_position(cid, units) else {
             return;
-        }
-        if let Some(target_id) = id {
-            // Find unit in survivors OR dead
-            let unit_opt = units
-                .iter()
-                .find(|u| u.instance_id == target_id)
-                .or_else(|| {
-                    dead.iter()
-                        .find(|(_, u)| u.instance_id == target_id)
-                        .map(|(_, u)| u)
-                });
+        };
 
-            if let Some(u) = unit_opt {
-                let is_dead = u.health <= 0;
-                for (sub_idx, a) in u.abilities.iter().enumerate() {
-                    if a.trigger == AbilityTrigger::OnHurt {
-                        // Check max_triggers before queuing
-                        if let Some(max) = a.max_triggers {
-                            if u.ability_trigger_counts.get(sub_idx).copied().unwrap_or(0) >= max {
-                                continue; // Already triggered max times
-                            }
-                        }
-                        // Find current index if survivor, otherwise 0
-                        let current_idx = units
-                            .iter()
-                            .position(|survivor| survivor.instance_id == target_id)
-                            .unwrap_or(0);
+        let spawn_override = if unit.health <= 0 { Some(idx) } else { None };
 
-                        queue.push(PendingTrigger {
-                            source_id: target_id,
-                            team,
-                            effect: a.effect.clone(),
-                            priority: TriggerPriority {
-                                attack: u.effective_attack(),
-                                health: u.effective_health(),
-                                unit_position: current_idx,
-                                ability_order: sub_idx,
-                                tiebreaker: 0, // Assigned before sorting
-                            },
-                            is_from_dead: is_dead,
-                            spawn_index_override: if is_dead { Some(current_idx) } else { None },
-                            trigger_target_id: dealer_id,
-                            conditions: a.conditions.clone(),
-                            ability_index: sub_idx,
-                            max_triggers: a.max_triggers,
-                        });
-                    }
-                }
-            }
+        // OnHurt (only if this unit was actually hurt)
+        if was_hurt {
+            queue.extend(capture_triggers_for_unit(
+                unit,
+                idx,
+                team,
+                AbilityTrigger::OnHurt,
+                opponent_id,
+                spawn_override,
+            ));
         }
+
+        // AfterUnitAttack (front unit only — the actual attacker)
+        queue.extend(capture_triggers_for_unit(
+            unit,
+            idx,
+            team,
+            AbilityTrigger::AfterUnitAttack,
+            opponent_id,
+            spawn_override,
+        ));
     };
 
-    check_clash_damage(
-        clashing_p_id,
-        clash_outcome.player_hurt,
-        clashing_e_id,
-        Team::Player,
+    capture_clash_triggers(
         player_units,
-        &dead_player,
-    );
-    check_clash_damage(
-        clashing_e_id,
-        clash_outcome.enemy_hurt,
         clashing_p_id,
-        Team::Enemy,
-        enemy_units,
-        &dead_enemy,
+        clashing_e_id,
+        clash_outcome.player_hurt,
+        Team::Player,
     );
+    capture_clash_triggers(
+        enemy_units,
+        clashing_e_id,
+        clashing_p_id,
+        clash_outcome.enemy_hurt,
+        Team::Enemy,
+    );
+
+    // AfterAnyAttack for ALL units (not just front) — captured before death check.
+
+    for (i, u) in player_units.iter().enumerate() {
+        queue.extend(capture_triggers_for_unit(
+            u,
+            i,
+            Team::Player,
+            AbilityTrigger::AfterAnyAttack,
+            clashing_e_id,
+            if u.health <= 0 { Some(i) } else { None },
+        ));
+    }
+    for (i, u) in enemy_units.iter().enumerate() {
+        queue.extend(capture_triggers_for_unit(
+            u,
+            i,
+            Team::Enemy,
+            AbilityTrigger::AfterAnyAttack,
+            clashing_p_id,
+            if u.health <= 0 { Some(i) } else { None },
+        ));
+    }
+
+    // ── Death check (removes dead units from boards) ──
+
+    let (dead_player, dead_enemy) = execute_death_check_phase(player_units, enemy_units, events);
 
     if dead_player.is_empty() && dead_enemy.is_empty() && queue.is_empty() {
         return Ok(());
     }
 
-    for (idx, u) in dead_player {
-        for (sub_idx, a) in u.abilities.iter().enumerate() {
-            if a.trigger == AbilityTrigger::OnFaint {
-                // Check if max triggers already reached before death
-                if let Some(max) = a.max_triggers {
-                    if u.ability_trigger_counts.get(sub_idx).copied().unwrap_or(0) >= max {
-                        continue; // Already triggered max times
-                    }
-                }
-                queue.push(PendingTrigger {
-                    source_id: u.instance_id,
-                    team: Team::Player,
-                    effect: a.effect.clone(),
-                    priority: TriggerPriority {
-                        attack: u.effective_attack(),
-                        health: u.effective_health(),
-                        unit_position: idx,
-                        ability_order: sub_idx,
-                        tiebreaker: 0, // Assigned before sorting
-                    },
-                    is_from_dead: true,
-                    spawn_index_override: Some(idx),
-                    trigger_target_id: Some(u.instance_id),
-                    conditions: a.conditions.clone(),
-                    ability_index: sub_idx,
-                    max_triggers: a.max_triggers,
-                });
-            }
-        }
-        // Scan Survivors for OnAllyFaint
+    // ── OnFaint and OnAllyFaint from dead lists ──
+
+    for (idx, dead_unit) in &dead_player {
+        queue.extend(capture_triggers_for_unit(
+            dead_unit,
+            *idx,
+            Team::Player,
+            AbilityTrigger::OnFaint,
+            Some(dead_unit.instance_id),
+            Some(*idx),
+        ));
         for (s_idx, survivor) in player_units.iter().enumerate() {
-            for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
-                if ability.trigger == AbilityTrigger::OnAllyFaint {
-                    queue.push(PendingTrigger {
-                        source_id: survivor.instance_id,
-                        team: Team::Player,
-                        effect: ability.effect.clone(),
-                        priority: TriggerPriority {
-                            attack: survivor.effective_attack(),
-                            health: survivor.effective_health(),
-                            unit_position: s_idx,
-                            ability_order: sub_idx,
-                            tiebreaker: 0, // Assigned before sorting
-                        },
-                        is_from_dead: false,
-                        spawn_index_override: None,
-                        trigger_target_id: Some(u.instance_id), // u is the dead ally
-                        conditions: ability.conditions.clone(),
-                        ability_index: sub_idx,
-                        max_triggers: ability.max_triggers,
-                    });
-                }
-            }
+            queue.extend(capture_triggers_for_unit(
+                survivor,
+                s_idx,
+                Team::Player,
+                AbilityTrigger::OnAllyFaint,
+                Some(dead_unit.instance_id),
+                None,
+            ));
         }
     }
-    for (idx, u) in dead_enemy {
-        for (sub_idx, a) in u.abilities.iter().enumerate() {
-            if a.trigger == AbilityTrigger::OnFaint {
-                // Check if max triggers already reached before death
-                if let Some(max) = a.max_triggers {
-                    if u.ability_trigger_counts.get(sub_idx).copied().unwrap_or(0) >= max {
-                        continue; // Already triggered max times
-                    }
-                }
-                queue.push(PendingTrigger {
-                    source_id: u.instance_id,
-                    team: Team::Enemy,
-                    effect: a.effect.clone(),
-                    priority: TriggerPriority {
-                        attack: u.effective_attack(),
-                        health: u.effective_health(),
-                        unit_position: idx,
-                        ability_order: sub_idx,
-                        tiebreaker: 0, // Assigned before sorting
-                    },
-                    is_from_dead: true,
-                    spawn_index_override: Some(idx),
-                    trigger_target_id: Some(u.instance_id),
-                    conditions: a.conditions.clone(),
-                    ability_index: sub_idx,
-                    max_triggers: a.max_triggers,
-                });
-            }
-        }
-        // Scan Survivors for OnAllyFaint
+    for (idx, dead_unit) in &dead_enemy {
+        queue.extend(capture_triggers_for_unit(
+            dead_unit,
+            *idx,
+            Team::Enemy,
+            AbilityTrigger::OnFaint,
+            Some(dead_unit.instance_id),
+            Some(*idx),
+        ));
         for (s_idx, survivor) in enemy_units.iter().enumerate() {
-            for (sub_idx, ability) in survivor.abilities.iter().enumerate() {
-                if ability.trigger == AbilityTrigger::OnAllyFaint {
-                    queue.push(PendingTrigger {
-                        source_id: survivor.instance_id,
-                        team: Team::Enemy,
-                        effect: ability.effect.clone(),
-                        priority: TriggerPriority {
-                            attack: survivor.effective_attack(),
-                            health: survivor.effective_health(),
-                            unit_position: s_idx,
-                            ability_order: sub_idx,
-                            tiebreaker: 0, // Assigned before sorting
-                        },
-                        is_from_dead: false,
-                        spawn_index_override: None,
-                        trigger_target_id: Some(u.instance_id), // u is the dead ally
-                        conditions: ability.conditions.clone(),
-                        ability_index: sub_idx,
-                        max_triggers: ability.max_triggers,
-                    });
-                }
-            }
+            queue.extend(capture_triggers_for_unit(
+                survivor,
+                s_idx,
+                Team::Enemy,
+                AbilityTrigger::OnAllyFaint,
+                Some(dead_unit.instance_id),
+                None,
+            ));
         }
     }
 
