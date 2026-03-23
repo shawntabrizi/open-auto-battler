@@ -18,6 +18,7 @@ import { KeyboardShortcutsOverlay } from './KeyboardShortcutsOverlay';
 import { CardInspectOverlay } from './CardInspectOverlay';
 import { useGameStore } from '../store/gameStore';
 import { useDragAndDrop } from '../hooks';
+import { useIsNarrowScreen } from '../hooks/useIsNarrowScreen';
 
 // Re-export for convenience
 export type { BlockchainAccount };
@@ -55,6 +56,7 @@ export function GameShell({
   className = '',
 }: GameShellProps) {
   const { view, bag, cardSet, selection, showBag, showGameCardDetailsPanel } = useGameStore();
+  const isNarrowScreen = useIsNarrowScreen();
 
   const {
     activeId,
@@ -66,10 +68,16 @@ export function GameShell({
     getActiveCard,
   } = useDragAndDrop();
 
-  // Pinned card panel is visible during shop phase or when a board unit is selected,
-  // unless the player has hidden it in settings.
+  // Resolve panel visibility from the 3-mode setting
+  const panelEnabled =
+    showGameCardDetailsPanel === 'always'
+      ? true
+      : showGameCardDetailsPanel === 'never'
+        ? false
+        : !isNarrowScreen; // 'auto': hide on narrow (portrait phone) screens
+
   const showCardPanel =
-    showGameCardDetailsPanel && (view?.phase === 'shop' || selection?.type === 'board' || showBag);
+    panelEnabled && (view?.phase === 'shop' || selection?.type === 'board' || showBag);
 
   // Determine which card to show in the panel
   const selectedCard =

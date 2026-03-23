@@ -11,7 +11,7 @@ export function SettingsPage() {
     showCardNames,
     toggleShowCardNames,
     showGameCardDetailsPanel,
-    toggleShowGameCardDetailsPanel,
+    setCardDetailsPanelMode,
     showBoardHelper,
     toggleShowBoardHelper,
     showAddress,
@@ -56,29 +56,34 @@ export function SettingsPage() {
                   />
                 </div>
               </button>
-              <button
-                onClick={toggleShowGameCardDetailsPanel}
-                className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-base-700 hover:border-base-600 transition-colors mt-2"
-              >
-                <div className="flex-1 min-w-0 text-left font-body">
-                  <div className="text-sm text-base-200">Show Game Card Details Panel</div>
+              <div className="theme-panel p-3 rounded-lg border border-base-700 mt-2">
+                <div className="text-left mb-2">
+                  <div className="text-sm text-base-200">Card Details Panel</div>
                   <div className="text-[10px] lg:text-xs text-base-500 mt-0.5">
-                    Keep the pinned card details sidebar visible during games. Use I to inspect
-                    cards when it is hidden.
+                    Show the pinned card details sidebar during games. Use I to inspect cards when
+                    hidden.
                   </div>
                 </div>
-                <div
-                  className={`w-10 h-5 shrink-0 rounded-full transition-colors relative ${
-                    showGameCardDetailsPanel ? 'theme-toggle-active' : 'bg-base-700'
-                  }`}
-                >
-                  <div
-                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                      showGameCardDetailsPanel ? 'translate-x-5' : 'translate-x-0.5'
-                    }`}
-                  />
+                <div className="flex gap-1.5">
+                  {([
+                    { value: 'always', label: 'Always' },
+                    { value: 'auto', label: 'Auto' },
+                    { value: 'never', label: 'Never' },
+                  ] as const).map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => setCardDetailsPanelMode(value)}
+                      className={`theme-button flex-1 px-2 py-1.5 text-xs lg:text-sm font-medium rounded-md transition-colors ${
+                        showGameCardDetailsPanel === value
+                          ? 'theme-selected-button'
+                          : 'bg-base-800 text-base-300 hover:bg-base-700'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
-              </button>
+              </div>
               <button
                 onClick={toggleShowBoardHelper}
                 className="theme-button w-full flex items-start justify-between gap-3 p-3 rounded-lg border border-base-700 hover:border-base-600 transition-colors mt-2"

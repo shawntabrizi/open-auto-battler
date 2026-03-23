@@ -3,6 +3,8 @@ import { toast } from 'react-hot-toast';
 import type { GameView, BattleOutput, Selection, CardView } from '../types';
 import { initEmojiMap } from '../utils/emoji';
 
+export type CardDetailsPanelMode = 'always' | 'never' | 'auto';
+
 interface SetMeta {
   id: number;
   name: string;
@@ -87,7 +89,7 @@ interface GameStore {
   showBattleOverlay: boolean;
   showRawJson: boolean;
   showCardNames: boolean;
-  showGameCardDetailsPanel: boolean;
+  showGameCardDetailsPanel: CardDetailsPanelMode;
   showBoardHelper: boolean;
   showAddress: boolean;
   showBalance: boolean;
@@ -129,7 +131,7 @@ interface GameStore {
   closeBattleOverlay: () => void;
   toggleShowRawJson: () => void;
   toggleShowCardNames: () => void;
-  toggleShowGameCardDetailsPanel: () => void;
+  setCardDetailsPanelMode: (mode: CardDetailsPanelMode) => void;
   toggleShowBoardHelper: () => void;
   toggleShowAddress: () => void;
   toggleShowBalance: () => void;
@@ -266,7 +268,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showBattleOverlay: false,
   showRawJson: JSON.parse(localStorage.getItem('showRawJson') || 'false'),
   showCardNames: JSON.parse(localStorage.getItem('showCardNames') ?? 'true'),
-  showGameCardDetailsPanel: JSON.parse(localStorage.getItem('showGameCardDetailsPanel') ?? 'true'),
+  showGameCardDetailsPanel: (JSON.parse(localStorage.getItem('showGameCardDetailsPanel') ?? '"auto"') as CardDetailsPanelMode),
   showBoardHelper: JSON.parse(localStorage.getItem('showBoardHelper') ?? 'true'),
   showAddress: JSON.parse(localStorage.getItem('showAddress') ?? 'true'),
   showBalance: JSON.parse(localStorage.getItem('showBalance') ?? 'true'),
@@ -728,12 +730,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
 
-  toggleShowGameCardDetailsPanel: () => {
-    set((state) => {
-      const newValue = !state.showGameCardDetailsPanel;
-      localStorage.setItem('showGameCardDetailsPanel', JSON.stringify(newValue));
-      return { showGameCardDetailsPanel: newValue };
-    });
+  setCardDetailsPanelMode: (mode: CardDetailsPanelMode) => {
+    localStorage.setItem('showGameCardDetailsPanel', JSON.stringify(mode));
+    set({ showGameCardDetailsPanel: mode });
   },
 
   toggleShowBoardHelper: () => {

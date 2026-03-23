@@ -192,7 +192,9 @@ export function CardDetailPanel({
     if (!card) {
       return (
         <div className="flex min-h-full flex-col items-center justify-center py-6 lg:py-12 text-center">
-          <div className="text-accent text-2xl lg:text-4xl mb-2 lg:mb-4">👆</div>
+          <div className="w-12 h-16 lg:w-32 lg:h-44 mb-2 lg:mb-4 board-slot-engraved rounded-lg border border-base-700/50 flex items-center justify-center">
+            <span className="text-base-600/60 text-xl lg:text-5xl font-heading font-bold select-none">?</span>
+          </div>
           <h3 className="theme-title-text font-heading mb-1 bg-clip-text text-sm font-bold text-transparent lg:mb-2 lg:text-lg">
             Select a Card
           </h3>
