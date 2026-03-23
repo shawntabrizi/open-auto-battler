@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { CardView, BoardUnitView } from '../types';
 import { getCardArtSm } from '../utils/cardArt';
@@ -12,6 +12,7 @@ import { SwordIcon, HeartIcon, AbilityIcon } from './Icons';
 import { CARD_TEXT, type CardSizeVariant } from '../constants/cardSizes';
 import { useAchievementStore } from '../store/achievementStore';
 import { useGameStore } from '../store/gameStore';
+import { useCardInspectStore } from '../store/cardInspectStore';
 
 /** Derive a visual rarity tier from play_cost + ability count. */
 export function getRarityTier(
@@ -104,6 +105,34 @@ export function UnitCard({
   const [tooltipPos, setTooltipPos] = useState<TooltipPosition | null>(null);
   const hasGameSelection = !!activeSelection;
 
+  // Long-press to open card inspect overlay (touch devices)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+  const openInspect = useCardInspectStore((s) => s.open);
+
+  const clearLongPress = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handleTouchStart = useCallback(() => {
+    longPressFired.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      openInspect(card);
+    }, 500);
+  }, [card, openInspect]);
+
+  const handleTouchMove = useCallback(() => {
+    clearLongPress();
+  }, [clearLongPress]);
+
+  const handleTouchEnd = useCallback(() => {
+    clearLongPress();
+  }, [clearLongPress]);
+
   const abilities = [
     ...((card as any).shop_abilities ?? []).map((a: any) => ({ ...a, _type: 'shop' })),
     ...((card as any).battle_abilities ?? []).map((a: any) => ({ ...a, _type: 'battle' })),
@@ -193,8 +222,17 @@ export function UnitCard({
         if (enableTilt && tiltRef) tiltRef(node);
       }}
       onClick={() => {
+        if (longPressFired.current) return;
         onClick?.();
       }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        openInspect(card);
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       draggable={draggable}
       onDragOver={onDragOver}
       onDrop={onDrop}
