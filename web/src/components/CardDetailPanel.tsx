@@ -236,9 +236,20 @@ export function CardDetailPanel({
       </div>
 
       {/* Footer */}
-      <div className="border-t border-base-700/60 bg-surface-dark/70 p-1 text-center text-[6px] uppercase tracking-tighter text-base-600 font-mono lg:p-4 lg:text-[10px]">
-        Open Auto Battler Engine v0.2.0
-      </div>
+      {isContainedLayout && onClose ? (
+        <div className="border-t border-base-700/60 bg-surface-dark/70 p-3 lg:p-4">
+          <button
+            onClick={handleClose}
+            className="w-full py-2.5 lg:py-3 rounded-lg bg-base-700/60 hover:bg-base-600/60 border border-base-600/50 text-base-300 hover:text-white text-sm lg:text-base font-heading font-bold uppercase tracking-wider transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      ) : (
+        <div className="border-t border-base-700/60 bg-surface-dark/70 p-1 text-center text-[6px] uppercase tracking-tighter text-base-600 font-mono lg:p-4 lg:text-[10px]">
+          Open Auto Battler Engine v0.2.0
+        </div>
+      )}
     </div>
   );
 }
