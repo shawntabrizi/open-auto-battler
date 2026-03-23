@@ -65,7 +65,10 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
         .map(|u| UnitView {
             instance_id: limits.generate_instance_id(oab_core::limits::Team::Player),
             card_id: u.card_id,
-            name: u.name.clone(),
+            name: card_pool
+                .get(&u.card_id)
+                .map(|c| c.name.clone())
+                .unwrap_or_default(),
             attack: u.attack,
             health: u.health,
             battle_abilities: u.abilities.clone(),
@@ -78,7 +81,10 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
         .map(|u| UnitView {
             instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
             card_id: u.card_id,
-            name: u.name.clone(),
+            name: card_pool
+                .get(&u.card_id)
+                .map(|c| c.name.clone())
+                .unwrap_or_default(),
             attack: u.attack,
             health: u.health,
             battle_abilities: u.abilities.clone(),

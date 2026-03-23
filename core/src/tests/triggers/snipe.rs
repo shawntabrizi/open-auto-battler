@@ -38,7 +38,7 @@ fn test_snipe_lowest_health() {
             new_board_state,
         } = e
         {
-            *team == Team::Enemy && !new_board_state.iter().any(|u| u.name == "Glass")
+            *team == Team::Enemy && !new_board_state.iter().any(|u| u.card_id == CardId(3))
         } else {
             false
         }

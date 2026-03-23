@@ -1096,7 +1096,12 @@ impl GameEngine {
                 .map(|cu| UnitView {
                     instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
                     card_id: cu.card_id,
-                    name: cu.name,
+                    name: self
+                        .state
+                        .card_pool
+                        .get(&cu.card_id)
+                        .map(|c| c.name.clone())
+                        .unwrap_or_default(),
                     attack: cu.attack,
                     health: cu.health,
                     battle_abilities: cu.abilities,

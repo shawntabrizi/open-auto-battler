@@ -173,9 +173,9 @@ fn test_spawn_index_preservation() {
     } = spawn_event
     {
         assert_eq!(new_board_state.len(), 3);
-        assert_eq!(new_board_state[0].name, "Tank");
-        assert_eq!(new_board_state[1].name, "Zombie Spawn");
-        assert_eq!(new_board_state[2].name, "Backline");
+        assert_eq!(new_board_state[0].card_id, CardId(1)); // Tank
+        assert_eq!(new_board_state[1].card_id, CardId(42)); // Zombie Spawn
+        assert_eq!(new_board_state[2].card_id, CardId(3)); // Backline
     }
 }
 

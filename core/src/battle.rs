@@ -223,7 +223,6 @@ pub struct CombatUnit {
     pub health: i32,
     pub abilities: Vec<Ability>,
     pub card_id: crate::types::CardId,
-    pub name: String,
     pub attack_buff: i32,
     pub health_buff: i32,
     pub play_cost: i32,
@@ -241,7 +240,6 @@ impl CombatUnit {
             health: card.stats.health,
             abilities: card.battle_abilities,
             card_id: card.id,
-            name: card.name,
             attack_buff: 0,
             health_buff: 0,
             play_cost: card.economy.play_cost,
@@ -249,11 +247,15 @@ impl CombatUnit {
         }
     }
 
-    fn to_view(&self) -> UnitView {
+    fn to_view(&self, card_pool: &BTreeMap<CardId, UnitCard>) -> UnitView {
+        let name = card_pool
+            .get(&self.card_id)
+            .map(|c| c.name.clone())
+            .unwrap_or_default();
         UnitView {
             instance_id: self.instance_id,
             card_id: self.card_id,
-            name: self.name.clone(),
+            name,
             attack: self.effective_attack(),
             health: self.effective_health(),
             battle_abilities: self.abilities.clone(),
@@ -677,7 +679,7 @@ fn resolve_trigger_queue<R: BattleRng>(
 
         // Death check — dead units move to graveyard
         let (dead_player, dead_enemy) =
-            execute_death_check_phase(player_units, enemy_units, events);
+            execute_death_check_phase(player_units, enemy_units, events, card_pool);
 
         // OnFaint and OnAllyFaint from dead lists
         for (idx, dead_unit) in dead_player {
@@ -896,8 +898,8 @@ fn apply_ability_effect<R: BattleRng>(
                     // Log Spawn
                     events.push(CombatEvent::UnitSpawn {
                         team: source_team,
-                        spawned_unit: new_unit.to_view(),
-                        new_board_state: my_board.iter().map(|u| u.to_view()).collect(),
+                        spawned_unit: new_unit.to_view(card_pool),
+                        new_board_state: my_board.iter().map(|u| u.to_view(card_pool)).collect(),
                     });
 
                     (new_unit, safe_idx)
@@ -1229,6 +1231,7 @@ fn execute_death_check_phase(
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
+    card_pool: &BTreeMap<CardId, UnitCard>,
 ) -> (Vec<(usize, CombatUnit)>, Vec<(usize, CombatUnit)>) {
     let mut player_dead = Vec::new();
     let mut i = 0;
@@ -1257,13 +1260,13 @@ fn execute_death_check_phase(
     if !player_dead.is_empty() {
         events.push(CombatEvent::UnitDeath {
             team: Team::Player,
-            new_board_state: player_units.iter().map(|u| u.to_view()).collect(),
+            new_board_state: player_units.iter().map(|u| u.to_view(card_pool)).collect(),
         });
     }
     if !enemy_dead.is_empty() {
         events.push(CombatEvent::UnitDeath {
             team: Team::Enemy,
-            new_board_state: enemy_units.iter().map(|u| u.to_view()).collect(),
+            new_board_state: enemy_units.iter().map(|u| u.to_view(card_pool)).collect(),
         });
     }
 
@@ -1362,7 +1365,8 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
 
     // ── Death check (removes dead units from boards) ──
 
-    let (dead_player, dead_enemy) = execute_death_check_phase(player_units, enemy_units, events);
+    let (dead_player, dead_enemy) =
+        execute_death_check_phase(player_units, enemy_units, events, card_pool);
 
     if dead_player.is_empty() && dead_enemy.is_empty() && queue.is_empty() {
         return Ok(());
