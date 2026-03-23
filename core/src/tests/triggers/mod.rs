@@ -2,6 +2,7 @@ mod abyssal_bomber;
 mod combos;
 mod conditions;
 mod damage;
+mod deathtouch;
 mod faint;
 mod lifecycle;
 mod positions;

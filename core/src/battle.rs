@@ -309,6 +309,7 @@ pub fn resolve_battle<R: BattleRng>(
         rng,
         &mut limits,
         card_pool,
+        None,
     )
     .is_err()
         || limits.is_exceeded()
@@ -322,7 +323,10 @@ pub fn resolve_battle<R: BattleRng>(
             return finalize_with_limit_exceeded(&mut events, &limits);
         }
 
-        // Before Attack
+        // Capture front unit IDs before any triggers fire this round
+        let pre_clash = ClashContext::capture(&player_units, &enemy_units);
+
+        // Before Attack — clash context = who is about to clash
         limits.reset_phase_counters();
         if execute_phase(
             BattlePhase::BeforeAttack,
@@ -332,6 +336,7 @@ pub fn resolve_battle<R: BattleRng>(
             rng,
             &mut limits,
             card_pool,
+            Some(pre_clash),
         )
         .is_err()
             || limits.is_exceeded()
@@ -339,9 +344,9 @@ pub fn resolve_battle<R: BattleRng>(
             return finalize_with_limit_exceeded(&mut events, &limits);
         }
 
-        // The Clash (Attack)
+        // The Clash (Attack) — returns clash context of who actually clashed
         limits.reset_phase_counters();
-        if execute_phase(
+        let clash_result = execute_phase(
             BattlePhase::Attack,
             &mut player_units,
             &mut enemy_units,
@@ -349,14 +354,17 @@ pub fn resolve_battle<R: BattleRng>(
             rng,
             &mut limits,
             card_pool,
-        )
-        .is_err()
-            || limits.is_exceeded()
-        {
-            return finalize_with_limit_exceeded(&mut events, &limits);
-        }
+            None,
+        );
+        let post_clash = match clash_result {
+            Err(()) => return finalize_with_limit_exceeded(&mut events, &limits),
+            Ok(_) if limits.is_exceeded() => {
+                return finalize_with_limit_exceeded(&mut events, &limits)
+            }
+            Ok(ctx) => ctx,
+        };
 
-        // After Attack
+        // After Attack — clash context = who actually clashed
         limits.reset_phase_counters();
         if execute_phase(
             BattlePhase::AfterAttack,
@@ -366,6 +374,7 @@ pub fn resolve_battle<R: BattleRng>(
             rng,
             &mut limits,
             card_pool,
+            post_clash,
         )
         .is_err()
             || limits.is_exceeded()
@@ -383,6 +392,7 @@ pub fn resolve_battle<R: BattleRng>(
         rng,
         &mut limits,
         card_pool,
+        None,
     );
     events
 }
@@ -1130,10 +1140,13 @@ fn execute_phase<R: BattleRng>(
     rng: &mut R,
     limits: &mut BattleLimits,
     card_pool: &BTreeMap<CardId, UnitCard>,
-) -> Result<(), ()> {
+    clash_context: Option<ClashContext>,
+) -> Result<Option<ClashContext>, ()> {
     if phase != BattlePhase::End {
         events.push(CombatEvent::PhaseStart { phase });
     }
+
+    let mut out_clash_context = None;
 
     match phase {
         BattlePhase::Start => {
@@ -1145,6 +1158,7 @@ fn execute_phase<R: BattleRng>(
                 rng,
                 limits,
                 card_pool,
+                None,
             )?;
         }
         BattlePhase::BeforeAttack => {
@@ -1159,10 +1173,15 @@ fn execute_phase<R: BattleRng>(
                 rng,
                 limits,
                 card_pool,
+                clash_context,
             )?;
         }
         BattlePhase::Attack => {
             let clash_outcome = execute_attack_clash(player_units, enemy_units, events);
+            out_clash_context = Some(ClashContext {
+                player_id: clash_outcome.player_id,
+                enemy_id: clash_outcome.enemy_id,
+            });
             // After clash, people might be dead or hurt. Resolve loop.
             resolve_hurt_and_faint_loop(
                 player_units,
@@ -1186,6 +1205,7 @@ fn execute_phase<R: BattleRng>(
                 rng,
                 limits,
                 card_pool,
+                clash_context,
             )?;
         }
         BattlePhase::End => {
@@ -1201,7 +1221,7 @@ fn execute_phase<R: BattleRng>(
     if phase != BattlePhase::End {
         events.push(CombatEvent::PhaseEnd { phase });
     }
-    Ok(())
+    Ok(out_clash_context)
 }
 
 fn collect_and_resolve_triggers<R: BattleRng>(
@@ -1212,6 +1232,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
     rng: &mut R,
     limits: &mut BattleLimits,
     card_pool: &BTreeMap<CardId, UnitCard>,
+    clash_context: Option<ClashContext>,
 ) -> Result<(), ()> {
     let mut queue = Vec::new();
     // Helper to scan board
@@ -1229,6 +1250,13 @@ fn collect_and_resolve_triggers<R: BattleRng>(
                         continue;
                     }
 
+                    // For attack triggers, set trigger_target_id to the opposing
+                    // clash participant so abilities can reference who was attacked.
+                    let trigger_target_id = clash_context.and_then(|ctx| match team {
+                        Team::Player => ctx.enemy_id,
+                        Team::Enemy => ctx.player_id,
+                    });
+
                     queue.push(PendingTrigger {
                         source_id: u.instance_id,
                         team,
@@ -1242,7 +1270,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
                         },
                         is_from_dead: false,
                         spawn_index_override: None,
-                        trigger_target_id: None,
+                        trigger_target_id,
                         conditions: ability.conditions.clone(),
                         ability_index: sub_idx,
                         max_triggers: ability.max_triggers,
@@ -1264,6 +1292,23 @@ fn collect_and_resolve_triggers<R: BattleRng>(
         limits,
         card_pool,
     )
+}
+
+/// Captures the instance IDs of the two front units involved in a clash.
+/// Used to populate `trigger_target_id` for Before/AfterAttack triggers.
+#[derive(Debug, Clone, Copy)]
+struct ClashContext {
+    player_id: Option<UnitInstanceId>,
+    enemy_id: Option<UnitInstanceId>,
+}
+
+impl ClashContext {
+    fn capture(player_units: &[CombatUnit], enemy_units: &[CombatUnit]) -> Self {
+        Self {
+            player_id: player_units.first().map(|u| u.instance_id),
+            enemy_id: enemy_units.first().map(|u| u.instance_id),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
