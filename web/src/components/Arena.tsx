@@ -1,10 +1,11 @@
-import { useLayoutEffect, useRef, useReducer } from 'react';
+import { useLayoutEffect, useRef, useReducer, useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useCustomizationStore } from '../store/customizationStore';
 import { DraggableCard, DroppableBoardSlot } from './DndComponents';
 import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
 import { UnitCard, EmptySlot } from './UnitCard';
 import type { BoardUnitView } from '../types';
+import { computeHandInsertShift, computeSlotShift } from '../utils/boardShift';
 
 type SlotAnim = 'placed' | { type: 'swapped'; fromIndex: number };
 type AnimState = { anims: Map<number, SlotAnim>; exits: Map<number, BoardUnitView> };
@@ -86,7 +87,7 @@ function getBoardHintState({
   };
 }
 
-/** Compare previous and current board to classify each slot's change. */
+/** Compare previous and current COMMITTED board to detect placed/exit changes. */
 function detectBoardChanges(
   prev: (BoardUnitView | null)[],
   curr: (BoardUnitView | null)[]
@@ -99,25 +100,17 @@ function detectBoardChanges(
     const currUnit = curr[i];
 
     if (!prevUnit && currUnit) {
-      // Check if this unit was already on the board (board-to-board move)
       const fromIndex = prev.findIndex((p) => p && p.id === currUnit.id);
-      if (fromIndex !== -1) {
-        // Moved from another slot — slide, don't scale-bounce
-        anims.set(i, { type: 'swapped', fromIndex });
-      } else {
+      if (fromIndex === -1) {
         // New card from hand — placement bounce
         anims.set(i, 'placed');
       }
+      // Board-to-board moves are handled by FLIP, not CSS animation
     } else if (prevUnit && !currUnit) {
-      // Only show exit animation if the unit actually left the board (burned).
-      // If it just moved to another slot, no phantom needed.
       const stillOnBoard = curr.some((c) => c && c.id === prevUnit.id);
       if (!stillOnBoard) {
         exits.set(i, prevUnit);
       }
-    } else if (prevUnit && currUnit && prevUnit.id !== currUnit.id) {
-      const fromIndex = prev.findIndex((p) => p && p.id === currUnit.id);
-      anims.set(i, { type: 'swapped', fromIndex: fromIndex !== -1 ? fromIndex : i });
     }
   }
 
@@ -125,28 +118,30 @@ function detectBoardChanges(
 }
 
 export function Arena() {
-  const { view, selection, setSelection, playHandCard, swapBoardPositions, showBoardHelper } =
-    useGameStore();
+  const {
+    view,
+    selection,
+    setSelection,
+    playHandCard,
+    swapBoardPositions,
+    showBoardHelper,
+    dragShift,
+  } = useGameStore();
+  // playHandCard now handles occupied slots via engine-side shifting
   const boardBg = useCustomizationStore((s) => s.selections.boardBackground);
 
-  // --- Board change detection (ref-only, zero extra re-renders) ---
-  // All animation state lives in refs. Detection happens during render so
-  // animation classes are present from the FIRST frame. The only state-driven
-  // re-render is the cleanup tick 450ms later when animations expire.
+  // --- Board change detection (for placed/exit CSS animations only) ---
   const prevBoardRef = useRef<(BoardUnitView | null)[]>([]);
   const animRef = useRef<AnimState>(EMPTY_ANIM);
   const cleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [, forceRender] = useReducer((x: number) => x + 1, 0);
 
-  // Detect changes during render — animation classes applied on this very frame.
-  // Writing to refs during render is safe here because detection is idempotent:
-  // once prevBoardRef is updated, the same board won't re-detect.
+  // Detect placed/exit changes on committed board only
   if (view?.board && prevBoardRef.current.length > 0) {
     const detected = detectBoardChanges(prevBoardRef.current, view.board);
     if (detected) {
       animRef.current = detected;
       prevBoardRef.current = [...view.board];
-      // Schedule cleanup: clear animations after they've played
       if (cleanupTimerRef.current) clearTimeout(cleanupTimerRef.current);
       cleanupTimerRef.current = setTimeout(() => {
         animRef.current = EMPTY_ANIM;
@@ -166,12 +161,38 @@ export function Arena() {
     }
   }, [view?.board]);
 
+  // --- Slot stride measurement for CSS transform shifting ---
+  const boardRowRef = useRef<HTMLDivElement>(null);
+  const [slotStride, setSlotStride] = useState(0);
+
+  const hasView = !!view;
+  useEffect(() => {
+    const row = boardRowRef.current;
+    if (!row) return;
+
+    const measure = () => {
+      const slots = row.children;
+      if (slots.length >= 2) {
+        const first = slots[0].getBoundingClientRect();
+        const second = slots[1].getBoundingClientRect();
+        setSlotStride(second.left - first.left);
+      }
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [hasView]);
+
   if (!view) return null;
 
   if (!view.board || !Array.isArray(view.board)) {
     return <div className="text-negative">Error: Board data not available</div>;
   }
 
+  // Use committed board for hint calculations (not preview)
   const unitCount = view.board.filter(Boolean).length;
   const handCount = view.hand?.filter(Boolean).length ?? 0;
   const hasHandSelection = selection?.type === 'hand';
@@ -198,6 +219,9 @@ export function Arena() {
       if (selection?.type === 'board' && selection.index === index) {
         // Tap same unit again — deselect
         setSelection(null);
+      } else if (selection?.type === 'hand') {
+        // Insert hand card at this occupied slot (engine shifts units)
+        playHandCard(selection.index, index);
       } else {
         // Select this board unit (show abilities); swap only via drag-and-drop
         setSelection({ type: 'board', index });
@@ -272,7 +296,10 @@ export function Arena() {
             }
           }}
         >
-          <div className="board-row flex gap-1 lg:gap-4 w-full lg:max-w-3xl h-[clamp(10.5rem,28vh,13rem)] lg:h-[clamp(12.5rem,32vh,16rem)]">
+          <div
+            ref={boardRowRef}
+            className="board-row flex gap-1 lg:gap-4 w-full lg:max-w-3xl h-[clamp(10.5rem,28vh,13rem)] lg:h-[clamp(12.5rem,32vh,16rem)]"
+          >
             {Array.from({ length: 5 }).map((_, displayIndex) => {
               const arrayIndex = 4 - displayIndex;
               const unit = view.board[arrayIndex];
@@ -280,15 +307,25 @@ export function Arena() {
 
               const slotAnim = slotAnimations.get(arrayIndex);
               let animClass = '';
-              let animStyle: React.CSSProperties | undefined;
 
               if (slotAnim === 'placed') {
                 animClass = 'animate-card-land';
-              } else if (typeof slotAnim === 'object' && slotAnim.type === 'swapped') {
-                animClass = 'animate-card-settle';
-                const settleSlots = arrayIndex - slotAnim.fromIndex;
-                animStyle = { '--settle-slots': settleSlots } as React.CSSProperties;
               }
+
+              // CSS transform shifting: compute shift in array-index space,
+              // negate because display order is reversed from array order
+              let shift = 0;
+              if (dragShift) {
+                if (dragShift.source === -1) {
+                  // Hand-insert shift: use nearest-empty-based shift map
+                  const shiftMap = computeHandInsertShift(view.board, dragShift.target);
+                  shift = shiftMap?.get(arrayIndex) ?? 0;
+                } else {
+                  // Board-rearrange shift
+                  shift = computeSlotShift(arrayIndex, dragShift.source, dragShift.target);
+                }
+              }
+              const shiftPx = shift * -slotStride;
 
               return (
                 <div
@@ -322,8 +359,11 @@ export function Arena() {
                                 <EmptySlot isTarget={false} />
                               </div>
                               <div
-                                className={`relative z-10 w-full h-full ${animClass} ${isOver && !animClass ? 'swap-target' : ''}`}
-                                style={animStyle}
+                                className={`relative z-10 w-full h-full ${animClass} ${isOver && !animClass && !shiftPx ? 'swap-target' : ''}`}
+                                style={{
+                                  transform: shiftPx ? `translateX(${shiftPx}px)` : undefined,
+                                  transition: dragShift ? 'transform 0.2s ease-out' : 'none',
+                                }}
                               >
                                 <DraggableCard
                                   id={`board-${arrayIndex}`}

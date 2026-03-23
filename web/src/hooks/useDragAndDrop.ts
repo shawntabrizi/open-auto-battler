@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   type DragEndEvent,
+  type DragOverEvent,
   TouchSensor,
   MouseSensor,
   useSensor,
@@ -10,6 +11,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { useGameStore } from '../store/gameStore';
 import type { CardView, BoardUnitView } from '../types';
+import { isBoardFull } from '../utils/boardShift';
 
 export interface UseDragAndDropOptions {
   onDragEnd?: (event: DragEndEvent) => void;
@@ -21,16 +23,28 @@ export interface UseDragAndDropReturn {
   restrictToContainer: Modifier;
   containerRef: React.RefObject<HTMLDivElement>;
   handleDragStart: (event: { active: { id: string | number } }) => void;
+  handleDragOver: (event: DragOverEvent) => void;
   handleDragEnd: (event: DragEndEvent) => void;
+  handleDragCancel: () => void;
   getActiveCard: () => CardView | BoardUnitView | null;
 }
 
 export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndDropReturn {
   const [activeId, setActiveId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Cache the board card at drag start so the overlay stays stable
+  const draggedCardRef = useRef<CardView | BoardUnitView | null>(null);
 
-  const { view, playHandCard, swapBoardPositions, burnHandCard, burnBoardUnit, setSelection } =
-    useGameStore();
+  const {
+    view,
+    playHandCard,
+    moveBoardPosition,
+    swapBoardPositions,
+    burnHandCard,
+    burnBoardUnit,
+    setSelection,
+    setDragShift,
+  } = useGameStore();
 
   // Custom modifier to restrict dragging to the container
   const restrictToContainer: Modifier = useCallback(({ transform, draggingNodeRect }) => {
@@ -66,17 +80,64 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
   });
   const sensors = useSensors(mouseSensor, touchSensor);
 
-  // Handle drag start
+  // Handle drag start — record selection and cache card for overlay
   const handleDragStart = useCallback(
     (event: { active: { id: string | number } }) => {
-      setActiveId(String(event.active.id));
-      const [type, indexStr] = String(event.active.id).split('-');
+      const id = String(event.active.id);
+      setActiveId(id);
+      const [type, indexStr] = id.split('-');
       const index = parseInt(indexStr);
       if (type === 'hand' || type === 'board') {
         setSelection({ type: type, index });
       }
+      // Cache the card data for the overlay
+      if (type === 'board' && view?.board) {
+        draggedCardRef.current = view.board[index] ?? null;
+      } else {
+        draggedCardRef.current = null;
+      }
     },
-    [setSelection]
+    [setSelection, view]
+  );
+
+  // Handle drag over — set drag shift for CSS transform-based card shifting
+  const handleDragOver = useCallback(
+    (event: DragOverEvent) => {
+      const activeData = event.active.data.current;
+      if (!activeData) {
+        setDragShift(null);
+        return;
+      }
+
+      const overData = event.over?.data.current;
+      if (overData?.type !== 'board-slot') {
+        setDragShift(null);
+        return;
+      }
+
+      const hoverIndex = overData.index as number;
+
+      if (activeData.type === 'board') {
+        // Board-to-board: shift when target is occupied
+        const sourceIndex = activeData.index as number;
+        if (sourceIndex === hoverIndex || !view?.board?.[hoverIndex]) {
+          setDragShift(null);
+        } else {
+          setDragShift({ source: sourceIndex, target: hoverIndex });
+        }
+      } else if (activeData.type === 'hand') {
+        // Hand-to-board: shift when target is occupied and board has space
+        if (!view?.board?.[hoverIndex] || isBoardFull(view.board)) {
+          setDragShift(null);
+        } else {
+          // source=-1 sentinel signals "hand insert" to the rendering layer
+          setDragShift({ source: -1, target: hoverIndex });
+        }
+      } else {
+        setDragShift(null);
+      }
+    },
+    [setDragShift, view]
   );
 
   // Handle drag end - dispatch actions based on source and destination
@@ -84,6 +145,8 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
     (event: DragEndEvent) => {
       const { active, over } = event;
       setActiveId(null);
+      setDragShift(null);
+      draggedCardRef.current = null;
 
       // Allow custom handler override
       if (options.onDragEnd) {
@@ -127,17 +190,39 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
         const destIndex = overData.index as number;
 
         if (sourceType === 'hand') {
-          // Play card from hand to board
+          // Play card from hand to board (engine handles shifting if occupied)
           playHandCard(sourceIndex, destIndex);
         } else if (sourceType === 'board' && sourceIndex !== destIndex) {
-          // Swap board positions
-          swapBoardPositions(sourceIndex, destIndex);
+          if (view?.board?.[destIndex]) {
+            // Target occupied — SAP-style shift
+            moveBoardPosition(sourceIndex, destIndex);
+          } else {
+            // Target empty — direct move
+            swapBoardPositions(sourceIndex, destIndex);
+          }
         }
         setSelection(null);
       }
     },
-    [options, burnHandCard, burnBoardUnit, playHandCard, swapBoardPositions, setSelection]
+    [
+      options,
+      burnHandCard,
+      burnBoardUnit,
+      playHandCard,
+      moveBoardPosition,
+      swapBoardPositions,
+      setSelection,
+      setDragShift,
+      view,
+    ]
   );
+
+  // Handle drag cancel
+  const handleDragCancel = useCallback(() => {
+    setActiveId(null);
+    setDragShift(null);
+    draggedCardRef.current = null;
+  }, [setDragShift]);
 
   // Prevent body scroll during drag
   useEffect(() => {
@@ -162,7 +247,7 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
     if (type === 'hand') {
       return view.hand[index] ?? null;
     } else if (type === 'board') {
-      return view.board[index] ?? null;
+      return draggedCardRef.current ?? view.board[index] ?? null;
     }
     return null;
   }, [activeId, view]);
@@ -173,7 +258,9 @@ export function useDragAndDrop(options: UseDragAndDropOptions = {}): UseDragAndD
     restrictToContainer,
     containerRef,
     handleDragStart,
+    handleDragOver,
     handleDragEnd,
+    handleDragCancel,
     getActiveCard,
   };
 }

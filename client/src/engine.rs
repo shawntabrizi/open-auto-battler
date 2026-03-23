@@ -52,6 +52,28 @@ struct TurnSnapshot {
     board: Vec<Option<BoardUnit>>,
 }
 
+/// Find the nearest empty slot to `target`, preferring right (higher index) first.
+/// Returns `None` if the board is full.
+fn find_nearest_empty<T>(board: &[Option<T>], target: usize) -> Option<usize> {
+    if board[target].is_none() {
+        return Some(target);
+    }
+    let len = board.len();
+    for distance in 1..len {
+        let right = target + distance;
+        if right < len && board[right].is_none() {
+            return Some(right);
+        }
+        if distance <= target {
+            let left = target - distance;
+            if board[left].is_none() {
+                return Some(left);
+            }
+        }
+    }
+    None
+}
+
 /// The main game engine exposed to WASM
 #[wasm_bindgen]
 pub struct GameEngine {
@@ -379,10 +401,6 @@ impl GameEngine {
             return Err("Invalid board slot".to_string());
         }
 
-        if self.state.board[board_slot].is_some() {
-            return Err("Board slot is occupied".to_string());
-        }
-
         let play_cost = {
             let card = self.get_card(card_id);
             card.economy.play_cost
@@ -395,7 +413,36 @@ impl GameEngine {
             ));
         }
 
-        self.save_snapshot();
+        // If the target slot is occupied, shift units to make room (SAP-style insert).
+        // Find the nearest empty slot (prefer right, then left) and swap toward target.
+        if self.state.board[board_slot].is_some() {
+            let empty_slot = find_nearest_empty(&self.state.board, board_slot)
+                .ok_or("Board is full")?;
+
+            self.save_snapshot();
+
+            // Shift units: swap adjacent slots from empty toward target
+            if empty_slot > board_slot {
+                for i in (board_slot..empty_slot).rev() {
+                    self.state.board.swap(i + 1, i);
+                    self.action_log.push(TurnAction::SwapBoard {
+                        slot_a: (i + 1) as u32,
+                        slot_b: i as u32,
+                    });
+                }
+            } else {
+                for i in empty_slot..board_slot {
+                    self.state.board.swap(i, i + 1);
+                    self.action_log.push(TurnAction::SwapBoard {
+                        slot_a: i as u32,
+                        slot_b: (i + 1) as u32,
+                    });
+                }
+            }
+        } else {
+            self.save_snapshot();
+        }
+
         self.state.shop_mana -= play_cost;
         self.hand_used[hand_index] = true;
         self.action_log.push(TurnAction::PlayFromHand {
@@ -403,7 +450,7 @@ impl GameEngine {
             board_slot: board_slot as u32,
         });
 
-        // Place the card on the board
+        // Place the card on the board (slot is now guaranteed empty)
         self.state.board[board_slot] = Some(BoardUnit::new(card_id));
         let action_index = self.action_log.len().saturating_sub(1);
         apply_on_buy_triggers(&mut self.state, action_index, board_slot);

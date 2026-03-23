@@ -122,6 +122,9 @@ interface GameStore {
   burnHandCard: (index: number) => void;
   playHandCard: (handIndex: number, boardSlot: number) => void;
   swapBoardPositions: (slotA: number, slotB: number) => void;
+  moveBoardPosition: (from: number, to: number) => void;
+  dragShift: { source: number; target: number } | null;
+  setDragShift: (shift: { source: number; target: number } | null) => void;
   burnBoardUnit: (boardSlot: number) => void;
   undo: () => void;
   endTurn: () => void;
@@ -275,6 +278,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   defaultBattleSpeed: JSON.parse(localStorage.getItem('defaultBattleSpeed') ?? '1'),
   reducedAnimations: JSON.parse(localStorage.getItem('reducedAnimations') ?? 'false'),
   showBag: false,
+  dragShift: null,
   startingLives: 3,
   winsToVictory: 10,
   afterBattleCallback: null,
@@ -488,6 +492,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
       console.error(err);
     }
   },
+
+  moveBoardPosition: (from: number, to: number) => {
+    const { engine } = get();
+    if (!engine) return;
+    try {
+      if (from < to) {
+        for (let i = from; i < to; i++) engine.swap_board_positions(i, i + 1);
+      } else {
+        for (let i = from; i > to; i--) engine.swap_board_positions(i, i - 1);
+      }
+      set({ view: engine.get_view(), selection: { type: 'board', index: to } });
+    } catch (err) {
+      console.error(err);
+    }
+  },
+
+  setDragShift: (shift) => set({ dragShift: shift }),
 
   burnBoardUnit: (boardSlot: number) => {
     const { engine } = get();

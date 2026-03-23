@@ -1,4 +1,4 @@
-import { DndContext, DragOverlay } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
 import { GameTopBar } from './GameTopBar';
 import { Arena } from './Arena';
 import { ManaBar } from './ManaBar';
@@ -28,11 +28,7 @@ export interface GameShellProps {
   className?: string;
 }
 
-export function GameShell({
-  hideEndTurn = false,
-  customAction,
-  className = '',
-}: GameShellProps) {
+export function GameShell({ hideEndTurn = false, customAction, className = '' }: GameShellProps) {
   const { view, bag, cardSet, selection, showBag, showGameCardDetailsPanel } = useGameStore();
   const isNarrowScreen = useIsNarrowScreen();
 
@@ -42,7 +38,9 @@ export function GameShell({
     restrictToContainer,
     containerRef,
     handleDragStart,
+    handleDragOver,
     handleDragEnd,
+    handleDragCancel,
     getActiveCard,
   } = useDragAndDrop();
 
@@ -80,9 +78,12 @@ export function GameShell({
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={closestCenter}
       modifiers={[restrictToContainer]}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
       autoScroll={false}
     >
       <div
@@ -134,7 +135,7 @@ export function GameShell({
       </div>
 
       {/* Drag overlay - shows the card being dragged */}
-      <DragOverlay>
+      <DragOverlay dropAnimation={null}>
         {activeCard ? (
           <div className={CARD_SIZES.standard.tw}>
             <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showBurn={true} />

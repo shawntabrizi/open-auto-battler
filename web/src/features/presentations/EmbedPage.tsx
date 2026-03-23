@@ -33,7 +33,9 @@ export default function EmbedPage() {
     restrictToContainer,
     containerRef,
     handleDragStart,
+    handleDragOver,
     handleDragEnd,
+    handleDragCancel,
     getActiveCard,
   } = useDragAndDrop();
 
@@ -52,7 +54,9 @@ export default function EmbedPage() {
       sensors={sensors}
       modifiers={[restrictToContainer]}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
       autoScroll={false}
     >
       <div ref={containerRef} className="game-layout h-screen flex flex-col bg-board-bg">
@@ -74,7 +78,7 @@ export default function EmbedPage() {
         <BattleOverlay />
       </div>
 
-      <DragOverlay>
+      <DragOverlay dropAnimation={null}>
         {activeCard ? (
           <div className={CARD_SIZES.standard.tw}>
             <UnitCard card={activeCard} showCost={activeId?.startsWith('hand')} showBurn={true} />
