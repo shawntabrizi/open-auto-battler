@@ -1,4 +1,5 @@
 mod abyssal_bomber;
+mod adjacent;
 mod combos;
 mod conditions;
 mod damage;

@@ -1464,10 +1464,14 @@ fn get_targets<R: BattleRng>(
                 resolve_absolute_position(*scope, source_team, *index, player_units, enemy_units)
             }
         }
-        AbilityTarget::Adjacent { scope: _ } => {
-            // Stub implementation as per instructions
-            vec![]
-        }
+        AbilityTarget::Adjacent { scope } => resolve_adjacent(
+            source_instance_id,
+            source_team,
+            *scope,
+            player_units,
+            enemy_units,
+            source_position_override,
+        ),
         AbilityTarget::Random { scope, count } => {
             let candidates = resolve_scope_ids(
                 *scope,
@@ -1536,10 +1540,14 @@ fn get_condition_targets(
                 resolve_absolute_position(*scope, source_team, *index, player_units, enemy_units)
             }
         }
-        AbilityTarget::Adjacent { scope: _ } => {
-            // Stub implementation as per instructions
-            vec![]
-        }
+        AbilityTarget::Adjacent { scope } => resolve_adjacent(
+            source_instance_id,
+            source_team,
+            *scope,
+            player_units,
+            enemy_units,
+            None,
+        ),
         AbilityTarget::Random { scope, count } => {
             let mut candidates = resolve_scope_ids(
                 *scope,
@@ -1659,6 +1667,61 @@ fn find_unit_in_slices<'a>(
         .iter()
         .chain(enemy_units.iter())
         .find(|u| u.instance_id == instance_id)
+}
+
+/// Resolve adjacent units for a source unit.
+/// The battle line is: [P5][P4][P3][P2][P1] <clash> [E1][E2][E3][E4][E5]
+/// Adjacent allies: same-team units at position ± 1.
+/// Adjacent enemies: enemy front (position 0) if source is at front (position 0).
+/// Scope controls which neighbors are included (Allies, Enemies, All, etc.).
+fn resolve_adjacent(
+    source_id: UnitInstanceId,
+    source_team: Team,
+    scope: TargetScope,
+    player_units: &[CombatUnit],
+    enemy_units: &[CombatUnit],
+    source_position_override: Option<usize>,
+) -> Vec<UnitInstanceId> {
+    let (allies, enemies) = match source_team {
+        Team::Player => (player_units, enemy_units),
+        Team::Enemy => (enemy_units, player_units),
+    };
+
+    // Find source position (alive on board, or override for dead units)
+    let pos = allies
+        .iter()
+        .position(|u| u.instance_id == source_id)
+        .or(source_position_override);
+
+    let Some(pos) = pos else {
+        return vec![];
+    };
+
+    let mut result = Vec::new();
+    let include_allies = matches!(
+        scope,
+        TargetScope::Allies | TargetScope::AlliesOther | TargetScope::All | TargetScope::SelfUnit
+    );
+    let include_enemies = matches!(scope, TargetScope::Enemies | TargetScope::All);
+
+    // Same-team neighbors at position ± 1
+    if include_allies {
+        if pos > 0 {
+            result.push(allies[pos - 1].instance_id);
+        }
+        if pos + 1 < allies.len() {
+            result.push(allies[pos + 1].instance_id);
+        }
+    }
+
+    // Cross-team: enemy front unit is adjacent to our front unit
+    if include_enemies && pos == 0 {
+        if let Some(enemy_front) = enemies.first() {
+            result.push(enemy_front.instance_id);
+        }
+    }
+
+    result
 }
 
 fn resolve_relative_position(
