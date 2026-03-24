@@ -41,6 +41,8 @@ impl From<GameView> for GameStateResponse {
 /// Result of POST /step — includes what happened and the next state.
 #[derive(Debug, Serialize)]
 pub struct StepResponse {
+    /// The round number this battle was for
+    pub completed_round: i32,
     /// The battle result: "Victory", "Defeat", or "Draw"
     pub battle_result: String,
     /// Whether the game is over
@@ -49,8 +51,19 @@ pub struct StepResponse {
     pub game_result: Option<String>,
     /// The reward signal for RL: +1 for victory round, -1 for defeat round, 0 for draw
     pub reward: i32,
-    /// Current game state after this step
+    /// Summary of what happened in the battle
+    pub battle_summary: BattleSummary,
+    /// Current game state after this step (next round, or final state if game_over)
     pub state: GameStateResponse,
+}
+
+/// Summary of a battle for agent feedback.
+#[derive(Debug, Serialize)]
+pub struct BattleSummary {
+    /// How many of your units survived the battle
+    pub player_units_survived: usize,
+    /// How many units the opponent had
+    pub enemy_units_faced: usize,
 }
 
 /// Error response.

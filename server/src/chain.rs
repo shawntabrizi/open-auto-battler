@@ -22,7 +22,7 @@ mod inner {
     use tokio::runtime::Runtime;
 
     use crate::game::GameBackend;
-    use crate::types::{GameStateResponse, StepResponse};
+    use crate::types::{BattleSummary, GameStateResponse, StepResponse};
 
     type MaxBagSize = ConstU32<50>;
     type MaxBoardSize = ConstU32<5>;
@@ -258,11 +258,19 @@ mod inner {
                 completed_round, battle_result_str, state.wins, state.lives
             );
 
+            // Count surviving units from refreshed state
+            let player_units_survived = state.board.iter().filter(|s| s.is_some()).count();
+
             Ok(StepResponse {
+                completed_round,
                 battle_result: battle_result_str.to_string(),
                 game_over,
                 game_result,
                 reward,
+                battle_summary: BattleSummary {
+                    player_units_survived,
+                    enemy_units_faced: 0, // Not available from chain state alone
+                },
                 state: self.get_state(),
             })
         }
@@ -287,6 +295,13 @@ mod inner {
                     can_afford: vec![],
                 },
             }
+        }
+
+        fn get_cards(&self) -> Vec<oab_core::view::CardView> {
+            self.card_pool
+                .values()
+                .map(oab_core::view::CardView::from)
+                .collect()
         }
     }
 

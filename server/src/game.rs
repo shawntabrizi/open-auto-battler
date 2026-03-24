@@ -14,7 +14,14 @@ use oab_core::types::*;
 use oab_core::units::create_starting_bag;
 use oab_core::view::GameView;
 
-use crate::types::{GameStateResponse, StepResponse};
+use crate::types::{BattleSummary, GameStateResponse, StepResponse};
+
+/// Result from running a battle, with summary info for the agent.
+struct BattleOutcome {
+    result: BattleResult,
+    player_units_survived: usize,
+    enemy_units_faced: usize,
+}
 
 /// Trait for game backends (local or on-chain).
 pub trait GameBackend: Send {
@@ -24,6 +31,8 @@ pub trait GameBackend: Send {
     fn step(&mut self, action: &CommitTurnAction) -> Result<StepResponse, String>;
     /// Get the current game state.
     fn get_state(&self) -> GameStateResponse;
+    /// Get all cards available in the current card pool.
+    fn get_cards(&self) -> Vec<oab_core::view::CardView>;
 }
 
 /// A local game session that manages a full game against built-in opponents.
@@ -93,8 +102,10 @@ impl GameSession {
         self.state.shop_mana = 0;
         self.state.phase = GamePhase::Battle;
 
+        let completed_round = self.state.round;
+
         // Run battle
-        let battle_result = self.run_battle();
+        let outcome = self.run_battle();
 
         // Check game over
         let game_over = self.state.wins >= WINS_TO_VICTORY || self.state.lives <= 0;
@@ -114,34 +125,39 @@ impl GameSession {
             self.state.mana_limit = self.state.calculate_mana_limit();
             self.state.phase = GamePhase::Shop;
             self.state.draw_hand();
-            apply_shop_start_triggers_with_result(&mut self.state, Some(battle_result.clone()));
+            apply_shop_start_triggers_with_result(&mut self.state, Some(outcome.result.clone()));
             None
         };
 
-        let reward = match &battle_result {
+        let reward = match &outcome.result {
             BattleResult::Victory => 1,
             BattleResult::Defeat => -1,
             BattleResult::Draw => 0,
         };
 
-        let battle_result_str = match &battle_result {
+        let battle_result_str = match &outcome.result {
             BattleResult::Victory => "Victory",
             BattleResult::Defeat => "Defeat",
             BattleResult::Draw => "Draw",
         };
 
         Ok(StepResponse {
+            completed_round,
             battle_result: battle_result_str.to_string(),
             game_over,
             game_result,
             reward,
+            battle_summary: BattleSummary {
+                player_units_survived: outcome.player_units_survived,
+                enemy_units_faced: outcome.enemy_units_faced,
+            },
             state: self.get_state(),
         })
     }
 
     /// Run a battle and apply results to state.
     /// Mirrors `client/src/engine.rs:run_battle()`.
-    fn run_battle(&mut self) -> BattleResult {
+    fn run_battle(&mut self) -> BattleOutcome {
         let mut player_slots = Vec::new();
         let player_units: Vec<CombatUnit> = self
             .state
@@ -164,6 +180,7 @@ impl GameSession {
         let enemy_units =
             get_opponent_for_round(self.state.round, battle_seed + 999, &self.state.card_pool)
                 .unwrap_or_default();
+        let enemy_count = enemy_units.len();
 
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
         let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool);
@@ -190,7 +207,14 @@ impl GameSession {
             BattleResult::Draw => {}
         }
 
-        result
+        // Count surviving player units
+        let player_units_survived = self.state.board.iter().filter(|s| s.is_some()).count();
+
+        BattleOutcome {
+            result,
+            player_units_survived,
+            enemy_units_faced: enemy_count,
+        }
     }
 }
 
@@ -248,5 +272,13 @@ impl GameBackend for GameSession {
 
     fn get_state(&self) -> GameStateResponse {
         self.get_state()
+    }
+
+    fn get_cards(&self) -> Vec<oab_core::view::CardView> {
+        self.state
+            .card_pool
+            .values()
+            .map(oab_core::view::CardView::from)
+            .collect()
     }
 }

@@ -23,6 +23,7 @@ pub fn serve(port: u16, backend: Box<dyn GameBackend>) -> std::io::Result<()> {
     eprintln!("  POST /reset  — Start new game {{ \"seed\": N, \"set_id\": N }}");
     eprintln!("  POST /step   — Submit actions {{ \"actions\": [...] }}");
     eprintln!("  GET  /state  — Get current game state");
+    eprintln!("  GET  /cards  — List all cards in the current set");
 
     let backend = Mutex::new(backend);
 
@@ -54,6 +55,7 @@ fn handle_request(
         (Method::Post, "/reset") => handle_reset(request, backend),
         (Method::Post, "/step") => handle_step(request, backend),
         (Method::Get, "/state") => handle_get_state(backend),
+        (Method::Get, "/cards") => handle_get_cards(backend),
         _ => Err((404, format!("Not found: {} {}", request.method(), path))),
     }
 }
@@ -99,6 +101,12 @@ fn handle_get_state(backend: &Mutex<Box<dyn GameBackend>>) -> Result<String, (u1
     let b = backend.lock().unwrap();
     let state = b.get_state();
     serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
+}
+
+fn handle_get_cards(backend: &Mutex<Box<dyn GameBackend>>) -> Result<String, (u16, String)> {
+    let b = backend.lock().unwrap();
+    let cards = b.get_cards();
+    serde_json::to_string(&cards).map_err(|e| (500, e.to_string()))
 }
 
 fn read_body(request: &mut Request) -> Result<String, (u16, String)> {
