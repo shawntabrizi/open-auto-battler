@@ -93,23 +93,35 @@ less often, so its average impact across games is kept in check.
 
 ## Archetypes
 
-Each archetype defines a **strategy** the player can build toward. A healthy set should
-have 8-12 cards per archetype spread across the mana curve (cheap enablers, mid-game
-core, expensive finishers).
+Each archetype defines a **strategy** the player can build toward, with its own thematic
+faction. A healthy set has 8-12 cards per archetype spread across the mana curve.
+
+| # | Archetype | Faction | Visual Identity |
+|---|-----------|---------|-----------------|
+| 1 | Spawn/Swarm | **The Hive** | Insects, beetles, ants, queens |
+| 2 | Scaling | **The Grove** | Trees, druids, forest creatures |
+| 3 | Sniper/Burst | **The Academy** | Mages, spellcasters, elements |
+| 4 | Tank/Sustain | **The Order** | Paladins, clerics, shields |
+| 5 | Faint Chain | **The Undead** | Skeletons, ghosts, death magic |
+| 6 | Thorns | **The Wilds** | Beasts, monsters, venom |
+| 7 | Economy | **The Guild** | Merchants, traders, gold |
+| 8 | Aggro/Rush | **The Horde** | Orcs, goblins, barbarians |
+| 9 | Comeback | **The Fallen** | Spirits, revenants, ghosts |
+| — | Vanilla | **Mercenaries** | Generic hired fighters |
 
 ### Counter Wheel
 
 ```
-Aggro ──beats──> Economy ──beats──> Scaling ──beats──> Tank ──beats──> Aggro
-                                       │
-                                       v
-            Sniper ──beats──> Swarm ──beats──> Sniper (triangle)
-                       │
-                       v
-                   Thorns ──beats──> Aggro (punishes repeated attacks)
-                       │
-                       v
-              Faint Chain ──beats──> Tank (value from dying, outlasts sustain)
+Horde ──beats──> Guild ──beats──> Grove ──beats──> Order ──beats──> Horde
+                                     │
+                                     v
+          Academy ──beats──> Hive ──beats──> Academy (triangle)
+                      │
+                      v
+                  Wilds ──beats──> Horde (punishes repeated attacks)
+                      │
+                      v
+              Undead ──beats──> Order (value from dying, outlasts sustain)
 ```
 
 Archetypes should have **favorable and unfavorable matchups**. No archetype should beat
@@ -117,7 +129,7 @@ everything. Hybrid builds exist to shore up weak matchups at the cost of peak po
 
 ---
 
-### 1. Spawn / Swarm
+### 1. Spawn / Swarm — *The Hive*
 
 **Win condition:** Overwhelm the opponent with bodies. Spawn tokens on faint, buff spawned
 units, fill the board faster than the enemy can clear it.
@@ -127,63 +139,52 @@ units, fill the board faster than the enemy can clear it.
 **Strengths:** Board presence, resilience to single-target removal
 **Weaknesses:** Individually weak units, vulnerable to AoE damage
 
-**Mana curve targets:**
-- Cheap (1-2): Spawners, spawn-trigger enablers
-- Mid (3-4): Better spawners, spawn payoffs (buff spawned units)
-- Finisher (5-6): Mass spawn, powerful tokens, spawn scaling
-
 **Cards:**
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Cricket | 1 | 2 | 1 | 0 | 10 | OnFaint: Spawn 1/1 Zombie Cricket | Cheapest spawner |
-| Spider | 2 | 2 | 3 | 1 | 10 | OnFaint: Spawn 2/2 Spiderling | Mid spawner, token matches parent |
-| Horse | 2 | 1 | 2 | 1 | 10 | OnAllySpawn: +1 ATK to spawned unit | Makes tokens dangerous |
-| Dog | 2 | 3 | 3 | 1 | 10 | OnAllySpawn: +2 ATK +1 HP to self | Grows with every spawn |
-| Rooster | 4 | 4 | 5 | 2 | 10 | OnFaint: Spawn 3/1 Chick | Big body + strong token |
-| Necromancer | 3 | 4 | 4 | 2 | 8 | OnAllySpawn: +2 ATK to spawned unit (3x) | Makes tokens hit harder |
-| Turkey | 4 | 5 | 6 | 3 | 6 | OnAllySpawn: +2 ATK +2 HP to spawned unit | THE spawn payoff, build-around |
-| Fly | 3 | 5 | 7 | 3 | 6 | OnAllyFaint: Spawn 3/3 Zombie Fly (3x) | Board refill machine |
-| Elephant | 5 | 7 | 9 | 3 | 6 | OnAllyFaint: Spawn 2/2 Calf at back (3x) | Swarm engine, spawns behind the line. **ART NOTE: token "Calf" needs art** |
-| Whale | 5 | 7 | 10 | 3 | 2 | OnFaint: Spawn 3x 1/1 Scorpion at back (deathtouch) | Kill the whale, face 3 assassins |
+| Larva | 1 | 2 | 1 | 0 | 10 | OnFaint: Spawn 1/1 Grub | Cheapest spawner |
+| Worker Bee | 2 | 1 | 2 | 1 | 10 | OnAllySpawn: +1 ATK to spawned unit | Makes tokens dangerous |
+| Scarab | 2 | 2 | 3 | 1 | 10 | OnFaint: Spawn 2/2 Hatchling | Mid spawner |
+| Ant Soldier | 2 | 3 | 3 | 1 | 10 | OnAllySpawn: +2 ATK +1 HP to self | Grows with every spawn |
+| Drone Keeper | 3 | 4 | 4 | 2 | 8 | OnAllySpawn: +2 ATK to spawned unit (3x) | Makes tokens hit harder |
+| Mantis | 4 | 4 | 5 | 2 | 10 | OnFaint: Spawn 3/1 Nymph | Big body + strong token |
+| Swarm Queen | 4 | 5 | 6 | 3 | 6 | OnAllySpawn: +2 ATK +2 HP to spawned unit | THE spawn payoff |
+| Moth Matriarch | 3 | 5 | 7 | 3 | 6 | OnAllyFaint: Spawn 3/3 Moth (3x) | Board refill machine |
+| Hive Mother | 5 | 7 | 9 | 3 | 6 | OnAllyFaint: Spawn 2/2 Drone at back (3x) | Swarm engine |
+| Brood Queen | 5 | 7 | 10 | 3 | 2 | OnFaint: Spawn 3x 1/1 Stinger at back (deathtouch) | Kill the queen, face 3 assassins |
 
 ---
 
-### 2. Scaling
+### 2. Scaling — *The Grove*
 
 **Win condition:** Build one or two massive units over multiple shop phases. Invest early,
 dominate late with stats that outclass anything the opponent can field.
 
-**Key mechanics:** OnBuy/OnShopStart permanent buffs, self-scaling in combat (Hippo,
-Kangaroo), stat stacking
+**Key mechanics:** OnBuy/OnShopStart permanent buffs, self-scaling in combat, stat stacking
 
 **Strengths:** Highest raw stats in late game, individual units are threats
 **Weaknesses:** Slow to come online, vulnerable to Sniper targeting the carry
-
-**Mana curve targets:**
-- Cheap (1-2): Stat generators (OnBuy/OnSell buffs to allies)
-- Mid (3-4): Self-scalers, shop-phase engines
-- Finisher (5-6): Big scaling payoffs, combat snowballers
 
 **Cards:**
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Worm | 1 | 2 | 1 | 0 | 10 | OnBuy: +1 ATK +1 HP to self (perm) | Self-investment on purchase |
-| Fish | 2 | 2 | 2 | 1 | 10 | OnBuy: +1 ATK +1 HP to random ally (perm) | Core scaling enabler |
-| Giraffe | 1 | 3 | 3 | 1 | 10 | OnShopStart: +1 ATK +1 HP to back unit (perm) | Recurring shop engine |
-| Penguin | 2 | 4 | 4 | 2 | 10 | OnShopStart: +1 ATK +1 HP to 2 random allies (perm) | Premium shop engine |
-| Cow | 3 | 5 | 5 | 2 | 10 | OnBuy: +1 ATK +1 HP to all allies (perm) | Mass buy buff |
-| Ox | 4 | 6 | 7 | 3 | 8 | AfterUnitAttack: +2 ATK +2 HP to self | Durable combat scaler |
-| Monkey | 3 | 5 | 7 | 3 | 6 | OnShopStart: +2 ATK +2 HP to random ally (perm) | Premium shop scaler |
-| Hippo | 4 | 5 | 7 | 3 | 6 | AfterUnitAttack: +3 ATK +3 HP to self | Combat snowball, must survive |
-| Ogre Mauler | 5 | 7 | 8 | 3 | 6 | OnShopStart: +1 ATK +1 HP to self (perm); AfterUnitAttack: +2 ATK +2 HP to self | Scales in shop AND combat |
-| Dragon | 4 | 6 | 9 | 3 | 6 | OnBuy: +1 ATK +1 HP to ALL allies (perm) | Mass scaling, best buy trigger |
-| Behemoth | 5 | 8 | 10 | 3 | 2 | OnShopStart: +2 ATK +2 HP to ALL allies (perm) | Team-wide scaling every round |
+| Seedling | 1 | 2 | 1 | 0 | 10 | OnBuy: +1/+1 to self (perm) | Self-investment on purchase |
+| Sapling | 2 | 2 | 2 | 1 | 10 | OnBuy: +1/+1 to random ally (perm) | Core scaling enabler |
+| Grove Tender | 1 | 3 | 3 | 1 | 10 | OnShopStart: +1/+1 to back unit (perm) | Recurring shop engine |
+| Forest Sage | 2 | 4 | 4 | 2 | 10 | OnShopStart: +1/+1 to 2 random allies (perm) | Premium shop engine |
+| Earth Shaman | 3 | 5 | 5 | 2 | 10 | OnBuy: +1/+1 to all allies (perm) | Mass buy buff |
+| Treant | 4 | 6 | 7 | 3 | 8 | AfterUnitAttack: +2/+2 to self | Durable combat scaler |
+| Elder Druid | 3 | 5 | 7 | 3 | 6 | OnShopStart: +2/+2 to random ally (perm) | Premium shop scaler |
+| Ancient Oak | 4 | 5 | 7 | 3 | 6 | AfterUnitAttack: +3/+3 to self | Combat snowball, must survive |
+| Ironwood Guardian | 5 | 7 | 8 | 3 | 6 | OnShopStart: +1/+1 self (perm); AfterUnitAttack: +2/+2 self | Scales in shop AND combat |
+| World Tree | 4 | 6 | 9 | 3 | 6 | OnBuy: +1/+1 to ALL allies (perm) | Mass scaling, best buy trigger |
+| Gaia | 5 | 8 | 10 | 3 | 2 | OnShopStart: +2/+2 to ALL allies (perm) | Team-wide scaling every round |
 
 ---
 
-### 3. Sniper / Burst
+### 3. Sniper / Burst — *The Academy*
 
 **Win condition:** Kill key enemy units before combat with OnStart targeted damage. Remove
 the opponent's carry or disrupt their board before attacks begin.
@@ -192,33 +193,27 @@ the opponent's carry or disrupt their board before attacks begin.
 specific position)
 
 **Strengths:** Disrupts enemy game plan, kills key targets, bypasses front-line
-**Weaknesses:** Low stats for cost (paying for damage), weak into wide boards with no
-single critical unit
-
-**Mana curve targets:**
-- Cheap (1-2): Chip damage (1-2 damage pings)
-- Mid (3-4): Targeted removal (3-5 damage to specific targets)
-- Finisher (5-6): Heavy burst (8+ damage, AoE damage)
+**Weaknesses:** Low stats for cost (paying for damage), weak into wide boards
 
 **Cards:**
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Mosquito | 1 | 2 | 1 | 0 | 10 | OnStart: Deal 1 damage to random enemy | Chip damage |
-| Archer | 1 | 3 | 2 | 1 | 10 | OnStart: Deal 2 damage to last enemy | Back-line sniper |
-| Dolphin | 2 | 3 | 3 | 1 | 10 | OnStart: Deal 3 damage to lowest HP enemy | Targeted removal |
-| Skunk | 3 | 4 | 4 | 2 | 10 | OnStart: Deal 3 damage to highest HP enemy | Tank buster |
-| Crocodile | 4 | 4 | 5 | 2 | 10 | OnStart: Deal 6 damage to last enemy | Heavy back-line hit |
-| Abyssal Bomber | 3 | 5 | 6 | 3 | 8 | OnStart: Deal 4 damage to 2 random enemies | Multi-target burst |
-| Leopard | 4 | 5 | 7 | 3 | 6 | OnStart: Deal 5 damage to random enemy | Heavy single-target burst |
-| Artillery Mage | 4 | 4 | 7 | 3 | 6 | OnStart: Deal 3 damage to ALL enemies | AoE nuke |
-| Headhunter | 5 | 6 | 8 | 3 | 6 | OnStart: Deal 8 damage to highest ATK enemy | Carry killer |
-| Dragon Tyrant | 5 | 7 | 9 | 3 | 6 | OnStart: Deal 4 damage to ALL enemies | Premium AoE nuke |
-| Giant Crusher | 6 | 8 | 10 | 3 | 2 | OnStart: Deal 6 damage to ALL enemies | Wipes weak boards outright |
+| Spark Mage | 1 | 2 | 1 | 0 | 10 | OnStart: Deal 1 damage to random enemy | Chip damage |
+| Frost Archer | 1 | 3 | 2 | 1 | 10 | OnStart: Deal 2 damage to last enemy | Back-line sniper |
+| Pyromancer | 2 | 3 | 3 | 1 | 10 | OnStart: Deal 3 damage to lowest HP enemy | Targeted removal |
+| Hex Caster | 3 | 4 | 4 | 2 | 10 | OnStart: Deal 3 damage to highest HP enemy | Tank buster |
+| Thunder Mage | 4 | 4 | 5 | 2 | 10 | OnStart: Deal 6 damage to last enemy | Heavy back-line hit |
+| Storm Caller | 3 | 5 | 6 | 3 | 8 | OnStart: Deal 4 damage to 2 random enemies | Multi-target burst |
+| Flame Lord | 4 | 5 | 7 | 3 | 6 | OnStart: Deal 5 damage to random enemy | Heavy single-target burst |
+| Lightning Mage | 4 | 4 | 7 | 3 | 6 | OnStart: Deal 3 damage to ALL enemies | AoE nuke |
+| Executioner | 5 | 6 | 8 | 3 | 6 | OnStart: Deal 8 damage to highest ATK enemy | Carry killer |
+| Inferno Mage | 5 | 7 | 9 | 3 | 6 | OnStart: Deal 4 damage to ALL enemies | Premium AoE nuke |
+| Archmage | 6 | 8 | 10 | 3 | 2 | OnStart: Deal 6 damage to ALL enemies | Wipes weak boards outright |
 
 ---
 
-### 4. Tank / Sustain
+### 4. Tank / Sustain — *The Order*
 
 **Win condition:** Outlast the opponent through healing and high HP. Win long fights by
 keeping your front-line alive while the opponent's units slowly fall.
@@ -229,134 +224,113 @@ keeping your front-line alive while the opponent's units slowly fall.
 **Weaknesses:** Low damage output, vulnerable to Scaling (eventually out-damages healing),
 loses to Faint Chain (opponent gains value from dying)
 
-**Mana curve targets:**
-- Cheap (1-2): HP buffers, small heals
-- Mid (3-4): Sustain engines (repeated healing triggers)
-- Finisher (5-6): Mass healing, massive HP walls
-
 **Cards:**
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Scaredy Cat | 1 | 3 | 2 | 1 | 10 | OnStart: +2 HP to unit behind | Positional HP buff |
-| Shield Bearer | 1 | 3 | 2 | 1 | 10 | OnStart: +2 HP to front ally | Front-line support |
-| Nurse Goblin | 1 | 3 | 2 | 1 | 10 | AfterUnitAttack (front ally): +1 HP to front ally (3x) | Heals survivors |
-| Crab | 1 | 4 | 3 | 1 | 8 | OnStart: +2 HP to adjacent allies | Positional HP buff |
-| Shield Squire | 2 | 4 | 4 | 2 | 10 | BeforeAnyAttack: +2 HP to back unit (3x) | Back-line protector |
-| Sheep | 2 | 6 | 5 | 2 | 8 | BeforeAnyAttack: +2 HP to front ally (3x) | Focused front-line healer |
-| Armadillo | 2 | 6 | 6 | 3 | 10 | OnStart: +4 HP to all allies | Mass HP buff |
-| Seal | 3 | 6 | 6 | 3 | 6 | BeforeUnitAttack: +3 HP to self | Unkillable front-liner |
-| Golem | 2 | 8 | 7 | 3 | 6 | OnStart: +3 HP to all allies | Massive HP wall |
-| Shield Master | 3 | 8 | 8 | 3 | 6 | BeforeAnyAttack: +2 HP to all allies (3x) | Premium AoE healer |
-| Boar | 3 | 12 | 10 | 3 | 2 | BeforeAnyAttack: +2 HP to all allies | Endless team healing, unkillable wall. **ART NOTE: Boar art as legendary tank is a weak fit** |
+| Squire | 1 | 3 | 2 | 1 | 10 | OnStart: +2 HP to unit behind | Positional HP buff |
+| Shield Guard | 1 | 3 | 2 | 1 | 10 | OnStart: +2 HP to front ally | Front-line support |
+| Field Medic | 1 | 3 | 2 | 1 | 10 | AfterUnitAttack (front ally): +1 HP to front (3x) | Heals survivors |
+| Sentinel | 1 | 4 | 3 | 1 | 8 | OnStart: +2 HP to adjacent allies | Positional HP buff |
+| Knight Protector | 2 | 4 | 4 | 2 | 10 | BeforeAnyAttack: +2 HP to back unit (3x) | Back-line protector |
+| Cleric | 2 | 6 | 5 | 2 | 8 | BeforeAnyAttack: +2 HP to front ally (3x) | Focused front-line healer |
+| Paladin | 2 | 6 | 6 | 3 | 10 | OnStart: +4 HP to all allies | Mass HP buff |
+| Holy Guard | 3 | 6 | 6 | 3 | 6 | BeforeUnitAttack: +3 HP to self | Unkillable front-liner |
+| Fortress Golem | 2 | 8 | 7 | 3 | 6 | OnStart: +3 HP to all allies | Massive HP wall |
+| Grand Paladin | 3 | 8 | 8 | 3 | 6 | BeforeAnyAttack: +2 HP to all allies (3x) | Premium AoE healer |
+| Divine Champion | 3 | 12 | 10 | 3 | 2 | BeforeAnyAttack: +2 HP to all allies | Endless team healing |
 
 ---
 
-### 5. Faint Chain
+### 5. Faint Chain — *The Undead*
 
 **Win condition:** Dying units cascade value — buffs to survivors, damage to enemies, or
 board refills. The team gets stronger as units fall.
 
 **Key mechanics:** OnFaint buffs/damage (not spawning — that's Swarm), OnAllyFaint
-triggers, Shark-style snowballing
+triggers, snowballing from ally deaths
 
 **Strengths:** Resilient to removal (dying is the plan), strong mid-combat momentum
 **Weaknesses:** Relies on ordering (Sniper kills units out of sequence), weak if units
 don't die in the right order
 
-**Mana curve targets:**
-- Cheap (1-2): Faint triggers (buff ally, deal damage on death)
-- Mid (3-4): Faint payoffs (bigger buffs, AoE on death), faint consumers (Shark)
-- Finisher (5-6): Massive faint effects, board-wide death triggers
-
 **Cards:**
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Ant | 1 | 2 | 1 | 0 | 10 | OnFaint: +1 ATK +1 HP to random ally (perm) | Basic faint buff |
-| Flamingo | 2 | 2 | 2 | 1 | 10 | OnFaint: +1 ATK +1 HP to 2 units behind (perm) | Positional faint buff |
-| Hedgehog | 2 | 2 | 2 | 1 | 10 | OnFaint: Deal 2 damage to all | AoE on death |
-| Martyr Knight | 2 | 3 | 3 | 1 | 10 | OnFaint: +2 ATK +2 HP to unit behind (perm) | Big single-target buff |
-| Badger | 3 | 3 | 3 | 1 | 10 | OnFaint: Deal 3 damage to adjacent | Risky directional AoE (hits own allies) |
-| Shark | 3 | 3 | 4 | 2 | 10 | OnAllyFaint: +2 ATK +1 HP to self | Faint consumer, snowballs |
-| Wolf Rider | 3 | 4 | 5 | 2 | 8 | OnFaint: Deal 5 damage to front enemy | Big damage on death |
-| Zombie Soldier | 4 | 5 | 6 | 3 | 8 | OnAllyFaint: +2 ATK +2 HP to self (perm) | Premium faint consumer |
-| Mammoth | 3 | 6 | 7 | 3 | 6 | OnFaint: +2 ATK +2 HP to ALL allies (perm) | Board-wide death buff |
-| Phoenix | 3 | 4 | 8 | 3 | 6 | OnFaint: Spawn Phoenix Egg (OnStart: Spawn 3/4 Phoenix) | Comes back from death |
-| Lich | 5 | 8 | 10 | 3 | 2 | OnAllyFaint: +3 ATK +3 HP to ALL other allies (perm) | Every death supercharges the team |
+| Skeleton | 1 | 2 | 1 | 0 | 10 | OnFaint: +1/+1 to random ally (perm) | Basic faint buff |
+| Spirit | 2 | 2 | 2 | 1 | 10 | OnFaint: +1/+1 to 2 units behind (perm) | Positional faint buff |
+| Ghoul | 2 | 2 | 2 | 1 | 10 | OnFaint: Deal 2 damage to all | AoE on death |
+| Death Knight | 2 | 3 | 3 | 1 | 10 | OnFaint: +2/+2 to unit behind (perm) | Big single-target buff |
+| Bone Golem | 3 | 3 | 3 | 1 | 10 | OnFaint: Deal 3 damage to adjacent | Risky AoE (hits own allies) |
+| Soul Eater | 3 | 3 | 4 | 2 | 10 | OnAllyFaint: +2/+1 to self | Faint consumer, snowballs |
+| Banshee | 3 | 4 | 5 | 2 | 8 | OnFaint: Deal 5 damage to front enemy | Big damage on death |
+| Revenant | 4 | 5 | 6 | 3 | 8 | OnAllyFaint: +2/+2 to self (perm) | Premium faint consumer |
+| Lich | 3 | 6 | 7 | 3 | 6 | OnFaint: +2/+2 to ALL allies (perm) | Board-wide death buff |
+| Necromancer | 3 | 4 | 8 | 3 | 6 | OnFaint: Spawn Phylactery (OnStart: Spawn 3/4 Necromancer) | Comes back from death |
+| Undead King | 5 | 8 | 10 | 3 | 2 | OnAllyFaint: +3/+3 to ALL other allies (perm) | Every death supercharges the team |
 
 ---
 
-### 6. Thorns / Retaliation
+### 6. Thorns / Retaliation — *The Wilds*
 
 **Win condition:** Punish the opponent for attacking. The more they hit you, the worse it
-gets for them. OnHurt and AfterAnyAttack effects turn enemy aggression against them.
+gets for them. OnHurt effects turn enemy aggression against them.
 
-**Key mechanics:** OnHurt triggers, AfterAnyAttack damage, damage reflection
+**Key mechanics:** OnHurt triggers, damage reflection, scaling retaliation
 
 **Strengths:** Punishes Aggro and multi-attack strategies, scales with combat length
 **Weaknesses:** Useless if units die before being hit, weak to Sniper (killed without
 being attacked)
 
-**Mana curve targets:**
-- Cheap (1-2): Small retaliation (deal 1 damage on hurt)
-- Mid (3-4): Scaling retaliation (Peacock), targeted damage on hurt
-- Finisher (5-6): AoE retaliation, heavy damage per hit taken
-
 **Cards:**
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Spined Urchin | 1 | 3 | 2 | 1 | 10 | OnHurt: Deal 1 damage to attacker (3x) | Basic thorns |
-| Peacock | 1 | 4 | 3 | 1 | 10 | OnHurt: +2 ATK to self | Gets dangerous when hit |
+| Porcupine | 1 | 3 | 2 | 1 | 10 | OnHurt: Deal 1 damage to attacker (3x) | Basic thorns |
+| Cobra | 1 | 4 | 3 | 1 | 10 | OnHurt: +2 ATK to self | Gets dangerous when hit |
 | Blowfish | 2 | 4 | 3 | 1 | 10 | OnHurt: Deal 3 damage to random enemy | Damage on hurt |
-| Snake | 3 | 5 | 5 | 2 | 10 | AfterUnitAttack (front ally): Deal 3 damage to random enemy | Punishes from behind |
-| Rear Guard | 2 | 5 | 4 | 2 | 8 | OnHurt: Deal 1 damage to ALL enemies (3x) | AoE thorns lite |
-| Vampire | 3 | 6 | 6 | 3 | 8 | OnHurt: Deal 3 damage to attacker | Heavy direct thorns |
-| Camel | 2 | 6 | 6 | 3 | 6 | OnHurt: +2 ATK +2 HP to unit behind (unlimited) | Cascading buffs on hit |
-| Fire Elemental | 3 | 7 | 7 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies | AoE retaliation |
-| Rabbit | 3 | 10 | 8 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies; +1 ATK to self | Grows and retaliates every hit. **ART NOTE: "Killer rabbit" is a weak fit** |
-| Giant Slayer | 4 | 8 | 9 | 3 | 6 | OnHurt: Deal 3 damage to attacker AND random enemy | Double retaliation |
-| Scorpion | 1 | 1 | 5 | 2 | 10 | **Deathtouch** | Kills anything it damages, glass cannon |
-| Troll Brute | 4 | 12 | 9 | 3 | 2 | OnHurt: Deal 4 damage to ALL enemies | AoE nuke on every hit taken |
+| Thornbeast | 2 | 5 | 4 | 2 | 8 | OnHurt: Deal 1 damage to ALL enemies (3x) | AoE thorns lite |
+| Viper | 3 | 5 | 5 | 2 | 10 | AfterUnitAttack (front ally): Deal 3 damage to random enemy | Punishes from behind |
+| Deathstalker | 1 | 1 | 5 | 2 | 10 | **Deathtouch** | Kills anything it damages |
+| Ironhide | 3 | 6 | 6 | 3 | 8 | OnHurt: Deal 3 damage to attacker | Heavy direct thorns |
+| War Beast | 2 | 6 | 6 | 3 | 6 | OnHurt: +2/+2 to unit behind (unlimited) | Cascading buffs on hit |
+| Fire Drake | 3 | 7 | 7 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies | AoE retaliation |
+| Hydra | 3 | 10 | 8 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies; +1 ATK to self | Grows and retaliates |
+| Manticore | 4 | 8 | 9 | 3 | 6 | OnHurt: Deal 3 damage to attacker AND random enemy | Double retaliation |
+| Titan Beast | 4 | 12 | 9 | 3 | 2 | OnHurt: Deal 4 damage to ALL enemies | AoE nuke on every hit |
 
 ---
 
-### 7. Economy / Greed
+### 7. Economy / Greed — *The Guild*
 
 **Win condition:** Generate extra mana to play more or bigger units than the opponent can
 afford. Sacrifice early tempo for late-game resource advantage.
 
-**Key mechanics:** GainMana effects, OnSell mana generation, high burn values, OnShopStart
-mana
+**Key mechanics:** GainMana effects, OnSell value, high burn values, OnShopStart mana
 
 **Strengths:** More resources = more options, enables expensive finishers from any archetype
 **Weaknesses:** Weak early board, loses to Aggro before greed pays off
-
-**Mana curve targets:**
-- Cheap (1-2): Mana generators (sell for mana, shop start mana)
-- Mid (3-4): Efficient mana engines, cards that refund their cost
-- Finisher: Economy doesn't have its own finishers — it enables OTHER archetypes' finishers
 
 **Cards:**
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Pig | 1 | 2 | 1 | 3 | 10 | None | High burn value, buy for 1 sell for 3 |
-| Beaver | 2 | 2 | 2 | 1 | 10 | OnSell: +1 ATK to 2 random allies (perm) | Sell for spread ATK |
-| Swan | 1 | 3 | 3 | 1 | 10 | OnShopStart: +1 mana | Recurring mana engine |
-| Duck | 1 | 3 | 2 | 1 | 10 | OnSell: +1 HP to all allies (perm) | Sell for team HP |
-| Squirrel | 2 | 4 | 4 | 2 | 10 | OnShopStart: +1 mana | Premium recurring mana |
-| Otter | 3 | 4 | 5 | 3 | 8 | None | High burn, buy for 5 sell for 3, decent body |
-| Parrot | 2 | 5 | 6 | 3 | 8 | OnShopStart: +1 mana | Bigger mana engine |
-| Mana Reaper | 2 | 4 | 5 | 3 | 6 | OnShopStart: +1 mana | Mana engine + high burn value |
-| Cat | 3 | 5 | 7 | 3 | 6 | OnShopStart: +2 mana | Premium double mana engine |
-| Deer | 4 | 6 | 9 | 3 | 6 | OnShopStart: +1 mana per ally on board | Up to +4 mana with full board |
-| Mouse | 5 | 8 | 10 | 3 | 2 | OnShopStart: +3 mana | Absurd mana generation, enables anything. **ART NOTE: Mouse as legendary economy is a weak fit** |
+| Coin Purse | 1 | 2 | 1 | 3 | 10 | None | High burn, buy for 1 sell for 3 |
+| Peddler | 2 | 2 | 2 | 1 | 10 | OnSell: +1 ATK to 2 random allies (perm) | Sell for spread ATK |
+| Merchant | 1 | 3 | 2 | 1 | 10 | OnSell: +1 HP to all allies (perm) | Sell for team HP |
+| Broker | 1 | 3 | 3 | 1 | 10 | OnShopStart: +1 mana | Recurring mana engine |
+| Treasurer | 2 | 4 | 4 | 2 | 10 | OnShopStart: +1 mana | Premium recurring mana |
+| Gold Hoarder | 3 | 4 | 5 | 3 | 8 | None | High burn, buy for 5 sell for 3 |
+| Tax Collector | 2 | 5 | 6 | 3 | 8 | OnShopStart: +1 mana | Bigger mana engine |
+| Alchemist | 2 | 4 | 5 | 3 | 6 | OnShopStart: +1 mana | Mana engine + high burn value |
+| Guild Master | 3 | 5 | 7 | 3 | 6 | OnShopStart: +2 mana | Premium double mana engine |
+| Trade Baron | 4 | 6 | 9 | 3 | 6 | OnShopStart: +1 mana per ally on board | Up to +4 mana with full board |
+| Midas | 5 | 8 | 10 | 3 | 2 | OnShopStart: +3 mana | Absurd mana generation |
 
 ---
 
-### 8. Aggro / Rush
+### 8. Aggro / Rush — *The Horde*
 
 **Win condition:** Front-load massive damage in the first few attacks. Win before the
 opponent's engine comes online. Kill fast or lose trying.
@@ -368,64 +342,53 @@ glass cannon stats (high ATK, low HP)
 **Weaknesses:** Runs out of steam, loses to Tank (survives the burst), loses to Faint
 Chain (dying fuels their engine)
 
-**Mana curve targets:**
-- Cheap (1-2): High ATK/low HP units, attack buffers
-- Mid (3-4): Self-buffing attackers, adjacent ATK buffs
-- Finisher (5-6): Massive first-strike damage, combat openers
-
 **Cards:**
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Rat Swarm | 2 | 1 | 1 | 0 | 10 | BeforeUnitAttack: +1 ATK to self (3x) | Glass cannon, pumps ATK |
-| Kangaroo | 2 | 2 | 2 | 1 | 10 | BeforeUnitAttack: +1 ATK +1 HP to self | Combat snowball |
-| Dodo | 3 | 3 | 3 | 1 | 10 | OnStart: +2 ATK to unit behind | Aggro buffer |
-| Lone Wolf | 2 | 3 | 3 | 1 | 10 | BeforeUnitAttack: +5 ATK if alone (3x) | Solo aggro, huge payoff |
-| Battle Hardened | 3 | 3 | 5 | 2 | 10 | BeforeUnitAttack: +2 ATK; AfterUnitAttack: +2 HP (3x ea) | Combat snowball |
+| Goblin Raider | 2 | 1 | 1 | 0 | 10 | BeforeUnitAttack: +1 ATK to self (3x) | Glass cannon, pumps ATK |
+| Orc Grunt | 2 | 2 | 2 | 1 | 10 | BeforeUnitAttack: +1/+1 to self | Combat snowball |
+| War Chief | 3 | 3 | 3 | 1 | 10 | OnStart: +2 ATK to unit behind | Aggro buffer |
+| Lone Berserker | 2 | 3 | 3 | 1 | 10 | BeforeUnitAttack: +5 ATK if alone (3x) | Solo aggro, huge payoff |
 | Raging Orc | 5 | 3 | 4 | 2 | 8 | OnStart: +2 ATK to self | Glass cannon, opens at 7 ATK |
-| Wolverine | 5 | 4 | 6 | 3 | 8 | BeforeUnitAttack: +2 ATK +1 HP to self (3x) | Aggressive self-buffer |
-| Tiger | 5 | 4 | 6 | 3 | 6 | OnStart: +3 ATK +2 HP to unit behind | Big aggro opener |
-| Rhino | 5 | 6 | 7 | 3 | 6 | AfterUnitAttack: Deal 4 damage to front enemy | Double tap |
-| Assassin | 6 | 5 | 8 | 3 | 6 | BeforeUnitAttack: +4 ATK to self (3x) | Massive damage escalation |
-| Pack Leader | 8 | 6 | 9 | 3 | 2 | OnStart: +4 ATK to ALL allies | Entire team hits like a truck |
+| Battle Veteran | 3 | 3 | 5 | 2 | 10 | BeforeUnitAttack: +2 ATK; AfterUnitAttack: +2 HP (3x ea) | Combat snowball |
+| Blood Wolf | 5 | 4 | 6 | 3 | 8 | BeforeUnitAttack: +2/+1 to self (3x) | Aggressive self-buffer |
+| Warbringer | 5 | 4 | 6 | 3 | 6 | OnStart: +3/+2 to unit behind | Big aggro opener |
+| Siege Breaker | 5 | 6 | 7 | 3 | 6 | AfterUnitAttack: Deal 4 damage to front enemy | Double tap |
+| Berserker Chief | 6 | 5 | 8 | 3 | 6 | BeforeUnitAttack: +4 ATK to self (3x) | Massive damage escalation |
+| Warlord | 8 | 6 | 9 | 3 | 2 | OnStart: +4 ATK to ALL allies | Entire team hits like a truck |
 
 ---
 
-### 9. Comeback / Underdog
+### 9. Comeback / Underdog — *The Fallen*
 
 **Win condition:** Get stronger after losing rounds. Punish opponents who damage you early
 by snowballing from behind. The more you lose, the scarier you become.
 
-**Key mechanics:** AfterLoss triggers, conditional buffs when behind (lower life total,
-fewer units), loss-streak payoffs
+**Key mechanics:** AfterLoss triggers, conditional buffs when behind, loss-streak payoffs
 
 **Strengths:** Natural catch-up mechanic, gets strongest when most desperate
 **Weaknesses:** Requires actually losing rounds (costs lives), inconsistent if you
 accidentally win early
 
-**Mana curve targets:**
-- Cheap (1-2): Small AfterLoss buffs, underdog conditionals
-- Mid (3-4): Loss-streak scaling, comeback engines
-- Finisher (5-6): Massive swing cards that pay off a string of losses
-
 **Cards:**
 
 | Name | ATK | HP | Cost | Burn | Rarity | Abilities | Notes |
 |------|-----|----|------|------|--------|-----------|-------|
-| Snail | 1 | 2 | 1 | 0 | 10 | AfterLoss: +1 HP to all allies (perm) | Basic comeback, team HP |
-| Rat | 2 | 2 | 2 | 1 | 10 | AfterLoss: +1 ATK +1 HP to self (perm) | Scrappy underdog, self-scaling on loss |
-| Brave Commander | 2 | 3 | 3 | 1 | 10 | AfterLoss: +1 ATK to all allies (perm) | Rallies troops after defeat |
-| Ram | 2 | 5 | 4 | 2 | 10 | AfterLoss: +2 ATK +1 HP to self (perm) | Stubborn, keeps charging |
-| Bison | 3 | 5 | 5 | 2 | 10 | AfterLoss: +1 ATK +1 HP to all allies (perm) | Resilient herd animal |
-| Warder | 3 | 7 | 7 | 3 | 8 | AfterLoss: +1 ATK +2 HP to all allies (perm) | Tank-style comeback |
-| Void Walker | 3 | 6 | 7 | 3 | 6 | AfterLoss: +2 ATK +2 HP to all allies (perm) | Dark, vengeful entity |
-| Skeleton Archer | 4 | 8 | 8 | 3 | 6 | AfterLoss: +2 ATK +2 HP to self AND +1 ATK to all allies (perm) | Undead hardened by defeat |
-| Sniper | 4 | 7 | 9 | 3 | 6 | AfterLoss: +3 ATK +2 HP to self (perm) | Precision warrior, grows from defeat. **ART NOTE: Sniper as comeback is an OK fit** |
-| Zombie Captain | 5 | 10 | 9 | 3 | 2 | AfterLoss: +3 ATK +3 HP to ALL allies (perm) | Undead leader, team becomes unstoppable |
+| Lost Soul | 1 | 2 | 1 | 0 | 10 | AfterLoss: +1 HP to all allies (perm) | Basic comeback, team HP |
+| Stray Spirit | 2 | 2 | 2 | 1 | 10 | AfterLoss: +1/+1 to self (perm) | Self-scaling on loss |
+| Fallen Captain | 2 | 3 | 3 | 1 | 10 | AfterLoss: +1 ATK to all allies (perm) | Rallies troops after defeat |
+| Scarred Warrior | 2 | 5 | 4 | 2 | 10 | AfterLoss: +2/+1 to self (perm) | Stubborn, keeps fighting |
+| Doom Herald | 3 | 5 | 5 | 2 | 10 | AfterLoss: +1/+1 to all allies (perm) | Mass comeback buff |
+| Resilient Guard | 3 | 7 | 7 | 3 | 8 | AfterLoss: +1/+2 to all allies (perm) | Tank-style comeback |
+| Vengeful Shade | 3 | 6 | 7 | 3 | 6 | AfterLoss: +2/+2 to all allies (perm) | Massive comeback swing |
+| Ironclad Specter | 4 | 8 | 8 | 3 | 6 | AfterLoss: +2/+2 self AND +1 ATK to all (perm) | Heavy loss payoff |
+| Phoenix Knight | 4 | 7 | 9 | 3 | 6 | AfterLoss: +3/+2 to self (perm) | Self-scaling monster |
+| Avatar of Vengeance | 5 | 10 | 9 | 3 | 2 | AfterLoss: +3/+3 to ALL allies (perm) | Lose once, team becomes unstoppable |
 
 ---
 
-## Vanilla Cards
+## Vanilla Cards — *Mercenaries*
 
 Vanilla cards have **no abilities** and exist as stat-efficient bodies. They fill gaps in
 the mana curve and give players reliable, simple options when they can't find archetype
@@ -438,11 +401,11 @@ pieces.
 
 | Name | ATK | HP | Cost | Burn | Rarity | Notes |
 |------|-----|----|------|------|--------|-------|
-| Goblin Scout | 1 | 3 | 1 | 0 | 10 | Cheap defensive body |
-| Goblin Grunt | 3 | 3 | 2 | 1 | 10 | Balanced early fighter |
+| Recruit | 1 | 3 | 1 | 0 | 10 | Cheap defensive body |
+| Foot Soldier | 3 | 3 | 2 | 1 | 10 | Balanced early fighter |
 | Militia | 4 | 4 | 3 | 1 | 10 | Solid mid-game body |
-| Turtle | 5 | 5 | 4 | 2 | 10 | Reliable all-rounder |
-| Gorilla | 7 | 7 | 6 | 3 | 10 | Premium vanilla, top-end stats |
+| Mercenary | 5 | 5 | 4 | 2 | 10 | Reliable all-rounder |
+| Champion | 7 | 7 | 6 | 3 | 10 | Premium vanilla, top-end stats |
 
 ---
 
@@ -459,7 +422,7 @@ a dedicated archetype card but provide flexibility and enable cross-archetype bu
 
 | Name | ATK | HP | Cost | Burn | Rarity | Archetypes | Abilities | Notes |
 |------|-----|----|------|------|--------|------------|-----------|-------|
-| *To be designed after commons are finalized* | | | | | | | | |
+| *To be designed* | | | | | | | | |
 
 ---
 
@@ -476,13 +439,13 @@ burn 0.
 
 | Name | ATK | HP | Spawned By | Abilities | Notes |
 |------|-----|----|------------|-----------|-------|
-| Zombie Cricket | 1 | 1 | Cricket | None | Basic token |
-| Spiderling | 2 | 2 | Spider | None | Mid-tier token |
-| Chick | 3 | 1 | Rooster | None | Glass cannon token |
-| Zombie Fly | 3 | 3 | Fly | None | Mid-tier token |
-| Bus | 2 | 2 | Elephant | None | Swarm token. **ART NOTE: Bus art as elephant calf is a weak fit** |
-| Phoenix Egg | 0 | 5 | Phoenix | OnStart: Spawn 3/4 Phoenix | Delayed rebirth |
-| Rat Token | 1 | 1 | Whale | Deathtouch | Assassin token. **ART NOTE: Rat art as scorpion spawn is a weak fit** |
+| Grub | 1 | 1 | Larva | None | Basic token |
+| Hatchling | 2 | 2 | Scarab | None | Mid-tier token |
+| Nymph | 3 | 1 | Mantis | None | Glass cannon token |
+| Moth | 3 | 3 | Moth Matriarch | None | Mid-tier token |
+| Drone | 2 | 2 | Hive Mother | None | Swarm token |
+| Phylactery | 0 | 5 | Necromancer | OnStart: Spawn 3/4 Necromancer | Delayed rebirth |
+| Stinger | 1 | 1 | Brood Queen | Deathtouch | Assassin token |
 
 ---
 
@@ -526,5 +489,5 @@ Cost  Count  Distribution                           Rarity Breakdown
   natural scarcity for powerful finishers.
 - **Cost 8-10 are rare+ only** — these are aspirational cards players work toward,
   enabled by economy cards or late-game mana limits.
-- **9 archetypes** — Sell Cycling was merged into Economy/Scaling as a playstyle
-  rather than a standalone archetype.
+- **9 archetypes** with distinct faction themes: The Hive, The Grove, The Academy,
+  The Order, The Undead, The Wilds, The Guild, The Horde, The Fallen.
