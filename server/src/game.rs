@@ -16,6 +16,16 @@ use oab_core::view::GameView;
 
 use crate::types::{GameStateResponse, StepResponse};
 
+/// Trait for game backends (local or on-chain).
+pub trait GameBackend: Send {
+    /// Reset the game with a new seed and optional set_id. Returns initial state.
+    fn reset(&mut self, seed: u64, set_id: Option<u32>) -> Result<GameStateResponse, String>;
+    /// Execute a turn and return the step result.
+    fn step(&mut self, action: &CommitTurnAction) -> Result<StepResponse, String>;
+    /// Get the current game state.
+    fn get_state(&self) -> GameStateResponse;
+}
+
 /// A local game session that manages a full game against built-in opponents.
 pub struct GameSession {
     state: GameState,
@@ -45,7 +55,7 @@ impl GameSession {
     }
 
     /// Reset with a new seed (same set), returning the initial game state.
-    pub fn reset(&mut self, seed: u64) -> GameStateResponse {
+    pub fn reset_local(&mut self, seed: u64) -> GameStateResponse {
         let card_pool = std::mem::take(&mut self.state.card_pool);
         let set_id = self.state.set_id;
         self.state = GameState::new(seed);
@@ -219,5 +229,24 @@ fn apply_permanent_deltas(
         if should_remove {
             state.board[slot] = None;
         }
+    }
+}
+
+impl GameBackend for GameSession {
+    fn reset(&mut self, seed: u64, set_id: Option<u32>) -> Result<GameStateResponse, String> {
+        if let Some(set_id) = set_id {
+            *self = GameSession::new(seed, set_id)?;
+        } else {
+            self.reset_local(seed);
+        }
+        Ok(self.get_state())
+    }
+
+    fn step(&mut self, action: &CommitTurnAction) -> Result<StepResponse, String> {
+        self.step(action)
+    }
+
+    fn get_state(&self) -> GameStateResponse {
+        self.get_state()
     }
 }
