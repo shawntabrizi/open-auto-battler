@@ -1,18 +1,10 @@
 === Aggro Agent on port 4003 ===
-  Game 2: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 3: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 4: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 5: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 6: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 7: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 8: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 9: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 10: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
+  [Aggro] Game 10/10 — victories: 0, avg_wins: 2.1, max_wins: 4
 
 === Aggro Final Results ===
   Games played: 10
   Full victories (10 wins): 0
-  Defeats: 1
-  Average wins per game: 3.00
-  Max wins in a single game: 3
-  Total rounds played: 6
+  Defeats: 10
+  Average wins per game: 2.10
+  Max wins in a single game: 4
+  Total rounds played: 60

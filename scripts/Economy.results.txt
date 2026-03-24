@@ -1,18 +1,10 @@
 === Economy Agent on port 4004 ===
-  Game 2: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 3: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 4: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 5: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 6: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 7: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 8: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 9: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
-  Game 10: reset error: Failed to end game: Tx failed: Runtime error: Pallet error: AutoBattle::NoActiveGame
+  [Economy] Game 10/10 — victories: 1, avg_wins: 2.6, max_wins: 10
 
 === Economy Final Results ===
   Games played: 10
-  Full victories (10 wins): 0
-  Defeats: 1
-  Average wins per game: 0.00
-  Max wins in a single game: 0
-  Total rounds played: 3
+  Full victories (10 wins): 1
+  Defeats: 9
+  Average wins per game: 2.60
+  Max wins in a single game: 10
+  Total rounds played: 58
