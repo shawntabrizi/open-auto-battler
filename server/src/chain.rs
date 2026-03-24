@@ -8,7 +8,8 @@
 mod inner {
     use std::collections::BTreeMap;
 
-    use oab_core::battle::BattleResult;
+    use oab_core::battle::{resolve_battle, BattleResult, CombatUnit};
+    use oab_core::rng::XorShiftRng;
     use oab_core::state::*;
     use oab_core::types::*;
     use oab_core::view::GameView;
@@ -179,27 +180,72 @@ mod inner {
                 return Err(format!("Wrong phase: {:?}", state.phase));
             }
 
-            // Local verification first
-            let mut test_state = state.clone();
-            oab_core::commit::verify_and_apply_turn(&mut test_state, action)
+            // Local verification — also gives us the post-turn board for battle replay
+            let mut verified_state = state.clone();
+            oab_core::commit::verify_and_apply_turn(&mut verified_state, action)
                 .map_err(|e| format!("{:?}", e))?;
+
+            // Snapshot player board after turn actions (before battle) for replay
+            let player_units: Vec<CombatUnit> = verified_state
+                .board
+                .iter()
+                .filter_map(|slot| {
+                    let u = slot.as_ref()?;
+                    let card = self.card_pool.get(&u.card_id)?;
+                    let mut cu = CombatUnit::from_card(card.clone());
+                    cu.attack_buff = u.perm_attack;
+                    cu.health_buff = u.perm_health;
+                    cu.health = cu.health.saturating_add(u.perm_health).max(0);
+                    Some(cu)
+                })
+                .collect();
 
             let prev_wins = state.wins;
             let prev_lives = state.lives;
             let completed_round = state.round;
 
-            // Submit on-chain
+            // Submit on-chain and get BattleReported event data
             eprintln!("Submitting turn (round {})...", completed_round);
             let action_value = commit_turn_action_to_value(action);
-            self.rt
-                .block_on(submit_extrinsic(
+            let battle_event = self
+                .rt
+                .block_on(submit_turn_and_get_battle_event(
                     &self.api,
                     &self.keypair,
-                    "AutoBattle",
-                    "submit_turn",
-                    vec![("action", action_value)],
+                    action_value,
                 ))
                 .map_err(|e| format!("Failed to submit turn: {}", e))?;
+
+            // Replay battle locally using event data
+            let battle_report = if let Some((battle_seed, ghost_units)) = battle_event {
+                let enemy_units: Vec<CombatUnit> = ghost_units
+                    .iter()
+                    .filter_map(|(card_id, perm_attack, perm_health)| {
+                        let card = self.card_pool.get(&CardId(*card_id))?;
+                        let mut cu = CombatUnit::from_card(card.clone());
+                        cu.attack_buff = *perm_attack;
+                        cu.health_buff = *perm_health;
+                        cu.health = cu.health.saturating_add(*perm_health).max(0);
+                        Some(cu)
+                    })
+                    .collect();
+                let enemy_count = enemy_units.len();
+
+                let mut rng = XorShiftRng::seed_from_u64(battle_seed);
+                let events = resolve_battle(player_units, enemy_units, &mut rng, &self.card_pool);
+
+                BattleReport {
+                    player_units_survived: 0, // Will be updated from chain state
+                    enemy_units_faced: enemy_count,
+                    events,
+                }
+            } else {
+                BattleReport {
+                    player_units_survived: 0,
+                    enemy_units_faced: 0,
+                    events: vec![],
+                }
+            };
 
             // Sync state from chain
             self.sync_state_from_chain()?;
@@ -209,7 +255,6 @@ mod inner {
                 .as_ref()
                 .ok_or("Game disappeared after submit_turn")?;
 
-            // Determine battle result
             let battle_result = if state.wins > prev_wins {
                 BattleResult::Victory
             } else if state.lives < prev_lives {
@@ -226,7 +271,6 @@ mod inner {
                     "defeat"
                 };
 
-                // Auto-submit end_game
                 eprintln!("Game over ({}). Submitting end_game...", result);
                 let _ = self.rt.block_on(submit_extrinsic(
                     &self.api,
@@ -253,12 +297,16 @@ mod inner {
                 BattleResult::Draw => "Draw",
             };
 
-            eprintln!(
-                "Round {}: {} (wins={}, lives={})",
-                completed_round, battle_result_str, state.wins, state.lives
-            );
-
             let player_units_survived = state.board.iter().filter(|s| s.is_some()).count();
+
+            eprintln!(
+                "Round {}: {} (survived={}, enemies={}, events={})",
+                completed_round,
+                battle_result_str,
+                player_units_survived,
+                battle_report.enemy_units_faced,
+                battle_report.events.len()
+            );
 
             Ok(StepResponse {
                 completed_round,
@@ -268,8 +316,7 @@ mod inner {
                 reward,
                 battle_report: BattleReport {
                     player_units_survived,
-                    enemy_units_faced: 0,
-                    events: vec![], // TODO: replay battle locally with battle_seed from event
+                    ..battle_report
                 },
                 state: self.get_state(),
             })
@@ -323,6 +370,56 @@ mod inner {
                     .map_err(|e| format!("Failed to derive keypair: {:?}", e))
             }
         }
+    }
+
+    /// Submit submit_turn and extract battle_seed + opponent_board from BattleReported event.
+    /// Returns (battle_seed, Vec<(card_id, perm_attack, perm_health)>).
+    async fn submit_turn_and_get_battle_event(
+        api: &OnlineClient<SubstrateConfig>,
+        keypair: &Keypair,
+        action_value: Value,
+    ) -> Result<Option<(u64, Vec<(u32, i32, i32)>)>, String> {
+        let tx = subxt::dynamic::tx("AutoBattle", "submit_turn", vec![("action", action_value)]);
+
+        let mut progress = api
+            .tx()
+            .sign_and_submit_then_watch_default(&tx, keypair)
+            .await
+            .map_err(|e| format!("Tx submission failed: {}", e))?;
+
+        use subxt::tx::TxStatus;
+        while let Some(status) = progress.next().await {
+            match status.map_err(|e| format!("Tx status error: {}", e))? {
+                TxStatus::InBestBlock(block) | TxStatus::InFinalizedBlock(block) => {
+                    let events = block
+                        .wait_for_success()
+                        .await
+                        .map_err(|e| format!("Tx failed: {}", e))?;
+
+                    // Find BattleReported event
+                    for event in events.iter() {
+                        let event = event.map_err(|e| format!("Event decode error: {}", e))?;
+                        if event.pallet_name() == "AutoBattle"
+                            && event.variant_name() == "BattleReported"
+                        {
+                            let bytes = event.field_bytes();
+                            if let Ok(parsed) = decode_battle_reported_event(bytes) {
+                                return Ok(Some(parsed));
+                            }
+                        }
+                    }
+
+                    // Event not found — still success, just no replay data
+                    return Ok(None);
+                }
+                TxStatus::Error { message } => return Err(format!("Tx error: {}", message)),
+                TxStatus::Dropped { message } => return Err(format!("Tx dropped: {}", message)),
+                TxStatus::Invalid { message } => return Err(format!("Tx invalid: {}", message)),
+                _ => {}
+            }
+        }
+
+        Err("Tx stream ended without inclusion".into())
     }
 
     async fn submit_extrinsic(
@@ -512,6 +609,41 @@ mod inner {
             .collect();
 
         Value::named_composite([("actions", Value::unnamed_composite(actions))])
+    }
+
+    // ── Event decoding ──
+
+    /// Decode BattleReported event fields.
+    /// Event layout: owner (AccountId32), round (i32), result (BattleResult enum),
+    ///               new_seed (u64), battle_seed (u64), opponent_board (BoundedGhostBoard)
+    /// Returns (battle_seed, Vec<(card_id, perm_attack, perm_health)>)
+    fn decode_battle_reported_event(
+        bytes: &[u8],
+    ) -> Result<(u64, Vec<(u32, i32, i32)>), parity_scale_codec::Error> {
+        let mut input = bytes;
+        // owner: AccountId32 (32 bytes)
+        let _owner = <[u8; 32]>::decode(&mut input)?;
+        // round: i32
+        let _round = i32::decode(&mut input)?;
+        // result: BattleResult (enum, 1 byte index)
+        let _result = u8::decode(&mut input)?;
+        // new_seed: u64
+        let _new_seed = u64::decode(&mut input)?;
+        // battle_seed: u64
+        let battle_seed = u64::decode(&mut input)?;
+        // opponent_board: BoundedGhostBoard = { units: BoundedVec<GhostBoardUnit> }
+        // BoundedVec encodes as Vec: length prefix + items
+        // GhostBoardUnit: { card_id: CardId(u32), perm_attack: i32, perm_health: i32 }
+        let unit_count = parity_scale_codec::Compact::<u32>::decode(&mut input)?.0 as usize;
+        let mut units = Vec::with_capacity(unit_count);
+        for _ in 0..unit_count {
+            let card_id = u32::decode(&mut input)?;
+            let perm_attack = i32::decode(&mut input)?;
+            let perm_health = i32::decode(&mut input)?;
+            units.push((card_id, perm_attack, perm_health));
+        }
+
+        Ok((battle_seed, units))
     }
 
     // ── SCALE decoding helpers ──
