@@ -1,5 +1,6 @@
 //! HTTP API request/response types.
 
+use oab_core::battle::CombatEvent;
 use oab_core::types::CommitTurnAction;
 use oab_core::view::{BoardUnitView, CardView, GameView};
 use serde::{Deserialize, Serialize};
@@ -51,19 +52,21 @@ pub struct StepResponse {
     pub game_result: Option<String>,
     /// The reward signal for RL: +1 for victory round, -1 for defeat round, 0 for draw
     pub reward: i32,
-    /// Summary of what happened in the battle
-    pub battle_summary: BattleSummary,
+    /// Details of the battle that was fought (mirrors on-chain BattleReported event)
+    pub battle_report: BattleReport,
     /// Current game state after this step (next round, or final state if game_over)
     pub state: GameStateResponse,
 }
 
-/// Summary of a battle for agent feedback.
-#[derive(Debug, Serialize)]
-pub struct BattleSummary {
+/// Report of a completed battle.
+#[derive(Debug, Clone, Serialize)]
+pub struct BattleReport {
     /// How many of your units survived the battle
     pub player_units_survived: usize,
     /// How many units the opponent had
     pub enemy_units_faced: usize,
+    /// Full sequence of battle events
+    pub events: Vec<CombatEvent>,
 }
 
 /// Error response.

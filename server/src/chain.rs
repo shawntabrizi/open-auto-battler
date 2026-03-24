@@ -22,7 +22,7 @@ mod inner {
     use tokio::runtime::Runtime;
 
     use crate::game::GameBackend;
-    use crate::types::{BattleSummary, GameStateResponse, StepResponse};
+    use crate::types::{BattleReport, GameStateResponse, StepResponse};
 
     type MaxBagSize = ConstU32<50>;
     type MaxBoardSize = ConstU32<5>;
@@ -258,7 +258,6 @@ mod inner {
                 completed_round, battle_result_str, state.wins, state.lives
             );
 
-            // Count surviving units from refreshed state
             let player_units_survived = state.board.iter().filter(|s| s.is_some()).count();
 
             Ok(StepResponse {
@@ -267,9 +266,10 @@ mod inner {
                 game_over,
                 game_result,
                 reward,
-                battle_summary: BattleSummary {
+                battle_report: BattleReport {
                     player_units_survived,
-                    enemy_units_faced: 0, // Not available from chain state alone
+                    enemy_units_faced: 0,
+                    events: vec![], // TODO: replay battle locally with battle_seed from event
                 },
                 state: self.get_state(),
             })

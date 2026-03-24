@@ -14,13 +14,12 @@ use oab_core::types::*;
 use oab_core::units::create_starting_bag;
 use oab_core::view::GameView;
 
-use crate::types::{BattleSummary, GameStateResponse, StepResponse};
+use crate::types::{BattleReport, GameStateResponse, StepResponse};
 
-/// Result from running a battle, with summary info for the agent.
+/// Result from running a battle, with report info for the agent.
 struct BattleOutcome {
     result: BattleResult,
-    player_units_survived: usize,
-    enemy_units_faced: usize,
+    report: BattleReport,
 }
 
 /// Trait for game backends (local or on-chain).
@@ -147,10 +146,7 @@ impl GameSession {
             game_over,
             game_result,
             reward,
-            battle_summary: BattleSummary {
-                player_units_survived: outcome.player_units_survived,
-                enemy_units_faced: outcome.enemy_units_faced,
-            },
+            battle_report: outcome.report,
             state: self.get_state(),
         })
     }
@@ -207,13 +203,15 @@ impl GameSession {
             BattleResult::Draw => {}
         }
 
-        // Count surviving player units
         let player_units_survived = self.state.board.iter().filter(|s| s.is_some()).count();
 
         BattleOutcome {
             result,
-            player_units_survived,
-            enemy_units_faced: enemy_count,
+            report: BattleReport {
+                player_units_survived,
+                enemy_units_faced: enemy_count,
+                events,
+            },
         }
     }
 }
