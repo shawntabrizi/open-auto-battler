@@ -190,9 +190,13 @@ export function HamburgerMenu() {
           >
             {/* Panel header */}
             <div className="flex items-center justify-between border-b border-base-700/60 px-4 py-4">
-              <span className="font-heading text-sm tracking-widest uppercase text-base-200 lg:text-base">
+              <Link
+                to="/"
+                onClick={() => setOpen(false)}
+                className="font-heading text-sm tracking-widest uppercase text-base-200 hover:text-white transition-colors lg:text-base"
+              >
                 {inGame ? 'Game Menu' : 'Menu'}
-              </span>
+              </Link>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close menu"
