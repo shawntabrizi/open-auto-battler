@@ -293,7 +293,6 @@ mod inner {
                     hand: vec![],
                     board: vec![],
                     can_afford: vec![],
-                    hints: vec!["No active game. Call POST /reset to start.".into()],
                 },
             }
         }

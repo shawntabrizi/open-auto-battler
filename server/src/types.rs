@@ -19,62 +19,10 @@ pub struct GameStateResponse {
     pub hand: Vec<Option<CardView>>,
     pub board: Vec<Option<BoardUnitView>>,
     pub can_afford: Vec<bool>,
-    /// Factual observations about the current turn situation.
-    pub hints: Vec<String>,
 }
 
 impl From<GameView> for GameStateResponse {
     fn from(v: GameView) -> Self {
-        let total_burn: i32 = v
-            .hand
-            .iter()
-            .filter_map(|c| c.as_ref().map(|c| c.burn_value))
-            .sum();
-        let potential_mana = (v.mana + total_burn).min(v.mana_limit);
-
-        let board_count = v.board.iter().filter(|b| b.is_some()).count();
-        let hand_cards: Vec<&CardView> = v.hand.iter().filter_map(|c| c.as_ref()).collect();
-        let cheapest_hand = hand_cards.iter().map(|c| c.play_cost).min();
-        let any_affordable_now = hand_cards.iter().any(|c| c.play_cost <= v.mana);
-        let any_affordable_after_burn = hand_cards.iter().any(|c| c.play_cost <= potential_mana);
-
-        let mut hints = Vec::new();
-
-        if v.mana == 0 && !hand_cards.is_empty() {
-            hints.push("Mana is 0. Burn hand cards to gain mana before playing.".into());
-        }
-
-        if !any_affordable_now && any_affordable_after_burn {
-            hints.push(
-                "No hand cards are affordable at current mana, but burning cards would provide enough."
-                    .into(),
-            );
-        }
-
-        if !any_affordable_after_burn && !hand_cards.is_empty() {
-            if let Some(cheapest) = cheapest_hand {
-                if cheapest > v.mana_limit {
-                    hints.push(format!(
-                        "All hand cards cost more than this round's mana limit ({}). Burn them for mana or let them return to the bag.",
-                        v.mana_limit
-                    ));
-                } else {
-                    hints.push(
-                        "Not enough mana to play any hand card even after burning all others."
-                            .into(),
-                    );
-                }
-            }
-        }
-
-        if board_count >= 5 {
-            hints.push("Board is full (5/5).".into());
-        }
-
-        if board_count == 0 && hand_cards.is_empty() {
-            hints.push("No units on board and no cards in hand.".into());
-        }
-
         Self {
             round: v.round,
             lives: v.lives,
@@ -86,7 +34,6 @@ impl From<GameView> for GameStateResponse {
             hand: v.hand,
             board: v.board,
             can_afford: v.can_afford,
-            hints,
         }
     }
 }
