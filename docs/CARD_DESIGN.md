@@ -46,20 +46,13 @@ fewer raw stats than a vanilla card at the same mana cost.
 | Strong       | 5-7 pts   | AoE buffs, deal 5+ damage, spawn a 3/3+ |
 | Extreme      | 8+ pts    | Board-wide scaling, repeated AoE triggers, game-warping effects |
 
-### Keyword Abilities
+### Notable Ability Patterns
 
-Keywords are passive abilities that don't use the trigger system. They are always active
-on the unit.
+Some cards use ability combinations to create emergent effects:
 
-| Keyword | Effect | Stat Cost | Implementation |
-|---------|--------|-----------|----------------|
-| Deathtouch | Kills any unit this unit deals damage to, regardless of remaining HP | ~10 pts | Destroy target after damage is applied if damage > 0 |
-
-> **Future keywords to consider:**
-> - **Taunt** — enemies must attack this unit first
-> - **Shield** — absorb the first instance of damage, then break
-> - **Stealth** — cannot be targeted by OnStart damage abilities
-> - **Poison** — deal 1 damage to this unit at the start of each attack phase
+| Pattern | Implementation | Stat Cost | Example |
+|---------|---------------|-----------|---------|
+| Deathtouch | AfterUnitAttack: Destroy front enemy | ~10 pts | Deathstalker, Stinger |
 
 ## Rarity System
 
@@ -152,7 +145,7 @@ units, fill the board faster than the enemy can clear it.
 | Swarm Queen | 4 | 5 | 6 | 3 | 6 | OnAllySpawn: +2 ATK +2 HP to spawned unit | THE spawn payoff |
 | Moth Matriarch | 3 | 5 | 7 | 3 | 6 | OnAllyFaint: Spawn 3/3 Moth (3x) | Board refill machine |
 | Hive Mother | 5 | 7 | 9 | 3 | 6 | OnAllyFaint: Spawn 2/2 Drone at back (3x) | Swarm engine |
-| Brood Queen | 5 | 7 | 10 | 3 | 2 | OnFaint: Spawn 3x 1/1 Stinger at back (deathtouch) | Kill the queen, face 3 assassins |
+| Brood Queen | 5 | 7 | 10 | 3 | 2 | OnFaint: Spawn 3x 1/1 Stinger at back | Kill the queen, face 3 assassins |
 
 ---
 
@@ -292,7 +285,7 @@ being attacked)
 | Blowfish | 2 | 4 | 3 | 1 | 10 | OnHurt: Deal 3 damage to random enemy | Damage on hurt |
 | Thornbeast | 2 | 5 | 4 | 2 | 8 | OnHurt: Deal 1 damage to ALL enemies (3x) | AoE thorns lite |
 | Viper | 3 | 5 | 5 | 2 | 10 | AfterUnitAttack (front ally): Deal 3 damage to random enemy | Punishes from behind |
-| Deathstalker | 1 | 1 | 5 | 2 | 10 | **Deathtouch** | Kills anything it damages |
+| Deathstalker | 1 | 1 | 5 | 2 | 10 | AfterUnitAttack: Destroy front enemy | Kills anything it damages |
 | Ironhide | 3 | 6 | 6 | 3 | 8 | OnHurt: Deal 3 damage to attacker | Heavy direct thorns |
 | War Beast | 2 | 6 | 6 | 3 | 6 | OnHurt: +2/+2 to unit behind (unlimited) | Cascading buffs on hit |
 | Fire Drake | 3 | 7 | 7 | 3 | 6 | OnHurt: Deal 2 damage to ALL enemies | AoE retaliation |
@@ -445,7 +438,7 @@ burn 0.
 | Moth | 3 | 3 | Moth Matriarch | None | Mid-tier token |
 | Drone | 2 | 2 | Hive Mother | None | Swarm token |
 | Phylactery | 0 | 5 | Necromancer | OnStart: Spawn 3/4 Necromancer | Delayed rebirth |
-| Stinger | 1 | 1 | Brood Queen | Deathtouch | Assassin token |
+| Stinger | 1 | 1 | Brood Queen | AfterUnitAttack: Destroy front enemy | Assassin token |
 
 ---
 

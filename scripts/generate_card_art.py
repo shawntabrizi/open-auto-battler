@@ -65,177 +65,133 @@ THEMES = {
             "Pen and ink drawing with muted watercolor wash. "
             "Distinct black outlines, crosshatching shading, etched texture. "
             "Earthy, faded colors. Classic fairy tale aesthetic, Victorian lithograph style. "
-            "Placed against a plain, aged parchment-colored background with minimal vignette environment."
+            "Placed against a plain, aged parchment-colored background with minimal vignette environment.{faction_palette}"
         ),
         "seed_offset": 0,
+        "use_faction_palette": False,
     },
-    # -- Add more themes below --
-    # "dark_fantasy": {
-    #     "name": "Dark Fantasy Oil Painting",
-    #     "description": "Moody oil painting style with dramatic chiaroscuro lighting",
-    #     "prompt_template": (
-    #         "A dark fantasy oil painting of {subject}. "
-    #         "Rich impasto brushwork, dramatic chiaroscuro lighting, deep shadows. "
-    #         "Dark moody color palette with glowing highlights. "
-    #         "Renaissance master painting technique, museum quality. "
-    #         "Dark background with subtle atmospheric depth."
-    #     ),
-    #     "seed_offset": 1000,
-    # },
-    # "anime": {
-    #     "name": "Stylized Anime Card Art",
-    #     "description": "Clean anime-inspired card art with cel shading",
-    #     "prompt_template": (
-    #         "Anime-style trading card art of {subject}. "
-    #         "Clean cel shading, bold outlines, vibrant saturated colors. "
-    #         "Dynamic pose, detailed character design. "
-    #         "Japanese illustration style, high contrast, polished. "
-    #         "Simple gradient background with soft glow effects."
-    #     ),
-    #     "seed_offset": 2000,
-    # },
+    "silhouette": {
+        "name": "High-Contrast Silhouette",
+        "description": "Dramatic vector-art silhouettes with distressed textures, per-faction color palettes",
+        "prompt_template": (
+            "A dramatic, high-contrast, modern graphic illustration for a vertical card design "
+            "featuring {subject}. The style is vector-art based with heavy, distressed, rough "
+            "texture overlays, reminiscent of screen-printing. {faction_palette} "
+            "The subject is rendered largely in silhouette or very dark tones, sharply defined "
+            "against a bright, back-lit background (like a moon shape, a wall of fire, or a stark sky). "
+            "Include a dense field of suspended, jagged particles, sparks, and dust debris in the air. "
+            "The composition is iconic and centered, with a clean or less busy top border area "
+            "reserved for future card text."
+        ),
+        "seed_offset": 1000,
+    },
+    "kawaii": {
+        "name": "Pastel Anime",
+        "description": "Cute, light-hearted anime style with soft pastel colors, per-faction palette",
+        "prompt_template": (
+            "A cute anime-style character portrait of {subject}. "
+            "Soft cel-shaded illustration with clean lines, round friendly features, and expressive eyes. "
+            "Light-hearted and approachable, like a beloved gacha game or cozy RPG. "
+            "{faction_palette} "
+            "Soft diffused lighting with gentle highlights and minimal shadows. "
+            "Simple clean background with soft pastel gradient and small sparkles or floating particles. "
+            "Centered composition, character clearly visible, warm and inviting. "
+            "No text, no border, no card frame."
+        ),
+        "seed_offset": 2000,
+    },
 }
 
 # ---------------------------------------------------------------------------
-# Card subject descriptions
+# Faction color palettes for the silhouette theme
 # ---------------------------------------------------------------------------
 
-def build_subject(card_name: str, card: dict) -> str:
-    """Build a descriptive subject phrase for the card.
+FACTION_PALETTES = {
+    "silhouette": {
+        "hive":        "The color palette must be strictly limited and highly saturated, utilizing deep amber gold, warm honey yellow, and dark, almost black, shadows.",
+        "grove":       "The color palette must be strictly limited and highly saturated, utilizing deep forest greens, saturated lime greens, and pale yellowish-greens.",
+        "academy":     "The color palette must be strictly limited and highly saturated, utilizing deep royal purple, vivid electric blue, and dark, almost black, shadows.",
+        "order":       "The color palette must be strictly limited and highly saturated, utilizing radiant gold, bright white, and warm bronze shadows.",
+        "undead":      "The color palette must be strictly limited and highly saturated, utilizing deep purple, vivid lime green, and dark, almost black, shadows.",
+        "wilds":       "The color palette must be strictly limited and highly saturated, utilizing warm oranges, deep amber yellows, and rich reddish-browns.",
+        "guild":       "The color palette must be strictly limited and highly saturated, utilizing deep crimson red, fiery gold, and dark, almost black, shadows.",
+        "horde":       "The color palette must be strictly limited and highly saturated, utilizing blood red, searing orange, and dark charcoal shadows.",
+        "fallen":      "The color palette must be strictly limited and highly saturated, utilizing icy silver-blue, ghostly pale white, and deep midnight blue shadows.",
+        "mercenaries": "The color palette must be strictly limited and highly saturated, utilizing steel gray, warm brown leather tones, and dark, almost black, shadows.",
+    },
+    "kawaii": {
+        "hive":        "Warm pastel palette: soft honey yellow, creamy amber, gentle peach, with white highlights.",
+        "grove":       "Fresh pastel palette: soft mint green, light sage, pale lime, with cream highlights.",
+        "academy":     "Magical pastel palette: soft lavender, periwinkle blue, pale violet, with pink sparkle highlights.",
+        "order":       "Holy pastel palette: warm champagne gold, soft cream, pearl white, with gentle rose highlights.",
+        "undead":      "Spooky-cute pastel palette: soft lilac purple, pale mint, dusty rose, with ghostly white highlights.",
+        "wilds":       "Nature pastel palette: soft coral, warm peach, pale terracotta, with cream highlights.",
+        "guild":       "Luxe pastel palette: soft rose gold, warm blush pink, pale champagne, with gold shimmer highlights.",
+        "horde":       "Fierce pastel palette: soft cherry pink, warm salmon, pale coral, with cream highlights.",
+        "fallen":      "Dreamy pastel palette: soft sky blue, pale periwinkle, light silver, with white glow highlights.",
+        "mercenaries": "Neutral pastel palette: soft taupe, warm beige, pale mushroom, with cream highlights.",
+    },
+}
 
-    Each card gets a hand-crafted or auto-generated subject description
-    that works well inside the theme's prompt template.
-    """
-    # Hand-crafted subjects for every card give much better results.
-    # The key is the card name (case-insensitive).
-    SUBJECT_MAP = {
-        # --- Original fantasy cards (0-43) ---
-        "rat swarm": "a scurrying horde of mangy rats with glowing red eyes",
-        "goblin scout": "a sneaky goblin scout crouching with a crude spyglass",
-        "goblin grunt": "a stocky goblin grunt wielding a rusty cleaver",
-        "scaredy cat": "a wide-eyed frightened cat with its fur standing on end",
-        "brave commander": "a courageous armored commander raising a sword to rally troops",
-        "militia": "a determined peasant militia soldier with a spear and wooden shield",
-        "shield bearer": "a stout shield bearer bracing behind a massive tower shield",
-        "nurse goblin": "a kindly goblin nurse carrying bandages and healing herbs",
-        "wolf rider": "a fierce goblin mounted on a snarling wolf",
-        "martyr knight": "a selfless knight in cracked armor, glowing with sacrificial light",
-        "abyssal bomber": "a cackling imp clutching a sputtering bomb",
-        "archer": "a keen-eyed archer drawing a longbow",
-        "sniper": "a hooded marksman aiming a crossbow from the shadows",
-        "skeleton archer": "a skeletal archer with tattered rags nocking a bone arrow",
-        "battle hardened": "a scarred veteran warrior covered in old wounds and dented armor",
-        "lone wolf": "a solitary wolf standing proud on a rocky outcrop",
-        "pack leader": "an alpha wolf howling to summon its pack",
-        "spined urchin": "a spiky sea urchin creature bristling with venomous spines",
-        "vampire": "a pale vampire lord with crimson eyes and a flowing cape",
-        "raging orc": "a furious orc berserker mid-charge with a massive axe",
-        "zombie captain": "an undead captain in rusted armor, one eye glowing green",
-        "necromancer": "a sinister necromancer raising skeletal hands from the ground",
-        "headhunter": "a tribal headhunter carrying shrunken trophies on a belt",
-        "giant slayer": "a small but fearless warrior wielding an oversized sword",
-        "shield squire": "a young squire struggling to carry a shield twice their size",
-        "warder": "a vigilant warden with glowing protective runes on their armor",
-        "artillery mage": "a battle mage conjuring a massive fireball between their hands",
-        "rear guard": "a stalwart soldier standing watch at the back of a formation",
-        "troll brute": "a massive troll with mossy skin swinging a tree trunk as a club",
-        "lich": "an ancient lich king with a crown of bone and swirling dark magic",
-        "assassin": "a shadowy assassin emerging from darkness with twin daggers",
-        "fire elemental": "a blazing fire elemental made of living flame",
-        "ogre mauler": "a hulking ogre smashing the ground with a spiked club",
-        "phoenix": "a magnificent phoenix reborn in a burst of golden flames",
-        "shield master": "an elite guardian wielding twin shields in a defensive stance",
-        "void walker": "a mysterious figure stepping through a rift in reality",
-        "mana reaper": "a spectral reaper harvesting glowing blue mana orbs",
-        "giant crusher": "an enormous giant raising a boulder overhead",
-        "behemoth": "a colossal armored beast towering over the battlefield",
-        "dragon tyrant": "a terrifying dragon wreathed in fire atop a mountain of gold",
-        # --- Tokens (40-46) ---
-        "rat token": "a single scrappy rat baring tiny teeth",
-        "zombie soldier": "a shambling zombie soldier with a broken sword",
-        "golem": "a small stone golem with glowing rune eyes",
-        "phoenix egg": "a glowing ember egg crackling with inner fire",
-        "zombie cricket": "a small undead cricket with tattered wings",
-        "ram": "a stubborn ram lowering its curled horns to charge",
-        "spiderling": "a tiny spider hatchling with eight gleaming eyes",
-        # --- Animal cards (47-109) ---
-        "ant": "a determined ant carrying a leaf many times its size",
-        "beaver": "a industrious beaver gnawing through a log",
-        "cricket": "a chirping cricket perched on a blade of grass",
-        "duck": "a plucky duck with a confident waddle",
-        "fish": "a shimmering fish leaping out of water",
-        "horse": "a powerful warhorse rearing up on its hind legs",
-        "mosquito": "an annoying mosquito with oversized proboscis",
-        "mouse": "a clever little mouse holding a crumb of cheese",
-        "otter": "a playful otter floating on its back",
-        "pig": "a round cheerful pig rolling in mud",
-        "crab": "a feisty crab snapping its oversized claws",
-        "flamingo": "an elegant flamingo standing on one leg",
-        "hedgehog": "a bristly hedgehog curled into a defensive ball",
-        "kangaroo": "a boxing kangaroo in a fighting stance",
-        "peacock": "a magnificent peacock displaying its full tail feathers",
-        "rat": "a cunning rat with a long whip-like tail",
-        "snail": "a slow but armored snail with a spiral shell",
-        "spider": "a patient spider weaving an intricate web",
-        "swan": "a graceful swan gliding across still water",
-        "worm": "a wriggling earthworm emerging from rich soil",
-        "badger": "a fierce badger baring its teeth from a burrow",
-        "camel": "a stoic camel trudging through desert sands",
-        "dodo": "a plump dodo bird with a bewildered expression",
-        "dog": "a loyal hound standing guard with alert ears",
-        "dolphin": "a sleek dolphin arcing through ocean waves",
-        "elephant": "a mighty elephant trumpeting with raised trunk",
-        "giraffe": "a tall giraffe reaching for leaves in a treetop",
-        "ox": "a powerful ox pulling against a heavy yoke",
-        "rabbit": "a quick rabbit mid-leap with ears back",
-        "sheep": "a fluffy sheep with a gentle, calm expression",
-        "bison": "a massive bison charging through tall grass",
-        "blowfish": "a puffed-up blowfish covered in sharp spines",
-        "deer": "a noble stag with a magnificent rack of antlers",
-        "hippo": "a yawning hippopotamus showing enormous teeth",
-        "parrot": "a colorful parrot perched on a branch, squawking",
-        "penguin": "a waddling penguin clutching a small fish",
-        "skunk": "a striped skunk with its tail raised in warning",
-        "squirrel": "a nimble squirrel clutching an acorn",
-        "turtle": "an ancient turtle with a moss-covered shell",
-        "whale": "a breaching whale erupting from the ocean",
-        "armadillo": "an armadillo curled into an armored ball",
-        "cow": "a sturdy cow chewing cud in a meadow",
-        "crocodile": "a lurking crocodile with eyes just above the waterline",
-        "monkey": "a mischievous monkey swinging from a vine",
-        "rhino": "a charging rhinoceros with a massive horn",
-        "rooster": "a proud rooster crowing at dawn",
-        "scorpion": "a menacing scorpion with its stinger raised to strike",
-        "seal": "a sleek seal balancing a ball on its nose",
-        "shark": "a great white shark surging through dark water",
-        "turkey": "a plump turkey with its tail feathers fanned out",
-        "boar": "a wild boar with tusks lowered for a charge",
-        "cat": "a mysterious cat with glowing eyes in moonlight",
-        "dragon": "a fearsome dragon breathing a torrent of fire",
-        "fly": "an iridescent fly with shimmering compound eyes",
-        "gorilla": "a mighty silverback gorilla beating its chest",
-        "leopard": "a sleek leopard crouching on a tree branch",
-        "mammoth": "an ancient woolly mammoth with enormous curved tusks",
-        "snake": "a coiled serpent with fangs bared and hood flared",
-        "tiger": "a prowling tiger with burning orange stripes",
-        "wolverine": "a ferocious wolverine snarling with bared claws",
-        "bus": "a peculiar enchanted bus with legs instead of wheels",
-        "chick": "a tiny fluffy chick peeping with its beak open",
-        "zombie fly": "a decaying undead fly buzzing with tattered wings",
-    }
+# Map card ID ranges to faction keys
+def get_faction(card_id: int) -> str:
+    if card_id <= 9: return "hive"
+    if card_id <= 20: return "grove"
+    if card_id <= 31: return "academy"
+    if card_id <= 42: return "order"
+    if card_id <= 53: return "undead"
+    if card_id <= 65: return "wilds"
+    if card_id <= 76: return "guild"
+    if card_id <= 87: return "horde"
+    if card_id <= 97: return "fallen"
+    if card_id <= 102: return "mercenaries"
+    # Tokens — match parent faction
+    if card_id <= 107: return "hive"      # Grub, Hatchling, Nymph, Moth, Drone
+    if card_id == 108: return "undead"     # Phylactery
+    if card_id == 109: return "hive"       # Stinger
+    return "mercenaries"
 
-    key = card_name.lower()
-    if key in SUBJECT_MAP:
-        return SUBJECT_MAP[key]
+# ---------------------------------------------------------------------------
+# Card art descriptions (parsed from CARD_ART_DESCRIPTIONS.md)
+# ---------------------------------------------------------------------------
 
-    # Fallback: use the card name directly with a generic description
-    return f"a fantasy creature called {card_name}"
+DESCRIPTIONS_MD = SCRIPT_DIR.parent / "docs" / "CARD_ART_DESCRIPTIONS.md"
+
+def load_descriptions() -> dict[str, str]:
+    """Parse CARD_ART_DESCRIPTIONS.md and return {card_name_lower: description}."""
+    import re
+    descriptions = {}
+    text = DESCRIPTIONS_MD.read_text()
+    # Match table rows: | Name | Cost | Description | or | Name | Description |
+    for match in re.finditer(r'^\|\s*([^|]+?)\s*\|(?:\s*\d*\s*\|)?\s*([^|]+?)\s*\|', text, re.MULTILINE):
+        name = match.group(1).strip()
+        desc = match.group(2).strip()
+        # Skip header rows
+        if name.startswith('--') or name == 'Name' or desc.startswith('--') or desc == 'Description' or desc == 'Cost':
+            continue
+        descriptions[name.lower()] = desc
+    return descriptions
+
+_DESCRIPTIONS = None
+
+def get_descriptions() -> dict[str, str]:
+    global _DESCRIPTIONS
+    if _DESCRIPTIONS is None:
+        _DESCRIPTIONS = load_descriptions()
+    return _DESCRIPTIONS
 
 
-def build_prompt(card_name: str, card: dict, theme: dict) -> str:
+def build_prompt(card_name: str, card: dict, card_id: int, theme: dict, theme_key: str) -> str:
     """Build the full image generation prompt for a card + theme."""
-    subject = build_subject(card_name, card)
-    return theme["prompt_template"].format(subject=subject)
+    descs = get_descriptions()
+    subject = descs.get(card_name.lower(), f"a fantasy creature called {card_name}")
+    faction = get_faction(card_id)
+    faction_palette = ""
+    if theme.get("use_faction_palette", True):
+        # Look up per-theme palette, fall back to silhouette palettes
+        theme_palettes = FACTION_PALETTES.get(theme_key, FACTION_PALETTES.get("silhouette", {}))
+        faction_palette = theme_palettes.get(faction, theme_palettes.get("mercenaries", ""))
+    return theme["prompt_template"].format(subject=subject, faction_palette=faction_palette)
 
 
 # ---------------------------------------------------------------------------
@@ -430,7 +386,7 @@ def main():
         for card in cards:
             if card["id"] < args.start:
                 continue
-            prompt = build_prompt(card["name"], card, theme)
+            prompt = build_prompt(card["name"], card, card["id"], theme, args.theme)
             print(f"[{card['id']:3d}] {card['name']}")
             print(f"      {prompt}")
             print()
@@ -472,7 +428,7 @@ def main():
             skipped += 1
             continue
 
-        prompt = build_prompt(card_name, card, theme)
+        prompt = build_prompt(card_name, card, card_id, theme, args.theme)
         seed = SEED_BASE + theme.get("seed_offset", 0) + card_id
 
         print(f"[{card_id:3d}/{total}] {card_name}")

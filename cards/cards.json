@@ -1,15 +1,15 @@
 [
   {
     "id": 0,
-    "name": "Rat Swarm",
-    "emoji": "🐀",
+    "name": "Larva",
+    "emoji": "🐛",
     "stats": {
       "attack": 1,
-      "health": 1
+      "health": 2
     },
     "economy": {
       "play_cost": 1,
-      "burn_value": 1
+      "burn_value": 0
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -17,7 +17,7 @@
         "trigger": "OnFaint",
         "effect": {
           "type": "SpawnUnit",
-          "card_id": 40
+          "card_id": 103
         },
         "conditions": [],
         "max_triggers": 1
@@ -26,23 +26,311 @@
   },
   {
     "id": 1,
-    "name": "Goblin Scout",
-    "emoji": "👺",
+    "name": "Worker Bee",
+    "emoji": "🐝",
+    "stats": {
+      "attack": 2,
+      "health": 1
+    },
+    "economy": {
+      "play_cost": 2,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnAllySpawn",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "TriggerSource"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Scarab",
+    "emoji": "🪲",
+    "stats": {
+      "attack": 2,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 3,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 104
+        },
+        "conditions": [],
+        "max_triggers": 1
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Ant Soldier",
+    "emoji": "🐜",
+    "stats": {
+      "attack": 2,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 3,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnAllySpawn",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 1,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Drone Keeper",
+    "emoji": "🦟",
+    "stats": {
+      "attack": 3,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 4,
+      "burn_value": 2
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnAllySpawn",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "TriggerSource"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": 3
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Mantis",
+    "emoji": "🦗",
+    "stats": {
+      "attack": 4,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 5,
+      "burn_value": 2
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 105
+        },
+        "conditions": [],
+        "max_triggers": 1
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "Swarm Queen",
+    "emoji": "👑",
+    "stats": {
+      "attack": 4,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 6,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnAllySpawn",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "TriggerSource"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "name": "Moth Matriarch",
+    "emoji": "🦋",
+    "stats": {
+      "attack": 3,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 7,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnAllyFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 106
+        },
+        "conditions": [],
+        "max_triggers": 3
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "name": "Hive Mother",
+    "emoji": "🐞",
+    "stats": {
+      "attack": 5,
+      "health": 7
+    },
+    "economy": {
+      "play_cost": 9,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnAllyFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 107
+        },
+        "conditions": [],
+        "max_triggers": 3
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "name": "Brood Queen",
+    "emoji": "🕷️",
+    "stats": {
+      "attack": 5,
+      "health": 7
+    },
+    "economy": {
+      "play_cost": 10,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 109
+        },
+        "conditions": [],
+        "max_triggers": null
+      },
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 109
+        },
+        "conditions": [],
+        "max_triggers": null
+      },
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 109
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "name": "Seedling",
+    "emoji": "🌱",
     "stats": {
       "attack": 1,
       "health": 2
     },
     "economy": {
       "play_cost": 1,
-      "burn_value": 2
+      "burn_value": 0
     },
-    "shop_abilities": [],
+    "shop_abilities": [
+      {
+        "trigger": "OnBuy",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
     "battle_abilities": []
   },
   {
-    "id": 2,
-    "name": "Goblin Grunt",
-    "emoji": "👹",
+    "id": 11,
+    "name": "Sapling",
+    "emoji": "🌿",
     "stats": {
       "attack": 2,
       "health": 2
@@ -51,20 +339,701 @@
       "play_cost": 2,
       "burn_value": 1
     },
-    "shop_abilities": [],
+    "shop_abilities": [
+      {
+        "trigger": "OnBuy",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "AlliesOther",
+              "count": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
     "battle_abilities": []
   },
   {
-    "id": 3,
-    "name": "Scaredy Cat",
-    "emoji": "🙀",
+    "id": 12,
+    "name": "Grove Tender",
+    "emoji": "🌳",
     "stats": {
       "attack": 1,
       "health": 3
     },
     "economy": {
-      "play_cost": 1,
+      "play_cost": 3,
+      "burn_value": 1
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "Allies",
+              "index": -1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 13,
+    "name": "Forest Sage",
+    "emoji": "🧙",
+    "stats": {
+      "attack": 2,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 4,
       "burn_value": 2
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "AlliesOther",
+              "count": 2
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 14,
+    "name": "Earth Shaman",
+    "emoji": "🪨",
+    "stats": {
+      "attack": 3,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 5,
+      "burn_value": 2
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnBuy",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 15,
+    "name": "Treant",
+    "emoji": "🌲",
+    "stats": {
+      "attack": 4,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 7,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "AfterUnitAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "name": "Elder Druid",
+    "emoji": "🧝",
+    "stats": {
+      "attack": 3,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 7,
+      "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 2,
+          "attack": 2,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "AlliesOther",
+              "count": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 17,
+    "name": "Ancient Oak",
+    "emoji": "🏔️",
+    "stats": {
+      "attack": 4,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 7,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "AfterUnitAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 3,
+          "attack": 3,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "name": "Ironwood Guardian",
+    "emoji": "🛡️",
+    "stats": {
+      "attack": 5,
+      "health": 7
+    },
+    "economy": {
+      "play_cost": 8,
+      "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": [
+      {
+        "trigger": "AfterUnitAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "name": "World Tree",
+    "emoji": "🌍",
+    "stats": {
+      "attack": 4,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 9,
+      "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnBuy",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 20,
+    "name": "Gaia",
+    "emoji": "🌎",
+    "stats": {
+      "attack": 5,
+      "health": 8
+    },
+    "economy": {
+      "play_cost": 10,
+      "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 2,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 21,
+    "name": "Spark Mage",
+    "emoji": "✨",
+    "stats": {
+      "attack": 1,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 1,
+      "burn_value": 0
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 1,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "Enemies",
+              "count": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "name": "Frost Archer",
+    "emoji": "🏹",
+    "stats": {
+      "attack": 1,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 2,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 2,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "Enemies",
+              "index": -1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "name": "Pyromancer",
+    "emoji": "🔥",
+    "stats": {
+      "attack": 2,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 3,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 3,
+          "target": {
+            "type": "Standard",
+            "data": {
+              "scope": "Enemies",
+              "stat": "Health",
+              "order": "Ascending",
+              "count": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 24,
+    "name": "Hex Caster",
+    "emoji": "🪄",
+    "stats": {
+      "attack": 3,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 4,
+      "burn_value": 2
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 3,
+          "target": {
+            "type": "Standard",
+            "data": {
+              "scope": "Enemies",
+              "stat": "Health",
+              "order": "Descending",
+              "count": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "name": "Thunder Mage",
+    "emoji": "⚡",
+    "stats": {
+      "attack": 4,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 5,
+      "burn_value": 2
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 6,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "Enemies",
+              "index": -1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "name": "Storm Caller",
+    "emoji": "🌩️",
+    "stats": {
+      "attack": 3,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 6,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 4,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "Enemies",
+              "count": 2
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "name": "Flame Lord",
+    "emoji": "🌋",
+    "stats": {
+      "attack": 4,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 7,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 5,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "Enemies",
+              "count": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 28,
+    "name": "Lightning Mage",
+    "emoji": "🌀",
+    "stats": {
+      "attack": 4,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 7,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 3,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Enemies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 29,
+    "name": "Executioner",
+    "emoji": "🪓",
+    "stats": {
+      "attack": 5,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 8,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 8,
+          "target": {
+            "type": "Standard",
+            "data": {
+              "scope": "Enemies",
+              "stat": "Attack",
+              "order": "Descending",
+              "count": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 30,
+    "name": "Inferno Mage",
+    "emoji": "☄️",
+    "stats": {
+      "attack": 5,
+      "health": 7
+    },
+    "economy": {
+      "play_cost": 9,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 4,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Enemies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 31,
+    "name": "Archmage",
+    "emoji": "🔮",
+    "stats": {
+      "attack": 6,
+      "health": 8
+    },
+    "economy": {
+      "play_cost": 10,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "Damage",
+          "amount": 6,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Enemies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 32,
+    "name": "Squire",
+    "emoji": "🗡️",
+    "stats": {
+      "attack": 1,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 2,
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -88,64 +1057,16 @@
     ]
   },
   {
-    "id": 4,
-    "name": "Brave Commander",
-    "emoji": "🫡",
+    "id": 33,
+    "name": "Shield Guard",
+    "emoji": "🛡️",
     "stats": {
-      "attack": 2,
+      "attack": 1,
       "health": 3
     },
     "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 2,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "AlliesOther",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 5,
-    "name": "Militia",
-    "emoji": "🛡️",
-    "stats": {
-      "attack": 2,
-      "health": 2
-    },
-    "economy": {
       "play_cost": 2,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 6,
-    "name": "Shield Bearer",
-    "emoji": "🏰",
-    "stats": {
-      "attack": 1,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 2,
-      "burn_value": 2
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -169,8 +1090,8 @@
     ]
   },
   {
-    "id": 7,
-    "name": "Nurse Goblin",
+    "id": 34,
+    "name": "Field Medic",
     "emoji": "🩺",
     "stats": {
       "attack": 1,
@@ -178,6 +1099,104 @@
     },
     "economy": {
       "play_cost": 2,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "AfterAnyAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 1,
+          "attack": 0,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "Allies",
+              "index": 0
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": 3
+      }
+    ]
+  },
+  {
+    "id": 35,
+    "name": "Sentinel",
+    "emoji": "🏰",
+    "stats": {
+      "attack": 1,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 3,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 0,
+          "target": {
+            "type": "Adjacent",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 36,
+    "name": "Knight Protector",
+    "emoji": "🏇",
+    "stats": {
+      "attack": 2,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 4,
+      "burn_value": 2
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "BeforeAnyAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 0,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "Allies",
+              "index": -1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": 3
+      }
+    ]
+  },
+  {
+    "id": 37,
+    "name": "Cleric",
+    "emoji": "⛪",
+    "stats": {
+      "attack": 2,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 5,
       "burn_value": 2
     },
     "shop_abilities": [],
@@ -196,54 +1215,35 @@
             }
           }
         },
-        "conditions": [
-          {
-            "type": "Is",
-            "data": {
-              "type": "TargetStatValueCompare",
-              "data": {
-                "target": {
-                  "type": "Position",
-                  "data": {
-                    "scope": "Allies",
-                    "index": 0
-                  }
-                },
-                "stat": "Health",
-                "op": "LessThanOrEqual",
-                "value": 6
-              }
-            }
-          }
-        ],
+        "conditions": [],
         "max_triggers": 3
       }
     ]
   },
   {
-    "id": 8,
-    "name": "Wolf Rider",
-    "emoji": "🐺",
+    "id": 38,
+    "name": "Paladin",
+    "emoji": "⚔️",
     "stats": {
-      "attack": 3,
-      "health": 2
+      "attack": 2,
+      "health": 6
     },
     "economy": {
-      "play_cost": 3,
-      "burn_value": 2
+      "play_cost": 6,
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
       {
-        "trigger": "OnFaint",
+        "trigger": "OnStart",
         "effect": {
-          "type": "Damage",
-          "amount": 2,
+          "type": "ModifyStats",
+          "health": 4,
+          "attack": 0,
           "target": {
-            "type": "Position",
+            "type": "All",
             "data": {
-              "scope": "Enemies",
-              "index": 0
+              "scope": "Allies"
             }
           }
         },
@@ -253,16 +1253,241 @@
     ]
   },
   {
-    "id": 9,
-    "name": "Martyr Knight",
-    "emoji": "🕯️",
+    "id": 39,
+    "name": "Holy Guard",
+    "emoji": "🌟",
+    "stats": {
+      "attack": 3,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 6,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "BeforeUnitAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 3,
+          "attack": 0,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 40,
+    "name": "Fortress Golem",
+    "emoji": "🗿",
+    "stats": {
+      "attack": 2,
+      "health": 8
+    },
+    "economy": {
+      "play_cost": 7,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 3,
+          "attack": 0,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 41,
+    "name": "Grand Paladin",
+    "emoji": "🛐",
+    "stats": {
+      "attack": 3,
+      "health": 8
+    },
+    "economy": {
+      "play_cost": 8,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "BeforeAnyAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 0,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": 3
+      }
+    ]
+  },
+  {
+    "id": 42,
+    "name": "Divine Champion",
+    "emoji": "👼",
+    "stats": {
+      "attack": 3,
+      "health": 12
+    },
+    "economy": {
+      "play_cost": 10,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "BeforeAnyAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 0,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 43,
+    "name": "Skeleton",
+    "emoji": "💀",
+    "stats": {
+      "attack": 1,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 1,
+      "burn_value": 0
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "AlliesOther",
+              "count": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 44,
+    "name": "Spirit",
+    "emoji": "👻",
+    "stats": {
+      "attack": 2,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 2,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "SelfUnit",
+              "index": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 45,
+    "name": "Ghoul",
+    "emoji": "🧟",
+    "stats": {
+      "attack": 2,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 2,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "Damage",
+          "amount": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "All"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 46,
+    "name": "Death Knight",
+    "emoji": "🗡️",
     "stats": {
       "attack": 2,
       "health": 3
     },
     "economy": {
       "play_cost": 3,
-      "burn_value": 2
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -286,16 +1511,16 @@
     ]
   },
   {
-    "id": 10,
-    "name": "Abyssal Bomber",
-    "emoji": "💣",
+    "id": 47,
+    "name": "Bone Golem",
+    "emoji": "🦴",
     "stats": {
-      "attack": 2,
-      "health": 2
+      "attack": 3,
+      "health": 3
     },
     "economy": {
-      "play_cost": 4,
-      "burn_value": 2
+      "play_cost": 3,
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -305,7 +1530,7 @@
           "type": "Damage",
           "amount": 3,
           "target": {
-            "type": "All",
+            "type": "Adjacent",
             "data": {
               "scope": "All"
             }
@@ -317,61 +1542,245 @@
     ]
   },
   {
-    "id": 11,
-    "name": "Archer",
-    "emoji": "🏹",
+    "id": 48,
+    "name": "Soul Eater",
+    "emoji": "😈",
+    "stats": {
+      "attack": 3,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 4,
+      "burn_value": 2
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnAllyFaint",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 1,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 49,
+    "name": "Banshee",
+    "emoji": "💨",
+    "stats": {
+      "attack": 3,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 5,
+      "burn_value": 2
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "Damage",
+          "amount": 5,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "Enemies",
+              "index": 0
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 50,
+    "name": "Revenant",
+    "emoji": "🌑",
+    "stats": {
+      "attack": 4,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 6,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnAllyFaint",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 51,
+    "name": "Lich",
+    "emoji": "☠️",
+    "stats": {
+      "attack": 3,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 7,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 2,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "AlliesOther"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 52,
+    "name": "Necromancer",
+    "emoji": "🧙‍♂️",
+    "stats": {
+      "attack": 3,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 8,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnFaint",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 108
+        },
+        "conditions": [],
+        "max_triggers": 1
+      }
+    ]
+  },
+  {
+    "id": 53,
+    "name": "Undead King",
+    "emoji": "👑",
+    "stats": {
+      "attack": 5,
+      "health": 8
+    },
+    "economy": {
+      "play_cost": 10,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnAllyFaint",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 3,
+          "attack": 3,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "AlliesOther"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 54,
+    "name": "Porcupine",
+    "emoji": "🦔",
     "stats": {
       "attack": 1,
       "health": 3
     },
     "economy": {
-      "play_cost": 3,
-      "burn_value": 2
+      "play_cost": 2,
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
       {
-        "trigger": "OnStart",
+        "trigger": "OnHurt",
         "effect": {
           "type": "Damage",
           "amount": 1,
           "target": {
-            "type": "Position",
+            "type": "All",
             "data": {
-              "scope": "Enemies",
-              "index": -1
+              "scope": "TriggerSource"
             }
           }
         },
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
   {
-    "id": 12,
-    "name": "Sniper",
-    "emoji": "🎯",
+    "id": 55,
+    "name": "Cobra",
+    "emoji": "🐍",
     "stats": {
-      "attack": 2,
-      "health": 2
+      "attack": 1,
+      "health": 4
     },
     "economy": {
       "play_cost": 3,
-      "burn_value": 2
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
       {
-        "trigger": "OnStart",
+        "trigger": "OnHurt",
         "effect": {
-          "type": "Damage",
-          "amount": 2,
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 2,
           "target": {
-            "type": "Position",
+            "type": "All",
             "data": {
-              "scope": "Enemies",
-              "index": -1
+              "scope": "SelfUnit"
             }
           }
         },
@@ -381,24 +1790,24 @@
     ]
   },
   {
-    "id": 13,
-    "name": "Skeleton Archer",
-    "emoji": "💀",
+    "id": 56,
+    "name": "Blowfish",
+    "emoji": "🐡",
     "stats": {
       "attack": 2,
-      "health": 2
+      "health": 4
     },
     "economy": {
       "play_cost": 3,
-      "burn_value": 2
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
       {
-        "trigger": "OnStart",
+        "trigger": "OnHurt",
         "effect": {
           "type": "Damage",
-          "amount": 2,
+          "amount": 3,
           "target": {
             "type": "Random",
             "data": {
@@ -413,25 +1822,229 @@
     ]
   },
   {
-    "id": 14,
-    "name": "Battle Hardened",
-    "emoji": "💪",
+    "id": 57,
+    "name": "Thornbeast",
+    "emoji": "🌵",
     "stats": {
       "attack": 2,
-      "health": 3
+      "health": 5
     },
     "economy": {
-      "play_cost": 3,
+      "play_cost": 4,
       "burn_value": 2
     },
     "shop_abilities": [],
     "battle_abilities": [
       {
-        "trigger": "BeforeUnitAttack",
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "Damage",
+          "amount": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Enemies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": 3
+      }
+    ]
+  },
+  {
+    "id": 58,
+    "name": "Viper",
+    "emoji": "🐉",
+    "stats": {
+      "attack": 3,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 5,
+      "burn_value": 2
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "AfterAnyAttack",
+        "effect": {
+          "type": "Damage",
+          "amount": 3,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "Enemies",
+              "count": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 59,
+    "name": "Deathstalker",
+    "emoji": "🦂",
+    "stats": {
+      "attack": 1,
+      "health": 1
+    },
+    "economy": {
+      "play_cost": 5,
+      "burn_value": 2
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "AfterUnitAttack",
+        "effect": {
+          "type": "Destroy",
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "Enemies",
+              "index": 0
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 60,
+    "name": "Ironhide",
+    "emoji": "🦏",
+    "stats": {
+      "attack": 3,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 6,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "Damage",
+          "amount": 3,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "TriggerSource"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 61,
+    "name": "War Beast",
+    "emoji": "🐗",
+    "stats": {
+      "attack": 2,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 6,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnHurt",
         "effect": {
           "type": "ModifyStats",
           "health": 2,
-          "attack": 0,
+          "attack": 2,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "SelfUnit",
+              "index": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 62,
+    "name": "Fire Drake",
+    "emoji": "🔥",
+    "stats": {
+      "attack": 3,
+      "health": 7
+    },
+    "economy": {
+      "play_cost": 7,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "Damage",
+          "amount": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Enemies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 63,
+    "name": "Hydra",
+    "emoji": "🐲",
+    "stats": {
+      "attack": 3,
+      "health": 10
+    },
+    "economy": {
+      "play_cost": 8,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "Damage",
+          "amount": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Enemies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      },
+      {
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 1,
           "target": {
             "type": "All",
             "data": {
@@ -440,14 +2053,378 @@
           }
         },
         "conditions": [],
-        "max_triggers": 3
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 64,
+    "name": "Manticore",
+    "emoji": "🦁",
+    "stats": {
+      "attack": 4,
+      "health": 8
+    },
+    "economy": {
+      "play_cost": 9,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "Damage",
+          "amount": 3,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "TriggerSource"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
       },
       {
-        "trigger": "AfterUnitAttack",
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "Damage",
+          "amount": 3,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "Enemies",
+              "count": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 65,
+    "name": "Titan Beast",
+    "emoji": "🐘",
+    "stats": {
+      "attack": 4,
+      "health": 12
+    },
+    "economy": {
+      "play_cost": 9,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnHurt",
+        "effect": {
+          "type": "Damage",
+          "amount": 4,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Enemies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 66,
+    "name": "Coin Purse",
+    "emoji": "💰",
+    "stats": {
+      "attack": 1,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 1,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 67,
+    "name": "Peddler",
+    "emoji": "🧑‍💼",
+    "stats": {
+      "attack": 2,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 2,
+      "burn_value": 1
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnSell",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 0,
+          "attack": 1,
+          "target": {
+            "type": "Random",
+            "data": {
+              "scope": "Allies",
+              "count": 2
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 68,
+    "name": "Merchant",
+    "emoji": "🏪",
+    "stats": {
+      "attack": 1,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 2,
+      "burn_value": 1
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnSell",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 0,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 69,
+    "name": "Broker",
+    "emoji": "📊",
+    "stats": {
+      "attack": 1,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 3,
+      "burn_value": 1
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 70,
+    "name": "Treasurer",
+    "emoji": "🏦",
+    "stats": {
+      "attack": 2,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 4,
+      "burn_value": 2
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 71,
+    "name": "Gold Hoarder",
+    "emoji": "💎",
+    "stats": {
+      "attack": 3,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 5,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 72,
+    "name": "Tax Collector",
+    "emoji": "📜",
+    "stats": {
+      "attack": 2,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 6,
+      "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 73,
+    "name": "Alchemist",
+    "emoji": "🧪",
+    "stats": {
+      "attack": 2,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 5,
+      "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "GainMana",
+          "amount": 1
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 74,
+    "name": "Guild Master",
+    "emoji": "🎩",
+    "stats": {
+      "attack": 3,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 7,
+      "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "GainMana",
+          "amount": 2
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 75,
+    "name": "Trade Baron",
+    "emoji": "👔",
+    "stats": {
+      "attack": 4,
+      "health": 6
+    },
+    "economy": {
+      "play_cost": 9,
+      "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "GainMana",
+          "amount": 2
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 76,
+    "name": "Midas",
+    "emoji": "🤴",
+    "stats": {
+      "attack": 5,
+      "health": 8
+    },
+    "economy": {
+      "play_cost": 10,
+      "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "OnShopStart",
+        "effect": {
+          "type": "GainMana",
+          "amount": 3
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 77,
+    "name": "Goblin Raider",
+    "emoji": "👺",
+    "stats": {
+      "attack": 2,
+      "health": 1
+    },
+    "economy": {
+      "play_cost": 1,
+      "burn_value": 0
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "BeforeUnitAttack",
         "effect": {
           "type": "ModifyStats",
           "health": 0,
-          "attack": 2,
+          "attack": 1,
           "target": {
             "type": "All",
             "data": {
@@ -461,16 +2438,81 @@
     ]
   },
   {
-    "id": 15,
-    "name": "Lone Wolf",
-    "emoji": "🐕",
+    "id": 78,
+    "name": "Orc Grunt",
+    "emoji": "👹",
     "stats": {
       "attack": 2,
-      "health": 4
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 2,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "BeforeUnitAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 1,
+          "attack": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 79,
+    "name": "War Chief",
+    "emoji": "🪖",
+    "stats": {
+      "attack": 3,
+      "health": 3
     },
     "economy": {
       "play_cost": 3,
-      "burn_value": 2
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 2,
+          "target": {
+            "type": "Position",
+            "data": {
+              "scope": "SelfUnit",
+              "index": 1
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 80,
+    "name": "Lone Berserker",
+    "emoji": "🤬",
+    "stats": {
+      "attack": 2,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 3,
+      "burn_value": 1
     },
     "shop_abilities": [],
     "battle_abilities": [
@@ -505,86 +2547,11 @@
     ]
   },
   {
-    "id": 16,
-    "name": "Pack Leader",
-    "emoji": "👑",
+    "id": 81,
+    "name": "Raging Orc",
+    "emoji": "💢",
     "stats": {
-      "attack": 2,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 3,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 1,
-          "attack": 1,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "Allies"
-            }
-          }
-        },
-        "conditions": [
-          {
-            "type": "Is",
-            "data": {
-              "type": "UnitCount",
-              "data": {
-                "scope": "Allies",
-                "op": "GreaterThanOrEqual",
-                "value": 3
-              }
-            }
-          }
-        ],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 17,
-    "name": "Spined Urchin",
-    "emoji": "🦔",
-    "stats": {
-      "attack": 1,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 2,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnHurt",
-        "effect": {
-          "type": "Damage",
-          "amount": 1,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "TriggerSource"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": 3
-      }
-    ]
-  },
-  {
-    "id": 18,
-    "name": "Vampire",
-    "emoji": "🧛",
-    "stats": {
-      "attack": 3,
+      "attack": 5,
       "health": 3
     },
     "economy": {
@@ -593,6 +2560,54 @@
     },
     "shop_abilities": [],
     "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 82,
+    "name": "Battle Veteran",
+    "emoji": "💪",
+    "stats": {
+      "attack": 3,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 5,
+      "burn_value": 2
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "BeforeUnitAttack",
+        "effect": {
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": 3
+      },
       {
         "trigger": "AfterUnitAttack",
         "effect": {
@@ -612,24 +2627,24 @@
     ]
   },
   {
-    "id": 19,
-    "name": "Raging Orc",
-    "emoji": "🤬",
+    "id": 83,
+    "name": "Blood Wolf",
+    "emoji": "🐺",
     "stats": {
-      "attack": 2,
-      "health": 8
+      "attack": 5,
+      "health": 4
     },
     "economy": {
-      "play_cost": 4,
-      "burn_value": 2
+      "play_cost": 6,
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
       {
-        "trigger": "OnHurt",
+        "trigger": "BeforeUnitAttack",
         "effect": {
           "type": "ModifyStats",
-          "health": 0,
+          "health": 1,
           "attack": 2,
           "target": {
             "type": "All",
@@ -644,324 +2659,32 @@
     ]
   },
   {
-    "id": 20,
-    "name": "Zombie Captain",
-    "emoji": "🧟‍♂️",
+    "id": 84,
+    "name": "Warbringer",
+    "emoji": "🫡",
     "stats": {
-      "attack": 3,
+      "attack": 5,
       "health": 4
     },
     "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 41
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 21,
-    "name": "Necromancer",
-    "emoji": "🧙",
-    "stats": {
-      "attack": 2,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 3,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnAllySpawn",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 0,
-          "attack": 2,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "TriggerSource"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": 3
-      }
-    ]
-  },
-  {
-    "id": 22,
-    "name": "Headhunter",
-    "emoji": "🕵️",
-    "stats": {
-      "attack": 4,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
+      "play_cost": 6,
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
       {
         "trigger": "OnStart",
-        "effect": {
-          "type": "Damage",
-          "amount": 5,
-          "target": {
-            "type": "Standard",
-            "data": {
-              "scope": "Enemies",
-              "stat": "Health",
-              "order": "Ascending",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 23,
-    "name": "Giant Slayer",
-    "emoji": "🗡️",
-    "stats": {
-      "attack": 2,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Damage",
-          "amount": 3,
-          "target": {
-            "type": "Standard",
-            "data": {
-              "scope": "Enemies",
-              "stat": "Attack",
-              "order": "Descending",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 24,
-    "name": "Shield Squire",
-    "emoji": "🛡️",
-    "stats": {
-      "attack": 2,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "BeforeAnyAttack",
         "effect": {
           "type": "ModifyStats",
           "health": 2,
-          "attack": 0,
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "SelfUnit",
-              "index": -1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": 3
-      }
-    ]
-  },
-  {
-    "id": 25,
-    "name": "Warder",
-    "emoji": "💂",
-    "stats": {
-      "attack": 2,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 3,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnEnemySpawn",
-        "effect": {
-          "type": "Damage",
-          "amount": 1,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "TriggerSource"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": 3
-      }
-    ]
-  },
-  {
-    "id": 26,
-    "name": "Artillery Mage",
-    "emoji": "☄️",
-    "stats": {
-      "attack": 3,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 5,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Damage",
-          "amount": 5,
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "Enemies",
-              "index": 2
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 27,
-    "name": "Rear Guard",
-    "emoji": "🧱",
-    "stats": {
-      "attack": 2,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 3,
           "attack": 3,
           "target": {
             "type": "Position",
             "data": {
-              "scope": "Allies",
-              "index": 4
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 28,
-    "name": "Troll Brute",
-    "emoji": "🧌",
-    "stats": {
-      "attack": 4,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 5,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "Damage",
-          "amount": 3,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "Enemies"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 29,
-    "name": "Lich",
-    "emoji": "💀",
-    "stats": {
-      "attack": 3,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 5,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Destroy",
-          "target": {
-            "type": "Position",
-            "data": {
               "scope": "SelfUnit",
-              "index": -1
+              "index": 1
             }
           }
-        },
-        "conditions": [],
-        "max_triggers": null
-      },
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 42
         },
         "conditions": [],
         "max_triggers": null
@@ -969,285 +2692,21 @@
     ]
   },
   {
-    "id": 30,
-    "name": "Assassin",
-    "emoji": "🥷",
-    "stats": {
-      "attack": 5,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 5,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Destroy",
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "Enemies",
-              "index": 0
-            }
-          }
-        },
-        "conditions": [
-          {
-            "type": "Is",
-            "data": {
-              "type": "StatValueCompare",
-              "data": {
-                "scope": "Enemies",
-                "stat": "Health",
-                "op": "LessThanOrEqual",
-                "value": 10
-              }
-            }
-          }
-        ],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 31,
-    "name": "Fire Elemental",
-    "emoji": "🔥",
-    "stats": {
-      "attack": 4,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 5,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "AfterUnitAttack",
-        "effect": {
-          "type": "Damage",
-          "amount": 2,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "Enemies",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": 3
-      }
-    ]
-  },
-  {
-    "id": 32,
-    "name": "Ogre Mauler",
-    "emoji": "👊",
+    "id": 85,
+    "name": "Siege Breaker",
+    "emoji": "🪓",
     "stats": {
       "attack": 5,
       "health": 6
     },
     "economy": {
-      "play_cost": 6,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 0,
-          "attack": 3,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 33,
-    "name": "Phoenix",
-    "emoji": "🐦‍🔥",
-    "stats": {
-      "attack": 3,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 6,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 43
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 34,
-    "name": "Shield Master",
-    "emoji": "👑",
-    "stats": {
-      "attack": 3,
-      "health": 10
-    },
-    "economy": {
       "play_cost": 7,
-      "burn_value": 2
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
       {
-        "trigger": "BeforeAnyAttack",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 3,
-          "attack": 0,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "Allies"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": 3
-      }
-    ]
-  },
-  {
-    "id": 35,
-    "name": "Void Walker",
-    "emoji": "🌑",
-    "stats": {
-      "attack": 4,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 7,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 0,
-          "attack": 2,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      },
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 0,
-          "attack": -2,
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "Enemies",
-              "index": 0
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 36,
-    "name": "Mana Reaper",
-    "emoji": "⚖️",
-    "stats": {
-      "attack": 2,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 8,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Destroy",
-          "target": {
-            "type": "Standard",
-            "data": {
-              "scope": "Enemies",
-              "stat": "Mana",
-              "order": "Descending",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      },
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Destroy",
-          "target": {
-            "type": "Standard",
-            "data": {
-              "scope": "Enemies",
-              "stat": "Mana",
-              "order": "Ascending",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 37,
-    "name": "Giant Crusher",
-    "emoji": "🦣",
-    "stats": {
-      "attack": 6,
-      "health": 8
-    },
-    "economy": {
-      "play_cost": 8,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
+        "trigger": "AfterUnitAttack",
         "effect": {
           "type": "Damage",
           "amount": 4,
@@ -1265,613 +2724,21 @@
     ]
   },
   {
-    "id": 38,
-    "name": "Behemoth",
-    "emoji": "🐘",
+    "id": 86,
+    "name": "Berserker Chief",
+    "emoji": "🔱",
     "stats": {
-      "attack": 10,
-      "health": 10
+      "attack": 6,
+      "health": 5
     },
     "economy": {
-      "play_cost": 10,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 39,
-    "name": "Dragon Tyrant",
-    "emoji": "🐉",
-    "stats": {
-      "attack": 8,
-      "health": 12
-    },
-    "economy": {
-      "play_cost": 10,
+      "play_cost": 8,
       "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
       {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Damage",
-          "amount": 3,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "Enemies"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 40,
-    "name": "Rat Token",
-    "emoji": "🐀",
-    "stats": {
-      "attack": 1,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 0,
-      "burn_value": 0
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 41,
-    "name": "Zombie Soldier",
-    "emoji": "🧟",
-    "stats": {
-      "attack": 1,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 1,
-      "burn_value": 1
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 42,
-    "name": "Golem",
-    "emoji": "🗿",
-    "stats": {
-      "attack": 5,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 0,
-      "burn_value": 0
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 43,
-    "name": "Phoenix Egg",
-    "emoji": "🥚",
-    "stats": {
-      "attack": 0,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 0,
-      "burn_value": 0
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 33
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 44,
-    "name": "Zombie Cricket",
-    "emoji": "🪳",
-    "stats": {
-      "attack": 1,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 0,
-      "burn_value": 0
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 45,
-    "name": "Ram",
-    "emoji": "🐏",
-    "stats": {
-      "attack": 2,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 0,
-      "burn_value": 0
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 46,
-    "name": "Spiderling",
-    "emoji": "🕸️",
-    "stats": {
-      "attack": 2,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 0,
-      "burn_value": 0
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 47,
-    "name": "Ant",
-    "emoji": "🐜",
-    "stats": {
-      "attack": 2,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 1,
-      "burn_value": 1
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 1,
-          "attack": 1,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "AlliesOther",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 48,
-    "name": "Beaver",
-    "emoji": "🦫",
-    "stats": {
-      "attack": 3,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 1,
-      "burn_value": 1
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnSell",
-        "effect": {
-          "type": "ModifyStatsPermanent",
-          "health": 0,
-          "attack": 1,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "Allies",
-              "count": 2
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 49,
-    "name": "Cricket",
-    "emoji": "🦗",
-    "stats": {
-      "attack": 1,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 1,
-      "burn_value": 1
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 44
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 50,
-    "name": "Duck",
-    "emoji": "🦆",
-    "stats": {
-      "attack": 2,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 1,
-      "burn_value": 1
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnSell",
-        "effect": {
-          "type": "ModifyStatsPermanent",
-          "health": 1,
-          "attack": 0,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "Allies"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 51,
-    "name": "Fish",
-    "emoji": "🐟",
-    "stats": {
-      "attack": 2,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 1,
-      "burn_value": 1
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnBuy",
-        "effect": {
-          "type": "ModifyStatsPermanent",
-          "health": 1,
-          "attack": 1,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "AlliesOther",
-              "count": 2
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 52,
-    "name": "Horse",
-    "emoji": "🐎",
-    "stats": {
-      "attack": 2,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 1,
-      "burn_value": 1
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnAllySpawn",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 0,
-          "attack": 1,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "TriggerSource"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 53,
-    "name": "Mosquito",
-    "emoji": "🦟",
-    "stats": {
-      "attack": 2,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 1,
-      "burn_value": 1
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Damage",
-          "amount": 1,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "Enemies",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 54,
-    "name": "Mouse",
-    "emoji": "🐭",
-    "stats": {
-      "attack": 1,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 1,
-      "burn_value": 1
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnSell",
-        "effect": {
-          "type": "GainMana",
-          "amount": 1
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 55,
-    "name": "Otter",
-    "emoji": "🦦",
-    "stats": {
-      "attack": 1,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 1,
-      "burn_value": 1
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnBuy",
-        "effect": {
-          "type": "ModifyStatsPermanent",
-          "health": 1,
-          "attack": 0,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "AlliesOther",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 56,
-    "name": "Pig",
-    "emoji": "🐷",
-    "stats": {
-      "attack": 4,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 1,
-      "burn_value": 1
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnSell",
-        "effect": {
-          "type": "GainMana",
-          "amount": 1
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 57,
-    "name": "Crab",
-    "emoji": "🦀",
-    "stats": {
-      "attack": 4,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 2,
-      "burn_value": 1
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 0,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 58,
-    "name": "Flamingo",
-    "emoji": "🦩",
-    "stats": {
-      "attack": 3,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 2,
-      "burn_value": 1
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 1,
-          "attack": 1,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "AlliesOther",
-              "count": 2
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 59,
-    "name": "Hedgehog",
-    "emoji": "🦔",
-    "stats": {
-      "attack": 3,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 2,
-      "burn_value": 1
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "Damage",
-          "amount": 2,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "All"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 60,
-    "name": "Kangaroo",
-    "emoji": "🦘",
-    "stats": {
-      "attack": 2,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 2,
-      "burn_value": 1
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
         "trigger": "BeforeUnitAttack",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 1,
-          "attack": 1,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 61,
-    "name": "Peacock",
-    "emoji": "🦚",
-    "stats": {
-      "attack": 2,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 2,
-      "burn_value": 1
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnHurt",
         "effect": {
           "type": "ModifyStats",
           "health": 0,
@@ -1884,29 +2751,36 @@
           }
         },
         "conditions": [],
-        "max_triggers": null
+        "max_triggers": 3
       }
     ]
   },
   {
-    "id": 62,
-    "name": "Rat",
-    "emoji": "🐀",
+    "id": 87,
+    "name": "Warlord",
+    "emoji": "🏴",
     "stats": {
-      "attack": 3,
+      "attack": 8,
       "health": 6
     },
     "economy": {
-      "play_cost": 2,
-      "burn_value": 1
+      "play_cost": 9,
+      "burn_value": 3
     },
     "shop_abilities": [],
     "battle_abilities": [
       {
-        "trigger": "OnFaint",
+        "trigger": "OnStart",
         "effect": {
-          "type": "SpawnUnit",
-          "card_id": 40
+          "type": "ModifyStats",
+          "health": 0,
+          "attack": 4,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
         },
         "conditions": [],
         "max_triggers": null
@@ -1914,16 +2788,16 @@
     ]
   },
   {
-    "id": 63,
-    "name": "Snail",
-    "emoji": "🐌",
+    "id": 88,
+    "name": "Lost Soul",
+    "emoji": "😢",
     "stats": {
-      "attack": 2,
+      "attack": 1,
       "health": 2
     },
     "economy": {
-      "play_cost": 2,
-      "burn_value": 1
+      "play_cost": 1,
+      "burn_value": 0
     },
     "shop_abilities": [
       {
@@ -1946,9 +2820,9 @@
     "battle_abilities": []
   },
   {
-    "id": 64,
-    "name": "Spider",
-    "emoji": "🕷️",
+    "id": 89,
+    "name": "Stray Spirit",
+    "emoji": "👻",
     "stats": {
       "attack": 2,
       "health": 2
@@ -1957,59 +2831,9 @@
       "play_cost": 2,
       "burn_value": 1
     },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 46
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 65,
-    "name": "Swan",
-    "emoji": "🦢",
-    "stats": {
-      "attack": 1,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 2,
-      "burn_value": 1
-    },
     "shop_abilities": [
       {
-        "trigger": "OnShopStart",
-        "effect": {
-          "type": "GainMana",
-          "amount": 1
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 66,
-    "name": "Worm",
-    "emoji": "🪱",
-    "stats": {
-      "attack": 1,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 2,
-      "burn_value": 1
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnBuy",
+        "trigger": "AfterLoss",
         "effect": {
           "type": "ModifyStatsPermanent",
           "health": 1,
@@ -2028,120 +2852,54 @@
     "battle_abilities": []
   },
   {
-    "id": 67,
-    "name": "Badger",
-    "emoji": "🦡",
+    "id": 90,
+    "name": "Fallen Captain",
+    "emoji": "⚰️",
     "stats": {
-      "attack": 6,
+      "attack": 2,
       "health": 3
     },
     "economy": {
       "play_cost": 3,
-      "burn_value": 2
+      "burn_value": 1
     },
-    "shop_abilities": [],
-    "battle_abilities": [
+    "shop_abilities": [
       {
-        "trigger": "OnFaint",
+        "trigger": "AfterLoss",
         "effect": {
-          "type": "Damage",
-          "amount": 3,
-          "target": {
-            "type": "Adjacent",
-            "data": {
-              "scope": "All"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 68,
-    "name": "Camel",
-    "emoji": "🐫",
-    "stats": {
-      "attack": 2,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 3,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnHurt",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 2,
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "SelfUnit",
-              "index": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 69,
-    "name": "Dodo",
-    "emoji": "🦤",
-    "stats": {
-      "attack": 4,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 3,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
+          "type": "ModifyStatsPermanent",
           "health": 0,
-          "attack": 2,
+          "attack": 1,
           "target": {
-            "type": "Position",
+            "type": "All",
             "data": {
-              "scope": "SelfUnit",
-              "index": -1
+              "scope": "Allies"
             }
           }
         },
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
-    "id": 70,
-    "name": "Dog",
-    "emoji": "🐕",
+    "id": 91,
+    "name": "Scarred Warrior",
+    "emoji": "🩹",
     "stats": {
       "attack": 2,
-      "health": 3
+      "health": 5
     },
     "economy": {
-      "play_cost": 3,
+      "play_cost": 4,
       "burn_value": 2
     },
-    "shop_abilities": [],
-    "battle_abilities": [
+    "shop_abilities": [
       {
-        "trigger": "OnAllySpawn",
+        "trigger": "AfterLoss",
         "effect": {
-          "type": "ModifyStats",
+          "type": "ModifyStatsPermanent",
           "health": 1,
           "attack": 2,
           "target": {
@@ -2154,544 +2912,56 @@
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
-    "id": 71,
-    "name": "Dolphin",
-    "emoji": "🐬",
+    "id": 92,
+    "name": "Doom Herald",
+    "emoji": "🌘",
     "stats": {
-      "attack": 4,
-      "health": 3
+      "attack": 3,
+      "health": 5
     },
     "economy": {
-      "play_cost": 3,
+      "play_cost": 5,
       "burn_value": 2
     },
-    "shop_abilities": [],
-    "battle_abilities": [
+    "shop_abilities": [
       {
-        "trigger": "OnStart",
+        "trigger": "AfterLoss",
         "effect": {
-          "type": "Damage",
-          "amount": 3,
+          "type": "ModifyStatsPermanent",
+          "health": 1,
+          "attack": 1,
           "target": {
-            "type": "Standard",
+            "type": "All",
             "data": {
-              "scope": "Enemies",
-              "stat": "Health",
-              "order": "Ascending",
-              "count": 1
+              "scope": "Allies"
             }
           }
         },
         "conditions": [],
         "max_triggers": null
       }
-    ]
+    ],
+    "battle_abilities": []
   },
   {
-    "id": 72,
-    "name": "Elephant",
-    "emoji": "🐘",
+    "id": 93,
+    "name": "Resilient Guard",
+    "emoji": "🛡️",
     "stats": {
       "attack": 3,
       "health": 7
     },
     "economy": {
-      "play_cost": 3,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "AfterUnitAttack",
-        "effect": {
-          "type": "Damage",
-          "amount": 1,
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "SelfUnit",
-              "index": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 73,
-    "name": "Giraffe",
-    "emoji": "🦒",
-    "stats": {
-      "attack": 1,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 3,
-      "burn_value": 2
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnShopStart",
-        "effect": {
-          "type": "ModifyStatsPermanent",
-          "health": 1,
-          "attack": 1,
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "SelfUnit",
-              "index": -1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 74,
-    "name": "Ox",
-    "emoji": "🐂",
-    "stats": {
-      "attack": 1,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 3,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnAllyFaint",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 0,
-          "attack": 1,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 75,
-    "name": "Rabbit",
-    "emoji": "🐇",
-    "stats": {
-      "attack": 1,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 3,
-      "burn_value": 2
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnBuy",
-        "effect": {
-          "type": "ModifyStatsPermanent",
-          "health": 1,
-          "attack": 0,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "TriggerSource"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 76,
-    "name": "Sheep",
-    "emoji": "🐑",
-    "stats": {
-      "attack": 2,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 3,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 45
-        },
-        "conditions": [],
-        "max_triggers": null
-      },
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 45
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 77,
-    "name": "Bison",
-    "emoji": "🦬",
-    "stats": {
-      "attack": 5,
-      "health": 3
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnShopStart",
-        "effect": {
-          "type": "ModifyStatsPermanent",
-          "health": 2,
-          "attack": 1,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 78,
-    "name": "Blowfish",
-    "emoji": "🐡",
-    "stats": {
-      "attack": 3,
-      "health": 6
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnHurt",
-        "effect": {
-          "type": "Damage",
-          "amount": 3,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "Enemies",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 79,
-    "name": "Deer",
-    "emoji": "🦌",
-    "stats": {
-      "attack": 1,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 107
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 80,
-    "name": "Hippo",
-    "emoji": "🦛",
-    "stats": {
-      "attack": 4,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "AfterUnitAttack",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 3,
-          "attack": 3,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 81,
-    "name": "Parrot",
-    "emoji": "🦜",
-    "stats": {
-      "attack": 4,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 1,
-          "attack": 1,
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "SelfUnit",
-              "index": -1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 82,
-    "name": "Penguin",
-    "emoji": "🐧",
-    "stats": {
-      "attack": 2,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnShopStart",
-        "effect": {
-          "type": "ModifyStatsPermanent",
-          "health": 1,
-          "attack": 1,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "AlliesOther",
-              "count": 2
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 83,
-    "name": "Skunk",
-    "emoji": "🦨",
-    "stats": {
-      "attack": 3,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Damage",
-          "amount": 3,
-          "target": {
-            "type": "Standard",
-            "data": {
-              "scope": "Enemies",
-              "stat": "Health",
-              "order": "Descending",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 84,
-    "name": "Squirrel",
-    "emoji": "🐿️",
-    "stats": {
-      "attack": 2,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnShopStart",
-        "effect": {
-          "type": "GainMana",
-          "amount": 1
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 85,
-    "name": "Turtle",
-    "emoji": "🐢",
-    "stats": {
-      "attack": 2,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 86,
-    "name": "Whale",
-    "emoji": "🐋",
-    "stats": {
-      "attack": 3,
-      "health": 8
-    },
-    "economy": {
-      "play_cost": 4,
-      "burn_value": 2
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Destroy",
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "SelfUnit",
-              "index": -1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 87,
-    "name": "Armadillo",
-    "emoji": "🛡️",
-    "stats": {
-      "attack": 2,
-      "health": 6
-    },
-    "economy": {
-      "play_cost": 5,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 8,
-          "attack": 0,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "All"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 88,
-    "name": "Cow",
-    "emoji": "🐄",
-    "stats": {
-      "attack": 4,
-      "health": 6
-    },
-    "economy": {
-      "play_cost": 5,
+      "play_cost": 7,
       "burn_value": 3
     },
     "shop_abilities": [
       {
-        "trigger": "OnBuy",
+        "trigger": "AfterLoss",
         "effect": {
           "type": "ModifyStatsPermanent",
           "health": 2,
@@ -2710,61 +2980,28 @@
     "battle_abilities": []
   },
   {
-    "id": 89,
-    "name": "Crocodile",
-    "emoji": "🐊",
+    "id": 94,
+    "name": "Vengeful Shade",
+    "emoji": "🌑",
     "stats": {
-      "attack": 8,
-      "health": 4
+      "attack": 3,
+      "health": 6
     },
     "economy": {
-      "play_cost": 5,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Damage",
-          "amount": 8,
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "Enemies",
-              "index": -1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 90,
-    "name": "Monkey",
-    "emoji": "🐒",
-    "stats": {
-      "attack": 1,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 5,
+      "play_cost": 7,
       "burn_value": 3
     },
     "shop_abilities": [
       {
-        "trigger": "OnShopStart",
+        "trigger": "AfterLoss",
         "effect": {
           "type": "ModifyStatsPermanent",
-          "health": 3,
+          "health": 2,
           "attack": 2,
           "target": {
-            "type": "Random",
+            "type": "All",
             "data": {
-              "scope": "AlliesOther",
-              "count": 1
+              "scope": "Allies"
             }
           }
         },
@@ -2775,24 +3012,310 @@
     "battle_abilities": []
   },
   {
-    "id": 91,
-    "name": "Rhino",
-    "emoji": "🦏",
+    "id": 95,
+    "name": "Ironclad Specter",
+    "emoji": "🗡️",
     "stats": {
-      "attack": 6,
-      "health": 9
+      "attack": 4,
+      "health": 8
     },
     "economy": {
-      "play_cost": 5,
+      "play_cost": 8,
       "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "AfterLoss",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 2,
+          "attack": 2,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      },
+      {
+        "trigger": "AfterLoss",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 0,
+          "attack": 1,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 96,
+    "name": "Phoenix Knight",
+    "emoji": "🐦‍🔥",
+    "stats": {
+      "attack": 4,
+      "health": 7
+    },
+    "economy": {
+      "play_cost": 9,
+      "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "AfterLoss",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 2,
+          "attack": 3,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "SelfUnit"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 97,
+    "name": "Avatar of Vengeance",
+    "emoji": "😡",
+    "stats": {
+      "attack": 5,
+      "health": 10
+    },
+    "economy": {
+      "play_cost": 9,
+      "burn_value": 3
+    },
+    "shop_abilities": [
+      {
+        "trigger": "AfterLoss",
+        "effect": {
+          "type": "ModifyStatsPermanent",
+          "health": 3,
+          "attack": 3,
+          "target": {
+            "type": "All",
+            "data": {
+              "scope": "Allies"
+            }
+          }
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ],
+    "battle_abilities": []
+  },
+  {
+    "id": 98,
+    "name": "Recruit",
+    "emoji": "🧑",
+    "stats": {
+      "attack": 1,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 1,
+      "burn_value": 0
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 99,
+    "name": "Foot Soldier",
+    "emoji": "🪖",
+    "stats": {
+      "attack": 3,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 2,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 100,
+    "name": "Militia",
+    "emoji": "⚔️",
+    "stats": {
+      "attack": 4,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 3,
+      "burn_value": 1
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 101,
+    "name": "Mercenary",
+    "emoji": "🗡️",
+    "stats": {
+      "attack": 5,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 4,
+      "burn_value": 2
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 102,
+    "name": "Champion",
+    "emoji": "🏆",
+    "stats": {
+      "attack": 7,
+      "health": 7
+    },
+    "economy": {
+      "play_cost": 6,
+      "burn_value": 3
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 103,
+    "name": "Grub",
+    "emoji": "🐛",
+    "stats": {
+      "attack": 1,
+      "health": 1
+    },
+    "economy": {
+      "play_cost": 0,
+      "burn_value": 0
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 104,
+    "name": "Hatchling",
+    "emoji": "🥚",
+    "stats": {
+      "attack": 2,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 0,
+      "burn_value": 0
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 105,
+    "name": "Nymph",
+    "emoji": "🪰",
+    "stats": {
+      "attack": 3,
+      "health": 1
+    },
+    "economy": {
+      "play_cost": 0,
+      "burn_value": 0
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 106,
+    "name": "Moth",
+    "emoji": "🦋",
+    "stats": {
+      "attack": 3,
+      "health": 3
+    },
+    "economy": {
+      "play_cost": 0,
+      "burn_value": 0
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 107,
+    "name": "Drone",
+    "emoji": "🐝",
+    "stats": {
+      "attack": 2,
+      "health": 2
+    },
+    "economy": {
+      "play_cost": 0,
+      "burn_value": 0
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
+  },
+  {
+    "id": 108,
+    "name": "Phylactery",
+    "emoji": "🏺",
+    "stats": {
+      "attack": 0,
+      "health": 5
+    },
+    "economy": {
+      "play_cost": 0,
+      "burn_value": 0
+    },
+    "shop_abilities": [],
+    "battle_abilities": [
+      {
+        "trigger": "OnStart",
+        "effect": {
+          "type": "SpawnUnit",
+          "card_id": 52
+        },
+        "conditions": [],
+        "max_triggers": null
+      }
+    ]
+  },
+  {
+    "id": 109,
+    "name": "Stinger",
+    "emoji": "🐝",
+    "stats": {
+      "attack": 1,
+      "health": 1
+    },
+    "economy": {
+      "play_cost": 0,
+      "burn_value": 0
     },
     "shop_abilities": [],
     "battle_abilities": [
       {
         "trigger": "AfterUnitAttack",
         "effect": {
-          "type": "Damage",
-          "amount": 4,
+          "type": "Destroy",
           "target": {
             "type": "Position",
             "data": {
@@ -2805,492 +3328,5 @@
         "max_triggers": null
       }
     ]
-  },
-  {
-    "id": 92,
-    "name": "Rooster",
-    "emoji": "🐓",
-    "stats": {
-      "attack": 6,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 5,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 108
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 93,
-    "name": "Scorpion",
-    "emoji": "🦂",
-    "stats": {
-      "attack": 1,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 5,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "AfterUnitAttack",
-        "effect": {
-          "type": "Destroy",
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "TriggerSource"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 94,
-    "name": "Seal",
-    "emoji": "🦭",
-    "stats": {
-      "attack": 3,
-      "health": 8
-    },
-    "economy": {
-      "play_cost": 5,
-      "burn_value": 3
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnBuy",
-        "effect": {
-          "type": "ModifyStatsPermanent",
-          "health": 0,
-          "attack": 1,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "AlliesOther",
-              "count": 3
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 95,
-    "name": "Shark",
-    "emoji": "🦈",
-    "stats": {
-      "attack": 4,
-      "health": 2
-    },
-    "economy": {
-      "play_cost": 5,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnAllyFaint",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 1,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 96,
-    "name": "Turkey",
-    "emoji": "🦃",
-    "stats": {
-      "attack": 3,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 5,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnAllySpawn",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 3,
-          "attack": 2,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "TriggerSource"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 97,
-    "name": "Boar",
-    "emoji": "🐗",
-    "stats": {
-      "attack": 10,
-      "health": 6
-    },
-    "economy": {
-      "play_cost": 6,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "BeforeUnitAttack",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 4,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "SelfUnit"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 98,
-    "name": "Cat",
-    "emoji": "🐱",
-    "stats": {
-      "attack": 4,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 6,
-      "burn_value": 3
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnShopStart",
-        "effect": {
-          "type": "GainMana",
-          "amount": 1
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 99,
-    "name": "Dragon",
-    "emoji": "🐉",
-    "stats": {
-      "attack": 6,
-      "health": 8
-    },
-    "economy": {
-      "play_cost": 6,
-      "burn_value": 3
-    },
-    "shop_abilities": [
-      {
-        "trigger": "OnBuy",
-        "effect": {
-          "type": "ModifyStatsPermanent",
-          "health": 1,
-          "attack": 1,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "Allies"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ],
-    "battle_abilities": []
-  },
-  {
-    "id": 100,
-    "name": "Fly",
-    "emoji": "🪰",
-    "stats": {
-      "attack": 5,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 6,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnAllyFaint",
-        "effect": {
-          "type": "SpawnUnit",
-          "card_id": 109
-        },
-        "conditions": [],
-        "max_triggers": 3
-      }
-    ]
-  },
-  {
-    "id": 101,
-    "name": "Gorilla",
-    "emoji": "🦍",
-    "stats": {
-      "attack": 7,
-      "health": 10
-    },
-    "economy": {
-      "play_cost": 6,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 102,
-    "name": "Leopard",
-    "emoji": "🐆",
-    "stats": {
-      "attack": 10,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 6,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "Damage",
-          "amount": 5,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "Enemies",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 103,
-    "name": "Mammoth",
-    "emoji": "🦣",
-    "stats": {
-      "attack": 3,
-      "health": 10
-    },
-    "economy": {
-      "play_cost": 6,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnFaint",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 2,
-          "target": {
-            "type": "All",
-            "data": {
-              "scope": "AlliesOther"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 104,
-    "name": "Snake",
-    "emoji": "🐍",
-    "stats": {
-      "attack": 6,
-      "health": 6
-    },
-    "economy": {
-      "play_cost": 6,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "AfterAnyAttack",
-        "effect": {
-          "type": "Damage",
-          "amount": 5,
-          "target": {
-            "type": "Random",
-            "data": {
-              "scope": "Enemies",
-              "count": 1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 105,
-    "name": "Tiger",
-    "emoji": "🐅",
-    "stats": {
-      "attack": 6,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 6,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 2,
-          "attack": 2,
-          "target": {
-            "type": "Position",
-            "data": {
-              "scope": "SelfUnit",
-              "index": -1
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 106,
-    "name": "Wolverine",
-    "emoji": "🐺",
-    "stats": {
-      "attack": 5,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 6,
-      "burn_value": 3
-    },
-    "shop_abilities": [],
-    "battle_abilities": [
-      {
-        "trigger": "OnStart",
-        "effect": {
-          "type": "ModifyStats",
-          "health": 0,
-          "attack": 3,
-          "target": {
-            "type": "Adjacent",
-            "data": {
-              "scope": "Allies"
-            }
-          }
-        },
-        "conditions": [],
-        "max_triggers": null
-      }
-    ]
-  },
-  {
-    "id": 107,
-    "name": "Bus",
-    "emoji": "🚌",
-    "stats": {
-      "attack": 5,
-      "health": 5
-    },
-    "economy": {
-      "play_cost": 0,
-      "burn_value": 0
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 108,
-    "name": "Chick",
-    "emoji": "🐥",
-    "stats": {
-      "attack": 3,
-      "health": 1
-    },
-    "economy": {
-      "play_cost": 0,
-      "burn_value": 0
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
-  },
-  {
-    "id": 109,
-    "name": "Zombie Fly",
-    "emoji": "🪰",
-    "stats": {
-      "attack": 4,
-      "health": 4
-    },
-    "economy": {
-      "play_cost": 0,
-      "burn_value": 0
-    },
-    "shop_abilities": [],
-    "battle_abilities": []
   }
 ]
