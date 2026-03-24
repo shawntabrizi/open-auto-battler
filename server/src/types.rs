@@ -67,11 +67,8 @@ impl From<GameView> for GameStateResponse {
             }
         }
 
-        if board_count >= 5 && !hand_cards.is_empty() {
-            hints.push(
-                "Board is full (5/5). Sell a board unit (BurnFromBoard) to make room for new cards."
-                    .into(),
-            );
+        if board_count >= 5 {
+            hints.push("Board is full (5/5).".into());
         }
 
         if board_count == 0 && hand_cards.is_empty() {
