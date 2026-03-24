@@ -69,6 +69,14 @@ pub struct BattleReport {
     pub events: Vec<CombatEvent>,
 }
 
+/// A card set summary.
+#[derive(Debug, Serialize)]
+pub struct SetInfo {
+    pub id: u32,
+    pub name: String,
+    pub card_count: usize,
+}
+
 /// Error response.
 #[derive(Debug, Serialize)]
 pub struct ErrorResponse {

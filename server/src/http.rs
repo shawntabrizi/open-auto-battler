@@ -24,6 +24,7 @@ pub fn serve(port: u16, backend: Box<dyn GameBackend>) -> std::io::Result<()> {
     eprintln!("  POST /step   — Submit actions {{ \"actions\": [...] }}");
     eprintln!("  GET  /state  — Get current game state");
     eprintln!("  GET  /cards  — List all cards in the current set");
+    eprintln!("  GET  /sets   — List available card sets");
 
     let backend = Mutex::new(backend);
 
@@ -53,9 +54,10 @@ fn handle_request(
 
     match (method, path) {
         (Method::Post, "/reset") => handle_reset(request, backend),
-        (Method::Post, "/step") => handle_step(request, backend),
+        (Method::Post, "/submit") => handle_step(request, backend),
         (Method::Get, "/state") => handle_get_state(backend),
         (Method::Get, "/cards") => handle_get_cards(backend),
+        (Method::Get, "/sets") => handle_get_sets(backend),
         _ => Err((404, format!("Not found: {} {}", request.method(), path))),
     }
 }
@@ -107,6 +109,12 @@ fn handle_get_cards(backend: &Mutex<Box<dyn GameBackend>>) -> Result<String, (u1
     let b = backend.lock().unwrap();
     let cards = b.get_cards();
     serde_json::to_string(&cards).map_err(|e| (500, e.to_string()))
+}
+
+fn handle_get_sets(backend: &Mutex<Box<dyn GameBackend>>) -> Result<String, (u16, String)> {
+    let b = backend.lock().unwrap();
+    let sets = b.get_sets();
+    serde_json::to_string(&sets).map_err(|e| (500, e.to_string()))
 }
 
 fn read_body(request: &mut Request) -> Result<String, (u16, String)> {

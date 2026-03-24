@@ -35,6 +35,7 @@ mod inner {
         keypair: Keypair,
         account_id: subxt::utils::AccountId32,
         card_pool: BTreeMap<CardId, UnitCard>,
+        sets: Vec<(u32, usize)>, // (set_id, card_count) for all sets on chain
         state: Option<GameState>,
         set_id: u32,
         rt: Runtime,
@@ -61,6 +62,12 @@ mod inner {
                 .map_err(|e| format!("Failed to load cards: {}", e))?;
             eprintln!("Loaded {} cards from chain.", card_pool.len());
 
+            // Load all sets from chain
+            let sets = rt
+                .block_on(load_all_sets_from_chain(&api))
+                .map_err(|e| format!("Failed to load sets: {}", e))?;
+            eprintln!("Loaded {} card sets from chain.", sets.len());
+
             // Check for existing active game
             let existing = rt
                 .block_on(load_active_game(&api, &account_id))
@@ -85,6 +92,7 @@ mod inner {
                 keypair,
                 account_id,
                 card_pool,
+                sets,
                 state,
                 set_id,
                 rt,
@@ -350,6 +358,17 @@ mod inner {
                 .map(oab_core::view::CardView::from)
                 .collect()
         }
+
+        fn get_sets(&self) -> Vec<crate::types::SetInfo> {
+            self.sets
+                .iter()
+                .map(|(id, card_count)| crate::types::SetInfo {
+                    id: *id,
+                    name: format!("Set #{}", id),
+                    card_count: *card_count,
+                })
+                .collect()
+        }
     }
 
     // ── Blockchain helpers ──
@@ -609,6 +628,31 @@ mod inner {
             .collect();
 
         Value::named_composite([("actions", Value::unnamed_composite(actions))])
+    }
+
+    async fn load_all_sets_from_chain(
+        api: &OnlineClient<SubstrateConfig>,
+    ) -> Result<Vec<(u32, usize)>, String> {
+        let mut sets = Vec::new();
+        let storage = api
+            .storage()
+            .at_latest()
+            .await
+            .map_err(|e| format!("Storage error: {}", e))?;
+        let address = subxt::dynamic::storage("AutoBattle", "CardSets", ());
+        let mut iter = storage
+            .iter(address)
+            .await
+            .map_err(|e| format!("Iter error: {}", e))?;
+
+        while let Some(Ok(kv)) = iter.next().await {
+            let set_id = extract_card_id_from_key(&kv.key_bytes); // same key format as cards
+            if let Ok(entries) = Vec::<CardSetEntry>::decode(&mut kv.value.encoded()) {
+                sets.push((set_id, entries.len()));
+            }
+        }
+
+        Ok(sets)
     }
 
     // ── Event decoding ──

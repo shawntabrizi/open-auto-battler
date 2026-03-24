@@ -32,6 +32,8 @@ pub trait GameBackend: Send {
     fn get_state(&self) -> GameStateResponse;
     /// Get all cards available in the current card pool.
     fn get_cards(&self) -> Vec<oab_core::view::CardView>;
+    /// Get available card sets.
+    fn get_sets(&self) -> Vec<crate::types::SetInfo>;
 }
 
 /// A local game session that manages a full game against built-in opponents.
@@ -277,6 +279,20 @@ impl GameBackend for GameSession {
             .card_pool
             .values()
             .map(oab_core::view::CardView::from)
+            .collect()
+    }
+
+    fn get_sets(&self) -> Vec<crate::types::SetInfo> {
+        let metas = oab_core::cards::get_all_set_metas();
+        let sets = oab_core::cards::get_all_sets();
+        metas
+            .into_iter()
+            .zip(sets.into_iter())
+            .map(|(meta, set)| crate::types::SetInfo {
+                id: meta.id,
+                name: meta.name.to_string(),
+                card_count: set.cards.len(),
+            })
             .collect()
     }
 }
