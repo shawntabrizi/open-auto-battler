@@ -288,7 +288,6 @@ mod inner {
                     wins: 0,
                     mana: 0,
                     mana_limit: 0,
-                    potential_mana: 0,
                     phase: "none".to_string(),
                     bag_count: 0,
                     hand: vec![],

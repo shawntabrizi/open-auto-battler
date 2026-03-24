@@ -14,8 +14,6 @@ pub struct GameStateResponse {
     pub wins: i32,
     pub mana: i32,
     pub mana_limit: i32,
-    /// Maximum mana achievable this turn if all hand cards are burned.
-    pub potential_mana: i32,
     pub phase: String,
     pub bag_count: u32,
     pub hand: Vec<Option<CardView>>,
@@ -69,7 +67,7 @@ impl From<GameView> for GameStateResponse {
             }
         }
 
-        if board_count >= 5 && any_affordable_after_burn {
+        if board_count >= 5 && !hand_cards.is_empty() {
             hints.push(
                 "Board is full (5/5). Sell a board unit (BurnFromBoard) to make room for new cards."
                     .into(),
@@ -86,7 +84,6 @@ impl From<GameView> for GameStateResponse {
             wins: v.wins,
             mana: v.mana,
             mana_limit: v.mana_limit,
-            potential_mana,
             phase: v.phase,
             bag_count: v.bag_count,
             hand: v.hand,
