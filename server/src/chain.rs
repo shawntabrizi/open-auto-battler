@@ -126,24 +126,25 @@ mod inner {
         fn reset(&mut self, _seed: u64, set_id: Option<u32>) -> Result<GameStateResponse, String> {
             let set_id = set_id.unwrap_or(self.set_id);
 
-            // If there's an existing completed game, end it first
+            // Sync from chain to get the real state
+            self.sync_state_from_chain()?;
+
+            // If there's an active game on-chain, end it first
             if let Some(ref state) = self.state {
                 if state.phase == GamePhase::Completed {
                     eprintln!("Ending completed game...");
-                    self.rt
-                        .block_on(submit_extrinsic(
-                            &self.api,
-                            &self.keypair,
-                            "AutoBattle",
-                            "end_game",
-                            vec![],
-                        ))
-                        .map_err(|e| format!("Failed to end game: {}", e))?;
+                    let _ = self.rt.block_on(submit_extrinsic(
+                        &self.api,
+                        &self.keypair,
+                        "AutoBattle",
+                        "end_game",
+                        vec![],
+                    ));
+                    self.sync_state_from_chain()?;
                 }
             }
 
-            // Check if there's still an active game
-            self.sync_state_from_chain()?;
+            // If game still exists (not completed), can't start a new one
             if self.state.is_some() {
                 return Err(
                     "Active game exists on-chain. Complete it first or use a different account."
