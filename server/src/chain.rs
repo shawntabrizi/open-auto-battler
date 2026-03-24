@@ -14,7 +14,7 @@ mod inner {
     use oab_core::view::GameView;
 
     use bounded_collections::ConstU32;
-    use parity_scale_codec::{Decode, Encode};
+    use parity_scale_codec::Decode;
     use subxt::config::SubstrateConfig;
     use subxt::dynamic::Value;
     use subxt::OnlineClient;
@@ -190,14 +190,14 @@ mod inner {
 
             // Submit on-chain
             eprintln!("Submitting turn (round {})...", completed_round);
-            let action_bytes = action.encode();
+            let action_value = commit_turn_action_to_value(action);
             self.rt
                 .block_on(submit_extrinsic(
                     &self.api,
                     &self.keypair,
                     "AutoBattle",
                     "submit_turn",
-                    vec![("action", Value::from_bytes(action_bytes))],
+                    vec![("action", action_value)],
                 ))
                 .map_err(|e| format!("Failed to submit turn: {}", e))?;
 
@@ -451,6 +451,52 @@ mod inner {
         }
 
         Ok(card_pool)
+    }
+
+    // ── Value encoding helpers ──
+
+    /// Convert a CommitTurnAction to a subxt dynamic Value matching the pallet's type.
+    fn commit_turn_action_to_value(action: &CommitTurnAction) -> Value {
+        let actions: Vec<Value> = action
+            .actions
+            .iter()
+            .map(|a| match a {
+                TurnAction::BurnFromHand { hand_index } => Value::named_variant(
+                    "BurnFromHand",
+                    [("hand_index", Value::u128(*hand_index as u128))],
+                ),
+                TurnAction::PlayFromHand {
+                    hand_index,
+                    board_slot,
+                } => Value::named_variant(
+                    "PlayFromHand",
+                    [
+                        ("hand_index", Value::u128(*hand_index as u128)),
+                        ("board_slot", Value::u128(*board_slot as u128)),
+                    ],
+                ),
+                TurnAction::BurnFromBoard { board_slot } => Value::named_variant(
+                    "BurnFromBoard",
+                    [("board_slot", Value::u128(*board_slot as u128))],
+                ),
+                TurnAction::SwapBoard { slot_a, slot_b } => Value::named_variant(
+                    "SwapBoard",
+                    [
+                        ("slot_a", Value::u128(*slot_a as u128)),
+                        ("slot_b", Value::u128(*slot_b as u128)),
+                    ],
+                ),
+                TurnAction::MoveBoard { from_slot, to_slot } => Value::named_variant(
+                    "MoveBoard",
+                    [
+                        ("from_slot", Value::u128(*from_slot as u128)),
+                        ("to_slot", Value::u128(*to_slot as u128)),
+                    ],
+                ),
+            })
+            .collect();
+
+        Value::named_composite([("actions", Value::unnamed_composite(actions))])
     }
 
     // ── SCALE decoding helpers ──
