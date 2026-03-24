@@ -261,7 +261,22 @@ pub enum AbilityTrigger {
     AfterUnitAttack,
     BeforeAnyAttack,
     AfterAnyAttack,
+    AfterAllyAttack,
+    AfterEnemyAttack,
 }
+
+/// Number of AbilityTrigger variants — must stay in sync with the enum.
+pub const TRIGGER_VARIANT_COUNT: usize = 13;
+
+impl AbilityTrigger {
+    /// Discriminant index for O(1) TriggerRegistry bucket lookup.
+    pub fn index(&self) -> usize {
+        *self as usize
+    }
+}
+
+// Compile-time check: last variant discriminant == TRIGGER_VARIANT_COUNT - 1
+const _: () = assert!(AbilityTrigger::AfterEnemyAttack as usize == TRIGGER_VARIANT_COUNT - 1);
 
 /// Shop ability trigger conditions.
 #[derive(
