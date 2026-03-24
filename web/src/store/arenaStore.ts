@@ -1106,6 +1106,8 @@ const GENESIS_STYLE_ITEMS: [number, string, string, string][] = [
   [0, 'card_style', 'Cosmic Vines', 'bafkreieiwi6hgi7bgg4vw5pdpr6fqaxijktk42gd7cq443slztqvkazwmy'],
   [0, 'board_bg', 'Cosmic Tree', 'bafybeicdlpsvd2hk3bv5a3uakmcnlehp7nmhkgksvvusr66lbbla35ennu'],
   [0, 'card_art', 'Cosmic Cards', 'bafybeialdf7cqyadsw2i57s6f5vdjyggotdtmcjzu7jr2oyp2ejuvkmxfy'],
+  [0, 'card_art', 'Kawaii Cards', 'bafybeibugexbiptjgnenqu5j3xbyia2rwlxeamb5va4y4v3qzwgqrdq6b4'],
+  [0, 'card_art', 'Full Moon Cards', 'bafybeigjxpozflqt335k7izwl4m2hrjvrlmu3zqy6zd2tk43vuls62l5cu'],
   [1, 'theme', 'Cyberpunk', 'bafkreihqnb3ouk36t6x4eiv6bsjyzqwjhl4wfjcmr763v4o2mhdcmfp7vu'],
   [1, 'theme', 'Pastel', 'bafkreiaho64e3fazspquhr5glnhs4yi43bbuwptmhraij7tpdz2sj3kshm'],
 ];
