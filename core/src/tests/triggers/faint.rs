@@ -1,4 +1,7 @@
-use crate::battle::{player_shop_mana_delta_from_events, CombatEvent, Team, UnitId};
+use crate::battle::{
+    player_permanent_stat_deltas_from_events, player_shop_mana_delta_from_events, CombatEvent,
+    Team, UnitId,
+};
 use crate::tests::*;
 use crate::types::*;
 
@@ -216,4 +219,148 @@ fn test_on_faint_gain_mana_carries_to_next_shop_pool() {
         1,
         "Player should gain +1 next-shop mana from this faint trigger"
     );
+}
+
+#[test]
+fn test_on_faint_permanent_buff_to_ally_behind_persists() {
+    let martyr = create_dummy_card(1, "Martyr", 2, 3).with_battle_ability(Ability {
+        trigger: AbilityTrigger::OnFaint,
+        effect: AbilityEffect::ModifyStatsPermanent {
+            health: 2,
+            attack: 2,
+            target: AbilityTarget::Position {
+                scope: TargetScope::SelfUnit,
+                index: 1,
+            },
+        },
+        conditions: vec![],
+        max_triggers: Some(1),
+    });
+
+    let ally_behind = create_dummy_card(2, "Ally", 5, 5);
+
+    let p_board = vec![
+        CombatUnit::from_card(martyr),
+        CombatUnit::from_card(ally_behind),
+    ];
+    let e_board = vec![create_board_unit(3, "Enemy", 10, 10)];
+
+    let events = run_battle(&p_board, &e_board, 42);
+
+    let permanent_buff = events.iter().any(|e| {
+        matches!(
+            e,
+            CombatEvent::AbilityModifyStatsPermanent {
+                source_instance_id,
+                target_instance_id,
+                attack_change,
+                health_change,
+                ..
+            } if *source_instance_id == UnitId::player(1)
+                && *target_instance_id == UnitId::player(2)
+                && *attack_change == 2
+                && *health_change == 2
+        )
+    });
+    assert!(
+        permanent_buff,
+        "Ally behind should receive a permanent +2/+2 from the martyr"
+    );
+
+    let deltas = player_permanent_stat_deltas_from_events(&events);
+    assert_eq!(deltas.get(&UnitId::player(2)), Some(&(2, 2)));
+}
+
+#[test]
+fn test_on_faint_permanent_adjacent_buff_uses_dead_unit_position() {
+    let spirit = create_dummy_card(2, "Spirit", 1, 1).with_battle_abilities(vec![
+        create_ability(
+            AbilityTrigger::OnStart,
+            AbilityEffect::Destroy {
+                target: AbilityTarget::All {
+                    scope: TargetScope::SelfUnit,
+                },
+            },
+        ),
+        create_ability(
+            AbilityTrigger::OnFaint,
+            AbilityEffect::ModifyStatsPermanent {
+                health: 1,
+                attack: 1,
+                target: AbilityTarget::Adjacent {
+                    scope: TargetScope::Allies,
+                },
+            },
+        ),
+    ]);
+
+    let front = create_dummy_card(1, "Front", 5, 5);
+    let back = create_dummy_card(3, "Back", 5, 5);
+    let far_back = create_dummy_card(4, "Far Back", 5, 5);
+
+    let p_board = vec![
+        CombatUnit::from_card(front),
+        CombatUnit::from_card(spirit),
+        CombatUnit::from_card(back),
+        CombatUnit::from_card(far_back),
+    ];
+    let e_board = vec![create_dummy_enemy()];
+
+    let events = run_battle(&p_board, &e_board, 42);
+
+    let front_buffed = events.iter().any(|e| {
+        matches!(
+            e,
+            CombatEvent::AbilityModifyStatsPermanent {
+                source_instance_id,
+                target_instance_id,
+                attack_change,
+                health_change,
+                ..
+            } if *source_instance_id == UnitId::player(2)
+                && *target_instance_id == UnitId::player(1)
+                && *attack_change == 1
+                && *health_change == 1
+        )
+    });
+    assert!(
+        front_buffed,
+        "Front ally should get Spirit's permanent buff"
+    );
+
+    let back_buffed = events.iter().any(|e| {
+        matches!(
+            e,
+            CombatEvent::AbilityModifyStatsPermanent {
+                source_instance_id,
+                target_instance_id,
+                attack_change,
+                health_change,
+                ..
+            } if *source_instance_id == UnitId::player(2)
+                && *target_instance_id == UnitId::player(3)
+                && *attack_change == 1
+                && *health_change == 1
+        )
+    });
+    assert!(back_buffed, "Back ally should get Spirit's permanent buff");
+
+    let far_back_buffed = events.iter().any(|e| {
+        matches!(
+            e,
+            CombatEvent::AbilityModifyStatsPermanent {
+                target_instance_id,
+                ..
+            } if *target_instance_id == UnitId::player(4)
+        )
+    });
+    assert!(
+        !far_back_buffed,
+        "Non-adjacent allies should not get Spirit's permanent buff"
+    );
+
+    let deltas = player_permanent_stat_deltas_from_events(&events);
+    assert_eq!(deltas.get(&UnitId::player(1)), Some(&(1, 1)));
+    assert_eq!(deltas.get(&UnitId::player(3)), Some(&(1, 1)));
+    assert_eq!(deltas.get(&UnitId::player(4)), None);
 }

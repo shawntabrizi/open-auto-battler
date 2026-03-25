@@ -592,7 +592,11 @@ fn test_spawn_location_death_position_on_faint() {
     let board = get_spawn_board_state(&events);
 
     assert_eq!(board[0], CardId(1), "Tank should stay at position 0");
-    assert_eq!(board[1], CardId(42), "Spawned unit should be at death position (1)");
+    assert_eq!(
+        board[1],
+        CardId(42),
+        "Spawned unit should be at death position (1)"
+    );
     assert_eq!(board[2], CardId(3), "Backline should stay at position 2");
 }
 
@@ -746,6 +750,10 @@ fn test_spawn_location_death_position_front_unit_dies() {
     let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
     let board = get_spawn_board_state(&events);
 
-    assert_eq!(board[0], CardId(42), "Spawned unit should be at position 0 (death position)");
+    assert_eq!(
+        board[0],
+        CardId(42),
+        "Spawned unit should be at position 0 (death position)"
+    );
     assert_eq!(board[1], CardId(2), "Back should stay at position 1");
 }

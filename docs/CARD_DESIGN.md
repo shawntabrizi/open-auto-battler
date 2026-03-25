@@ -253,7 +253,7 @@ don't die in the right order
 | Name         | ATK | HP  | Cost | Burn | Rarity | Abilities                                                                        | Notes                             |
 | ------------ | --- | --- | ---- | ---- | ------ | -------------------------------------------------------------------------------- | --------------------------------- |
 | Skeleton     | 1   | 2   | 1    | 0    | 10     | OnFaint: +1/+1 to random ally (perm)                                             | Basic faint buff                  |
-| Spirit       | 2   | 2   | 2    | 1    | 10     | OnFaint: +1/+1 to 2 units behind (perm)                                          | Positional faint buff             |
+| Spirit       | 2   | 2   | 2    | 1    | 10     | OnFaint: +1/+1 to adjacent allies (perm)                                         | Adjacent faint buff               |
 | Ghoul        | 2   | 2   | 2    | 1    | 10     | OnFaint: Deal 2 damage to all                                                    | AoE on death                      |
 | Death Knight | 2   | 3   | 3    | 1    | 10     | OnFaint: +2/+2 to unit behind (perm)                                             | Big single-target buff            |
 | Bone Golem   | 3   | 3   | 3    | 1    | 10     | OnFaint: Deal 3 damage to adjacent                                               | Risky AoE (hits own allies)       |
