@@ -15,7 +15,7 @@ use alloc::collections::BTreeMap;
 
 use crate::types::{
     Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CardId, CompareOp, Condition, Matcher,
-    SortOrder, StatType, TargetScope, UnitCard,
+    SortOrder, SpawnLocation, StatType, TargetScope, UnitCard,
 };
 
 #[cfg(feature = "std")]
@@ -746,7 +746,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                         Team::Player,
                         AbilityTrigger::OnAllyFaint,
                         Some(dead_id),
-                        None,
+                        Some(idx),
                     ));
                 }
             }
@@ -773,7 +773,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                         Team::Enemy,
                         AbilityTrigger::OnAllyFaint,
                         Some(dead_id),
-                        None,
+                        Some(idx),
                     ));
                 }
             }
@@ -919,6 +919,7 @@ fn apply_ability_effect<R: BattleRng>(
             }
             AbilityEffect::SpawnUnit {
                 card_id: spawn_card_id,
+                spawn_location,
             } => {
                 limits.record_spawn(source_team)?;
 
@@ -944,8 +945,13 @@ fn apply_ability_effect<R: BattleRng>(
                     new_unit.instance_id = instance_id;
                     new_unit.team = source_team;
 
-                    // INSERTION LOGIC: Use override if provided (e.g. Zombie Cricket), otherwise Front
-                    let insert_idx = spawn_index_override.unwrap_or(0);
+                    // INSERTION LOGIC: Use the effect's spawn_location preference.
+                    // DeathPosition uses the override from the death context, falling back to Front.
+                    let insert_idx = match spawn_location {
+                        SpawnLocation::Front => 0,
+                        SpawnLocation::Back => my_board.len(),
+                        SpawnLocation::DeathPosition => spawn_index_override.unwrap_or(0),
+                    };
                     let safe_idx = core::cmp::min(insert_idx, my_board.len());
 
                     my_board.insert(safe_idx, new_unit);

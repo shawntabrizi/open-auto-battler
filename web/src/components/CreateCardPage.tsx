@@ -199,7 +199,7 @@ export const CreateCardPage: React.FC = () => {
       } else if (type === 'SpawnUnit') {
         setNewAbility({
           ...(newAbility as BattleAbility),
-          effect: { type: 'SpawnUnit', card_id: 2 },
+          effect: { type: 'SpawnUnit', card_id: 2, spawn_location: 'Front' },
         });
       } else if (type === 'Destroy') {
         setNewAbility({ ...(newAbility as BattleAbility), effect: { type: 'Destroy', target } });
@@ -219,7 +219,7 @@ export const CreateCardPage: React.FC = () => {
       } else if (type === 'SpawnUnit') {
         setNewAbility({
           ...(newAbility as ShopAbility),
-          effect: { type: 'SpawnUnit', card_id: 2 },
+          effect: { type: 'SpawnUnit', card_id: 2, spawn_location: 'Front' },
         });
       } else if (type === 'Destroy') {
         setNewAbility({ ...(newAbility as ShopAbility), effect: { type: 'Destroy', target } });
@@ -736,26 +736,54 @@ export const CreateCardPage: React.FC = () => {
                       </div>
                     )}
                     {newAbility.effect.type === 'SpawnUnit' && (
-                      <div>
-                        <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
-                          Card ID
-                        </label>
-                        <input
-                          type="number"
-                          value={newAbility.effect.card_id}
-                          onChange={(e) =>
-                            setNewAbility({
-                              ...newAbility,
-                              effect: {
-                                ...newAbility.effect,
-                                card_id: parseInt(e.target.value) || 0,
-                              } as any,
-                            })
-                          }
-                          className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
-                          placeholder="2"
-                        />
-                      </div>
+                      <>
+                        <div>
+                          <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
+                            Card ID
+                          </label>
+                          <input
+                            type="number"
+                            value={newAbility.effect.card_id}
+                            onChange={(e) =>
+                              setNewAbility({
+                                ...newAbility,
+                                effect: {
+                                  ...newAbility.effect,
+                                  card_id: parseInt(e.target.value) || 0,
+                                } as any,
+                              })
+                            }
+                            className="w-full bg-base-800 border border-white/10 rounded px-2 py-1 text-sm outline-none"
+                            placeholder="2"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-base-500 uppercase mb-1">
+                            Spawn Location
+                          </label>
+                          <div className="flex gap-2">
+                            {(['Front', 'Back', 'DeathPosition'] as const).map((loc) => (
+                              <button
+                                key={loc}
+                                onClick={() =>
+                                  setNewAbility({
+                                    ...newAbility,
+                                    effect: { ...newAbility.effect, spawn_location: loc } as any,
+                                  })
+                                }
+                                className={`flex-1 px-2 py-1 text-xs rounded border ${
+                                  newAbility.effect.type === 'SpawnUnit' &&
+                                  newAbility.effect.spawn_location === loc
+                                    ? 'bg-accent-500/20 border-accent-500 text-accent-400'
+                                    : 'bg-base-800 border-white/10 text-base-400 hover:border-white/20'
+                                }`}
+                              >
+                                {loc}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </>
                     )}
 
                     {newAbility.effect.type === 'GainMana' && (

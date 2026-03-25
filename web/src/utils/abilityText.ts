@@ -164,8 +164,13 @@ export function formatAbilityEffect(
       return `Give ${effect.attack >= 0 ? '+' : ''}${effect.attack}/${effect.health >= 0 ? '+' : ''}${effect.health} to ${formatAbilityTarget(effect.target)}`;
     case 'ModifyStatsPermanent':
       return `Give ${effect.attack >= 0 ? '+' : ''}${effect.attack}/${effect.health >= 0 ? '+' : ''}${effect.health} permanently to ${formatAbilityTarget(effect.target)}`;
-    case 'SpawnUnit':
-      return `Spawn ${options.resolveCardName?.(effect.card_id) ?? `card #${effect.card_id}`}`;
+    case 'SpawnUnit': {
+      const name = options.resolveCardName?.(effect.card_id) ?? `card #${effect.card_id}`;
+      const loc = effect.spawn_location === 'Back' ? ' at the back'
+        : effect.spawn_location === 'DeathPosition' ? ' in its place'
+        : '';
+      return `Spawn ${name}${loc}`;
+    }
     case 'Destroy':
       return `Destroy ${formatAbilityTarget(effect.target)}`;
     case 'GainMana':

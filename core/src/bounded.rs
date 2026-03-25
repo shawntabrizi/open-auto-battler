@@ -18,7 +18,7 @@ use crate::state::{calculate_mana_limit, derive_hand_indices_logic, CardSetEntry
 use crate::types::{
     Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CardId, CommitTurnAction,
     Condition, EconomyStats, Matcher, ShopAbility, ShopCondition, ShopEffect, ShopMatcher,
-    ShopTarget, ShopTrigger, TurnAction, UnitCard, UnitStats,
+    ShopTarget, ShopTrigger, SpawnLocation, TurnAction, UnitCard, UnitStats,
 };
 use crate::{GamePhase, GameState};
 
@@ -307,6 +307,7 @@ pub enum BoundedBattleEffect {
     },
     SpawnUnit {
         card_id: CardId,
+        spawn_location: SpawnLocation,
     },
     Destroy {
         target: AbilityTarget,
@@ -338,7 +339,13 @@ impl From<AbilityEffect> for BoundedBattleEffect {
                 attack,
                 target,
             },
-            AbilityEffect::SpawnUnit { card_id } => Self::SpawnUnit { card_id },
+            AbilityEffect::SpawnUnit {
+                card_id,
+                spawn_location,
+            } => Self::SpawnUnit {
+                card_id,
+                spawn_location,
+            },
             AbilityEffect::Destroy { target } => Self::Destroy { target },
             AbilityEffect::GainMana { amount } => Self::GainMana { amount },
         }
@@ -369,7 +376,13 @@ impl From<BoundedBattleEffect> for AbilityEffect {
                 attack,
                 target,
             },
-            BoundedBattleEffect::SpawnUnit { card_id } => AbilityEffect::SpawnUnit { card_id },
+            BoundedBattleEffect::SpawnUnit {
+                card_id,
+                spawn_location,
+            } => AbilityEffect::SpawnUnit {
+                card_id,
+                spawn_location,
+            },
             BoundedBattleEffect::Destroy { target } => AbilityEffect::Destroy { target },
             BoundedBattleEffect::GainMana { amount } => AbilityEffect::GainMana { amount },
         }
@@ -387,6 +400,7 @@ pub enum BoundedShopEffect {
     },
     SpawnUnit {
         card_id: CardId,
+        spawn_location: SpawnLocation,
     },
     Destroy {
         target: ShopTarget,
@@ -408,7 +422,13 @@ impl From<ShopEffect> for BoundedShopEffect {
                 attack,
                 target,
             },
-            ShopEffect::SpawnUnit { card_id } => Self::SpawnUnit { card_id },
+            ShopEffect::SpawnUnit {
+                card_id,
+                spawn_location,
+            } => Self::SpawnUnit {
+                card_id,
+                spawn_location,
+            },
             ShopEffect::Destroy { target } => Self::Destroy { target },
             ShopEffect::GainMana { amount } => Self::GainMana { amount },
         }
@@ -427,7 +447,13 @@ impl From<BoundedShopEffect> for ShopEffect {
                 attack,
                 target,
             },
-            BoundedShopEffect::SpawnUnit { card_id } => ShopEffect::SpawnUnit { card_id },
+            BoundedShopEffect::SpawnUnit {
+                card_id,
+                spawn_location,
+            } => ShopEffect::SpawnUnit {
+                card_id,
+                spawn_location,
+            },
             BoundedShopEffect::Destroy { target } => ShopEffect::Destroy { target },
             BoundedShopEffect::GainMana { amount } => ShopEffect::GainMana { amount },
         }

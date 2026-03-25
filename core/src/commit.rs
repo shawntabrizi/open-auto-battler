@@ -465,11 +465,22 @@ fn apply_shop_effect<R: BattleRng>(
             }
             cleanup_dead_units(state);
         }
-        ShopEffect::SpawnUnit { card_id } => {
+        ShopEffect::SpawnUnit {
+            card_id,
+            spawn_location,
+        } => {
             let Some(_spawn_card) = state.card_pool.get(card_id) else {
                 return;
             };
-            let Some(empty_slot) = state.board.iter().position(|s| s.is_none()) else {
+            let empty_slot = match spawn_location {
+                crate::types::SpawnLocation::Front | crate::types::SpawnLocation::DeathPosition => {
+                    state.board.iter().position(|s| s.is_none())
+                }
+                crate::types::SpawnLocation::Back => {
+                    state.board.iter().rposition(|s| s.is_none())
+                }
+            };
+            let Some(empty_slot) = empty_slot else {
                 return;
             };
 
