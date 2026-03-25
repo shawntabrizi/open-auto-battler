@@ -742,7 +742,7 @@ mod inner {
         }
     }
 
-    /// Fund a list of accounts by transferring balance from the funder.
+    /// Fund a list of accounts in a single batch transfer from the funder.
     pub fn fund_accounts(url: &str, funder_suri: &str, target_suris: &[String]) -> Result<(), String> {
         let rt = Runtime::new().map_err(|e| format!("Failed to create runtime: {}", e))?;
 
@@ -751,49 +751,56 @@ mod inner {
             .map_err(|e| format!("Failed to connect to {}: {}", url, e))?;
 
         let funder = parse_suri(funder_suri)?;
-        let amount: u128 = 1u128 << 50; // generous but well under Alice's 2^60
+        let amount: u128 = 1u128 << 50;
 
+        // Build batch of transfer calls
+        let mut calls: Vec<Value> = Vec::new();
         for suri in target_suris {
             let target_keypair = parse_suri(suri)?;
             let target_account: subxt::utils::AccountId32 = target_keypair.public_key().into();
+            eprintln!("  {} -> {}", suri, target_account);
 
-            let tx = subxt::dynamic::tx(
-                "Balances",
-                "transfer_allow_death",
-                vec![
-                    ("dest", Value::unnamed_variant("Id", [Value::from_bytes(target_account.0)])),
-                    ("value", Value::u128(amount)),
-                ],
-            );
-
-            rt.block_on(async {
-                let mut progress = api
-                    .tx()
-                    .sign_and_submit_then_watch_default(&tx, &funder)
-                    .await
-                    .map_err(|e| format!("Fund tx failed for {}: {}", suri, e))?;
-
-                use subxt::tx::TxStatus;
-                while let Some(status) = progress.next().await {
-                    match status.map_err(|e| format!("Tx status error: {}", e))? {
-                        TxStatus::InBestBlock(block) | TxStatus::InFinalizedBlock(block) => {
-                            block
-                                .wait_for_success()
-                                .await
-                                .map_err(|e| format!("Fund tx failed for {}: {}", suri, e))?;
-                            eprintln!("  Funded {} ({})", suri, target_account);
-                            return Ok(());
-                        }
-                        TxStatus::Error { message } => return Err(format!("Fund error for {}: {}", suri, message)),
-                        TxStatus::Dropped { message } => return Err(format!("Fund dropped for {}: {}", suri, message)),
-                        TxStatus::Invalid { message } => return Err(format!("Fund invalid for {}: {}", suri, message)),
-                        _ => {}
-                    }
-                }
-                Err(format!("Fund tx for {} ended without inclusion", suri))
-            })?;
+            calls.push(Value::unnamed_variant("Balances", [
+                Value::unnamed_variant("transfer_allow_death", [
+                    Value::unnamed_variant("Id", [Value::from_bytes(target_account.0)]),
+                    Value::u128(amount),
+                ]),
+            ]));
         }
 
+        let batch_tx = subxt::dynamic::tx(
+            "Utility",
+            "batch_all",
+            vec![("calls", Value::unnamed_composite(calls))],
+        );
+
+        rt.block_on(async {
+            let mut progress = api
+                .tx()
+                .sign_and_submit_then_watch_default(&batch_tx, &funder)
+                .await
+                .map_err(|e| format!("Batch fund tx failed: {}", e))?;
+
+            use subxt::tx::TxStatus;
+            while let Some(status) = progress.next().await {
+                match status.map_err(|e| format!("Tx status error: {}", e))? {
+                    TxStatus::InBestBlock(block) | TxStatus::InFinalizedBlock(block) => {
+                        block
+                            .wait_for_success()
+                            .await
+                            .map_err(|e| format!("Batch fund tx failed: {}", e))?;
+                        return Ok(());
+                    }
+                    TxStatus::Error { message } => return Err(format!("Batch error: {}", message)),
+                    TxStatus::Dropped { message } => return Err(format!("Batch dropped: {}", message)),
+                    TxStatus::Invalid { message } => return Err(format!("Batch invalid: {}", message)),
+                    _ => {}
+                }
+            }
+            Err("Batch tx ended without inclusion".into())
+        })?;
+
+        eprintln!("  All {} accounts funded in one transaction.", target_suris.len());
         Ok(())
     }
 }

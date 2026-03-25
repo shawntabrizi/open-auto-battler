@@ -10,16 +10,16 @@ NUM_GAMES="${OAB_NUM_GAMES:-100}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# Strategies: name, base key, script
-STRATEGIES=(
-    "Greedy://Greedy:greedy.py"
-    "Tank://Tank:tank.py"
-    "Aggro://Aggro:aggro.py"
-    "Economy://Economy:economy.py"
-)
+# Strategies: name:base_key:script
+STRAT_NAMES=( Greedy    Tank    Aggro    Economy   )
+STRAT_KEYS=(  //Greedy  //Tank  //Aggro  //Economy )
+STRAT_SCRIPTS=( greedy.py tank.py aggro.py economy.py )
 
 # Card set IDs to test
 SETS=(0 1 2)
+
+# Port for a given (strategy_index, set_id): 4000 + set_id * 10 + strat_idx
+get_port() { echo $(( 4000 + $1 * 10 + $2 )); }
 
 echo "========================================="
 echo " OAB Agent Tournament"
@@ -27,8 +27,8 @@ echo "========================================="
 echo " Chain:   $CHAIN_URL"
 echo " Games:   $NUM_GAMES per agent per set"
 echo " Sets:    ${#SETS[@]}"
-echo " Agents:  ${#STRATEGIES[@]} per set"
-echo " Total:   $(( ${#SETS[@]} * ${#STRATEGIES[@]} )) agent instances"
+echo " Agents:  ${#STRAT_NAMES[@]} per set"
+echo " Total:   $(( ${#SETS[@]} * ${#STRAT_NAMES[@]} )) agent instances"
 echo "========================================="
 echo ""
 
@@ -41,9 +41,8 @@ OAB_SERVER="$PROJECT_DIR/target/release/oab-server"
 # Collect all derived account SURIs that need funding
 FUND_ARGS=()
 for SET_ID in "${SETS[@]}"; do
-    for strat in "${STRATEGIES[@]}"; do
-        IFS=: read -r NAME BASE_KEY SCRIPT <<< "$strat"
-        FUND_ARGS+=("${BASE_KEY}//${SET_ID}")
+    for KEY in "${STRAT_KEYS[@]}"; do
+        FUND_ARGS+=("${KEY}//${SET_ID}")
     done
 done
 
@@ -65,24 +64,20 @@ cleanup() {
 trap cleanup EXIT
 
 # Start servers for every (strategy, set) combination
-# Port scheme: 4000 + set_id * 10 + strategy_index
 echo "Starting servers..."
-declare -A PORT_MAP  # "set_id:strategy_name" -> port
-STRAT_IDX=0
-for strat in "${STRATEGIES[@]}"; do
-    IFS=: read -r NAME BASE_KEY SCRIPT <<< "$strat"
+for si in "${!STRAT_NAMES[@]}"; do
+    NAME="${STRAT_NAMES[$si]}"
+    KEY="${STRAT_KEYS[$si]}"
     for SET_ID in "${SETS[@]}"; do
-        PORT=$(( 4000 + SET_ID * 10 + STRAT_IDX ))
-        DERIVED_KEY="${BASE_KEY}//${SET_ID}"
+        PORT=$(get_port "$SET_ID" "$si")
+        DERIVED_KEY="${KEY}//${SET_ID}"
         LABEL="${NAME}_set${SET_ID}"
 
         echo "  $LABEL ($DERIVED_KEY) -> port $PORT (set $SET_ID)"
         "$OAB_SERVER" --url "$CHAIN_URL" --key "$DERIVED_KEY" --port "$PORT" --set "$SET_ID" \
             2>"$SCRIPT_DIR/$LABEL.server.log" &
         ALL_PIDS+=($!)
-        PORT_MAP["${SET_ID}:${NAME}"]="$PORT"
     done
-    STRAT_IDX=$(( STRAT_IDX + 1 ))
 done
 
 # Wait for servers to be ready
@@ -93,9 +88,9 @@ sleep 20
 # Check servers are up
 echo "Checking servers..."
 for SET_ID in "${SETS[@]}"; do
-    for strat in "${STRATEGIES[@]}"; do
-        IFS=: read -r NAME BASE_KEY SCRIPT <<< "$strat"
-        PORT="${PORT_MAP[${SET_ID}:${NAME}]}"
+    for si in "${!STRAT_NAMES[@]}"; do
+        NAME="${STRAT_NAMES[$si]}"
+        PORT=$(get_port "$SET_ID" "$si")
         LABEL="${NAME}_set${SET_ID}"
         if curl -s "http://localhost:$PORT/state" > /dev/null 2>&1; then
             echo "  $LABEL ready on port $PORT"
@@ -116,9 +111,10 @@ echo ""
 AGENT_PIDS=()
 AGENT_LABELS=()
 for SET_ID in "${SETS[@]}"; do
-    for strat in "${STRATEGIES[@]}"; do
-        IFS=: read -r NAME BASE_KEY SCRIPT <<< "$strat"
-        PORT="${PORT_MAP[${SET_ID}:${NAME}]}"
+    for si in "${!STRAT_NAMES[@]}"; do
+        NAME="${STRAT_NAMES[$si]}"
+        SCRIPT="${STRAT_SCRIPTS[$si]}"
+        PORT=$(get_port "$SET_ID" "$si")
         LABEL="${NAME}_set${SET_ID}"
 
         echo "Launching $LABEL ($SCRIPT) -> port $PORT..."
@@ -129,7 +125,7 @@ for SET_ID in "${SETS[@]}"; do
     done
 done
 
-TOTAL=$(( ${#SETS[@]} * ${#STRATEGIES[@]} ))
+TOTAL=$(( ${#SETS[@]} * ${#STRAT_NAMES[@]} ))
 echo ""
 echo "All $TOTAL agents running. Waiting for completion..."
 echo "($NUM_GAMES games per agent on-chain)"
@@ -150,8 +146,8 @@ for SET_ID in "${SETS[@]}"; do
     echo ""
     echo "--- Set $SET_ID ---"
     echo ""
-    for strat in "${STRATEGIES[@]}"; do
-        IFS=: read -r NAME BASE_KEY SCRIPT <<< "$strat"
+    for si in "${!STRAT_NAMES[@]}"; do
+        NAME="${STRAT_NAMES[$si]}"
         LABEL="${NAME}_set${SET_ID}"
         RESULTS_FILE="$SCRIPT_DIR/$LABEL.results.txt"
         if [ -f "$RESULTS_FILE" ]; then

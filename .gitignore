@@ -3,3 +3,5 @@
 .playwright-mcp/
 .DS_Store
 scripts/card_art_output/
+scripts/*.server.log
+scripts/*.results.txt
