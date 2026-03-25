@@ -108,6 +108,21 @@ pub struct ErrorResponse {
 
 // ── Requests ──
 
+/// A unit on a custom opponent board.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct OpponentUnit {
+    /// Card ID of the unit
+    pub card_id: u32,
+    /// Board slot (0=front, 4=back)
+    pub slot: u32,
+    /// Permanent attack buff (default: 0)
+    #[serde(default)]
+    pub perm_attack: i32,
+    /// Permanent health buff (default: 0)
+    #[serde(default)]
+    pub perm_health: i32,
+}
+
 /// POST /reset request body (optional).
 #[derive(Debug, Deserialize)]
 pub struct ResetRequest {
@@ -117,6 +132,10 @@ pub struct ResetRequest {
     /// Card set ID (default: 0)
     #[serde(default)]
     pub set_id: Option<u32>,
+    /// Custom opponents per round. Key is round number (as string in JSON).
+    /// If absent or empty, uses built-in opponents.
+    #[serde(default)]
+    pub opponents: Option<std::collections::BTreeMap<String, Vec<OpponentUnit>>>,
 }
 
 /// POST /step request body.

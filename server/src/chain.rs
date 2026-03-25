@@ -123,7 +123,12 @@ mod inner {
     }
 
     impl GameBackend for ChainGameSession {
-        fn reset(&mut self, _seed: u64, set_id: Option<u32>) -> Result<GameStateResponse, String> {
+        fn reset(
+            &mut self,
+            _seed: u64,
+            set_id: Option<u32>,
+            _opponents: Option<std::collections::BTreeMap<i32, Vec<crate::types::OpponentUnit>>>,
+        ) -> Result<GameStateResponse, String> {
             let set_id = set_id.unwrap_or(self.set_id);
 
             // Sync from chain to get the real state

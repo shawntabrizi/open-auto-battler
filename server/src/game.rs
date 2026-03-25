@@ -24,8 +24,13 @@ struct BattleOutcome {
 
 /// Trait for game backends (local or on-chain).
 pub trait GameBackend: Send {
-    /// Reset the game with a new seed and optional set_id. Returns initial state.
-    fn reset(&mut self, seed: u64, set_id: Option<u32>) -> Result<GameStateResponse, String>;
+    /// Reset the game with a new seed, optional set_id, and optional custom opponents.
+    fn reset(
+        &mut self,
+        seed: u64,
+        set_id: Option<u32>,
+        opponents: Option<BTreeMap<i32, Vec<crate::types::OpponentUnit>>>,
+    ) -> Result<GameStateResponse, String>;
     /// Execute a turn and return the step result.
     fn step(&mut self, action: &CommitTurnAction) -> Result<StepResponse, String>;
     /// Get the current game state.
@@ -40,6 +45,9 @@ pub trait GameBackend: Send {
 pub struct GameSession {
     state: GameState,
     card_set: CardSet,
+    /// Custom opponents per round (round number → list of units).
+    /// If empty, falls back to built-in opponents.
+    custom_opponents: BTreeMap<i32, Vec<crate::types::OpponentUnit>>,
 }
 
 impl GameSession {
@@ -61,7 +69,11 @@ impl GameSession {
         state.draw_hand();
         apply_shop_start_triggers(&mut state);
 
-        Ok(Self { state, card_set })
+        Ok(Self {
+            state,
+            card_set,
+            custom_opponents: BTreeMap::new(),
+        })
     }
 
     /// Reset with a new seed (same set), returning the initial game state.
@@ -108,6 +120,25 @@ impl GameSession {
                 })
             })
             .collect()
+    }
+
+    /// Build enemy units from a custom opponent definition.
+    fn build_custom_opponent(&self, units: &[crate::types::OpponentUnit]) -> Vec<CombatUnit> {
+        let mut board: Vec<Option<CombatUnit>> = vec![None; oab_core::state::BOARD_SIZE];
+        for u in units {
+            let slot = u.slot as usize;
+            if slot >= board.len() {
+                continue;
+            }
+            if let Some(card) = self.state.card_pool.get(&CardId(u.card_id)) {
+                let mut cu = CombatUnit::from_card(card.clone());
+                cu.attack_buff = u.perm_attack;
+                cu.health_buff = u.perm_health;
+                cu.health = cu.health.saturating_add(u.perm_health).max(0);
+                board[slot] = Some(cu);
+            }
+        }
+        board.into_iter().flatten().collect()
     }
 
     /// Execute a turn: apply actions, run battle, advance round.
@@ -200,9 +231,12 @@ impl GameSession {
             .collect();
 
         let battle_seed = self.state.round as u64;
-        let enemy_units =
+        let enemy_units = if let Some(custom) = self.custom_opponents.get(&self.state.round) {
+            self.build_custom_opponent(custom)
+        } else {
             get_opponent_for_round(self.state.round, battle_seed + 999, &self.state.card_pool)
-                .unwrap_or_default();
+                .unwrap_or_default()
+        };
         let enemy_count = enemy_units.len();
 
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
@@ -334,7 +368,7 @@ let _ = (entry.card_id, entry.rarity);
         let _ = session.step(&CommitTurnAction { actions: vec![] });
 
         // Reset
-        let state = session.reset(99, None).expect("reset should succeed");
+        let state = session.reset(99, None, None).expect("reset should succeed");
         assert_eq!(state.round, 1);
         assert_eq!(state.phase, "shop");
         assert_eq!(state.wins, 0);
@@ -345,7 +379,7 @@ let _ = (entry.card_id, entry.rarity);
         let mut session = new_session();
         let all_sets = oab_core::cards::get_all_set_metas();
         if all_sets.len() > 1 {
-            let state = session.reset(99, Some(1)).expect("reset with set 1 should succeed");
+            let state = session.reset(99, Some(1), None).expect("reset with set 1 should succeed");
             assert_eq!(state.round, 1);
         }
     }
@@ -353,7 +387,7 @@ let _ = (entry.card_id, entry.rarity);
     #[test]
     fn reset_invalid_set_returns_error() {
         let mut session = new_session();
-        let result = session.reset(99, Some(9999));
+        let result = session.reset(99, Some(9999), None);
         assert!(result.is_err());
     }
 
@@ -445,12 +479,18 @@ fn apply_permanent_deltas(
 }
 
 impl GameBackend for GameSession {
-    fn reset(&mut self, seed: u64, set_id: Option<u32>) -> Result<GameStateResponse, String> {
+    fn reset(
+        &mut self,
+        seed: u64,
+        set_id: Option<u32>,
+        opponents: Option<BTreeMap<i32, Vec<crate::types::OpponentUnit>>>,
+    ) -> Result<GameStateResponse, String> {
         if let Some(set_id) = set_id {
             *self = GameSession::new(seed, set_id)?;
         } else {
             self.reset_local(seed);
         }
+        self.custom_opponents = opponents.unwrap_or_default();
         Ok(self.get_state())
     }
 

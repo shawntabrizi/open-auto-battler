@@ -72,6 +72,7 @@ fn handle_reset(
         ResetRequest {
             seed: None,
             set_id: None,
+            opponents: None,
         }
     } else {
         serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?
@@ -79,8 +80,15 @@ fn handle_reset(
 
     let seed = req.seed.unwrap_or_else(generate_seed);
 
+    // Convert string-keyed opponent map to i32-keyed
+    let opponents = req.opponents.map(|map| {
+        map.into_iter()
+            .filter_map(|(k, v)| k.parse::<i32>().ok().map(|round| (round, v)))
+            .collect()
+    });
+
     let mut b = backend.lock().unwrap();
-    let state = b.reset(seed, req.set_id).map_err(|e| (400, e))?;
+    let state = b.reset(seed, req.set_id, opponents).map_err(|e| (400, e))?;
     serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
 }
 
