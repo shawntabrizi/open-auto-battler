@@ -94,6 +94,7 @@ def empty_slots(state):
 
 def run_agent(name, client, decide_fn, num_games=100, set_id=0):
     """Run an agent for num_games games and print stats."""
+    tag = "%s/S%d" % (name, set_id)
     wins_total = 0
     losses_total = 0
     total_rounds = 0
@@ -103,7 +104,7 @@ def run_agent(name, client, decide_fn, num_games=100, set_id=0):
     for game_num in range(1, num_games + 1):
         state = client.reset(set_id=set_id)
         if "error" in state:
-            print("  Game %d: reset error: %s" % (game_num, state["error"]))
+            print("  %-12s Game %2d: reset error: %s" % (tag, game_num, state["error"]))
             time.sleep(2)
             continue
 
@@ -132,8 +133,8 @@ def run_agent(name, client, decide_fn, num_games=100, set_id=0):
                 else:
                     losses_total += 1
                 print(
-                    "  [%s] Game %d: %s — round %d, wins: %d"
-                    % (name, game_num, outcome.upper(), game_round, game_wins)
+                    "  %-12s Game %2d: %-7s  round %2d  wins %2d  [%d/%d victories]"
+                    % (tag, game_num, outcome.upper(), game_round, game_wins, wins_total, game_num)
                 )
                 break
 
@@ -143,7 +144,8 @@ def run_agent(name, client, decide_fn, num_games=100, set_id=0):
         win_counts.append(game_wins)
 
     avg_wins = sum(win_counts) / len(win_counts) if win_counts else 0
-    print("\n=== %s Final Results ===" % name)
+    label = "%s (Set %d)" % (name, set_id)
+    print("\n=== %s Final Results ===" % label)
     print("  Games played: %d" % num_games)
     print("  Full victories (10 wins): %d" % wins_total)
     print("  Defeats: %d" % losses_total)
@@ -153,6 +155,7 @@ def run_agent(name, client, decide_fn, num_games=100, set_id=0):
 
     return {
         "name": name,
+        "set_id": set_id,
         "games": num_games,
         "victories": wins_total,
         "defeats": losses_total,

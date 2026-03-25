@@ -1,19 +1,19 @@
 === Greedy Agent on port 4001 ===
-  Game 1: reset error: Active game exists on-chain. Complete it first or use a different account.
-  Game 2: reset error: Active game exists on-chain. Complete it first or use a different account.
-  Game 3: reset error: Active game exists on-chain. Complete it first or use a different account.
-  Game 4: reset error: Active game exists on-chain. Complete it first or use a different account.
-  Game 5: reset error: Active game exists on-chain. Complete it first or use a different account.
-  Game 6: reset error: Active game exists on-chain. Complete it first or use a different account.
-  Game 7: reset error: Active game exists on-chain. Complete it first or use a different account.
-  Game 8: reset error: Active game exists on-chain. Complete it first or use a different account.
-  Game 9: reset error: Active game exists on-chain. Complete it first or use a different account.
-  Game 10: reset error: Active game exists on-chain. Complete it first or use a different account.
+  [Greedy] Game 1: DEFEAT — round 6, wins: 2
+  [Greedy] Game 2: DEFEAT — round 6, wins: 3
+  [Greedy] Game 3: DEFEAT — round 5, wins: 2
+  [Greedy] Game 4: DEFEAT — round 6, wins: 3
+  [Greedy] Game 5: DEFEAT — round 5, wins: 2
+  [Greedy] Game 6: DEFEAT — round 6, wins: 3
+  [Greedy] Game 7: DEFEAT — round 6, wins: 2
+  [Greedy] Game 8: DEFEAT — round 4, wins: 0
+  [Greedy] Game 9: DEFEAT — round 3, wins: 0
+  [Greedy] Game 10: DEFEAT — round 7, wins: 2
 
 === Greedy Final Results ===
   Games played: 10
   Full victories (10 wins): 0
-  Defeats: 0
-  Average wins per game: 0.00
-  Max wins in a single game: 0
-  Total rounds played: 0
+  Defeats: 10
+  Average wins per game: 1.90
+  Max wins in a single game: 3
+  Total rounds played: 54

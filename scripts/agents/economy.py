@@ -107,6 +107,6 @@ def decide(state):
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 3000
     games = int(sys.argv[2]) if len(sys.argv) > 2 else 100
+    set_id = int(sys.argv[3]) if len(sys.argv) > 3 else 0
     client = OABClient("http://localhost:%d" % port)
-    print("=== Economy Agent on port %d ===" % port)
-    run_agent("Economy", client, decide, num_games=games)
+    run_agent("Economy", client, decide, num_games=games, set_id=set_id)
