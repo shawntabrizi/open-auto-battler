@@ -319,7 +319,7 @@
       {
         "trigger": "OnBuy",
         "effect": {
-          "type": "ModifyStatsPermanent",
+          "type": "ModifyStats",
           "health": 1,
           "attack": 1,
           "target": {
@@ -351,7 +351,7 @@
       {
         "trigger": "OnBuy",
         "effect": {
-          "type": "ModifyStatsPermanent",
+          "type": "ModifyStats",
           "health": 1,
           "attack": 1,
           "target": {
