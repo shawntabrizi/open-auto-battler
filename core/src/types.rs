@@ -292,6 +292,30 @@ pub enum ShopTrigger {
     AfterDraw,
 }
 
+/// Where a spawned unit should be placed on the board.
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Encode,
+    Decode,
+    DecodeWithMemTracking,
+    TypeInfo,
+    MaxEncodedLen,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub enum SpawnLocation {
+    /// Spawn at the first available location starting at the front.
+    Front,
+    /// Spawn at the first available location starting at the back.
+    Back,
+    /// Spawn at the position where the death occurred.
+    /// Falls back to Front if there is no death context (e.g. OnStart triggers).
+    DeathPosition,
+}
+
 /// Battle ability effect types.
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -312,7 +336,10 @@ pub enum AbilityEffect {
         target: AbilityTarget,
     },
     /// Spawn a new unit on the board
-    SpawnUnit { card_id: CardId },
+    SpawnUnit {
+        card_id: CardId,
+        spawn_location: SpawnLocation,
+    },
     /// Destroy a target directly
     Destroy { target: AbilityTarget },
     /// Add mana for next shop via battle event processing.
@@ -331,7 +358,10 @@ pub enum ShopEffect {
         target: ShopTarget,
     },
     /// Spawn a new unit on the board.
-    SpawnUnit { card_id: CardId },
+    SpawnUnit {
+        card_id: CardId,
+        spawn_location: SpawnLocation,
+    },
     /// Destroy a target directly.
     Destroy { target: ShopTarget },
     /// Modify current shop mana.

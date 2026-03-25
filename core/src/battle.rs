@@ -15,7 +15,7 @@ use alloc::collections::BTreeMap;
 
 use crate::types::{
     Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CardId, CompareOp, Condition, Matcher,
-    SortOrder, StatType, TargetScope, UnitCard,
+    SortOrder, SpawnLocation, StatType, TargetScope, UnitCard,
 };
 
 #[cfg(feature = "std")]
@@ -746,7 +746,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                         Team::Player,
                         AbilityTrigger::OnAllyFaint,
                         Some(dead_id),
-                        None,
+                        Some(idx),
                     ));
                 }
             }
@@ -773,7 +773,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                         Team::Enemy,
                         AbilityTrigger::OnAllyFaint,
                         Some(dead_id),
-                        None,
+                        Some(idx),
                     ));
                 }
             }
@@ -919,6 +919,7 @@ fn apply_ability_effect<R: BattleRng>(
             }
             AbilityEffect::SpawnUnit {
                 card_id: spawn_card_id,
+                spawn_location,
             } => {
                 limits.record_spawn(source_team)?;
 
@@ -944,8 +945,13 @@ fn apply_ability_effect<R: BattleRng>(
                     new_unit.instance_id = instance_id;
                     new_unit.team = source_team;
 
-                    // INSERTION LOGIC: Use override if provided (e.g. Zombie Cricket), otherwise Front
-                    let insert_idx = spawn_index_override.unwrap_or(0);
+                    // INSERTION LOGIC: Use the effect's spawn_location preference.
+                    // DeathPosition uses the override from the death context, falling back to Front.
+                    let insert_idx = match spawn_location {
+                        SpawnLocation::Front => 0,
+                        SpawnLocation::Back => my_board.len(),
+                        SpawnLocation::DeathPosition => spawn_index_override.unwrap_or(0),
+                    };
                     let safe_idx = core::cmp::min(insert_idx, my_board.len());
 
                     my_board.insert(safe_idx, new_unit);
@@ -1525,7 +1531,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                     Team::Player,
                     AbilityTrigger::OnAllyFaint,
                     Some(dead_unit.instance_id),
-                    None,
+                    Some(idx),
                 ));
             }
         }
@@ -1551,7 +1557,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                     Team::Enemy,
                     AbilityTrigger::OnAllyFaint,
                     Some(dead_unit.instance_id),
-                    None,
+                    Some(idx),
                 ));
             }
         }
@@ -1747,10 +1753,8 @@ fn resolve_adjacent(
     };
 
     // Find source position (alive on board, or override for dead units)
-    let pos = allies
-        .iter()
-        .position(|u| u.instance_id == source_id)
-        .or(source_position_override);
+    let live_pos = allies.iter().position(|u| u.instance_id == source_id);
+    let pos = live_pos.or(source_position_override);
 
     let Some(pos) = pos else {
         return vec![];
@@ -1763,13 +1767,24 @@ fn resolve_adjacent(
     );
     let include_enemies = matches!(scope, TargetScope::Enemies | TargetScope::All);
 
-    // Same-team neighbors at position ± 1
+    // Same-team neighbors at position ± 1.
+    // For dead units using a position override, the board has already compacted,
+    // so the dead unit's former right neighbor now sits at `pos`.
     if include_allies {
-        if pos > 0 {
-            result.push(allies[pos - 1].instance_id);
-        }
-        if pos + 1 < allies.len() {
-            result.push(allies[pos + 1].instance_id);
+        if live_pos.is_none() && source_position_override.is_some() {
+            if pos > 0 {
+                result.push(allies[pos - 1].instance_id);
+            }
+            if pos < allies.len() {
+                result.push(allies[pos].instance_id);
+            }
+        } else {
+            if pos > 0 {
+                result.push(allies[pos - 1].instance_id);
+            }
+            if pos + 1 < allies.len() {
+                result.push(allies[pos + 1].instance_id);
+            }
         }
     }
 

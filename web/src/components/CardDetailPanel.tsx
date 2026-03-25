@@ -4,6 +4,7 @@ import type { BoardUnitView, CardView } from '../types';
 import { getCardEmoji } from '../utils/emoji';
 import { getCardArtMd } from '../utils/cardArt';
 import { formatAbilitySentence } from '../utils/abilityText';
+import { getRarityInfo } from '../utils/rarity';
 
 /** Card art image with loading state — remount via key={card.id} to reset on card change. */
 function CardArtImage({ card }: { card: CardView | BoardUnitView }) {
@@ -62,6 +63,10 @@ export interface CardDetailPanelProps {
   isVisible: boolean;
   layout?: 'fixed' | 'contained';
   onClose?: () => void;
+  /** Optional rarity weight from the card set (0–10). */
+  rarity?: number;
+  /** Sum of all rarity weights in the set — used to compute selection percentage. */
+  rarityTotalWeight?: number;
 }
 
 export function CardDetailPanel({
@@ -69,6 +74,8 @@ export function CardDetailPanel({
   isVisible,
   layout = 'fixed',
   onClose,
+  rarity,
+  rarityTotalWeight,
 }: CardDetailPanelProps) {
   const { cardNameMap, setSelection, showRawJson } = useGameStore();
   const resolveCardName = React.useCallback((cardId: number) => cardNameMap[cardId], [cardNameMap]);
@@ -136,6 +143,29 @@ export function CardDetailPanel({
             </div>
           </div>
         </div>
+
+        {/* Rarity Section */}
+        {rarity != null && (() => {
+          const info = getRarityInfo(rarity);
+          const pct = rarityTotalWeight && rarityTotalWeight > 0
+            ? ((rarity / rarityTotalWeight) * 100)
+            : null;
+          return (
+            <div className={`theme-panel p-1.5 lg:p-3 border rounded-lg ${info.bgColor}`}>
+              <div className="text-[8px] lg:text-[10px] uppercase font-heading font-bold mb-0.5 lg:mb-1 text-base-400">
+                Rarity
+              </div>
+              <div className={`text-sm lg:text-xl font-stat font-bold ${info.color}`}>
+                {info.label}
+                {pct != null && (
+                  <span className="text-[10px] lg:text-sm text-base-400 font-normal ml-1.5">
+                    {pct < 1 ? pct.toFixed(2) : pct.toFixed(1)}%
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Ability Section */}
         {allAbilities.length > 0 && (

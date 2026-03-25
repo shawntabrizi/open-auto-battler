@@ -100,13 +100,15 @@ export type BattleEffect =
   | { type: 'Damage'; amount: number; target: BattleTarget }
   | { type: 'ModifyStats'; health: number; attack: number; target: BattleTarget }
   | { type: 'ModifyStatsPermanent'; health: number; attack: number; target: BattleTarget }
-  | { type: 'SpawnUnit'; card_id: number }
+  | { type: 'SpawnUnit'; card_id: number; spawn_location: SpawnLocation }
   | { type: 'Destroy'; target: BattleTarget }
   | { type: 'GainMana'; amount: number };
 
+export type SpawnLocation = 'Front' | 'Back' | 'DeathPosition';
+
 export type ShopEffect =
   | { type: 'ModifyStatsPermanent'; health: number; attack: number; target: ShopTarget }
-  | { type: 'SpawnUnit'; card_id: number }
+  | { type: 'SpawnUnit'; card_id: number; spawn_location: SpawnLocation }
   | { type: 'Destroy'; target: ShopTarget }
   | { type: 'GainMana'; amount: number };
 

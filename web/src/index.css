@@ -532,11 +532,11 @@ body {
     0 0 14px color-mix(in srgb, var(--theme-rarity-rare-glow) 58%, transparent);
 }
 
-/* ── Card rarity: legendary (pulsing accent glow) ── */
-.card-legendary-glow {
-  animation: legendary-pulse 2.5s ease-in-out infinite;
+/* ── Card rarity: mythic (pulsing accent glow) ── */
+.card-mythic-glow {
+  animation: mythic-pulse 2.5s ease-in-out infinite;
 }
-@keyframes legendary-pulse {
+@keyframes mythic-pulse {
   0%,
   100% {
     box-shadow:
@@ -555,7 +555,7 @@ body {
       0 0 4px rgb(var(--color-accent) / 0.22);
   }
 }
-.card-legendary-glow:hover {
+.card-mythic-glow:hover {
   animation: none;
   box-shadow:
     inset 1px 1px 0 0 rgb(var(--color-card-burn) / 0.22),
@@ -629,7 +629,7 @@ body {
   }
 }
 .card-holographic.card-rare-glow,
-.card-holographic.card-legendary-glow {
+.card-holographic.card-mythic-glow {
   animation: none;
 }
 .holo-border:hover {
@@ -1706,7 +1706,7 @@ body {
   .wobble-card {
     animation: none !important;
   }
-  .card-legendary-glow {
+  .card-mythic-glow {
     animation: none !important;
   }
   .animate-card-entrance {

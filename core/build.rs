@@ -52,6 +52,7 @@ struct JsonEffect {
     effect_type: String,
     // SpawnUnit
     card_id: Option<u32>,
+    spawn_location: Option<String>,
     // Damage
     amount: Option<i32>,
     // ModifyStats
@@ -542,7 +543,12 @@ fn gen_battle_effect(effect: &JsonEffect) -> String {
         }
         "SpawnUnit" => {
             let card_id = effect.card_id.unwrap();
-            format!("AbilityEffect::SpawnUnit {{ card_id: CardId({card_id}) }}")
+            let spawn_loc = match effect.spawn_location.as_deref() {
+                Some("Front") => "SpawnLocation::Front",
+                Some("Back") => "SpawnLocation::Back",
+                _ => "SpawnLocation::DeathPosition",
+            };
+            format!("AbilityEffect::SpawnUnit {{ card_id: CardId({card_id}), spawn_location: {spawn_loc} }}")
         }
         "Damage" => {
             let amount = effect.amount.unwrap();
@@ -581,7 +587,12 @@ fn gen_shop_effect(effect: &JsonEffect) -> String {
         }
         "SpawnUnit" => {
             let card_id = effect.card_id.unwrap();
-            format!("ShopEffect::SpawnUnit {{ card_id: CardId({card_id}) }}")
+            let spawn_loc = match effect.spawn_location.as_deref() {
+                Some("Front") => "SpawnLocation::Front",
+                Some("Back") => "SpawnLocation::Back",
+                _ => "SpawnLocation::DeathPosition",
+            };
+            format!("ShopEffect::SpawnUnit {{ card_id: CardId({card_id}), spawn_location: {spawn_loc} }}")
         }
         "ModifyStatsPermanent" => {
             let health = effect.health.unwrap();

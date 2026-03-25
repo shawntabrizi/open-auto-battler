@@ -162,11 +162,44 @@ impl GameEngine {
 
     /// Get all cards in a set as CardView[] without mutating engine state.
     /// Used for set preview before starting a game.
+    /// Returns card views with their set rarity weight.
     /// Checks custom (blockchain) sets first, then falls back to genesis sets.
     #[wasm_bindgen]
     pub fn get_set_cards(&self, set_id: u32) -> Result<JsValue, String> {
         use oab_core::cards::{build_card_pool, get_all_sets};
         use oab_core::view::CardView;
+        use serde::Serialize;
+
+        // Note: serde_wasm_bindgen doesn't support #[serde(flatten)],
+        // so we explicitly list all CardView fields plus rarity.
+        #[derive(Serialize)]
+        struct SetCardView {
+            id: oab_core::types::CardId,
+            name: String,
+            attack: i32,
+            health: i32,
+            play_cost: i32,
+            burn_value: i32,
+            shop_abilities: Vec<oab_core::types::ShopAbility>,
+            battle_abilities: Vec<oab_core::types::Ability>,
+            rarity: u32,
+        }
+
+        impl SetCardView {
+            fn from_card_and_rarity(card: CardView, rarity: u32) -> Self {
+                Self {
+                    id: card.id,
+                    name: card.name,
+                    attack: card.attack,
+                    health: card.health,
+                    play_cost: card.play_cost,
+                    burn_value: card.burn_value,
+                    shop_abilities: card.shop_abilities,
+                    battle_abilities: card.battle_abilities,
+                    rarity,
+                }
+            }
+        }
 
         let card_set = if let Some(custom) = self.custom_sets.get(&set_id) {
             custom.clone()
@@ -179,7 +212,7 @@ impl GameEngine {
 
         // Use the engine's card pool (includes blockchain cards) with genesis as fallback
         let genesis_pool = build_card_pool();
-        let card_views: Vec<CardView> = card_set
+        let card_views: Vec<SetCardView> = card_set
             .cards
             .iter()
             .filter_map(|entry| {
@@ -187,7 +220,10 @@ impl GameEngine {
                     .card_pool
                     .get(&entry.card_id)
                     .or_else(|| genesis_pool.get(&entry.card_id))
-                    .map(CardView::from)
+                    .map(|unit| SetCardView::from_card_and_rarity(
+                        CardView::from(unit),
+                        entry.rarity,
+                    ))
             })
             .collect();
 

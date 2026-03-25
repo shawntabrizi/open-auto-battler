@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { BattleOutput, SandboxUnit, CardView } from '../types';
+import type { SortOption } from '../components/CardFilterBar';
 import { initEmojiMap } from '../utils/emoji';
 import { useGameStore } from './gameStore';
 
@@ -22,7 +23,7 @@ interface SandboxStore {
   isBattling: boolean;
   battleSeed: number;
   searchQuery: string;
-  sortBy: 'cost' | 'name';
+  sortBy: SortOption;
 
   // Actions
   init: () => Promise<void>;
@@ -38,7 +39,7 @@ interface SandboxStore {
   closeBattle: () => void;
   setBattleSeed: (seed: number) => void;
   setSearchQuery: (query: string) => void;
-  setSortBy: (sort: 'cost' | 'name') => void;
+  setSortBy: (sort: SortOption) => void;
 }
 
 let wasmInitialized = false;

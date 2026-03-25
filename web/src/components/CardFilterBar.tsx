@@ -1,10 +1,11 @@
-export type SortOption = 'cost' | 'name';
+export type SortOption = 'cost' | 'name' | 'rarity';
 
 interface CardFilterBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   sortBy: SortOption;
   onSortChange: (sort: SortOption) => void;
+  showRaritySort?: boolean;
 }
 
 export function CardFilterBar({
@@ -12,6 +13,7 @@ export function CardFilterBar({
   onSearchChange,
   sortBy,
   onSortChange,
+  showRaritySort = false,
 }: CardFilterBarProps) {
   return (
     <div className="flex items-center gap-2">
@@ -41,6 +43,7 @@ export function CardFilterBar({
       >
         <option value="cost">Sort: Mana Cost</option>
         <option value="name">Sort: Name</option>
+        {showRaritySort && <option value="rarity">Sort: Rarity</option>}
       </select>
     </div>
   );

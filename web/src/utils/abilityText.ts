@@ -164,8 +164,16 @@ export function formatAbilityEffect(
       return `Give ${effect.attack >= 0 ? '+' : ''}${effect.attack}/${effect.health >= 0 ? '+' : ''}${effect.health} to ${formatAbilityTarget(effect.target)}`;
     case 'ModifyStatsPermanent':
       return `Give ${effect.attack >= 0 ? '+' : ''}${effect.attack}/${effect.health >= 0 ? '+' : ''}${effect.health} permanently to ${formatAbilityTarget(effect.target)}`;
-    case 'SpawnUnit':
-      return `Spawn ${options.resolveCardName?.(effect.card_id) ?? `card #${effect.card_id}`}`;
+    case 'SpawnUnit': {
+      const name = options.resolveCardName?.(effect.card_id) ?? `card #${effect.card_id}`;
+      const loc =
+        effect.spawn_location === 'Back'
+          ? ' at the back'
+          : effect.spawn_location === 'DeathPosition'
+            ? ' in its place'
+            : ' at the front';
+      return `Spawn ${name}${loc}`;
+    }
     case 'Destroy':
       return `Destroy ${formatAbilityTarget(effect.target)}`;
     case 'GainMana':
@@ -249,9 +257,9 @@ function formatTriggerClause(trigger: string): string {
     case 'OnHurt':
       return 'When this is hurt';
     case 'OnBuy':
-      return 'When bought';
+      return 'When any unit is bought';
     case 'OnSell':
-      return 'When sold';
+      return 'When any unit is sold';
     case 'OnShopStart':
       return 'At shop start';
     case 'AfterLoss':
@@ -308,4 +316,3 @@ export function formatAbilitySentence(
 
   return `${trigger}, ${effect}${conditionText}${triggerLimit}.`;
 }
-

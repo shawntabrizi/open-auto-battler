@@ -5,6 +5,8 @@ import type { CardView, BoardUnitView } from '../types';
 
 interface CardGalleryProps {
   cards: (CardView | BoardUnitView)[];
+  /** Optional rarity map (card_id → rarity weight) for set preview. */
+  rarityMap?: Map<number, number>;
   selectedId?: number | null;
   /** Per-item selection check — overrides selectedId when provided (useful for duplicates). */
   isSelected?: (card: CardView | BoardUnitView, index: number) => boolean;
@@ -26,6 +28,7 @@ interface CardGalleryProps {
 
 export function CardGallery({
   cards,
+  rarityMap,
   selectedId,
   isSelected: isSelectedFn,
   onSelect,
@@ -48,17 +51,32 @@ export function CardGallery({
   const sortBy = controlledSort ?? internalSort;
   const setSortBy = onSortChange ?? setInternalSort;
 
+  const hasRarity = rarityMap && rarityMap.size > 0;
+  const rarityTotalWeight = useMemo(
+    () => (rarityMap ? Array.from(rarityMap.values()).reduce((sum, w) => sum + w, 0) : 0),
+    [rarityMap]
+  );
+
   // Track original index through sort/filter so callbacks reference input array positions
   const sorted = useMemo(
     () =>
       cards
         .map((card, originalIndex) => ({ card, originalIndex }))
-        .sort((a, b) =>
-          sortBy === 'name'
-            ? a.card.name.localeCompare(b.card.name)
-            : a.card.play_cost - b.card.play_cost || a.card.name.localeCompare(b.card.name)
-        ),
-    [cards, sortBy]
+        .sort((a, b) => {
+          if (sortBy === 'name') {
+            return a.card.name.localeCompare(b.card.name);
+          }
+          if (sortBy === 'rarity' && rarityMap) {
+            const ra = rarityMap.get(a.card.id) ?? 10;
+            const rb = rarityMap.get(b.card.id) ?? 10;
+            // Tokens (0) go to the bottom, then rarest first
+            if (ra === 0 && rb !== 0) return 1;
+            if (rb === 0 && ra !== 0) return -1;
+            return ra - rb || a.card.name.localeCompare(b.card.name);
+          }
+          return a.card.play_cost - b.card.play_cost || a.card.name.localeCompare(b.card.name);
+        }),
+    [cards, sortBy, rarityMap]
   );
 
   const filtered = useMemo(() => {
@@ -76,6 +94,7 @@ export function CardGallery({
             onSearchChange={setSearchQuery}
             sortBy={sortBy}
             onSortChange={setSortBy}
+            showRaritySort={hasRarity}
           />
         </div>
       )}
@@ -97,6 +116,8 @@ export function CardGallery({
                 card={card}
                 showCost={true}
                 showBurn={true}
+                rarityWeight={rarityMap?.get(card.id)}
+                rarityTotalWeight={rarityTotalWeight}
                 draggable={false}
                 isSelected={selected}
                 onClick={focusableCards ? undefined : handleSelect}

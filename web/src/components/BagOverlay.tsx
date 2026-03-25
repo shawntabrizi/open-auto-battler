@@ -16,6 +16,7 @@ export function BagOverlay() {
     selection,
     setSelection,
     showGameCardDetailsPanel,
+    rarityMap,
   } = useGameStore();
   const isNarrowScreen = useIsNarrowScreen();
   const galleryScrollRef = useRef<HTMLDivElement>(null);
@@ -82,6 +83,7 @@ export function BagOverlay() {
         ) : (
           <CardGallery
             cards={cards}
+            rarityMap={rarityMap}
             isSelected={(_card, index) => index === selectedGalleryIndex}
             focusableCards={true}
             scrollRegionRef={galleryScrollRef}
