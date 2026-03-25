@@ -57,7 +57,7 @@ Higher cost/rarity cards should look more imposing, detailed, and powerful.
 | Ancient Oak | 7 | A colossal ancient tree with a weathered face, rings visible in the bark, deep roots cracking stone |
 | Ironwood Guardian | 8 | A treant whose bark has turned to dark metallic wood, iron-like grain patterns, virtually indestructible |
 | World Tree | 9 | An impossibly tall tree stretching beyond the frame, roots forming an entire landscape, birds nesting in clouds of leaves |
-| Gaia | 10 | A goddess formed from living earth — flowers blooming across her body, rivers for veins, hair of cascading waterfalls, radiant with life |
+| Gaia | 10 | A majestic earth goddess in a flowing gown of woven vines and leaves, a crown of blooming flowers, hair of cascading green foliage, hands gently cupping a glowing seedling, fully clothed in living nature |
 
 ---
 
