@@ -317,9 +317,9 @@
     },
     "shop_abilities": [
       {
-        "trigger": "OnBuy",
+        "trigger": "OnShopStart",
         "effect": {
-          "type": "ModifyStats",
+          "type": "ModifyStatsPermanent",
           "health": 1,
           "attack": 1,
           "target": {
@@ -349,9 +349,9 @@
     },
     "shop_abilities": [
       {
-        "trigger": "OnBuy",
+        "trigger": "OnShopStart",
         "effect": {
-          "type": "ModifyStats",
+          "type": "ModifyStatsPermanent",
           "health": 1,
           "attack": 1,
           "target": {
