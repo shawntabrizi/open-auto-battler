@@ -3,7 +3,9 @@ import { createClient, Binary, getTypedCodecs } from 'polkadot-api';
 import { getWsProvider } from 'polkadot-api/ws-provider';
 import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
 import { getInjectedExtensions, connectInjectedExtension } from 'polkadot-api/pjs-signer';
-import { injectSpektrExtension } from '@novasamatech/product-sdk';
+import { injectSpektrExtension, createPapiProvider, createAccountsProvider } from '@novasamatech/product-sdk';
+import { isInHost } from '../services/hostEnvironment';
+import { storageService } from '../services/storage';
 import { auto_battle } from '@polkadot-api/descriptors';
 import { useGameStore } from './gameStore';
 import { sr25519CreateDerive } from '@polkadot-labs/hdkd';
@@ -333,6 +335,9 @@ interface ArenaStore {
   cardDataCoercer?: ((value: unknown) => any) | null;
 }
 
+/** Convert raw public key bytes to SS58 address (generic substrate prefix 42). */
+const toSs58 = (publicKey: Uint8Array): string => AccountId(42).dec(publicKey);
+
 const LOCAL_ACCOUNTS_KEY = 'oab-local-accounts';
 
 interface StoredLocalAccount {
@@ -341,6 +346,7 @@ interface StoredLocalAccount {
 }
 
 function loadStoredLocalAccounts(): StoredLocalAccount[] {
+  if (isInHost()) return [];
   try {
     const raw = localStorage.getItem(LOCAL_ACCOUNTS_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -350,11 +356,7 @@ function loadStoredLocalAccounts(): StoredLocalAccount[] {
 }
 
 function saveStoredLocalAccounts(accounts: StoredLocalAccount[]) {
-  try {
-    localStorage.setItem(LOCAL_ACCOUNTS_KEY, JSON.stringify(accounts));
-  } catch (e) {
-    console.warn('Failed to save local accounts:', e);
-  }
+  storageService.writeJSON(LOCAL_ACCOUNTS_KEY, accounts);
 }
 
 function deriveAccountFromMnemonic(mnemonic: string, name: string) {
@@ -414,7 +416,9 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
   accounts: [],
   selectedAccount: null,
   isLoggedIn: false,
+  // In host mode, initHostStorage() sets this before first render.
   isRestoringSession: (() => {
+    if (isInHost()) return false;
     try {
       return !!localStorage.getItem('oab-logged-in');
     } catch {
@@ -456,7 +460,27 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
 
     try {
       const wsEndpoint = useSettingsStore.getState().endpoint;
-      client = createClient(withPolkadotSdkCompat(getWsProvider(wsEndpoint)));
+      const wsProvider = withPolkadotSdkCompat(getWsProvider(wsEndpoint));
+
+      if (isInHost()) {
+        // In host mode, discover genesis hash via WS (allowed in sandbox),
+        // then route through host's shared connection for efficiency.
+        try {
+          const tempClient = createClient(wsProvider);
+          const chainSpec = await tempClient.getChainSpecData();
+          tempClient.destroy();
+          const provider = createPapiProvider(
+            chainSpec.genesisHash as `0x${string}`,
+            wsProvider // fallback if host doesn't support this chain
+          );
+          client = createClient(provider);
+        } catch (e) {
+          console.warn('Host provider setup failed, falling back to WS:', e);
+          client = createClient(wsProvider);
+        }
+      } else {
+        client = createClient(wsProvider);
+      }
 
       // Subscribe to best blocks — first block confirms connection is live
       client.bestBlocks$.subscribe((blocks: any[]) => {
@@ -479,9 +503,67 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
         'card_data'
       );
 
-      const devAccounts = SHOW_DEV_ACCOUNTS ? getDevAccounts() : [];
-      const localAccounts = getLocalAccounts();
-      let allAccounts: any[] = [...devAccounts, ...localAccounts];
+      let allAccounts: any[] = [];
+
+      if (isInHost()) {
+        // Host mode: use host-managed accounts, suppress dev/local accounts
+        try {
+          await injectSpektrExtension();
+        } catch {}
+
+        // Get accounts from host via createAccountsProvider
+        try {
+          const accountsProvider = createAccountsProvider();
+          const result = await accountsProvider.getNonProductAccounts();
+          if (result.isOk()) {
+            const hostAccounts = result.value.map((acct: any) => ({
+              address: toSs58(acct.publicKey),
+              name: acct.name || 'Host Account',
+              polkadotSigner: accountsProvider.getNonProductAccountSigner(acct),
+              source: 'host' as const,
+            }));
+            allAccounts = [...allAccounts, ...hostAccounts];
+          }
+        } catch (e) {
+          console.warn('Host account provider failed:', e);
+        }
+
+        // Also try injected extensions (Spektr injection makes them available)
+        try {
+          const extensions = getInjectedExtensions();
+          for (const ext of extensions) {
+            try {
+              const pjs = await connectInjectedExtension(ext);
+              allAccounts = [...allAccounts, ...pjs.getAccounts()];
+            } catch {}
+          }
+        } catch {}
+      } else {
+        // Standalone: current flow — dev accounts, local accounts, wallet extensions
+        const devAccounts = SHOW_DEV_ACCOUNTS ? getDevAccounts() : [];
+        const localAccounts = getLocalAccounts();
+        allAccounts = [...devAccounts, ...localAccounts];
+
+        try {
+          await injectSpektrExtension();
+        } catch (e) {
+          console.warn('Spektr extension not available:', e);
+        }
+
+        try {
+          const extensions = getInjectedExtensions();
+          for (const ext of extensions) {
+            try {
+              const pjs = await connectInjectedExtension(ext);
+              allAccounts = [...allAccounts, ...pjs.getAccounts()];
+            } catch (extErr) {
+              console.warn(`Failed to connect extension "${ext}":`, extErr);
+            }
+          }
+        } catch (walletErr) {
+          console.warn('Wallet extensions not available:', walletErr);
+        }
+      }
 
       set({
         client,
@@ -492,29 +574,6 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
         cardDataCoercer,
       });
 
-      // Inject Spektr (Polkadot Desktop) extension, then connect all wallet extensions
-      try {
-        await injectSpektrExtension();
-      } catch (e) {
-        console.warn('Spektr extension not available:', e);
-      }
-
-      try {
-        const extensions = getInjectedExtensions();
-        for (const ext of extensions) {
-          try {
-            const pjs = await connectInjectedExtension(ext);
-            const pjsAccounts = pjs.getAccounts();
-            allAccounts = [...allAccounts, ...pjsAccounts];
-          } catch (extErr) {
-            console.warn(`Failed to connect extension "${ext}":`, extErr);
-          }
-        }
-        set({ accounts: allAccounts });
-      } catch (walletErr) {
-        console.warn('Wallet extensions not available:', walletErr);
-      }
-
       // Fetch available sets and cards
       await Promise.all([get().fetchSets(), get().fetchCards()]);
       get().hydrateGameEngineFromChainData();
@@ -522,7 +581,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
 
       // Restore login session if the previously logged-in account is still available
       try {
-        const savedAddress = localStorage.getItem('oab-logged-in');
+        const savedAddress = await storageService.readString('oab-logged-in');
         if (savedAddress) {
           const match = get().accounts.find((a: any) => a.address === savedAddress);
           if (match) {
@@ -1073,17 +1132,13 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
     const { selectedAccount } = get();
     if (selectedAccount) {
       set({ isLoggedIn: true });
-      try {
-        localStorage.setItem('oab-logged-in', selectedAccount.address);
-      } catch {}
+      storageService.writeString('oab-logged-in', selectedAccount.address);
     }
   },
 
   logout: () => {
     set({ isLoggedIn: false });
-    try {
-      localStorage.removeItem('oab-logged-in');
-    } catch {}
+    storageService.remove('oab-logged-in');
   },
 
   getAccountBalance: async (address: string) => {
