@@ -719,7 +719,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
     }
   },
 
-  startGame: async (set_id = 1) => {
+  startGame: async (set_id = 0) => {
     const { api, selectedAccount } = get();
     if (!api || !selectedAccount) return;
 

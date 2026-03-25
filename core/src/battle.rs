@@ -1753,10 +1753,8 @@ fn resolve_adjacent(
     };
 
     // Find source position (alive on board, or override for dead units)
-    let pos = allies
-        .iter()
-        .position(|u| u.instance_id == source_id)
-        .or(source_position_override);
+    let live_pos = allies.iter().position(|u| u.instance_id == source_id);
+    let pos = live_pos.or(source_position_override);
 
     let Some(pos) = pos else {
         return vec![];
@@ -1769,13 +1767,24 @@ fn resolve_adjacent(
     );
     let include_enemies = matches!(scope, TargetScope::Enemies | TargetScope::All);
 
-    // Same-team neighbors at position ± 1
+    // Same-team neighbors at position ± 1.
+    // For dead units using a position override, the board has already compacted,
+    // so the dead unit's former right neighbor now sits at `pos`.
     if include_allies {
-        if pos > 0 {
-            result.push(allies[pos - 1].instance_id);
-        }
-        if pos + 1 < allies.len() {
-            result.push(allies[pos + 1].instance_id);
+        if live_pos.is_none() && source_position_override.is_some() {
+            if pos > 0 {
+                result.push(allies[pos - 1].instance_id);
+            }
+            if pos < allies.len() {
+                result.push(allies[pos].instance_id);
+            }
+        } else {
+            if pos > 0 {
+                result.push(allies[pos - 1].instance_id);
+            }
+            if pos + 1 < allies.len() {
+                result.push(allies[pos + 1].instance_id);
+            }
         }
     }
 

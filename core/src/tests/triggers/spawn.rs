@@ -408,6 +408,121 @@ fn test_missing_spawn_card_fizzles_without_panic() {
 }
 
 #[test]
+fn test_necromancer_rebirth_chain_spawns_once_without_looping() {
+    let tank = create_dummy_card(1, "Tank", 5, 10);
+    let necromancer =
+        create_dummy_card(2, "Necromancer", 3, 4).with_battle_ability(create_ability(
+            AbilityTrigger::OnFaint,
+            AbilityEffect::SpawnUnit {
+                card_id: CardId(108),
+                spawn_location: SpawnLocation::DeathPosition,
+            },
+        ));
+
+    let p_board = vec![
+        CombatUnit::from_card(tank),
+        CombatUnit::from_card(necromancer),
+    ];
+
+    let bomber = create_dummy_card(3, "Bomber", 0, 50).with_battle_abilities(vec![
+        create_ability(
+            AbilityTrigger::OnStart,
+            AbilityEffect::Damage {
+                amount: 4,
+                target: AbilityTarget::All {
+                    scope: TargetScope::Enemies,
+                },
+            },
+        ),
+        create_ability(
+            AbilityTrigger::OnEnemySpawn,
+            AbilityEffect::Destroy {
+                target: AbilityTarget::All {
+                    scope: TargetScope::TriggerSource,
+                },
+            },
+        ),
+    ]);
+    let e_board = vec![CombatUnit::from_card(bomber)];
+
+    let mut card_pool = spawn_test_card_pool();
+    card_pool.insert(
+        CardId(108),
+        UnitCard {
+            id: CardId(108),
+            name: "Phylactery".to_string(),
+            stats: UnitStats {
+                attack: 0,
+                health: 5,
+            },
+            economy: EconomyStats {
+                play_cost: 0,
+                burn_value: 0,
+            },
+            shop_abilities: vec![],
+            battle_abilities: vec![create_ability(
+                AbilityTrigger::OnFaint,
+                AbilityEffect::SpawnUnit {
+                    card_id: CardId(110),
+                    spawn_location: SpawnLocation::DeathPosition,
+                },
+            )],
+        },
+    );
+    card_pool.insert(
+        CardId(110),
+        UnitCard::new(CardId(110), "Reborn Necromancer", 3, 4, 0, 0),
+    );
+
+    let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
+
+    let spawned_cards: Vec<CardId> = events
+        .iter()
+        .filter_map(|event| {
+            if let CombatEvent::UnitSpawn { spawned_unit, .. } = event {
+                Some(spawned_unit.card_id)
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    assert_eq!(
+        spawned_cards,
+        vec![CardId(108), CardId(110)],
+        "Necromancer should spawn Phylactery first, then a one-time Reborn Necromancer"
+    );
+
+    let reborn_spawn = events
+        .iter()
+        .find_map(|event| {
+            if let CombatEvent::UnitSpawn {
+                spawned_unit,
+                new_board_state,
+                ..
+            } = event
+            {
+                if spawned_unit.card_id == CardId(110) {
+                    return Some(
+                        new_board_state
+                            .iter()
+                            .map(|unit| unit.card_id)
+                            .collect::<Vec<_>>(),
+                    );
+                }
+            }
+            None
+        })
+        .expect("Reborn Necromancer should spawn");
+
+    assert_eq!(
+        reborn_spawn,
+        vec![CardId(1), CardId(110)],
+        "Reborn Necromancer should appear at the Phylactery's death position behind the surviving tank"
+    );
+}
+
+#[test]
 fn test_full_board_spawn_spam_does_not_leak_recursion_depth() {
     let spawn_spam = create_ability(
         AbilityTrigger::BeforeAnyAttack,
@@ -592,7 +707,11 @@ fn test_spawn_location_death_position_on_faint() {
     let board = get_spawn_board_state(&events);
 
     assert_eq!(board[0], CardId(1), "Tank should stay at position 0");
-    assert_eq!(board[1], CardId(42), "Spawned unit should be at death position (1)");
+    assert_eq!(
+        board[1],
+        CardId(42),
+        "Spawned unit should be at death position (1)"
+    );
     assert_eq!(board[2], CardId(3), "Backline should stay at position 2");
 }
 
@@ -746,6 +865,10 @@ fn test_spawn_location_death_position_front_unit_dies() {
     let events = run_battle_with_pool(&p_board, &e_board, 42, &card_pool);
     let board = get_spawn_board_state(&events);
 
-    assert_eq!(board[0], CardId(42), "Spawned unit should be at position 0 (death position)");
+    assert_eq!(
+        board[0],
+        CardId(42),
+        "Spawned unit should be at position 0 (death position)"
+    );
     assert_eq!(board[1], CardId(2), "Back should stay at position 1");
 }

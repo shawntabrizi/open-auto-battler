@@ -13,14 +13,14 @@ function getCardArtCid(): string | null {
   return cardArt?.ipfsCid ?? null;
 }
 
-/** Returns the small (256x340) card art URL, or null if no card art selected. */
+/** Returns the small (256x384) card art URL, or null if no card art selected. */
 export function getCardArtSm(cardId: number): string | null {
   const cid = getCardArtCid();
   if (!cid) return null;
   return ipfsUrl(`ipfs://${cid}/sm/${cardId}.webp`);
 }
 
-/** Returns the medium (464x616) card art URL, or null if no card art selected. */
+/** Returns the medium (512x768) card art URL, or null if no card art selected. */
 export function getCardArtMd(cardId: number): string | null {
   const cid = getCardArtCid();
   if (!cid) return null;

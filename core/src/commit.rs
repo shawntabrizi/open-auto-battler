@@ -476,9 +476,7 @@ fn apply_shop_effect<R: BattleRng>(
                 crate::types::SpawnLocation::Front | crate::types::SpawnLocation::DeathPosition => {
                     state.board.iter().position(|s| s.is_none())
                 }
-                crate::types::SpawnLocation::Back => {
-                    state.board.iter().rposition(|s| s.is_none())
-                }
+                crate::types::SpawnLocation::Back => state.board.iter().rposition(|s| s.is_none()),
             };
             let Some(empty_slot) = empty_slot else {
                 return;

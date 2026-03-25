@@ -351,7 +351,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           wasmInitialized = true;
         }
         const engine = new wasm.GameEngine(undefined); // Don't auto-init
-        engine.load_card_set(1);
+        engine.load_card_set(0);
 
         // Initialize emoji map from card metadata baked into the WASM binary
         const metas = engine.get_card_metas();
@@ -373,7 +373,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           view: engine.get_view(),
           cardSet: engine.get_card_set(), // Fetch card set once on init
           cardNameMap: buildCardNameMap(metas),
-          currentSetId: 1,
+          currentSetId: 0,
           isLoading: false,
         });
       } catch (err) {
