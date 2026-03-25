@@ -42,15 +42,23 @@ import { ThemeController } from './theme/ThemeController.tsx';
 import { ParticleBackground } from './components/ParticleBackground.tsx';
 import { applyResolvedThemeToDocument } from './theme/themes.ts';
 import { useThemeStore } from './store/themeStore.ts';
+import { isInHost } from './services/hostEnvironment.ts';
+import { initHostStorage } from './services/storage.ts';
 
 // Lazy-loaded features (code-split, no impact on main bundle)
 import { PresentationsPage, PresentationViewer, EmbedPage } from './features/presentations';
 import { TutorialOverlay } from './components/tutorials/TutorialOverlay';
 import { CardInspectOverlay } from './components/CardInspectOverlay';
 
-applyResolvedThemeToDocument(useThemeStore.getState().activeTheme);
+async function boot() {
+  // In host mode, hydrate stores from hostLocalStorage before first render
+  if (isInHost()) {
+    await initHostStorage();
+  }
 
-createRoot(document.getElementById('root')!).render(
+  applyResolvedThemeToDocument(useThemeStore.getState().activeTheme);
+
+  createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemedToaster />
     <TransactionOverlay />
@@ -148,4 +156,7 @@ createRoot(document.getElementById('root')!).render(
       </AuthGate>
     </HashRouter>
   </StrictMode>
-);
+  );
+}
+
+boot();

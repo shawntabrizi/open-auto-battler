@@ -23,6 +23,7 @@ fn test_on_spawn_triggers_for_spawned_unit() {
         AbilityTrigger::OnStart,
         AbilityEffect::SpawnUnit {
             card_id: CardId(120),
+            spawn_location: SpawnLocation::Front,
         },
     ));
 

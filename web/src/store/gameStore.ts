@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
 import type { GameView, BattleOutput, Selection, CardView } from '../types';
 import { initEmojiMap } from '../utils/emoji';
+import { storageService } from '../services/storage';
+import { isInHost } from '../services/hostEnvironment';
 
 export type CardDetailsPanelMode = 'always' | 'never' | 'auto';
 
@@ -149,6 +151,8 @@ function localSessionJsonReviver(_key: string, value: unknown): unknown {
 }
 
 function loadPersistedLocalSession(): PersistedLocalSession | null {
+  // Sync path for standalone; in host mode session is loaded async via storageService
+  if (isInHost()) return null;
   try {
     const raw = localStorage.getItem(LOCAL_SESSION_STORAGE_KEY);
     if (!raw) return null;
@@ -170,14 +174,12 @@ function savePersistedLocalSession(session: GameSessionSnapshot) {
     session,
     savedAt: Date.now(),
   };
-  localStorage.setItem(
-    LOCAL_SESSION_STORAGE_KEY,
-    JSON.stringify(payload, localSessionJsonReplacer)
-  );
+  const serialized = JSON.stringify(payload, localSessionJsonReplacer);
+  storageService.writeString(LOCAL_SESSION_STORAGE_KEY, serialized);
 }
 
 function clearPersistedLocalSession() {
-  localStorage.removeItem(LOCAL_SESSION_STORAGE_KEY);
+  storageService.remove(LOCAL_SESSION_STORAGE_KEY);
 }
 
 function canStillFieldAUnitThisRound(view: GameView | null): boolean {
@@ -227,14 +229,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
   error: null,
   selection: null,
   showBattleOverlay: false,
-  showRawJson: JSON.parse(localStorage.getItem('showRawJson') || 'false'),
-  showCardNames: JSON.parse(localStorage.getItem('showCardNames') ?? 'true'),
-  showGameCardDetailsPanel: (JSON.parse(localStorage.getItem('showGameCardDetailsPanel') ?? '"auto"') as CardDetailsPanelMode),
-  showBoardHelper: JSON.parse(localStorage.getItem('showBoardHelper') ?? 'true'),
-  showAddress: JSON.parse(localStorage.getItem('showAddress') ?? 'true'),
-  showBalance: JSON.parse(localStorage.getItem('showBalance') ?? 'true'),
-  defaultBattleSpeed: JSON.parse(localStorage.getItem('defaultBattleSpeed') ?? '1'),
-  reducedAnimations: JSON.parse(localStorage.getItem('reducedAnimations') ?? 'false'),
+  // In host mode, these defaults are hydrated by initHostStorage() before first render.
+  // In standalone mode, read sync from localStorage.
+  showRawJson: isInHost() ? false : JSON.parse(localStorage.getItem('showRawJson') || 'false'),
+  showCardNames: isInHost() ? true : JSON.parse(localStorage.getItem('showCardNames') ?? 'true'),
+  showGameCardDetailsPanel: isInHost() ? ('auto' as CardDetailsPanelMode) : (JSON.parse(localStorage.getItem('showGameCardDetailsPanel') ?? '"auto"') as CardDetailsPanelMode),
+  showBoardHelper: isInHost() ? true : JSON.parse(localStorage.getItem('showBoardHelper') ?? 'true'),
+  showAddress: isInHost() ? true : JSON.parse(localStorage.getItem('showAddress') ?? 'true'),
+  showBalance: isInHost() ? true : JSON.parse(localStorage.getItem('showBalance') ?? 'true'),
+  defaultBattleSpeed: isInHost() ? 1 : JSON.parse(localStorage.getItem('defaultBattleSpeed') ?? '1'),
+  reducedAnimations: isInHost() ? false : JSON.parse(localStorage.getItem('reducedAnimations') ?? 'false'),
   showBag: false,
   dragShift: null,
   startingLives: 3,
@@ -699,7 +703,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   toggleShowRawJson: () => {
     set((state) => {
       const newValue = !state.showRawJson;
-      localStorage.setItem('showRawJson', JSON.stringify(newValue));
+      storageService.writeJSON('showRawJson', newValue);
       return { showRawJson: newValue };
     });
   },
@@ -707,20 +711,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   toggleShowCardNames: () => {
     set((state) => {
       const newValue = !state.showCardNames;
-      localStorage.setItem('showCardNames', JSON.stringify(newValue));
+      storageService.writeJSON('showCardNames', newValue);
       return { showCardNames: newValue };
     });
   },
 
   setCardDetailsPanelMode: (mode: CardDetailsPanelMode) => {
-    localStorage.setItem('showGameCardDetailsPanel', JSON.stringify(mode));
+    storageService.writeJSON('showGameCardDetailsPanel', mode);
     set({ showGameCardDetailsPanel: mode });
   },
 
   toggleShowBoardHelper: () => {
     set((state) => {
       const newValue = !state.showBoardHelper;
-      localStorage.setItem('showBoardHelper', JSON.stringify(newValue));
+      storageService.writeJSON('showBoardHelper', newValue);
       return { showBoardHelper: newValue };
     });
   },
@@ -728,7 +732,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   toggleShowAddress: () => {
     set((state) => {
       const newValue = !state.showAddress;
-      localStorage.setItem('showAddress', JSON.stringify(newValue));
+      storageService.writeJSON('showAddress', newValue);
       return { showAddress: newValue };
     });
   },
@@ -736,20 +740,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   toggleShowBalance: () => {
     set((state) => {
       const newValue = !state.showBalance;
-      localStorage.setItem('showBalance', JSON.stringify(newValue));
+      storageService.writeJSON('showBalance', newValue);
       return { showBalance: newValue };
     });
   },
 
   setDefaultBattleSpeed: (speed: number) => {
-    localStorage.setItem('defaultBattleSpeed', JSON.stringify(speed));
+    storageService.writeJSON('defaultBattleSpeed', speed);
     set({ defaultBattleSpeed: speed });
   },
 
   toggleReducedAnimations: () => {
     set((state) => {
       const newValue = !state.reducedAnimations;
-      localStorage.setItem('reducedAnimations', JSON.stringify(newValue));
+      storageService.writeJSON('reducedAnimations', newValue);
       return { reducedAnimations: newValue };
     });
   },

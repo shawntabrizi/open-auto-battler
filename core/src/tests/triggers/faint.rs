@@ -96,6 +96,7 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::SpawnUnit {
                 card_id: CardId(43), // golem
+                spawn_location: SpawnLocation::Front,
             },
             conditions: vec![],
             max_triggers: None,
@@ -121,6 +122,7 @@ fn test_ally_behind_on_faint_with_lich_sacrifice() {
             trigger: AbilityTrigger::OnStart,
             effect: AbilityEffect::SpawnUnit {
                 card_id: CardId(43), // golem
+                spawn_location: SpawnLocation::Front,
             },
             conditions: vec![],
             max_triggers: None,
