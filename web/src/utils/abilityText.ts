@@ -257,9 +257,9 @@ function formatTriggerClause(trigger: string): string {
     case 'OnHurt':
       return 'When this is hurt';
     case 'OnBuy':
-      return 'When bought';
+      return 'When any unit is bought';
     case 'OnSell':
-      return 'When sold';
+      return 'When any unit is sold';
     case 'OnShopStart':
       return 'At shop start';
     case 'AfterLoss':
