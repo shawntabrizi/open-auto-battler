@@ -42,6 +42,8 @@ interface GameStore {
   cardSet: CardView[] | null; // Full set of unique cards (fetched once)
   cardNameMap: Record<number, string>;
   currentSetId: number | null;
+  rarityMap: Map<number, number>; // card_id → rarity weight for current set
+  rarityTotalWeight: number;
   bag: number[] | null; // Bag as a list of Card IDs
   isLoading: boolean;
   error: string | null;
@@ -129,6 +131,21 @@ const NO_ACTIONS_COMMIT_WARNING =
 
 function buildCardNameMap(metas: Array<{ id: number; name: string }>): Record<number, string> {
   return Object.fromEntries(metas.map((meta) => [meta.id, meta.name]));
+}
+
+function buildRarityMap(engine: any, setId: number): { rarityMap: Map<number, number>; rarityTotalWeight: number } {
+  try {
+    const cards: { id: number; rarity: number }[] = engine.get_set_cards(setId);
+    const rarityMap = new Map<number, number>();
+    let rarityTotalWeight = 0;
+    for (const card of cards) {
+      rarityMap.set(card.id, card.rarity);
+      rarityTotalWeight += card.rarity;
+    }
+    return { rarityMap, rarityTotalWeight };
+  } catch {
+    return { rarityMap: new Map(), rarityTotalWeight: 0 };
+  }
 }
 
 function localSessionJsonReplacer(_key: string, value: unknown): unknown {
@@ -224,6 +241,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   cardSet: null,
   cardNameMap: {},
   currentSetId: null,
+  rarityMap: new Map(),
+  rarityTotalWeight: 0,
   bag: null,
   isLoading: true,
   error: null,
@@ -321,6 +340,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         view: engine.get_view(),
         cardSet: engine.get_card_set(),
         currentSetId: setId,
+        ...buildRarityMap(engine, setId),
         gameStarted: true,
         isLoading: false,
         showSetPreview: false,
@@ -374,6 +394,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           cardSet: engine.get_card_set(), // Fetch card set once on init
           cardNameMap: buildCardNameMap(metas),
           currentSetId: 0,
+          ...buildRarityMap(engine, 0),
           isLoading: false,
         });
       } catch (err) {
@@ -635,6 +656,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       showBattleOverlay: false,
       gameStarted: false,
       currentSetId: null,
+      rarityMap: new Map(),
+      rarityTotalWeight: 0,
       startingLives: 3,
       winsToVictory: 10,
       afterBattleCallback: null,
@@ -680,6 +703,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         selection: null,
         showBattleOverlay: false,
         currentSetId: persisted.session.set_id,
+        ...buildRarityMap(engine, persisted.session.set_id),
         gameStarted: true,
         isLoading: false,
         error: null,

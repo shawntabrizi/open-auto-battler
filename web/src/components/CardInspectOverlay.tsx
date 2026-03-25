@@ -3,11 +3,19 @@ import { CardDetailPanel } from './CardDetailPanel';
 import { UI_LAYERS } from '../constants/uiLayers';
 import { useFocusTrap } from '../hooks';
 import { useCardInspectStore } from '../store/cardInspectStore';
+import { useGameStore } from '../store/gameStore';
 
 export function CardInspectOverlay() {
   const isOpen = useCardInspectStore((state) => state.isOpen);
   const card = useCardInspectStore((state) => state.card);
+  const rarityInfo = useCardInspectStore((state) => state.rarityInfo);
   const close = useCardInspectStore((state) => state.close);
+
+  // Fall back to game store rarity when inspect store has none (e.g. right-click during gameplay)
+  const gameRarityMap = useGameStore((s) => s.rarityMap);
+  const gameRarityTotalWeight = useGameStore((s) => s.rarityTotalWeight);
+  const rarity = rarityInfo?.rarity ?? (card ? gameRarityMap.get(card.id) : undefined);
+  const totalWeight = rarityInfo?.totalWeight ?? (gameRarityTotalWeight || undefined);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,6 +53,8 @@ export function CardInspectOverlay() {
             isVisible={true}
             layout="contained"
             onClose={close}
+            rarity={rarity}
+            rarityTotalWeight={totalWeight}
           />
         </div>
       </div>

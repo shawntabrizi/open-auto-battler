@@ -4,12 +4,18 @@ import { useGameStore } from './gameStore';
 
 type InspectCard = CardView | BoardUnitView;
 
+interface RarityInfo {
+  rarity: number;
+  totalWeight: number;
+}
+
 interface CardInspectStore {
   isOpen: boolean;
   card: InspectCard | null;
-  open: (card: InspectCard) => void;
+  rarityInfo: RarityInfo | null;
+  open: (card: InspectCard, rarityInfo?: RarityInfo) => void;
   close: () => void;
-  toggle: (card: InspectCard) => void;
+  toggle: (card: InspectCard, rarityInfo?: RarityInfo) => void;
 }
 
 function clearSelection() {
@@ -19,16 +25,21 @@ function clearSelection() {
 export const useCardInspectStore = create<CardInspectStore>((set) => ({
   isOpen: false,
   card: null,
-  open: (card) => {
+  rarityInfo: null,
+  open: (card, rarityInfo) => {
     clearSelection();
-    set({ isOpen: true, card });
+    set({ isOpen: true, card, rarityInfo: rarityInfo ?? null });
   },
   close: () => {
     clearSelection();
-    set({ isOpen: false, card: null });
+    set({ isOpen: false, card: null, rarityInfo: null });
   },
-  toggle: (card) => {
+  toggle: (card, rarityInfo) => {
     clearSelection();
-    set((state) => (state.isOpen ? { isOpen: false, card: null } : { isOpen: true, card }));
+    set((state) =>
+      state.isOpen
+        ? { isOpen: false, card: null, rarityInfo: null }
+        : { isOpen: true, card, rarityInfo: rarityInfo ?? null }
+    );
   },
 }));

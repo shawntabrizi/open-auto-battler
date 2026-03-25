@@ -13,22 +13,40 @@ import { CARD_TEXT, type CardSizeVariant } from '../constants/cardSizes';
 import { useAchievementStore } from '../store/achievementStore';
 import { useGameStore } from '../store/gameStore';
 import { useCardInspectStore } from '../store/cardInspectStore';
+import { getRarityInfo } from '../utils/rarity';
 
-/** Derive a visual rarity tier from play_cost + ability count. */
-export function getRarityTier(
-  card: CardView | BoardUnitView
-): 'common' | 'uncommon' | 'rare' | 'legendary' {
+export type RarityTier = 'common' | 'uncommon' | 'rare' | 'mythic';
+
+/** Map a rarity weight (from sets.json) to a visual tier. */
+function rarityWeightToTier(weight: number): RarityTier {
+  if (weight <= 2) return 'mythic';
+  if (weight <= 6) return 'rare';
+  if (weight <= 8) return 'uncommon';
+  return 'common';
+}
+
+/** Fallback: derive a visual rarity tier from play_cost + ability count. */
+function costBasedTier(card: CardView | BoardUnitView): RarityTier {
   const cost = card.play_cost;
   const abilityCount =
     ((card as any).shop_abilities?.length ?? 0) + ((card as any).battle_abilities?.length ?? 0);
-  if (cost >= 5 || (cost >= 4 && abilityCount >= 2)) return 'legendary';
+  if (cost >= 5 || (cost >= 4 && abilityCount >= 2)) return 'mythic';
   if (cost >= 4 || (cost >= 3 && abilityCount >= 2)) return 'rare';
   if (cost >= 3 || abilityCount >= 2) return 'uncommon';
   return 'common';
 }
 
+/** Get the visual rarity tier. Uses actual rarity weight when available, falls back to cost heuristic. */
+export function getRarityTier(
+  card: CardView | BoardUnitView,
+  rarityWeight?: number
+): RarityTier {
+  if (rarityWeight != null) return rarityWeightToTier(rarityWeight);
+  return costBasedTier(card);
+}
+
 /** Border and glow styles per rarity tier. */
-export const RARITY_STYLES = {
+export const RARITY_STYLES: Record<RarityTier, { border: string; glow: string }> = {
   common: {
     border: 'border-card-burn/40',
     glow: '',
@@ -41,11 +59,11 @@ export const RARITY_STYLES = {
     border: 'border-mana/60',
     glow: 'card-rare-glow',
   },
-  legendary: {
+  mythic: {
     border: 'border-accent/70',
-    glow: 'card-legendary-glow',
+    glow: 'card-mythic-glow',
   },
-} as const;
+};
 
 interface UnitCardProps {
   card: CardView | BoardUnitView;
@@ -53,6 +71,10 @@ interface UnitCardProps {
   onClick?: () => void;
   showCost?: boolean;
   showBurn?: boolean;
+  /** Optional rarity weight from the card set — shows a rarity label on the card. */
+  rarityWeight?: number;
+  /** Sum of all rarity weights in the set — passed to inspect overlay for percentage display. */
+  rarityTotalWeight?: number;
   sizeVariant?: CardSizeVariant;
   enableWobble?: boolean;
   enableTilt?: boolean;
@@ -77,6 +99,8 @@ export function UnitCard({
   onClick,
   showCost = true,
   showBurn = true,
+  rarityWeight,
+  rarityTotalWeight,
   sizeVariant = 'standard',
   enableWobble = true,
   enableTilt = true,
@@ -89,6 +113,9 @@ export function UnitCard({
   const cardStyle = useCustomizationStore((s) => s.selections.cardStyle);
   const showCardNames = useGameStore((s) => s.showCardNames);
   const activeSelection = useGameStore((s) => s.selection);
+  // Fall back to game store rarity when not explicitly provided
+  const storeRarityMap = useGameStore((s) => s.rarityMap);
+  const effectiveRarityWeight = rarityWeight ?? storeRarityMap.get(card.id);
   const { tiltRef } = useCardTilt({
     enabled: enableTilt,
     maxRotation: sizeVariant === 'compact' || sizeVariant === 'battle' ? 8 : 12,
@@ -114,7 +141,7 @@ export function UnitCard({
   const resolveCardName = (cardId: number) => cardNameMap[cardId];
   const showArt = artSrc && !artFailed;
   const text = CARD_TEXT[sizeVariant];
-  const rarity = getRarityTier(card);
+  const rarity = getRarityTier(card, effectiveRarityWeight);
   const rarityStyle = RARITY_STYLES[rarity];
   const showTooltip = abilities.length > 0 && (isSelected || (!hasGameSelection && isHovered));
 
@@ -198,7 +225,12 @@ export function UnitCard({
       onClick={() => onClick?.()}
       onContextMenu={(e) => {
         e.preventDefault();
-        openInspect(card);
+        openInspect(
+          card,
+          effectiveRarityWeight != null && rarityTotalWeight
+            ? { rarity: effectiveRarityWeight, totalWeight: rarityTotalWeight }
+            : undefined
+        );
       }}
       draggable={draggable}
       onDragOver={onDragOver}
@@ -287,6 +319,18 @@ export function UnitCard({
           {card.play_cost}
         </div>
       )}
+
+      {/* Rarity label (top center) */}
+      {effectiveRarityWeight != null && (() => {
+        const info = getRarityInfo(effectiveRarityWeight);
+        return (
+          <div
+            className={`absolute top-0 left-1/2 -translate-x-1/2 z-10 px-1 lg:px-1.5 py-px rounded-b text-[5px] lg:text-[7px] font-stat font-bold uppercase tracking-wider ${info.color} bg-black/80`}
+          >
+            {info.label}
+          </div>
+        );
+      })()}
 
       {/* Burn value badge (top right) — gold flame */}
       {showBurn && (

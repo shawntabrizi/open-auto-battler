@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGameStore } from '../store/gameStore';
 import { CardGallery } from './CardGallery';
@@ -11,6 +11,7 @@ export function SetPage() {
   const { setId } = useParams<{ setId: string }>();
   const { engine, init, setMetas } = useGameStore();
   const [cards, setCards] = useState<CardView[] | null>(null);
+  const [rarityMap, setRarityMap] = useState<Map<number, number>>(new Map());
   const [selectedCard, setSelectedCard] = useState<CardView | null>(null);
 
   useInitGuard(() => {
@@ -20,12 +21,23 @@ export function SetPage() {
   useEffect(() => {
     if (!engine || setId == null) return;
     try {
-      const result: CardView[] = engine.get_set_cards(Number(setId));
+      const result: (CardView & { rarity: number })[] = engine.get_set_cards(Number(setId));
       setCards(result);
+
+      const map = new Map<number, number>();
+      for (const card of result) {
+        map.set(card.id, card.rarity);
+      }
+      setRarityMap(map);
     } catch (err) {
       console.error('Failed to load set:', err);
     }
   }, [engine, setId]);
+
+  const totalWeight = useMemo(
+    () => Array.from(rarityMap.values()).reduce((sum, w) => sum + w, 0),
+    [rarityMap]
+  );
 
   const setName = setMetas.find((m) => m.id === Number(setId))?.name ?? `Set #${setId}`;
 
@@ -64,6 +76,7 @@ export function SetPage() {
             ) : (
               <CardGallery
                 cards={cards}
+                rarityMap={rarityMap}
                 selectedId={selectedCard?.id}
                 onSelect={(card) => setSelectedCard(card as CardView | null)}
               />
@@ -72,7 +85,7 @@ export function SetPage() {
         </div>
       </div>
 
-      <CardDetailPanel card={selectedCard} isVisible={true} />
+      <CardDetailPanel card={selectedCard} isVisible={true} rarity={selectedCard ? rarityMap.get(selectedCard.id) : undefined} rarityTotalWeight={totalWeight} />
     </div>
   );
 }
