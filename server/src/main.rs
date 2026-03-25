@@ -2,8 +2,8 @@
 
 mod chain;
 mod constructed;
-mod local;
 mod http;
+mod local;
 mod types;
 
 use std::env;

@@ -167,10 +167,7 @@ impl GameSession {
     }
 
     /// Apply shop actions without running battle. Returns updated state with the post-shop board.
-    pub fn shop(
-        &mut self,
-        action: &CommitTurnAction,
-    ) -> Result<GameStateResponse, String> {
+    pub fn shop(&mut self, action: &CommitTurnAction) -> Result<GameStateResponse, String> {
         if self.state.phase == GamePhase::Completed {
             return Err("Game is already over. Call POST /reset to start a new game.".into());
         }
@@ -190,15 +187,15 @@ impl GameSession {
     }
 
     /// Run battle against the provided opponent, advance round. Must be called after shop().
-    pub fn battle(
-        &mut self,
-        opponent: &[OpponentUnit],
-    ) -> Result<StepResponse, String> {
+    pub fn battle(&mut self, opponent: &[OpponentUnit]) -> Result<StepResponse, String> {
         if self.state.phase == GamePhase::Completed {
             return Err("Game is already over.".into());
         }
         if self.state.phase != GamePhase::Battle {
-            return Err(format!("Wrong phase: {:?}. Call POST /shop first.", self.state.phase));
+            return Err(format!(
+                "Wrong phase: {:?}. Call POST /shop first.",
+                self.state.phase
+            ));
         }
 
         let completed_round = self.state.round;
@@ -498,7 +495,9 @@ mod tests {
         let mut session = new_session();
         let all_sets = oab_battle::cards::get_all_set_metas();
         if all_sets.len() > 1 {
-            let state = session.reset(99, Some(1)).expect("reset with set 1 should succeed");
+            let state = session
+                .reset(99, Some(1))
+                .expect("reset with set 1 should succeed");
             assert_eq!(state.round, 1);
         }
     }
@@ -549,8 +548,6 @@ mod tests {
         let result = session.shop(&CommitTurnAction { actions: vec![] });
         assert!(result.is_err());
     }
-
-
 
     // ── Determinism ──
 
