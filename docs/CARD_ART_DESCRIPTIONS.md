@@ -49,7 +49,7 @@ Higher cost/rarity cards should look more imposing, detailed, and powerful.
 |------|------|-------------|
 | Seedling | 1 | A tiny sprout with two leaves growing from a crack in stone, a faint green glow at its base |
 | Sapling | 2 | A young tree with thin trunk and a handful of bright leaves, roots just beginning to grip the earth |
-| Grove Tender | 3 | A gentle forest spirit with bark-like skin and leaf hair, kneeling to touch a glowing plant |
+| Grove Tender | 3 | A gentle forest spirit dressed in a layered robe of broad green leaves and woven bark, leaf-like hair, kneeling to touch a glowing plant |
 | Forest Sage | 4 | An elderly figure wrapped in moss and lichen, owl perched on shoulder, wise glowing eyes |
 | Earth Shaman | 5 | A muscular druid with antler headdress, hands pressed to the ground, vines spiraling up their arms |
 | Treant | 7 | A walking tree with a gnarled face in the trunk, thick root-legs, branches forming massive arms |
@@ -111,7 +111,7 @@ Higher cost/rarity cards should look more imposing, detailed, and powerful.
 | Name | Cost | Description |
 |------|------|-------------|
 | Skeleton | 1 | A basic skeleton warrior with a rusty sword, one eye socket glowing faintly green, bones held together by dark magic |
-| Spirit | 2 | A translucent ghostly figure, barely visible, wispy trails where limbs should be, sad hollow eyes |
+| Spirit | 2 | A translucent ghostly figure in tattered robes, barely visible, wispy trails flowing from the cloak, sad hollow eyes |
 | Ghoul | 2 | A hunched, decaying humanoid with long claws, feral posture, glowing eyes, patches of rotting flesh |
 | Death Knight | 3 | An armored skeleton knight on foot, dark plate armor with green rune engravings, tattered cape |
 | Bone Golem | 3 | A hulking construct assembled from hundreds of bones, skulls forming joints, held together by dark energy |
