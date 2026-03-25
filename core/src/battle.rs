@@ -1531,7 +1531,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                     Team::Player,
                     AbilityTrigger::OnAllyFaint,
                     Some(dead_unit.instance_id),
-                    None,
+                    Some(idx),
                 ));
             }
         }
@@ -1557,7 +1557,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
                     Team::Enemy,
                     AbilityTrigger::OnAllyFaint,
                     Some(dead_unit.instance_id),
-                    None,
+                    Some(idx),
                 ));
             }
         }
