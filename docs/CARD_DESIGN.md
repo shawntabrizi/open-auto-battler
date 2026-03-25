@@ -69,8 +69,9 @@ is a token and cannot be drafted.
 | 2            | Legendary | Rarely     | Game-warping effects, high stat budgets                 |
 | 1            | Mythic    | Very rare  | Showstopper cards, highest cost/impact                  |
 
-Token cards are not included in the set's card list at all — they are referenced by
-`card_id` in spawn abilities but never appear in the bag.
+Token cards should be included in a set's card list with `rarity: 0` when that set contains
+spawners or rebirth cards that reference them. They never appear in the bag, but the runtime
+still needs them present in the set/card pool so spawn effects can resolve correctly.
 
 **Rarity as a balance lever:** If a card is slightly above the stat budget curve or has an
 unusually strong ability, it can be balanced by lowering its rarity — the player sees it
@@ -82,6 +83,38 @@ less often, so its average impact across games is kept in check.
 - Archetype enablers should be Uncommon (8) or Rare (6) — common enough to find
 - Archetype payoffs / finishers should be Rare (6) or Epic (4)
 - Cards that warp the game around them should be Legendary (2) or Mythic (1)
+
+---
+
+## Implementation Guardrails
+
+These rules exist to keep `docs/CARD_DESIGN.md`, `cards/cards.json`, and `cards/sets.json`
+aligned.
+
+- If a design says `(perm)`, the implementation must use a permanent effect type rather than
+  a temporary battle buff.
+- Every spawn effect must explicitly choose `Front`, `Back`, or `DeathPosition`. Do not rely on
+  implicit/default spawn placement.
+- `OnFaint` happens once per unit instance. Do not use `max_triggers` to mean "repeat N times"
+  for an `OnFaint` ability. Encode repeated faint effects as multiple abilities or as a token
+  chain.
+- Battle-spawned units do not persist into the next shop. Any rebirth/revival design must fully
+  resolve within the same battle.
+- If a design cannot be expressed cleanly with the current ability/target enums, redesign the
+  card before merging instead of relying on ambiguous text.
+
+## Card Authoring Checklist
+
+Before shipping a card update:
+
+- Confirm the design row and `cards/cards.json` agree on stats, cost, burn, rarity, trigger,
+  target, and whether the effect is permanent.
+- Confirm every spawned/reborn token exists in `cards/cards.json` and is present in any relevant
+  curated set with `rarity: 0`.
+- Confirm `cards/sets.json` uses the intended rarity weights for all curated sets.
+- Confirm [web/src/utils/abilityText.ts](../web/src/utils/abilityText.ts) still renders the card
+  text accurately if the ability shape changed.
+- Add a focused regression test for positional, spawn, rebirth, or permanent-buff behavior.
 
 ---
 
