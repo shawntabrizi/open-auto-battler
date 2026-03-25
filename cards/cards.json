@@ -3296,11 +3296,11 @@
     "shop_abilities": [],
     "battle_abilities": [
       {
-        "trigger": "OnStart",
+        "trigger": "OnFaint",
         "effect": {
           "type": "SpawnUnit",
-          "card_id": 52,
-          "spawn_location": "Front"
+          "card_id": 110,
+          "spawn_location": "DeathPosition"
         },
         "conditions": [],
         "max_triggers": null
@@ -3337,5 +3337,20 @@
         "max_triggers": null
       }
     ]
+  },
+  {
+    "id": 110,
+    "name": "Reborn Necromancer",
+    "emoji": "🧟",
+    "stats": {
+      "attack": 3,
+      "health": 4
+    },
+    "economy": {
+      "play_cost": 0,
+      "burn_value": 0
+    },
+    "shop_abilities": [],
+    "battle_abilities": []
   }
 ]

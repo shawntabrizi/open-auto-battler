@@ -250,19 +250,19 @@ don't die in the right order
 
 **Cards:**
 
-| Name         | ATK | HP  | Cost | Burn | Rarity | Abilities                                                                        | Notes                             |
-| ------------ | --- | --- | ---- | ---- | ------ | -------------------------------------------------------------------------------- | --------------------------------- |
-| Skeleton     | 1   | 2   | 1    | 0    | 10     | OnFaint: +1/+1 to random ally (perm)                                             | Basic faint buff                  |
-| Spirit       | 2   | 2   | 2    | 1    | 10     | OnFaint: +1/+1 to adjacent allies (perm)                                         | Adjacent faint buff               |
-| Ghoul        | 2   | 2   | 2    | 1    | 10     | OnFaint: Deal 2 damage to all                                                    | AoE on death                      |
-| Death Knight | 2   | 3   | 3    | 1    | 10     | OnFaint: +2/+2 to unit behind (perm)                                             | Big single-target buff            |
-| Bone Golem   | 3   | 3   | 3    | 1    | 10     | OnFaint: Deal 3 damage to adjacent                                               | Risky AoE (hits own allies)       |
-| Soul Eater   | 3   | 3   | 4    | 2    | 10     | OnAllyFaint: +2/+1 to self                                                       | Faint consumer, snowballs         |
-| Banshee      | 3   | 4   | 5    | 2    | 8      | OnFaint: Deal 5 damage to front enemy                                            | Big damage on death               |
-| Revenant     | 4   | 5   | 6    | 3    | 8      | OnAllyFaint: +2/+2 to self (perm)                                                | Premium faint consumer            |
-| Lich         | 3   | 6   | 7    | 3    | 6      | OnFaint: +2/+2 to ALL allies (perm)                                              | Board-wide death buff             |
-| Necromancer  | 3   | 4   | 8    | 3    | 6      | OnFaint: Spawn Phylactery in its place (OnStart: Spawn 3/4 Necromancer at front) | Comes back from death             |
-| Undead King  | 5   | 8   | 10   | 3    | 2      | OnAllyFaint: +3/+3 to ALL other allies (perm)                                    | Every death supercharges the team |
+| Name         | ATK | HP  | Cost | Burn | Rarity | Abilities                                                                                   | Notes                             |
+| ------------ | --- | --- | ---- | ---- | ------ | ------------------------------------------------------------------------------------------- | --------------------------------- |
+| Skeleton     | 1   | 2   | 1    | 0    | 10     | OnFaint: +1/+1 to random ally (perm)                                                        | Basic faint buff                  |
+| Spirit       | 2   | 2   | 2    | 1    | 10     | OnFaint: +1/+1 to adjacent allies (perm)                                                    | Adjacent faint buff               |
+| Ghoul        | 2   | 2   | 2    | 1    | 10     | OnFaint: Deal 2 damage to all                                                               | AoE on death                      |
+| Death Knight | 2   | 3   | 3    | 1    | 10     | OnFaint: +2/+2 to unit behind (perm)                                                        | Big single-target buff            |
+| Bone Golem   | 3   | 3   | 3    | 1    | 10     | OnFaint: Deal 3 damage to adjacent                                                          | Risky AoE (hits own allies)       |
+| Soul Eater   | 3   | 3   | 4    | 2    | 10     | OnAllyFaint: +2/+1 to self                                                                  | Faint consumer, snowballs         |
+| Banshee      | 3   | 4   | 5    | 2    | 8      | OnFaint: Deal 5 damage to front enemy                                                       | Big damage on death               |
+| Revenant     | 4   | 5   | 6    | 3    | 8      | OnAllyFaint: +2/+2 to self (perm)                                                           | Premium faint consumer            |
+| Lich         | 3   | 6   | 7    | 3    | 6      | OnFaint: +2/+2 to ALL allies (perm)                                                         | Board-wide death buff             |
+| Necromancer  | 3   | 4   | 8    | 3    | 6      | OnFaint: Spawn Phylactery in its place (OnFaint: Spawn 3/4 Reborn Necromancer in its place) | Comes back from death             |
+| Undead King  | 5   | 8   | 10   | 3    | 2      | OnAllyFaint: +3/+3 to ALL other allies (perm)                                               | Every death supercharges the team |
 
 ---
 
@@ -434,15 +434,16 @@ burn 0.
 - Tokens from expensive spawners: ~3/3 to 5/5
 - Tokens can have simple abilities but should not spawn further tokens (no infinite loops)
 
-| Name       | ATK | HP  | Spawned By     | Abilities                               | Notes              |
-| ---------- | --- | --- | -------------- | --------------------------------------- | ------------------ |
-| Grub       | 1   | 1   | Larva          | None                                    | Basic token        |
-| Hatchling  | 2   | 2   | Scarab         | None                                    | Mid-tier token     |
-| Nymph      | 3   | 1   | Mantis         | None                                    | Glass cannon token |
-| Moth       | 3   | 3   | Moth Matriarch | None                                    | Mid-tier token     |
-| Drone      | 2   | 2   | Hive Mother    | None                                    | Swarm token        |
-| Phylactery | 0   | 5   | Necromancer    | OnStart: Spawn 3/4 Necromancer at front | Delayed rebirth    |
-| Stinger    | 1   | 1   | Brood Queen    | AfterUnitAttack: Destroy front enemy    | Assassin token     |
+| Name               | ATK | HP  | Spawned By     | Abilities                                          | Notes                |
+| ------------------ | --- | --- | -------------- | -------------------------------------------------- | -------------------- |
+| Grub               | 1   | 1   | Larva          | None                                               | Basic token          |
+| Hatchling          | 2   | 2   | Scarab         | None                                               | Mid-tier token       |
+| Nymph              | 3   | 1   | Mantis         | None                                               | Glass cannon token   |
+| Moth               | 3   | 3   | Moth Matriarch | None                                               | Mid-tier token       |
+| Drone              | 2   | 2   | Hive Mother    | None                                               | Swarm token          |
+| Phylactery         | 0   | 5   | Necromancer    | OnFaint: Spawn 3/4 Reborn Necromancer in its place | Delayed rebirth      |
+| Reborn Necromancer | 3   | 4   | Phylactery     | None                                               | One-time reborn body |
+| Stinger            | 1   | 1   | Brood Queen    | AfterUnitAttack: Destroy front enemy               | Assassin token       |
 
 ---
 
