@@ -720,8 +720,8 @@ impl GameEngine {
         self.state.lives = self.config.starting_lives;
         self.state.mana_limit = self.config.mana_limit_for_round(1);
 
-        self.state.local_state.bag = deck_ids;
-        self.state.local_state.next_card_id = 1000;
+        self.state.bag = deck_ids;
+        self.state.next_card_id = 1000;
         self.state.draw_hand();
 
         apply_shop_start_triggers(&mut self.state);
@@ -771,9 +771,10 @@ impl GameEngine {
     /// Get the resumable local session payload (similar to the on-chain GameSession).
     #[wasm_bindgen]
     pub fn get_local_session(&self) -> JsValue {
+        let (_, set_id, local_state) = self.state.clone().decompose();
         let snapshot = GameSession {
-            state: self.state.local_state.clone(),
-            set_id: self.state.set_id,
+            state: local_state,
+            set_id,
         };
 
         match serde_wasm_bindgen::to_value(&snapshot) {
@@ -1061,15 +1062,15 @@ impl GameEngine {
     fn initialize_bag(&mut self) {
         use oab_game::sealed::create_starting_bag;
 
-        self.state.local_state.bag.clear();
+        self.state.bag.clear();
 
         if let Some(card_set) = &self.card_set {
             // Generate random bag of 100 cards from the already-loaded set
-            self.state.local_state.bag = create_starting_bag(card_set, self.state.game_seed);
+            self.state.bag = create_starting_bag(card_set, self.state.game_seed);
         }
 
         // Set next_card_id to be after card definitions
-        self.state.local_state.next_card_id = 1000;
+        self.state.next_card_id = 1000;
 
         // Draw initial hand once bag is ready
         self.state.draw_hand();

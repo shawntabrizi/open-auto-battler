@@ -103,7 +103,6 @@ impl<T: Config> Pallet<T> {
     /// Create a ghost board from the current game state.
     pub(crate) fn create_ghost_board(core_state: &GameState) -> BoundedGhostBoard<T> {
         let units: Vec<GhostBoardUnit> = core_state
-            .local_state
             .board
             .iter()
             .flatten()
@@ -136,7 +135,6 @@ impl<T: Config> Pallet<T> {
             let slot = player_slots[unit_index - 1];
 
             let unit_state = core_state
-                .local_state
                 .board
                 .get_mut(slot)
                 .and_then(|s| s.as_mut())
@@ -156,7 +154,7 @@ impl<T: Config> Pallet<T> {
                 .unwrap_or(false);
 
             if should_remove {
-                core_state.local_state.board[slot] = None;
+                core_state.board[slot] = None;
             }
         }
     }
@@ -227,13 +225,12 @@ impl<T: Config> Pallet<T> {
         verify_and_apply_turn(&mut core_state, &core_action)
             .map_err(|_| Error::<T>::InvalidTurn)?;
 
-        core_state.local_state.shop_mana = 0;
+        core_state.shop_mana = 0;
 
         let battle_seed = Self::generate_next_seed(who, battle_seed_context);
 
         let mut player_slots = Vec::new();
         let player_units: Vec<CombatUnit> = core_state
-            .local_state
             .board
             .iter()
             .enumerate()
@@ -252,9 +249,9 @@ impl<T: Config> Pallet<T> {
 
         let bracket = MatchmakingBracket {
             set_id,
-            round: core_state.local_state.round,
-            wins: core_state.local_state.wins,
-            lives: core_state.local_state.lives,
+            round: core_state.round,
+            wins: core_state.wins,
+            lives: core_state.lives,
         };
 
         Ok(PreparedBattle {
@@ -301,7 +298,7 @@ impl<T: Config> Pallet<T> {
             &battle.core_state.card_pool,
         );
 
-        battle.core_state.local_state.shop_mana =
+        battle.core_state.shop_mana =
             oab_battle::battle::player_shop_mana_delta_from_events(&events).max(0);
         let permanent_deltas = oab_battle::battle::player_permanent_stat_deltas_from_events(&events);
         Self::apply_player_permanent_stat_deltas(
@@ -324,26 +321,26 @@ impl<T: Config> Pallet<T> {
 
         match result {
             BattleResult::Victory => {
-                battle.core_state.local_state.wins += 1;
+                battle.core_state.wins += 1;
             }
             BattleResult::Defeat => {
-                battle.core_state.local_state.lives -= 1;
+                battle.core_state.lives -= 1;
             }
             BattleResult::Draw => {}
         }
 
-        let completed_round = battle.core_state.local_state.round;
+        let completed_round = battle.core_state.round;
         let config = oab_game::sealed::default_config();
-        let game_over = battle.core_state.local_state.lives <= 0
-            || battle.core_state.local_state.wins >= config.wins_to_victory;
+        let game_over = battle.core_state.lives <= 0
+            || battle.core_state.wins >= config.wins_to_victory;
 
         let new_seed = if !game_over {
             let new_seed = Self::generate_next_seed(who, next_seed_context);
-            battle.core_state.local_state.game_seed = new_seed;
-            battle.core_state.local_state.round += 1;
-            battle.core_state.local_state.mana_limit =
-                config.mana_limit_for_round(battle.core_state.local_state.round);
-            battle.core_state.local_state.phase = GamePhase::Shop;
+            battle.core_state.game_seed = new_seed;
+            battle.core_state.round += 1;
+            battle.core_state.mana_limit =
+                config.mana_limit_for_round(battle.core_state.round);
+            battle.core_state.phase = GamePhase::Shop;
             battle.core_state.draw_hand();
             apply_shop_start_triggers_with_result(&mut battle.core_state, Some(result.clone()));
             new_seed
@@ -432,7 +429,7 @@ impl<T: Config> Pallet<T> {
     /// Grant bronze achievement (bit 0) for every card currently on the player's board.
     /// Called after a battle victory so cards that helped win earn the bronze star.
     pub(crate) fn grant_bronze_achievements(who: &T::AccountId, core_state: &GameState) {
-        for board_unit in core_state.local_state.board.iter().flatten() {
+        for board_unit in core_state.board.iter().flatten() {
             let card_id = board_unit.card_id.0;
             let current = VictoryAchievements::<T>::get(who, card_id);
             if current & ACHIEVEMENT_BRONZE == 0 {

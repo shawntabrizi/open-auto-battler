@@ -783,10 +783,11 @@ pub mod pallet {
 
             // If game is over, mark as Completed for end_game to finalize
             if turn.game_over {
-                battle.core_state.local_state.phase = GamePhase::Completed;
+                battle.core_state.phase = GamePhase::Completed;
             }
 
-            session.state = battle.core_state.local_state.into();
+            let (_, _, local) = battle.core_state.decompose();
+            session.state = local.into();
             ActiveGame::<T>::insert(&who, &session);
 
             Self::deposit_event(Event::BattleReported {
@@ -1126,10 +1127,11 @@ pub mod pallet {
 
             // If game is over, mark as Completed for end_tournament_game to finalize
             if turn.game_over {
-                battle.core_state.local_state.phase = GamePhase::Completed;
+                battle.core_state.phase = GamePhase::Completed;
             }
 
-            session.state = battle.core_state.local_state.into();
+            let (_, _, local) = battle.core_state.decompose();
+            session.state = local.into();
             ActiveTournamentGame::<T>::insert(&who, &session);
 
             Self::deposit_event(Event::BattleReported {

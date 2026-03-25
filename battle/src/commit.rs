@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 
 use crate::error::{GameError, GameResult};
 use crate::rng::{BattleRng, XorShiftRng};
-use crate::state::{GameState, BOARD_SIZE};
+use crate::state::{ShopState, BOARD_SIZE};
 use crate::types::{
     CardId, CommitTurnAction, CompareOp, ShopAbility, ShopCondition, ShopEffect, ShopMatcher,
     ShopScope, ShopTarget, ShopTrigger, StatType, TurnAction,
@@ -33,7 +33,7 @@ struct ShopPendingAbility {
 /// Apply `OnShopStart` triggers for all units currently on the board.
 ///
 /// This should be called exactly once when entering a new shop phase.
-pub fn apply_shop_start_triggers(state: &mut GameState) {
+pub fn apply_shop_start_triggers(state: &mut ShopState) {
     apply_shop_start_triggers_with_result(state, None);
 }
 
@@ -42,7 +42,7 @@ pub fn apply_shop_start_triggers(state: &mut GameState) {
 /// Runs `OnShopStart`, then one of `AfterLoss` / `AfterWin` / `AfterDraw`
 /// if a previous battle result is provided.
 pub fn apply_shop_start_triggers_with_result(
-    state: &mut GameState,
+    state: &mut ShopState,
     previous_battle_result: Option<BattleResult>,
 ) {
     state.shop_mana = state.shop_mana.clamp(0, state.mana_limit);
@@ -63,7 +63,7 @@ pub fn apply_shop_start_triggers_with_result(
 }
 
 /// Apply `OnBuy` triggers for a successful shop buy action.
-pub fn apply_on_buy_triggers(state: &mut GameState, action_index: usize, bought_slot: usize) {
+pub fn apply_on_buy_triggers(state: &mut ShopState, action_index: usize, bought_slot: usize) {
     if bought_slot >= BOARD_SIZE {
         return;
     }
@@ -74,7 +74,7 @@ pub fn apply_on_buy_triggers(state: &mut GameState, action_index: usize, bought_
 
 /// Apply `OnSell` triggers for a successful shop sell action.
 pub fn apply_on_sell_triggers(
-    state: &mut GameState,
+    state: &mut ShopState,
     action_index: usize,
     sold_card_id: CardId,
     sold_slot: usize,
@@ -205,7 +205,7 @@ pub fn apply_move_board_positions<T>(board: &mut [Option<T>], from: usize, to: u
 /// 3. Ensures mana never goes negative and respects mana_limit
 /// 4. Updates board state as actions are applied
 /// 5. Removes used hand cards at the end
-pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -> GameResult<()> {
+pub fn verify_and_apply_turn(state: &mut ShopState, action: &CommitTurnAction) -> GameResult<()> {
     let hand_size = state.hand.len();
 
     // Track mana and used cards
@@ -365,13 +365,13 @@ pub fn verify_and_apply_turn(state: &mut GameState, action: &CommitTurnAction) -
     Ok(())
 }
 
-fn shop_rng(state: &GameState, salt: u64) -> XorShiftRng {
+fn shop_rng(state: &ShopState, salt: u64) -> XorShiftRng {
     let round_mix = (state.round.max(0) as u64).wrapping_mul(0x9e37_79b9_7f4a_7c15);
     XorShiftRng::seed_from_u64(state.game_seed ^ round_mix ^ salt)
 }
 
 fn execute_shop_trigger<R: BattleRng>(
-    state: &mut GameState,
+    state: &mut ShopState,
     trigger: ShopTrigger,
     trigger_source_slot: Option<usize>,
     sold_source: Option<(CardId, usize)>,
@@ -436,7 +436,7 @@ fn execute_shop_trigger<R: BattleRng>(
 }
 
 fn apply_shop_effect<R: BattleRng>(
-    state: &mut GameState,
+    state: &mut ShopState,
     effect: &ShopEffect,
     source_slot: Option<usize>,
     source_on_board: bool,
@@ -507,7 +507,7 @@ fn apply_shop_effect<R: BattleRng>(
 }
 
 fn resolve_shop_targets<R: BattleRng>(
-    state: &GameState,
+    state: &ShopState,
     target: &ShopTarget,
     source_slot: Option<usize>,
     source_on_board: bool,
@@ -585,7 +585,7 @@ fn resolve_shop_targets<R: BattleRng>(
 }
 
 fn resolve_self_position_target(
-    state: &GameState,
+    state: &ShopState,
     source_slot: Option<usize>,
     source_on_board: bool,
     index: i32,
@@ -625,7 +625,7 @@ fn resolve_self_position_target(
 }
 
 fn resolve_absolute_position_target(
-    state: &GameState,
+    state: &ShopState,
     scope: ShopScope,
     source_slot: Option<usize>,
     source_on_board: bool,
@@ -664,7 +664,7 @@ fn resolve_absolute_position_target(
 }
 
 fn resolve_scope_slots(
-    state: &GameState,
+    state: &ShopState,
     scope: ShopScope,
     source_slot: Option<usize>,
     source_on_board: bool,
@@ -708,7 +708,7 @@ fn resolve_scope_slots(
 }
 
 fn shop_conditions_pass(
-    state: &GameState,
+    state: &ShopState,
     conditions: &[ShopCondition],
     source_slot: Option<usize>,
     source_on_board: bool,
@@ -746,7 +746,7 @@ fn shop_conditions_pass(
 }
 
 fn shop_matcher_pass(
-    state: &GameState,
+    state: &ShopState,
     matcher: &ShopMatcher,
     source_slot: Option<usize>,
     source_on_board: bool,
@@ -812,7 +812,7 @@ fn shop_matcher_pass(
     }
 }
 
-fn shop_stat_value(state: &GameState, slot: usize, stat: StatType) -> Option<i32> {
+fn shop_stat_value(state: &ShopState, slot: usize, stat: StatType) -> Option<i32> {
     let unit = state.board.get(slot)?.as_ref()?;
     let card = state.card_pool.get(&unit.card_id)?;
 
@@ -823,7 +823,7 @@ fn shop_stat_value(state: &GameState, slot: usize, stat: StatType) -> Option<i32
     }
 }
 
-fn cleanup_dead_units(state: &mut GameState) {
+fn cleanup_dead_units(state: &mut ShopState) {
     for idx in 0..state.board.len() {
         let should_remove = state.board[idx]
             .as_ref()

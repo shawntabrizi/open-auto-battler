@@ -100,7 +100,7 @@ fn test_empty_state_constructor_is_zeroed_and_sized() {
     assert_eq!(state.shop_mana, 0);
     assert_eq!(state.lives, 0);
     assert_eq!(state.wins, 0);
-    assert_eq!(state.board.len(), BOARD_SIZE);
+    assert_eq!(state.board.len(), 0, "empty() is a placeholder with no board slots");
 }
 
 #[test]
@@ -125,5 +125,6 @@ fn test_reconstruct_from_manual_local_state() {
 
     let state = GameState::reconstruct(pool, 11, local.clone());
     assert_eq!(state.set_id, 11);
-    assert_eq!(state.local_state, local);
+    let (_, _, roundtripped) = state.decompose();
+    assert_eq!(roundtripped, local);
 }

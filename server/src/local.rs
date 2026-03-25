@@ -44,10 +44,10 @@ impl GameSession {
         let mut state = GameState::new(seed);
         state.card_pool = card_pool;
         state.set_id = set_id;
-        state.local_state.lives = config.starting_lives;
-        state.local_state.mana_limit = config.mana_limit_for_round(1);
-        state.local_state.bag = sealed::create_starting_bag(&card_set, seed);
-        state.local_state.next_card_id = 1000;
+        state.lives = config.starting_lives;
+        state.mana_limit = config.mana_limit_for_round(1);
+        state.bag = sealed::create_starting_bag(&card_set, seed);
+        state.next_card_id = 1000;
         state.draw_hand();
         apply_shop_start_triggers(&mut state);
 
@@ -71,10 +71,10 @@ impl GameSession {
         let mut state = GameState::new(seed);
         state.card_pool = card_pool;
         state.set_id = set_id;
-        state.local_state.lives = config.starting_lives;
-        state.local_state.mana_limit = config.mana_limit_for_round(1);
-        state.local_state.bag = deck_ids;
-        state.local_state.next_card_id = 1000;
+        state.lives = config.starting_lives;
+        state.mana_limit = config.mana_limit_for_round(1);
+        state.bag = deck_ids;
+        state.next_card_id = 1000;
         state.draw_hand();
         apply_shop_start_triggers(&mut state);
 
@@ -116,10 +116,10 @@ impl GameSession {
         self.state = GameState::new(seed);
         self.state.card_pool = card_pool;
         self.state.set_id = set_id;
-        self.state.local_state.lives = self.config.starting_lives;
-        self.state.local_state.mana_limit = self.config.mana_limit_for_round(1);
-        self.state.local_state.bag = sealed::create_starting_bag(&self.card_set, seed);
-        self.state.local_state.next_card_id = 1000;
+        self.state.lives = self.config.starting_lives;
+        self.state.mana_limit = self.config.mana_limit_for_round(1);
+        self.state.bag = sealed::create_starting_bag(&self.card_set, seed);
+        self.state.next_card_id = 1000;
         self.state.draw_hand();
         apply_shop_start_triggers(&mut self.state);
         self.get_state()
