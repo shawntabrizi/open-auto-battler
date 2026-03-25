@@ -35,7 +35,7 @@ mod inner {
         keypair: Keypair,
         account_id: subxt::utils::AccountId32,
         card_pool: BTreeMap<CardId, UnitCard>,
-        sets: Vec<(u32, usize)>, // (set_id, card_count) for all sets on chain
+        sets: Vec<(u32, Vec<CardSetEntry>)>, // (set_id, entries) for all sets on chain
         state: Option<GameState>,
         set_id: u32,
         rt: Runtime,
@@ -129,7 +129,7 @@ mod inner {
             // Sync from chain to get the real state
             self.sync_state_from_chain()?;
 
-            // If there's an active game on-chain, end it first
+            // If there's an active game on-chain, clean it up
             if let Some(ref state) = self.state {
                 if state.phase == GamePhase::Completed {
                     eprintln!("Ending completed game...");
@@ -140,14 +140,23 @@ mod inner {
                         "end_game",
                         vec![],
                     ));
-                    self.sync_state_from_chain()?;
+                } else {
+                    eprintln!("Abandoning active game...");
+                    let _ = self.rt.block_on(submit_extrinsic(
+                        &self.api,
+                        &self.keypair,
+                        "AutoBattle",
+                        "abandon_game",
+                        vec![],
+                    ));
                 }
+                self.sync_state_from_chain()?;
             }
 
-            // If game still exists (not completed), can't start a new one
+            // If game still exists after cleanup, something went wrong
             if self.state.is_some() {
                 return Err(
-                    "Active game exists on-chain. Complete it first or use a different account."
+                    "Failed to clear active game on-chain. Try again."
                         .into(),
                 );
             }
@@ -363,10 +372,17 @@ mod inner {
         fn get_sets(&self) -> Vec<crate::types::SetInfo> {
             self.sets
                 .iter()
-                .map(|(id, card_count)| crate::types::SetInfo {
+                .map(|(id, entries)| crate::types::SetInfo {
                     id: *id,
                     name: format!("Set #{}", id),
-                    card_count: *card_count,
+                    card_count: entries.len(),
+                    cards: entries
+                        .iter()
+                        .map(|e| crate::types::SetCardEntry {
+                            card_id: e.card_id.0,
+                            rarity: e.rarity,
+                        })
+                        .collect(),
                 })
                 .collect()
         }
@@ -633,7 +649,7 @@ mod inner {
 
     async fn load_all_sets_from_chain(
         api: &OnlineClient<SubstrateConfig>,
-    ) -> Result<Vec<(u32, usize)>, String> {
+    ) -> Result<Vec<(u32, Vec<CardSetEntry>)>, String> {
         let mut sets = Vec::new();
         let storage = api
             .storage()
@@ -649,7 +665,7 @@ mod inner {
         while let Some(Ok(kv)) = iter.next().await {
             let set_id = extract_card_id_from_key(&kv.key_bytes); // same key format as cards
             if let Ok(entries) = Vec::<CardSetEntry>::decode(&mut kv.value.encoded()) {
-                sets.push((set_id, entries.len()));
+                sets.push((set_id, entries));
             }
         }
 

@@ -75,6 +75,14 @@ pub struct SetInfo {
     pub id: u32,
     pub name: String,
     pub card_count: usize,
+    pub cards: Vec<SetCardEntry>,
+}
+
+/// A card entry within a set, exposing card_id and rarity weight.
+#[derive(Debug, Serialize)]
+pub struct SetCardEntry {
+    pub card_id: u32,
+    pub rarity: u32,
 }
 
 /// Error response.

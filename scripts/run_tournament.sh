@@ -81,8 +81,8 @@ AGENT_PIDS=()
 for agent_config in "${AGENTS[@]}"; do
     IFS=: read -r NAME KEY PORT SCRIPT <<< "$agent_config"
     echo "Launching $NAME agent ($SCRIPT) -> port $PORT..."
-    python3 "$SCRIPT_DIR/agents/$SCRIPT" "$PORT" "$NUM_GAMES" \
-        > "$SCRIPT_DIR/$NAME.results.txt" 2>&1 &
+    python3 -u "$SCRIPT_DIR/agents/$SCRIPT" "$PORT" "$NUM_GAMES" \
+        2>&1 | tee "$SCRIPT_DIR/$NAME.results.txt" &
     AGENT_PIDS+=($!)
 done
 

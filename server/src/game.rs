@@ -218,6 +218,169 @@ impl GameSession {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const TEST_SEED: u64 = 42;
+
+    fn new_session() -> GameSession {
+        GameSession::new(TEST_SEED, 0).expect("set 0 must exist")
+    }
+
+    // ── GET /sets ──
+
+    #[test]
+    fn get_sets_returns_all_sets() {
+        let session = new_session();
+        let sets = session.get_sets();
+        let expected_count = oab_core::cards::get_all_set_metas().len();
+        assert_eq!(sets.len(), expected_count);
+    }
+
+    #[test]
+    fn get_sets_includes_rarity_per_card() {
+        let session = new_session();
+        let sets = session.get_sets();
+        for set in &sets {
+            assert_eq!(set.cards.len(), set.card_count);
+            // Every entry must have a card_id and a rarity
+            for entry in &set.cards {
+                // card_id and rarity are u32, just check they were populated
+let _ = (entry.card_id, entry.rarity);
+            }
+        }
+    }
+
+    #[test]
+    fn get_sets_card_count_matches_cards_len() {
+        let session = new_session();
+        for set in session.get_sets() {
+            assert_eq!(
+                set.card_count,
+                set.cards.len(),
+                "card_count should equal cards.len() for set {}",
+                set.id
+            );
+        }
+    }
+
+    #[test]
+    fn get_sets_rarity_matches_core() {
+        let session = new_session();
+        let core_sets = oab_core::cards::get_all_sets();
+        let api_sets = session.get_sets();
+
+        for (core_set, api_set) in core_sets.iter().zip(api_sets.iter()) {
+            for (core_entry, api_entry) in core_set.cards.iter().zip(api_set.cards.iter()) {
+                assert_eq!(api_entry.card_id, core_entry.card_id.0);
+                assert_eq!(api_entry.rarity, core_entry.rarity);
+            }
+        }
+    }
+
+    // ── GET /cards ──
+
+    #[test]
+    fn get_cards_returns_nonempty() {
+        let session = new_session();
+        let cards = session.get_cards();
+        assert!(!cards.is_empty(), "card pool should not be empty");
+    }
+
+    // ── GET /state ──
+
+    #[test]
+    fn initial_state_is_round_one_shop() {
+        let session = new_session();
+        let state = session.get_state();
+        assert_eq!(state.round, 1);
+        assert_eq!(state.phase, "shop");
+        assert_eq!(state.wins, 0);
+        assert!(state.lives > 0);
+    }
+
+    // ── POST /reset ──
+
+    #[test]
+    fn reset_returns_fresh_state() {
+        let mut session = new_session();
+        // Play a step first so state changes
+        let _ = session.step(&CommitTurnAction { actions: vec![] });
+
+        // Reset
+        let state = session.reset(99, None).expect("reset should succeed");
+        assert_eq!(state.round, 1);
+        assert_eq!(state.phase, "shop");
+        assert_eq!(state.wins, 0);
+    }
+
+    #[test]
+    fn reset_with_different_set() {
+        let mut session = new_session();
+        let all_sets = oab_core::cards::get_all_set_metas();
+        if all_sets.len() > 1 {
+            let state = session.reset(99, Some(1)).expect("reset with set 1 should succeed");
+            assert_eq!(state.round, 1);
+        }
+    }
+
+    #[test]
+    fn reset_invalid_set_returns_error() {
+        let mut session = new_session();
+        let result = session.reset(99, Some(9999));
+        assert!(result.is_err());
+    }
+
+    // ── POST /step ──
+
+    #[test]
+    fn step_with_empty_actions_advances_round() {
+        let mut session = new_session();
+        let result = session.step(&CommitTurnAction { actions: vec![] }).expect("step should work");
+        assert_eq!(result.completed_round, 1);
+        assert!(["Victory", "Defeat", "Draw"].contains(&result.battle_result.as_str()));
+        assert!(result.reward == 1 || result.reward == -1 || result.reward == 0);
+        // If game is not over, should be round 2
+        if !result.game_over {
+            assert_eq!(result.state.round, 2);
+            assert_eq!(result.state.phase, "shop");
+        }
+    }
+
+    #[test]
+    fn step_after_game_over_returns_error() {
+        let mut session = new_session();
+        // Play until game over
+        loop {
+            let result = session.step(&CommitTurnAction { actions: vec![] });
+            match result {
+                Ok(r) if r.game_over => break,
+                Ok(_) => continue,
+                Err(_) => break, // already over
+            }
+        }
+        // Next step should fail
+        let result = session.step(&CommitTurnAction { actions: vec![] });
+        assert!(result.is_err());
+    }
+
+    // ── Determinism ──
+
+    #[test]
+    fn same_seed_produces_same_initial_state() {
+        let s1 = GameSession::new(123, 0).unwrap();
+        let s2 = GameSession::new(123, 0).unwrap();
+        let state1 = s1.get_state();
+        let state2 = s2.get_state();
+        assert_eq!(state1.round, state2.round);
+        assert_eq!(state1.lives, state2.lives);
+        assert_eq!(state1.mana, state2.mana);
+        assert_eq!(state1.hand.len(), state2.hand.len());
+        assert_eq!(state1.bag_count, state2.bag_count);
+    }
+}
+
 /// Apply permanent stat deltas from battle events to the player's board.
 fn apply_permanent_deltas(
     state: &mut GameState,
@@ -292,6 +455,14 @@ impl GameBackend for GameSession {
                 id: meta.id,
                 name: meta.name.to_string(),
                 card_count: set.cards.len(),
+                cards: set
+                    .cards
+                    .iter()
+                    .map(|e| crate::types::SetCardEntry {
+                        card_id: e.card_id.0,
+                        rarity: e.rarity,
+                    })
+                    .collect(),
             })
             .collect()
     }

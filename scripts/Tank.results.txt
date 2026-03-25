@@ -1,10 +1,19 @@
 === Tank Agent on port 4002 ===
-  [Tank] Game 10/10 — victories: 0, avg_wins: 2.1, max_wins: 6
+  Game 1: reset error: Active game exists on-chain. Complete it first or use a different account.
+  Game 2: reset error: Active game exists on-chain. Complete it first or use a different account.
+  Game 3: reset error: Active game exists on-chain. Complete it first or use a different account.
+  Game 4: reset error: Active game exists on-chain. Complete it first or use a different account.
+  Game 5: reset error: Active game exists on-chain. Complete it first or use a different account.
+  Game 6: reset error: Active game exists on-chain. Complete it first or use a different account.
+  Game 7: reset error: Active game exists on-chain. Complete it first or use a different account.
+  Game 8: reset error: Active game exists on-chain. Complete it first or use a different account.
+  Game 9: reset error: Active game exists on-chain. Complete it first or use a different account.
+  Game 10: reset error: Active game exists on-chain. Complete it first or use a different account.
 
 === Tank Final Results ===
   Games played: 10
   Full victories (10 wins): 0
-  Defeats: 10
-  Average wins per game: 2.10
-  Max wins in a single game: 6
-  Total rounds played: 58
+  Defeats: 0
+  Average wins per game: 0.00
+  Max wins in a single game: 0
+  Total rounds played: 0

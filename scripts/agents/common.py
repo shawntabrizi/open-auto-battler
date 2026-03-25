@@ -108,8 +108,10 @@ def run_agent(name, client, decide_fn, num_games=100, set_id=0):
             continue
 
         game_wins = 0
+        game_round = 0
 
         while True:
+            game_round = state.get("round", game_round)
             actions = decide_fn(state)
             result = client.submit(actions)
 
@@ -120,26 +122,25 @@ def run_agent(name, client, decide_fn, num_games=100, set_id=0):
                     break
 
             game_wins = result["state"]["wins"]
+            game_round = result["state"].get("round", game_round)
             total_rounds += 1
 
             if result["game_over"]:
-                if result["game_result"] == "victory":
+                outcome = result["game_result"]
+                if outcome == "victory":
                     wins_total += 1
                 else:
                     losses_total += 1
+                print(
+                    "  [%s] Game %d: %s — round %d, wins: %d"
+                    % (name, game_num, outcome.upper(), game_round, game_wins)
+                )
                 break
 
             state = result["state"]
 
         max_wins = max(max_wins, game_wins)
         win_counts.append(game_wins)
-
-        if game_num % 10 == 0:
-            avg = sum(win_counts) / len(win_counts)
-            print(
-                "  [%s] Game %d/%d — victories: %d, avg_wins: %.1f, max_wins: %d"
-                % (name, game_num, num_games, wins_total, avg, max_wins)
-            )
 
     avg_wins = sum(win_counts) / len(win_counts) if win_counts else 0
     print("\n=== %s Final Results ===" % name)
