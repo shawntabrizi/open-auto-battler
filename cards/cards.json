@@ -173,7 +173,7 @@
   {
     "id": 6,
     "name": "Swarm Queen",
-    "emoji": "👑",
+    "emoji": "🫅",
     "stats": {
       "attack": 4,
       "health": 5
@@ -558,7 +558,7 @@
   {
     "id": 18,
     "name": "Ironwood Guardian",
-    "emoji": "🛡️",
+    "emoji": "🪵",
     "stats": {
       "attack": 5,
       "health": 7
@@ -1026,7 +1026,7 @@
   {
     "id": 32,
     "name": "Squire",
-    "emoji": "🗡️",
+    "emoji": "⚜️",
     "stats": {
       "attack": 1,
       "health": 3
@@ -1480,7 +1480,7 @@
   {
     "id": 46,
     "name": "Death Knight",
-    "emoji": "🗡️",
+    "emoji": "🖤",
     "stats": {
       "attack": 2,
       "health": 3
@@ -1982,7 +1982,7 @@
   {
     "id": 62,
     "name": "Fire Drake",
-    "emoji": "🔥",
+    "emoji": "🐊",
     "stats": {
       "attack": 3,
       "health": 7
@@ -2694,7 +2694,7 @@
   {
     "id": 85,
     "name": "Siege Breaker",
-    "emoji": "🪓",
+    "emoji": "💣",
     "stats": {
       "attack": 5,
       "health": 6
@@ -2822,7 +2822,7 @@
   {
     "id": 89,
     "name": "Stray Spirit",
-    "emoji": "👻",
+    "emoji": "🌫️",
     "stats": {
       "attack": 2,
       "health": 2
@@ -2950,7 +2950,7 @@
   {
     "id": 93,
     "name": "Resilient Guard",
-    "emoji": "🛡️",
+    "emoji": "🫧",
     "stats": {
       "attack": 3,
       "health": 7
@@ -2982,7 +2982,7 @@
   {
     "id": 94,
     "name": "Vengeful Shade",
-    "emoji": "🌑",
+    "emoji": "🌒",
     "stats": {
       "attack": 3,
       "health": 6
@@ -3014,7 +3014,7 @@
   {
     "id": 95,
     "name": "Ironclad Specter",
-    "emoji": "🗡️",
+    "emoji": "⛓️",
     "stats": {
       "attack": 4,
       "health": 8
@@ -3141,7 +3141,7 @@
   {
     "id": 99,
     "name": "Foot Soldier",
-    "emoji": "🪖",
+    "emoji": "💂",
     "stats": {
       "attack": 3,
       "health": 3
@@ -3156,7 +3156,7 @@
   {
     "id": 100,
     "name": "Militia",
-    "emoji": "⚔️",
+    "emoji": "🏛️",
     "stats": {
       "attack": 4,
       "health": 4
@@ -3201,7 +3201,7 @@
   {
     "id": 103,
     "name": "Grub",
-    "emoji": "🐛",
+    "emoji": "🪱",
     "stats": {
       "attack": 1,
       "health": 1
@@ -3246,7 +3246,7 @@
   {
     "id": 106,
     "name": "Moth",
-    "emoji": "🦋",
+    "emoji": "🕊️",
     "stats": {
       "attack": 3,
       "health": 3
@@ -3261,7 +3261,7 @@
   {
     "id": 107,
     "name": "Drone",
-    "emoji": "🐝",
+    "emoji": "🪳",
     "stats": {
       "attack": 2,
       "health": 2
@@ -3301,7 +3301,7 @@
   {
     "id": 109,
     "name": "Stinger",
-    "emoji": "🐝",
+    "emoji": "🪡",
     "stats": {
       "attack": 1,
       "health": 1
