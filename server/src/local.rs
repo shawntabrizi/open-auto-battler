@@ -10,7 +10,8 @@ use oab_core::commit::{apply_shop_start_triggers, apply_shop_start_triggers_with
 use oab_core::rng::XorShiftRng;
 use oab_core::state::*;
 use oab_core::types::*;
-use oab_core::units::create_starting_bag;
+use oab_game::constructed;
+use oab_game::sealed::create_starting_bag;
 use oab_core::view::GameView;
 
 use crate::types::{BattleReport, GameStateResponse, OpponentUnit, StepResponse};
@@ -48,6 +49,48 @@ impl GameSession {
         apply_shop_start_triggers(&mut state);
 
         Ok(Self { state, card_set })
+    }
+
+    /// Start a new constructed game with a user-provided deck.
+    pub fn new_constructed(seed: u64, set_id: u32, deck: Vec<u32>) -> Result<Self, String> {
+        let card_pool = oab_core::cards::build_card_pool();
+        let all_sets = oab_core::cards::get_all_sets();
+        let card_set = if (set_id as usize) < all_sets.len() {
+            all_sets.into_iter().nth(set_id as usize).unwrap()
+        } else {
+            return Err(format!("Card set {} not found", set_id));
+        };
+
+        constructed::validate_deck(&deck, &card_set, constructed::MAX_COPIES_PER_CARD)?;
+
+        let deck_ids: Vec<CardId> = deck.into_iter().map(CardId).collect();
+        let mut state = GameState::new(seed);
+        state.card_pool = card_pool;
+        state.set_id = set_id;
+        state.local_state.bag = deck_ids;
+        state.local_state.next_card_id = 1000;
+        state.draw_hand();
+        apply_shop_start_triggers(&mut state);
+
+        Ok(Self { state, card_set })
+    }
+
+    /// Extract the current board as opponent units (for PvP pairing).
+    pub fn board_as_opponent(&self) -> Vec<OpponentUnit> {
+        self.state
+            .board
+            .iter()
+            .enumerate()
+            .filter_map(|(slot, unit)| {
+                let u = unit.as_ref()?;
+                Some(OpponentUnit {
+                    card_id: u.card_id.0,
+                    slot: slot as u32,
+                    perm_attack: u.perm_attack,
+                    perm_health: u.perm_health,
+                })
+            })
+            .collect()
     }
 
     /// Reset the game with a new seed and optional set_id.

@@ -7,7 +7,7 @@ use oab_core::bounded::{
     BoundedGhostBoard as CoreBoundedGhostBoard, GhostBoardUnit, MatchmakingBracket,
 };
 use oab_core::rng::BattleRng;
-use oab_core::units::create_starting_bag;
+use oab_game::sealed::create_starting_bag;
 use oab_core::{
     apply_shop_start_triggers, apply_shop_start_triggers_with_result, resolve_battle,
     verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, GamePhase,

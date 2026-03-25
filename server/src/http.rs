@@ -18,12 +18,14 @@ use std::sync::Mutex;
 
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
+use crate::constructed::ConstructedMatch;
 use crate::local::GameSession;
 use crate::types::*;
 
 /// Local mode backend — manages multiple game sessions keyed by agent_id.
 pub struct LocalBackend {
     sessions: HashMap<String, GameSession>,
+    constructed_matches: HashMap<String, ConstructedMatch>,
     default_set_id: u32,
 }
 
@@ -31,6 +33,7 @@ impl LocalBackend {
     pub fn new(default_set_id: u32) -> Self {
         Self {
             sessions: HashMap::new(),
+            constructed_matches: HashMap::new(),
             default_set_id,
         }
     }
@@ -68,7 +71,7 @@ pub fn serve(port: u16, backend: Backend) -> std::io::Result<()> {
     };
 
     eprintln!("OAB Server listening on http://localhost:{} ({})", port, mode);
-    eprintln!("Endpoints:");
+    eprintln!("Endpoints (sealed):");
     eprintln!("  POST /reset   — Start new game {{ \"agent_id\": \"a0\", ... }}");
     eprintln!("  POST /shop    — Apply shop actions {{ \"agent_id\": \"a0\", \"actions\": [...] }}");
     eprintln!("  POST /battle  — Run battle {{ \"agent_id\": \"a0\", \"opponent\": [...] }}");
@@ -76,6 +79,12 @@ pub fn serve(port: u16, backend: Backend) -> std::io::Result<()> {
     eprintln!("  GET  /state?agent_id=a0 — Get game state");
     eprintln!("  GET  /cards   — List all cards");
     eprintln!("  GET  /sets    — List available card sets");
+    eprintln!("Endpoints (constructed):");
+    eprintln!("  POST /constructed/create  — Create match {{ \"match_id\": \"m1\" }}");
+    eprintln!("  POST /constructed/join    — Join match {{ \"match_id\": \"m1\", \"agent_id\": \"a0\", \"deck\": [...] }}");
+    eprintln!("  POST /constructed/shop    — Shop {{ \"match_id\": \"m1\", \"agent_id\": \"a0\", \"actions\": [...] }}");
+    eprintln!("  POST /constructed/battle  — Battle {{ \"match_id\": \"m1\" }}");
+    eprintln!("  GET  /constructed/state?match_id=m1&agent_id=a0 — Get state");
 
     let backend = Mutex::new(backend);
 
@@ -111,6 +120,12 @@ fn handle_request(
         (Method::Get, "/state") => handle_get_state(request, backend),
         (Method::Get, "/cards") => handle_get_cards(backend),
         (Method::Get, "/sets") => handle_get_sets(backend),
+        // Constructed mode
+        (Method::Post, "/constructed/create") => handle_constructed_create(request, backend),
+        (Method::Post, "/constructed/join") => handle_constructed_join(request, backend),
+        (Method::Post, "/constructed/shop") => handle_constructed_shop(request, backend),
+        (Method::Post, "/constructed/battle") => handle_constructed_battle(request, backend),
+        (Method::Get, "/constructed/state") => handle_constructed_state(request, backend),
         _ => Err((404, format!("Not found: {} {}", request.method(), path))),
     }
 }
@@ -304,6 +319,136 @@ fn json_response(status: u16, body: &str) -> Response<std::io::Cursor<Vec<u8>>> 
         Some(len),
         None,
     )
+}
+
+// ── Constructed mode handlers ──
+
+fn handle_constructed_create(
+    request: &mut Request,
+    backend: &Mutex<Backend>,
+) -> Result<String, (u16, String)> {
+    let body = read_body(request)?;
+    let req: ConstructedCreateRequest =
+        serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
+
+    let mut b = backend.lock().unwrap();
+    match &mut *b {
+        Backend::Local(local) => {
+            let set_id = req.set_id.unwrap_or(local.default_set_id);
+            if local.constructed_matches.contains_key(&req.match_id) {
+                return Err((400, format!("Match '{}' already exists", req.match_id)));
+            }
+            let m = ConstructedMatch::new(req.match_id.clone(), set_id);
+            local.constructed_matches.insert(req.match_id.clone(), m);
+            let resp = ConstructedCreateResponse {
+                match_id: req.match_id,
+                set_id,
+            };
+            serde_json::to_string(&resp).map_err(|e| (500, e.to_string()))
+        }
+        #[cfg(feature = "chain")]
+        Backend::Chain(_) => Err((400, "Constructed mode not supported in chain mode".into())),
+    }
+}
+
+fn handle_constructed_join(
+    request: &mut Request,
+    backend: &Mutex<Backend>,
+) -> Result<String, (u16, String)> {
+    let body = read_body(request)?;
+    let req: ConstructedJoinRequest =
+        serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
+
+    let seed = req.seed.unwrap_or_else(generate_seed);
+
+    let mut b = backend.lock().unwrap();
+    match &mut *b {
+        Backend::Local(local) => {
+            let m = local
+                .constructed_matches
+                .get_mut(&req.match_id)
+                .ok_or_else(|| (404, format!("Match '{}' not found", req.match_id)))?;
+            let state = m.join(req.agent_id, req.deck, seed).map_err(|e| (400, e))?;
+            serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
+        }
+        #[cfg(feature = "chain")]
+        Backend::Chain(_) => Err((400, "Constructed mode not supported in chain mode".into())),
+    }
+}
+
+fn handle_constructed_shop(
+    request: &mut Request,
+    backend: &Mutex<Backend>,
+) -> Result<String, (u16, String)> {
+    let body = read_body(request)?;
+    let req: ConstructedShopRequest =
+        serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
+
+    let action = oab_core::types::CommitTurnAction {
+        actions: req.actions,
+    };
+
+    let mut b = backend.lock().unwrap();
+    match &mut *b {
+        Backend::Local(local) => {
+            let m = local
+                .constructed_matches
+                .get_mut(&req.match_id)
+                .ok_or_else(|| (404, format!("Match '{}' not found", req.match_id)))?;
+            let state = m.shop(&req.agent_id, &action).map_err(|e| (400, e))?;
+            serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
+        }
+        #[cfg(feature = "chain")]
+        Backend::Chain(_) => Err((400, "Constructed mode not supported in chain mode".into())),
+    }
+}
+
+fn handle_constructed_battle(
+    request: &mut Request,
+    backend: &Mutex<Backend>,
+) -> Result<String, (u16, String)> {
+    let body = read_body(request)?;
+    let req: ConstructedBattleRequest =
+        serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
+
+    let mut b = backend.lock().unwrap();
+    match &mut *b {
+        Backend::Local(local) => {
+            let m = local
+                .constructed_matches
+                .get_mut(&req.match_id)
+                .ok_or_else(|| (404, format!("Match '{}' not found", req.match_id)))?;
+            let results = m.battle().map_err(|e| (400, e))?;
+            let resp = ConstructedBattleResponse { results };
+            serde_json::to_string(&resp).map_err(|e| (500, e.to_string()))
+        }
+        #[cfg(feature = "chain")]
+        Backend::Chain(_) => Err((400, "Constructed mode not supported in chain mode".into())),
+    }
+}
+
+fn handle_constructed_state(
+    request: &Request,
+    backend: &Mutex<Backend>,
+) -> Result<String, (u16, String)> {
+    let match_id = parse_query_param(request.url(), "match_id")
+        .ok_or_else(|| (400, "Missing match_id query parameter".to_string()))?;
+    let agent_id = parse_query_param(request.url(), "agent_id")
+        .ok_or_else(|| (400, "Missing agent_id query parameter".to_string()))?;
+
+    let b = backend.lock().unwrap();
+    match &*b {
+        Backend::Local(local) => {
+            let m = local
+                .constructed_matches
+                .get(&match_id)
+                .ok_or_else(|| (404, format!("Match '{}' not found", match_id)))?;
+            let state = m.get_state(&agent_id).map_err(|e| (400, e))?;
+            serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
+        }
+        #[cfg(feature = "chain")]
+        Backend::Chain(_) => Err((400, "Constructed mode not supported in chain mode".into())),
+    }
 }
 
 pub fn generate_seed() -> u64 {

@@ -13,6 +13,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 oab-core = { workspace = true, features = ["std", "bounded"] }
+oab-game = { workspace = true, features = ["std"] }
 parity-scale-codec = { workspace = true, features = ["derive"] }
 bounded-collections = { workspace = true }
 wasm-bindgen = { workspace = true }

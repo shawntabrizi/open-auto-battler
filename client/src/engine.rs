@@ -678,6 +678,62 @@ impl GameEngine {
         self.wins_to_victory = lives;
     }
 
+    /// Start a new constructed run with a user-provided deck.
+    #[wasm_bindgen]
+    pub fn new_run_constructed(&mut self, seed: u64, deck_js: JsValue) -> Result<(), String> {
+        let deck: Vec<u32> = serde_wasm_bindgen::from_value(deck_js)
+            .map_err(|e| format!("Failed to parse deck: {:?}", e))?;
+
+        let card_set = self
+            .card_set
+            .as_ref()
+            .ok_or("No card set loaded. Call load_card_set first.")?;
+
+        oab_game::constructed::validate_deck(
+            &deck,
+            card_set,
+            oab_game::constructed::MAX_COPIES_PER_CARD,
+        )?;
+
+        log::action(
+            "new_run_constructed",
+            &format!("Starting constructed run with seed {}", seed),
+        );
+
+        let deck_ids: Vec<CardId> = deck.into_iter().map(CardId).collect();
+        let card_pool = std::mem::take(&mut self.state.card_pool);
+        self.state = GameState::new(seed);
+        self.state.card_pool = card_pool;
+        self.last_battle_output = None;
+        self.starting_lives = STARTING_LIVES;
+        self.wins_to_victory = WINS_TO_VICTORY;
+
+        self.state.local_state.bag = deck_ids;
+        self.state.local_state.next_card_id = 1000;
+        self.state.draw_hand();
+
+        apply_shop_start_triggers(&mut self.state);
+        self.start_planning_phase();
+        self.log_state();
+        Ok(())
+    }
+
+    /// Start a new constructed P2P run with a user-provided deck and custom lives.
+    #[wasm_bindgen]
+    pub fn new_run_constructed_p2p(
+        &mut self,
+        seed: u64,
+        deck_js: JsValue,
+        lives: i32,
+    ) -> Result<(), String> {
+        self.new_run_constructed(seed, deck_js)?;
+        let lives = lives.max(1).min(10);
+        self.state.lives = lives;
+        self.starting_lives = lives;
+        self.wins_to_victory = lives;
+        Ok(())
+    }
+
     #[wasm_bindgen]
     pub fn get_starting_lives(&self) -> i32 {
         self.starting_lives
@@ -991,7 +1047,7 @@ impl GameEngine {
     }
 
     fn initialize_bag(&mut self) {
-        use oab_core::units::create_starting_bag;
+        use oab_game::sealed::create_starting_bag;
 
         self.state.local_state.bag.clear();
 

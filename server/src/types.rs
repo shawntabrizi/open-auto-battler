@@ -176,3 +176,52 @@ impl From<StepRequest> for CommitTurnAction {
         }
     }
 }
+
+// ── Constructed mode requests ──
+
+/// POST /constructed/create
+#[derive(Debug, Deserialize)]
+pub struct ConstructedCreateRequest {
+    pub match_id: String,
+    #[serde(default)]
+    pub set_id: Option<u32>,
+}
+
+/// POST /constructed/join
+#[derive(Debug, Deserialize)]
+pub struct ConstructedJoinRequest {
+    pub match_id: String,
+    pub agent_id: String,
+    pub deck: Vec<u32>,
+    #[serde(default)]
+    pub seed: Option<u64>,
+}
+
+/// POST /constructed/shop
+#[derive(Debug, Deserialize)]
+pub struct ConstructedShopRequest {
+    pub match_id: String,
+    pub agent_id: String,
+    pub actions: Vec<oab_core::types::TurnAction>,
+}
+
+/// POST /constructed/battle
+#[derive(Debug, Deserialize)]
+pub struct ConstructedBattleRequest {
+    pub match_id: String,
+}
+
+// ── Constructed mode responses ──
+
+/// Response for POST /constructed/create
+#[derive(Debug, Serialize)]
+pub struct ConstructedCreateResponse {
+    pub match_id: String,
+    pub set_id: u32,
+}
+
+/// Response for POST /constructed/battle — results for both players
+#[derive(Debug, Serialize)]
+pub struct ConstructedBattleResponse {
+    pub results: [StepResponse; 2],
+}

@@ -1269,6 +1269,7 @@ dependencies = [
  "hex-literal",
  "log",
  "oab-core",
+ "oab-game",
  "pallet-auto-battle",
  "parity-scale-codec",
  "polkadot-sdk 2503.2.0",
@@ -7712,6 +7713,7 @@ dependencies = [
  "getrandom 0.2.17",
  "log",
  "oab-core",
+ "oab-game",
  "parity-scale-codec",
  "serde",
  "serde-wasm-bindgen",
@@ -7733,11 +7735,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "oab-game"
+version = "0.1.0"
+dependencies = [
+ "oab-core",
+ "serde",
+]
+
+[[package]]
 name = "oab-server"
 version = "0.1.0"
 dependencies = [
  "bounded-collections",
  "oab-core",
+ "oab-game",
  "parity-scale-codec",
  "serde",
  "serde_json",
@@ -8110,6 +8121,7 @@ name = "pallet-auto-battle"
 version = "0.1.0"
 dependencies = [
  "oab-core",
+ "oab-game",
  "parity-scale-codec",
  "polkadot-sdk 2503.2.0",
  "polkadot-sdk-frame",
