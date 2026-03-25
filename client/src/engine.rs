@@ -60,6 +60,7 @@ pub struct GameEngine {
     set_id: u32,
     card_set: Option<CardSet>, // Loaded card set for bag generation
     last_battle_output: Option<BattleOutput>,
+    config: oab_game::GameConfig,
     starting_lives: i32,
     wins_to_victory: i32,
     // Per-turn local tracking (transient, not persisted)
@@ -82,13 +83,15 @@ impl GameEngine {
         // memory/cycles setting up a full game state that will be dropped.
         let state = GameState::empty();
 
+        let config = oab_game::sealed::default_config();
         let mut engine = Self {
             set_id: 0,
             state,
             card_set: None,
             last_battle_output: None,
-            starting_lives: STARTING_LIVES,
-            wins_to_victory: WINS_TO_VICTORY,
+            starting_lives: config.starting_lives,
+            wins_to_victory: config.wins_to_victory,
+            config,
             hand_used: Vec::new(),
             action_log: Vec::new(),
             start_board: vec![None; BOARD_SIZE],
@@ -102,9 +105,9 @@ impl GameEngine {
         if let Some(seed_val) = seed {
             log::debug("new", "Seed provided, performing full initialization");
             engine.state.game_seed = seed_val;
-            engine.state.mana_limit = STARTING_MANA_LIMIT;
+            engine.state.mana_limit = engine.config.mana_limit_for_round(1);
             engine.state.round = 1;
-            engine.state.lives = STARTING_LIVES;
+            engine.state.lives = engine.config.starting_lives;
             engine.initialize_bag();
             apply_shop_start_triggers(&mut engine.state);
             engine.start_planning_phase();
@@ -631,7 +634,10 @@ impl GameEngine {
         }
 
         self.state.round += 1;
-        self.state.mana_limit = self.state.calculate_mana_limit();
+        self.state.mana_limit = self.config.mana_limit_for_round(self.state.round);
+        if self.config.full_mana_each_round {
+            self.state.shop_mana = self.state.mana_limit;
+        }
         self.state.phase = GamePhase::Shop;
         self.state.draw_hand();
         let previous_battle_result = self.last_battle_output.as_ref().and_then(|output| {
@@ -654,13 +660,16 @@ impl GameEngine {
     #[wasm_bindgen]
     pub fn new_run(&mut self, seed: u64) {
         log::action("new_run", &format!("Starting run with seed {}", seed));
+        self.config = oab_game::sealed::default_config();
         // Preserve card_pool when resetting state
         let card_pool = std::mem::take(&mut self.state.card_pool);
         self.state = GameState::new(seed);
         self.state.card_pool = card_pool;
         self.last_battle_output = None;
-        self.starting_lives = STARTING_LIVES;
-        self.wins_to_victory = WINS_TO_VICTORY;
+        self.starting_lives = self.config.starting_lives;
+        self.wins_to_victory = self.config.wins_to_victory;
+        self.state.lives = self.config.starting_lives;
+        self.state.mana_limit = self.config.mana_limit_for_round(1);
         self.initialize_bag();
         apply_shop_start_triggers(&mut self.state);
         self.start_planning_phase();
@@ -700,13 +709,16 @@ impl GameEngine {
             &format!("Starting constructed run with seed {}", seed),
         );
 
+        self.config = oab_game::constructed::default_config();
         let deck_ids: Vec<CardId> = deck.into_iter().map(CardId).collect();
         let card_pool = std::mem::take(&mut self.state.card_pool);
         self.state = GameState::new(seed);
         self.state.card_pool = card_pool;
         self.last_battle_output = None;
-        self.starting_lives = STARTING_LIVES;
-        self.wins_to_victory = WINS_TO_VICTORY;
+        self.starting_lives = self.config.starting_lives;
+        self.wins_to_victory = self.config.wins_to_victory;
+        self.state.lives = self.config.starting_lives;
+        self.state.mana_limit = self.config.mana_limit_for_round(1);
 
         self.state.local_state.bag = deck_ids;
         self.state.local_state.next_card_id = 1000;
@@ -1022,8 +1034,8 @@ impl GameEngine {
         self.state = GameState::reconstruct(card_pool, session.set_id, session.state);
         self.set_id = self.state.set_id;
         self.last_battle_output = None;
-        self.starting_lives = STARTING_LIVES;
-        self.wins_to_victory = WINS_TO_VICTORY;
+        self.starting_lives = self.config.starting_lives;
+        self.wins_to_victory = self.config.wins_to_victory;
         self.start_planning_phase();
 
         Ok(())

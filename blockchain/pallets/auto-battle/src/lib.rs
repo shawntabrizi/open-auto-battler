@@ -1401,14 +1401,15 @@ pub mod pallet {
             Self::finalize_game(&who, session.set_id, &session.state);
 
             // Update tournament statistics
+            let config = oab_game::sealed::default_config();
             TournamentPlayerStats::<T>::mutate(tid, &who, |stats| {
                 stats.total_games += 1;
                 stats.total_wins += wins as u32;
-                if wins >= 10 {
+                if wins >= config.wins_to_victory {
                     stats.perfect_runs += 1;
                 }
             });
-            if wins >= 10 {
+            if wins >= config.wins_to_victory {
                 TournamentStates::<T>::mutate(tid, |state| {
                     state.total_perfect_runs += 1;
                 });

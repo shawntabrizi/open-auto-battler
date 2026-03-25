@@ -614,6 +614,7 @@ fn test_after_battle_shop_triggers_fire_by_result() {
 
     fn build_state(seed: u64) -> GameState {
         let mut state = GameState::new(seed);
+        state.mana_limit = 10; // Game mode sets this; core tests just need a reasonable value
 
         let unit_id = state.generate_card_id();
         let unit = UnitCard::new(unit_id, "ResultAware", 1, 2, 1, 1).with_shop_abilities(vec![

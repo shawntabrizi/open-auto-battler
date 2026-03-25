@@ -18,14 +18,6 @@ use serde::{Deserialize, Serialize};
 pub const HAND_SIZE: usize = 5;
 /// Number of board slots
 pub const BOARD_SIZE: usize = 5;
-/// Starting lives
-pub const STARTING_LIVES: i32 = 3;
-/// Starting mana limit
-pub const STARTING_MANA_LIMIT: i32 = 3;
-/// Maximum mana limit
-pub const MAX_MANA_LIMIT: i32 = 10;
-/// Wins needed for victory
-pub const WINS_TO_VICTORY: i32 = 10;
 /// Number of cards in the initial bag
 pub const STARTING_BAG_SIZE: usize = 50;
 
@@ -130,10 +122,10 @@ impl GameState {
                 bag: Vec::new(),
                 hand: Vec::new(),
                 board: vec![None; BOARD_SIZE],
-                mana_limit: STARTING_MANA_LIMIT,
+                mana_limit: 0,
                 shop_mana: 0,
                 round: 1,
-                lives: STARTING_LIVES,
+                lives: 0,
                 wins: 0,
                 phase: GamePhase::Shop,
                 next_card_id: 1,
@@ -213,11 +205,6 @@ impl GameState {
         CardId(id)
     }
 
-    /// Calculate mana limit for the current round
-    pub fn calculate_mana_limit(&self) -> i32 {
-        calculate_mana_limit(self.local_state.round)
-    }
-
     /// Derive hand indices from bag using deterministic RNG
     /// Uses game_seed XOR round to produce repeatable hand selection
     pub fn derive_hand_indices(&self) -> Vec<usize> {
@@ -244,11 +231,6 @@ impl GameState {
             .filter(|slot| slot.is_some())
             .count()
     }
-}
-
-/// Shared logic to calculate mana limit
-pub fn calculate_mana_limit(round: i32) -> i32 {
-    (STARTING_MANA_LIMIT + round - 1).min(MAX_MANA_LIMIT)
 }
 
 /// Shared logic to derive hand indices

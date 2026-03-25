@@ -182,17 +182,18 @@ impl<T: Config> Pallet<T> {
 
         let seed = Self::generate_next_seed(who, seed_context);
 
+        let config = oab_game::sealed::default_config();
         let mut state = GameState::reconstruct(
             card_pool,
             set_id,
             oab_core::state::LocalGameState {
                 bag: create_starting_bag(&card_set, seed),
                 hand: Vec::new(),
-                board: vec![None; 5],
-                mana_limit: 3,
+                board: vec![None; oab_core::state::BOARD_SIZE],
+                mana_limit: config.mana_limit_for_round(1),
                 shop_mana: 0,
                 round: 1,
-                lives: 3,
+                lives: config.starting_lives,
                 wins: 0,
                 phase: GamePhase::Shop,
                 next_card_id: 1000,
@@ -332,14 +333,16 @@ impl<T: Config> Pallet<T> {
         }
 
         let completed_round = battle.core_state.local_state.round;
-        let game_over =
-            battle.core_state.local_state.lives <= 0 || battle.core_state.local_state.wins >= 10;
+        let config = oab_game::sealed::default_config();
+        let game_over = battle.core_state.local_state.lives <= 0
+            || battle.core_state.local_state.wins >= config.wins_to_victory;
 
         let new_seed = if !game_over {
             let new_seed = Self::generate_next_seed(who, next_seed_context);
             battle.core_state.local_state.game_seed = new_seed;
             battle.core_state.local_state.round += 1;
-            battle.core_state.local_state.mana_limit = battle.core_state.calculate_mana_limit();
+            battle.core_state.local_state.mana_limit =
+                config.mana_limit_for_round(battle.core_state.local_state.round);
             battle.core_state.local_state.phase = GamePhase::Shop;
             battle.core_state.draw_hand();
             apply_shop_start_triggers_with_result(&mut battle.core_state, Some(result.clone()));
@@ -409,9 +412,10 @@ impl<T: Config> Pallet<T> {
         }
 
         // Grant silver/gold achievements for cards on the final board
-        if wins >= 10 {
+        let config = oab_game::sealed::default_config();
+        if wins >= config.wins_to_victory {
             let mut new_bits = ACHIEVEMENT_SILVER;
-            if lives >= 3 {
+            if lives >= config.starting_lives {
                 new_bits |= ACHIEVEMENT_GOLD;
             }
             for board_unit in state.board.iter().flatten() {

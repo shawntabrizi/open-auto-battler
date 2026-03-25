@@ -6,6 +6,19 @@ use oab_core::rng::{BattleRng, XorShiftRng};
 use oab_core::state::{CardSet, STARTING_BAG_SIZE};
 use oab_core::types::CardId;
 
+use crate::GameConfig;
+
+/// Default game configuration for sealed format.
+pub fn default_config() -> GameConfig {
+    GameConfig {
+        starting_lives: 3,
+        wins_to_victory: 10,
+        starting_mana_limit: 3,
+        max_mana_limit: 10,
+        full_mana_each_round: false,
+    }
+}
+
 /// Create a starting bag of random CardIds from a card set, weighted by rarity.
 pub fn create_starting_bag(set: &CardSet, seed: u64) -> Vec<CardId> {
     if set.cards.is_empty() {

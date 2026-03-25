@@ -286,7 +286,7 @@ mod inner {
 
             let game_over = state.phase == GamePhase::Completed;
             let game_result = if game_over {
-                let result = if state.wins >= oab_core::state::WINS_TO_VICTORY {
+                let result = if state.wins >= oab_game::sealed::default_config().wins_to_victory {
                     "victory"
                 } else {
                     "defeat"

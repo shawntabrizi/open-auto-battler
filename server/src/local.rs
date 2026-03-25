@@ -10,8 +10,7 @@ use oab_core::commit::{apply_shop_start_triggers, apply_shop_start_triggers_with
 use oab_core::rng::XorShiftRng;
 use oab_core::state::*;
 use oab_core::types::*;
-use oab_game::constructed;
-use oab_game::sealed::create_starting_bag;
+use oab_game::{constructed, sealed, GameConfig};
 use oab_core::view::GameView;
 
 use crate::types::{BattleReport, GameStateResponse, OpponentUnit, StepResponse};
@@ -27,11 +26,13 @@ struct BattleOutcome {
 pub struct GameSession {
     state: GameState,
     card_set: CardSet,
+    config: GameConfig,
 }
 
 impl GameSession {
-    /// Start a new game with the given seed and card set.
+    /// Start a new sealed game with the given seed and card set.
     pub fn new(seed: u64, set_id: u32) -> Result<Self, String> {
+        let config = sealed::default_config();
         let card_pool = oab_core::cards::build_card_pool();
         let all_sets = oab_core::cards::get_all_sets();
         let card_set = if (set_id as usize) < all_sets.len() {
@@ -43,16 +44,19 @@ impl GameSession {
         let mut state = GameState::new(seed);
         state.card_pool = card_pool;
         state.set_id = set_id;
-        state.local_state.bag = create_starting_bag(&card_set, seed);
+        state.local_state.lives = config.starting_lives;
+        state.local_state.mana_limit = config.mana_limit_for_round(1);
+        state.local_state.bag = sealed::create_starting_bag(&card_set, seed);
         state.local_state.next_card_id = 1000;
         state.draw_hand();
         apply_shop_start_triggers(&mut state);
 
-        Ok(Self { state, card_set })
+        Ok(Self { state, card_set, config })
     }
 
     /// Start a new constructed game with a user-provided deck.
     pub fn new_constructed(seed: u64, set_id: u32, deck: Vec<u32>) -> Result<Self, String> {
+        let config = constructed::default_config();
         let card_pool = oab_core::cards::build_card_pool();
         let all_sets = oab_core::cards::get_all_sets();
         let card_set = if (set_id as usize) < all_sets.len() {
@@ -67,12 +71,14 @@ impl GameSession {
         let mut state = GameState::new(seed);
         state.card_pool = card_pool;
         state.set_id = set_id;
+        state.local_state.lives = config.starting_lives;
+        state.local_state.mana_limit = config.mana_limit_for_round(1);
         state.local_state.bag = deck_ids;
         state.local_state.next_card_id = 1000;
         state.draw_hand();
         apply_shop_start_triggers(&mut state);
 
-        Ok(Self { state, card_set })
+        Ok(Self { state, card_set, config })
     }
 
     /// Extract the current board as opponent units (for PvP pairing).
@@ -110,7 +116,9 @@ impl GameSession {
         self.state = GameState::new(seed);
         self.state.card_pool = card_pool;
         self.state.set_id = set_id;
-        self.state.local_state.bag = create_starting_bag(&self.card_set, seed);
+        self.state.local_state.lives = self.config.starting_lives;
+        self.state.local_state.mana_limit = self.config.mana_limit_for_round(1);
+        self.state.local_state.bag = sealed::create_starting_bag(&self.card_set, seed);
         self.state.local_state.next_card_id = 1000;
         self.state.draw_hand();
         apply_shop_start_triggers(&mut self.state);
@@ -199,11 +207,12 @@ impl GameSession {
         let outcome = self.run_battle(opponent);
 
         // Check game over
-        let game_over = self.state.wins >= WINS_TO_VICTORY || self.state.lives <= 0;
+        let game_over =
+            self.state.wins >= self.config.wins_to_victory || self.state.lives <= 0;
         let game_result = if game_over {
             self.state.phase = GamePhase::Completed;
             Some(
-                if self.state.wins >= WINS_TO_VICTORY {
+                if self.state.wins >= self.config.wins_to_victory {
                     "victory"
                 } else {
                     "defeat"
@@ -213,7 +222,10 @@ impl GameSession {
         } else {
             // Advance to next round
             self.state.round += 1;
-            self.state.mana_limit = self.state.calculate_mana_limit();
+            self.state.mana_limit = self.config.mana_limit_for_round(self.state.round);
+            if self.config.full_mana_each_round {
+                self.state.shop_mana = self.state.mana_limit;
+            }
             self.state.phase = GamePhase::Shop;
             self.state.draw_hand();
             apply_shop_start_triggers_with_result(&mut self.state, Some(outcome.result.clone()));

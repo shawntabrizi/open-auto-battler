@@ -14,7 +14,7 @@ use scale_info::TypeInfo;
 
 use crate::battle::{BattlePhase, BattleResult, UnitId};
 use crate::limits::{LimitReason, Team};
-use crate::state::{calculate_mana_limit, derive_hand_indices_logic, CardSetEntry};
+use crate::state::{derive_hand_indices_logic, CardSetEntry};
 use crate::types::{
     Ability, AbilityEffect, AbilityTarget, AbilityTrigger, BoardUnit, CardId, CommitTurnAction,
     Condition, EconomyStats, Matcher, ShopAbility, ShopCondition, ShopEffect, ShopMatcher,
@@ -146,10 +146,6 @@ where
         }
     }
 
-    /// Calculate mana limit for the current round
-    pub fn calculate_mana_limit(&self) -> i32 {
-        calculate_mana_limit(self.round)
-    }
 }
 
 // --- Conversion Helpers ---

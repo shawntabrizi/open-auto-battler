@@ -1,4 +1,4 @@
-//! Constructed format — deck validation for user-built decks.
+//! Constructed format — deck validation and configuration for user-built decks.
 
 use alloc::collections::BTreeMap;
 use alloc::format;
@@ -7,8 +7,24 @@ use alloc::string::String;
 use oab_core::state::{CardSet, STARTING_BAG_SIZE};
 use oab_core::types::CardId;
 
+use crate::GameConfig;
+
 /// Maximum copies of a single card allowed in a constructed deck.
 pub const MAX_COPIES_PER_CARD: usize = 5;
+
+/// Default game configuration for constructed format.
+///
+/// Same as sealed for now — game modes can customize this later
+/// (e.g. higher starting mana, full mana each round, etc.)
+pub fn default_config() -> GameConfig {
+    GameConfig {
+        starting_lives: 3,
+        wins_to_victory: 10,
+        starting_mana_limit: 3,
+        max_mana_limit: 10,
+        full_mana_each_round: false,
+    }
+}
 
 /// Validate a user-provided constructed deck against a card set.
 ///
