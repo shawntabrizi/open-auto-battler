@@ -126,6 +126,9 @@ pub struct OpponentUnit {
 /// POST /reset request body (optional).
 #[derive(Debug, Deserialize)]
 pub struct ResetRequest {
+    /// Agent ID (default: "default")
+    #[serde(default = "default_agent_id")]
+    pub agent_id: String,
     /// Game seed (default: random)
     #[serde(default)]
     pub seed: Option<u64>,
@@ -137,6 +140,9 @@ pub struct ResetRequest {
 /// POST /shop request body — apply shop actions.
 #[derive(Debug, Deserialize)]
 pub struct ShopRequest {
+    /// Agent ID (default: "default")
+    #[serde(default = "default_agent_id")]
+    pub agent_id: String,
     /// Turn actions to execute during shop phase.
     pub actions: Vec<oab_core::types::TurnAction>,
 }
@@ -144,9 +150,16 @@ pub struct ShopRequest {
 /// POST /battle request body — run battle against opponent.
 #[derive(Debug, Deserialize)]
 pub struct BattleRequest {
+    /// Agent ID (default: "default")
+    #[serde(default = "default_agent_id")]
+    pub agent_id: String,
     /// Opponent board for this round.
     #[serde(default)]
     pub opponent: Vec<OpponentUnit>,
+}
+
+fn default_agent_id() -> String {
+    "default".to_string()
 }
 
 /// POST /submit request body — combined shop + battle (used by chain mode).

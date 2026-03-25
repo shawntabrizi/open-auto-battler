@@ -1,10 +1,10 @@
 //! HTTP server exposing the game as a REST API.
 //!
-//! Local mode endpoints:
-//!   POST /reset   — Start a new game. Body: { "seed": N, "set_id": N } (optional)
-//!   POST /shop    — Apply shop actions. Body: { "actions": [...] }
-//!   POST /battle  — Run battle. Body: { "opponent": [...] }
-//!   GET  /state   — Get current game state.
+//! Local mode endpoints (multi-session, keyed by agent_id):
+//!   POST /reset   — Start a new game. Body: { "agent_id": "a0", "seed": N, "set_id": N }
+//!   POST /shop    — Apply shop actions. Body: { "agent_id": "a0", "actions": [...] }
+//!   POST /battle  — Run battle. Body: { "agent_id": "a0", "opponent": [...] }
+//!   GET  /state?agent_id=a0 — Get game state for an agent.
 //!   GET  /cards   — List all cards in the current set.
 //!   GET  /sets    — List available card sets.
 //!
@@ -13,6 +13,7 @@
 //!   POST /submit  — Submit turn (shop + battle handled by chain).
 //!   GET  /state, /cards, /sets — Same as local.
 
+use std::collections::HashMap;
 use std::sync::Mutex;
 
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
@@ -20,9 +21,36 @@ use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 use crate::local::GameSession;
 use crate::types::*;
 
-/// Server backend — either local or on-chain.
+/// Local mode backend — manages multiple game sessions keyed by agent_id.
+pub struct LocalBackend {
+    sessions: HashMap<String, GameSession>,
+    default_set_id: u32,
+}
+
+impl LocalBackend {
+    pub fn new(default_set_id: u32) -> Self {
+        Self {
+            sessions: HashMap::new(),
+            default_set_id,
+        }
+    }
+
+    fn get_session(&self, agent_id: &str) -> Result<&GameSession, String> {
+        self.sessions
+            .get(agent_id)
+            .ok_or_else(|| format!("No session for agent '{}'. Call POST /reset first.", agent_id))
+    }
+
+    fn get_session_mut(&mut self, agent_id: &str) -> Result<&mut GameSession, String> {
+        self.sessions
+            .get_mut(agent_id)
+            .ok_or_else(|| format!("No session for agent '{}'. Call POST /reset first.", agent_id))
+    }
+}
+
+/// Server backend — either local (multi-session) or on-chain (single session).
 pub enum Backend {
-    Local(GameSession),
+    Local(LocalBackend),
     #[cfg(feature = "chain")]
     Chain(crate::chain::ChainGameSession),
 }
@@ -41,11 +69,11 @@ pub fn serve(port: u16, backend: Backend) -> std::io::Result<()> {
 
     eprintln!("OAB Server listening on http://localhost:{} ({})", port, mode);
     eprintln!("Endpoints:");
-    eprintln!("  POST /reset   — Start new game");
-    eprintln!("  POST /shop    — Apply shop actions {{ \"actions\": [...] }}");
-    eprintln!("  POST /battle  — Run battle {{ \"opponent\": [...] }}");
+    eprintln!("  POST /reset   — Start new game {{ \"agent_id\": \"a0\", ... }}");
+    eprintln!("  POST /shop    — Apply shop actions {{ \"agent_id\": \"a0\", \"actions\": [...] }}");
+    eprintln!("  POST /battle  — Run battle {{ \"agent_id\": \"a0\", \"opponent\": [...] }}");
     eprintln!("  POST /submit  — Combined shop+battle (chain mode)");
-    eprintln!("  GET  /state   — Get current game state");
+    eprintln!("  GET  /state?agent_id=a0 — Get game state");
     eprintln!("  GET  /cards   — List all cards");
     eprintln!("  GET  /sets    — List available card sets");
 
@@ -80,7 +108,7 @@ fn handle_request(
         (Method::Post, "/shop") => handle_shop(request, backend),
         (Method::Post, "/battle") => handle_battle(request, backend),
         (Method::Post, "/submit") => handle_submit(request, backend),
-        (Method::Get, "/state") => handle_get_state(backend),
+        (Method::Get, "/state") => handle_get_state(request, backend),
         (Method::Get, "/cards") => handle_get_cards(backend),
         (Method::Get, "/sets") => handle_get_sets(backend),
         _ => Err((404, format!("Not found: {} {}", request.method(), path))),
@@ -95,6 +123,7 @@ fn handle_reset(
 
     let req: ResetRequest = if body.trim().is_empty() {
         ResetRequest {
+            agent_id: "default".into(),
             seed: None,
             set_id: None,
         }
@@ -106,14 +135,19 @@ fn handle_reset(
 
     let mut b = backend.lock().unwrap();
     let state = match &mut *b {
-        Backend::Local(session) => session.reset(seed, req.set_id).map_err(|e| (400, e))?,
+        Backend::Local(local) => {
+            let set_id = req.set_id.unwrap_or(local.default_set_id);
+            let session = GameSession::new(seed, set_id).map_err(|e| (400, e))?;
+            local.sessions.insert(req.agent_id, session);
+            let session = local.sessions.values().last().unwrap();
+            session.get_state()
+        }
         #[cfg(feature = "chain")]
         Backend::Chain(session) => session.reset(seed, req.set_id).map_err(|e| (400, e))?,
     };
     serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
 }
 
-/// POST /shop — Apply shop actions, return post-shop state (local mode).
 fn handle_shop(
     request: &mut Request,
     backend: &Mutex<Backend>,
@@ -128,7 +162,10 @@ fn handle_shop(
 
     let mut b = backend.lock().unwrap();
     let state = match &mut *b {
-        Backend::Local(session) => session.shop(&action).map_err(|e| (400, e))?,
+        Backend::Local(local) => {
+            let session = local.get_session_mut(&req.agent_id).map_err(|e| (400, e))?;
+            session.shop(&action).map_err(|e| (400, e))?
+        }
         #[cfg(feature = "chain")]
         Backend::Chain(_) => return Err((400, "Use POST /submit for chain mode".into())),
     };
@@ -136,7 +173,6 @@ fn handle_shop(
     serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
 }
 
-/// POST /battle — Run battle against provided opponent (local mode).
 fn handle_battle(
     request: &mut Request,
     backend: &Mutex<Backend>,
@@ -147,7 +183,10 @@ fn handle_battle(
 
     let mut b = backend.lock().unwrap();
     let result = match &mut *b {
-        Backend::Local(session) => session.battle(&req.opponent).map_err(|e| (400, e))?,
+        Backend::Local(local) => {
+            let session = local.get_session_mut(&req.agent_id).map_err(|e| (400, e))?;
+            session.battle(&req.opponent).map_err(|e| (400, e))?
+        }
         #[cfg(feature = "chain")]
         Backend::Chain(_) => return Err((400, "Use POST /submit for chain mode".into())),
     };
@@ -155,7 +194,6 @@ fn handle_battle(
     serde_json::to_string(&result).map_err(|e| (500, e.to_string()))
 }
 
-/// POST /submit — Combined shop+battle (chain mode, or legacy).
 fn handle_submit(
     request: &mut Request,
     backend: &Mutex<Backend>,
@@ -180,10 +218,19 @@ fn handle_submit(
     serde_json::to_string(&result).map_err(|e| (500, e.to_string()))
 }
 
-fn handle_get_state(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
+fn handle_get_state(
+    request: &Request,
+    backend: &Mutex<Backend>,
+) -> Result<String, (u16, String)> {
+    let agent_id = parse_query_param(request.url(), "agent_id")
+        .unwrap_or_else(|| "default".to_string());
+
     let b = backend.lock().unwrap();
     let state = match &*b {
-        Backend::Local(session) => session.get_state(),
+        Backend::Local(local) => {
+            let session = local.get_session(&agent_id).map_err(|e| (400, e))?;
+            session.get_state()
+        }
         #[cfg(feature = "chain")]
         Backend::Chain(session) => session.get_state(),
     };
@@ -193,7 +240,15 @@ fn handle_get_state(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
 fn handle_get_cards(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
     let b = backend.lock().unwrap();
     let cards = match &*b {
-        Backend::Local(session) => session.get_cards(),
+        Backend::Local(local) => {
+            // Cards are global — use any session
+            let session = local
+                .sessions
+                .values()
+                .next()
+                .ok_or_else(|| (400, "No sessions. Call POST /reset first.".to_string()))?;
+            session.get_cards()
+        }
         #[cfg(feature = "chain")]
         Backend::Chain(session) => session.get_cards(),
     };
@@ -203,11 +258,30 @@ fn handle_get_cards(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
 fn handle_get_sets(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
     let b = backend.lock().unwrap();
     let sets = match &*b {
-        Backend::Local(session) => session.get_sets(),
+        Backend::Local(local) => {
+            let session = local
+                .sessions
+                .values()
+                .next()
+                .ok_or_else(|| (400, "No sessions. Call POST /reset first.".to_string()))?;
+            session.get_sets()
+        }
         #[cfg(feature = "chain")]
         Backend::Chain(session) => session.get_sets(),
     };
     serde_json::to_string(&sets).map_err(|e| (500, e.to_string()))
+}
+
+/// Parse a query parameter from a URL string.
+fn parse_query_param(url: &str, key: &str) -> Option<String> {
+    let query = url.split('?').nth(1)?;
+    for pair in query.split('&') {
+        let mut kv = pair.splitn(2, '=');
+        if kv.next()? == key {
+            return kv.next().map(|v| v.to_string());
+        }
+    }
+    None
 }
 
 fn read_body(request: &mut Request) -> Result<String, (u16, String)> {

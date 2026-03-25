@@ -8,8 +8,7 @@ mod types;
 use std::env;
 use std::process;
 
-use local::GameSession;
-use http::Backend;
+use http::{Backend, LocalBackend};
 
 struct Args {
     port: u16,
@@ -171,16 +170,9 @@ fn main() {
             process::exit(1);
         }
     } else {
-        // Local mode
-        let seed = http::generate_seed();
-        eprintln!("Starting local mode (set={})...", args.set_id);
-        match GameSession::new(seed, args.set_id) {
-            Ok(session) => Backend::Local(session),
-            Err(e) => {
-                eprintln!("Error: {}", e);
-                process::exit(1);
-            }
-        }
+        // Local mode — sessions created on demand via POST /reset
+        eprintln!("Starting local mode (default set={})...", args.set_id);
+        Backend::Local(LocalBackend::new(args.set_id))
     };
 
     if let Err(e) = http::serve(args.port, backend) {
