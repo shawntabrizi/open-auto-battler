@@ -319,7 +319,7 @@ afford. Sacrifice early tempo for late-game resource advantage.
 | Tax Collector | 2   | 5   | 6    | 3    | 8      | OnShopStart: +1 mana                     | Bigger mana engine              |
 | Alchemist     | 2   | 4   | 5    | 3    | 6      | OnShopStart: +1 mana                     | Mana engine + high burn value   |
 | Guild Master  | 3   | 5   | 7    | 3    | 6      | OnShopStart: +2 mana                     | Premium double mana engine      |
-| Trade Baron   | 4   | 6   | 9    | 3    | 6      | OnShopStart: +1 mana per ally on board   | Up to +4 mana with full board   |
+| Trade Baron   | 4   | 6   | 9    | 3    | 6      | OnShopStart: +3 mana                     | Premium flat mana engine        |
 | Midas         | 5   | 8   | 10   | 3    | 2      | OnShopStart: +3 mana                     | Absurd mana generation          |
 
 ---

@@ -2355,7 +2355,7 @@
         "trigger": "OnShopStart",
         "effect": {
           "type": "GainMana",
-          "amount": 2
+          "amount": 3
         },
         "conditions": [],
         "max_triggers": null
@@ -2380,7 +2380,7 @@
         "trigger": "OnShopStart",
         "effect": {
           "type": "GainMana",
-          "amount": 2
+          "amount": 3
         },
         "conditions": [],
         "max_triggers": null
