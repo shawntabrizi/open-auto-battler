@@ -197,8 +197,8 @@ dominate late with stats that outclass anything the opponent can field.
 
 | Name              | ATK | HP  | Cost | Burn | Rarity | Abilities                                                   | Notes                          |
 | ----------------- | --- | --- | ---- | ---- | ------ | ----------------------------------------------------------- | ------------------------------ |
-| Seedling          | 1   | 2   | 1    | 0    | 10     | OnBuy: +1/+1 to self (perm)                                 | Self-investment on purchase    |
-| Sapling           | 2   | 2   | 2    | 1    | 10     | OnBuy: +1/+1 to random ally (perm)                          | Core scaling enabler           |
+| Seedling          | 1   | 2   | 1    | 0    | 10     | OnShopStart: +1/+1 to self (perm)                           | Early self-scaling engine      |
+| Sapling           | 2   | 2   | 2    | 1    | 10     | OnShopStart: +1/+1 to random other ally (perm)              | Core scaling enabler           |
 | Grove Tender      | 1   | 3   | 3    | 1    | 10     | OnShopStart: +1/+1 to back unit (perm)                      | Recurring shop engine          |
 | Forest Sage       | 2   | 4   | 4    | 2    | 10     | OnShopStart: +1/+1 to 2 random allies (perm)                | Premium shop engine            |
 | Earth Shaman      | 3   | 5   | 5    | 2    | 10     | OnBuy: +1/+1 to all allies (perm)                           | Mass buy buff                  |
