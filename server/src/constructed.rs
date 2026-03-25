@@ -142,14 +142,6 @@ impl ConstructedMatch {
         Ok(player.session.get_state())
     }
 
-    /// Get the list of agent IDs that have joined.
-    pub fn agent_ids(&self) -> Vec<&str> {
-        self.players
-            .iter()
-            .filter_map(|p| p.as_ref().map(|p| p.agent_id.as_str()))
-            .collect()
-    }
-
     /// Find a player's index by agent_id.
     fn player_index(&self, agent_id: &str) -> Result<usize, String> {
         for (i, slot) in self.players.iter().enumerate() {

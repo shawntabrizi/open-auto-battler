@@ -1,6 +1,6 @@
 use alloc::collections::BTreeMap;
 
-use crate::state::{GameState, LocalGameState, BOARD_SIZE};
+use crate::state::{GameState, LocalGameState};
 use crate::types::{BoardUnit, *};
 
 #[test]
