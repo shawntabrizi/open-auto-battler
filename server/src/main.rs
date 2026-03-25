@@ -1,8 +1,8 @@
 //! OAB Server — HTTP game server for AI agents to play Open Auto Battler.
 
 mod chain;
-mod local;
 mod http;
+mod local;
 mod types;
 
 use std::env;

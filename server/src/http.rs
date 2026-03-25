@@ -36,15 +36,21 @@ impl LocalBackend {
     }
 
     fn get_session(&self, agent_id: &str) -> Result<&GameSession, String> {
-        self.sessions
-            .get(agent_id)
-            .ok_or_else(|| format!("No session for agent '{}'. Call POST /reset first.", agent_id))
+        self.sessions.get(agent_id).ok_or_else(|| {
+            format!(
+                "No session for agent '{}'. Call POST /reset first.",
+                agent_id
+            )
+        })
     }
 
     fn get_session_mut(&mut self, agent_id: &str) -> Result<&mut GameSession, String> {
-        self.sessions
-            .get_mut(agent_id)
-            .ok_or_else(|| format!("No session for agent '{}'. Call POST /reset first.", agent_id))
+        self.sessions.get_mut(agent_id).ok_or_else(|| {
+            format!(
+                "No session for agent '{}'. Call POST /reset first.",
+                agent_id
+            )
+        })
     }
 }
 
@@ -67,10 +73,15 @@ pub fn serve(port: u16, backend: Backend) -> std::io::Result<()> {
         Backend::Chain(_) => "on-chain",
     };
 
-    eprintln!("OAB Server listening on http://localhost:{} ({})", port, mode);
+    eprintln!(
+        "OAB Server listening on http://localhost:{} ({})",
+        port, mode
+    );
     eprintln!("Endpoints:");
     eprintln!("  POST /reset   — Start new game {{ \"agent_id\": \"a0\", ... }}");
-    eprintln!("  POST /shop    — Apply shop actions {{ \"agent_id\": \"a0\", \"actions\": [...] }}");
+    eprintln!(
+        "  POST /shop    — Apply shop actions {{ \"agent_id\": \"a0\", \"actions\": [...] }}"
+    );
     eprintln!("  POST /battle  — Run battle {{ \"agent_id\": \"a0\", \"opponent\": [...] }}");
     eprintln!("  POST /submit  — Combined shop+battle (chain mode)");
     eprintln!("  GET  /state?agent_id=a0 — Get game state");
@@ -115,10 +126,7 @@ fn handle_request(
     }
 }
 
-fn handle_reset(
-    request: &mut Request,
-    backend: &Mutex<Backend>,
-) -> Result<String, (u16, String)> {
+fn handle_reset(request: &mut Request, backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
     let body = read_body(request)?;
 
     let req: ResetRequest = if body.trim().is_empty() {
@@ -148,10 +156,7 @@ fn handle_reset(
     serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
 }
 
-fn handle_shop(
-    request: &mut Request,
-    backend: &Mutex<Backend>,
-) -> Result<String, (u16, String)> {
+fn handle_shop(request: &mut Request, backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
     let body = read_body(request)?;
     let req: ShopRequest =
         serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
@@ -173,10 +178,7 @@ fn handle_shop(
     serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
 }
 
-fn handle_battle(
-    request: &mut Request,
-    backend: &Mutex<Backend>,
-) -> Result<String, (u16, String)> {
+fn handle_battle(request: &mut Request, backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
     let body = read_body(request)?;
     let req: BattleRequest =
         serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
@@ -194,10 +196,7 @@ fn handle_battle(
     serde_json::to_string(&result).map_err(|e| (500, e.to_string()))
 }
 
-fn handle_submit(
-    request: &mut Request,
-    backend: &Mutex<Backend>,
-) -> Result<String, (u16, String)> {
+fn handle_submit(request: &mut Request, backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
     let body = read_body(request)?;
     let req: StepRequest =
         serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
@@ -218,12 +217,9 @@ fn handle_submit(
     serde_json::to_string(&result).map_err(|e| (500, e.to_string()))
 }
 
-fn handle_get_state(
-    request: &Request,
-    backend: &Mutex<Backend>,
-) -> Result<String, (u16, String)> {
-    let agent_id = parse_query_param(request.url(), "agent_id")
-        .unwrap_or_else(|| "default".to_string());
+fn handle_get_state(request: &Request, backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
+    let agent_id =
+        parse_query_param(request.url(), "agent_id").unwrap_or_else(|| "default".to_string());
 
     let b = backend.lock().unwrap();
     let state = match &*b {

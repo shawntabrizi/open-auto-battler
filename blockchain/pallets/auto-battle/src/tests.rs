@@ -39,6 +39,65 @@ fn ghost_unit(card_id: u32) -> oab_core::bounded::GhostBoardUnit {
     }
 }
 
+/// Create a minimal card + set directly in storage, independent of genesis.
+/// Returns `(set_id, card_id)`.
+fn setup_test_set() -> (u32, u32) {
+    let card_id = crate::NextUserCardId::<Test>::get();
+    let data = sample_card_data(5, 5);
+    crate::UserCards::<Test>::insert(card_id, &data);
+    crate::NextUserCardId::<Test>::put(card_id + 1);
+
+    let set_id = crate::NextSetId::<Test>::get();
+    let entry = oab_core::state::CardSetEntry {
+        card_id: oab_core::types::CardId(card_id),
+        rarity: 10,
+    };
+    let bounded_entries = BoundedVec::try_from(vec![entry]).unwrap();
+    let bounded_set = crate::BoundedCardSet::<Test> {
+        cards: bounded_entries,
+    };
+    crate::CardSets::<Test>::insert(set_id, bounded_set);
+    crate::NextSetId::<Test>::put(set_id + 1);
+
+    (set_id, card_id)
+}
+
+/// Insert a ghost opponent directly into regular ghost storage for a given bracket.
+/// Reads the first card from the given set so the ghost is always valid for battle.
+fn seed_ghost(set_id: u32, round: i32, wins: i32, lives: i32) {
+    let card_id = crate::CardSets::<Test>::get(set_id)
+        .expect("set must exist to seed ghost")
+        .cards[0]
+        .card_id
+        .0;
+    let board = crate::BoundedGhostBoard::<Test> {
+        units: BoundedVec::try_from(vec![ghost_unit(card_id)]).unwrap(),
+    };
+    let entry = crate::GhostEntry::<Test> { owner: 0, board };
+    crate::GhostOpponents::<Test>::mutate((set_id, round, wins, lives), |pool| {
+        pool.try_push(entry).ok();
+    });
+}
+
+/// Insert a ghost opponent directly into tournament ghost storage.
+/// Looks up the set from the tournament config so the ghost is always valid.
+fn seed_tournament_ghost(tournament_id: u32, round: i32, wins: i32, lives: i32) {
+    let config = crate::Tournaments::<Test>::get(tournament_id)
+        .expect("tournament must exist to seed ghost");
+    let card_id = crate::CardSets::<Test>::get(config.set_id)
+        .expect("set must exist to seed ghost")
+        .cards[0]
+        .card_id
+        .0;
+    let board = crate::BoundedGhostBoard::<Test> {
+        units: BoundedVec::try_from(vec![ghost_unit(card_id)]).unwrap(),
+    };
+    let entry = crate::GhostEntry::<Test> { owner: 0, board };
+    crate::TournamentGhostOpponents::<Test>::mutate((tournament_id, round, wins, lives), |pool| {
+        pool.try_push(entry).ok();
+    });
+}
+
 fn create_custom_set(creator: u64, card_stats: &[(i32, i32)], name: &[u8]) -> (u32, Vec<u32>) {
     let mut entries = Vec::new();
     let mut card_ids = Vec::new();
@@ -156,6 +215,9 @@ fn test_game_over_after_three_losses() {
         ActiveGame::<Test>::mutate(account_id, |session| {
             session.as_mut().unwrap().state.lives = 1;
         });
+
+        // Seed a ghost so the empty player board loses instead of drawing
+        seed_ghost(0, 1, 0, 1);
 
         // Submit empty turn (will lose battle with empty board)
         let action = CommitTurnAction { actions: vec![] };
@@ -339,7 +401,7 @@ fn test_create_card_set() {
         ));
 
         // Verify set was created
-        let set_id = 2; // Next set ID after genesis (0, 1)
+        let set_id = crate::NextSetId::<Test>::get() - 1;
         let set = crate::CardSets::<Test>::get(set_id).unwrap();
         assert_eq!(set.cards.len(), 3);
         assert_eq!(set.cards[0].card_id.0, 1);
@@ -711,6 +773,9 @@ fn test_tournament_game_over_records_stats() {
             session.as_mut().unwrap().state.lives = 1;
         });
 
+        // Seed a ghost so the empty player board loses instead of drawing
+        seed_tournament_ghost(0, 1, 0, 1);
+
         let action = CommitTurnAction { actions: vec![] };
         assert_ok!(AutoBattle::submit_tournament_turn(
             RuntimeOrigin::signed(player),
@@ -777,6 +842,9 @@ fn test_tournament_perfect_run_stats() {
             s.state.wins = 0;
             s.state.lives = 1;
         });
+
+        // Seed a ghost so the empty player board loses instead of drawing
+        seed_tournament_ghost(0, 1, 0, 1);
 
         let action = CommitTurnAction { actions: vec![] };
         assert_ok!(AutoBattle::submit_tournament_turn(
@@ -1131,7 +1199,7 @@ fn test_claim_prize_double_claim() {
             bounded_set_entries(entries),
             bounded_set_name(b"Prize Test Set")
         ));
-        let set_id = 2; // After genesis sets 0 and 1
+        let set_id = crate::NextSetId::<Test>::get() - 1;
 
         // Create tournament with this set
         assert_ok!(AutoBattle::create_tournament(
@@ -1180,7 +1248,7 @@ fn test_claim_prize_set_creator() {
             bounded_set_entries(entries),
             bounded_set_name(b"Creator Test")
         ));
-        let set_id = 2;
+        let set_id = crate::NextSetId::<Test>::get() - 1;
 
         // Create tournament with 100 entry fee
         // prize: 60% player, 20% set creator, 20% card creators
@@ -1330,7 +1398,7 @@ fn test_no_perfect_runs_player_share_stays_in_pallet() {
             bounded_set_entries(entries),
             bounded_set_name(b"No Win Set")
         ));
-        let set_id = 2;
+        let set_id = crate::NextSetId::<Test>::get() - 1;
 
         assert_ok!(AutoBattle::create_tournament(
             RuntimeOrigin::root(),
@@ -1434,12 +1502,14 @@ fn test_end_game_no_silver_gold_on_loss() {
         let player = 1;
         assert_ok!(AutoBattle::start_game(RuntimeOrigin::signed(player), 0));
 
-        // Place a unit and set lives to 1 so next loss ends game
+        // Set lives to 1 so next loss ends game
         ActiveGame::<Test>::mutate(player, |session| {
             let s = session.as_mut().unwrap();
-            s.state.board[0] = Some(oab_core::types::BoardUnit::new(oab_core::types::CardId(0)));
             s.state.lives = 1;
         });
+
+        // Seed a ghost so the empty player board loses instead of drawing
+        seed_ghost(0, 1, 0, 1);
 
         let action = CommitTurnAction { actions: vec![] };
         assert_ok!(AutoBattle::submit_turn(

@@ -158,10 +158,7 @@ mod inner {
 
             // If game still exists after cleanup, something went wrong
             if self.state.is_some() {
-                return Err(
-                    "Failed to clear active game on-chain. Try again."
-                        .into(),
-                );
+                return Err("Failed to clear active game on-chain. Try again.".into());
             }
 
             // Start new game on-chain (seed is determined by chain randomness)
@@ -747,7 +744,11 @@ mod inner {
     }
 
     /// Fund a list of accounts in a single batch transfer from the funder.
-    pub fn fund_accounts(url: &str, funder_suri: &str, target_suris: &[String]) -> Result<(), String> {
+    pub fn fund_accounts(
+        url: &str,
+        funder_suri: &str,
+        target_suris: &[String],
+    ) -> Result<(), String> {
         let rt = Runtime::new().map_err(|e| format!("Failed to create runtime: {}", e))?;
 
         let api = rt
@@ -764,12 +765,16 @@ mod inner {
             let target_account: subxt::utils::AccountId32 = target_keypair.public_key().into();
             eprintln!("  {} -> {}", suri, target_account);
 
-            calls.push(Value::unnamed_variant("Balances", [
-                Value::unnamed_variant("transfer_allow_death", [
-                    Value::unnamed_variant("Id", [Value::from_bytes(target_account.0)]),
-                    Value::u128(amount),
-                ]),
-            ]));
+            calls.push(Value::unnamed_variant(
+                "Balances",
+                [Value::unnamed_variant(
+                    "transfer_allow_death",
+                    [
+                        Value::unnamed_variant("Id", [Value::from_bytes(target_account.0)]),
+                        Value::u128(amount),
+                    ],
+                )],
+            ));
         }
 
         let batch_tx = subxt::dynamic::tx(
@@ -796,15 +801,22 @@ mod inner {
                         return Ok(());
                     }
                     TxStatus::Error { message } => return Err(format!("Batch error: {}", message)),
-                    TxStatus::Dropped { message } => return Err(format!("Batch dropped: {}", message)),
-                    TxStatus::Invalid { message } => return Err(format!("Batch invalid: {}", message)),
+                    TxStatus::Dropped { message } => {
+                        return Err(format!("Batch dropped: {}", message))
+                    }
+                    TxStatus::Invalid { message } => {
+                        return Err(format!("Batch invalid: {}", message))
+                    }
                     _ => {}
                 }
             }
             Err("Batch tx ended without inclusion".into())
         })?;
 
-        eprintln!("  All {} accounts funded in one transaction.", target_suris.len());
+        eprintln!(
+            "  All {} accounts funded in one transaction.",
+            target_suris.len()
+        );
         Ok(())
     }
 }
@@ -814,4 +826,3 @@ pub use inner::ChainGameSession;
 
 #[cfg(feature = "chain")]
 pub use inner::fund_accounts;
-

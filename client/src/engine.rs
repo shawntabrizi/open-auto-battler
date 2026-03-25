@@ -219,10 +219,9 @@ impl GameEngine {
                     .card_pool
                     .get(&entry.card_id)
                     .or_else(|| genesis_pool.get(&entry.card_id))
-                    .map(|unit| SetCardView::from_card_and_rarity(
-                        CardView::from(unit),
-                        entry.rarity,
-                    ))
+                    .map(|unit| {
+                        SetCardView::from_card_and_rarity(CardView::from(unit), entry.rarity)
+                    })
             })
             .collect();
 
