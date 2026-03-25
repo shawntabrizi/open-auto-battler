@@ -115,12 +115,11 @@ impl GameSession {
             .collect()
     }
 
-    /// Execute a turn: apply actions, run battle against provided opponent, advance round.
-    pub fn step(
+    /// Apply shop actions without running battle. Returns updated state with the post-shop board.
+    pub fn shop(
         &mut self,
         action: &CommitTurnAction,
-        opponent: &[OpponentUnit],
-    ) -> Result<StepResponse, String> {
+    ) -> Result<GameStateResponse, String> {
         if self.state.phase == GamePhase::Completed {
             return Err("Game is already over. Call POST /reset to start a new game.".into());
         }
@@ -135,6 +134,21 @@ impl GameSession {
         // Leftover shop mana doesn't carry
         self.state.shop_mana = 0;
         self.state.phase = GamePhase::Battle;
+
+        Ok(self.get_state())
+    }
+
+    /// Run battle against the provided opponent, advance round. Must be called after shop().
+    pub fn battle(
+        &mut self,
+        opponent: &[OpponentUnit],
+    ) -> Result<StepResponse, String> {
+        if self.state.phase == GamePhase::Completed {
+            return Err("Game is already over.".into());
+        }
+        if self.state.phase != GamePhase::Battle {
+            return Err(format!("Wrong phase: {:?}. Call POST /shop first.", self.state.phase));
+        }
 
         let completed_round = self.state.round;
 
@@ -413,8 +427,9 @@ mod tests {
     #[test]
     fn reset_returns_fresh_state() {
         let mut session = new_session();
-        // Play a step first so state changes
-        let _ = session.step(&CommitTurnAction { actions: vec![] }, &[]);
+        // Play a round first so state changes
+        session.shop(&CommitTurnAction { actions: vec![] }).unwrap();
+        let _ = session.battle(&[]);
 
         // Reset
         let state = session.reset(99, None).expect("reset should succeed");
@@ -440,14 +455,21 @@ mod tests {
         assert!(result.is_err());
     }
 
-    // ── POST /step ──
+    // ── Shop + Battle ──
 
     #[test]
-    fn step_with_empty_actions_advances_round() {
+    fn shop_then_battle_advances_round() {
         let mut session = new_session();
-        let result = session
-            .step(&CommitTurnAction { actions: vec![] }, &[])
-            .expect("step should work");
+
+        // Shop phase
+        let state = session
+            .shop(&CommitTurnAction { actions: vec![] })
+            .expect("shop should work");
+        assert_eq!(state.phase, "battle");
+        assert_eq!(state.round, 1);
+
+        // Battle phase
+        let result = session.battle(&[]).expect("battle should work");
         assert_eq!(result.completed_round, 1);
         assert!(["Victory", "Defeat", "Draw"].contains(&result.battle_result.as_str()));
         assert!(result.reward == 1 || result.reward == -1 || result.reward == 0);
@@ -455,6 +477,22 @@ mod tests {
             assert_eq!(result.state.round, 2);
             assert_eq!(result.state.phase, "shop");
         }
+    }
+
+    #[test]
+    fn battle_before_shop_returns_error() {
+        let session = new_session();
+        // Can't battle when in shop phase
+        assert_eq!(session.get_state().phase, "shop");
+    }
+
+    #[test]
+    fn shop_in_battle_phase_returns_error() {
+        let mut session = new_session();
+        session.shop(&CommitTurnAction { actions: vec![] }).unwrap();
+        // Now in battle phase — shop again should fail
+        let result = session.shop(&CommitTurnAction { actions: vec![] });
+        assert!(result.is_err());
     }
 
 

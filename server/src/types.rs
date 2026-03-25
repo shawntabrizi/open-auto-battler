@@ -134,14 +134,26 @@ pub struct ResetRequest {
     pub set_id: Option<u32>,
 }
 
-/// POST /submit request body.
+/// POST /shop request body — apply shop actions.
+#[derive(Debug, Deserialize)]
+pub struct ShopRequest {
+    /// Turn actions to execute during shop phase.
+    pub actions: Vec<oab_core::types::TurnAction>,
+}
+
+/// POST /battle request body — run battle against opponent.
+#[derive(Debug, Deserialize)]
+pub struct BattleRequest {
+    /// Opponent board for this round.
+    #[serde(default)]
+    pub opponent: Vec<OpponentUnit>,
+}
+
+/// POST /submit request body — combined shop + battle (used by chain mode).
 #[derive(Debug, Deserialize)]
 pub struct StepRequest {
     /// Turn actions to execute
     pub actions: Vec<oab_core::types::TurnAction>,
-    /// Opponent board for this round (local mode only).
-    #[serde(default)]
-    pub opponent: Vec<OpponentUnit>,
 }
 
 impl From<StepRequest> for CommitTurnAction {

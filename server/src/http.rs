@@ -1,11 +1,17 @@
 //! HTTP server exposing the game as a REST API.
 //!
-//! Endpoints:
+//! Local mode endpoints:
 //!   POST /reset   — Start a new game. Body: { "seed": N, "set_id": N } (optional)
-//!   POST /submit  — Submit turn actions. Body: { "actions": [...], "opponent": [...] }
+//!   POST /shop    — Apply shop actions. Body: { "actions": [...] }
+//!   POST /battle  — Run battle. Body: { "opponent": [...] }
 //!   GET  /state   — Get current game state.
 //!   GET  /cards   — List all cards in the current set.
 //!   GET  /sets    — List available card sets.
+//!
+//! Chain mode endpoints:
+//!   POST /reset   — Start a new game on-chain.
+//!   POST /submit  — Submit turn (shop + battle handled by chain).
+//!   GET  /state, /cards, /sets — Same as local.
 
 use std::sync::Mutex;
 
@@ -35,10 +41,12 @@ pub fn serve(port: u16, backend: Backend) -> std::io::Result<()> {
 
     eprintln!("OAB Server listening on http://localhost:{} ({})", port, mode);
     eprintln!("Endpoints:");
-    eprintln!("  POST /reset   — Start new game {{ \"seed\": N, \"set_id\": N }}");
-    eprintln!("  POST /submit  — Submit actions {{ \"actions\": [...], \"opponent\": [...] }}");
+    eprintln!("  POST /reset   — Start new game");
+    eprintln!("  POST /shop    — Apply shop actions {{ \"actions\": [...] }}");
+    eprintln!("  POST /battle  — Run battle {{ \"opponent\": [...] }}");
+    eprintln!("  POST /submit  — Combined shop+battle (chain mode)");
     eprintln!("  GET  /state   — Get current game state");
-    eprintln!("  GET  /cards   — List all cards in the current set");
+    eprintln!("  GET  /cards   — List all cards");
     eprintln!("  GET  /sets    — List available card sets");
 
     let backend = Mutex::new(backend);
@@ -69,7 +77,9 @@ fn handle_request(
 
     match (method, path) {
         (Method::Post, "/reset") => handle_reset(request, backend),
-        (Method::Post, "/submit") => handle_step(request, backend),
+        (Method::Post, "/shop") => handle_shop(request, backend),
+        (Method::Post, "/battle") => handle_battle(request, backend),
+        (Method::Post, "/submit") => handle_submit(request, backend),
         (Method::Get, "/state") => handle_get_state(backend),
         (Method::Get, "/cards") => handle_get_cards(backend),
         (Method::Get, "/sets") => handle_get_sets(backend),
@@ -103,7 +113,50 @@ fn handle_reset(
     serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
 }
 
-fn handle_step(
+/// POST /shop — Apply shop actions, return post-shop state (local mode).
+fn handle_shop(
+    request: &mut Request,
+    backend: &Mutex<Backend>,
+) -> Result<String, (u16, String)> {
+    let body = read_body(request)?;
+    let req: ShopRequest =
+        serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
+
+    let action = oab_core::types::CommitTurnAction {
+        actions: req.actions,
+    };
+
+    let mut b = backend.lock().unwrap();
+    let state = match &mut *b {
+        Backend::Local(session) => session.shop(&action).map_err(|e| (400, e))?,
+        #[cfg(feature = "chain")]
+        Backend::Chain(_) => return Err((400, "Use POST /submit for chain mode".into())),
+    };
+
+    serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
+}
+
+/// POST /battle — Run battle against provided opponent (local mode).
+fn handle_battle(
+    request: &mut Request,
+    backend: &Mutex<Backend>,
+) -> Result<String, (u16, String)> {
+    let body = read_body(request)?;
+    let req: BattleRequest =
+        serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
+
+    let mut b = backend.lock().unwrap();
+    let result = match &mut *b {
+        Backend::Local(session) => session.battle(&req.opponent).map_err(|e| (400, e))?,
+        #[cfg(feature = "chain")]
+        Backend::Chain(_) => return Err((400, "Use POST /submit for chain mode".into())),
+    };
+
+    serde_json::to_string(&result).map_err(|e| (500, e.to_string()))
+}
+
+/// POST /submit — Combined shop+battle (chain mode, or legacy).
+fn handle_submit(
     request: &mut Request,
     backend: &Mutex<Backend>,
 ) -> Result<String, (u16, String)> {
@@ -117,7 +170,9 @@ fn handle_step(
 
     let mut b = backend.lock().unwrap();
     let result = match &mut *b {
-        Backend::Local(session) => session.step(&action, &req.opponent).map_err(|e| (400, e))?,
+        Backend::Local(_) => {
+            return Err((400, "Use POST /shop + POST /battle for local mode".into()))
+        }
         #[cfg(feature = "chain")]
         Backend::Chain(session) => session.step(&action).map_err(|e| (400, e))?,
     };
