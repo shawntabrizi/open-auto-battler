@@ -82,7 +82,32 @@ impl GameSession {
     pub fn get_state(&self) -> GameStateResponse {
         let hand_used = vec![false; self.state.hand.len()];
         let view = GameView::from_state(&self.state, self.state.shop_mana, &hand_used, false);
-        view.into()
+        let mut resp: GameStateResponse = view.into();
+        resp.bag = self.bag_summary();
+        resp
+    }
+
+    /// Build a bag summary: unique cards grouped with counts and stats.
+    fn bag_summary(&self) -> Vec<crate::types::BagCardEntry> {
+        let mut counts: BTreeMap<CardId, u32> = BTreeMap::new();
+        for card_id in self.state.bag.iter() {
+            *counts.entry(*card_id).or_insert(0) += 1;
+        }
+        counts
+            .into_iter()
+            .filter_map(|(card_id, count)| {
+                let card = self.state.card_pool.get(&card_id)?;
+                Some(crate::types::BagCardEntry {
+                    card_id: card_id.0,
+                    name: card.name.clone(),
+                    attack: card.stats.attack,
+                    health: card.stats.health,
+                    play_cost: card.economy.play_cost,
+                    burn_value: card.economy.burn_value,
+                    count,
+                })
+            })
+            .collect()
     }
 
     /// Execute a turn: apply actions, run battle, advance round.

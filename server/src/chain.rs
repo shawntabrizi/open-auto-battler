@@ -358,6 +358,7 @@ mod inner {
                     hand: vec![],
                     board: vec![],
                     can_afford: vec![],
+                    bag: vec![],
                 },
             }
         }

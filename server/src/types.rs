@@ -20,6 +20,8 @@ pub struct GameStateResponse {
     pub hand: Vec<Option<CardView>>,
     pub board: Vec<Option<BoardUnitView>>,
     pub can_afford: Vec<bool>,
+    /// Cards remaining in the bag, grouped by card with counts.
+    pub bag: Vec<BagCardEntry>,
 }
 
 impl From<GameView> for GameStateResponse {
@@ -35,6 +37,7 @@ impl From<GameView> for GameStateResponse {
             hand: v.hand,
             board: v.board,
             can_afford: v.can_afford,
+            bag: Vec::new(), // Populated by GameSession::get_state()
         }
     }
 }
@@ -83,6 +86,18 @@ pub struct SetInfo {
 pub struct SetCardEntry {
     pub card_id: u32,
     pub rarity: u32,
+}
+
+/// A card entry in the bag summary (grouped by card_id with count).
+#[derive(Debug, Serialize)]
+pub struct BagCardEntry {
+    pub card_id: u32,
+    pub name: String,
+    pub attack: i32,
+    pub health: i32,
+    pub play_cost: i32,
+    pub burn_value: i32,
+    pub count: u32,
 }
 
 /// Error response.
