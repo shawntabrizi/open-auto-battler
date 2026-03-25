@@ -15,8 +15,8 @@ mod benchmarks {
     use super::*;
     use frame::traits::fungible;
     use frame_system::RawOrigin;
-    use oab_core::types::{BoardUnit, CardId, EconomyStats, UnitStats};
-    use oab_core::{CommitTurnAction, TurnAction};
+    use oab_battle::types::{BoardUnit, CardId, EconomyStats, UnitStats};
+    use oab_battle::{CommitTurnAction, TurnAction};
 
     fn default_prize_config() -> PrizeConfig {
         PrizeConfig {

@@ -13,10 +13,10 @@ crate-type = ["rlib"]
 [features]
 default = ["std"]
 std = [
-    "oab-core/std",
+    "oab-battle/std",
     "serde/std",
 ]
 
 [dependencies]
-oab-core = { workspace = true }
+oab-battle = { workspace = true }
 serde = { workspace = true, features = ["derive", "alloc"] }

@@ -5,12 +5,12 @@
 use std::vec::Vec;
 
 use crate::engine::BattleOutput;
-use oab_core::battle::{resolve_battle, CombatUnit, UnitView};
-use oab_core::cards::build_card_pool;
-use oab_core::log;
-use oab_core::rng::XorShiftRng;
-use oab_core::types::CardId;
-use oab_core::view::CardView;
+use oab_battle::battle::{resolve_battle, CombatUnit, UnitView};
+use oab_battle::cards::build_card_pool;
+use oab_battle::log;
+use oab_battle::rng::XorShiftRng;
+use oab_battle::types::CardId;
+use oab_battle::view::CardView;
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
@@ -59,11 +59,11 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
         &card_pool,
     );
 
-    let mut limits = oab_core::limits::BattleLimits::new();
+    let mut limits = oab_battle::limits::BattleLimits::new();
     let initial_player_units: Vec<UnitView> = player_board
         .iter()
         .map(|u| UnitView {
-            instance_id: limits.generate_instance_id(oab_core::limits::Team::Player),
+            instance_id: limits.generate_instance_id(oab_battle::limits::Team::Player),
             card_id: u.card_id,
             name: card_pool
                 .get(&u.card_id)
@@ -79,7 +79,7 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
     let initial_enemy_units: Vec<UnitView> = enemy_board
         .iter()
         .map(|u| UnitView {
-            instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
+            instance_id: limits.generate_instance_id(oab_battle::limits::Team::Enemy),
             card_id: u.card_id,
             name: card_pool
                 .get(&u.card_id)

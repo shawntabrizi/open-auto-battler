@@ -8,22 +8,22 @@ use std::vec;
 use std::vec::Vec;
 
 use bounded_collections::ConstU32;
-use oab_core::battle::{
+use oab_battle::battle::{
     player_permanent_stat_deltas_from_events, player_shop_mana_delta_from_events, resolve_battle,
     CombatEvent, CombatUnit, UnitId, UnitView,
 };
-use oab_core::bounded::{BoundedCardSet, BoundedGameSession};
-use oab_core::commit::{
+use oab_battle::bounded::{BoundedCardSet, BoundedGameSession};
+use oab_battle::commit::{
     apply_board_insert_shift, apply_move_board_positions, apply_on_buy_triggers,
     apply_on_sell_triggers, apply_shop_start_triggers, apply_shop_start_triggers_with_result,
     prepare_board_slot_for_insert, validate_move_board_positions, verify_and_apply_turn,
 };
-use oab_core::log;
-use oab_core::rng::XorShiftRng;
-use oab_core::state::*;
-use oab_core::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
-use oab_core::view::{CardView, GameView};
-use oab_core::GameError;
+use oab_battle::log;
+use oab_battle::rng::XorShiftRng;
+use oab_battle::state::*;
+use oab_battle::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
+use oab_battle::view::{CardView, GameView};
+use oab_battle::GameError;
 use parity_scale_codec::Decode;
 use parity_scale_codec::Encode;
 use serde::{Deserialize, Serialize};
@@ -120,7 +120,7 @@ impl GameEngine {
     /// Must be called before new_run() or init_from_scale().
     #[wasm_bindgen]
     pub fn load_card_set(&mut self, set_id: u32) -> Result<(), String> {
-        use oab_core::cards::{build_card_pool, get_all_sets};
+        use oab_battle::cards::{build_card_pool, get_all_sets};
 
         log::action(
             "load_card_set",
@@ -150,7 +150,7 @@ impl GameEngine {
     /// Used by the frontend to build the emoji display map.
     #[wasm_bindgen]
     pub fn get_card_metas(&self) -> JsValue {
-        let metas = oab_core::cards::get_all_card_metas();
+        let metas = oab_battle::cards::get_all_card_metas();
         serde_wasm_bindgen::to_value(&metas).unwrap_or(JsValue::NULL)
     }
 
@@ -158,7 +158,7 @@ impl GameEngine {
     /// Used by the frontend for set selection screen.
     #[wasm_bindgen]
     pub fn get_set_metas(&self) -> JsValue {
-        let metas = oab_core::cards::get_all_set_metas();
+        let metas = oab_battle::cards::get_all_set_metas();
         serde_wasm_bindgen::to_value(&metas).unwrap_or(JsValue::NULL)
     }
 
@@ -168,22 +168,22 @@ impl GameEngine {
     /// Checks custom (blockchain) sets first, then falls back to genesis sets.
     #[wasm_bindgen]
     pub fn get_set_cards(&self, set_id: u32) -> Result<JsValue, String> {
-        use oab_core::cards::{build_card_pool, get_all_sets};
-        use oab_core::view::CardView;
+        use oab_battle::cards::{build_card_pool, get_all_sets};
+        use oab_battle::view::CardView;
         use serde::Serialize;
 
         // Note: serde_wasm_bindgen doesn't support #[serde(flatten)],
         // so we explicitly list all CardView fields plus rarity.
         #[derive(Serialize)]
         struct SetCardView {
-            id: oab_core::types::CardId,
+            id: oab_battle::types::CardId,
             name: String,
             attack: i32,
             health: i32,
             play_cost: i32,
             burn_value: i32,
-            shop_abilities: Vec<oab_core::types::ShopAbility>,
-            battle_abilities: Vec<oab_core::types::Ability>,
+            shop_abilities: Vec<oab_battle::types::ShopAbility>,
+            battle_abilities: Vec<oab_battle::types::Ability>,
             rarity: u32,
         }
 
@@ -237,7 +237,7 @@ impl GameEngine {
     /// Used by the frontend to inject blockchain sets for preview/play.
     #[wasm_bindgen]
     pub fn add_set(&mut self, set_id: u32, cards_js: JsValue) -> Result<(), String> {
-        let entries: Vec<oab_core::state::CardSetEntry> = serde_wasm_bindgen::from_value(cards_js)
+        let entries: Vec<oab_battle::state::CardSetEntry> = serde_wasm_bindgen::from_value(cards_js)
             .map_err(|e| format!("Failed to parse set entries: {:?}", e))?;
         let card_set = CardSet { cards: entries };
         self.custom_sets.insert(set_id, card_set);
@@ -866,14 +866,14 @@ impl GameEngine {
         );
 
         // Generate initial views for UI animation
-        let mut limits = oab_core::limits::BattleLimits::new();
+        let mut limits = oab_battle::limits::BattleLimits::new();
         let initial_player_units: Vec<UnitView> = player_board
             .iter()
             .flatten()
             .map(|u| {
                 let card = self.get_card(u.card_id);
                 UnitView {
-                    instance_id: limits.generate_instance_id(oab_core::limits::Team::Player),
+                    instance_id: limits.generate_instance_id(oab_battle::limits::Team::Player),
                     card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),
@@ -890,7 +890,7 @@ impl GameEngine {
             .map(|u| {
                 let card = self.get_card(u.card_id);
                 UnitView {
-                    instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
+                    instance_id: limits.generate_instance_id(oab_battle::limits::Team::Enemy),
                     card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),
@@ -903,8 +903,8 @@ impl GameEngine {
         // Apply the battle result (wins/lives)
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {
-                oab_core::battle::BattleResult::Victory => self.state.wins += 1,
-                oab_core::battle::BattleResult::Defeat => self.state.lives -= 1,
+                oab_battle::battle::BattleResult::Victory => self.state.wins += 1,
+                oab_battle::battle::BattleResult::Defeat => self.state.lives -= 1,
                 _ => {} // Draw
             }
             log::info(&format!("P2P Battle Result: {:?}", result));
@@ -993,7 +993,7 @@ impl GameEngine {
             "init_from_scale",
             "Converting bounded types to core types...",
         );
-        let _card_set: oab_core::state::CardSet = card_set_bounded.into();
+        let _card_set: oab_battle::state::CardSet = card_set_bounded.into();
         let session: GameSession = session_bounded.into();
 
         log::debug("init_from_scale", "Reconstructing GameState...");
@@ -1164,22 +1164,22 @@ impl GameEngine {
 
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {
-                oab_core::battle::BattleResult::Victory => self.state.wins += 1,
-                oab_core::battle::BattleResult::Defeat => self.state.lives -= 1,
+                oab_battle::battle::BattleResult::Victory => self.state.wins += 1,
+                oab_battle::battle::BattleResult::Defeat => self.state.lives -= 1,
                 _ => {} // DRAW
             }
             log::info(&format!("Battle Result: {:?}", result));
         }
 
         // Generate initial views for UI
-        let mut limits = oab_core::limits::BattleLimits::new();
+        let mut limits = oab_battle::limits::BattleLimits::new();
         let initial_player_units: Vec<UnitView> = board_before_battle
             .iter()
             .flatten()
             .map(|u| {
                 let card = self.get_card(u.card_id);
                 UnitView {
-                    instance_id: limits.generate_instance_id(oab_core::limits::Team::Player),
+                    instance_id: limits.generate_instance_id(oab_battle::limits::Team::Player),
                     card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),

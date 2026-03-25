@@ -2,9 +2,9 @@
 
 use alloc::vec::Vec;
 
-use oab_core::rng::{BattleRng, XorShiftRng};
-use oab_core::state::{CardSet, STARTING_BAG_SIZE};
-use oab_core::types::CardId;
+use oab_battle::rng::{BattleRng, XorShiftRng};
+use oab_battle::state::{CardSet, STARTING_BAG_SIZE};
+use oab_battle::types::CardId;
 
 use crate::GameConfig;
 
@@ -55,7 +55,7 @@ pub fn create_starting_bag(set: &CardSet, seed: u64) -> Vec<CardId> {
 mod tests {
     use super::*;
     use alloc::vec;
-    use oab_core::state::CardSetEntry;
+    use oab_battle::state::CardSetEntry;
 
     #[test]
     fn empty_set_returns_empty() {

@@ -1,8 +1,8 @@
 //! HTTP API request/response types.
 
-use oab_core::battle::CombatEvent;
-use oab_core::types::CommitTurnAction;
-use oab_core::view::{BoardUnitView, CardView, GameView};
+use oab_battle::battle::CombatEvent;
+use oab_battle::types::CommitTurnAction;
+use oab_battle::view::{BoardUnitView, CardView, GameView};
 use serde::{Deserialize, Serialize};
 
 // ── Responses ──
@@ -144,7 +144,7 @@ pub struct ShopRequest {
     #[serde(default = "default_agent_id")]
     pub agent_id: String,
     /// Turn actions to execute during shop phase.
-    pub actions: Vec<oab_core::types::TurnAction>,
+    pub actions: Vec<oab_battle::types::TurnAction>,
 }
 
 /// POST /battle request body — run battle against opponent.
@@ -166,7 +166,7 @@ fn default_agent_id() -> String {
 #[derive(Debug, Deserialize)]
 pub struct StepRequest {
     /// Turn actions to execute
-    pub actions: Vec<oab_core::types::TurnAction>,
+    pub actions: Vec<oab_battle::types::TurnAction>,
 }
 
 impl From<StepRequest> for CommitTurnAction {
@@ -202,7 +202,7 @@ pub struct ConstructedJoinRequest {
 pub struct ConstructedShopRequest {
     pub match_id: String,
     pub agent_id: String,
-    pub actions: Vec<oab_core::types::TurnAction>,
+    pub actions: Vec<oab_battle::types::TurnAction>,
 }
 
 /// POST /constructed/battle

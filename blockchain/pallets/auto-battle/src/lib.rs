@@ -27,7 +27,7 @@ pub mod pallet {
     use frame::traits::{fungible, tokens::Preservation, Get, Randomness};
 
     // Import types from core engine
-    use oab_core::bounded::{
+    use oab_battle::bounded::{
         BoundedBattleAbility as CoreBoundedBattleAbility, BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
         BoundedGameSession as CoreBoundedGameSession, BoundedGameState as CoreBoundedGameState,
@@ -36,8 +36,8 @@ pub mod pallet {
         BoundedShopAbility as CoreBoundedShopAbility, GhostBoardUnit as CoreGhostBoardUnit,
         MatchmakingBracket,
     };
-    use oab_core::types::{EconomyStats, UnitStats};
-    use oab_core::{BattleResult, CardSet, CombatUnit, GamePhase};
+    use oab_battle::types::{EconomyStats, UnitStats};
+    use oab_battle::{BattleResult, CardSet, CombatUnit, GamePhase};
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -644,7 +644,7 @@ pub mod pallet {
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
-            use oab_core::cards::{
+            use oab_battle::cards::{
                 get_all_card_metas, get_all_cards, get_all_set_metas, get_all_sets,
             };
 
@@ -910,8 +910,8 @@ pub mod pallet {
             let card_set = CardSet {
                 cards: cards
                     .into_iter()
-                    .map(|entry| oab_core::state::CardSetEntry {
-                        card_id: oab_core::types::CardId(entry.card_id),
+                    .map(|entry| oab_battle::state::CardSetEntry {
+                        card_id: oab_battle::types::CardId(entry.card_id),
                         rarity: entry.rarity,
                     })
                     .collect(),

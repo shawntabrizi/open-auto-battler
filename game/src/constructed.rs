@@ -4,8 +4,8 @@ use alloc::collections::BTreeMap;
 use alloc::format;
 use alloc::string::String;
 
-use oab_core::state::{CardSet, STARTING_BAG_SIZE};
-use oab_core::types::CardId;
+use oab_battle::state::{CardSet, STARTING_BAG_SIZE};
+use oab_battle::types::CardId;
 
 use crate::GameConfig;
 
@@ -85,13 +85,13 @@ mod tests {
     fn test_set() -> CardSet {
         CardSet {
             cards: alloc::vec![
-                oab_core::state::CardSetEntry { card_id: CardId(1), rarity: 100 },
-                oab_core::state::CardSetEntry { card_id: CardId(2), rarity: 80 },
-                oab_core::state::CardSetEntry { card_id: CardId(3), rarity: 60 },
-                oab_core::state::CardSetEntry { card_id: CardId(4), rarity: 40 },
-                oab_core::state::CardSetEntry { card_id: CardId(5), rarity: 20 },
+                oab_battle::state::CardSetEntry { card_id: CardId(1), rarity: 100 },
+                oab_battle::state::CardSetEntry { card_id: CardId(2), rarity: 80 },
+                oab_battle::state::CardSetEntry { card_id: CardId(3), rarity: 60 },
+                oab_battle::state::CardSetEntry { card_id: CardId(4), rarity: 40 },
+                oab_battle::state::CardSetEntry { card_id: CardId(5), rarity: 20 },
                 // Token card
-                oab_core::state::CardSetEntry { card_id: CardId(99), rarity: 0 },
+                oab_battle::state::CardSetEntry { card_id: CardId(99), rarity: 0 },
             ],
         }
     }

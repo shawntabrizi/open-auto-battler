@@ -17,7 +17,7 @@ use crate::Runtime;
 
 pub fn initialize() {
     let alice = Sr25519Keyring::Alice.to_account_id();
-    let styles = oab_core::cards::get_all_nft_styles();
+    let styles = oab_battle::cards::get_all_nft_styles();
 
     let mut max_collection_id: u32 = 0;
 

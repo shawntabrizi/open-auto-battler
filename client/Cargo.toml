@@ -12,7 +12,7 @@ repository.workspace = true
 crate-type = ["cdylib"]
 
 [dependencies]
-oab-core = { workspace = true, features = ["std", "bounded"] }
+oab-battle = { workspace = true, features = ["std", "bounded"] }
 oab-game = { workspace = true, features = ["std"] }
 parity-scale-codec = { workspace = true, features = ["derive"] }
 bounded-collections = { workspace = true }
@@ -27,4 +27,4 @@ getrandom = { workspace = true, features = ["js"] }
 
 [features]
 default = []
-browser_log = ["oab-core/browser_log"]
+browser_log = ["oab-battle/browser_log"]

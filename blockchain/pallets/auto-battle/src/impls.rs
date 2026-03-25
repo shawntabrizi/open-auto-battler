@@ -3,12 +3,12 @@ use alloc::collections::BTreeMap;
 use alloc::{vec, vec::Vec};
 use frame::prelude::*;
 use frame::traits::Randomness;
-use oab_core::bounded::{
+use oab_battle::bounded::{
     BoundedGhostBoard as CoreBoundedGhostBoard, GhostBoardUnit, MatchmakingBracket,
 };
-use oab_core::rng::BattleRng;
+use oab_battle::rng::BattleRng;
 use oab_game::sealed::create_starting_bag;
-use oab_core::{
+use oab_battle::{
     apply_shop_start_triggers, apply_shop_start_triggers_with_result, resolve_battle,
     verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, GamePhase,
     GameState, UnitCard, XorShiftRng,
@@ -39,7 +39,7 @@ impl<T: Config> Pallet<T> {
     // ── Moved helpers ──────────────────────────────────────────────────
 
     /// Reconstruct a card pool from storage based on a card set.
-    pub(crate) fn get_card_pool(card_set: &CardSet) -> BTreeMap<oab_core::types::CardId, UnitCard> {
+    pub(crate) fn get_card_pool(card_set: &CardSet) -> BTreeMap<oab_battle::types::CardId, UnitCard> {
         let mut card_pool = BTreeMap::new();
         for entry in &card_set.cards {
             if let Some(user_data) = UserCards::<T>::get(entry.card_id.0) {
@@ -53,7 +53,7 @@ impl<T: Config> Pallet<T> {
     }
 
     /// Convert UserCardData to UnitCard.
-    fn entry_to_unit_card(id: oab_core::types::CardId, data: UserCardData<T>) -> UnitCard {
+    fn entry_to_unit_card(id: oab_battle::types::CardId, data: UserCardData<T>) -> UnitCard {
         UnitCard {
             id,
             name: alloc::string::String::new(),
@@ -83,7 +83,7 @@ impl<T: Config> Pallet<T> {
     /// Convert a ghost board to combat units using the provided card pool.
     pub(crate) fn ghost_to_combat_units(
         ghost: &BoundedGhostBoard<T>,
-        card_pool: &BTreeMap<oab_core::types::CardId, UnitCard>,
+        card_pool: &BTreeMap<oab_battle::types::CardId, UnitCard>,
     ) -> Vec<CombatUnit> {
         ghost
             .units
@@ -126,7 +126,7 @@ impl<T: Config> Pallet<T> {
     pub(crate) fn apply_player_permanent_stat_deltas(
         core_state: &mut GameState,
         player_slots: &[usize],
-        deltas: &BTreeMap<oab_core::battle::UnitId, (i32, i32)>,
+        deltas: &BTreeMap<oab_battle::battle::UnitId, (i32, i32)>,
     ) {
         for (unit_id, (attack_delta, health_delta)) in deltas {
             let unit_index = unit_id.raw() as usize;
@@ -186,10 +186,10 @@ impl<T: Config> Pallet<T> {
         let mut state = GameState::reconstruct(
             card_pool,
             set_id,
-            oab_core::state::LocalGameState {
+            oab_battle::state::LocalGameState {
                 bag: create_starting_bag(&card_set, seed),
                 hand: Vec::new(),
-                board: vec![None; oab_core::state::BOARD_SIZE],
+                board: vec![None; oab_battle::state::BOARD_SIZE],
                 mana_limit: config.mana_limit_for_round(1),
                 shop_mana: 0,
                 round: 1,
@@ -213,7 +213,7 @@ impl<T: Config> Pallet<T> {
     pub(crate) fn prepare_battle(
         who: &T::AccountId,
         set_id: u32,
-        local_state: oab_core::state::LocalGameState,
+        local_state: oab_battle::state::LocalGameState,
         action: BoundedCommitTurnAction<T>,
         battle_seed_context: &[u8],
     ) -> Result<PreparedBattle, DispatchError> {
@@ -302,8 +302,8 @@ impl<T: Config> Pallet<T> {
         );
 
         battle.core_state.local_state.shop_mana =
-            oab_core::battle::player_shop_mana_delta_from_events(&events).max(0);
-        let permanent_deltas = oab_core::battle::player_permanent_stat_deltas_from_events(&events);
+            oab_battle::battle::player_shop_mana_delta_from_events(&events).max(0);
+        let permanent_deltas = oab_battle::battle::player_permanent_stat_deltas_from_events(&events);
         Self::apply_player_permanent_stat_deltas(
             &mut battle.core_state,
             &battle.player_slots,
@@ -314,7 +314,7 @@ impl<T: Config> Pallet<T> {
             .iter()
             .rev()
             .find_map(|e| {
-                if let oab_core::battle::CombatEvent::BattleEnd { result } = e {
+                if let oab_battle::battle::CombatEvent::BattleEnd { result } = e {
                     Some(result.clone())
                 } else {
                     None

@@ -8,11 +8,11 @@
 mod inner {
     use std::collections::BTreeMap;
 
-    use oab_core::battle::{resolve_battle, BattleResult, CombatUnit};
-    use oab_core::rng::XorShiftRng;
-    use oab_core::state::*;
-    use oab_core::types::*;
-    use oab_core::view::GameView;
+    use oab_battle::battle::{resolve_battle, BattleResult, CombatUnit};
+    use oab_battle::rng::XorShiftRng;
+    use oab_battle::state::*;
+    use oab_battle::types::*;
+    use oab_battle::view::GameView;
 
     use bounded_collections::ConstU32;
     use parity_scale_codec::Decode;
@@ -203,7 +203,7 @@ mod inner {
 
             // Local verification — also gives us the post-turn board for battle replay
             let mut verified_state = state.clone();
-            oab_core::commit::verify_and_apply_turn(&mut verified_state, action)
+            oab_battle::commit::verify_and_apply_turn(&mut verified_state, action)
                 .map_err(|e| format!("{:?}", e))?;
 
             // Snapshot player board after turn actions (before battle) for replay
@@ -366,10 +366,10 @@ mod inner {
             }
         }
 
-        pub fn get_cards(&self) -> Vec<oab_core::view::CardView> {
+        pub fn get_cards(&self) -> Vec<oab_battle::view::CardView> {
             self.card_pool
                 .values()
-                .map(oab_core::view::CardView::from)
+                .map(oab_battle::view::CardView::from)
                 .collect()
         }
 
@@ -541,7 +541,7 @@ mod inner {
         match raw {
             Some(bytes) => {
                 let mut input = &bytes[..];
-                let bounded = oab_core::bounded::BoundedGameSession::<
+                let bounded = oab_battle::bounded::BoundedGameSession::<
                     MaxBagSize,
                     MaxBoardSize,
                     MaxHandActions,

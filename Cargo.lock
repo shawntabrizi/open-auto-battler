@@ -1268,7 +1268,7 @@ dependencies = [
  "docify",
  "hex-literal",
  "log",
- "oab-core",
+ "oab-battle",
  "oab-game",
  "pallet-auto-battle",
  "parity-scale-codec",
@@ -7700,29 +7700,11 @@ dependencies = [
 name = "oab"
 version = "0.1.0"
 dependencies = [
- "oab-core",
+ "oab-battle",
 ]
 
 [[package]]
-name = "oab-client"
-version = "0.1.0"
-dependencies = [
- "bounded-collections",
- "console_error_panic_hook",
- "console_log",
- "getrandom 0.2.17",
- "log",
- "oab-core",
- "oab-game",
- "parity-scale-codec",
- "serde",
- "serde-wasm-bindgen",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
-name = "oab-core"
+name = "oab-battle"
 version = "0.1.0"
 dependencies = [
  "bounded-collections",
@@ -7735,10 +7717,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "oab-client"
+version = "0.1.0"
+dependencies = [
+ "bounded-collections",
+ "console_error_panic_hook",
+ "console_log",
+ "getrandom 0.2.17",
+ "log",
+ "oab-battle",
+ "oab-game",
+ "parity-scale-codec",
+ "serde",
+ "serde-wasm-bindgen",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
 name = "oab-game"
 version = "0.1.0"
 dependencies = [
- "oab-core",
+ "oab-battle",
  "serde",
 ]
 
@@ -7747,7 +7747,7 @@ name = "oab-server"
 version = "0.1.0"
 dependencies = [
  "bounded-collections",
- "oab-core",
+ "oab-battle",
  "oab-game",
  "parity-scale-codec",
  "serde",
@@ -8120,7 +8120,7 @@ dependencies = [
 name = "pallet-auto-battle"
 version = "0.1.0"
 dependencies = [
- "oab-core",
+ "oab-battle",
  "oab-game",
  "parity-scale-codec",
  "polkadot-sdk 2503.2.0",

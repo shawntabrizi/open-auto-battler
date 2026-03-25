@@ -171,7 +171,7 @@ fn handle_shop(
     let req: ShopRequest =
         serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
 
-    let action = oab_core::types::CommitTurnAction {
+    let action = oab_battle::types::CommitTurnAction {
         actions: req.actions,
     };
 
@@ -217,7 +217,7 @@ fn handle_submit(
     let req: StepRequest =
         serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
 
-    let action = oab_core::types::CommitTurnAction {
+    let action = oab_battle::types::CommitTurnAction {
         actions: req.actions,
     };
 
@@ -384,7 +384,7 @@ fn handle_constructed_shop(
     let req: ConstructedShopRequest =
         serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
 
-    let action = oab_core::types::CommitTurnAction {
+    let action = oab_battle::types::CommitTurnAction {
         actions: req.actions,
     };
 

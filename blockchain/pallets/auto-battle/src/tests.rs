@@ -1,7 +1,7 @@
 use crate::{mock::*, ActiveGame, ActiveTournamentGame, Error};
 use frame::arithmetic::Perbill;
 use frame::testing_prelude::*;
-use oab_core::{CommitTurnAction, GamePhase};
+use oab_battle::{CommitTurnAction, GamePhase};
 
 fn bounded_set_entries(
     entries: Vec<crate::CardSetEntryInput>,
@@ -15,8 +15,8 @@ fn bounded_set_name(name: &[u8]) -> BoundedVec<u8, <Test as crate::Config>::MaxS
 
 fn sample_card_data(attack: i32, health: i32) -> crate::UserCardData<Test> {
     crate::UserCardData::<Test> {
-        stats: oab_core::types::UnitStats { attack, health },
-        economy: oab_core::types::EconomyStats {
+        stats: oab_battle::types::UnitStats { attack, health },
+        economy: oab_battle::types::EconomyStats {
             play_cost: 1,
             burn_value: 1,
         },
@@ -26,14 +26,14 @@ fn sample_card_data(attack: i32, health: i32) -> crate::UserCardData<Test> {
 }
 
 fn bounded_ghost_board(
-    units: Vec<oab_core::bounded::GhostBoardUnit>,
-) -> BoundedVec<oab_core::bounded::GhostBoardUnit, <Test as crate::Config>::MaxBoardSize> {
+    units: Vec<oab_battle::bounded::GhostBoardUnit>,
+) -> BoundedVec<oab_battle::bounded::GhostBoardUnit, <Test as crate::Config>::MaxBoardSize> {
     BoundedVec::try_from(units).unwrap()
 }
 
-fn ghost_unit(card_id: u32) -> oab_core::bounded::GhostBoardUnit {
-    oab_core::bounded::GhostBoardUnit {
-        card_id: oab_core::types::CardId(card_id),
+fn ghost_unit(card_id: u32) -> oab_battle::bounded::GhostBoardUnit {
+    oab_battle::bounded::GhostBoardUnit {
+        card_id: oab_battle::types::CardId(card_id),
         perm_attack: 0,
         perm_health: 0,
     }
@@ -235,11 +235,11 @@ fn test_submit_card_and_metadata() {
     new_test_ext().execute_with(|| {
         let account_id = 1;
         let card_data = crate::UserCardData::<Test> {
-            stats: oab_core::types::UnitStats {
+            stats: oab_battle::types::UnitStats {
                 attack: 1,
                 health: 1,
             },
-            economy: oab_core::types::EconomyStats {
+            economy: oab_battle::types::EconomyStats {
                 play_cost: 1,
                 burn_value: 1,
             },
@@ -288,11 +288,11 @@ fn test_submit_card_and_metadata() {
 
         // Submit different card
         let card_data_2 = crate::UserCardData::<Test> {
-            stats: oab_core::types::UnitStats {
+            stats: oab_battle::types::UnitStats {
                 attack: 2,
                 health: 2,
             },
-            economy: oab_core::types::EconomyStats {
+            economy: oab_battle::types::EconomyStats {
                 play_cost: 2,
                 burn_value: 2,
             },
@@ -1380,7 +1380,7 @@ fn test_end_game_grants_achievements() {
         // Place a unit on the board and set wins to 10 so game ends as victory
         ActiveGame::<Test>::mutate(player, |session| {
             let s = session.as_mut().unwrap();
-            s.state.board[0] = Some(oab_core::types::BoardUnit::new(oab_core::types::CardId(0)));
+            s.state.board[0] = Some(oab_battle::types::BoardUnit::new(oab_battle::types::CardId(0)));
             s.state.wins = 10;
             s.state.lives = 100;
         });
@@ -1437,7 +1437,7 @@ fn test_end_game_no_silver_gold_on_loss() {
         // Place a unit and set lives to 1 so next loss ends game
         ActiveGame::<Test>::mutate(player, |session| {
             let s = session.as_mut().unwrap();
-            s.state.board[0] = Some(oab_core::types::BoardUnit::new(oab_core::types::CardId(0)));
+            s.state.board[0] = Some(oab_battle::types::BoardUnit::new(oab_battle::types::CardId(0)));
             s.state.lives = 1;
         });
 
@@ -1484,7 +1484,7 @@ fn test_end_tournament_game_archives_and_records_stats() {
         // Place a unit and set wins to 10 for victory
         ActiveTournamentGame::<Test>::mutate(player, |session| {
             let s = session.as_mut().unwrap();
-            s.state.board[0] = Some(oab_core::types::BoardUnit::new(oab_core::types::CardId(0)));
+            s.state.board[0] = Some(oab_battle::types::BoardUnit::new(oab_battle::types::CardId(0)));
             s.state.wins = 10;
             s.state.lives = 100;
         });

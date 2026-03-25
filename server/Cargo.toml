@@ -15,7 +15,7 @@ default = ["chain"]
 chain = ["subxt", "subxt-signer", "tokio"]
 
 [dependencies]
-oab-core = { workspace = true, features = ["std", "bounded"] }
+oab-battle = { workspace = true, features = ["std", "bounded"] }
 oab-game = { workspace = true, features = ["std"] }
 serde = { workspace = true, features = ["derive", "std"] }
 serde_json = { workspace = true, features = ["std"] }

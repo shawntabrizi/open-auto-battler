@@ -2,16 +2,16 @@
 
 use std::collections::BTreeMap;
 
-use oab_core::battle::{
+use oab_battle::battle::{
     player_permanent_stat_deltas_from_events, player_shop_mana_delta_from_events, resolve_battle,
     BattleResult, CombatEvent, CombatUnit, UnitId,
 };
-use oab_core::commit::{apply_shop_start_triggers, apply_shop_start_triggers_with_result};
-use oab_core::rng::XorShiftRng;
-use oab_core::state::*;
-use oab_core::types::*;
+use oab_battle::commit::{apply_shop_start_triggers, apply_shop_start_triggers_with_result};
+use oab_battle::rng::XorShiftRng;
+use oab_battle::state::*;
+use oab_battle::types::*;
 use oab_game::{constructed, sealed, GameConfig};
-use oab_core::view::GameView;
+use oab_battle::view::GameView;
 
 use crate::types::{BattleReport, GameStateResponse, OpponentUnit, StepResponse};
 
@@ -33,8 +33,8 @@ impl GameSession {
     /// Start a new sealed game with the given seed and card set.
     pub fn new(seed: u64, set_id: u32) -> Result<Self, String> {
         let config = sealed::default_config();
-        let card_pool = oab_core::cards::build_card_pool();
-        let all_sets = oab_core::cards::get_all_sets();
+        let card_pool = oab_battle::cards::build_card_pool();
+        let all_sets = oab_battle::cards::get_all_sets();
         let card_set = if (set_id as usize) < all_sets.len() {
             all_sets.into_iter().nth(set_id as usize).unwrap()
         } else {
@@ -57,8 +57,8 @@ impl GameSession {
     /// Start a new constructed game with a user-provided deck.
     pub fn new_constructed(seed: u64, set_id: u32, deck: Vec<u32>) -> Result<Self, String> {
         let config = constructed::default_config();
-        let card_pool = oab_core::cards::build_card_pool();
-        let all_sets = oab_core::cards::get_all_sets();
+        let card_pool = oab_battle::cards::build_card_pool();
+        let all_sets = oab_battle::cards::get_all_sets();
         let card_set = if (set_id as usize) < all_sets.len() {
             all_sets.into_iter().nth(set_id as usize).unwrap()
         } else {
@@ -135,18 +135,18 @@ impl GameSession {
     }
 
     /// Get all cards in the card pool.
-    pub fn get_cards(&self) -> Vec<oab_core::view::CardView> {
+    pub fn get_cards(&self) -> Vec<oab_battle::view::CardView> {
         self.state
             .card_pool
             .values()
-            .map(oab_core::view::CardView::from)
+            .map(oab_battle::view::CardView::from)
             .collect()
     }
 
     /// Get available card sets.
     pub fn get_sets(&self) -> Vec<crate::types::SetInfo> {
-        let metas = oab_core::cards::get_all_set_metas();
-        let sets = oab_core::cards::get_all_sets();
+        let metas = oab_battle::cards::get_all_set_metas();
+        let sets = oab_battle::cards::get_all_sets();
         metas
             .into_iter()
             .zip(sets.into_iter())
@@ -179,7 +179,7 @@ impl GameSession {
         }
 
         // Verify and apply turn
-        oab_core::commit::verify_and_apply_turn(&mut self.state, action)
+        oab_battle::commit::verify_and_apply_turn(&mut self.state, action)
             .map_err(|e| format!("{:?}", e))?;
 
         // Leftover shop mana doesn't carry
@@ -318,7 +318,7 @@ impl GameSession {
 
     /// Build enemy CombatUnits from opponent unit definitions.
     fn build_opponent(&self, units: &[OpponentUnit]) -> Vec<CombatUnit> {
-        let mut board: Vec<Option<CombatUnit>> = vec![None; oab_core::state::BOARD_SIZE];
+        let mut board: Vec<Option<CombatUnit>> = vec![None; oab_battle::state::BOARD_SIZE];
         for u in units {
             let slot = u.slot as usize;
             if slot >= board.len() {
@@ -413,7 +413,7 @@ mod tests {
     fn get_sets_returns_all_sets() {
         let session = new_session();
         let sets = session.get_sets();
-        let expected_count = oab_core::cards::get_all_set_metas().len();
+        let expected_count = oab_battle::cards::get_all_set_metas().len();
         assert_eq!(sets.len(), expected_count);
     }
 
@@ -445,7 +445,7 @@ mod tests {
     #[test]
     fn get_sets_rarity_matches_core() {
         let session = new_session();
-        let core_sets = oab_core::cards::get_all_sets();
+        let core_sets = oab_battle::cards::get_all_sets();
         let api_sets = session.get_sets();
 
         for (core_set, api_set) in core_sets.iter().zip(api_sets.iter()) {
@@ -496,7 +496,7 @@ mod tests {
     #[test]
     fn reset_with_different_set() {
         let mut session = new_session();
-        let all_sets = oab_core::cards::get_all_set_metas();
+        let all_sets = oab_battle::cards::get_all_set_metas();
         if all_sets.len() > 1 {
             let state = session.reset(99, Some(1)).expect("reset with set 1 should succeed");
             assert_eq!(state.round, 1);

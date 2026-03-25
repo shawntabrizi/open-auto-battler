@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
     "oab",
-    "core",
+    "battle",
     "game",
     "client",
     "server",
@@ -18,7 +18,7 @@ repository = "https://github.com/shawntabrizi/auto-battle.git"
 edition = "2021"
 
 [workspace.dependencies]
-oab-core = { version = "0.1.0", path = "./core", default-features = false }
+oab-battle = { version = "0.1.0", path = "./battle", default-features = false }
 oab-game = { version = "0.1.0", path = "./game", default-features = false }
 auto-battle-runtime = { path = "./blockchain/runtime", default-features = false }
 pallet-auto-battle = { version = "0.1.0", path = "./blockchain/pallets/auto-battle", default-features = false }
