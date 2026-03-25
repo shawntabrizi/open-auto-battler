@@ -205,11 +205,27 @@ function syncGameStoreWithBlockchainContent(cards: any[], sets: any[]) {
     },
   });
 
-  const { engine } = useGameStore.getState();
+  const { engine, currentSetId } = useGameStore.getState();
   if (!engine) return;
 
   injectCardsIntoEngine(engine, cards);
   injectSetsIntoEngine(engine, sets);
+
+  // Rebuild rarity map so blockchain-set cards display rarity correctly
+  if (currentSetId != null) {
+    try {
+      const setCards: { id: number; rarity: number }[] = engine.get_set_cards(currentSetId);
+      const rarityMap = new Map<number, number>();
+      let rarityTotalWeight = 0;
+      for (const card of setCards) {
+        rarityMap.set(card.id, card.rarity);
+        rarityTotalWeight += card.rarity;
+      }
+      useGameStore.setState({ rarityMap, rarityTotalWeight });
+    } catch {
+      // set not loaded yet — rarity will be built when the game starts
+    }
+  }
 }
 
 function deriveLocalBattleSeed(
