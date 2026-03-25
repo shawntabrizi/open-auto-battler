@@ -17,7 +17,6 @@ pub mod opponents;
 pub mod rng;
 pub mod state;
 pub mod types;
-pub mod units;
 pub mod view;
 
 #[cfg(test)]

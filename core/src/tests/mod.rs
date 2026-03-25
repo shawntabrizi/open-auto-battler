@@ -3,7 +3,6 @@ mod battle_result;
 mod commit_paths;
 mod limits;
 mod log;
-mod mana;
 mod math;
 mod opponents;
 mod priority;
@@ -11,7 +10,6 @@ mod state;
 mod state_ops;
 mod triggers;
 mod turns;
-mod units;
 mod view;
 
 use crate::battle::{resolve_battle, CombatEvent, CombatUnit, UnitId};
