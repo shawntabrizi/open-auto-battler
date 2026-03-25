@@ -1,30 +1,45 @@
 //! HTTP server exposing the game as a REST API.
 //!
 //! Endpoints:
-//!   POST /reset  — Start a new game. Body: { "seed": N, "set_id": N } (optional)
-//!   POST /step   — Submit turn actions. Body: { "actions": [...] }
-//!   GET  /state  — Get current game state.
+//!   POST /reset   — Start a new game. Body: { "seed": N, "set_id": N } (optional)
+//!   POST /submit  — Submit turn actions. Body: { "actions": [...], "opponent": [...] }
+//!   GET  /state   — Get current game state.
+//!   GET  /cards   — List all cards in the current set.
+//!   GET  /sets    — List available card sets.
 
 use std::sync::Mutex;
 
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
-use crate::game::GameBackend;
+use crate::local::GameSession;
 use crate::types::*;
 
+/// Server backend — either local or on-chain.
+pub enum Backend {
+    Local(GameSession),
+    #[cfg(feature = "chain")]
+    Chain(crate::chain::ChainGameSession),
+}
+
 /// Run the HTTP game server with the given backend.
-pub fn serve(port: u16, backend: Box<dyn GameBackend>) -> std::io::Result<()> {
+pub fn serve(port: u16, backend: Backend) -> std::io::Result<()> {
     let addr = format!("0.0.0.0:{}", port);
     let server = Server::http(&addr)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::AddrInUse, e.to_string()))?;
 
-    eprintln!("OAB Server listening on http://localhost:{}", port);
+    let mode = match &backend {
+        Backend::Local(_) => "local",
+        #[cfg(feature = "chain")]
+        Backend::Chain(_) => "on-chain",
+    };
+
+    eprintln!("OAB Server listening on http://localhost:{} ({})", port, mode);
     eprintln!("Endpoints:");
-    eprintln!("  POST /reset  — Start new game {{ \"seed\": N, \"set_id\": N }}");
-    eprintln!("  POST /step   — Submit actions {{ \"actions\": [...] }}");
-    eprintln!("  GET  /state  — Get current game state");
-    eprintln!("  GET  /cards  — List all cards in the current set");
-    eprintln!("  GET  /sets   — List available card sets");
+    eprintln!("  POST /reset   — Start new game {{ \"seed\": N, \"set_id\": N }}");
+    eprintln!("  POST /submit  — Submit actions {{ \"actions\": [...], \"opponent\": [...] }}");
+    eprintln!("  GET  /state   — Get current game state");
+    eprintln!("  GET  /cards   — List all cards in the current set");
+    eprintln!("  GET  /sets    — List available card sets");
 
     let backend = Mutex::new(backend);
 
@@ -47,7 +62,7 @@ pub fn serve(port: u16, backend: Box<dyn GameBackend>) -> std::io::Result<()> {
 
 fn handle_request(
     request: &mut Request,
-    backend: &Mutex<Box<dyn GameBackend>>,
+    backend: &Mutex<Backend>,
 ) -> Result<String, (u16, String)> {
     let path = request.url().split('?').next().unwrap_or("");
     let method = request.method().clone();
@@ -64,7 +79,7 @@ fn handle_request(
 
 fn handle_reset(
     request: &mut Request,
-    backend: &Mutex<Box<dyn GameBackend>>,
+    backend: &Mutex<Backend>,
 ) -> Result<String, (u16, String)> {
     let body = read_body(request)?;
 
@@ -72,7 +87,6 @@ fn handle_reset(
         ResetRequest {
             seed: None,
             set_id: None,
-            opponents: None,
         }
     } else {
         serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?
@@ -80,48 +94,64 @@ fn handle_reset(
 
     let seed = req.seed.unwrap_or_else(generate_seed);
 
-    // Convert string-keyed opponent map to i32-keyed
-    let opponents = req.opponents.map(|map| {
-        map.into_iter()
-            .filter_map(|(k, v)| k.parse::<i32>().ok().map(|round| (round, v)))
-            .collect()
-    });
-
     let mut b = backend.lock().unwrap();
-    let state = b.reset(seed, req.set_id, opponents).map_err(|e| (400, e))?;
+    let state = match &mut *b {
+        Backend::Local(session) => session.reset(seed, req.set_id).map_err(|e| (400, e))?,
+        #[cfg(feature = "chain")]
+        Backend::Chain(session) => session.reset(seed, req.set_id).map_err(|e| (400, e))?,
+    };
     serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
 }
 
 fn handle_step(
     request: &mut Request,
-    backend: &Mutex<Box<dyn GameBackend>>,
+    backend: &Mutex<Backend>,
 ) -> Result<String, (u16, String)> {
     let body = read_body(request)?;
     let req: StepRequest =
         serde_json::from_str(&body).map_err(|e| (400, format!("Invalid JSON: {}", e)))?;
 
-    let action = req.into();
+    let action = oab_core::types::CommitTurnAction {
+        actions: req.actions,
+    };
+
     let mut b = backend.lock().unwrap();
-    let result = b.step(&action).map_err(|e| (400, e))?;
+    let result = match &mut *b {
+        Backend::Local(session) => session.step(&action, &req.opponent).map_err(|e| (400, e))?,
+        #[cfg(feature = "chain")]
+        Backend::Chain(session) => session.step(&action).map_err(|e| (400, e))?,
+    };
 
     serde_json::to_string(&result).map_err(|e| (500, e.to_string()))
 }
 
-fn handle_get_state(backend: &Mutex<Box<dyn GameBackend>>) -> Result<String, (u16, String)> {
+fn handle_get_state(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
     let b = backend.lock().unwrap();
-    let state = b.get_state();
+    let state = match &*b {
+        Backend::Local(session) => session.get_state(),
+        #[cfg(feature = "chain")]
+        Backend::Chain(session) => session.get_state(),
+    };
     serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
 }
 
-fn handle_get_cards(backend: &Mutex<Box<dyn GameBackend>>) -> Result<String, (u16, String)> {
+fn handle_get_cards(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
     let b = backend.lock().unwrap();
-    let cards = b.get_cards();
+    let cards = match &*b {
+        Backend::Local(session) => session.get_cards(),
+        #[cfg(feature = "chain")]
+        Backend::Chain(session) => session.get_cards(),
+    };
     serde_json::to_string(&cards).map_err(|e| (500, e.to_string()))
 }
 
-fn handle_get_sets(backend: &Mutex<Box<dyn GameBackend>>) -> Result<String, (u16, String)> {
+fn handle_get_sets(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
     let b = backend.lock().unwrap();
-    let sets = b.get_sets();
+    let sets = match &*b {
+        Backend::Local(session) => session.get_sets(),
+        #[cfg(feature = "chain")]
+        Backend::Chain(session) => session.get_sets(),
+    };
     serde_json::to_string(&sets).map_err(|e| (500, e.to_string()))
 }
 

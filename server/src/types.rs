@@ -132,17 +132,16 @@ pub struct ResetRequest {
     /// Card set ID (default: 0)
     #[serde(default)]
     pub set_id: Option<u32>,
-    /// Custom opponents per round. Key is round number (as string in JSON).
-    /// If absent or empty, uses built-in opponents.
-    #[serde(default)]
-    pub opponents: Option<std::collections::BTreeMap<String, Vec<OpponentUnit>>>,
 }
 
-/// POST /step request body.
+/// POST /submit request body.
 #[derive(Debug, Deserialize)]
 pub struct StepRequest {
     /// Turn actions to execute
     pub actions: Vec<oab_core::types::TurnAction>,
+    /// Opponent board for this round (local mode only).
+    #[serde(default)]
+    pub opponent: Vec<OpponentUnit>,
 }
 
 impl From<StepRequest> for CommitTurnAction {

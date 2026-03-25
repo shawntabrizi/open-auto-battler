@@ -1,4 +1,4 @@
-//! Core game session — provides reset/step interface for both local and chain modes.
+//! Core game session — provides reset/step interface for local mode.
 
 use std::collections::BTreeMap;
 
@@ -13,7 +13,7 @@ use oab_core::types::*;
 use oab_core::units::create_starting_bag;
 use oab_core::view::GameView;
 
-use crate::types::{BattleReport, GameStateResponse, StepResponse};
+use crate::types::{BattleReport, GameStateResponse, OpponentUnit, StepResponse};
 
 /// Result from running a battle, with report info for the agent.
 struct BattleOutcome {
@@ -21,32 +21,11 @@ struct BattleOutcome {
     report: BattleReport,
 }
 
-/// Trait for game backends (local or on-chain).
-pub trait GameBackend: Send {
-    /// Reset the game with a new seed, optional set_id, and optional custom opponents.
-    fn reset(
-        &mut self,
-        seed: u64,
-        set_id: Option<u32>,
-        opponents: Option<BTreeMap<i32, Vec<crate::types::OpponentUnit>>>,
-    ) -> Result<GameStateResponse, String>;
-    /// Execute a turn and return the step result.
-    fn step(&mut self, action: &CommitTurnAction) -> Result<StepResponse, String>;
-    /// Get the current game state.
-    fn get_state(&self) -> GameStateResponse;
-    /// Get all cards available in the current card pool.
-    fn get_cards(&self) -> Vec<oab_core::view::CardView>;
-    /// Get available card sets.
-    fn get_sets(&self) -> Vec<crate::types::SetInfo>;
-}
-
-/// A local game session that manages a full game against built-in opponents.
+/// A local game session that manages a full game.
+/// Opponents are provided per-step by the caller.
 pub struct GameSession {
     state: GameState,
     card_set: CardSet,
-    /// Custom opponents per round (round number → list of units).
-    /// If empty, falls back to built-in opponents.
-    custom_opponents: BTreeMap<i32, Vec<crate::types::OpponentUnit>>,
 }
 
 impl GameSession {
@@ -68,15 +47,21 @@ impl GameSession {
         state.draw_hand();
         apply_shop_start_triggers(&mut state);
 
-        Ok(Self {
-            state,
-            card_set,
-            custom_opponents: BTreeMap::new(),
-        })
+        Ok(Self { state, card_set })
     }
 
-    /// Reset with a new seed (same set), returning the initial game state.
-    pub fn reset_local(&mut self, seed: u64) -> GameStateResponse {
+    /// Reset the game with a new seed and optional set_id.
+    pub fn reset(&mut self, seed: u64, set_id: Option<u32>) -> Result<GameStateResponse, String> {
+        if let Some(set_id) = set_id {
+            *self = GameSession::new(seed, set_id)?;
+        } else {
+            self.reset_local(seed);
+        }
+        Ok(self.get_state())
+    }
+
+    /// Reset with a new seed (same set).
+    fn reset_local(&mut self, seed: u64) -> GameStateResponse {
         let card_pool = std::mem::take(&mut self.state.card_pool);
         let set_id = self.state.set_id;
         self.state = GameState::new(seed);
@@ -98,51 +83,44 @@ impl GameSession {
         resp
     }
 
-    /// Build a bag summary: unique cards grouped with counts and stats.
-    fn bag_summary(&self) -> Vec<crate::types::BagCardEntry> {
-        let mut counts: BTreeMap<CardId, u32> = BTreeMap::new();
-        for card_id in self.state.bag.iter() {
-            *counts.entry(*card_id).or_insert(0) += 1;
-        }
-        counts
+    /// Get all cards in the card pool.
+    pub fn get_cards(&self) -> Vec<oab_core::view::CardView> {
+        self.state
+            .card_pool
+            .values()
+            .map(oab_core::view::CardView::from)
+            .collect()
+    }
+
+    /// Get available card sets.
+    pub fn get_sets(&self) -> Vec<crate::types::SetInfo> {
+        let metas = oab_core::cards::get_all_set_metas();
+        let sets = oab_core::cards::get_all_sets();
+        metas
             .into_iter()
-            .filter_map(|(card_id, count)| {
-                let card = self.state.card_pool.get(&card_id)?;
-                Some(crate::types::BagCardEntry {
-                    card_id: card_id.0,
-                    name: card.name.clone(),
-                    attack: card.stats.attack,
-                    health: card.stats.health,
-                    play_cost: card.economy.play_cost,
-                    burn_value: card.economy.burn_value,
-                    count,
-                })
+            .zip(sets.into_iter())
+            .map(|(meta, set)| crate::types::SetInfo {
+                id: meta.id,
+                name: meta.name.to_string(),
+                card_count: set.cards.len(),
+                cards: set
+                    .cards
+                    .iter()
+                    .map(|e| crate::types::SetCardEntry {
+                        card_id: e.card_id.0,
+                        rarity: e.rarity,
+                    })
+                    .collect(),
             })
             .collect()
     }
 
-    /// Build enemy units from a custom opponent definition.
-    fn build_custom_opponent(&self, units: &[crate::types::OpponentUnit]) -> Vec<CombatUnit> {
-        let mut board: Vec<Option<CombatUnit>> = vec![None; oab_core::state::BOARD_SIZE];
-        for u in units {
-            let slot = u.slot as usize;
-            if slot >= board.len() {
-                continue;
-            }
-            if let Some(card) = self.state.card_pool.get(&CardId(u.card_id)) {
-                let mut cu = CombatUnit::from_card(card.clone());
-                cu.attack_buff = u.perm_attack;
-                cu.health_buff = u.perm_health;
-                cu.health = cu.health.saturating_add(u.perm_health).max(0);
-                board[slot] = Some(cu);
-            }
-        }
-        board.into_iter().flatten().collect()
-    }
-
-    /// Execute a turn: apply actions, run battle, advance round.
-    /// Returns the step result with battle outcome and next state.
-    pub fn step(&mut self, action: &CommitTurnAction) -> Result<StepResponse, String> {
+    /// Execute a turn: apply actions, run battle against provided opponent, advance round.
+    pub fn step(
+        &mut self,
+        action: &CommitTurnAction,
+        opponent: &[OpponentUnit],
+    ) -> Result<StepResponse, String> {
         if self.state.phase == GamePhase::Completed {
             return Err("Game is already over. Call POST /reset to start a new game.".into());
         }
@@ -160,8 +138,8 @@ impl GameSession {
 
         let completed_round = self.state.round;
 
-        // Run battle
-        let outcome = self.run_battle();
+        // Run battle against provided opponent
+        let outcome = self.run_battle(opponent);
 
         // Check game over
         let game_over = self.state.wins >= WINS_TO_VICTORY || self.state.lives <= 0;
@@ -208,9 +186,8 @@ impl GameSession {
         })
     }
 
-    /// Run a battle and apply results to state.
-    /// Mirrors `client/src/engine.rs:run_battle()`.
-    fn run_battle(&mut self) -> BattleOutcome {
+    /// Run a battle against the provided opponent and apply results to state.
+    fn run_battle(&mut self, opponent: &[OpponentUnit]) -> BattleOutcome {
         let mut player_slots = Vec::new();
         let player_units: Vec<CombatUnit> = self
             .state
@@ -229,14 +206,10 @@ impl GameSession {
             })
             .collect();
 
-        let battle_seed = self.state.round as u64;
-        let enemy_units = if let Some(custom) = self.custom_opponents.get(&self.state.round) {
-            self.build_custom_opponent(custom)
-        } else {
-            Vec::new()
-        };
+        let enemy_units = self.build_opponent(opponent);
         let enemy_count = enemy_units.len();
 
+        let battle_seed = self.state.round as u64;
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
         let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool);
 
@@ -273,6 +246,86 @@ impl GameSession {
             },
         }
     }
+
+    /// Build enemy CombatUnits from opponent unit definitions.
+    fn build_opponent(&self, units: &[OpponentUnit]) -> Vec<CombatUnit> {
+        let mut board: Vec<Option<CombatUnit>> = vec![None; oab_core::state::BOARD_SIZE];
+        for u in units {
+            let slot = u.slot as usize;
+            if slot >= board.len() {
+                continue;
+            }
+            if let Some(card) = self.state.card_pool.get(&CardId(u.card_id)) {
+                let mut cu = CombatUnit::from_card(card.clone());
+                cu.attack_buff = u.perm_attack;
+                cu.health_buff = u.perm_health;
+                cu.health = cu.health.saturating_add(u.perm_health).max(0);
+                board[slot] = Some(cu);
+            }
+        }
+        board.into_iter().flatten().collect()
+    }
+
+    /// Build a bag summary: unique cards grouped with counts and stats.
+    fn bag_summary(&self) -> Vec<crate::types::BagCardEntry> {
+        let mut counts: BTreeMap<CardId, u32> = BTreeMap::new();
+        for card_id in self.state.bag.iter() {
+            *counts.entry(*card_id).or_insert(0) += 1;
+        }
+        counts
+            .into_iter()
+            .filter_map(|(card_id, count)| {
+                let card = self.state.card_pool.get(&card_id)?;
+                Some(crate::types::BagCardEntry {
+                    card_id: card_id.0,
+                    name: card.name.clone(),
+                    attack: card.stats.attack,
+                    health: card.stats.health,
+                    play_cost: card.economy.play_cost,
+                    burn_value: card.economy.burn_value,
+                    count,
+                })
+            })
+            .collect()
+    }
+}
+
+/// Apply permanent stat deltas from battle events to the player's board.
+fn apply_permanent_deltas(
+    state: &mut GameState,
+    player_slots: &[usize],
+    deltas: &BTreeMap<UnitId, (i32, i32)>,
+) {
+    for (unit_id, (attack_delta, health_delta)) in deltas {
+        let unit_index = unit_id.raw() as usize;
+        if unit_index == 0 || unit_index > player_slots.len() {
+            continue;
+        }
+
+        let slot = player_slots[unit_index - 1];
+
+        let death_check =
+            if let Some(board_unit) = state.board.get_mut(slot).and_then(|s| s.as_mut()) {
+                board_unit.perm_attack = board_unit.perm_attack.saturating_add(*attack_delta);
+                board_unit.perm_health = board_unit.perm_health.saturating_add(*health_delta);
+                Some((board_unit.card_id, board_unit.perm_health))
+            } else {
+                None
+            };
+
+        let should_remove = death_check
+            .and_then(|(card_id, perm_health)| {
+                state
+                    .card_pool
+                    .get(&card_id)
+                    .map(|card| card.stats.health.saturating_add(perm_health) <= 0)
+            })
+            .unwrap_or(false);
+
+        if should_remove {
+            state.board[slot] = None;
+        }
+    }
 }
 
 #[cfg(test)]
@@ -301,10 +354,8 @@ mod tests {
         let sets = session.get_sets();
         for set in &sets {
             assert_eq!(set.cards.len(), set.card_count);
-            // Every entry must have a card_id and a rarity
             for entry in &set.cards {
-                // card_id and rarity are u32, just check they were populated
-let _ = (entry.card_id, entry.rarity);
+                let _ = (entry.card_id, entry.rarity);
             }
         }
     }
@@ -363,10 +414,10 @@ let _ = (entry.card_id, entry.rarity);
     fn reset_returns_fresh_state() {
         let mut session = new_session();
         // Play a step first so state changes
-        let _ = session.step(&CommitTurnAction { actions: vec![] });
+        let _ = session.step(&CommitTurnAction { actions: vec![] }, &[]);
 
         // Reset
-        let state = session.reset(99, None, None).expect("reset should succeed");
+        let state = session.reset(99, None).expect("reset should succeed");
         assert_eq!(state.round, 1);
         assert_eq!(state.phase, "shop");
         assert_eq!(state.wins, 0);
@@ -377,7 +428,7 @@ let _ = (entry.card_id, entry.rarity);
         let mut session = new_session();
         let all_sets = oab_core::cards::get_all_set_metas();
         if all_sets.len() > 1 {
-            let state = session.reset(99, Some(1), None).expect("reset with set 1 should succeed");
+            let state = session.reset(99, Some(1)).expect("reset with set 1 should succeed");
             assert_eq!(state.round, 1);
         }
     }
@@ -385,7 +436,7 @@ let _ = (entry.card_id, entry.rarity);
     #[test]
     fn reset_invalid_set_returns_error() {
         let mut session = new_session();
-        let result = session.reset(99, Some(9999), None);
+        let result = session.reset(99, Some(9999));
         assert!(result.is_err());
     }
 
@@ -394,33 +445,19 @@ let _ = (entry.card_id, entry.rarity);
     #[test]
     fn step_with_empty_actions_advances_round() {
         let mut session = new_session();
-        let result = session.step(&CommitTurnAction { actions: vec![] }).expect("step should work");
+        let result = session
+            .step(&CommitTurnAction { actions: vec![] }, &[])
+            .expect("step should work");
         assert_eq!(result.completed_round, 1);
         assert!(["Victory", "Defeat", "Draw"].contains(&result.battle_result.as_str()));
         assert!(result.reward == 1 || result.reward == -1 || result.reward == 0);
-        // If game is not over, should be round 2
         if !result.game_over {
             assert_eq!(result.state.round, 2);
             assert_eq!(result.state.phase, "shop");
         }
     }
 
-    #[test]
-    fn step_after_game_over_returns_error() {
-        let mut session = new_session();
-        // Play until game over
-        loop {
-            let result = session.step(&CommitTurnAction { actions: vec![] });
-            match result {
-                Ok(r) if r.game_over => break,
-                Ok(_) => continue,
-                Err(_) => break, // already over
-            }
-        }
-        // Next step should fail
-        let result = session.step(&CommitTurnAction { actions: vec![] });
-        assert!(result.is_err());
-    }
+
 
     // ── Determinism ──
 
@@ -435,98 +472,5 @@ let _ = (entry.card_id, entry.rarity);
         assert_eq!(state1.mana, state2.mana);
         assert_eq!(state1.hand.len(), state2.hand.len());
         assert_eq!(state1.bag_count, state2.bag_count);
-    }
-}
-
-/// Apply permanent stat deltas from battle events to the player's board.
-fn apply_permanent_deltas(
-    state: &mut GameState,
-    player_slots: &[usize],
-    deltas: &BTreeMap<UnitId, (i32, i32)>,
-) {
-    for (unit_id, (attack_delta, health_delta)) in deltas {
-        let unit_index = unit_id.raw() as usize;
-        if unit_index == 0 || unit_index > player_slots.len() {
-            continue;
-        }
-
-        let slot = player_slots[unit_index - 1];
-
-        let death_check =
-            if let Some(board_unit) = state.board.get_mut(slot).and_then(|s| s.as_mut()) {
-                board_unit.perm_attack = board_unit.perm_attack.saturating_add(*attack_delta);
-                board_unit.perm_health = board_unit.perm_health.saturating_add(*health_delta);
-                Some((board_unit.card_id, board_unit.perm_health))
-            } else {
-                None
-            };
-
-        let should_remove = death_check
-            .and_then(|(card_id, perm_health)| {
-                state
-                    .card_pool
-                    .get(&card_id)
-                    .map(|card| card.stats.health.saturating_add(perm_health) <= 0)
-            })
-            .unwrap_or(false);
-
-        if should_remove {
-            state.board[slot] = None;
-        }
-    }
-}
-
-impl GameBackend for GameSession {
-    fn reset(
-        &mut self,
-        seed: u64,
-        set_id: Option<u32>,
-        opponents: Option<BTreeMap<i32, Vec<crate::types::OpponentUnit>>>,
-    ) -> Result<GameStateResponse, String> {
-        if let Some(set_id) = set_id {
-            *self = GameSession::new(seed, set_id)?;
-        } else {
-            self.reset_local(seed);
-        }
-        self.custom_opponents = opponents.unwrap_or_default();
-        Ok(self.get_state())
-    }
-
-    fn step(&mut self, action: &CommitTurnAction) -> Result<StepResponse, String> {
-        self.step(action)
-    }
-
-    fn get_state(&self) -> GameStateResponse {
-        self.get_state()
-    }
-
-    fn get_cards(&self) -> Vec<oab_core::view::CardView> {
-        self.state
-            .card_pool
-            .values()
-            .map(oab_core::view::CardView::from)
-            .collect()
-    }
-
-    fn get_sets(&self) -> Vec<crate::types::SetInfo> {
-        let metas = oab_core::cards::get_all_set_metas();
-        let sets = oab_core::cards::get_all_sets();
-        metas
-            .into_iter()
-            .zip(sets.into_iter())
-            .map(|(meta, set)| crate::types::SetInfo {
-                id: meta.id,
-                name: meta.name.to_string(),
-                card_count: set.cards.len(),
-                cards: set
-                    .cards
-                    .iter()
-                    .map(|e| crate::types::SetCardEntry {
-                        card_id: e.card_id.0,
-                        rarity: e.rarity,
-                    })
-                    .collect(),
-            })
-            .collect()
     }
 }

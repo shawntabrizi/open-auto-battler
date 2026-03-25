@@ -22,7 +22,6 @@ mod inner {
     use subxt_signer::sr25519::Keypair;
     use tokio::runtime::Runtime;
 
-    use crate::game::GameBackend;
     use crate::types::{BattleReport, GameStateResponse, StepResponse};
 
     type MaxBagSize = ConstU32<50>;
@@ -122,12 +121,11 @@ mod inner {
         }
     }
 
-    impl GameBackend for ChainGameSession {
-        fn reset(
+    impl ChainGameSession {
+        pub fn reset(
             &mut self,
             _seed: u64,
             set_id: Option<u32>,
-            _opponents: Option<std::collections::BTreeMap<i32, Vec<crate::types::OpponentUnit>>>,
         ) -> Result<GameStateResponse, String> {
             let set_id = set_id.unwrap_or(self.set_id);
 
@@ -190,7 +188,7 @@ mod inner {
             }
         }
 
-        fn step(&mut self, action: &CommitTurnAction) -> Result<StepResponse, String> {
+        pub fn step(&mut self, action: &CommitTurnAction) -> Result<StepResponse, String> {
             let state = self
                 .state
                 .as_ref()
@@ -345,7 +343,7 @@ mod inner {
             })
         }
 
-        fn get_state(&self) -> GameStateResponse {
+        pub fn get_state(&self) -> GameStateResponse {
             match &self.state {
                 Some(state) => {
                     let hand_used = vec![false; state.hand.len()];
@@ -368,14 +366,14 @@ mod inner {
             }
         }
 
-        fn get_cards(&self) -> Vec<oab_core::view::CardView> {
+        pub fn get_cards(&self) -> Vec<oab_core::view::CardView> {
             self.card_pool
                 .values()
                 .map(oab_core::view::CardView::from)
                 .collect()
         }
 
-        fn get_sets(&self) -> Vec<crate::types::SetInfo> {
+        pub fn get_sets(&self) -> Vec<crate::types::SetInfo> {
             self.sets
                 .iter()
                 .map(|(id, entries)| crate::types::SetInfo {

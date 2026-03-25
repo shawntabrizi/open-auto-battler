@@ -1,14 +1,15 @@
 //! OAB Server — HTTP game server for AI agents to play Open Auto Battler.
 
 mod chain;
-mod game;
+mod local;
 mod http;
 mod types;
 
 use std::env;
 use std::process;
 
-use game::{GameBackend, GameSession};
+use local::GameSession;
+use http::Backend;
 
 struct Args {
     port: u16,
@@ -90,13 +91,15 @@ fn print_usage() {
 HTTP game server for AI agents to play Open Auto Battler.
 
 Modes:
-  Local (default)  Uses built-in cards and opponents.
+  Local (default)  Caller provides opponent boards each round.
   On-chain         Provide --url and --key to play on a live blockchain.
 
 Endpoints:
-  POST /reset  Start new game {{ \"seed\": N, \"set_id\": N }}
-  POST /step   Submit actions {{ \"actions\": [...] }}
-  GET  /state  Get current game state
+  POST /reset   Start new game {{ \"seed\": N, \"set_id\": N }}
+  POST /submit  Submit actions {{ \"actions\": [...], \"opponent\": [...] }}
+  GET  /state   Get current game state
+  GET  /cards   List all cards
+  GET  /sets    List available card sets
 
 Options:
   --port <N>        Server port (default: 3000)
@@ -138,7 +141,7 @@ fn main() {
         }
     }
 
-    let backend: Box<dyn GameBackend> = if let Some(url) = &args.url {
+    let backend = if let Some(url) = &args.url {
         // On-chain mode
         #[cfg(feature = "chain")]
         {
@@ -152,7 +155,7 @@ fn main() {
 
             eprintln!("Starting on-chain mode...");
             match chain::ChainGameSession::new(url, &key, args.set_id) {
-                Ok(session) => Box::new(session),
+                Ok(session) => Backend::Chain(session),
                 Err(e) => {
                     eprintln!("Error: {}", e);
                     process::exit(1);
@@ -172,7 +175,7 @@ fn main() {
         let seed = http::generate_seed();
         eprintln!("Starting local mode (set={})...", args.set_id);
         match GameSession::new(seed, args.set_id) {
-            Ok(session) => Box::new(session),
+            Ok(session) => Backend::Local(session),
             Err(e) => {
                 eprintln!("Error: {}", e);
                 process::exit(1);
