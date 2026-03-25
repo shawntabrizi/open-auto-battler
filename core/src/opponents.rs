@@ -6,21 +6,9 @@ use alloc::collections::BTreeMap;
 use alloc::vec;
 use alloc::vec::Vec;
 
-use crate::battle::CombatUnit;
-use crate::error::{GameError, GameResult};
-use crate::rng::{BattleRng, XorShiftRng};
 use crate::types::{CardId, UnitCard};
 
-/// Create a combat unit from the card pool by card ID
-fn create_unit_from_pool(
-    card_pool: &BTreeMap<CardId, UnitCard>,
-    card_id: CardId,
-) -> GameResult<CombatUnit> {
-    let card = card_pool.get(&card_id).ok_or(GameError::TemplateNotFound)?;
-    Ok(CombatUnit::from_card(card.clone()))
-}
-
-// Card ID constants for readability
+// Card ID constants for genesis ghost generation
 const RAT_SWARM: u32 = 0;
 const GOBLIN_SCOUT: u32 = 1;
 const GOBLIN_GRUNT: u32 = 2;
@@ -106,29 +94,6 @@ fn get_sniper_strategy(round: i32) -> Vec<u32> {
             HEADHUNTER,
         ],
     }
-}
-
-/// Get the opponent board for a given round (1-10)
-pub fn get_opponent_for_round(
-    round: i32,
-    seed: u64,
-    card_pool: &BTreeMap<CardId, UnitCard>,
-) -> GameResult<Vec<CombatUnit>> {
-    let mut rng = XorShiftRng::seed_from_u64(seed);
-    let strategy_roll = rng.gen_range(3); // 0, 1, or 2
-
-    let card_ids = match strategy_roll {
-        0 => get_swarm_strategy(round),
-        1 => get_tank_strategy(round),
-        _ => get_sniper_strategy(round),
-    };
-
-    let mut units = Vec::new();
-    for id in card_ids {
-        units.push(create_unit_from_pool(card_pool, CardId(id))?);
-    }
-
-    Ok(units)
 }
 
 /// A simple ghost board unit for genesis generation (non-bounded version).

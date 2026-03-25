@@ -36,8 +36,7 @@ pub use commit::{
 pub use error::{GameError, GameResult};
 pub use limits::{BattleLimits, LimitReason, Team};
 pub use opponents::{
-    generate_genesis_ghosts, get_opponent_for_round, GenesisMatchmakingBracket, GhostBoard,
-    GhostBoardUnitSimple,
+    generate_genesis_ghosts, GenesisMatchmakingBracket, GhostBoard, GhostBoardUnitSimple,
 };
 pub use rng::{BattleRng, XorShiftRng};
 pub use state::*;

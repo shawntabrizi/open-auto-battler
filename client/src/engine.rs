@@ -19,7 +19,6 @@ use oab_core::commit::{
     prepare_board_slot_for_insert, validate_move_board_positions, verify_and_apply_turn,
 };
 use oab_core::log;
-use oab_core::opponents::get_opponent_for_round;
 use oab_core::rng::XorShiftRng;
 use oab_core::state::*;
 use oab_core::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
@@ -1087,9 +1086,7 @@ impl GameEngine {
             .collect();
 
         let battle_seed = self.state.round as u64;
-        let enemy_units =
-            get_opponent_for_round(self.state.round, battle_seed + 999, &self.state.card_pool)
-                .expect("Failed to generate opponent for round");
+        let enemy_units = Vec::new();
 
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
         let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool);
@@ -1125,24 +1122,7 @@ impl GameEngine {
             .collect();
 
         limits.reset_phase_counters(); // Reset for enemy
-        let initial_enemy_units: Vec<UnitView> =
-            get_opponent_for_round(self.state.round, battle_seed + 999, &self.state.card_pool)
-                .unwrap()
-                .into_iter()
-                .map(|cu| UnitView {
-                    instance_id: limits.generate_instance_id(oab_core::limits::Team::Enemy),
-                    card_id: cu.card_id,
-                    name: self
-                        .state
-                        .card_pool
-                        .get(&cu.card_id)
-                        .map(|c| c.name.clone())
-                        .unwrap_or_default(),
-                    attack: cu.attack,
-                    health: cu.health,
-                    battle_abilities: cu.abilities,
-                })
-                .collect();
+        let initial_enemy_units: Vec<UnitView> = Vec::new();
 
         self.last_battle_output = Some(BattleOutput {
             events,

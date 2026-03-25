@@ -1,7 +1,6 @@
 use alloc::collections::BTreeMap;
 
-use crate::error::GameError;
-use crate::opponents::{generate_genesis_ghosts, get_opponent_for_round};
+use crate::opponents::generate_genesis_ghosts;
 use crate::types::{CardId, UnitCard};
 
 fn full_opponent_pool() -> BTreeMap<CardId, UnitCard> {
@@ -14,27 +13,6 @@ fn full_opponent_pool() -> BTreeMap<CardId, UnitCard> {
         );
     }
     pool
-}
-
-#[test]
-fn test_get_opponent_for_round_deterministic() {
-    let pool = full_opponent_pool();
-
-    let a = get_opponent_for_round(4, 42, &pool).expect("pool contains all strategy cards");
-    let b = get_opponent_for_round(4, 42, &pool).expect("pool contains all strategy cards");
-
-    let a_ids: Vec<CardId> = a.iter().map(|u| u.card_id).collect();
-    let b_ids: Vec<CardId> = b.iter().map(|u| u.card_id).collect();
-    assert_eq!(a_ids, b_ids);
-    assert!(!a_ids.is_empty());
-    assert!(a_ids.len() <= 5);
-}
-
-#[test]
-fn test_get_opponent_for_round_missing_template_errors() {
-    let pool = BTreeMap::new();
-    let result = get_opponent_for_round(1, 0, &pool);
-    assert!(matches!(result, Err(GameError::TemplateNotFound)));
 }
 
 #[test]

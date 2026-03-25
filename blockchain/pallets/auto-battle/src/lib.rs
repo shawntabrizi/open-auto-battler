@@ -37,7 +37,7 @@ pub mod pallet {
         MatchmakingBracket,
     };
     use oab_core::types::{EconomyStats, UnitStats};
-    use oab_core::{get_opponent_for_round, BattleResult, CardSet, CombatUnit, GamePhase};
+    use oab_core::{BattleResult, CardSet, CombatUnit, GamePhase};
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -765,17 +765,10 @@ pub mod pallet {
                 b"battle",
             )?;
 
-            // Select ghost from regular pool, fallback to procedural
+            // Select ghost from regular pool, fallback to empty board
             let enemy_units =
                 Self::select_ghost_opponent(&battle.bracket, &battle.card_set, battle.battle_seed)
-                    .unwrap_or_else(|| {
-                        get_opponent_for_round(
-                            battle.core_state.local_state.round,
-                            battle.battle_seed.wrapping_add(999),
-                            &battle.core_state.card_pool,
-                        )
-                        .unwrap_or_default()
-                    });
+                    .unwrap_or_default();
 
             // Store player's board as ghost (after selecting opponent)
             let ghost = Self::create_ghost_board(&battle.core_state);
@@ -1110,21 +1103,14 @@ pub mod pallet {
                 b"tournament_battle",
             )?;
 
-            // Select ghost from tournament pool, fallback to procedural
+            // Select ghost from tournament pool, fallback to empty board
             let enemy_units = Self::select_tournament_ghost_opponent(
                 tid,
                 &battle.bracket,
                 &battle.card_set,
                 battle.battle_seed,
             )
-            .unwrap_or_else(|| {
-                get_opponent_for_round(
-                    battle.core_state.local_state.round,
-                    battle.battle_seed.wrapping_add(999),
-                    &battle.core_state.card_pool,
-                )
-                .unwrap_or_default()
-            });
+            .unwrap_or_default();
 
             // Store player's board as tournament ghost
             let ghost = Self::create_ghost_board(&battle.core_state);

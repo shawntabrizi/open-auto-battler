@@ -7,7 +7,6 @@ use oab_core::battle::{
     BattleResult, CombatEvent, CombatUnit, UnitId,
 };
 use oab_core::commit::{apply_shop_start_triggers, apply_shop_start_triggers_with_result};
-use oab_core::opponents::get_opponent_for_round;
 use oab_core::rng::XorShiftRng;
 use oab_core::state::*;
 use oab_core::types::*;
@@ -234,8 +233,7 @@ impl GameSession {
         let enemy_units = if let Some(custom) = self.custom_opponents.get(&self.state.round) {
             self.build_custom_opponent(custom)
         } else {
-            get_opponent_for_round(self.state.round, battle_seed + 999, &self.state.card_pool)
-                .unwrap_or_default()
+            Vec::new()
         };
         let enemy_count = enemy_units.len();
 
