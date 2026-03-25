@@ -4,6 +4,7 @@ members = [
     "oab",
     "core",
     "client",
+    "server",
     "blockchain/pallets/auto-battle",
     "blockchain/runtime",
 ]
@@ -40,6 +41,9 @@ console_log = "1.0"
 web-sys = { version = "0.3", features = ["console"] }
 getrandom = { version = "0.2", features = ["js"] }
 wasm-bindgen-test = "0.3"
+subxt = { version = "0.38" }
+subxt-signer = { version = "0.38", features = ["sr25519", "subxt"] }
+tokio = { version = "1", features = ["full"] }
 
 [profile.release]
 opt-level = 3

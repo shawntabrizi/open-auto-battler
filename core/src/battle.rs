@@ -281,6 +281,40 @@ impl CombatUnit {
 }
 
 // ==========================================
+// TRIGGER REGISTRY (Observer/Pub-Sub)
+// ==========================================
+
+/// Maps trigger types to subscribed units for O(1) trigger relevance checks.
+/// Unused triggers cost zero — no iteration over non-subscribing units.
+struct TriggerRegistry {
+    buckets: [Vec<UnitInstanceId>; crate::types::TRIGGER_VARIANT_COUNT],
+}
+
+impl TriggerRegistry {
+    fn new() -> Self {
+        Self {
+            buckets: core::array::from_fn(|_| Vec::new()),
+        }
+    }
+
+    fn register_unit(&mut self, unit: &CombatUnit) {
+        for ability in &unit.abilities {
+            self.buckets[ability.trigger.index()].push(unit.instance_id);
+        }
+    }
+
+    fn unregister_unit(&mut self, instance_id: UnitInstanceId) {
+        for bucket in &mut self.buckets {
+            bucket.retain(|id| *id != instance_id);
+        }
+    }
+
+    fn has_subscribers(&self, trigger: AbilityTrigger) -> bool {
+        !self.buckets[trigger.index()].is_empty()
+    }
+}
+
+// ==========================================
 // TRIGGER CAPTURE HELPERS
 // ==========================================
 
@@ -363,6 +397,15 @@ pub fn resolve_battle<R: BattleRng>(
         unit.team = Team::Enemy;
     }
 
+    // Build trigger registry from initial boards
+    let mut registry = TriggerRegistry::new();
+    for unit in player_units.iter() {
+        registry.register_unit(unit);
+    }
+    for unit in enemy_units.iter() {
+        registry.register_unit(unit);
+    }
+
     // 1. Start of Battle Phase
     limits.reset_phase_counters();
     if execute_phase(
@@ -374,6 +417,7 @@ pub fn resolve_battle<R: BattleRng>(
         &mut limits,
         card_pool,
         None,
+        &mut registry,
     )
     .is_err()
         || limits.is_exceeded()
@@ -401,6 +445,7 @@ pub fn resolve_battle<R: BattleRng>(
             &mut limits,
             card_pool,
             Some(pre_clash),
+            &mut registry,
         )
         .is_err()
             || limits.is_exceeded()
@@ -420,6 +465,7 @@ pub fn resolve_battle<R: BattleRng>(
             &mut limits,
             card_pool,
             None,
+            &mut registry,
         )
         .is_err()
             || limits.is_exceeded()
@@ -438,6 +484,7 @@ pub fn resolve_battle<R: BattleRng>(
         &mut limits,
         card_pool,
         None,
+        &mut registry,
     );
     events
 }
@@ -538,6 +585,7 @@ fn resolve_trigger_queue<R: BattleRng>(
     rng: &mut R,
     limits: &mut BattleLimits,
     card_pool: &BTreeMap<CardId, UnitCard>,
+    registry: &mut TriggerRegistry,
 ) -> Result<(), ()> {
     // Trigger Priority:
     // 1. Attack (Highest First) -> Ascending Sort
@@ -640,33 +688,36 @@ fn resolve_trigger_queue<R: BattleRng>(
             events,
             rng,
             limits,
-            trigger.spawn_index_override, // Pass the index where the parent died
+            trigger.spawn_index_override,
             trigger.trigger_target_id,
             card_pool,
+            registry,
         )?;
 
         let mut reaction_queue = Vec::new();
 
         // Capture OnHurt BEFORE death check so fatally-damaged units still fire.
-        for unit_id in damaged_ids {
-            let (idx, team, unit) =
-                if let Some((i, u)) = find_unit_with_position(unit_id, player_units) {
-                    (i, Team::Player, u)
-                } else if let Some((i, u)) = find_unit_with_position(unit_id, enemy_units) {
-                    (i, Team::Enemy, u)
-                } else {
-                    continue;
-                };
+        if registry.has_subscribers(AbilityTrigger::OnHurt) {
+            for unit_id in damaged_ids {
+                let (idx, team, unit) =
+                    if let Some((i, u)) = find_unit_with_position(unit_id, player_units) {
+                        (i, Team::Player, u)
+                    } else if let Some((i, u)) = find_unit_with_position(unit_id, enemy_units) {
+                        (i, Team::Enemy, u)
+                    } else {
+                        continue;
+                    };
 
-            let is_fatal = unit.health <= 0;
-            reaction_queue.extend(capture_triggers_for_unit(
-                unit,
-                idx,
-                team,
-                AbilityTrigger::OnHurt,
-                Some(trigger.source_id),
-                if is_fatal { Some(idx) } else { None },
-            ));
+                let is_fatal = unit.health <= 0;
+                reaction_queue.extend(capture_triggers_for_unit(
+                    unit,
+                    idx,
+                    team,
+                    AbilityTrigger::OnHurt,
+                    Some(trigger.source_id),
+                    if is_fatal { Some(idx) } else { None },
+                ));
+            }
         }
 
         // Death check — dead units move to graveyard
@@ -676,45 +727,55 @@ fn resolve_trigger_queue<R: BattleRng>(
         // OnFaint and OnAllyFaint from dead lists
         for (idx, dead_unit) in dead_player {
             let dead_id = dead_unit.instance_id;
-            reaction_queue.extend(capture_triggers_for_unit(
-                &dead_unit,
-                idx,
-                Team::Player,
-                AbilityTrigger::OnFaint,
-                Some(dead_id),
-                Some(idx),
-            ));
-            for (s_idx, survivor) in player_units.iter().enumerate() {
+            if registry.has_subscribers(AbilityTrigger::OnFaint) {
                 reaction_queue.extend(capture_triggers_for_unit(
-                    survivor,
-                    s_idx,
+                    &dead_unit,
+                    idx,
                     Team::Player,
-                    AbilityTrigger::OnAllyFaint,
+                    AbilityTrigger::OnFaint,
                     Some(dead_id),
-                    None,
+                    Some(idx),
                 ));
+            }
+            registry.unregister_unit(dead_id);
+            if registry.has_subscribers(AbilityTrigger::OnAllyFaint) {
+                for (s_idx, survivor) in player_units.iter().enumerate() {
+                    reaction_queue.extend(capture_triggers_for_unit(
+                        survivor,
+                        s_idx,
+                        Team::Player,
+                        AbilityTrigger::OnAllyFaint,
+                        Some(dead_id),
+                        None,
+                    ));
+                }
             }
             graveyard.push(dead_unit);
         }
         for (idx, dead_unit) in dead_enemy {
             let dead_id = dead_unit.instance_id;
-            reaction_queue.extend(capture_triggers_for_unit(
-                &dead_unit,
-                idx,
-                Team::Enemy,
-                AbilityTrigger::OnFaint,
-                Some(dead_id),
-                Some(idx),
-            ));
-            for (s_idx, survivor) in enemy_units.iter().enumerate() {
+            if registry.has_subscribers(AbilityTrigger::OnFaint) {
                 reaction_queue.extend(capture_triggers_for_unit(
-                    survivor,
-                    s_idx,
+                    &dead_unit,
+                    idx,
                     Team::Enemy,
-                    AbilityTrigger::OnAllyFaint,
+                    AbilityTrigger::OnFaint,
                     Some(dead_id),
-                    None,
+                    Some(idx),
                 ));
+            }
+            registry.unregister_unit(dead_id);
+            if registry.has_subscribers(AbilityTrigger::OnAllyFaint) {
+                for (s_idx, survivor) in enemy_units.iter().enumerate() {
+                    reaction_queue.extend(capture_triggers_for_unit(
+                        survivor,
+                        s_idx,
+                        Team::Enemy,
+                        AbilityTrigger::OnAllyFaint,
+                        Some(dead_id),
+                        None,
+                    ));
+                }
             }
             graveyard.push(dead_unit);
         }
@@ -731,6 +792,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                 rng,
                 limits,
                 card_pool,
+                registry,
             )?;
             limits.exit_trigger_depth();
         }
@@ -756,6 +818,7 @@ fn apply_ability_effect<R: BattleRng>(
     spawn_index_override: Option<usize>,
     trigger_target_id: Option<UnitInstanceId>,
     card_pool: &BTreeMap<CardId, UnitCard>,
+    registry: &mut TriggerRegistry,
 ) -> Result<Vec<UnitInstanceId>, ()> {
     limits.enter_recursion(source_team)?;
     let result = (|| -> Result<Vec<UnitInstanceId>, ()> {
@@ -894,6 +957,8 @@ fn apply_ability_effect<R: BattleRng>(
                         new_board_state: my_board.iter().map(|u| u.to_view(card_pool)).collect(),
                     });
 
+                    registry.register_unit(&my_board[safe_idx]);
+
                     (instance_id, safe_idx)
                 };
 
@@ -906,29 +971,31 @@ fn apply_ability_effect<R: BattleRng>(
                         Team::Enemy => &mut *enemy_units,
                     };
 
-                    // OnSpawn for the new unit itself
-                    reactions.extend(capture_triggers_for_unit(
-                        &my_board[safe_idx],
-                        safe_idx,
-                        source_team,
-                        AbilityTrigger::OnSpawn,
-                        Some(spawned_id),
-                        None,
-                    ));
-
-                    // OnAllySpawn for existing allies (excluding the spawned unit)
-                    for (i, unit) in my_board.iter().enumerate() {
-                        if unit.instance_id == spawned_id {
-                            continue;
-                        }
+                    if registry.has_subscribers(AbilityTrigger::OnSpawn) {
                         reactions.extend(capture_triggers_for_unit(
-                            unit,
-                            i,
+                            &my_board[safe_idx],
+                            safe_idx,
                             source_team,
-                            AbilityTrigger::OnAllySpawn,
+                            AbilityTrigger::OnSpawn,
                             Some(spawned_id),
                             None,
                         ));
+                    }
+
+                    if registry.has_subscribers(AbilityTrigger::OnAllySpawn) {
+                        for (i, unit) in my_board.iter().enumerate() {
+                            if unit.instance_id == spawned_id {
+                                continue;
+                            }
+                            reactions.extend(capture_triggers_for_unit(
+                                unit,
+                                i,
+                                source_team,
+                                AbilityTrigger::OnAllySpawn,
+                                Some(spawned_id),
+                                None,
+                            ));
+                        }
                     }
 
                     // OnEnemySpawn for units on the opposite team
@@ -941,15 +1008,17 @@ fn apply_ability_effect<R: BattleRng>(
                         Team::Enemy => Team::Player,
                     };
 
-                    for (i, unit) in opposing_board.iter().enumerate() {
-                        reactions.extend(capture_triggers_for_unit(
-                            unit,
-                            i,
-                            opposing_team,
-                            AbilityTrigger::OnEnemySpawn,
-                            Some(spawned_id),
-                            None,
-                        ));
+                    if registry.has_subscribers(AbilityTrigger::OnEnemySpawn) {
+                        for (i, unit) in opposing_board.iter().enumerate() {
+                            reactions.extend(capture_triggers_for_unit(
+                                unit,
+                                i,
+                                opposing_team,
+                                AbilityTrigger::OnEnemySpawn,
+                                Some(spawned_id),
+                                None,
+                            ));
+                        }
                     }
                 }
 
@@ -964,6 +1033,7 @@ fn apply_ability_effect<R: BattleRng>(
                         rng,
                         limits,
                         card_pool,
+                        registry,
                     )?;
                     limits.exit_trigger_depth();
                 }
@@ -1021,6 +1091,7 @@ fn execute_phase<R: BattleRng>(
     limits: &mut BattleLimits,
     card_pool: &BTreeMap<CardId, UnitCard>,
     clash_context: Option<ClashContext>,
+    registry: &mut TriggerRegistry,
 ) -> Result<(), ()> {
     if phase != BattlePhase::End {
         events.push(CombatEvent::PhaseStart { phase });
@@ -1037,6 +1108,7 @@ fn execute_phase<R: BattleRng>(
                 limits,
                 card_pool,
                 None,
+                registry,
             )?;
         }
         BattlePhase::BeforeAttack => {
@@ -1052,6 +1124,7 @@ fn execute_phase<R: BattleRng>(
                 limits,
                 card_pool,
                 clash_context,
+                registry,
             )?;
         }
         BattlePhase::Attack => {
@@ -1066,6 +1139,7 @@ fn execute_phase<R: BattleRng>(
                 rng,
                 limits,
                 card_pool,
+                registry,
             )?;
         }
         BattlePhase::End => {
@@ -1093,37 +1167,41 @@ fn collect_and_resolve_triggers<R: BattleRng>(
     limits: &mut BattleLimits,
     card_pool: &BTreeMap<CardId, UnitCard>,
     clash_context: Option<ClashContext>,
+    registry: &mut TriggerRegistry,
 ) -> Result<(), ()> {
     let mut queue = Vec::new();
 
-    let mut scan_board = |units: &[CombatUnit], team: Team| {
-        // For attack triggers, set trigger_target_id to the opposing
-        // clash participant so abilities can reference who was attacked.
-        let target_id = clash_context.and_then(|ctx| match team {
-            Team::Player => ctx.enemy_id,
-            Team::Enemy => ctx.player_id,
-        });
+    {
+        let reg = &*registry;
+        let mut scan_board = |units: &[CombatUnit], team: Team| {
+            let target_id = clash_context.and_then(|ctx| match team {
+                Team::Player => ctx.enemy_id,
+                Team::Enemy => ctx.player_id,
+            });
 
-        for (i, u) in units.iter().enumerate() {
-            for trigger_type in trigger_types {
-                // BeforeUnitAttack triggers ONLY for the front unit (index 0).
-                if *trigger_type == AbilityTrigger::BeforeUnitAttack && i != 0 {
-                    continue;
+            for (i, u) in units.iter().enumerate() {
+                for trigger_type in trigger_types {
+                    if !reg.has_subscribers(*trigger_type) {
+                        continue;
+                    }
+                    if *trigger_type == AbilityTrigger::BeforeUnitAttack && i != 0 {
+                        continue;
+                    }
+                    queue.extend(capture_triggers_for_unit(
+                        u,
+                        i,
+                        team,
+                        *trigger_type,
+                        target_id,
+                        None,
+                    ));
                 }
-                queue.extend(capture_triggers_for_unit(
-                    u,
-                    i,
-                    team,
-                    *trigger_type,
-                    target_id,
-                    None,
-                ));
             }
-        }
-    };
+        };
 
-    scan_board(player_units, Team::Player);
-    scan_board(enemy_units, Team::Enemy);
+        scan_board(player_units, Team::Player);
+        scan_board(enemy_units, Team::Enemy);
+    }
 
     let mut graveyard = Vec::new();
     resolve_trigger_queue(
@@ -1135,6 +1213,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
         rng,
         limits,
         card_pool,
+        registry,
     )
 }
 
@@ -1272,6 +1351,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
     rng: &mut R,
     limits: &mut BattleLimits,
     card_pool: &BTreeMap<CardId, UnitCard>,
+    registry: &mut TriggerRegistry,
 ) -> Result<(), ()> {
     let clashing_p_id = clash_outcome.player_id;
     let clashing_e_id = clash_outcome.enemy_id;
@@ -1280,78 +1360,136 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
 
     let mut queue = Vec::new();
 
-    // Helper: capture clash-related triggers for one team's front unit.
-    let mut capture_clash_triggers = |units: &[CombatUnit],
-                                      clash_id: Option<UnitInstanceId>,
-                                      opponent_id: Option<UnitInstanceId>,
-                                      was_hurt: bool,
-                                      team: Team| {
-        let Some(cid) = clash_id else { return };
-        let Some((idx, unit)) = find_unit_with_position(cid, units) else {
-            return;
+    {
+        let reg = &*registry;
+        let mut capture_clash_triggers = |units: &[CombatUnit],
+                                          clash_id: Option<UnitInstanceId>,
+                                          opponent_id: Option<UnitInstanceId>,
+                                          was_hurt: bool,
+                                          team: Team| {
+            let Some(cid) = clash_id else { return };
+            let Some((idx, unit)) = find_unit_with_position(cid, units) else {
+                return;
+            };
+
+            let spawn_override = if unit.health <= 0 { Some(idx) } else { None };
+
+            if was_hurt && reg.has_subscribers(AbilityTrigger::OnHurt) {
+                queue.extend(capture_triggers_for_unit(
+                    unit,
+                    idx,
+                    team,
+                    AbilityTrigger::OnHurt,
+                    opponent_id,
+                    spawn_override,
+                ));
+            }
+
+            if reg.has_subscribers(AbilityTrigger::AfterUnitAttack) {
+                queue.extend(capture_triggers_for_unit(
+                    unit,
+                    idx,
+                    team,
+                    AbilityTrigger::AfterUnitAttack,
+                    opponent_id,
+                    spawn_override,
+                ));
+            }
         };
 
-        let spawn_override = if unit.health <= 0 { Some(idx) } else { None };
-
-        // OnHurt (only if this unit was actually hurt)
-        if was_hurt {
-            queue.extend(capture_triggers_for_unit(
-                unit,
-                idx,
-                team,
-                AbilityTrigger::OnHurt,
-                opponent_id,
-                spawn_override,
-            ));
-        }
-
-        // AfterUnitAttack (front unit only — the actual attacker)
-        queue.extend(capture_triggers_for_unit(
-            unit,
-            idx,
-            team,
-            AbilityTrigger::AfterUnitAttack,
-            opponent_id,
-            spawn_override,
-        ));
-    };
-
-    capture_clash_triggers(
-        player_units,
-        clashing_p_id,
-        clashing_e_id,
-        clash_outcome.player_hurt,
-        Team::Player,
-    );
-    capture_clash_triggers(
-        enemy_units,
-        clashing_e_id,
-        clashing_p_id,
-        clash_outcome.enemy_hurt,
-        Team::Enemy,
-    );
+        capture_clash_triggers(
+            player_units,
+            clashing_p_id,
+            clashing_e_id,
+            clash_outcome.player_hurt,
+            Team::Player,
+        );
+        capture_clash_triggers(
+            enemy_units,
+            clashing_e_id,
+            clashing_p_id,
+            clash_outcome.enemy_hurt,
+            Team::Enemy,
+        );
+    }
 
     // AfterAnyAttack for ALL units (not just front) — captured before death check.
 
-    for (i, u) in player_units.iter().enumerate() {
-        queue.extend(capture_triggers_for_unit(
-            u,
-            i,
-            Team::Player,
-            AbilityTrigger::AfterAnyAttack,
-            clashing_e_id,
-            if u.health <= 0 { Some(i) } else { None },
-        ));
+    if registry.has_subscribers(AbilityTrigger::AfterAnyAttack) {
+        for (i, u) in player_units.iter().enumerate() {
+            queue.extend(capture_triggers_for_unit(
+                u,
+                i,
+                Team::Player,
+                AbilityTrigger::AfterAnyAttack,
+                clashing_e_id,
+                if u.health <= 0 { Some(i) } else { None },
+            ));
+        }
+        for (i, u) in enemy_units.iter().enumerate() {
+            queue.extend(capture_triggers_for_unit(
+                u,
+                i,
+                Team::Enemy,
+                AbilityTrigger::AfterAnyAttack,
+                clashing_p_id,
+                if u.health <= 0 { Some(i) } else { None },
+            ));
+        }
     }
-    for (i, u) in enemy_units.iter().enumerate() {
-        queue.extend(capture_triggers_for_unit(
-            u,
-            i,
-            Team::Enemy,
-            AbilityTrigger::AfterAnyAttack,
-            clashing_p_id,
-            if u.health <= 0 { Some(i) } else { None },
-        ));
+
+    // AfterAllyAttack — fires for units on the SAME team as the attacker.
+    // AfterEnemyAttack — fires for units on the OPPOSING team of the attacker.
+
+    if registry.has_subscribers(AbilityTrigger::AfterAllyAttack)
+        || registry.has_subscribers(AbilityTrigger::AfterEnemyAttack)
+    {
+        for (i, u) in player_units.iter().enumerate() {
+            let spawn_override = if u.health <= 0 { Some(i) } else { None };
+            if registry.has_subscribers(AbilityTrigger::AfterAllyAttack) {
+                queue.extend(capture_triggers_for_unit(
+                    u,
+                    i,
+                    Team::Player,
+                    AbilityTrigger::AfterAllyAttack,
+                    clashing_p_id,
+                    spawn_override,
+                ));
+            }
+            if registry.has_subscribers(AbilityTrigger::AfterEnemyAttack) {
+                queue.extend(capture_triggers_for_unit(
+                    u,
+                    i,
+                    Team::Player,
+                    AbilityTrigger::AfterEnemyAttack,
+                    clashing_e_id,
+                    spawn_override,
+                ));
+            }
+        }
+        for (i, u) in enemy_units.iter().enumerate() {
+            let spawn_override = if u.health <= 0 { Some(i) } else { None };
+            if registry.has_subscribers(AbilityTrigger::AfterAllyAttack) {
+                queue.extend(capture_triggers_for_unit(
+                    u,
+                    i,
+                    Team::Enemy,
+                    AbilityTrigger::AfterAllyAttack,
+                    clashing_e_id,
+                    spawn_override,
+                ));
+            }
+            if registry.has_subscribers(AbilityTrigger::AfterEnemyAttack) {
+                queue.extend(capture_triggers_for_unit(
+                    u,
+                    i,
+                    Team::Enemy,
+                    AbilityTrigger::AfterEnemyAttack,
+                    clashing_p_id,
+                    spawn_override,
+                ));
+            }
+        }
     }
 
     // ── Death check (removes dead units from boards) ──
@@ -1368,44 +1506,54 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
     let mut graveyard = Vec::new();
 
     for (idx, dead_unit) in dead_player {
-        queue.extend(capture_triggers_for_unit(
-            &dead_unit,
-            idx,
-            Team::Player,
-            AbilityTrigger::OnFaint,
-            Some(dead_unit.instance_id),
-            Some(idx),
-        ));
-        for (s_idx, survivor) in player_units.iter().enumerate() {
+        if registry.has_subscribers(AbilityTrigger::OnFaint) {
             queue.extend(capture_triggers_for_unit(
-                survivor,
-                s_idx,
+                &dead_unit,
+                idx,
                 Team::Player,
-                AbilityTrigger::OnAllyFaint,
+                AbilityTrigger::OnFaint,
                 Some(dead_unit.instance_id),
-                None,
+                Some(idx),
             ));
+        }
+        registry.unregister_unit(dead_unit.instance_id);
+        if registry.has_subscribers(AbilityTrigger::OnAllyFaint) {
+            for (s_idx, survivor) in player_units.iter().enumerate() {
+                queue.extend(capture_triggers_for_unit(
+                    survivor,
+                    s_idx,
+                    Team::Player,
+                    AbilityTrigger::OnAllyFaint,
+                    Some(dead_unit.instance_id),
+                    None,
+                ));
+            }
         }
         graveyard.push(dead_unit);
     }
     for (idx, dead_unit) in dead_enemy {
-        queue.extend(capture_triggers_for_unit(
-            &dead_unit,
-            idx,
-            Team::Enemy,
-            AbilityTrigger::OnFaint,
-            Some(dead_unit.instance_id),
-            Some(idx),
-        ));
-        for (s_idx, survivor) in enemy_units.iter().enumerate() {
+        if registry.has_subscribers(AbilityTrigger::OnFaint) {
             queue.extend(capture_triggers_for_unit(
-                survivor,
-                s_idx,
+                &dead_unit,
+                idx,
                 Team::Enemy,
-                AbilityTrigger::OnAllyFaint,
+                AbilityTrigger::OnFaint,
                 Some(dead_unit.instance_id),
-                None,
+                Some(idx),
             ));
+        }
+        registry.unregister_unit(dead_unit.instance_id);
+        if registry.has_subscribers(AbilityTrigger::OnAllyFaint) {
+            for (s_idx, survivor) in enemy_units.iter().enumerate() {
+                queue.extend(capture_triggers_for_unit(
+                    survivor,
+                    s_idx,
+                    Team::Enemy,
+                    AbilityTrigger::OnAllyFaint,
+                    Some(dead_unit.instance_id),
+                    None,
+                ));
+            }
         }
         graveyard.push(dead_unit);
     }
@@ -1419,6 +1567,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
         rng,
         limits,
         card_pool,
+        registry,
     )
 }
 

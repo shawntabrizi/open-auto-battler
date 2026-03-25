@@ -7,7 +7,9 @@
       { "id": 1, "type": "hand_bg", "name": "Cosmic Soil", "cid": "bafybeicuqz6a4ejkrbv644lt5rxz6ha3oah22lrofkdnaxwk5lyt6kvdue" },
       { "id": 2, "type": "card_style", "name": "Cosmic Vines", "cid": "bafkreieiwi6hgi7bgg4vw5pdpr6fqaxijktk42gd7cq443slztqvkazwmy" },
       { "id": 3, "type": "board_bg", "name": "Cosmic Tree", "cid": "bafybeicdlpsvd2hk3bv5a3uakmcnlehp7nmhkgksvvusr66lbbla35ennu" },
-      { "id": 4, "type": "card_art", "name": "Cosmic Cards", "cid": "bafybeialdf7cqyadsw2i57s6f5vdjyggotdtmcjzu7jr2oyp2ejuvkmxfy" }
+      { "id": 4, "type": "card_art", "name": "Cosmic Cards", "cid": "bafybeialdf7cqyadsw2i57s6f5vdjyggotdtmcjzu7jr2oyp2ejuvkmxfy" },
+      { "id": 5, "type": "card_art", "name": "Kawaii Cards", "cid": "bafybeibugexbiptjgnenqu5j3xbyia2rwlxeamb5va4y4v3qzwgqrdq6b4" },
+      { "id": 6, "type": "card_art", "name": "Full Moon Cards", "cid": "bafybeigjxpozflqt335k7izwl4m2hrjvrlmu3zqy6zd2tk43vuls62l5cu" }
     ]
   },
   {
