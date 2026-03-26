@@ -1,6 +1,7 @@
 [package]
 name = "oab-battle"
 version = "0.1.0"
+description = "Core battle engine for Open Auto Battler"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
