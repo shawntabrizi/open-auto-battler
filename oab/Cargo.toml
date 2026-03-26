@@ -10,8 +10,9 @@ repository.workspace = true
 
 [features]
 default = ["std"]
-std = ["oab-battle/std"]
-bounded = ["oab-battle/bounded"]
+std = ["oab-battle/std", "oab-game/std"]
+bounded = ["oab-battle/bounded", "oab-game/bounded"]
 
 [dependencies]
 oab-battle = { workspace = true }
+oab-game = { workspace = true }

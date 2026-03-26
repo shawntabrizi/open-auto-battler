@@ -20,6 +20,7 @@ edition = "2021"
 [workspace.dependencies]
 oab-battle = { version = "0.1.0", path = "./battle", default-features = false }
 oab-game = { version = "0.1.0", path = "./game", default-features = false }
+oab-server = { version = "0.1.0", path = "./server", default-features = false }
 auto-battle-runtime = { path = "./blockchain/runtime", default-features = false }
 pallet-auto-battle = { version = "0.1.0", path = "./blockchain/pallets/auto-battle", default-features = false }
 docify = { version = "0.2.9" }
