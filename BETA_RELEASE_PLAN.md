@@ -23,7 +23,7 @@ The beta is the first version of Open Auto Battler that feels like a complete ga
 | Layer | Status | Details |
 |-------|--------|---------|
 | **Core Engine** | ~90% | Battle system, ability system (11 battle triggers, 6 effects, 6 shop triggers, 4 effects), permanent stat modifiers, targeting, conditions, deterministic RNG |
-| **Pallet** | ~85% | start_game, submit_turn, submit_card, create_card_set, ghost matchmaking, tournament system, ghost backfill, victory achievements |
+| **Pallet** | ~85% | start_game, submit_turn, submit_card, create_card_set, ghost matchmaking, tournament system, victory achievements |
 | **Frontend** | ~75% | Shop/battle UI, card rendering, customization (5 NFT slots), WASM bridge, creator hub, versus, sandbox |
 | **Content** | ~40% | 110 cards, 2 sets (Starter Pack 40 cards, SAP Turtle Pack 60 cards), 1 style set (Cosmic) |
 
@@ -179,4 +179,4 @@ These features already exist in the codebase but are not part of the beta scope.
 3. **Balance pass** on Starter Pack — makes the game actually fun to play competitively; also fix the 5 cards that lost status abilities
 4. **2 new style sets** (art production + IPFS upload + styles.json) — can be parallelized with above
 5. **Frontend pages** (achievement progress grid, style bundles) + wire `end_game` call after victory runs
-6. **Integration testing** + ghost backfill for the rebalanced set
+6. **Integration testing**

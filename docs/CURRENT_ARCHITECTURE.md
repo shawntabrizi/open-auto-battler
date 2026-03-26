@@ -452,8 +452,7 @@ auto-battle/
 │   ├── pallets/
 │   │   └── auto-battle/     # Game pallet
 │   │       └── src/lib.rs   # Extrinsics: start_game, submit_turn
-│   ├── runtime/             # Runtime configuration
-│   └── node/                # Node implementation
+│   └── runtime/             # Runtime configuration
 │
 ├── web/                     # React frontend
 │   └── src/
