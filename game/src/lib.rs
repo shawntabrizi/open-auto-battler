@@ -14,7 +14,6 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 
 pub mod constructed;
-pub mod opponents;
 pub mod sealed;
 pub mod state;
 pub mod view;
