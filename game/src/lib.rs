@@ -20,8 +20,7 @@ pub mod view;
 
 // Re-export key types for convenience
 pub use state::{
-    derive_hand_indices_logic, GamePhase, GameSession, GameState, LocalGameState, HAND_SIZE,
-    STARTING_BAG_SIZE,
+    derive_hand_indices_logic, GamePhase, GameSession, GameState, LocalGameState,
 };
 pub use view::*;
 

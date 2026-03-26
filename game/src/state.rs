@@ -16,11 +16,6 @@ use oab_battle::types::*;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-/// Number of cards drawn per round as the player's hand
-pub const HAND_SIZE: usize = 5;
-/// Number of cards in the initial bag
-pub const STARTING_BAG_SIZE: usize = 50;
-
 /// Current phase of the game
 #[derive(
     Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
