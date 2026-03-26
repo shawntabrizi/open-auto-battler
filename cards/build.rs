@@ -1,6 +1,6 @@
-//! Build script: reads /cards/cards.json and /cards/sets.json and generates
+//! Build script: reads cards.json, sets.json, and styles.json and generates
 //! Rust source code that statically constructs all card data.
-//! This lets the core crate embed card data without any runtime JSON parsing,
+//! This lets the crate embed card data without any runtime JSON parsing,
 //! keeping it fully no_std compatible.
 
 use serde::Deserialize;
@@ -833,9 +833,9 @@ fn gen_card(
 
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let cards_path = Path::new(&manifest_dir).join("../cards/cards.json");
-    let sets_path = Path::new(&manifest_dir).join("../cards/sets.json");
-    let styles_path = Path::new(&manifest_dir).join("../cards/styles.json");
+    let cards_path = Path::new(&manifest_dir).join("assets/cards.json");
+    let sets_path = Path::new(&manifest_dir).join("assets/sets.json");
+    let styles_path = Path::new(&manifest_dir).join("assets/styles.json");
 
     // Tell Cargo to re-run if JSON files change
     println!("cargo:rerun-if-changed={}", cards_path.display());
@@ -969,16 +969,16 @@ fn main() {
 
     // ── Write output ─────────────────────────────────────────────────────────
     let out_dir = env::var("OUT_DIR").unwrap();
-    let dest = Path::new(&out_dir).join("cards_generated.rs");
+    let out_path = Path::new(&out_dir);
 
-    let generated = format!(
-        r#"// Auto-generated from cards.json, sets.json, and styles.json — DO NOT EDIT
+    // cards_generated.rs
+    let cards_gen = format!(
+        r#"// Auto-generated from cards.json — DO NOT EDIT
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 use alloc::collections::BTreeMap;
-use crate::types::*;
-use crate::state::{{CardSet, CardSetEntry}};
+use oab_battle::types::*;
 
 /// Card metadata (name, emoji) — not used in game logic.
 #[derive(serde::Serialize)]
@@ -988,12 +988,71 @@ pub struct CardMeta {{
     pub emoji: &'static str,
 }}
 
+/// Returns all cards defined in cards.json.
+pub fn get_all() -> Vec<UnitCard> {{
+    vec![
+{}
+    ]
+}}
+
+/// Returns metadata (id, name, emoji) for every card.
+pub fn get_all_metas() -> Vec<CardMeta> {{
+    vec![
+{}
+    ]
+}}
+
+/// Build a CardId → UnitCard lookup map from the static card data.
+pub fn build_pool() -> BTreeMap<CardId, UnitCard> {{
+    get_all().into_iter().map(|c| (c.id, c)).collect()
+}}
+"#,
+        card_entries.join(",\n"),
+        meta_entries.join(",\n"),
+    );
+    fs::write(out_path.join("cards_generated.rs"), cards_gen)
+        .expect("Failed to write cards_generated.rs");
+
+    // sets_generated.rs
+    let sets_gen = format!(
+        r#"// Auto-generated from sets.json — DO NOT EDIT
+use alloc::vec;
+use alloc::vec::Vec;
+use oab_battle::types::*;
+use oab_battle::state::{{CardSet, CardSetEntry}};
+
 /// Set metadata (id, name) — not used in game logic.
 #[derive(serde::Serialize)]
 pub struct SetMeta {{
     pub id: u32,
     pub name: &'static str,
 }}
+
+/// Returns all card sets defined in sets.json.
+pub fn get_all() -> Vec<CardSet> {{
+    vec![
+{}
+    ]
+}}
+
+/// Returns metadata (id, name) for every card set.
+pub fn get_all_metas() -> Vec<SetMeta> {{
+    vec![
+{}
+    ]
+}}
+"#,
+        set_entries.join(",\n"),
+        set_meta_entries.join(",\n"),
+    );
+    fs::write(out_path.join("sets_generated.rs"), sets_gen)
+        .expect("Failed to write sets_generated.rs");
+
+    // styles_generated.rs
+    let styles_gen = format!(
+        r#"// Auto-generated from styles.json — DO NOT EDIT
+use alloc::vec;
+use alloc::vec::Vec;
 
 /// A single NFT style item with pre-built metadata JSON.
 pub struct NftStyleItem {{
@@ -1008,52 +1067,15 @@ pub struct NftStyleCollection {{
     pub items: &'static [NftStyleItem],
 }}
 
-/// Returns all cards defined in cards.json.
-pub fn get_all_cards() -> Vec<UnitCard> {{
-    vec![
-{}
-    ]
-}}
-
-/// Returns metadata (id, name, emoji) for every card.
-pub fn get_all_card_metas() -> Vec<CardMeta> {{
-    vec![
-{}
-    ]
-}}
-
-/// Returns all card sets defined in sets.json.
-pub fn get_all_sets() -> Vec<CardSet> {{
-    vec![
-{}
-    ]
-}}
-
-/// Returns metadata (id, name) for every card set.
-pub fn get_all_set_metas() -> Vec<SetMeta> {{
-    vec![
-{}
-    ]
-}}
-
-/// Build a CardId → UnitCard lookup map from the static card data.
-pub fn build_card_pool() -> BTreeMap<CardId, UnitCard> {{
-    get_all_cards().into_iter().map(|c| (c.id, c)).collect()
-}}
-
 /// Returns all NFT style collections defined in styles.json.
-pub fn get_all_nft_styles() -> Vec<NftStyleCollection> {{
+pub fn get_all() -> Vec<NftStyleCollection> {{
     vec![
 {}
     ]
 }}
 "#,
-        card_entries.join(",\n"),
-        meta_entries.join(",\n"),
-        set_entries.join(",\n"),
-        set_meta_entries.join(",\n"),
         style_collection_entries.join(",\n"),
     );
-
-    fs::write(&dest, generated).expect("Failed to write generated cards file");
+    fs::write(out_path.join("styles_generated.rs"), styles_gen)
+        .expect("Failed to write styles_generated.rs");
 }

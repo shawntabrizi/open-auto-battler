@@ -1,0 +1,22 @@
+[package]
+name = "oab-assets"
+version = "0.1.0"
+description = "Default game assets for Open Auto Battler"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[features]
+default = ["std"]
+std = ["oab-battle/std"]
+bounded = ["oab-battle/bounded"]
+
+[dependencies]
+oab-battle = { workspace = true }
+serde = { workspace = true, features = ["derive", "alloc"] }
+
+[build-dependencies]
+serde = { workspace = true, features = ["derive", "std"] }
+serde_json = { workspace = true, features = ["std"] }

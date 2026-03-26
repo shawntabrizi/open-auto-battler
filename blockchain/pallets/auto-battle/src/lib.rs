@@ -648,14 +648,10 @@ pub mod pallet {
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
-            use oab_battle::cards::{
-                get_all_card_metas, get_all_cards, get_all_set_metas, get_all_sets,
-            };
-
-            let cards = get_all_cards();
-            let metas = get_all_card_metas();
-            let sets = get_all_sets();
-            let set_metas = get_all_set_metas();
+            let cards = oab_assets::cards::get_all();
+            let metas = oab_assets::cards::get_all_metas();
+            let sets = oab_assets::sets::get_all();
+            let set_metas = oab_assets::sets::get_all_metas();
 
             // Store all cards
             for (card, meta) in cards.iter().zip(metas.iter()) {

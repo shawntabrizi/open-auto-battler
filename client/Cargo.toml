@@ -13,6 +13,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 oab-battle = { workspace = true, features = ["std", "bounded"] }
+oab-assets = { workspace = true, features = ["std", "bounded"] }
 oab-game = { workspace = true, features = ["std", "bounded"] }
 parity-scale-codec = { workspace = true, features = ["derive"] }
 bounded-collections = { workspace = true }

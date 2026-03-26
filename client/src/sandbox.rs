@@ -6,7 +6,7 @@ use std::vec::Vec;
 
 use crate::engine::BattleOutput;
 use oab_battle::battle::{resolve_battle, CombatUnit, UnitView};
-use oab_battle::cards::build_card_pool;
+use oab_assets::cards::build_pool;
 use oab_battle::log;
 use oab_battle::rng::XorShiftRng;
 use oab_battle::types::CardId;
@@ -24,7 +24,7 @@ pub struct SandboxUnit {
 #[wasm_bindgen]
 pub fn get_unit_templates() -> JsValue {
     log::debug("get_unit_templates", "Fetching all unit templates");
-    let card_pool = build_card_pool();
+    let card_pool = build_pool();
     let views: Vec<CardView> = card_pool.values().map(CardView::from).collect();
     serde_wasm_bindgen::to_value(&views).unwrap_or(JsValue::NULL)
 }
@@ -39,7 +39,7 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
     let enemy_sandbox: Vec<SandboxUnit> =
         serde_wasm_bindgen::from_value(enemy_units_js).unwrap_or_default();
 
-    let card_pool = build_card_pool();
+    let card_pool = build_pool();
 
     let make_combat_unit = |sandbox: &SandboxUnit| -> Option<CombatUnit> {
         let card = card_pool.get(&CardId(sandbox.card_id))?;

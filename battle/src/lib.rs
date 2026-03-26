@@ -8,7 +8,6 @@
 extern crate alloc;
 
 pub mod battle;
-pub mod cards;
 pub mod commit;
 pub mod error;
 pub mod limits;

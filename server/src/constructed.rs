@@ -160,7 +160,7 @@ mod tests {
     use super::*;
 
     fn sample_deck(set_id: u32) -> Vec<u32> {
-        let sets = oab_battle::cards::get_all_sets();
+        let sets = oab_assets::sets::get_all();
         let set = &sets[set_id as usize];
         // Build a valid 50-card deck using draftable cards
         let draftable: Vec<u32> = set

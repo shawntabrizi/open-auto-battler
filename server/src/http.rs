@@ -252,7 +252,7 @@ fn handle_get_cards(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
     let b = backend.lock().unwrap();
     let cards = match &*b {
         Backend::Local(_) => {
-            let card_pool = oab_battle::cards::build_card_pool();
+            let card_pool = oab_assets::cards::build_pool();
             card_pool
                 .values()
                 .map(oab_game::view::CardView::from)
@@ -268,8 +268,8 @@ fn handle_get_sets(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
     let b = backend.lock().unwrap();
     let sets = match &*b {
         Backend::Local(_) => {
-            let metas = oab_battle::cards::get_all_set_metas();
-            let all_sets = oab_battle::cards::get_all_sets();
+            let metas = oab_assets::sets::get_all_metas();
+            let all_sets = oab_assets::sets::get_all();
             metas
                 .into_iter()
                 .zip(all_sets.into_iter())

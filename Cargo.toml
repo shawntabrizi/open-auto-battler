@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "oab",
     "battle",
+    "cards",
     "game",
     "client",
     "server",
@@ -19,6 +20,7 @@ edition = "2021"
 
 [workspace.dependencies]
 oab-battle = { version = "0.1.0", path = "./battle", default-features = false }
+oab-assets = { version = "0.1.0", path = "./cards", default-features = false }
 oab-game = { version = "0.1.0", path = "./game", default-features = false }
 oab-server = { version = "0.1.0", path = "./server", default-features = false }
 auto-battle-runtime = { path = "./blockchain/runtime", default-features = false }

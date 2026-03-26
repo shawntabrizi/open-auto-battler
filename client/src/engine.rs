@@ -115,18 +115,16 @@ impl GameEngine {
     /// Must be called before new_run() or init_from_scale().
     #[wasm_bindgen]
     pub fn load_card_set(&mut self, set_id: u32) -> Result<(), String> {
-        use oab_battle::cards::{build_card_pool, get_all_sets};
-
         log::action(
             "load_card_set",
             &format!("Loading cards for set_id={}", set_id),
         );
 
-        let card_pool = build_card_pool();
+        let card_pool = oab_assets::cards::build_pool();
         let card_set = if let Some(custom) = self.custom_sets.get(&set_id) {
             custom.clone()
         } else {
-            let sets = get_all_sets();
+            let sets = oab_assets::sets::get_all();
             sets.into_iter()
                 .nth(set_id as usize)
                 .ok_or_else(|| format!("Set {} not found", set_id))?
@@ -145,7 +143,7 @@ impl GameEngine {
     /// Used by the frontend to build the emoji display map.
     #[wasm_bindgen]
     pub fn get_card_metas(&self) -> JsValue {
-        let metas = oab_battle::cards::get_all_card_metas();
+        let metas = oab_assets::cards::get_all_metas();
         serde_wasm_bindgen::to_value(&metas).unwrap_or(JsValue::NULL)
     }
 
@@ -153,7 +151,7 @@ impl GameEngine {
     /// Used by the frontend for set selection screen.
     #[wasm_bindgen]
     pub fn get_set_metas(&self) -> JsValue {
-        let metas = oab_battle::cards::get_all_set_metas();
+        let metas = oab_assets::sets::get_all_metas();
         serde_wasm_bindgen::to_value(&metas).unwrap_or(JsValue::NULL)
     }
 
@@ -163,7 +161,6 @@ impl GameEngine {
     /// Checks custom (blockchain) sets first, then falls back to genesis sets.
     #[wasm_bindgen]
     pub fn get_set_cards(&self, set_id: u32) -> Result<JsValue, String> {
-        use oab_battle::cards::{build_card_pool, get_all_sets};
         use oab_game::view::CardView;
         use serde::Serialize;
 
@@ -201,14 +198,14 @@ impl GameEngine {
         let card_set = if let Some(custom) = self.custom_sets.get(&set_id) {
             custom.clone()
         } else {
-            let sets = get_all_sets();
+            let sets = oab_assets::sets::get_all();
             sets.into_iter()
                 .nth(set_id as usize)
                 .ok_or_else(|| format!("Set {} not found", set_id))?
         };
 
         // Use the engine's card pool (includes blockchain cards) with genesis as fallback
-        let genesis_pool = build_card_pool();
+        let genesis_pool = oab_assets::cards::build_pool();
         let card_views: Vec<SetCardView> = card_set
             .cards
             .iter()

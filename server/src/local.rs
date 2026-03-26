@@ -30,8 +30,8 @@ impl GameSession {
     /// Start a new sealed game with the given seed and card set.
     pub fn new(seed: u64, set_id: u32) -> Result<Self, String> {
         let config = sealed::default_config();
-        let card_pool = oab_battle::cards::build_card_pool();
-        let all_sets = oab_battle::cards::get_all_sets();
+        let card_pool = oab_assets::cards::build_pool();
+        let all_sets = oab_assets::sets::get_all();
         let card_set = if (set_id as usize) < all_sets.len() {
             all_sets.into_iter().nth(set_id as usize).unwrap()
         } else {
@@ -53,8 +53,8 @@ impl GameSession {
     /// Start a new constructed game with a user-provided deck.
     pub fn new_constructed(seed: u64, set_id: u32, deck: Vec<u32>) -> Result<Self, String> {
         let config = constructed::default_config();
-        let card_pool = oab_battle::cards::build_card_pool();
-        let all_sets = oab_battle::cards::get_all_sets();
+        let card_pool = oab_assets::cards::build_pool();
+        let all_sets = oab_assets::sets::get_all();
         let card_set = if (set_id as usize) < all_sets.len() {
             all_sets.into_iter().nth(set_id as usize).unwrap()
         } else {
@@ -345,14 +345,14 @@ mod tests {
 
     #[test]
     fn get_sets_returns_all_sets() {
-        let sets = oab_battle::cards::get_all_sets();
-        let expected_count = oab_battle::cards::get_all_set_metas().len();
+        let sets = oab_assets::sets::get_all();
+        let expected_count = oab_assets::sets::get_all_metas().len();
         assert_eq!(sets.len(), expected_count);
     }
 
     #[test]
     fn get_sets_returns_sets_with_cards() {
-        let sets = oab_battle::cards::get_all_sets();
+        let sets = oab_assets::sets::get_all();
         for set in &sets {
             assert!(!set.cards.is_empty());
         }
@@ -360,7 +360,7 @@ mod tests {
 
     #[test]
     fn get_cards_returns_nonempty() {
-        let card_pool = oab_battle::cards::build_card_pool();
+        let card_pool = oab_assets::cards::build_pool();
         assert!(!card_pool.is_empty(), "card pool should not be empty");
     }
 
@@ -390,7 +390,7 @@ mod tests {
 
     #[test]
     fn reset_with_different_set() {
-        let all_sets = oab_battle::cards::get_all_set_metas();
+        let all_sets = oab_assets::sets::get_all_metas();
         if all_sets.len() > 1 {
             let session = GameSession::new(99, 1).expect("set 1 should succeed");
             let state = session.get_state();

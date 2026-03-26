@@ -16,6 +16,7 @@ chain = ["subxt", "subxt-signer", "tokio"]
 
 [dependencies]
 oab-battle = { workspace = true, features = ["std", "bounded"] }
+oab-assets = { workspace = true, features = ["std", "bounded"] }
 oab-game = { workspace = true, features = ["std", "bounded"] }
 serde = { workspace = true, features = ["derive", "std"] }
 serde_json = { workspace = true, features = ["std"] }
