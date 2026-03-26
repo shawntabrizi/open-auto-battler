@@ -833,9 +833,9 @@ fn gen_card(
 
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let cards_path = Path::new(&manifest_dir).join("assets/cards.json");
-    let sets_path = Path::new(&manifest_dir).join("assets/sets.json");
-    let styles_path = Path::new(&manifest_dir).join("assets/styles.json");
+    let cards_path = Path::new(&manifest_dir).join("data/cards.json");
+    let sets_path = Path::new(&manifest_dir).join("data/sets.json");
+    let styles_path = Path::new(&manifest_dir).join("data/styles.json");
 
     // Tell Cargo to re-run if JSON files change
     println!("cargo:rerun-if-changed={}", cards_path.display());
