@@ -62,8 +62,6 @@ pub struct GameEngine {
     set_id: u32,
     card_set: Option<CardSet>, // Loaded card set for bag generation
     last_battle_output: Option<BattleOutput>,
-    starting_lives: i32,
-    wins_to_victory: i32,
     // Per-turn local tracking (transient, not persisted)
     hand_used: Vec<bool>,                // true = burned or played
     action_log: Vec<TurnAction>,         // Ordered list of actions taken this turn
@@ -84,16 +82,11 @@ impl GameEngine {
         // memory/cycles setting up a full game state that will be dropped.
         let state = GameState::empty();
 
-        let config = oab_game::sealed::default_config();
-        let starting_lives = config.starting_lives;
-        let wins_to_victory = config.wins_to_victory;
         let mut engine = Self {
             set_id: 0,
             state,
             card_set: None,
             last_battle_output: None,
-            starting_lives,
-            wins_to_victory,
             hand_used: Vec::new(),
             action_log: Vec::new(),
             start_board: Vec::new(),
@@ -629,7 +622,7 @@ impl GameEngine {
             return Err("Not in battle phase".to_string());
         }
 
-        if self.state.wins >= self.wins_to_victory || self.state.lives <= 0 {
+        if self.state.wins >= self.state.config.wins_to_victory || self.state.lives <= 0 {
             self.state.phase = GamePhase::Completed;
             return Ok(());
         }
@@ -667,8 +660,6 @@ impl GameEngine {
         self.state = GameState::new(seed, config);
         self.state.card_pool = card_pool;
         self.last_battle_output = None;
-        self.starting_lives = self.state.config.starting_lives;
-        self.wins_to_victory = self.state.config.wins_to_victory;
         self.state.lives = self.state.config.starting_lives;
         self.initialize_bag();
         apply_shop_start_triggers(&mut self.state);
@@ -683,8 +674,8 @@ impl GameEngine {
         let lives = lives.max(1).min(10);
         self.new_run(seed);
         self.state.lives = lives;
-        self.starting_lives = lives;
-        self.wins_to_victory = lives;
+        self.state.config.starting_lives = lives;
+        self.state.config.wins_to_victory = lives;
     }
 
     /// Start a new constructed run with a user-provided deck.
@@ -716,8 +707,6 @@ impl GameEngine {
         self.state = GameState::new(seed, config);
         self.state.card_pool = card_pool;
         self.last_battle_output = None;
-        self.starting_lives = self.state.config.starting_lives;
-        self.wins_to_victory = self.state.config.wins_to_victory;
         self.state.lives = self.state.config.starting_lives;
 
         self.state.bag = deck_ids;
@@ -741,19 +730,19 @@ impl GameEngine {
         self.new_run_constructed(seed, deck_js)?;
         let lives = lives.max(1).min(10);
         self.state.lives = lives;
-        self.starting_lives = lives;
-        self.wins_to_victory = lives;
+        self.state.config.starting_lives = lives;
+        self.state.config.wins_to_victory = lives;
         Ok(())
     }
 
     #[wasm_bindgen]
     pub fn get_starting_lives(&self) -> i32 {
-        self.starting_lives
+        self.state.config.starting_lives
     }
 
     #[wasm_bindgen]
     pub fn get_wins_to_victory(&self) -> i32 {
-        self.wins_to_victory
+        self.state.config.wins_to_victory
     }
 
     /// Get the full game state as JSON (for P2P sync)
@@ -1037,8 +1026,6 @@ impl GameEngine {
         self.state = GameState::reconstruct(card_pool, session.set_id, session.config, session.state);
         self.set_id = self.state.set_id;
         self.last_battle_output = None;
-        self.starting_lives = self.state.config.starting_lives;
-        self.wins_to_victory = self.state.config.wins_to_victory;
         self.start_planning_phase();
 
         Ok(())
