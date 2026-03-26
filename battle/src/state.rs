@@ -13,9 +13,6 @@ use crate::types::*;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-/// Number of board slots (default)
-pub const BOARD_SIZE: usize = 5;
-
 /// An entry in a card set, mapping a card to its rarity.
 #[derive(
     Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, PartialEq, MaxEncodedLen,

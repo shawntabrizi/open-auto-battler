@@ -39,14 +39,14 @@ impl GameSession {
             return Err(format!("Card set {} not found", set_id));
         };
 
-        let mut state = GameState::new(seed);
+        let mut state = GameState::new(seed, config.board_size);
         state.card_pool = card_pool;
         state.set_id = set_id;
         state.lives = config.starting_lives;
         state.mana_limit = config.mana_limit_for_round(1);
-        state.bag = sealed::create_starting_bag(&card_set, seed);
+        state.bag = sealed::create_starting_bag(&card_set, seed, config.bag_size);
         state.next_card_id = 1000;
-        state.draw_hand();
+        state.draw_hand(config.hand_size);
         apply_shop_start_triggers(&mut state);
 
         Ok(Self { state, config })
@@ -63,17 +63,17 @@ impl GameSession {
             return Err(format!("Card set {} not found", set_id));
         };
 
-        constructed::validate_deck(&deck, &card_set, constructed::MAX_COPIES_PER_CARD)?;
+        constructed::validate_deck(&deck, &card_set, constructed::MAX_COPIES_PER_CARD, config.bag_size)?;
 
         let deck_ids: Vec<CardId> = deck.into_iter().map(CardId).collect();
-        let mut state = GameState::new(seed);
+        let mut state = GameState::new(seed, config.board_size);
         state.card_pool = card_pool;
         state.set_id = set_id;
         state.lives = config.starting_lives;
         state.mana_limit = config.mana_limit_for_round(1);
         state.bag = deck_ids;
         state.next_card_id = 1000;
-        state.draw_hand();
+        state.draw_hand(config.hand_size);
         apply_shop_start_triggers(&mut state);
 
         Ok(Self { state, config })
@@ -196,7 +196,7 @@ impl GameSession {
                 self.state.shop_mana = self.state.mana_limit;
             }
             self.state.phase = GamePhase::Shop;
-            self.state.draw_hand();
+            self.state.draw_hand(self.config.hand_size);
             apply_shop_start_triggers_with_result(&mut self.state, Some(outcome.result.clone()));
             None
         };
@@ -249,7 +249,7 @@ impl GameSession {
 
         let battle_seed = self.state.round as u64;
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-        let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool);
+        let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool, self.config.board_size);
 
         self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
         let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
@@ -287,7 +287,7 @@ impl GameSession {
 
     /// Build enemy CombatUnits from opponent unit definitions.
     fn build_opponent(&self, units: &[OpponentUnit]) -> Vec<CombatUnit> {
-        let mut board: Vec<Option<CombatUnit>> = vec![None; oab_battle::state::BOARD_SIZE];
+        let mut board: Vec<Option<CombatUnit>> = vec![None; self.config.board_size];
         for u in units {
             let slot = u.slot as usize;
             if slot >= board.len() {

@@ -17,6 +17,9 @@ fn custom_config_mana_limit() {
         starting_mana_limit: 5,
         max_mana_limit: 15,
         full_mana_each_round: true,
+        board_size: 5,
+        hand_size: 5,
+        bag_size: 50,
     };
     assert_eq!(config.mana_limit_for_round(1), 5);
     assert_eq!(config.mana_limit_for_round(6), 10);

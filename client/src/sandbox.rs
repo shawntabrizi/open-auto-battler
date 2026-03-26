@@ -57,6 +57,7 @@ pub fn run_sandbox_battle(player_units_js: JsValue, enemy_units_js: JsValue, see
         enemy_board.clone(),
         &mut rng,
         &card_pool,
+        5,
     );
 
     let mut limits = oab_battle::limits::BattleLimits::new();

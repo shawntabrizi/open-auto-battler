@@ -6,7 +6,6 @@ use alloc::string::String;
 
 use oab_battle::state::CardSet;
 
-use crate::state::STARTING_BAG_SIZE;
 use oab_battle::types::CardId;
 
 use crate::GameConfig;
@@ -25,24 +24,28 @@ pub fn default_config() -> GameConfig {
         starting_mana_limit: 3,
         max_mana_limit: 10,
         full_mana_each_round: false,
+        board_size: 5,
+        hand_size: 5,
+        bag_size: 50,
     }
 }
 
 /// Validate a user-provided constructed deck against a card set.
 ///
 /// Checks:
-/// - Deck has exactly `STARTING_BAG_SIZE` cards
+/// - Deck has exactly `bag_size` cards
 /// - Every card exists in the set with rarity > 0 (no tokens)
 /// - No card appears more than `max_copies_per_card` times
 pub fn validate_deck(
     deck: &[u32],
     set: &CardSet,
     max_copies_per_card: usize,
+    bag_size: usize,
 ) -> Result<(), String> {
-    if deck.len() != STARTING_BAG_SIZE {
+    if deck.len() != bag_size {
         return Err(format!(
             "Deck must have exactly {} cards, got {}",
-            STARTING_BAG_SIZE,
+            bag_size,
             deck.len()
         ));
     }
@@ -108,7 +111,7 @@ mod tests {
         let set = test_set();
         // 5 copies each = within MAX_COPIES_PER_CARD limit
         let deck: alloc::vec::Vec<u32> = (0..50).map(|i| (i % 5) as u32 + 1).collect();
-        assert!(validate_deck(&deck, &set, 10).is_ok());
+        assert!(validate_deck(&deck, &set, 10, 50).is_ok());
     }
 
     #[test]
@@ -116,8 +119,8 @@ mod tests {
         let set = test_set();
         let short: alloc::vec::Vec<u32> = alloc::vec![1; 49];
         let long: alloc::vec::Vec<u32> = alloc::vec![1; 51];
-        assert!(validate_deck(&short, &set, 50).is_err());
-        assert!(validate_deck(&long, &set, 50).is_err());
+        assert!(validate_deck(&short, &set, 50, 50).is_err());
+        assert!(validate_deck(&long, &set, 50, 50).is_err());
     }
 
     #[test]
@@ -125,7 +128,7 @@ mod tests {
         let set = test_set();
         let mut deck = valid_deck();
         deck[0] = 999;
-        assert!(validate_deck(&deck, &set, 50).is_err());
+        assert!(validate_deck(&deck, &set, 50, 50).is_err());
     }
 
     #[test]
@@ -133,14 +136,14 @@ mod tests {
         let set = test_set();
         let mut deck = valid_deck();
         deck[0] = 99; // token
-        assert!(validate_deck(&deck, &set, 50).is_err());
+        assert!(validate_deck(&deck, &set, 50, 50).is_err());
     }
 
     #[test]
     fn too_many_copies_rejected() {
         let set = test_set();
         let deck = valid_deck(); // 10 copies each
-        assert!(validate_deck(&deck, &set, 5).is_err());
-        assert!(validate_deck(&deck, &set, 10).is_ok());
+        assert!(validate_deck(&deck, &set, 5, 50).is_err());
+        assert!(validate_deck(&deck, &set, 10, 50).is_ok());
     }
 }

@@ -119,6 +119,7 @@ fn run_battle(
         enemy_board.to_vec(),
         &mut rng,
         &card_pool,
+        5,
     )
 }
 
@@ -134,6 +135,7 @@ fn run_battle_with_pool(
         enemy_board.to_vec(),
         &mut rng,
         card_pool,
+        5,
     )
 }
 

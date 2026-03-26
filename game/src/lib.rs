@@ -38,6 +38,12 @@ pub struct GameConfig {
     /// If true, shop_mana is set to mana_limit at the start of each round
     /// (players don't need to burn cards for mana).
     pub full_mana_each_round: bool,
+    /// Number of board slots.
+    pub board_size: usize,
+    /// Number of cards drawn per round as the player's hand.
+    pub hand_size: usize,
+    /// Number of cards in the starting bag/deck.
+    pub bag_size: usize,
 }
 
 impl GameConfig {

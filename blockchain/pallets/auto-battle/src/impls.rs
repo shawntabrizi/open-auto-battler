@@ -186,9 +186,9 @@ impl<T: Config> Pallet<T> {
             card_pool,
             set_id,
             oab_game::LocalGameState {
-                bag: create_starting_bag(&card_set, seed),
+                bag: create_starting_bag(&card_set, seed, config.bag_size),
                 hand: Vec::new(),
-                board: vec![None; oab_battle::state::BOARD_SIZE],
+                board: vec![None; config.board_size],
                 mana_limit: config.mana_limit_for_round(1),
                 shop_mana: 0,
                 round: 1,
@@ -200,7 +200,7 @@ impl<T: Config> Pallet<T> {
             },
         );
 
-        state.draw_hand();
+        state.draw_hand(config.hand_size);
         apply_shop_start_triggers(&mut state);
 
         let (_, _, local_state) = state.decompose();
@@ -273,6 +273,7 @@ impl<T: Config> Pallet<T> {
         enemy_units: Vec<CombatUnit>,
         next_seed_context: &[u8],
     ) -> TurnResult<T> {
+        let config = oab_game::sealed::default_config();
         // Capture opponent ghost board for event emission
         let opponent_ghost: BoundedGhostBoard<T> = {
             let units: Vec<GhostBoardUnit> = enemy_units
@@ -297,6 +298,7 @@ impl<T: Config> Pallet<T> {
             enemy_units,
             &mut rng,
             &battle.core_state.card_pool,
+            config.board_size,
         );
 
         battle.core_state.shop_mana =
@@ -342,7 +344,7 @@ impl<T: Config> Pallet<T> {
             battle.core_state.mana_limit =
                 config.mana_limit_for_round(battle.core_state.round);
             battle.core_state.phase = GamePhase::Shop;
-            battle.core_state.draw_hand();
+            battle.core_state.draw_hand(config.hand_size);
             apply_shop_start_triggers_with_result(&mut battle.core_state, Some(result.clone()));
             new_seed
         } else {

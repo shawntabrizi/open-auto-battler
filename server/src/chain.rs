@@ -251,7 +251,7 @@ mod inner {
                 let enemy_count = enemy_units.len();
 
                 let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-                let events = resolve_battle(player_units, enemy_units, &mut rng, &self.card_pool);
+                let events = resolve_battle(player_units, enemy_units, &mut rng, &self.card_pool, oab_game::sealed::default_config().board_size);
 
                 BattleReport {
                     player_units_survived: 0, // Will be updated from chain state

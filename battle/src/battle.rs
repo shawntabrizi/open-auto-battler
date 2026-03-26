@@ -10,7 +10,6 @@ use scale_info::TypeInfo;
 
 use crate::limits::{BattleLimits, LimitReason};
 use crate::rng::BattleRng;
-use crate::state::BOARD_SIZE;
 use alloc::collections::BTreeMap;
 
 use crate::types::{
@@ -382,6 +381,7 @@ pub fn resolve_battle<R: BattleRng>(
     mut enemy_units: Vec<CombatUnit>,
     rng: &mut R,
     card_pool: &BTreeMap<CardId, UnitCard>,
+    board_size: usize,
 ) -> Vec<CombatEvent> {
     let mut events = Vec::new();
     let mut limits = BattleLimits::new();
@@ -418,6 +418,7 @@ pub fn resolve_battle<R: BattleRng>(
         card_pool,
         None,
         &mut registry,
+        board_size,
     )
     .is_err()
         || limits.is_exceeded()
@@ -446,6 +447,7 @@ pub fn resolve_battle<R: BattleRng>(
             card_pool,
             Some(pre_clash),
             &mut registry,
+            board_size,
         )
         .is_err()
             || limits.is_exceeded()
@@ -466,6 +468,7 @@ pub fn resolve_battle<R: BattleRng>(
             card_pool,
             None,
             &mut registry,
+            board_size,
         )
         .is_err()
             || limits.is_exceeded()
@@ -485,6 +488,7 @@ pub fn resolve_battle<R: BattleRng>(
         card_pool,
         None,
         &mut registry,
+        board_size,
     );
     events
 }
@@ -586,6 +590,7 @@ fn resolve_trigger_queue<R: BattleRng>(
     limits: &mut BattleLimits,
     card_pool: &BTreeMap<CardId, UnitCard>,
     registry: &mut TriggerRegistry,
+    board_size: usize,
 ) -> Result<(), ()> {
     // Trigger Priority:
     // 1. Attack (Highest First) -> Ascending Sort
@@ -692,6 +697,7 @@ fn resolve_trigger_queue<R: BattleRng>(
             trigger.trigger_target_id,
             card_pool,
             registry,
+            board_size,
         )?;
 
         let mut reaction_queue = Vec::new();
@@ -793,6 +799,7 @@ fn resolve_trigger_queue<R: BattleRng>(
                 limits,
                 card_pool,
                 registry,
+                board_size,
             )?;
             limits.exit_trigger_depth();
         }
@@ -819,6 +826,7 @@ fn apply_ability_effect<R: BattleRng>(
     trigger_target_id: Option<UnitInstanceId>,
     card_pool: &BTreeMap<CardId, UnitCard>,
     registry: &mut TriggerRegistry,
+    board_size: usize,
 ) -> Result<Vec<UnitInstanceId>, ()> {
     limits.enter_recursion(source_team)?;
     let result = (|| -> Result<Vec<UnitInstanceId>, ()> {
@@ -930,7 +938,7 @@ fn apply_ability_effect<R: BattleRng>(
                         Team::Enemy => &mut *enemy_units,
                     };
 
-                    if my_board.len() >= BOARD_SIZE {
+                    if my_board.len() >= board_size {
                         return Ok(damaged_units);
                     }
 
@@ -1040,6 +1048,7 @@ fn apply_ability_effect<R: BattleRng>(
                         limits,
                         card_pool,
                         registry,
+                        board_size,
                     )?;
                     limits.exit_trigger_depth();
                 }
@@ -1098,6 +1107,7 @@ fn execute_phase<R: BattleRng>(
     card_pool: &BTreeMap<CardId, UnitCard>,
     clash_context: Option<ClashContext>,
     registry: &mut TriggerRegistry,
+    board_size: usize,
 ) -> Result<(), ()> {
     if phase != BattlePhase::End {
         events.push(CombatEvent::PhaseStart { phase });
@@ -1115,6 +1125,7 @@ fn execute_phase<R: BattleRng>(
                 card_pool,
                 None,
                 registry,
+                board_size,
             )?;
         }
         BattlePhase::BeforeAttack => {
@@ -1131,6 +1142,7 @@ fn execute_phase<R: BattleRng>(
                 card_pool,
                 clash_context,
                 registry,
+                board_size,
             )?;
         }
         BattlePhase::Attack => {
@@ -1146,6 +1158,7 @@ fn execute_phase<R: BattleRng>(
                 limits,
                 card_pool,
                 registry,
+                board_size,
             )?;
         }
         BattlePhase::End => {
@@ -1174,6 +1187,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
     card_pool: &BTreeMap<CardId, UnitCard>,
     clash_context: Option<ClashContext>,
     registry: &mut TriggerRegistry,
+    board_size: usize,
 ) -> Result<(), ()> {
     let mut queue = Vec::new();
 
@@ -1220,6 +1234,7 @@ fn collect_and_resolve_triggers<R: BattleRng>(
         limits,
         card_pool,
         registry,
+        board_size,
     )
 }
 
@@ -1358,6 +1373,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
     limits: &mut BattleLimits,
     card_pool: &BTreeMap<CardId, UnitCard>,
     registry: &mut TriggerRegistry,
+    board_size: usize,
 ) -> Result<(), ()> {
     let clashing_p_id = clash_outcome.player_id;
     let clashing_e_id = clash_outcome.enemy_id;
@@ -1574,6 +1590,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
         limits,
         card_pool,
         registry,
+        board_size,
     )
 }
 

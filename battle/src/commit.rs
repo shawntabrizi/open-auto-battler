@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 
 use crate::error::{GameError, GameResult};
 use crate::rng::{BattleRng, XorShiftRng};
-use crate::state::{ShopState, BOARD_SIZE};
+use crate::state::ShopState;
 use crate::types::{
     CardId, CommitTurnAction, CompareOp, ShopAbility, ShopCondition, ShopEffect, ShopMatcher,
     ShopScope, ShopTarget, ShopTrigger, StatType, TurnAction,
@@ -64,7 +64,7 @@ pub fn apply_shop_start_triggers_with_result(
 
 /// Apply `OnBuy` triggers for a successful shop buy action.
 pub fn apply_on_buy_triggers(state: &mut ShopState, action_index: usize, bought_slot: usize) {
-    if bought_slot >= BOARD_SIZE {
+    if bought_slot >= state.board.len() {
         return;
     }
 
@@ -79,7 +79,7 @@ pub fn apply_on_sell_triggers(
     sold_card_id: CardId,
     sold_slot: usize,
 ) {
-    if sold_slot >= BOARD_SIZE {
+    if sold_slot >= state.board.len() {
         return;
     }
 
@@ -126,7 +126,7 @@ pub fn prepare_board_slot_for_insert<T>(
     board: &[Option<T>],
     target: usize,
 ) -> GameResult<Option<usize>> {
-    if target >= BOARD_SIZE || target >= board.len() {
+    if target >= board.len() {
         return Err(GameError::InvalidBoardSlot {
             index: target as u32,
         });
@@ -162,10 +162,10 @@ pub fn validate_move_board_positions<T>(
     from: usize,
     to: usize,
 ) -> GameResult<()> {
-    if from >= BOARD_SIZE {
+    if from >= board.len() {
         return Err(GameError::InvalidBoardSlot { index: from as u32 });
     }
-    if to >= BOARD_SIZE {
+    if to >= board.len() {
         return Err(GameError::InvalidBoardSlot { index: to as u32 });
     }
     if from == to {
@@ -258,7 +258,7 @@ pub fn verify_and_apply_turn(state: &mut ShopState, action: &CommitTurnAction) -
                 }
 
                 // Validate board slot
-                if bs >= BOARD_SIZE {
+                if bs >= state.board.len() {
                     return Err(GameError::InvalidBoardSlot { index: *board_slot });
                 }
 
@@ -297,7 +297,7 @@ pub fn verify_and_apply_turn(state: &mut ShopState, action: &CommitTurnAction) -
                 let bs = *board_slot as usize;
 
                 // Validate board slot
-                if bs >= BOARD_SIZE {
+                if bs >= state.board.len() {
                     return Err(GameError::InvalidBoardBurn { index: *board_slot });
                 }
 
@@ -325,10 +325,10 @@ pub fn verify_and_apply_turn(state: &mut ShopState, action: &CommitTurnAction) -
                 let sb = *slot_b as usize;
 
                 // Validate both slots
-                if sa >= BOARD_SIZE {
+                if sa >= state.board.len() {
                     return Err(GameError::InvalidBoardSlot { index: *slot_a });
                 }
-                if sb >= BOARD_SIZE {
+                if sb >= state.board.len() {
                     return Err(GameError::InvalidBoardSlot { index: *slot_b });
                 }
 
@@ -613,7 +613,7 @@ fn resolve_self_position_target(
         return Vec::new();
     };
 
-    if slot >= BOARD_SIZE {
+    if slot >= state.board.len() {
         return Vec::new();
     }
 
@@ -652,7 +652,7 @@ fn resolve_absolute_position_target(
     }
 
     let idx = index as usize;
-    if idx >= BOARD_SIZE {
+    if idx >= state.board.len() {
         return Vec::new();
     }
 

@@ -10,7 +10,7 @@ use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
 use oab_battle::rng::{BattleRng, XorShiftRng};
-use oab_battle::state::{find_empty_board_slot, ShopState, BOARD_SIZE};
+use oab_battle::state::{find_empty_board_slot, ShopState};
 use oab_battle::types::*;
 
 #[cfg(feature = "std")]
@@ -110,13 +110,13 @@ impl core::ops::DerefMut for GameState {
 }
 
 impl GameState {
-    pub fn new(game_seed: u64) -> Self {
+    pub fn new(game_seed: u64, board_size: usize) -> Self {
         Self {
             shop: ShopState {
                 card_pool: BTreeMap::new(),
                 set_id: 0,
                 hand: Vec::new(),
-                board: vec![None; BOARD_SIZE],
+                board: vec![None; board_size],
                 mana_limit: 0,
                 shop_mana: 0,
                 round: 1,
@@ -195,10 +195,10 @@ impl GameState {
     }
 
     /// Populate the hand by drawing from the bag.
-    pub fn draw_hand(&mut self) {
+    pub fn draw_hand(&mut self, hand_size: usize) {
         self.bag.append(&mut self.shop.hand);
 
-        let indices = self.derive_hand_indices();
+        let indices = derive_hand_indices_logic(self.bag.len(), self.shop.game_seed, self.shop.round, hand_size);
         if indices.is_empty() {
             return;
         }
@@ -222,11 +222,6 @@ impl GameState {
         CardId(id)
     }
 
-    /// Derive hand indices from bag using deterministic RNG
-    pub fn derive_hand_indices(&self) -> Vec<usize> {
-        derive_hand_indices_logic(self.bag.len(), self.shop.game_seed, self.shop.round)
-    }
-
     /// Find an empty board slot
     pub fn find_empty_board_slot(&self) -> Option<usize> {
         find_empty_board_slot(&self.shop.board)
@@ -239,12 +234,17 @@ impl GameState {
 }
 
 /// Shared logic to derive hand indices
-pub fn derive_hand_indices_logic(bag_len: usize, game_seed: u64, round: i32) -> Vec<usize> {
+pub fn derive_hand_indices_logic(
+    bag_len: usize,
+    game_seed: u64,
+    round: i32,
+    hand_size: usize,
+) -> Vec<usize> {
     if bag_len == 0 {
         return Vec::new();
     }
 
-    let hand_count = HAND_SIZE.min(bag_len);
+    let hand_count = hand_size.min(bag_len);
     let seed = game_seed ^ (round as u64);
     let mut rng = XorShiftRng::seed_from_u64(seed);
 
@@ -260,6 +260,6 @@ pub fn derive_hand_indices_logic(bag_len: usize, game_seed: u64, round: i32) -> 
 
 impl Default for GameState {
     fn default() -> Self {
-        Self::new(42)
+        Self::new(42, 5)
     }
 }

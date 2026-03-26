@@ -36,14 +36,14 @@ where
     MaxConditions: Get<u32>,
 {
     /// Populate the hand by drawing from the bag.
-    pub fn draw_hand(&mut self) {
+    pub fn draw_hand(&mut self, hand_size: usize) {
         // Return unused hand cards to the bag
         let hand_cards: Vec<_> = self.hand.drain(..).collect();
         for card_id in hand_cards {
             let _ = self.bag.try_push(card_id);
         }
 
-        let indices = derive_hand_indices_logic(self.bag.len(), self.game_seed, self.round);
+        let indices = derive_hand_indices_logic(self.bag.len(), self.game_seed, self.round, hand_size);
         if indices.is_empty() {
             return;
         }

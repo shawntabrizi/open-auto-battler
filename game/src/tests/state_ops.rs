@@ -5,7 +5,7 @@ use oab_battle::types::{BoardUnit, *};
 
 #[test]
 fn test_generate_card_id_monotonic() {
-    let mut state = GameState::new(100);
+    let mut state = GameState::new(100, 5);
     let a = state.generate_card_id();
     let b = state.generate_card_id();
     let c = state.generate_card_id();
@@ -17,7 +17,7 @@ fn test_generate_card_id_monotonic() {
 
 #[test]
 fn test_reconstruct_decompose_round_trip() {
-    let mut state = GameState::new(200);
+    let mut state = GameState::new(200, 5);
     let id = state.generate_card_id();
     state
         .card_pool
@@ -35,7 +35,7 @@ fn test_reconstruct_decompose_round_trip() {
 
 #[test]
 fn test_draw_hand_returns_previous_hand_to_bag_before_redraw() {
-    let mut state = GameState::new(300);
+    let mut state = GameState::new(300, 5);
     let mut all_ids = Vec::new();
 
     for _ in 0..8 {
@@ -47,11 +47,11 @@ fn test_draw_hand_returns_previous_hand_to_bag_before_redraw() {
         all_ids.push(id);
     }
 
-    state.draw_hand();
+    state.draw_hand(5);
     assert_eq!(state.hand.len(), 5);
     assert_eq!(state.bag.len(), 3);
 
-    state.draw_hand();
+    state.draw_hand(5);
     assert_eq!(state.hand.len(), 5);
     assert_eq!(state.bag.len(), 3);
 
@@ -68,15 +68,15 @@ fn test_draw_hand_returns_previous_hand_to_bag_before_redraw() {
 
 #[test]
 fn test_draw_hand_noop_when_bag_and_hand_empty() {
-    let mut state = GameState::new(400);
-    state.draw_hand();
+    let mut state = GameState::new(400, 5);
+    state.draw_hand(5);
     assert!(state.hand.is_empty());
     assert!(state.bag.is_empty());
 }
 
 #[test]
 fn test_find_empty_board_slot_and_count() {
-    let mut state = GameState::new(500);
+    let mut state = GameState::new(500, 5);
     assert_eq!(state.find_empty_board_slot(), Some(0));
     assert_eq!(state.board_unit_count(), 0);
 

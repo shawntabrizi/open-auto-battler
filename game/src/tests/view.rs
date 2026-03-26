@@ -4,7 +4,7 @@ use crate::view::GameView;
 
 #[test]
 fn test_game_view_from_state_maps_hand_board_and_affordability() {
-    let mut state = GameState::new(123);
+    let mut state = GameState::new(123, 5);
     state.round = 4;
     state.lives = 2;
     state.wins = 3;
@@ -52,7 +52,7 @@ fn test_game_view_from_state_maps_hand_board_and_affordability() {
 
 #[test]
 fn test_game_view_phase_mapping() {
-    let mut state = GameState::new(456);
+    let mut state = GameState::new(456, 5);
     let card_id = CardId(10);
     state
         .card_pool

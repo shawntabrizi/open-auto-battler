@@ -96,7 +96,7 @@ impl GameEngine {
             config,
             hand_used: Vec::new(),
             action_log: Vec::new(),
-            start_board: vec![None; BOARD_SIZE],
+            start_board: Vec::new(),
             start_shop_mana: 0,
             undo_history: Vec::new(),
             custom_sets: std::collections::HashMap::new(),
@@ -416,7 +416,7 @@ impl GameEngine {
             return Err("Card already used this turn".to_string());
         }
 
-        if board_slot >= BOARD_SIZE {
+        if board_slot >= self.state.board.len() {
             return Err("Invalid board slot".to_string());
         }
 
@@ -640,7 +640,7 @@ impl GameEngine {
             self.state.shop_mana = self.state.mana_limit;
         }
         self.state.phase = GamePhase::Shop;
-        self.state.draw_hand();
+        self.state.draw_hand(self.config.hand_size);
         let previous_battle_result = self.last_battle_output.as_ref().and_then(|output| {
             output.events.iter().rev().find_map(|event| {
                 if let CombatEvent::BattleEnd { result } = event {
@@ -664,7 +664,7 @@ impl GameEngine {
         self.config = oab_game::sealed::default_config();
         // Preserve card_pool when resetting state
         let card_pool = std::mem::take(&mut self.state.card_pool);
-        self.state = GameState::new(seed);
+        self.state = GameState::new(seed, self.config.board_size);
         self.state.card_pool = card_pool;
         self.last_battle_output = None;
         self.starting_lives = self.config.starting_lives;
@@ -703,6 +703,7 @@ impl GameEngine {
             &deck,
             card_set,
             oab_game::constructed::MAX_COPIES_PER_CARD,
+            oab_game::constructed::default_config().bag_size,
         )?;
 
         log::action(
@@ -713,7 +714,7 @@ impl GameEngine {
         self.config = oab_game::constructed::default_config();
         let deck_ids: Vec<CardId> = deck.into_iter().map(CardId).collect();
         let card_pool = std::mem::take(&mut self.state.card_pool);
-        self.state = GameState::new(seed);
+        self.state = GameState::new(seed, self.config.board_size);
         self.state.card_pool = card_pool;
         self.last_battle_output = None;
         self.starting_lives = self.config.starting_lives;
@@ -723,7 +724,7 @@ impl GameEngine {
 
         self.state.bag = deck_ids;
         self.state.next_card_id = 1000;
-        self.state.draw_hand();
+        self.state.draw_hand(self.config.hand_size);
 
         apply_shop_start_triggers(&mut self.state);
         self.start_planning_phase();
@@ -865,6 +866,7 @@ impl GameEngine {
             enemy_units.clone(),
             &mut rng,
             &self.state.card_pool,
+            self.config.board_size,
         );
 
         // Generate initial views for UI animation
@@ -1067,20 +1069,20 @@ impl GameEngine {
 
         if let Some(card_set) = &self.card_set {
             // Generate random bag of 100 cards from the already-loaded set
-            self.state.bag = create_starting_bag(card_set, self.state.game_seed);
+            self.state.bag = create_starting_bag(card_set, self.state.game_seed, self.config.bag_size);
         }
 
         // Set next_card_id to be after card definitions
         self.state.next_card_id = 1000;
 
         // Draw initial hand once bag is ready
-        self.state.draw_hand();
+        self.state.draw_hand(self.config.hand_size);
     }
 
     fn start_planning_phase(&mut self) {
         // If hand is empty, draw it (should have been drawn by initialize_bag or continue_after_battle)
         if self.state.hand.is_empty() {
-            self.state.draw_hand();
+            self.state.draw_hand(self.config.hand_size);
         }
 
         let hand_size = self.state.hand.len();
@@ -1159,7 +1161,7 @@ impl GameEngine {
         let enemy_units = Vec::new();
 
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-        let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool);
+        let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool, self.config.board_size);
         self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
         let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
         self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);
