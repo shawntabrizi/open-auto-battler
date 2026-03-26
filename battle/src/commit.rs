@@ -202,6 +202,7 @@ pub fn apply_move_board_positions<T>(board: &mut [Option<T>], from: usize, to: u
 /// Tracks mana, used hand cards, and action ordering so that callers (e.g.
 /// reinforcement-learning bots) can apply shop actions one at a time while
 /// observing the true engine state after each action.
+#[derive(Clone)]
 pub struct ShopTurnContext {
     /// Which hand cards have already been used this turn.
     pub hand_used: Vec<bool>,

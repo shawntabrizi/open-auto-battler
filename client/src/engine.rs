@@ -4,7 +4,6 @@
 
 use std::format;
 use std::string::{String, ToString};
-use std::vec;
 use std::vec::Vec;
 
 use bounded_collections::ConstU32;
@@ -14,15 +13,13 @@ use oab_battle::battle::{
 };
 use oab_battle::bounded::BoundedCardSet;
 use oab_battle::commit::{
-    apply_board_insert_shift, apply_move_board_positions, apply_on_buy_triggers,
-    apply_on_sell_triggers, apply_shop_start_triggers, apply_shop_start_triggers_with_result,
-    prepare_board_slot_for_insert, validate_move_board_positions, verify_and_apply_turn,
+    apply_shop_start_triggers, apply_shop_start_triggers_with_result, apply_single_action,
+    verify_and_apply_turn, ShopTurnContext,
 };
 use oab_battle::log;
 use oab_battle::rng::XorShiftRng;
 use oab_battle::state::*;
 use oab_battle::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
-use oab_battle::GameError;
 use oab_game::bounded::BoundedGameSession;
 use oab_game::view::{CardView, GameView};
 use oab_game::{GamePhase, GameSession, GameState};
@@ -49,8 +46,7 @@ pub struct BattleOutput {
 /// Snapshot of turn state for undo functionality
 #[derive(Clone)]
 struct TurnSnapshot {
-    mana: i32,
-    hand_used: Vec<bool>,
+    shop_ctx: ShopTurnContext,
     action_log: Vec<TurnAction>,
     board: Vec<Option<BoardUnit>>,
 }
@@ -63,11 +59,11 @@ pub struct GameEngine {
     card_set: Option<CardSet>, // Loaded card set for bag generation
     last_battle_output: Option<BattleOutput>,
     // Per-turn local tracking (transient, not persisted)
-    hand_used: Vec<bool>,                // true = burned or played
-    action_log: Vec<TurnAction>,         // Ordered list of actions taken this turn
+    shop_ctx: ShopTurnContext,   // canonical incremental shop context
+    action_log: Vec<TurnAction>, // Ordered list of actions taken this turn
     start_board: Vec<Option<BoardUnit>>, // board state at the start of the turn
-    start_shop_mana: i32,                // mana state at the start of the turn
-    undo_history: Vec<TurnSnapshot>,     // Stack of snapshots for undo
+    start_shop_mana: i32,        // mana state at the start of the turn
+    undo_history: Vec<TurnSnapshot>, // Stack of snapshots for undo
     custom_sets: std::collections::HashMap<u32, CardSet>, // Blockchain sets injected via add_set
 }
 
@@ -87,7 +83,7 @@ impl GameEngine {
             state,
             card_set: None,
             last_battle_output: None,
-            hand_used: Vec::new(),
+            shop_ctx: ShopTurnContext::new(&GameState::empty()),
             action_log: Vec::new(),
             start_board: Vec::new(),
             start_shop_mana: 0,
@@ -302,8 +298,12 @@ impl GameEngine {
     pub fn get_view(&self) -> JsValue {
         log::debug("get_view", "Serializing game state to view");
         let can_undo = !self.undo_history.is_empty();
-        let view =
-            GameView::from_state(&self.state, self.state.shop_mana, &self.hand_used, can_undo);
+        let view = GameView::from_state(
+            &self.state,
+            self.state.shop_mana,
+            &self.shop_ctx.hand_used,
+            can_undo,
+        );
         match serde_wasm_bindgen::to_value(&view) {
             Ok(val) => val,
             Err(e) => {
@@ -356,31 +356,23 @@ impl GameEngine {
             &format!(
                 "hand_index={}, hand_used_len={}",
                 hand_index,
-                self.hand_used.len()
+                self.shop_ctx.hand_used.len()
             ),
         );
         if self.state.phase != GamePhase::Shop {
             return Err("Can only burn during shop phase".to_string());
         }
 
-        let card_id = self
-            .state
-            .hand
-            .get(hand_index)
-            .ok_or("Invalid hand index")?;
-
-        if hand_index < self.hand_used.len() && self.hand_used[hand_index] {
-            return Err("Card already used this turn".to_string());
-        }
-
-        let burn_value = self.get_card(*card_id).economy.burn_value;
-
-        self.save_snapshot();
-        self.state.shop_mana = (self.state.shop_mana + burn_value).min(self.state.mana_limit);
-        self.hand_used[hand_index] = true;
-        self.action_log.push(TurnAction::BurnFromHand {
+        let action = TurnAction::BurnFromHand {
             hand_index: hand_index as u32,
-        });
+        };
+        self.save_snapshot();
+        if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
+            let snapshot = self.undo_history.pop().unwrap();
+            self.restore_snapshot(snapshot);
+            return Err(format!("{:?}", e));
+        }
+        self.action_log.push(action);
 
         self.log_state();
         Ok(())
@@ -397,56 +389,18 @@ impl GameEngine {
             return Err("Can only play during shop phase".to_string());
         }
 
-        let card_id = *self
-            .state
-            .hand
-            .get(hand_index)
-            .ok_or("Invalid hand index")?;
-
-        if self.hand_used[hand_index] {
-            return Err("Card already used this turn".to_string());
-        }
-
-        if board_slot >= self.state.board.len() {
-            return Err("Invalid board slot".to_string());
-        }
-
-        let play_cost = {
-            let card = self.get_card(card_id);
-            card.economy.play_cost
-        };
-
-        if self.state.shop_mana < play_cost {
-            return Err(format!(
-                "Not enough mana: have {}, need {}",
-                self.state.shop_mana, play_cost
-            ));
-        }
-
-        let insert_shift = prepare_board_slot_for_insert(&self.state.board, board_slot).map_err(
-            |err| match err {
-                GameError::InvalidBoardSlot { .. } => "Invalid board slot".to_string(),
-                GameError::BoardFull => "Board is full".to_string(),
-                _ => "Invalid board slot".to_string(),
-            },
-        )?;
-
-        self.save_snapshot();
-        if let Some(empty_slot) = insert_shift {
-            apply_board_insert_shift(&mut self.state.board, empty_slot, board_slot);
-        }
-
-        self.state.shop_mana -= play_cost;
-        self.hand_used[hand_index] = true;
-        self.action_log.push(TurnAction::PlayFromHand {
+        let action = TurnAction::PlayFromHand {
             hand_index: hand_index as u32,
             board_slot: board_slot as u32,
-        });
-
-        // Place the card on the board (slot is now guaranteed empty)
-        self.state.board[board_slot] = Some(BoardUnit::new(card_id));
-        let action_index = self.action_log.len().saturating_sub(1);
-        apply_on_buy_triggers(&mut self.state, action_index, board_slot);
+        };
+        self.save_snapshot();
+        if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
+            // Rollback on failure: restore snapshot since save_snapshot was already called
+            let snapshot = self.undo_history.pop().unwrap();
+            self.restore_snapshot(snapshot);
+            return Err(format!("{:?}", e));
+        }
+        self.action_log.push(action);
 
         self.log_state();
         Ok(())
@@ -463,16 +417,17 @@ impl GameEngine {
             return Err("Can only swap during shop phase".to_string());
         }
 
-        if slot_a >= self.state.board.len() || slot_b >= self.state.board.len() {
-            return Err("Invalid board slot".to_string());
-        }
-
-        self.save_snapshot();
-        self.state.board.swap(slot_a, slot_b);
-        self.action_log.push(TurnAction::SwapBoard {
+        let action = TurnAction::SwapBoard {
             slot_a: slot_a as u32,
             slot_b: slot_b as u32,
-        });
+        };
+        self.save_snapshot();
+        if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
+            let snapshot = self.undo_history.pop().unwrap();
+            self.restore_snapshot(snapshot);
+            return Err(format!("{:?}", e));
+        }
+        self.action_log.push(action);
         Ok(())
     }
 
@@ -484,29 +439,17 @@ impl GameEngine {
             return Err("Can only move during shop phase".to_string());
         }
 
-        if from >= self.state.board.len() || to >= self.state.board.len() {
-            return Err("Invalid board slot".to_string());
-        }
-
-        validate_move_board_positions(&self.state.board, from, to).map_err(|err| match err {
-            GameError::InvalidBoardSlot { .. } => "Invalid board slot".to_string(),
-            GameError::InvalidBoardMove { .. } => "Source and target slots must differ".to_string(),
-            GameError::BoardSlotEmpty { index } if index == from as u32 => {
-                "Source board slot is empty".to_string()
-            }
-            GameError::BoardSlotEmpty { .. } => {
-                "Target board slot is empty; use swap_board_positions for direct moves".to_string()
-            }
-            _ => "Invalid board move".to_string(),
-        })?;
-
-        self.save_snapshot();
-        apply_move_board_positions(&mut self.state.board, from, to);
-
-        self.action_log.push(TurnAction::MoveBoard {
+        let action = TurnAction::MoveBoard {
             from_slot: from as u32,
             to_slot: to as u32,
-        });
+        };
+        self.save_snapshot();
+        if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
+            let snapshot = self.undo_history.pop().unwrap();
+            self.restore_snapshot(snapshot);
+            return Err(format!("{:?}", e));
+        }
+        self.action_log.push(action);
         Ok(())
     }
 
@@ -518,34 +461,16 @@ impl GameEngine {
             return Err("Can only burn during shop phase".to_string());
         }
 
-        // Check slot is occupied before saving snapshot
-        if self
-            .state
-            .board
-            .get(board_slot)
-            .map(|s| s.is_none())
-            .unwrap_or(true)
-        {
-            return Err("Board slot is empty".to_string());
-        }
-
-        self.save_snapshot();
-
-        let unit = self
-            .state
-            .board
-            .get_mut(board_slot)
-            .and_then(|s| s.take())
-            .expect("Board slot should be occupied");
-
-        let card_id = unit.card_id;
-        let burn_value = self.get_card(card_id).economy.burn_value;
-        self.state.shop_mana = (self.state.shop_mana + burn_value).min(self.state.mana_limit);
-        self.action_log.push(TurnAction::BurnFromBoard {
+        let action = TurnAction::BurnFromBoard {
             board_slot: board_slot as u32,
-        });
-        let action_index = self.action_log.len().saturating_sub(1);
-        apply_on_sell_triggers(&mut self.state, action_index, card_id, board_slot);
+        };
+        self.save_snapshot();
+        if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
+            let snapshot = self.undo_history.pop().unwrap();
+            self.restore_snapshot(snapshot);
+            return Err(format!("{:?}", e));
+        }
+        self.action_log.push(action);
 
         self.log_state();
         Ok(())
@@ -560,11 +485,7 @@ impl GameEngine {
         }
 
         let snapshot = self.undo_history.pop().ok_or("Nothing to undo")?;
-
-        self.state.shop_mana = snapshot.mana;
-        self.hand_used = snapshot.hand_used;
-        self.action_log = snapshot.action_log;
-        self.state.board = snapshot.board;
+        self.restore_snapshot(snapshot);
 
         self.log_state();
         Ok(())
@@ -1041,11 +962,18 @@ impl GameEngine {
     /// Save current state to undo history before making a change
     fn save_snapshot(&mut self) {
         self.undo_history.push(TurnSnapshot {
-            mana: self.state.shop_mana,
-            hand_used: self.hand_used.clone(),
+            shop_ctx: self.shop_ctx.clone(),
             action_log: self.action_log.clone(),
             board: self.state.board.clone(),
         });
+    }
+
+    /// Restore state from a snapshot
+    fn restore_snapshot(&mut self, snapshot: TurnSnapshot) {
+        self.shop_ctx = snapshot.shop_ctx;
+        self.action_log = snapshot.action_log;
+        self.state.board = snapshot.board;
+        self.state.shop_mana = self.shop_ctx.current_mana;
     }
 
     fn initialize_bag(&mut self) {
@@ -1075,11 +1003,9 @@ impl GameEngine {
             self.state.draw_hand(self.state.config.hand_size as usize);
         }
 
-        let hand_size = self.state.hand.len();
-        self.hand_used = vec![false; hand_size];
+        self.shop_ctx = ShopTurnContext::new(&self.state);
         self.action_log = Vec::new();
         self.start_board = self.state.board.clone();
-        self.state.shop_mana = self.state.shop_mana.clamp(0, self.state.mana_limit);
         self.start_shop_mana = self.state.shop_mana;
         self.undo_history.clear();
     }
