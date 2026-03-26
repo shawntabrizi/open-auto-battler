@@ -1,5 +1,6 @@
 mod battle_helpers;
 mod battle_result;
+mod incremental;
 mod limits;
 mod log;
 mod math;

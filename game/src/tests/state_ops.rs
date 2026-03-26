@@ -100,7 +100,11 @@ fn test_empty_state_constructor_is_zeroed_and_sized() {
     assert_eq!(state.shop_mana, 0);
     assert_eq!(state.lives, 0);
     assert_eq!(state.wins, 0);
-    assert_eq!(state.board.len(), 0, "empty() is a placeholder with no board slots");
+    assert_eq!(
+        state.board.len(),
+        0,
+        "empty() is a placeholder with no board slots"
+    );
 }
 
 #[test]

@@ -1426,7 +1426,9 @@ fn test_end_game_grants_achievements() {
         // Place a unit on the board and set wins to 10 so game ends as victory
         ActiveGame::<Test>::mutate(player, |session| {
             let s = session.as_mut().unwrap();
-            s.state.board[0] = Some(oab_battle::types::BoardUnit::new(oab_battle::types::CardId(0)));
+            s.state.board[0] = Some(oab_battle::types::BoardUnit::new(
+                oab_battle::types::CardId(0),
+            ));
             s.state.wins = 10;
             s.state.lives = 100;
         });
@@ -1532,7 +1534,9 @@ fn test_end_tournament_game_archives_and_records_stats() {
         // Place a unit and set wins to 10 for victory
         ActiveTournamentGame::<Test>::mutate(player, |session| {
             let s = session.as_mut().unwrap();
-            s.state.board[0] = Some(oab_battle::types::BoardUnit::new(oab_battle::types::CardId(0)));
+            s.state.board[0] = Some(oab_battle::types::BoardUnit::new(
+                oab_battle::types::CardId(0),
+            ));
             s.state.wins = 10;
             s.state.lives = 100;
         });

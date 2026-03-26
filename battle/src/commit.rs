@@ -197,157 +197,173 @@ pub fn apply_move_board_positions<T>(board: &mut [Option<T>], from: usize, to: u
     }
 }
 
-/// Verify and apply a committed turn action to the game state.
+/// Context for incremental shop turn execution.
 ///
-/// This function executes actions sequentially in order:
-/// 1. Validates each action as it's processed
-/// 2. Tracks mana changes (earned from burns, spent on plays)
-/// 3. Ensures mana never goes negative and respects mana_limit
-/// 4. Updates board state as actions are applied
-/// 5. Removes used hand cards at the end
-pub fn verify_and_apply_turn(state: &mut ShopState, action: &CommitTurnAction) -> GameResult<()> {
-    let hand_size = state.hand.len();
+/// Tracks mana, used hand cards, and action ordering so that callers (e.g.
+/// reinforcement-learning bots) can apply shop actions one at a time while
+/// observing the true engine state after each action.
+pub struct ShopTurnContext {
+    /// Which hand cards have already been used this turn.
+    pub hand_used: Vec<bool>,
+    /// Current mana available during the shop turn.
+    pub current_mana: i32,
+    /// Index of the next action (used for deterministic trigger RNG).
+    pub action_index: usize,
+}
 
-    // Track mana and used cards
-    let mut current_mana: i32 = state.shop_mana.clamp(0, state.mana_limit);
-    let mut hand_used = vec![false; hand_size];
+impl ShopTurnContext {
+    /// Create a new context from the current shop state.
+    pub fn new(state: &ShopState) -> Self {
+        Self {
+            hand_used: vec![false; state.hand.len()],
+            current_mana: state.shop_mana.clamp(0, state.mana_limit),
+            action_index: 0,
+        }
+    }
+}
 
-    // Process each action in order
-    for (action_index, turn_action) in action.actions.iter().enumerate() {
-        match turn_action {
-            TurnAction::BurnFromHand { hand_index } => {
-                let hi = *hand_index as usize;
+/// Apply a single turn action to the shop state using the given context.
+///
+/// This is the canonical per-action shop execution entry point. Both batch
+/// execution (`verify_and_apply_turn`) and incremental execution share this
+/// same implementation.
+pub fn apply_single_action(
+    state: &mut ShopState,
+    ctx: &mut ShopTurnContext,
+    action: &TurnAction,
+) -> GameResult<()> {
+    let hand_size = ctx.hand_used.len();
 
-                // Validate index
-                if hi >= hand_size {
-                    return Err(GameError::InvalidHandIndex { index: *hand_index });
-                }
+    match action {
+        TurnAction::BurnFromHand { hand_index } => {
+            let hi = *hand_index as usize;
 
-                // Check not already used
-                if hand_used[hi] {
-                    return Err(GameError::CardAlreadyUsed { index: *hand_index });
-                }
-
-                // Get burn value and add mana (capped at mana_limit)
-                let card_id = state.hand[hi];
-                let burn_value = state
-                    .card_pool
-                    .get(&card_id)
-                    .map(|c| c.economy.burn_value)
-                    .unwrap_or(0);
-
-                current_mana = (current_mana + burn_value).min(state.mana_limit);
-                hand_used[hi] = true;
+            if hi >= hand_size {
+                return Err(GameError::InvalidHandIndex { index: *hand_index });
             }
 
-            TurnAction::PlayFromHand {
-                hand_index,
-                board_slot,
-            } => {
-                let hi = *hand_index as usize;
-                let bs = *board_slot as usize;
-
-                // Validate hand index
-                if hi >= hand_size {
-                    return Err(GameError::InvalidHandIndex { index: *hand_index });
-                }
-
-                // Check hand card not already used
-                if hand_used[hi] {
-                    return Err(GameError::CardAlreadyUsed { index: *hand_index });
-                }
-
-                // Validate board slot
-                if bs >= state.board.len() {
-                    return Err(GameError::InvalidBoardSlot { index: *board_slot });
-                }
-
-                // Get card info
-                let card_id = state.hand[hi];
-                let play_cost = state
-                    .card_pool
-                    .get(&card_id)
-                    .map(|c| c.economy.play_cost)
-                    .unwrap_or(0);
-
-                // Check we have enough mana
-                if current_mana < play_cost {
-                    return Err(GameError::NotEnoughMana {
-                        have: current_mana,
-                        need: play_cost,
-                    });
-                }
-
-                let insert_shift = prepare_board_slot_for_insert(&state.board, bs)?;
-                if let Some(empty_slot) = insert_shift {
-                    apply_board_insert_shift(&mut state.board, empty_slot, bs);
-                }
-
-                // Deduct mana and place unit
-                current_mana -= play_cost;
-                hand_used[hi] = true;
-                state.board[bs] = Some(crate::types::BoardUnit::new(card_id));
-
-                state.shop_mana = current_mana;
-                apply_on_buy_triggers(state, action_index, bs);
-                current_mana = state.shop_mana;
+            if ctx.hand_used[hi] {
+                return Err(GameError::CardAlreadyUsed { index: *hand_index });
             }
 
-            TurnAction::BurnFromBoard { board_slot } => {
-                let bs = *board_slot as usize;
+            let card_id = state.hand[hi];
+            let burn_value = state
+                .card_pool
+                .get(&card_id)
+                .map(|c| c.economy.burn_value)
+                .unwrap_or(0);
 
-                // Validate board slot
-                if bs >= state.board.len() {
-                    return Err(GameError::InvalidBoardBurn { index: *board_slot });
-                }
+            ctx.current_mana = (ctx.current_mana + burn_value).min(state.mana_limit);
+            ctx.hand_used[hi] = true;
+        }
 
-                // Check slot has a unit
-                let sold_unit = state.board[bs]
-                    .take()
-                    .ok_or(GameError::InvalidBoardBurn { index: *board_slot })?;
+        TurnAction::PlayFromHand {
+            hand_index,
+            board_slot,
+        } => {
+            let hi = *hand_index as usize;
+            let bs = *board_slot as usize;
 
-                // Get burn value and add mana (capped at mana_limit)
-                let burn_value = state
-                    .card_pool
-                    .get(&sold_unit.card_id)
-                    .map(|c| c.economy.burn_value)
-                    .unwrap_or(0);
-
-                current_mana = (current_mana + burn_value).min(state.mana_limit);
-
-                state.shop_mana = current_mana;
-                apply_on_sell_triggers(state, action_index, sold_unit.card_id, bs);
-                current_mana = state.shop_mana;
+            if hi >= hand_size {
+                return Err(GameError::InvalidHandIndex { index: *hand_index });
             }
 
-            TurnAction::SwapBoard { slot_a, slot_b } => {
-                let sa = *slot_a as usize;
-                let sb = *slot_b as usize;
-
-                // Validate both slots
-                if sa >= state.board.len() {
-                    return Err(GameError::InvalidBoardSlot { index: *slot_a });
-                }
-                if sb >= state.board.len() {
-                    return Err(GameError::InvalidBoardSlot { index: *slot_b });
-                }
-
-                // Swap positions
-                state.board.swap(sa, sb);
+            if ctx.hand_used[hi] {
+                return Err(GameError::CardAlreadyUsed { index: *hand_index });
             }
 
-            TurnAction::MoveBoard { from_slot, to_slot } => {
-                let from = *from_slot as usize;
-                let to = *to_slot as usize;
-
-                validate_move_board_positions(&state.board, from, to)?;
-                apply_move_board_positions(&mut state.board, from, to);
+            if bs >= state.board.len() {
+                return Err(GameError::InvalidBoardSlot { index: *board_slot });
             }
+
+            let card_id = state.hand[hi];
+            let play_cost = state
+                .card_pool
+                .get(&card_id)
+                .map(|c| c.economy.play_cost)
+                .unwrap_or(0);
+
+            if ctx.current_mana < play_cost {
+                return Err(GameError::NotEnoughMana {
+                    have: ctx.current_mana,
+                    need: play_cost,
+                });
+            }
+
+            let insert_shift = prepare_board_slot_for_insert(&state.board, bs)?;
+            if let Some(empty_slot) = insert_shift {
+                apply_board_insert_shift(&mut state.board, empty_slot, bs);
+            }
+
+            ctx.current_mana -= play_cost;
+            ctx.hand_used[hi] = true;
+            state.board[bs] = Some(crate::types::BoardUnit::new(card_id));
+
+            state.shop_mana = ctx.current_mana;
+            apply_on_buy_triggers(state, ctx.action_index, bs);
+            ctx.current_mana = state.shop_mana;
+        }
+
+        TurnAction::BurnFromBoard { board_slot } => {
+            let bs = *board_slot as usize;
+
+            if bs >= state.board.len() {
+                return Err(GameError::InvalidBoardBurn { index: *board_slot });
+            }
+
+            let sold_unit = state.board[bs]
+                .take()
+                .ok_or(GameError::InvalidBoardBurn { index: *board_slot })?;
+
+            let burn_value = state
+                .card_pool
+                .get(&sold_unit.card_id)
+                .map(|c| c.economy.burn_value)
+                .unwrap_or(0);
+
+            ctx.current_mana = (ctx.current_mana + burn_value).min(state.mana_limit);
+
+            state.shop_mana = ctx.current_mana;
+            apply_on_sell_triggers(state, ctx.action_index, sold_unit.card_id, bs);
+            ctx.current_mana = state.shop_mana;
+        }
+
+        TurnAction::SwapBoard { slot_a, slot_b } => {
+            let sa = *slot_a as usize;
+            let sb = *slot_b as usize;
+
+            if sa >= state.board.len() {
+                return Err(GameError::InvalidBoardSlot { index: *slot_a });
+            }
+            if sb >= state.board.len() {
+                return Err(GameError::InvalidBoardSlot { index: *slot_b });
+            }
+
+            state.board.swap(sa, sb);
+        }
+
+        TurnAction::MoveBoard { from_slot, to_slot } => {
+            let from = *from_slot as usize;
+            let to = *to_slot as usize;
+
+            validate_move_board_positions(&state.board, from, to)?;
+            apply_move_board_positions(&mut state.board, from, to);
         }
     }
 
+    ctx.action_index += 1;
+    state.shop_mana = ctx.current_mana;
+
+    Ok(())
+}
+
+/// Finalize a shop turn by removing used hand cards and writing final mana.
+///
+/// Call this after all actions have been applied via `apply_single_action`.
+pub fn finalize_turn(state: &mut ShopState, ctx: ShopTurnContext) {
     // Remove used hand cards (sort descending to preserve indices)
-    let mut hand_indices_to_remove: Vec<usize> = hand_used
+    let mut hand_indices_to_remove: Vec<usize> = ctx
+        .hand_used
         .iter()
         .enumerate()
         .filter(|(_, &used)| used)
@@ -360,7 +376,25 @@ pub fn verify_and_apply_turn(state: &mut ShopState, action: &CommitTurnAction) -
         state.hand.remove(idx);
     }
 
-    state.shop_mana = current_mana;
+    state.shop_mana = ctx.current_mana;
+}
+
+/// Verify and apply a committed turn action to the game state.
+///
+/// This function executes actions sequentially in order:
+/// 1. Validates each action as it's processed
+/// 2. Tracks mana changes (earned from burns, spent on plays)
+/// 3. Ensures mana never goes negative and respects mana_limit
+/// 4. Updates board state as actions are applied
+/// 5. Removes used hand cards at the end
+pub fn verify_and_apply_turn(state: &mut ShopState, action: &CommitTurnAction) -> GameResult<()> {
+    let mut ctx = ShopTurnContext::new(state);
+
+    for turn_action in &action.actions {
+        apply_single_action(state, &mut ctx, turn_action)?;
+    }
+
+    finalize_turn(state, ctx);
 
     Ok(())
 }

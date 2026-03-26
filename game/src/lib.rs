@@ -19,9 +19,7 @@ pub mod state;
 pub mod view;
 
 // Re-export key types for convenience
-pub use state::{
-    derive_hand_indices_logic, GamePhase, GameSession, GameState, LocalGameState,
-};
+pub use state::{derive_hand_indices_logic, GamePhase, GameSession, GameState, LocalGameState};
 pub use view::*;
 
 /// Configuration for a game mode.
@@ -29,7 +27,9 @@ pub use view::*;
 /// Controls mana progression, lives, win conditions, and other per-mode rules.
 /// The battle engine validates turns against whatever values are in ShopState;
 /// this config determines what those values are set to.
-#[derive(Debug, Clone, PartialEq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
+#[derive(
+    Debug, Clone, PartialEq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
+)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GameConfig {
     /// Starting lives for the player.

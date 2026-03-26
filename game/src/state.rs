@@ -180,7 +180,14 @@ impl GameState {
     }
 
     /// Decompose GameState into card_pool, config, and a flat LocalGameState
-    pub fn decompose(self) -> (BTreeMap<CardId, UnitCard>, u32, crate::GameConfig, LocalGameState) {
+    pub fn decompose(
+        self,
+    ) -> (
+        BTreeMap<CardId, UnitCard>,
+        u32,
+        crate::GameConfig,
+        LocalGameState,
+    ) {
         let local = LocalGameState {
             bag: self.bag,
             hand: self.shop.hand,
@@ -201,7 +208,12 @@ impl GameState {
     pub fn draw_hand(&mut self, hand_size: usize) {
         self.bag.append(&mut self.shop.hand);
 
-        let indices = derive_hand_indices_logic(self.bag.len(), self.shop.game_seed, self.shop.round, hand_size);
+        let indices = derive_hand_indices_logic(
+            self.bag.len(),
+            self.shop.game_seed,
+            self.shop.round,
+            hand_size,
+        );
         if indices.is_empty() {
             return;
         }

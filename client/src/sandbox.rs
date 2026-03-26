@@ -5,8 +5,8 @@
 use std::vec::Vec;
 
 use crate::engine::BattleOutput;
-use oab_battle::battle::{resolve_battle, CombatUnit, UnitView};
 use oab_assets::cards::build_pool;
+use oab_battle::battle::{resolve_battle, CombatUnit, UnitView};
 use oab_battle::log;
 use oab_battle::rng::XorShiftRng;
 use oab_battle::types::CardId;

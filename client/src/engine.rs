@@ -13,7 +13,6 @@ use oab_battle::battle::{
     CombatEvent, CombatUnit, UnitId, UnitView,
 };
 use oab_battle::bounded::BoundedCardSet;
-use oab_game::bounded::BoundedGameSession;
 use oab_battle::commit::{
     apply_board_insert_shift, apply_move_board_positions, apply_on_buy_triggers,
     apply_on_sell_triggers, apply_shop_start_triggers, apply_shop_start_triggers_with_result,
@@ -24,6 +23,7 @@ use oab_battle::rng::XorShiftRng;
 use oab_battle::state::*;
 use oab_battle::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
 use oab_battle::GameError;
+use oab_game::bounded::BoundedGameSession;
 use oab_game::view::{CardView, GameView};
 use oab_game::{GamePhase, GameSession, GameState};
 use parity_scale_codec::Decode;
@@ -228,8 +228,9 @@ impl GameEngine {
     /// Used by the frontend to inject blockchain sets for preview/play.
     #[wasm_bindgen]
     pub fn add_set(&mut self, set_id: u32, cards_js: JsValue) -> Result<(), String> {
-        let entries: Vec<oab_battle::state::CardSetEntry> = serde_wasm_bindgen::from_value(cards_js)
-            .map_err(|e| format!("Failed to parse set entries: {:?}", e))?;
+        let entries: Vec<oab_battle::state::CardSetEntry> =
+            serde_wasm_bindgen::from_value(cards_js)
+                .map_err(|e| format!("Failed to parse set entries: {:?}", e))?;
         let card_set = CardSet { cards: entries };
         self.custom_sets.insert(set_id, card_set);
         Ok(())
@@ -989,7 +990,8 @@ impl GameEngine {
         // Use the card pool already loaded via load_card_set()
         let card_pool = std::mem::take(&mut self.state.card_pool);
 
-        let state = GameState::reconstruct(card_pool, session.set_id, session.config, session.state);
+        let state =
+            GameState::reconstruct(card_pool, session.set_id, session.config, session.state);
 
         log::debug("init_from_scale", "Reconstructing done...");
 
@@ -1020,7 +1022,8 @@ impl GameEngine {
         }
 
         let card_pool = std::mem::take(&mut self.state.card_pool);
-        self.state = GameState::reconstruct(card_pool, session.set_id, session.config, session.state);
+        self.state =
+            GameState::reconstruct(card_pool, session.set_id, session.config, session.state);
         self.set_id = self.state.set_id;
         self.last_battle_output = None;
         self.start_planning_phase();
@@ -1052,7 +1055,11 @@ impl GameEngine {
 
         if let Some(card_set) = &self.card_set {
             // Generate random bag of 100 cards from the already-loaded set
-            self.state.bag = create_starting_bag(card_set, self.state.game_seed, self.state.config.bag_size as usize);
+            self.state.bag = create_starting_bag(
+                card_set,
+                self.state.game_seed,
+                self.state.config.bag_size as usize,
+            );
         }
 
         // Set next_card_id to be after card definitions
@@ -1144,7 +1151,13 @@ impl GameEngine {
         let enemy_units = Vec::new();
 
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-        let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool, self.state.config.board_size as usize);
+        let events = resolve_battle(
+            player_units,
+            enemy_units,
+            &mut rng,
+            &self.state.card_pool,
+            self.state.config.board_size as usize,
+        );
         self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
         let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
         self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);

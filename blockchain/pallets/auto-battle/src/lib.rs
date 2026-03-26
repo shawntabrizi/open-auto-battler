@@ -30,9 +30,8 @@ pub mod pallet {
     use oab_battle::bounded::{
         BoundedBattleAbility as CoreBoundedBattleAbility, BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
-        BoundedGhostBoard as CoreBoundedGhostBoard,
-        BoundedShopAbility as CoreBoundedShopAbility, GhostBoardUnit as CoreGhostBoardUnit,
-        MatchmakingBracket,
+        BoundedGhostBoard as CoreBoundedGhostBoard, BoundedShopAbility as CoreBoundedShopAbility,
+        GhostBoardUnit as CoreGhostBoardUnit, MatchmakingBracket,
     };
     use oab_battle::types::{EconomyStats, UnitStats};
     use oab_battle::{BattleResult, CardSet, CombatUnit};

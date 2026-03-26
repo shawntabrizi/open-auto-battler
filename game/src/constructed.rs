@@ -51,11 +51,8 @@ pub fn validate_deck(
     }
 
     // Build lookup of valid (non-token) cards in the set
-    let valid_cards: BTreeMap<CardId, u32> = set
-        .cards
-        .iter()
-        .map(|e| (e.card_id, e.rarity))
-        .collect();
+    let valid_cards: BTreeMap<CardId, u32> =
+        set.cards.iter().map(|e| (e.card_id, e.rarity)).collect();
 
     // Count copies of each card
     let mut counts: BTreeMap<u32, usize> = BTreeMap::new();
@@ -63,7 +60,10 @@ pub fn validate_deck(
         match valid_cards.get(&CardId(card_id)) {
             None => return Err(format!("Card {} is not in the selected set", card_id)),
             Some(0) => {
-                return Err(format!("Card {} is a token and cannot be in a deck", card_id))
+                return Err(format!(
+                    "Card {} is a token and cannot be in a deck",
+                    card_id
+                ))
             }
             Some(_) => {}
         }
@@ -90,13 +90,31 @@ mod tests {
     fn test_set() -> CardSet {
         CardSet {
             cards: alloc::vec![
-                oab_battle::state::CardSetEntry { card_id: CardId(1), rarity: 100 },
-                oab_battle::state::CardSetEntry { card_id: CardId(2), rarity: 80 },
-                oab_battle::state::CardSetEntry { card_id: CardId(3), rarity: 60 },
-                oab_battle::state::CardSetEntry { card_id: CardId(4), rarity: 40 },
-                oab_battle::state::CardSetEntry { card_id: CardId(5), rarity: 20 },
+                oab_battle::state::CardSetEntry {
+                    card_id: CardId(1),
+                    rarity: 100
+                },
+                oab_battle::state::CardSetEntry {
+                    card_id: CardId(2),
+                    rarity: 80
+                },
+                oab_battle::state::CardSetEntry {
+                    card_id: CardId(3),
+                    rarity: 60
+                },
+                oab_battle::state::CardSetEntry {
+                    card_id: CardId(4),
+                    rarity: 40
+                },
+                oab_battle::state::CardSetEntry {
+                    card_id: CardId(5),
+                    rarity: 20
+                },
                 // Token card
-                oab_battle::state::CardSetEntry { card_id: CardId(99), rarity: 0 },
+                oab_battle::state::CardSetEntry {
+                    card_id: CardId(99),
+                    rarity: 0
+                },
             ],
         }
     }

@@ -43,7 +43,8 @@ where
             let _ = self.bag.try_push(card_id);
         }
 
-        let indices = derive_hand_indices_logic(self.bag.len(), self.game_seed, self.round, hand_size);
+        let indices =
+            derive_hand_indices_logic(self.bag.len(), self.game_seed, self.round, hand_size);
         if indices.is_empty() {
             return;
         }
@@ -65,7 +66,6 @@ where
             let _ = self.hand.try_push(id);
         }
     }
-
 }
 
 // --- Bounded Local Game State ---
@@ -195,8 +195,7 @@ where
 }
 
 impl<MaxBagSize, MaxBoardSize, MaxHandActions>
-    From<BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>>
-    for LocalGameState
+    From<BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>> for LocalGameState
 where
     MaxBagSize: Get<u32>,
     MaxBoardSize: Get<u32>,
@@ -517,7 +516,12 @@ where
             .collect();
         let local_state = bounded.local_state.into();
 
-        Self::reconstruct(card_pool, bounded.set_id, crate::sealed::default_config(), local_state)
+        Self::reconstruct(
+            card_pool,
+            bounded.set_id,
+            crate::sealed::default_config(),
+            local_state,
+        )
     }
 }
 

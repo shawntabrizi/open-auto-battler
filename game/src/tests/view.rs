@@ -1,6 +1,6 @@
+use crate::view::GameView;
 use crate::{GamePhase, GameState};
 use oab_battle::types::{BoardUnit, CardId, UnitCard};
-use crate::view::GameView;
 
 #[test]
 fn test_game_view_from_state_maps_hand_board_and_affordability() {

@@ -7,12 +7,12 @@ use oab_battle::bounded::{
     BoundedGhostBoard as CoreBoundedGhostBoard, GhostBoardUnit, MatchmakingBracket,
 };
 use oab_battle::rng::BattleRng;
-use oab_game::sealed::create_starting_bag;
 use oab_battle::{
     apply_shop_start_triggers, apply_shop_start_triggers_with_result, resolve_battle,
     verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, UnitCard,
     XorShiftRng,
 };
+use oab_game::sealed::create_starting_bag;
 use oab_game::{GamePhase, GameState};
 
 /// Transient struct holding everything needed for battle execution.
@@ -40,7 +40,9 @@ impl<T: Config> Pallet<T> {
     // ── Moved helpers ──────────────────────────────────────────────────
 
     /// Reconstruct a card pool from storage based on a card set.
-    pub(crate) fn get_card_pool(card_set: &CardSet) -> BTreeMap<oab_battle::types::CardId, UnitCard> {
+    pub(crate) fn get_card_pool(
+        card_set: &CardSet,
+    ) -> BTreeMap<oab_battle::types::CardId, UnitCard> {
         let mut card_pool = BTreeMap::new();
         for entry in &card_set.cards {
             if let Some(user_data) = UserCards::<T>::get(entry.card_id.0) {
@@ -135,15 +137,18 @@ impl<T: Config> Pallet<T> {
             }
             let slot = player_slots[unit_index - 1];
 
-            let unit_state = core_state
-                .board
-                .get_mut(slot)
-                .and_then(|s| s.as_mut())
-                .map(|board_unit| {
-                    board_unit.perm_attack = board_unit.perm_attack.saturating_add(*attack_delta);
-                    board_unit.perm_health = board_unit.perm_health.saturating_add(*health_delta);
-                    (board_unit.card_id, board_unit.perm_health)
-                });
+            let unit_state =
+                core_state
+                    .board
+                    .get_mut(slot)
+                    .and_then(|s| s.as_mut())
+                    .map(|board_unit| {
+                        board_unit.perm_attack =
+                            board_unit.perm_attack.saturating_add(*attack_delta);
+                        board_unit.perm_health =
+                            board_unit.perm_health.saturating_add(*health_delta);
+                        (board_unit.card_id, board_unit.perm_health)
+                    });
 
             let should_remove = unit_state
                 .and_then(|(card_id, perm_health)| {
@@ -304,7 +309,8 @@ impl<T: Config> Pallet<T> {
 
         battle.core_state.shop_mana =
             oab_battle::battle::player_shop_mana_delta_from_events(&events).max(0);
-        let permanent_deltas = oab_battle::battle::player_permanent_stat_deltas_from_events(&events);
+        let permanent_deltas =
+            oab_battle::battle::player_permanent_stat_deltas_from_events(&events);
         Self::apply_player_permanent_stat_deltas(
             &mut battle.core_state,
             &battle.player_slots,
@@ -341,13 +347,17 @@ impl<T: Config> Pallet<T> {
             let new_seed = Self::generate_next_seed(who, next_seed_context);
             battle.core_state.game_seed = new_seed;
             battle.core_state.round += 1;
-            battle.core_state.mana_limit =
-                battle.core_state.config.mana_limit_for_round(battle.core_state.round);
+            battle.core_state.mana_limit = battle
+                .core_state
+                .config
+                .mana_limit_for_round(battle.core_state.round);
             if battle.core_state.config.full_mana_each_round {
                 battle.core_state.shop_mana = battle.core_state.mana_limit;
             }
             battle.core_state.phase = GamePhase::Shop;
-            battle.core_state.draw_hand(battle.core_state.config.hand_size as usize);
+            battle
+                .core_state
+                .draw_hand(battle.core_state.config.hand_size as usize);
             apply_shop_start_triggers_with_result(&mut battle.core_state, Some(result.clone()));
             new_seed
         } else {
