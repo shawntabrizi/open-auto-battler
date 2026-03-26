@@ -330,6 +330,7 @@ pub mod pallet {
     pub struct TournamentGameSession<T: Config> {
         pub state: BoundedLocalGameState<T>,
         pub set_id: u32,
+        pub config: oab_game::GameConfig,
         pub tournament_id: u32,
     }
 
@@ -736,7 +737,11 @@ pub mod pallet {
 
             let (state, seed) = Self::initialize_game_state(&who, set_id, b"start_game")?;
 
-            let session = BoundedGameSession::<T> { state, set_id };
+            let session = BoundedGameSession::<T> {
+                state,
+                set_id,
+                config: oab_game::sealed::default_config(),
+            };
 
             ActiveGame::<T>::insert(&who, session);
             Self::deposit_event(Event::GameStarted { owner: who, seed });
@@ -763,6 +768,7 @@ pub mod pallet {
             let mut battle = Self::prepare_battle(
                 &who,
                 session.set_id,
+                session.config.clone(),
                 session.state.clone().into(),
                 action,
                 b"battle",
@@ -789,7 +795,7 @@ pub mod pallet {
                 battle.core_state.phase = GamePhase::Completed;
             }
 
-            let (_, _, local) = battle.core_state.decompose();
+            let (_, _, _config, local) = battle.core_state.decompose();
             session.state = local.into();
             ActiveGame::<T>::insert(&who, &session);
 
@@ -1067,6 +1073,7 @@ pub mod pallet {
             let session = TournamentGameSession::<T> {
                 state,
                 set_id: config.set_id,
+                config: oab_game::sealed::default_config(),
                 tournament_id,
             };
 
@@ -1102,6 +1109,7 @@ pub mod pallet {
             let mut battle = Self::prepare_battle(
                 &who,
                 session.set_id,
+                session.config.clone(),
                 session.state.clone().into(),
                 action,
                 b"tournament_battle",
@@ -1133,7 +1141,7 @@ pub mod pallet {
                 battle.core_state.phase = GamePhase::Completed;
             }
 
-            let (_, _, local) = battle.core_state.decompose();
+            let (_, _, _config, local) = battle.core_state.decompose();
             session.state = local.into();
             ActiveTournamentGame::<T>::insert(&who, &session);
 
@@ -1369,7 +1377,7 @@ pub mod pallet {
                 Error::<T>::WrongPhase
             );
 
-            Self::finalize_game(&who, session.set_id, &session.state);
+            Self::finalize_game(&who, session.set_id, &session.config, &session.state);
 
             ActiveGame::<T>::remove(&who);
 
@@ -1403,18 +1411,17 @@ pub mod pallet {
             let tid = session.tournament_id;
             let wins = session.state.wins;
 
-            Self::finalize_game(&who, session.set_id, &session.state);
+            Self::finalize_game(&who, session.set_id, &session.config, &session.state);
 
             // Update tournament statistics
-            let config = oab_game::sealed::default_config();
             TournamentPlayerStats::<T>::mutate(tid, &who, |stats| {
                 stats.total_games += 1;
                 stats.total_wins += wins as u32;
-                if wins >= config.wins_to_victory {
+                if wins >= session.config.wins_to_victory {
                     stats.perfect_runs += 1;
                 }
             });
-            if wins >= config.wins_to_victory {
+            if wins >= session.config.wins_to_victory {
                 TournamentStates::<T>::mutate(tid, |state| {
                     state.total_perfect_runs += 1;
                 });

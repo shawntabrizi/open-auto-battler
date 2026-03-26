@@ -62,7 +62,6 @@ pub struct GameEngine {
     set_id: u32,
     card_set: Option<CardSet>, // Loaded card set for bag generation
     last_battle_output: Option<BattleOutput>,
-    config: oab_game::GameConfig,
     starting_lives: i32,
     wins_to_victory: i32,
     // Per-turn local tracking (transient, not persisted)
@@ -86,14 +85,15 @@ impl GameEngine {
         let state = GameState::empty();
 
         let config = oab_game::sealed::default_config();
+        let starting_lives = config.starting_lives;
+        let wins_to_victory = config.wins_to_victory;
         let mut engine = Self {
             set_id: 0,
             state,
             card_set: None,
             last_battle_output: None,
-            starting_lives: config.starting_lives,
-            wins_to_victory: config.wins_to_victory,
-            config,
+            starting_lives,
+            wins_to_victory,
             hand_used: Vec::new(),
             action_log: Vec::new(),
             start_board: Vec::new(),
@@ -107,9 +107,9 @@ impl GameEngine {
         if let Some(seed_val) = seed {
             log::debug("new", "Seed provided, performing full initialization");
             engine.state.game_seed = seed_val;
-            engine.state.mana_limit = engine.config.mana_limit_for_round(1);
+            engine.state.mana_limit = engine.state.config.mana_limit_for_round(1);
             engine.state.round = 1;
-            engine.state.lives = engine.config.starting_lives;
+            engine.state.lives = engine.state.config.starting_lives;
             engine.initialize_bag();
             apply_shop_start_triggers(&mut engine.state);
             engine.start_planning_phase();
@@ -635,12 +635,12 @@ impl GameEngine {
         }
 
         self.state.round += 1;
-        self.state.mana_limit = self.config.mana_limit_for_round(self.state.round);
-        if self.config.full_mana_each_round {
+        self.state.mana_limit = self.state.config.mana_limit_for_round(self.state.round);
+        if self.state.config.full_mana_each_round {
             self.state.shop_mana = self.state.mana_limit;
         }
         self.state.phase = GamePhase::Shop;
-        self.state.draw_hand(self.config.hand_size);
+        self.state.draw_hand(self.state.config.hand_size as usize);
         let previous_battle_result = self.last_battle_output.as_ref().and_then(|output| {
             output.events.iter().rev().find_map(|event| {
                 if let CombatEvent::BattleEnd { result } = event {
@@ -661,16 +661,15 @@ impl GameEngine {
     #[wasm_bindgen]
     pub fn new_run(&mut self, seed: u64) {
         log::action("new_run", &format!("Starting run with seed {}", seed));
-        self.config = oab_game::sealed::default_config();
+        let config = oab_game::sealed::default_config();
         // Preserve card_pool when resetting state
         let card_pool = std::mem::take(&mut self.state.card_pool);
-        self.state = GameState::new(seed, self.config.board_size);
+        self.state = GameState::new(seed, config);
         self.state.card_pool = card_pool;
         self.last_battle_output = None;
-        self.starting_lives = self.config.starting_lives;
-        self.wins_to_victory = self.config.wins_to_victory;
-        self.state.lives = self.config.starting_lives;
-        self.state.mana_limit = self.config.mana_limit_for_round(1);
+        self.starting_lives = self.state.config.starting_lives;
+        self.wins_to_victory = self.state.config.wins_to_victory;
+        self.state.lives = self.state.config.starting_lives;
         self.initialize_bag();
         apply_shop_start_triggers(&mut self.state);
         self.start_planning_phase();
@@ -703,7 +702,7 @@ impl GameEngine {
             &deck,
             card_set,
             oab_game::constructed::MAX_COPIES_PER_CARD,
-            oab_game::constructed::default_config().bag_size,
+            oab_game::constructed::default_config().bag_size as usize,
         )?;
 
         log::action(
@@ -711,20 +710,19 @@ impl GameEngine {
             &format!("Starting constructed run with seed {}", seed),
         );
 
-        self.config = oab_game::constructed::default_config();
+        let config = oab_game::constructed::default_config();
         let deck_ids: Vec<CardId> = deck.into_iter().map(CardId).collect();
         let card_pool = std::mem::take(&mut self.state.card_pool);
-        self.state = GameState::new(seed, self.config.board_size);
+        self.state = GameState::new(seed, config);
         self.state.card_pool = card_pool;
         self.last_battle_output = None;
-        self.starting_lives = self.config.starting_lives;
-        self.wins_to_victory = self.config.wins_to_victory;
-        self.state.lives = self.config.starting_lives;
-        self.state.mana_limit = self.config.mana_limit_for_round(1);
+        self.starting_lives = self.state.config.starting_lives;
+        self.wins_to_victory = self.state.config.wins_to_victory;
+        self.state.lives = self.state.config.starting_lives;
 
         self.state.bag = deck_ids;
         self.state.next_card_id = 1000;
-        self.state.draw_hand(self.config.hand_size);
+        self.state.draw_hand(self.state.config.hand_size as usize);
 
         apply_shop_start_triggers(&mut self.state);
         self.start_planning_phase();
@@ -773,10 +771,11 @@ impl GameEngine {
     /// Get the resumable local session payload (similar to the on-chain GameSession).
     #[wasm_bindgen]
     pub fn get_local_session(&self) -> JsValue {
-        let (_, set_id, local_state) = self.state.clone().decompose();
+        let (_, set_id, config, local_state) = self.state.clone().decompose();
         let snapshot = GameSession {
             state: local_state,
             set_id,
+            config,
         };
 
         match serde_wasm_bindgen::to_value(&snapshot) {
@@ -866,7 +865,7 @@ impl GameEngine {
             enemy_units.clone(),
             &mut rng,
             &self.state.card_pool,
-            self.config.board_size,
+            self.state.config.board_size as usize,
         );
 
         // Generate initial views for UI animation
@@ -1004,7 +1003,7 @@ impl GameEngine {
         // Use the card pool already loaded via load_card_set()
         let card_pool = std::mem::take(&mut self.state.card_pool);
 
-        let state = GameState::reconstruct(card_pool, session.set_id, session.state);
+        let state = GameState::reconstruct(card_pool, session.set_id, session.config, session.state);
 
         log::debug("init_from_scale", "Reconstructing done...");
 
@@ -1035,11 +1034,11 @@ impl GameEngine {
         }
 
         let card_pool = std::mem::take(&mut self.state.card_pool);
-        self.state = GameState::reconstruct(card_pool, session.set_id, session.state);
+        self.state = GameState::reconstruct(card_pool, session.set_id, session.config, session.state);
         self.set_id = self.state.set_id;
         self.last_battle_output = None;
-        self.starting_lives = self.config.starting_lives;
-        self.wins_to_victory = self.config.wins_to_victory;
+        self.starting_lives = self.state.config.starting_lives;
+        self.wins_to_victory = self.state.config.wins_to_victory;
         self.start_planning_phase();
 
         Ok(())
@@ -1069,20 +1068,20 @@ impl GameEngine {
 
         if let Some(card_set) = &self.card_set {
             // Generate random bag of 100 cards from the already-loaded set
-            self.state.bag = create_starting_bag(card_set, self.state.game_seed, self.config.bag_size);
+            self.state.bag = create_starting_bag(card_set, self.state.game_seed, self.state.config.bag_size as usize);
         }
 
         // Set next_card_id to be after card definitions
         self.state.next_card_id = 1000;
 
         // Draw initial hand once bag is ready
-        self.state.draw_hand(self.config.hand_size);
+        self.state.draw_hand(self.state.config.hand_size as usize);
     }
 
     fn start_planning_phase(&mut self) {
         // If hand is empty, draw it (should have been drawn by initialize_bag or continue_after_battle)
         if self.state.hand.is_empty() {
-            self.state.draw_hand(self.config.hand_size);
+            self.state.draw_hand(self.state.config.hand_size as usize);
         }
 
         let hand_size = self.state.hand.len();
@@ -1161,7 +1160,7 @@ impl GameEngine {
         let enemy_units = Vec::new();
 
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-        let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool, self.config.board_size);
+        let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool, self.state.config.board_size as usize);
         self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
         let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
         self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);

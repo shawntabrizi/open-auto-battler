@@ -5,7 +5,7 @@ use oab_battle::types::*;
 fn test_verify_and_apply_turn() {
     use oab_battle::commit::verify_and_apply_turn;
 
-    let mut state = GameState::new(42, 5);
+    let mut state = GameState::new(42, crate::sealed::default_config());
     state.mana_limit = 5;
     // Add cards with known costs
     for _ in 0..10 {
@@ -47,7 +47,7 @@ fn test_verify_and_apply_turn() {
 fn test_verify_and_apply_turn_with_refill() {
     use oab_battle::commit::verify_and_apply_turn;
 
-    let mut state = GameState::new(42, 5);
+    let mut state = GameState::new(42, crate::sealed::default_config());
     state.mana_limit = 4; // Capacity is 4
 
     // Add cards with cost 4 and burn 4
@@ -99,7 +99,7 @@ fn test_verify_and_apply_turn_with_refill() {
 fn test_sequential_order_matters() {
     use oab_battle::commit::verify_and_apply_turn;
 
-    let mut state = GameState::new(42, 5);
+    let mut state = GameState::new(42, crate::sealed::default_config());
     state.mana_limit = 4;
 
     // Add cards with cost 4 and burn 4
@@ -127,7 +127,7 @@ fn test_sequential_order_matters() {
 fn test_burn_then_burn_same_card_fails() {
     use oab_battle::commit::verify_and_apply_turn;
 
-    let mut state = GameState::new(42, 5);
+    let mut state = GameState::new(42, crate::sealed::default_config());
     state.mana_limit = 10;
 
     // Add cards
@@ -155,7 +155,7 @@ fn test_burn_then_burn_same_card_fails() {
 fn test_swap_board_positions() {
     use oab_battle::commit::verify_and_apply_turn;
 
-    let mut state = GameState::new(42, 5);
+    let mut state = GameState::new(42, crate::sealed::default_config());
     state.mana_limit = 10;
 
     // Add cards
@@ -208,7 +208,7 @@ fn test_swap_board_positions() {
 fn test_move_board_positions_shifts_intermediate_units() {
     use oab_battle::commit::verify_and_apply_turn;
 
-    let mut state = GameState::new(42, 5);
+    let mut state = GameState::new(42, crate::sealed::default_config());
 
     let card_a = state.generate_card_id();
     let card_b = state.generate_card_id();
@@ -245,7 +245,7 @@ fn test_move_board_positions_shifts_intermediate_units() {
 fn test_burn_from_board() {
     use oab_battle::commit::verify_and_apply_turn;
 
-    let mut state = GameState::new(42, 5);
+    let mut state = GameState::new(42, crate::sealed::default_config());
     state.mana_limit = 10;
 
     // Add cards
@@ -292,7 +292,7 @@ fn test_burn_from_board() {
 fn test_on_buy_trigger_applies_in_shop() {
     use oab_battle::commit::verify_and_apply_turn;
 
-    let mut state = GameState::new(7, 5);
+    let mut state = GameState::new(7, crate::sealed::default_config());
     state.mana_limit = 10;
 
     let support_id = state.generate_card_id();
@@ -340,7 +340,7 @@ fn test_on_buy_trigger_applies_in_shop() {
 fn test_on_sell_trigger_applies_in_shop() {
     use oab_battle::commit::verify_and_apply_turn;
 
-    let mut state = GameState::new(9, 5);
+    let mut state = GameState::new(9, crate::sealed::default_config());
     state.mana_limit = 10;
 
     let seller_id = state.generate_card_id();
@@ -387,7 +387,7 @@ fn test_on_sell_trigger_applies_in_shop() {
 fn test_on_buy_gain_mana_enables_extra_play() {
     use oab_battle::commit::verify_and_apply_turn;
 
-    let mut state = GameState::new(17, 5);
+    let mut state = GameState::new(17, crate::sealed::default_config());
     state.mana_limit = 5;
 
     let booster_id = state.generate_card_id();
@@ -439,7 +439,7 @@ fn test_on_buy_gain_mana_enables_extra_play() {
 fn test_on_sell_gain_mana_enables_extra_play() {
     use oab_battle::commit::verify_and_apply_turn;
 
-    let mut state = GameState::new(19, 5);
+    let mut state = GameState::new(19, crate::sealed::default_config());
     state.mana_limit = 5;
 
     let seller_id = state.generate_card_id();
@@ -485,7 +485,7 @@ fn test_on_shop_start_random_is_deterministic_with_seed() {
     use oab_battle::commit::apply_shop_start_triggers;
 
     fn build_state(seed: u64) -> GameState {
-        let mut state = GameState::new(seed, 5);
+        let mut state = GameState::new(seed, crate::sealed::default_config());
 
         let trigger_id = state.generate_card_id();
         let ally_a_id = state.generate_card_id();
@@ -550,7 +550,7 @@ fn test_on_shop_start_random_is_deterministic_with_seed() {
 fn test_on_shop_start_gain_mana_sets_turn_starting_mana() {
     use oab_battle::commit::{apply_shop_start_triggers, verify_and_apply_turn};
 
-    let mut state = GameState::new(23, 5);
+    let mut state = GameState::new(23, crate::sealed::default_config());
     state.mana_limit = 3;
 
     let starter_id = state.generate_card_id();
@@ -595,7 +595,7 @@ fn test_on_shop_start_gain_mana_sets_turn_starting_mana() {
 fn test_on_shop_start_keeps_carryover_and_clamps_to_limit() {
     use oab_battle::commit::apply_shop_start_triggers;
 
-    let mut state = GameState::new(29, 5);
+    let mut state = GameState::new(29, crate::sealed::default_config());
     state.mana_limit = 4;
     state.shop_mana = 10;
 
@@ -613,7 +613,7 @@ fn test_after_battle_shop_triggers_fire_by_result() {
     use oab_battle::commit::apply_shop_start_triggers_with_result;
 
     fn build_state(seed: u64) -> GameState {
-        let mut state = GameState::new(seed, 5);
+        let mut state = GameState::new(seed, crate::sealed::default_config());
         state.mana_limit = 10; // Game mode sets this; core tests just need a reasonable value
 
         let unit_id = state.generate_card_id();

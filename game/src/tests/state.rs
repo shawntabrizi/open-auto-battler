@@ -4,7 +4,7 @@ use oab_battle::types::*;
 
 #[test]
 fn test_hand_derivation_deterministic() {
-    let mut state = GameState::new(12345, 5);
+    let mut state = GameState::new(12345, crate::sealed::default_config());
     for _ in 0..15 {
         let id = state.generate_card_id();
         let card = UnitCard::new(id, "TestCard", 1, 1, 1, 1);
@@ -31,7 +31,7 @@ fn test_hand_derivation_deterministic() {
 
 #[test]
 fn test_hand_derivation_unique_indices() {
-    let mut state = GameState::new(42, 5);
+    let mut state = GameState::new(42, crate::sealed::default_config());
     for _ in 0..20 {
         let id = state.generate_card_id();
         let card = UnitCard::new(id, "Test", 1, 1, 1, 1);

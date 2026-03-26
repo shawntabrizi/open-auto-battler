@@ -7,6 +7,12 @@
 
 extern crate alloc;
 
+use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode, MaxEncodedLen};
+use scale_info::TypeInfo;
+
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
+
 pub mod constructed;
 pub mod opponents;
 pub mod sealed;
@@ -25,7 +31,8 @@ pub use view::*;
 /// Controls mana progression, lives, win conditions, and other per-mode rules.
 /// The battle engine validates turns against whatever values are in ShopState;
 /// this config determines what those values are set to.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GameConfig {
     /// Starting lives for the player.
     pub starting_lives: i32,
@@ -39,11 +46,11 @@ pub struct GameConfig {
     /// (players don't need to burn cards for mana).
     pub full_mana_each_round: bool,
     /// Number of board slots.
-    pub board_size: usize,
+    pub board_size: u32,
     /// Number of cards drawn per round as the player's hand.
-    pub hand_size: usize,
+    pub hand_size: u32,
     /// Number of cards in the starting bag/deck.
-    pub bag_size: usize,
+    pub bag_size: u32,
 }
 
 impl GameConfig {

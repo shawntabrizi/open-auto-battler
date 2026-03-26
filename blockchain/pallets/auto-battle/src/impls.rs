@@ -185,10 +185,11 @@ impl<T: Config> Pallet<T> {
         let mut state = GameState::reconstruct(
             card_pool,
             set_id,
+            config.clone(),
             oab_game::LocalGameState {
-                bag: create_starting_bag(&card_set, seed, config.bag_size),
+                bag: create_starting_bag(&card_set, seed, config.bag_size as usize),
                 hand: Vec::new(),
-                board: vec![None; config.board_size],
+                board: vec![None; config.board_size as usize],
                 mana_limit: config.mana_limit_for_round(1),
                 shop_mana: 0,
                 round: 1,
@@ -200,10 +201,10 @@ impl<T: Config> Pallet<T> {
             },
         );
 
-        state.draw_hand(config.hand_size);
+        state.draw_hand(config.hand_size as usize);
         apply_shop_start_triggers(&mut state);
 
-        let (_, _, local_state) = state.decompose();
+        let (_, _, _config, local_state) = state.decompose();
         Ok((local_state.into(), seed))
     }
 
@@ -212,6 +213,7 @@ impl<T: Config> Pallet<T> {
     pub(crate) fn prepare_battle(
         who: &T::AccountId,
         set_id: u32,
+        config: oab_game::GameConfig,
         local_state: oab_game::LocalGameState,
         action: BoundedCommitTurnAction<T>,
         battle_seed_context: &[u8],
@@ -220,7 +222,7 @@ impl<T: Config> Pallet<T> {
         let card_set: CardSet = card_set_bounded.into();
         let card_pool = Self::get_card_pool(&card_set);
 
-        let mut core_state = GameState::reconstruct(card_pool, set_id, local_state);
+        let mut core_state = GameState::reconstruct(card_pool, set_id, config, local_state);
 
         let core_action: CommitTurnAction = action.into();
         verify_and_apply_turn(&mut core_state, &core_action)
@@ -273,7 +275,6 @@ impl<T: Config> Pallet<T> {
         enemy_units: Vec<CombatUnit>,
         next_seed_context: &[u8],
     ) -> TurnResult<T> {
-        let config = oab_game::sealed::default_config();
         // Capture opponent ghost board for event emission
         let opponent_ghost: BoundedGhostBoard<T> = {
             let units: Vec<GhostBoardUnit> = enemy_units
@@ -298,7 +299,7 @@ impl<T: Config> Pallet<T> {
             enemy_units,
             &mut rng,
             &battle.core_state.card_pool,
-            config.board_size,
+            battle.core_state.config.board_size as usize,
         );
 
         battle.core_state.shop_mana =
@@ -333,18 +334,17 @@ impl<T: Config> Pallet<T> {
         }
 
         let completed_round = battle.core_state.round;
-        let config = oab_game::sealed::default_config();
         let game_over = battle.core_state.lives <= 0
-            || battle.core_state.wins >= config.wins_to_victory;
+            || battle.core_state.wins >= battle.core_state.config.wins_to_victory;
 
         let new_seed = if !game_over {
             let new_seed = Self::generate_next_seed(who, next_seed_context);
             battle.core_state.game_seed = new_seed;
             battle.core_state.round += 1;
             battle.core_state.mana_limit =
-                config.mana_limit_for_round(battle.core_state.round);
+                battle.core_state.config.mana_limit_for_round(battle.core_state.round);
             battle.core_state.phase = GamePhase::Shop;
-            battle.core_state.draw_hand(config.hand_size);
+            battle.core_state.draw_hand(battle.core_state.config.hand_size as usize);
             apply_shop_start_triggers_with_result(&mut battle.core_state, Some(result.clone()));
             new_seed
         } else {
@@ -381,7 +381,12 @@ impl<T: Config> Pallet<T> {
 
     /// Finalize a completed game: archive victory ghost and grant silver/gold achievements.
     /// Shared by both `end_game` and `end_tournament_game`.
-    pub(crate) fn finalize_game(who: &T::AccountId, set_id: u32, state: &BoundedLocalGameState<T>) {
+    pub(crate) fn finalize_game(
+        who: &T::AccountId,
+        set_id: u32,
+        config: &oab_game::GameConfig,
+        state: &BoundedLocalGameState<T>,
+    ) {
         let wins = state.wins;
         let lives = state.lives;
 
@@ -412,7 +417,6 @@ impl<T: Config> Pallet<T> {
         }
 
         // Grant silver/gold achievements for cards on the final board
-        let config = oab_game::sealed::default_config();
         if wins >= config.wins_to_victory {
             let mut new_bits = ACHIEVEMENT_SILVER;
             if lives >= config.starting_lives {

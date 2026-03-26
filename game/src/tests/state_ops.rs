@@ -5,7 +5,7 @@ use oab_battle::types::{BoardUnit, *};
 
 #[test]
 fn test_generate_card_id_monotonic() {
-    let mut state = GameState::new(100, 5);
+    let mut state = GameState::new(100, crate::sealed::default_config());
     let a = state.generate_card_id();
     let b = state.generate_card_id();
     let c = state.generate_card_id();
@@ -17,7 +17,7 @@ fn test_generate_card_id_monotonic() {
 
 #[test]
 fn test_reconstruct_decompose_round_trip() {
-    let mut state = GameState::new(200, 5);
+    let mut state = GameState::new(200, crate::sealed::default_config());
     let id = state.generate_card_id();
     state
         .card_pool
@@ -27,15 +27,15 @@ fn test_reconstruct_decompose_round_trip() {
     state.board[0] = Some(BoardUnit::new(id));
     state.set_id = 9;
 
-    let (pool, set_id, local) = state.clone().decompose();
-    let rebuilt = GameState::reconstruct(pool, set_id, local);
+    let (pool, set_id, config, local) = state.clone().decompose();
+    let rebuilt = GameState::reconstruct(pool, set_id, config, local);
 
     assert_eq!(rebuilt, state);
 }
 
 #[test]
 fn test_draw_hand_returns_previous_hand_to_bag_before_redraw() {
-    let mut state = GameState::new(300, 5);
+    let mut state = GameState::new(300, crate::sealed::default_config());
     let mut all_ids = Vec::new();
 
     for _ in 0..8 {
@@ -68,7 +68,7 @@ fn test_draw_hand_returns_previous_hand_to_bag_before_redraw() {
 
 #[test]
 fn test_draw_hand_noop_when_bag_and_hand_empty() {
-    let mut state = GameState::new(400, 5);
+    let mut state = GameState::new(400, crate::sealed::default_config());
     state.draw_hand(5);
     assert!(state.hand.is_empty());
     assert!(state.bag.is_empty());
@@ -76,7 +76,7 @@ fn test_draw_hand_noop_when_bag_and_hand_empty() {
 
 #[test]
 fn test_find_empty_board_slot_and_count() {
-    let mut state = GameState::new(500, 5);
+    let mut state = GameState::new(500, crate::sealed::default_config());
     assert_eq!(state.find_empty_board_slot(), Some(0));
     assert_eq!(state.board_unit_count(), 0);
 
@@ -123,8 +123,8 @@ fn test_reconstruct_from_manual_local_state() {
         game_seed: 777,
     };
 
-    let state = GameState::reconstruct(pool, 11, local.clone());
+    let state = GameState::reconstruct(pool, 11, crate::sealed::default_config(), local.clone());
     assert_eq!(state.set_id, 11);
-    let (_, _, roundtripped) = state.decompose();
+    let (_, _, _config, roundtripped) = state.decompose();
     assert_eq!(roundtripped, local);
 }

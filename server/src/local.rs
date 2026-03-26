@@ -10,7 +10,7 @@ use oab_battle::commit::{apply_shop_start_triggers, apply_shop_start_triggers_wi
 use oab_battle::rng::XorShiftRng;
 use oab_battle::types::*;
 use oab_game::view::GameView;
-use oab_game::{constructed, sealed, GameConfig, GamePhase, GameState};
+use oab_game::{constructed, sealed, GamePhase, GameState};
 
 use crate::types::{BattleReport, GameStateResponse, OpponentUnit, StepResponse};
 
@@ -24,7 +24,6 @@ struct BattleOutcome {
 /// Opponents are provided per-step by the caller.
 pub struct GameSession {
     state: GameState,
-    config: GameConfig,
 }
 
 impl GameSession {
@@ -39,17 +38,16 @@ impl GameSession {
             return Err(format!("Card set {} not found", set_id));
         };
 
-        let mut state = GameState::new(seed, config.board_size);
+        let mut state = GameState::new(seed, config.clone());
         state.card_pool = card_pool;
         state.set_id = set_id;
         state.lives = config.starting_lives;
-        state.mana_limit = config.mana_limit_for_round(1);
-        state.bag = sealed::create_starting_bag(&card_set, seed, config.bag_size);
+        state.bag = sealed::create_starting_bag(&card_set, seed, config.bag_size as usize);
         state.next_card_id = 1000;
-        state.draw_hand(config.hand_size);
+        state.draw_hand(config.hand_size as usize);
         apply_shop_start_triggers(&mut state);
 
-        Ok(Self { state, config })
+        Ok(Self { state })
     }
 
     /// Start a new constructed game with a user-provided deck.
@@ -63,20 +61,19 @@ impl GameSession {
             return Err(format!("Card set {} not found", set_id));
         };
 
-        constructed::validate_deck(&deck, &card_set, constructed::MAX_COPIES_PER_CARD, config.bag_size)?;
+        constructed::validate_deck(&deck, &card_set, constructed::MAX_COPIES_PER_CARD, config.bag_size as usize)?;
 
         let deck_ids: Vec<CardId> = deck.into_iter().map(CardId).collect();
-        let mut state = GameState::new(seed, config.board_size);
+        let mut state = GameState::new(seed, config.clone());
         state.card_pool = card_pool;
         state.set_id = set_id;
         state.lives = config.starting_lives;
-        state.mana_limit = config.mana_limit_for_round(1);
         state.bag = deck_ids;
         state.next_card_id = 1000;
-        state.draw_hand(config.hand_size);
+        state.draw_hand(config.hand_size as usize);
         apply_shop_start_triggers(&mut state);
 
-        Ok(Self { state, config })
+        Ok(Self { state })
     }
 
     /// Extract the current board as opponent units (for PvP pairing).
@@ -104,38 +101,6 @@ impl GameSession {
         let mut resp: GameStateResponse = view.into();
         resp.bag = self.bag_summary();
         resp
-    }
-
-    /// Get all cards in the card pool.
-    pub fn get_cards(&self) -> Vec<oab_game::view::CardView> {
-        self.state
-            .card_pool
-            .values()
-            .map(oab_game::view::CardView::from)
-            .collect()
-    }
-
-    /// Get available card sets.
-    pub fn get_sets(&self) -> Vec<crate::types::SetInfo> {
-        let metas = oab_battle::cards::get_all_set_metas();
-        let sets = oab_battle::cards::get_all_sets();
-        metas
-            .into_iter()
-            .zip(sets.into_iter())
-            .map(|(meta, set)| crate::types::SetInfo {
-                id: meta.id,
-                name: meta.name.to_string(),
-                card_count: set.cards.len(),
-                cards: set
-                    .cards
-                    .iter()
-                    .map(|e| crate::types::SetCardEntry {
-                        card_id: e.card_id.0,
-                        rarity: e.rarity,
-                    })
-                    .collect(),
-            })
-            .collect()
     }
 
     /// Apply shop actions without running battle. Returns updated state with the post-shop board.
@@ -177,11 +142,11 @@ impl GameSession {
 
         // Check game over
         let game_over =
-            self.state.wins >= self.config.wins_to_victory || self.state.lives <= 0;
+            self.state.wins >= self.state.config.wins_to_victory || self.state.lives <= 0;
         let game_result = if game_over {
             self.state.phase = GamePhase::Completed;
             Some(
-                if self.state.wins >= self.config.wins_to_victory {
+                if self.state.wins >= self.state.config.wins_to_victory {
                     "victory"
                 } else {
                     "defeat"
@@ -191,12 +156,12 @@ impl GameSession {
         } else {
             // Advance to next round
             self.state.round += 1;
-            self.state.mana_limit = self.config.mana_limit_for_round(self.state.round);
-            if self.config.full_mana_each_round {
+            self.state.mana_limit = self.state.config.mana_limit_for_round(self.state.round);
+            if self.state.config.full_mana_each_round {
                 self.state.shop_mana = self.state.mana_limit;
             }
             self.state.phase = GamePhase::Shop;
-            self.state.draw_hand(self.config.hand_size);
+            self.state.draw_hand(self.state.config.hand_size as usize);
             apply_shop_start_triggers_with_result(&mut self.state, Some(outcome.result.clone()));
             None
         };
@@ -249,7 +214,7 @@ impl GameSession {
 
         let battle_seed = self.state.round as u64;
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-        let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool, self.config.board_size);
+        let events = resolve_battle(player_units, enemy_units, &mut rng, &self.state.card_pool, self.state.config.board_size as usize);
 
         self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
         let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
@@ -287,7 +252,7 @@ impl GameSession {
 
     /// Build enemy CombatUnits from opponent unit definitions.
     fn build_opponent(&self, units: &[OpponentUnit]) -> Vec<CombatUnit> {
-        let mut board: Vec<Option<CombatUnit>> = vec![None; self.config.board_size];
+        let mut board: Vec<Option<CombatUnit>> = vec![None; self.state.config.board_size as usize];
         for u in units {
             let slot = u.slot as usize;
             if slot >= board.len() {
@@ -380,58 +345,23 @@ mod tests {
 
     #[test]
     fn get_sets_returns_all_sets() {
-        let session = new_session();
-        let sets = session.get_sets();
+        let sets = oab_battle::cards::get_all_sets();
         let expected_count = oab_battle::cards::get_all_set_metas().len();
         assert_eq!(sets.len(), expected_count);
     }
 
     #[test]
-    fn get_sets_includes_rarity_per_card() {
-        let session = new_session();
-        let sets = session.get_sets();
+    fn get_sets_returns_sets_with_cards() {
+        let sets = oab_battle::cards::get_all_sets();
         for set in &sets {
-            assert_eq!(set.cards.len(), set.card_count);
-            for entry in &set.cards {
-                let _ = (entry.card_id, entry.rarity);
-            }
+            assert!(!set.cards.is_empty());
         }
     }
-
-    #[test]
-    fn get_sets_card_count_matches_cards_len() {
-        let session = new_session();
-        for set in session.get_sets() {
-            assert_eq!(
-                set.card_count,
-                set.cards.len(),
-                "card_count should equal cards.len() for set {}",
-                set.id
-            );
-        }
-    }
-
-    #[test]
-    fn get_sets_rarity_matches_core() {
-        let session = new_session();
-        let core_sets = oab_battle::cards::get_all_sets();
-        let api_sets = session.get_sets();
-
-        for (core_set, api_set) in core_sets.iter().zip(api_sets.iter()) {
-            for (core_entry, api_entry) in core_set.cards.iter().zip(api_set.cards.iter()) {
-                assert_eq!(api_entry.card_id, core_entry.card_id.0);
-                assert_eq!(api_entry.rarity, core_entry.rarity);
-            }
-        }
-    }
-
-    // ── GET /cards ──
 
     #[test]
     fn get_cards_returns_nonempty() {
-        let session = new_session();
-        let cards = session.get_cards();
-        assert!(!cards.is_empty(), "card pool should not be empty");
+        let card_pool = oab_battle::cards::build_card_pool();
+        assert!(!card_pool.is_empty(), "card pool should not be empty");
     }
 
     // ── GET /state ──

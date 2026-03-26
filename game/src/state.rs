@@ -69,6 +69,7 @@ pub struct LocalGameState {
 pub struct GameSession {
     pub state: LocalGameState,
     pub set_id: u32,
+    pub config: crate::GameConfig,
 }
 
 /// The complete game state used at runtime.
@@ -84,6 +85,8 @@ pub struct GameState {
     /// The shop/battle engine state
     #[cfg_attr(feature = "std", serde(flatten))]
     pub shop: ShopState,
+    /// Game mode configuration
+    pub config: crate::GameConfig,
     /// Cards remaining in the bag (unordered pool)
     pub bag: Vec<CardId>,
     /// Lives remaining
@@ -110,18 +113,20 @@ impl core::ops::DerefMut for GameState {
 }
 
 impl GameState {
-    pub fn new(game_seed: u64, board_size: usize) -> Self {
+    pub fn new(game_seed: u64, config: crate::GameConfig) -> Self {
+        let board_size = config.board_size as usize;
         Self {
             shop: ShopState {
                 card_pool: BTreeMap::new(),
                 set_id: 0,
                 hand: Vec::new(),
                 board: vec![None; board_size],
-                mana_limit: 0,
+                mana_limit: config.mana_limit_for_round(1),
                 shop_mana: 0,
                 round: 1,
                 game_seed,
             },
+            config,
             bag: Vec::new(),
             lives: 0,
             wins: 0,
@@ -143,6 +148,7 @@ impl GameState {
                 round: 0,
                 game_seed: 0,
             },
+            config: crate::sealed::default_config(),
             bag: Vec::new(),
             lives: 0,
             wins: 0,
@@ -151,10 +157,11 @@ impl GameState {
         }
     }
 
-    /// Construct a full GameState from card_pool and a flat LocalGameState
+    /// Construct a full GameState from card_pool, config, and a flat LocalGameState
     pub fn reconstruct(
         card_pool: BTreeMap<CardId, UnitCard>,
         set_id: u32,
+        config: crate::GameConfig,
         local: LocalGameState,
     ) -> Self {
         Self {
@@ -168,6 +175,7 @@ impl GameState {
                 round: local.round,
                 game_seed: local.game_seed,
             },
+            config,
             bag: local.bag,
             lives: local.lives,
             wins: local.wins,
@@ -176,8 +184,8 @@ impl GameState {
         }
     }
 
-    /// Decompose GameState into card_pool and a flat LocalGameState
-    pub fn decompose(self) -> (BTreeMap<CardId, UnitCard>, u32, LocalGameState) {
+    /// Decompose GameState into card_pool, config, and a flat LocalGameState
+    pub fn decompose(self) -> (BTreeMap<CardId, UnitCard>, u32, crate::GameConfig, LocalGameState) {
         let local = LocalGameState {
             bag: self.bag,
             hand: self.shop.hand,
@@ -191,7 +199,7 @@ impl GameState {
             next_card_id: self.next_card_id,
             game_seed: self.shop.game_seed,
         };
-        (self.shop.card_pool, self.shop.set_id, local)
+        (self.shop.card_pool, self.shop.set_id, self.config, local)
     }
 
     /// Populate the hand by drawing from the bag.
@@ -260,6 +268,6 @@ pub fn derive_hand_indices_logic(
 
 impl Default for GameState {
     fn default() -> Self {
-        Self::new(42, 5)
+        Self::new(42, crate::sealed::default_config())
     }
 }

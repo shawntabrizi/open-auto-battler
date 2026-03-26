@@ -126,8 +126,8 @@ mod tests {
             ],
         };
         let config = default_config();
-        let bag = create_starting_bag(&set, 321, config.bag_size);
-        assert_eq!(bag.len(), config.bag_size);
+        let bag = create_starting_bag(&set, 321, config.bag_size as usize);
+        assert_eq!(bag.len(), config.bag_size as usize);
         assert!(bag.iter().all(|id| *id == CardId(42)));
     }
 }

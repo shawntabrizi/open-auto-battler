@@ -30,6 +30,7 @@ mod inner {
     type MaxHandActions = ConstU32<10>;
 
     /// On-chain game session that submits turns to a Substrate blockchain.
+    #[allow(dead_code)]
     pub struct ChainGameSession {
         api: OnlineClient<SubstrateConfig>,
         keypair: Keypair,
@@ -81,6 +82,7 @@ mod inner {
                 Some(GameState::reconstruct(
                     card_pool.clone(),
                     session.set_id,
+                    session.config,
                     session.state,
                 ))
             } else {
@@ -110,6 +112,7 @@ mod inner {
                     self.state = Some(GameState::reconstruct(
                         self.card_pool.clone(),
                         session.set_id,
+                        session.config,
                         session.state,
                     ));
                     Ok(())
@@ -251,7 +254,7 @@ mod inner {
                 let enemy_count = enemy_units.len();
 
                 let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-                let events = resolve_battle(player_units, enemy_units, &mut rng, &self.card_pool, oab_game::sealed::default_config().board_size);
+                let events = resolve_battle(player_units, enemy_units, &mut rng, &self.card_pool, oab_game::sealed::default_config().board_size as usize);
 
                 BattleReport {
                     player_units_survived: 0, // Will be updated from chain state
@@ -364,6 +367,7 @@ mod inner {
             }
         }
 
+        #[allow(dead_code)]
         pub fn get_cards(&self) -> Vec<oab_game::view::CardView> {
             self.card_pool
                 .values()
@@ -371,6 +375,7 @@ mod inner {
                 .collect()
         }
 
+        #[allow(dead_code)]
         pub fn get_sets(&self) -> Vec<crate::types::SetInfo> {
             self.sets
                 .iter()

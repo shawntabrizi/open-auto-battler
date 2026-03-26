@@ -229,6 +229,7 @@ where
 {
     pub state: BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>,
     pub set_id: u32,
+    pub config: crate::GameConfig,
 }
 
 impl<MaxBagSize, MaxBoardSize, MaxHandActions> Clone
@@ -242,6 +243,7 @@ where
         Self {
             state: self.state.clone(),
             set_id: self.set_id,
+            config: self.config.clone(),
         }
     }
 }
@@ -254,7 +256,7 @@ where
     MaxHandActions: Get<u32>,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.state == other.state && self.set_id == other.set_id
+        self.state == other.state && self.set_id == other.set_id && self.config == other.config
     }
 }
 
@@ -278,6 +280,7 @@ where
         f.debug_struct("BoundedGameSession")
             .field("state", &self.state)
             .field("set_id", &self.set_id)
+            .field("config", &self.config)
             .finish()
     }
 }
@@ -293,6 +296,7 @@ where
         Self {
             state: session.state.into(),
             set_id: session.set_id,
+            config: session.config,
         }
     }
 }
@@ -308,6 +312,7 @@ where
         Self {
             state: session.state.into(),
             set_id: session.set_id,
+            config: session.config,
         }
     }
 }
@@ -461,7 +466,7 @@ where
     MaxConditions: Get<u32>,
 {
     fn from(state: GameState) -> Self {
-        let (card_pool_raw, set_id, local_state_raw) = state.decompose();
+        let (card_pool_raw, set_id, _config, local_state_raw) = state.decompose();
 
         let mut card_pool = BoundedBTreeMap::new();
         for (id, card) in card_pool_raw {
@@ -512,7 +517,7 @@ where
             .collect();
         let local_state = bounded.local_state.into();
 
-        Self::reconstruct(card_pool, bounded.set_id, local_state)
+        Self::reconstruct(card_pool, bounded.set_id, crate::sealed::default_config(), local_state)
     }
 }
 

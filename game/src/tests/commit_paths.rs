@@ -19,7 +19,7 @@ fn add_card(
 
 #[test]
 fn test_turn_error_invalid_hand_index_burn_and_play() {
-    let mut state = GameState::new(1, 5);
+    let mut state = GameState::new(1, crate::sealed::default_config());
 
     let burn = CommitTurnAction {
         actions: vec![TurnAction::BurnFromHand { hand_index: 0 }],
@@ -43,7 +43,7 @@ fn test_turn_error_invalid_hand_index_burn_and_play() {
 
 #[test]
 fn test_play_into_occupied_slot_shifts_board() {
-    let mut state = GameState::new(2, 5);
+    let mut state = GameState::new(2, crate::sealed::default_config());
     state.mana_limit = 10;
     state.shop_mana = 10;
 
@@ -71,7 +71,7 @@ fn test_play_into_occupied_slot_shifts_board() {
 
 #[test]
 fn test_turn_error_play_into_occupied_slot_on_full_board() {
-    let mut state = GameState::new(3, 5);
+    let mut state = GameState::new(3, crate::sealed::default_config());
     state.mana_limit = 10;
     state.shop_mana = 10;
 
@@ -97,7 +97,7 @@ fn test_turn_error_play_into_occupied_slot_on_full_board() {
 
 #[test]
 fn test_turn_error_not_enough_mana() {
-    let mut state = GameState::new(4, 5);
+    let mut state = GameState::new(4, crate::sealed::default_config());
     state.mana_limit = 10;
     state.shop_mana = 1;
 
@@ -119,7 +119,7 @@ fn test_turn_error_not_enough_mana() {
 
 #[test]
 fn test_turn_error_invalid_board_burn_paths() {
-    let mut state = GameState::new(5, 5);
+    let mut state = GameState::new(5, crate::sealed::default_config());
 
     let out_of_bounds = CommitTurnAction {
         actions: vec![TurnAction::BurnFromBoard { board_slot: 5 }],
@@ -140,7 +140,7 @@ fn test_turn_error_invalid_board_burn_paths() {
 
 #[test]
 fn test_turn_error_invalid_swap_slot() {
-    let mut state = GameState::new(6, 5);
+    let mut state = GameState::new(6, crate::sealed::default_config());
     let action = CommitTurnAction {
         actions: vec![TurnAction::SwapBoard {
             slot_a: 0,
@@ -155,7 +155,7 @@ fn test_turn_error_invalid_swap_slot() {
 
 #[test]
 fn test_turn_error_move_board_requires_distinct_occupied_slots() {
-    let mut state = GameState::new(7, 5);
+    let mut state = GameState::new(7, crate::sealed::default_config());
     let from_id = add_card(&mut state, "From", 2, 2, 0, 0);
     let to_id = add_card(&mut state, "To", 3, 3, 0, 0);
 
@@ -201,7 +201,7 @@ fn test_turn_error_move_board_requires_distinct_occupied_slots() {
 
 #[test]
 fn test_on_buy_damage_trigger_source_removes_bought_unit() {
-    let mut state = GameState::new(8, 5);
+    let mut state = GameState::new(8, crate::sealed::default_config());
     state.mana_limit = 10;
     state.shop_mana = 10;
 
@@ -241,7 +241,7 @@ fn test_on_buy_damage_trigger_source_removes_bought_unit() {
 
 #[test]
 fn test_on_buy_destroy_standard_target_selects_highest_attack() {
-    let mut state = GameState::new(9, 5);
+    let mut state = GameState::new(9, crate::sealed::default_config());
     state.mana_limit = 10;
     state.shop_mana = 10;
 
@@ -288,7 +288,7 @@ fn test_on_buy_destroy_standard_target_selects_highest_attack() {
 
 #[test]
 fn test_on_sell_self_position_zero_fizzles_when_source_is_removed() {
-    let mut state = GameState::new(10, 5);
+    let mut state = GameState::new(10, crate::sealed::default_config());
     state.mana_limit = 10;
 
     let seller_id = state.generate_card_id();
@@ -322,7 +322,7 @@ fn test_on_sell_self_position_zero_fizzles_when_source_is_removed() {
 
 #[test]
 fn test_on_sell_allies_other_targets_survivors_when_source_is_removed() {
-    let mut state = GameState::new(11, 5);
+    let mut state = GameState::new(11, crate::sealed::default_config());
     state.mana_limit = 10;
 
     let seller_id = state.generate_card_id();
@@ -358,7 +358,7 @@ fn test_on_sell_allies_other_targets_survivors_when_source_is_removed() {
 
 #[test]
 fn test_shop_condition_gate_can_prevent_effects() {
-    let mut state = GameState::new(10, 5);
+    let mut state = GameState::new(10, crate::sealed::default_config());
     state.mana_limit = 10;
     state.shop_mana = 0;
 
@@ -397,7 +397,7 @@ fn test_shop_condition_gate_can_prevent_effects() {
 
 #[test]
 fn test_shop_condition_anyof_path_applies_with_valid_targets() {
-    let mut state = GameState::new(11, 5);
+    let mut state = GameState::new(11, crate::sealed::default_config());
     state.mana_limit = 10;
     state.shop_mana = 0;
 
