@@ -248,36 +248,50 @@ fn handle_get_state(request: &Request, backend: &Mutex<Backend>) -> Result<Strin
     serde_json::to_string(&state).map_err(|e| (500, e.to_string()))
 }
 
-fn handle_get_cards(_backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
-    let card_pool = oab_battle::cards::build_card_pool();
-    let cards: Vec<oab_game::view::CardView> = card_pool
-        .values()
-        .map(oab_game::view::CardView::from)
-        .collect();
+fn handle_get_cards(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
+    let b = backend.lock().unwrap();
+    let cards = match &*b {
+        Backend::Local(_) => {
+            let card_pool = oab_battle::cards::build_card_pool();
+            card_pool
+                .values()
+                .map(oab_game::view::CardView::from)
+                .collect()
+        }
+        #[cfg(feature = "chain")]
+        Backend::Chain(session) => session.get_cards(),
+    };
     serde_json::to_string(&cards).map_err(|e| (500, e.to_string()))
 }
 
-fn handle_get_sets(_backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
-    let metas = oab_battle::cards::get_all_set_metas();
-    let sets = oab_battle::cards::get_all_sets();
-    let result: Vec<crate::types::SetInfo> = metas
-        .into_iter()
-        .zip(sets.into_iter())
-        .map(|(meta, set)| crate::types::SetInfo {
-            id: meta.id,
-            name: meta.name.to_string(),
-            card_count: set.cards.len(),
-            cards: set
-                .cards
-                .iter()
-                .map(|e| crate::types::SetCardEntry {
-                    card_id: e.card_id.0,
-                    rarity: e.rarity,
+fn handle_get_sets(backend: &Mutex<Backend>) -> Result<String, (u16, String)> {
+    let b = backend.lock().unwrap();
+    let sets = match &*b {
+        Backend::Local(_) => {
+            let metas = oab_battle::cards::get_all_set_metas();
+            let all_sets = oab_battle::cards::get_all_sets();
+            metas
+                .into_iter()
+                .zip(all_sets.into_iter())
+                .map(|(meta, set)| crate::types::SetInfo {
+                    id: meta.id,
+                    name: meta.name.to_string(),
+                    card_count: set.cards.len(),
+                    cards: set
+                        .cards
+                        .iter()
+                        .map(|e| crate::types::SetCardEntry {
+                            card_id: e.card_id.0,
+                            rarity: e.rarity,
+                        })
+                        .collect(),
                 })
-                .collect(),
-        })
-        .collect();
-    serde_json::to_string(&result).map_err(|e| (500, e.to_string()))
+                .collect()
+        }
+        #[cfg(feature = "chain")]
+        Backend::Chain(session) => session.get_sets(),
+    };
+    serde_json::to_string(&sets).map_err(|e| (500, e.to_string()))
 }
 
 /// Parse a query parameter from a URL string.

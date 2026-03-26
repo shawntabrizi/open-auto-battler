@@ -343,6 +343,9 @@ impl<T: Config> Pallet<T> {
             battle.core_state.round += 1;
             battle.core_state.mana_limit =
                 battle.core_state.config.mana_limit_for_round(battle.core_state.round);
+            if battle.core_state.config.full_mana_each_round {
+                battle.core_state.shop_mana = battle.core_state.mana_limit;
+            }
             battle.core_state.phase = GamePhase::Shop;
             battle.core_state.draw_hand(battle.core_state.config.hand_size as usize);
             apply_shop_start_triggers_with_result(&mut battle.core_state, Some(result.clone()));

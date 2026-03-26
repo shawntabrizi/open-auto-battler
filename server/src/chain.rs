@@ -254,7 +254,8 @@ mod inner {
                 let enemy_count = enemy_units.len();
 
                 let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-                let events = resolve_battle(player_units, enemy_units, &mut rng, &self.card_pool, oab_game::sealed::default_config().board_size as usize);
+                let board_size = state.config.board_size as usize;
+                let events = resolve_battle(player_units, enemy_units, &mut rng, &self.card_pool, board_size);
 
                 BattleReport {
                     player_units_survived: 0, // Will be updated from chain state
@@ -287,7 +288,7 @@ mod inner {
 
             let game_over = state.phase == GamePhase::Completed;
             let game_result = if game_over {
-                let result = if state.wins >= oab_game::sealed::default_config().wins_to_victory {
+                let result = if state.wins >= state.config.wins_to_victory {
                     "victory"
                 } else {
                     "defeat"
