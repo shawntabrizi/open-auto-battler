@@ -10,9 +10,10 @@ use oab_battle::rng::BattleRng;
 use oab_game::sealed::create_starting_bag;
 use oab_battle::{
     apply_shop_start_triggers, apply_shop_start_triggers_with_result, resolve_battle,
-    verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, GamePhase,
-    GameState, UnitCard, XorShiftRng,
+    verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, UnitCard,
+    XorShiftRng,
 };
+use oab_game::{GamePhase, GameState};
 
 /// Transient struct holding everything needed for battle execution.
 /// Not stored on-chain.
@@ -184,7 +185,7 @@ impl<T: Config> Pallet<T> {
         let mut state = GameState::reconstruct(
             card_pool,
             set_id,
-            oab_battle::state::LocalGameState {
+            oab_game::LocalGameState {
                 bag: create_starting_bag(&card_set, seed),
                 hand: Vec::new(),
                 board: vec![None; oab_battle::state::BOARD_SIZE],
@@ -211,7 +212,7 @@ impl<T: Config> Pallet<T> {
     pub(crate) fn prepare_battle(
         who: &T::AccountId,
         set_id: u32,
-        local_state: oab_battle::state::LocalGameState,
+        local_state: oab_game::LocalGameState,
         action: BoundedCommitTurnAction<T>,
         battle_seed_context: &[u8],
     ) -> Result<PreparedBattle, DispatchError> {

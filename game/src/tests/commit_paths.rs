@@ -1,7 +1,7 @@
-use crate::commit::{apply_shop_start_triggers, verify_and_apply_turn};
-use crate::error::GameError;
-use crate::state::GameState;
-use crate::types::*;
+use oab_battle::commit::{apply_shop_start_triggers, verify_and_apply_turn};
+use oab_battle::error::GameError;
+use crate::GameState;
+use oab_battle::types::*;
 
 fn add_card(
     state: &mut GameState,

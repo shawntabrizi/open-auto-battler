@@ -6,7 +6,7 @@ use alloc::collections::BTreeMap;
 use alloc::vec;
 use alloc::vec::Vec;
 
-use crate::types::{CardId, UnitCard};
+use oab_battle::types::{CardId, UnitCard};
 
 // Card ID constants for genesis ghost generation
 const RAT_SWARM: u32 = 0;

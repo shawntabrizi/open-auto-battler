@@ -12,7 +12,8 @@ mod inner {
     use oab_battle::rng::XorShiftRng;
     use oab_battle::state::*;
     use oab_battle::types::*;
-    use oab_battle::view::GameView;
+    use oab_game::view::GameView;
+    use oab_game::{GamePhase, GameSession, GameState};
 
     use bounded_collections::ConstU32;
     use parity_scale_codec::Decode;
@@ -363,10 +364,10 @@ mod inner {
             }
         }
 
-        pub fn get_cards(&self) -> Vec<oab_battle::view::CardView> {
+        pub fn get_cards(&self) -> Vec<oab_game::view::CardView> {
             self.card_pool
                 .values()
-                .map(oab_battle::view::CardView::from)
+                .map(oab_game::view::CardView::from)
                 .collect()
         }
 
@@ -538,7 +539,7 @@ mod inner {
         match raw {
             Some(bytes) => {
                 let mut input = &bytes[..];
-                let bounded = oab_battle::bounded::BoundedGameSession::<
+                let bounded = oab_game::bounded::BoundedGameSession::<
                     MaxBagSize,
                     MaxBoardSize,
                     MaxHandActions,

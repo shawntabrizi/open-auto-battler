@@ -7,8 +7,8 @@ use alloc::vec::Vec;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 
-use crate::state::*;
-use crate::types::*;
+use crate::state::{GamePhase, GameState};
+use oab_battle::types::*;
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -23,8 +23,8 @@ pub struct CardView {
     pub health: i32,
     pub play_cost: i32,
     pub burn_value: i32,
-    pub shop_abilities: Vec<crate::types::ShopAbility>,
-    pub battle_abilities: Vec<crate::types::Ability>,
+    pub shop_abilities: Vec<oab_battle::types::ShopAbility>,
+    pub battle_abilities: Vec<oab_battle::types::Ability>,
 }
 
 impl From<&UnitCard> for CardView {
@@ -52,8 +52,8 @@ pub struct BoardUnitView {
     pub health: i32,
     pub play_cost: i32,
     pub burn_value: i32,
-    pub shop_abilities: Vec<crate::types::ShopAbility>,
-    pub battle_abilities: Vec<crate::types::Ability>,
+    pub shop_abilities: Vec<oab_battle::types::ShopAbility>,
+    pub battle_abilities: Vec<oab_battle::types::Ability>,
 }
 
 /// The complete game view sent to React (Hot Path - lightweight)

@@ -8,10 +8,9 @@ use oab_battle::battle::{
 };
 use oab_battle::commit::{apply_shop_start_triggers, apply_shop_start_triggers_with_result};
 use oab_battle::rng::XorShiftRng;
-use oab_battle::state::*;
 use oab_battle::types::*;
-use oab_game::{constructed, sealed, GameConfig};
-use oab_battle::view::GameView;
+use oab_game::view::GameView;
+use oab_game::{constructed, sealed, GameConfig, GamePhase, GameState};
 
 use crate::types::{BattleReport, GameStateResponse, OpponentUnit, StepResponse};
 
@@ -25,7 +24,6 @@ struct BattleOutcome {
 /// Opponents are provided per-step by the caller.
 pub struct GameSession {
     state: GameState,
-    card_set: CardSet,
     config: GameConfig,
 }
 
@@ -51,7 +49,7 @@ impl GameSession {
         state.draw_hand();
         apply_shop_start_triggers(&mut state);
 
-        Ok(Self { state, card_set, config })
+        Ok(Self { state, config })
     }
 
     /// Start a new constructed game with a user-provided deck.
@@ -78,7 +76,7 @@ impl GameSession {
         state.draw_hand();
         apply_shop_start_triggers(&mut state);
 
-        Ok(Self { state, card_set, config })
+        Ok(Self { state, config })
     }
 
     /// Extract the current board as opponent units (for PvP pairing).
@@ -99,32 +97,6 @@ impl GameSession {
             .collect()
     }
 
-    /// Reset the game with a new seed and optional set_id.
-    pub fn reset(&mut self, seed: u64, set_id: Option<u32>) -> Result<GameStateResponse, String> {
-        if let Some(set_id) = set_id {
-            *self = GameSession::new(seed, set_id)?;
-        } else {
-            self.reset_local(seed);
-        }
-        Ok(self.get_state())
-    }
-
-    /// Reset with a new seed (same set).
-    fn reset_local(&mut self, seed: u64) -> GameStateResponse {
-        let card_pool = std::mem::take(&mut self.state.card_pool);
-        let set_id = self.state.set_id;
-        self.state = GameState::new(seed);
-        self.state.card_pool = card_pool;
-        self.state.set_id = set_id;
-        self.state.lives = self.config.starting_lives;
-        self.state.mana_limit = self.config.mana_limit_for_round(1);
-        self.state.bag = sealed::create_starting_bag(&self.card_set, seed);
-        self.state.next_card_id = 1000;
-        self.state.draw_hand();
-        apply_shop_start_triggers(&mut self.state);
-        self.get_state()
-    }
-
     /// Get the current game state.
     pub fn get_state(&self) -> GameStateResponse {
         let hand_used = vec![false; self.state.hand.len()];
@@ -135,11 +107,11 @@ impl GameSession {
     }
 
     /// Get all cards in the card pool.
-    pub fn get_cards(&self) -> Vec<oab_battle::view::CardView> {
+    pub fn get_cards(&self) -> Vec<oab_game::view::CardView> {
         self.state
             .card_pool
             .values()
-            .map(oab_battle::view::CardView::from)
+            .map(oab_game::view::CardView::from)
             .collect()
     }
 
@@ -478,13 +450,9 @@ mod tests {
 
     #[test]
     fn reset_returns_fresh_state() {
-        let mut session = new_session();
-        // Play a round first so state changes
-        session.shop(&CommitTurnAction { actions: vec![] }).unwrap();
-        let _ = session.battle(&[]);
-
-        // Reset
-        let state = session.reset(99, None).expect("reset should succeed");
+        // Creating a new session is equivalent to a reset
+        let session = GameSession::new(99, 0).expect("new session should succeed");
+        let state = session.get_state();
         assert_eq!(state.round, 1);
         assert_eq!(state.phase, "shop");
         assert_eq!(state.wins, 0);
@@ -492,20 +460,17 @@ mod tests {
 
     #[test]
     fn reset_with_different_set() {
-        let mut session = new_session();
         let all_sets = oab_battle::cards::get_all_set_metas();
         if all_sets.len() > 1 {
-            let state = session
-                .reset(99, Some(1))
-                .expect("reset with set 1 should succeed");
+            let session = GameSession::new(99, 1).expect("set 1 should succeed");
+            let state = session.get_state();
             assert_eq!(state.round, 1);
         }
     }
 
     #[test]
     fn reset_invalid_set_returns_error() {
-        let mut session = new_session();
-        let result = session.reset(99, Some(9999));
+        let result = GameSession::new(99, 9999);
         assert!(result.is_err());
     }
 

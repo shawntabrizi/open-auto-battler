@@ -12,7 +12,8 @@ use oab_battle::battle::{
     player_permanent_stat_deltas_from_events, player_shop_mana_delta_from_events, resolve_battle,
     CombatEvent, CombatUnit, UnitId, UnitView,
 };
-use oab_battle::bounded::{BoundedCardSet, BoundedGameSession};
+use oab_battle::bounded::BoundedCardSet;
+use oab_game::bounded::BoundedGameSession;
 use oab_battle::commit::{
     apply_board_insert_shift, apply_move_board_positions, apply_on_buy_triggers,
     apply_on_sell_triggers, apply_shop_start_triggers, apply_shop_start_triggers_with_result,
@@ -22,8 +23,9 @@ use oab_battle::log;
 use oab_battle::rng::XorShiftRng;
 use oab_battle::state::*;
 use oab_battle::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
-use oab_battle::view::{CardView, GameView};
 use oab_battle::GameError;
+use oab_game::view::{CardView, GameView};
+use oab_game::{GamePhase, GameSession, GameState};
 use parity_scale_codec::Decode;
 use parity_scale_codec::Encode;
 use serde::{Deserialize, Serialize};
@@ -169,7 +171,7 @@ impl GameEngine {
     #[wasm_bindgen]
     pub fn get_set_cards(&self, set_id: u32) -> Result<JsValue, String> {
         use oab_battle::cards::{build_card_pool, get_all_sets};
-        use oab_battle::view::CardView;
+        use oab_game::view::CardView;
         use serde::Serialize;
 
         // Note: serde_wasm_bindgen doesn't support #[serde(flatten)],

@@ -2,7 +2,7 @@
 
 use oab_battle::battle::CombatEvent;
 use oab_battle::types::CommitTurnAction;
-use oab_battle::view::{BoardUnitView, CardView, GameView};
+use oab_game::view::{BoardUnitView, CardView, GameView};
 use serde::{Deserialize, Serialize};
 
 // ── Responses ──

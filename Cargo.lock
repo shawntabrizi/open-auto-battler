@@ -7738,7 +7738,10 @@ dependencies = [
 name = "oab-game"
 version = "0.1.0"
 dependencies = [
+ "bounded-collections",
  "oab-battle",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
 ]
 

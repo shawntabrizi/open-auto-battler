@@ -10,7 +10,7 @@ use oab_battle::cards::build_card_pool;
 use oab_battle::log;
 use oab_battle::rng::XorShiftRng;
 use oab_battle::types::CardId;
-use oab_battle::view::CardView;
+use oab_game::view::CardView;
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 

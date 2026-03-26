@@ -1,5 +1,5 @@
-use crate::state::{GamePhase, GameState};
-use crate::types::{BoardUnit, CardId, UnitCard};
+use crate::{GamePhase, GameState};
+use oab_battle::types::{BoardUnit, CardId, UnitCard};
 use crate::view::GameView;
 
 #[test]

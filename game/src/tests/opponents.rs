@@ -1,7 +1,7 @@
 use alloc::collections::BTreeMap;
 
 use crate::opponents::generate_genesis_ghosts;
-use crate::types::{CardId, UnitCard};
+use oab_battle::types::{CardId, UnitCard};
 
 fn full_opponent_pool() -> BTreeMap<CardId, UnitCard> {
     let mut pool = BTreeMap::new();

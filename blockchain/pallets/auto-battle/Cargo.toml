@@ -16,7 +16,7 @@ codec = { features = ["derive"], workspace = true }
 frame = { workspace = true, features = ["experimental", "runtime"], default-features = false }
 scale-info = { features = ["derive"], workspace = true }
 oab-battle = { workspace = true, features = ["bounded"] }
-oab-game = { workspace = true }
+oab-game = { workspace = true, features = ["bounded"] }
 
 [dev-dependencies]
 polkadot-sdk = { workspace = true, features = ["pallet-balances", "std"] }

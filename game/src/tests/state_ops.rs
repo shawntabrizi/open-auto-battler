@@ -1,7 +1,7 @@
 use alloc::collections::BTreeMap;
 
-use crate::state::{GameState, LocalGameState};
-use crate::types::{BoardUnit, *};
+use crate::{GameState, LocalGameState};
+use oab_battle::types::{BoardUnit, *};
 
 #[test]
 fn test_generate_card_id_monotonic() {
@@ -118,7 +118,7 @@ fn test_reconstruct_from_manual_local_state() {
         round: 3,
         lives: 2,
         wins: 1,
-        phase: crate::state::GamePhase::Shop,
+        phase: crate::GamePhase::Shop,
         next_card_id: 99,
         game_seed: 777,
     };

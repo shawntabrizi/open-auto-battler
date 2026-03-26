@@ -3,7 +3,9 @@
 use alloc::vec::Vec;
 
 use oab_battle::rng::{BattleRng, XorShiftRng};
-use oab_battle::state::{CardSet, STARTING_BAG_SIZE};
+use oab_battle::state::CardSet;
+
+use crate::state::STARTING_BAG_SIZE;
 use oab_battle::types::CardId;
 
 use crate::GameConfig;

@@ -1,7 +1,8 @@
 use crate::{mock::*, ActiveGame, ActiveTournamentGame, Error};
 use frame::arithmetic::Perbill;
 use frame::testing_prelude::*;
-use oab_battle::{CommitTurnAction, GamePhase};
+use oab_battle::CommitTurnAction;
+use oab_game::GamePhase;
 
 fn bounded_set_entries(
     entries: Vec<crate::CardSetEntryInput>,
@@ -37,29 +38,6 @@ fn ghost_unit(card_id: u32) -> oab_battle::bounded::GhostBoardUnit {
         perm_attack: 0,
         perm_health: 0,
     }
-}
-
-/// Create a minimal card + set directly in storage, independent of genesis.
-/// Returns `(set_id, card_id)`.
-fn setup_test_set() -> (u32, u32) {
-    let card_id = crate::NextUserCardId::<Test>::get();
-    let data = sample_card_data(5, 5);
-    crate::UserCards::<Test>::insert(card_id, &data);
-    crate::NextUserCardId::<Test>::put(card_id + 1);
-
-    let set_id = crate::NextSetId::<Test>::get();
-    let entry = oab_core::state::CardSetEntry {
-        card_id: oab_core::types::CardId(card_id),
-        rarity: 10,
-    };
-    let bounded_entries = BoundedVec::try_from(vec![entry]).unwrap();
-    let bounded_set = crate::BoundedCardSet::<Test> {
-        cards: bounded_entries,
-    };
-    crate::CardSets::<Test>::insert(set_id, bounded_set);
-    crate::NextSetId::<Test>::put(set_id + 1);
-
-    (set_id, card_id)
 }
 
 /// Insert a ghost opponent directly into regular ghost storage for a given bracket.

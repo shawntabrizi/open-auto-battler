@@ -1,16 +1,10 @@
 mod battle_helpers;
 mod battle_result;
-mod commit_paths;
 mod limits;
 mod log;
 mod math;
-mod opponents;
 mod priority;
-mod state;
-mod state_ops;
 mod triggers;
-mod turns;
-mod view;
 
 use crate::battle::{resolve_battle, CombatEvent, CombatUnit, UnitId};
 use crate::rng::XorShiftRng;
@@ -41,7 +35,6 @@ fn create_ability(trigger: AbilityTrigger, effect: AbilityEffect) -> Ability {
 fn create_tester_unit(id: u32, name: &str, attack: i32, health: i32) -> CombatUnit {
     let ability = Ability {
         trigger: AbilityTrigger::OnStart,
-        // Simple effect that won't kill anyone to keep the log clean
         effect: AbilityEffect::ModifyStats {
             health: 1,
             attack: 0,
@@ -94,24 +87,19 @@ fn empty_card_pool() -> BTreeMap<CardId, UnitCard> {
 /// Card pool with common token cards for spawn tests
 fn spawn_test_card_pool() -> BTreeMap<CardId, UnitCard> {
     let mut pool = BTreeMap::new();
-    // rat_token (ID 40)
     pool.insert(
         CardId(40),
         UnitCard::new(CardId(40), "Rat Token", 1, 1, 0, 0),
     );
-    // zombie_soldier (ID 41)
     pool.insert(
         CardId(41),
         UnitCard::new(CardId(41), "Zombie Soldier", 1, 1, 1, 1),
     );
-    // zombie_spawn (ID 42)
     pool.insert(
         CardId(42),
         UnitCard::new(CardId(42), "Zombie Spawn", 1, 1, 0, 0),
     );
-    // golem (ID 43)
     pool.insert(CardId(43), UnitCard::new(CardId(43), "Golem", 5, 5, 0, 0));
-    // phoenix_egg (ID 44)
     pool.insert(
         CardId(44),
         UnitCard::new(CardId(44), "Phoenix Egg", 0, 5, 0, 0),

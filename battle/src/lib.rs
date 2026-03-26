@@ -13,11 +13,9 @@ pub mod commit;
 pub mod error;
 pub mod limits;
 pub mod log;
-pub mod opponents;
 pub mod rng;
 pub mod state;
 pub mod types;
-pub mod view;
 
 #[cfg(test)]
 mod tests;
@@ -34,10 +32,6 @@ pub use commit::{
 };
 pub use error::{GameError, GameResult};
 pub use limits::{BattleLimits, LimitReason, Team};
-pub use opponents::{
-    generate_genesis_ghosts, GenesisMatchmakingBracket, GhostBoard, GhostBoardUnitSimple,
-};
 pub use rng::{BattleRng, XorShiftRng};
 pub use state::*;
 pub use types::*;
-pub use view::*;

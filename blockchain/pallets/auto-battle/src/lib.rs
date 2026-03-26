@@ -30,14 +30,17 @@ pub mod pallet {
     use oab_battle::bounded::{
         BoundedBattleAbility as CoreBoundedBattleAbility, BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
-        BoundedGameSession as CoreBoundedGameSession, BoundedGameState as CoreBoundedGameState,
         BoundedGhostBoard as CoreBoundedGhostBoard,
-        BoundedLocalGameState as CoreBoundedLocalGameState,
         BoundedShopAbility as CoreBoundedShopAbility, GhostBoardUnit as CoreGhostBoardUnit,
         MatchmakingBracket,
     };
     use oab_battle::types::{EconomyStats, UnitStats};
-    use oab_battle::{BattleResult, CardSet, CombatUnit, GamePhase};
+    use oab_battle::{BattleResult, CardSet, CombatUnit};
+    use oab_game::bounded::{
+        BoundedGameSession as CoreBoundedGameSession, BoundedGameState as CoreBoundedGameState,
+        BoundedLocalGameState as CoreBoundedLocalGameState,
+    };
+    use oab_game::GamePhase;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);

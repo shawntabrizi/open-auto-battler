@@ -15,8 +15,15 @@ default = ["std"]
 std = [
     "oab-battle/std",
     "serde/std",
+    "parity-scale-codec/std",
+    "scale-info/std",
+    "bounded-collections?/std",
 ]
+bounded = ["dep:bounded-collections", "oab-battle/bounded"]
 
 [dependencies]
 oab-battle = { workspace = true }
 serde = { workspace = true, features = ["derive", "alloc"] }
+parity-scale-codec = { workspace = true, features = ["derive", "max-encoded-len"] }
+scale-info = { workspace = true, features = ["derive"] }
+bounded-collections = { workspace = true, optional = true }

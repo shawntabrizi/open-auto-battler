@@ -1,5 +1,5 @@
-use crate::state::GameState;
-use crate::types::*;
+use crate::GameState;
+use oab_battle::types::*;
 
 #[test]
 fn test_hand_derivation_deterministic() {
