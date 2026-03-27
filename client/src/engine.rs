@@ -151,7 +151,10 @@ impl GameEngine {
         let card_set = CardSet {
             cards: card_pool
                 .keys()
-                .map(|&id| CardSetEntry { card_id: id, rarity: 1 })
+                .map(|&id| CardSetEntry {
+                    card_id: id,
+                    rarity: 1,
+                })
                 .collect(),
         };
 

@@ -14,6 +14,7 @@ use oab_battle::{
 };
 use oab_game::sealed::create_starting_bag;
 use oab_game::{GamePhase, GameState};
+use pallet_oab_card_registry::CardRegistryProvider;
 
 /// Transient struct holding everything needed for battle execution.
 /// Not stored on-chain.
@@ -37,38 +38,13 @@ pub(crate) struct TurnResult<T: Config> {
 }
 
 impl<T: Config> Pallet<T> {
-    // ── Moved helpers ──────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────
 
     /// Reconstruct a card pool from storage based on a card set.
     pub(crate) fn get_card_pool(
         card_set: &CardSet,
     ) -> BTreeMap<oab_battle::types::CardId, UnitCard> {
-        let mut card_pool = BTreeMap::new();
-        for entry in &card_set.cards {
-            if let Some(user_data) = UserCards::<T>::get(entry.card_id.0) {
-                card_pool.insert(
-                    entry.card_id,
-                    Self::entry_to_unit_card(entry.card_id, user_data),
-                );
-            }
-        }
-        card_pool
-    }
-
-    /// Convert UserCardData to UnitCard.
-    fn entry_to_unit_card(id: oab_battle::types::CardId, data: UserCardData<T>) -> UnitCard {
-        UnitCard {
-            id,
-            name: alloc::string::String::new(),
-            stats: data.stats,
-            economy: data.economy,
-            shop_abilities: data.shop_abilities.into_iter().map(|a| a.into()).collect(),
-            battle_abilities: data
-                .battle_abilities
-                .into_iter()
-                .map(|a| a.into())
-                .collect(),
-        }
+        T::CardRegistry::get_card_pool(card_set)
     }
 
     /// Generate a unique seed per user/block/context.
@@ -180,8 +156,7 @@ impl<T: Config> Pallet<T> {
         set_id: u32,
         seed_context: &[u8],
     ) -> Result<(BoundedLocalGameState<T>, u64), DispatchError> {
-        let card_set_bounded = CardSets::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
-        let card_set: CardSet = card_set_bounded.into();
+        let card_set = T::CardRegistry::get_card_set(set_id).ok_or(Error::<T>::CardSetNotFound)?;
         let card_pool = Self::get_card_pool(&card_set);
 
         let seed = Self::generate_next_seed(who, seed_context);
@@ -223,8 +198,7 @@ impl<T: Config> Pallet<T> {
         action: BoundedCommitTurnAction<T>,
         battle_seed_context: &[u8],
     ) -> Result<PreparedBattle, DispatchError> {
-        let card_set_bounded = CardSets::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
-        let card_set: CardSet = card_set_bounded.into();
+        let card_set = T::CardRegistry::get_card_set(set_id).ok_or(Error::<T>::CardSetNotFound)?;
         let card_pool = Self::get_card_pool(&card_set);
 
         let mut core_state = GameState::reconstruct(card_pool, set_id, config, local_state);
@@ -431,16 +405,16 @@ impl<T: Config> Pallet<T> {
 
         // Grant silver/gold achievements for cards on the final board
         if wins >= config.wins_to_victory {
-            let mut new_bits = ACHIEVEMENT_SILVER;
+            let mut new_bits = pallet_oab_card_registry::pallet::ACHIEVEMENT_SILVER;
             if lives >= config.starting_lives {
-                new_bits |= ACHIEVEMENT_GOLD;
+                new_bits |= pallet_oab_card_registry::pallet::ACHIEVEMENT_GOLD;
             }
             for board_unit in state.board.iter().flatten() {
                 let card_id = board_unit.card_id.0;
-                let old = VictoryAchievements::<T>::get(who, card_id);
+                let old = T::CardRegistry::get_achievements(who, card_id);
                 let updated = old | new_bits;
                 if updated != old {
-                    VictoryAchievements::<T>::insert(who, card_id, updated);
+                    T::CardRegistry::set_achievements(who, card_id, updated);
                 }
             }
         }
@@ -451,9 +425,13 @@ impl<T: Config> Pallet<T> {
     pub(crate) fn grant_bronze_achievements(who: &T::AccountId, core_state: &GameState) {
         for board_unit in core_state.board.iter().flatten() {
             let card_id = board_unit.card_id.0;
-            let current = VictoryAchievements::<T>::get(who, card_id);
-            if current & ACHIEVEMENT_BRONZE == 0 {
-                VictoryAchievements::<T>::insert(who, card_id, current | ACHIEVEMENT_BRONZE);
+            let current = T::CardRegistry::get_achievements(who, card_id);
+            if current & pallet_oab_card_registry::pallet::ACHIEVEMENT_BRONZE == 0 {
+                T::CardRegistry::set_achievements(
+                    who,
+                    card_id,
+                    current | pallet_oab_card_registry::pallet::ACHIEVEMENT_BRONZE,
+                );
             }
         }
     }

@@ -316,9 +316,11 @@ mod runtime {
     #[runtime::pallet_index(33)]
     pub type MessageQueue = pallet_message_queue;
 
-    // Template
+    // OAB Pallets
     #[runtime::pallet_index(50)]
     pub type AutoBattle = pallet_auto_battle;
+    #[runtime::pallet_index(52)]
+    pub type CardRegistry = pallet_oab_card_registry;
 
     // NFTs
     #[runtime::pallet_index(51)]

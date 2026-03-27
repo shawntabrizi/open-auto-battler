@@ -1,6 +1,6 @@
 [package]
-name = "pallet-auto-battle"
-description = "FRAME pallet for the Open Auto Battler on-chain game logic."
+name = "pallet-oab-card-registry"
+description = "FRAME pallet for Open Auto Battler card and set management."
 version = "0.1.0"
 license.workspace = true
 authors.workspace = true
@@ -17,14 +17,9 @@ frame = { workspace = true, features = ["experimental", "runtime"], default-feat
 scale-info = { features = ["derive"], workspace = true }
 oab-battle = { workspace = true, features = ["bounded"] }
 oab-assets = { workspace = true, features = ["bounded"] }
-oab-game = { workspace = true, features = ["bounded"] }
-pallet-oab-card-registry = { workspace = true }
-
-[dev-dependencies]
-polkadot-sdk = { workspace = true, features = ["pallet-balances", "std"] }
 
 [features]
 default = ["std"]
 runtime-benchmarks = ["frame/runtime-benchmarks"]
-std = ["codec/std", "frame/std", "scale-info/std", "oab-battle/std", "oab-assets/std", "oab-game/std", "pallet-oab-card-registry/std"]
+std = ["codec/std", "frame/std", "scale-info/std", "oab-battle/std", "oab-assets/std"]
 try-runtime = ["frame/try-runtime"]

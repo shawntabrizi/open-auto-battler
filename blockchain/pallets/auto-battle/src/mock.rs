@@ -30,6 +30,8 @@ mod test_runtime {
     pub type AutoBattle = crate;
     #[runtime::pallet_index(2)]
     pub type Balances = pallet_balances;
+    #[runtime::pallet_index(3)]
+    pub type CardRegistry = pallet_oab_card_registry;
 }
 
 #[derive_impl(frame_system::config_preludes::TestDefaultConfig)]
@@ -70,6 +72,15 @@ impl
     }
 }
 
+impl pallet_oab_card_registry::Config for Test {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = ();
+    type MaxAbilities = ConstU32<5>;
+    type MaxStringLen = ConstU32<32>;
+    type MaxConditions = ConstU32<5>;
+    type MaxSetSize = ConstU32<100>;
+}
+
 frame::deps::frame_support::parameter_types! {
     pub const AutoBattlePalletId: frame::deps::frame_support::PalletId =
         frame::deps::frame_support::PalletId(*b"autobttl");
@@ -90,6 +101,7 @@ impl crate::Config for Test {
     type Currency = Balances;
     type TournamentOrigin = frame_system::EnsureRoot<u64>;
     type PalletId = AutoBattlePalletId;
+    type CardRegistry = CardRegistry;
 }
 
 // Build genesis storage according to the mock runtime.
@@ -110,8 +122,8 @@ pub fn new_test_ext() -> TestState {
     .assimilate_storage(&mut t)
     .unwrap();
 
-    // Initialize AutoBattle genesis
-    crate::GenesisConfig::<Test> {
+    // Initialize CardRegistry genesis
+    pallet_oab_card_registry::GenesisConfig::<Test> {
         _phantom: Default::default(),
     }
     .assimilate_storage(&mut t)

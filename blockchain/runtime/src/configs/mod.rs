@@ -61,10 +61,10 @@ use xcm::latest::prelude::BodyId;
 // Local module imports
 use super::{
     weights::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight},
-    AccountId, Aura, Balance, Balances, Block, BlockNumber, CollatorSelection, ConsensusHook, Hash,
-    MessageQueue, Nonce, OriginCaller, PalletInfo, ParachainSystem, Runtime, RuntimeCall,
-    RuntimeEvent, RuntimeFreezeReason, RuntimeHoldReason, RuntimeOrigin, RuntimeTask, Session,
-    SessionKeys, System, WeightToFee, XcmpQueue, AVERAGE_ON_INITIALIZE_RATIO, DAYS,
+    AccountId, Aura, Balance, Balances, Block, BlockNumber, CardRegistry, CollatorSelection,
+    ConsensusHook, Hash, MessageQueue, Nonce, OriginCaller, PalletInfo, ParachainSystem, Runtime,
+    RuntimeCall, RuntimeEvent, RuntimeFreezeReason, RuntimeHoldReason, RuntimeOrigin, RuntimeTask,
+    Session, SessionKeys, System, WeightToFee, XcmpQueue, AVERAGE_ON_INITIALIZE_RATIO, DAYS,
     EXISTENTIAL_DEPOSIT, HOURS, MAXIMUM_BLOCK_WEIGHT, MICRO_UNIT, NORMAL_DISPATCH_RATIO,
     SLOT_DURATION, UNIT, VERSION,
 };
@@ -358,6 +358,15 @@ parameter_types! {
     pub const AutoBattlePalletId: PalletId = PalletId(*b"autobttl");
 }
 
+impl pallet_oab_card_registry::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = ();
+    type MaxAbilities = ConstU32<5>;
+    type MaxStringLen = ConstU32<32>;
+    type MaxConditions = ConstU32<5>;
+    type MaxSetSize = ConstU32<100>;
+}
+
 impl pallet_auto_battle::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type WeightInfo = pallet_auto_battle::weights::SubstrateWeight<Runtime>;
@@ -373,6 +382,7 @@ impl pallet_auto_battle::Config for Runtime {
     type Currency = Balances;
     type TournamentOrigin = EnsureRoot<AccountId>;
     type PalletId = AutoBattlePalletId;
+    type CardRegistry = CardRegistry;
 }
 
 parameter_types! {

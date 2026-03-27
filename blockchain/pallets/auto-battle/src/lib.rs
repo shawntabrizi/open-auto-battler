@@ -25,15 +25,14 @@ pub mod pallet {
     use frame::arithmetic::Perbill;
     use frame::prelude::*;
     use frame::traits::{fungible, tokens::Preservation, Get, Randomness};
+    use pallet_oab_card_registry::CardRegistryProvider;
 
     // Import types from core engine
     use oab_battle::bounded::{
-        BoundedBattleAbility as CoreBoundedBattleAbility, BoundedCardSet as CoreBoundedCardSet,
         BoundedCommitTurnAction as CoreBoundedCommitTurnAction,
-        BoundedGhostBoard as CoreBoundedGhostBoard, BoundedShopAbility as CoreBoundedShopAbility,
-        GhostBoardUnit as CoreGhostBoardUnit, MatchmakingBracket,
+        BoundedGhostBoard as CoreBoundedGhostBoard, GhostBoardUnit as CoreGhostBoardUnit,
+        MatchmakingBracket,
     };
-    use oab_battle::types::{EconomyStats, UnitStats};
     use oab_battle::{BattleResult, CardSet, CombatUnit};
     use oab_game::bounded::{
         BoundedGameSession as CoreBoundedGameSession, BoundedGameState as CoreBoundedGameState,
@@ -97,6 +96,9 @@ pub mod pallet {
         /// Pallet ID used to derive the pallet's account for holding tournament funds.
         #[pallet::constant]
         type PalletId: Get<frame::deps::frame_support::PalletId>;
+
+        /// The card registry provider for card/set lookups and achievements.
+        type CardRegistry: pallet_oab_card_registry::CardRegistryProvider<Self::AccountId>;
     }
 
     /// Type alias for the bounded game state using pallet config.
@@ -123,9 +125,6 @@ pub mod pallet {
         <T as Config>::MaxHandActions,
     >;
 
-    /// Type alias for the bounded card set using pallet config.
-    pub type BoundedCardSet<T> = CoreBoundedCardSet<<T as Config>::MaxSetSize>;
-
     /// Type alias for the bounded turn action using pallet config.
     /// MaxHandActions is used as the max number of actions in a turn.
     pub type BoundedCommitTurnAction<T> =
@@ -134,100 +133,10 @@ pub mod pallet {
     /// Type alias for bounded ghost board using pallet config.
     pub type BoundedGhostBoard<T> = CoreBoundedGhostBoard<<T as Config>::MaxBoardSize>;
 
-    /// Type alias for bounded ability using pallet config.
-    pub type BoundedBattleAbility<T> = CoreBoundedBattleAbility<<T as Config>::MaxConditions>;
-    /// Type alias for bounded shop ability using pallet config.
-    pub type BoundedShopAbility<T> = CoreBoundedShopAbility<<T as Config>::MaxConditions>;
-
     /// Type alias for the balance type from the configured Currency.
     pub type BalanceOf<T> = <<T as Config>::Currency as fungible::Inspect<
         <T as frame_system::Config>::AccountId,
     >>::Balance;
-
-    /// The core game data of a user-submitted card (used for hashing).
-    /// Does not include metadata like name or emoji - those are stored separately.
-    #[derive(
-        Encode,
-        Decode,
-        DecodeWithMemTracking,
-        TypeInfo,
-        CloneNoBound,
-        PartialEqNoBound,
-        RuntimeDebugNoBound,
-        MaxEncodedLen,
-    )]
-    #[scale_info(skip_type_params(T))]
-    pub struct UserCardData<T: Config> {
-        /// Combat stats (attack, health)
-        pub stats: UnitStats,
-        /// Economy stats (play_cost, burn_value)
-        pub economy: EconomyStats,
-        /// Card shop-phase abilities
-        pub shop_abilities: BoundedVec<BoundedShopAbility<T>, T::MaxAbilities>,
-        /// Card battle-phase abilities
-        pub battle_abilities: BoundedVec<BoundedBattleAbility<T>, T::MaxAbilities>,
-    }
-
-    /// Metadata for a card (name, emoji, etc. - not used in game logic).
-    #[derive(
-        Encode,
-        Decode,
-        DecodeWithMemTracking,
-        TypeInfo,
-        CloneNoBound,
-        PartialEqNoBound,
-        RuntimeDebugNoBound,
-        MaxEncodedLen,
-    )]
-    #[scale_info(skip_type_params(T))]
-    pub struct CardMetadata<T: Config> {
-        /// Display name of the card
-        pub name: BoundedVec<u8, T::MaxStringLen>,
-        /// Emoji representation (UTF-8 encoded)
-        pub emoji: BoundedVec<u8, T::MaxStringLen>,
-        /// Card description
-        pub description: BoundedVec<u8, T::MaxStringLen>,
-    }
-
-    /// A card metadata entry stored on-chain.
-    #[derive(
-        Encode,
-        Decode,
-        DecodeWithMemTracking,
-        TypeInfo,
-        CloneNoBound,
-        PartialEqNoBound,
-        RuntimeDebugNoBound,
-        MaxEncodedLen,
-    )]
-    #[scale_info(skip_type_params(T))]
-    pub struct CardMetadataEntry<T: Config> {
-        /// The creator who submitted this card
-        pub creator: T::AccountId,
-        /// The metadata
-        pub metadata: CardMetadata<T>,
-        /// Block number when the card was created
-        pub created_at: BlockNumberFor<T>,
-    }
-
-    /// Metadata for a card set (name, etc.).
-    #[derive(
-        Encode,
-        Decode,
-        DecodeWithMemTracking,
-        TypeInfo,
-        CloneNoBound,
-        PartialEqNoBound,
-        RuntimeDebugNoBound,
-        MaxEncodedLen,
-    )]
-    #[scale_info(skip_type_params(T))]
-    pub struct SetMetadata<T: Config> {
-        /// Display name of the set
-        pub name: BoundedVec<u8, T::MaxStringLen>,
-        /// The creator of this card set
-        pub creator: T::AccountId,
-    }
 
     /// A ghost entry that includes the owner who created the board.
     /// Used for matchmaking storage.
@@ -338,15 +247,6 @@ pub mod pallet {
     pub type ActiveGame<T: Config> =
         StorageMap<_, Blake2_128Concat, T::AccountId, BoundedGameSession<T>, OptionQuery>;
 
-    /// Map of Card Sets: u32 -> CardSet
-    #[pallet::storage]
-    pub type CardSets<T: Config> =
-        StorageMap<_, Blake2_128Concat, u32, BoundedCardSet<T>, OptionQuery>;
-
-    /// Next available ID for card sets.
-    #[pallet::storage]
-    pub type NextSetId<T: Config> = StorageValue<_, u32, ValueQuery>;
-
     /// Ghost opponents indexed by matchmaking bracket.
     /// Key: (set_id, round, wins, lives)
     /// Value: Vector of ghost entries (with owner) for that bracket
@@ -383,36 +283,6 @@ pub mod pallet {
     /// Next available ghost archive ID (global counter).
     #[pallet::storage]
     pub type NextGhostArchiveId<T: Config> = StorageValue<_, u64, ValueQuery>;
-
-    /// Next available ID for user-submitted cards.
-    #[pallet::storage]
-    pub type NextUserCardId<T: Config> = StorageValue<_, u32, ValueQuery>;
-
-    /// Map of card hashes to their unique CardId.
-    /// Used to prevent duplicate cards from being stored.
-    #[pallet::storage]
-    pub type UserCardHashes<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, u32, OptionQuery>;
-
-    /// User-submitted cards indexed by their unique CardId.
-    #[pallet::storage]
-    pub type UserCards<T: Config> =
-        StorageMap<_, Blake2_128Concat, u32, UserCardData<T>, OptionQuery>;
-
-    /// Card metadata indexed by CardId.
-    /// Metadata is separate from game logic data and can be updated by the creator.
-    #[pallet::storage]
-    pub type CardMetadataStore<T: Config> =
-        StorageMap<_, Blake2_128Concat, u32, CardMetadataEntry<T>, OptionQuery>;
-
-    /// Set metadata indexed by set_id.
-    #[pallet::storage]
-    pub type CardSetMetadataStore<T: Config> =
-        StorageMap<_, Blake2_128Concat, u32, SetMetadata<T>, OptionQuery>;
-
-    /// Map of card set hashes to their unique set ID.
-    /// Used to prevent duplicate card sets from being stored.
-    #[pallet::storage]
-    pub type CardSetHashes<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, u32, OptionQuery>;
 
     /// Next available tournament ID.
     #[pallet::storage]
@@ -471,27 +341,6 @@ pub mod pallet {
         ValueQuery,
     >;
 
-    /// Achievement bitmap flags.
-    /// Each bit represents a tier: bronze (played), silver (10 wins), gold (perfect 10 wins).
-    pub const ACHIEVEMENT_BRONZE: u8 = 0b001;
-    pub const ACHIEVEMENT_SILVER: u8 = 0b010;
-    pub const ACHIEVEMENT_GOLD: u8 = 0b100;
-
-    /// Achievements per card per player, stored as a bitmap.
-    /// Bit 0 = bronze (card on board when a battle is won)
-    /// Bit 1 = silver (won 10 rounds with this card)
-    /// Bit 2 = gold (perfect 10-win run, no losses, with this card)
-    #[pallet::storage]
-    pub type VictoryAchievements<T: Config> = StorageDoubleMap<
-        _,
-        Blake2_128Concat,
-        T::AccountId, // player
-        Blake2_128Concat,
-        u32, // card_id
-        u8,  // achievement bitmap
-        ValueQuery,
-    >;
-
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -512,18 +361,6 @@ pub mod pallet {
             battle_seed: u64,
             opponent_board: BoundedGhostBoard<T>,
         },
-        /// A new user card has been submitted.
-        CardSubmitted {
-            creator: T::AccountId,
-            card_id: u32,
-            card_hash: T::Hash,
-        },
-        /// Card metadata has been set or updated.
-        CardMetadataUpdated { creator: T::AccountId, card_id: u32 },
-        /// A new card set has been created.
-        SetCreated { creator: T::AccountId, set_id: u32 },
-        /// Card set metadata has been set or updated.
-        SetMetadataUpdated { updater: T::AccountId, set_id: u32 },
         /// A new tournament has been created.
         TournamentCreated { tournament_id: u32, set_id: u32 },
         /// A player has joined a tournament and started a game.
@@ -580,18 +417,6 @@ pub mod pallet {
         WrongPhase,
         /// The specified card set does not exist.
         CardSetNotFound,
-        /// A card with this hash already exists.
-        CardAlreadyExists,
-        /// The specified card does not exist.
-        CardNotFound,
-        /// Only the card creator can perform this action.
-        NotCardCreator,
-        /// The total rarity of the cards in the set would overflow.
-        RarityOverflow,
-        /// The total rarity of the cards in the set is zero.
-        InvalidRarity,
-        /// A card set with this exact card list already exists.
-        SetAlreadyExists,
         /// The specified tournament does not exist.
         TournamentNotFound,
         /// The supplied ghost bracket is invalid.
@@ -618,102 +443,6 @@ pub mod pallet {
         TournamentGameAlreadyActive,
         /// No active tournament game found.
         NoActiveTournamentGame,
-    }
-
-    /// Input for creating a card set.
-    #[derive(
-        Encode,
-        Decode,
-        DecodeWithMemTracking,
-        TypeInfo,
-        MaxEncodedLen,
-        Clone,
-        RuntimeDebug,
-        PartialEq,
-        Eq,
-    )]
-    pub struct CardSetEntryInput {
-        pub card_id: u32,
-        pub rarity: u32,
-    }
-
-    #[pallet::genesis_config]
-    #[derive(frame::prelude::DefaultNoBound)]
-    pub struct GenesisConfig<T: Config> {
-        #[expect(clippy::type_complexity)]
-        pub _phantom: core::marker::PhantomData<T>,
-    }
-
-    #[pallet::genesis_build]
-    impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
-        fn build(&self) {
-            let cards = oab_assets::cards::get_all();
-            let metas = oab_assets::cards::get_all_metas();
-            let sets = oab_assets::sets::get_all();
-            let set_metas = oab_assets::sets::get_all_metas();
-
-            // Store all cards
-            for (card, meta) in cards.iter().zip(metas.iter()) {
-                let card_id = card.id.0;
-                let data = UserCardData::<T> {
-                    stats: card.stats.clone(),
-                    economy: card.economy.clone(),
-                    shop_abilities: BoundedVec::truncate_from(
-                        card.shop_abilities
-                            .iter()
-                            .cloned()
-                            .map(|a| BoundedShopAbility::<T>::from(a))
-                            .collect(),
-                    ),
-                    battle_abilities: BoundedVec::truncate_from(
-                        card.battle_abilities
-                            .iter()
-                            .cloned()
-                            .map(|a| BoundedBattleAbility::<T>::from(a))
-                            .collect(),
-                    ),
-                };
-
-                UserCards::<T>::insert(card_id, data);
-
-                let metadata_entry = CardMetadataEntry {
-                    creator: T::AccountId::decode(&mut frame::traits::TrailingZeroInput::zeroes())
-                        .unwrap(),
-                    metadata: CardMetadata {
-                        name: BoundedVec::truncate_from(meta.name.as_bytes().to_vec()),
-                        emoji: BoundedVec::truncate_from(meta.emoji.as_bytes().to_vec()),
-                        description: BoundedVec::default(),
-                    },
-                    created_at: Zero::zero(),
-                };
-                CardMetadataStore::<T>::insert(card_id, metadata_entry);
-
-                if card_id >= NextUserCardId::<T>::get() {
-                    NextUserCardId::<T>::put(card_id + 1);
-                }
-            }
-
-            // Store all sets
-            let num_sets = sets.len();
-            for (i, card_set) in sets.into_iter().enumerate() {
-                let bounded = BoundedCardSet::<T>::from(card_set);
-                let set_hash = T::Hashing::hash_of(&bounded);
-                CardSetHashes::<T>::insert(set_hash, i as u32);
-                CardSets::<T>::insert(i as u32, bounded);
-            }
-            NextSetId::<T>::put(num_sets as u32);
-
-            // Store set metadata
-            let default_creator =
-                T::AccountId::decode(&mut frame::traits::TrailingZeroInput::zeroes()).unwrap();
-            for set_meta in set_metas {
-                let metadata = SetMetadata {
-                    name: BoundedVec::truncate_from(set_meta.name.as_bytes().to_vec()),
-                    creator: default_creator.clone(),
-                };
-                CardSetMetadataStore::<T>::insert(set_meta.id, metadata);
-            }
-        }
     }
 
     #[pallet::call]
@@ -806,177 +535,6 @@ pub mod pallet {
             Ok(())
         }
 
-        /// Submit a new user-created card.
-        /// The card's unique identifier is a hash of its game logic data.
-        /// Metadata (name, emoji, description) should be set separately via `set_card_metadata`.
-        #[pallet::call_index(3)]
-        #[pallet::weight(T::WeightInfo::submit_card())]
-        pub fn submit_card(origin: OriginFor<T>, card_data: UserCardData<T>) -> DispatchResult {
-            let who = ensure_signed(origin)?;
-
-            // Generate unique hash from the card data
-            let card_hash = T::Hashing::hash_of(&card_data);
-
-            // Ensure card doesn't already exist (de-duplication)
-            ensure!(
-                !UserCardHashes::<T>::contains_key(&card_hash),
-                Error::<T>::CardAlreadyExists
-            );
-
-            // Get next ID and increment
-            let card_id = NextUserCardId::<T>::get();
-
-            // Create and store the card data
-            UserCards::<T>::insert(card_id, &card_data);
-
-            // Create and store initial metadata
-            let metadata_entry = CardMetadataEntry {
-                creator: who.clone(),
-                metadata: CardMetadata {
-                    name: BoundedVec::default(),
-                    emoji: BoundedVec::default(),
-                    description: BoundedVec::default(),
-                },
-                created_at: frame_system::Pallet::<T>::block_number(),
-            };
-
-            UserCardHashes::<T>::insert(&card_hash, card_id);
-            CardMetadataStore::<T>::insert(card_id, metadata_entry);
-            NextUserCardId::<T>::put(card_id.saturating_add(1));
-
-            Self::deposit_event(Event::CardSubmitted {
-                creator: who,
-                card_id,
-                card_hash,
-            });
-
-            Ok(())
-        }
-
-        /// Set or update metadata for a card.
-        /// Only the card creator can update the metadata.
-        #[pallet::call_index(4)]
-        #[pallet::weight(T::WeightInfo::set_card_metadata())]
-        pub fn set_card_metadata(
-            origin: OriginFor<T>,
-            card_id: u32,
-            metadata: CardMetadata<T>,
-        ) -> DispatchResult {
-            let who = ensure_signed(origin)?;
-
-            // Ensure the card exists
-            let mut entry = CardMetadataStore::<T>::get(card_id).ok_or(Error::<T>::CardNotFound)?;
-
-            // Ensure the caller is the card creator
-            ensure!(entry.creator == who, Error::<T>::NotCardCreator);
-
-            // Update the metadata
-            entry.metadata = metadata;
-
-            CardMetadataStore::<T>::insert(card_id, entry);
-
-            Self::deposit_event(Event::CardMetadataUpdated {
-                creator: who,
-                card_id,
-            });
-
-            Ok(())
-        }
-
-        /// Create a new card set.
-        #[pallet::call_index(5)]
-        #[pallet::weight(T::WeightInfo::create_card_set())]
-        pub fn create_card_set(
-            origin: OriginFor<T>,
-            cards: BoundedVec<CardSetEntryInput, T::MaxSetSize>,
-            name: BoundedVec<u8, T::MaxStringLen>,
-        ) -> DispatchResult {
-            let who = ensure_signed(origin)?;
-
-            // Verify all cards exist
-            for entry in &cards {
-                ensure!(
-                    UserCards::<T>::contains_key(entry.card_id),
-                    Error::<T>::CardNotFound
-                );
-            }
-
-            // Check for total rarity overflow
-            let mut total_rarity: u32 = 0;
-            for entry in &cards {
-                total_rarity = total_rarity
-                    .checked_add(entry.rarity)
-                    .ok_or(Error::<T>::RarityOverflow)?;
-            }
-            ensure!(total_rarity > 0, Error::<T>::InvalidRarity);
-
-            let set_id = NextSetId::<T>::get();
-
-            let card_set = CardSet {
-                cards: cards
-                    .into_iter()
-                    .map(|entry| oab_battle::state::CardSetEntry {
-                        card_id: oab_battle::types::CardId(entry.card_id),
-                        rarity: entry.rarity,
-                    })
-                    .collect(),
-            };
-
-            let bounded_set = BoundedCardSet::<T>::from(card_set);
-            let set_hash = T::Hashing::hash_of(&bounded_set);
-            ensure!(
-                !CardSetHashes::<T>::contains_key(&set_hash),
-                Error::<T>::SetAlreadyExists
-            );
-
-            CardSets::<T>::insert(set_id, bounded_set);
-            CardSetHashes::<T>::insert(&set_hash, set_id);
-
-            // Store set metadata
-            let set_metadata = SetMetadata {
-                name,
-                creator: who.clone(),
-            };
-            CardSetMetadataStore::<T>::insert(set_id, set_metadata);
-
-            NextSetId::<T>::put(set_id.saturating_add(1));
-
-            Self::deposit_event(Event::SetCreated {
-                creator: who,
-                set_id,
-            });
-
-            Ok(())
-        }
-
-        /// Set or update metadata for a card set.
-        #[pallet::call_index(6)]
-        #[pallet::weight(T::WeightInfo::set_set_metadata())]
-        pub fn set_set_metadata(
-            origin: OriginFor<T>,
-            set_id: u32,
-            name: BoundedVec<u8, T::MaxStringLen>,
-        ) -> DispatchResult {
-            let who = ensure_signed(origin)?;
-
-            // Ensure the set exists and get existing metadata for creator
-            let existing =
-                CardSetMetadataStore::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
-
-            let set_metadata = SetMetadata {
-                name,
-                creator: existing.creator,
-            };
-            CardSetMetadataStore::<T>::insert(set_id, set_metadata);
-
-            Self::deposit_event(Event::SetMetadataUpdated {
-                updater: who,
-                set_id,
-            });
-
-            Ok(())
-        }
-
         /// Create a new tournament. Only callable by TournamentOrigin (e.g. root/sudo).
         #[pallet::call_index(7)]
         #[pallet::weight(T::WeightInfo::create_tournament())]
@@ -992,7 +550,7 @@ pub mod pallet {
 
             // Validate set exists
             ensure!(
-                CardSets::<T>::contains_key(set_id),
+                T::CardRegistry::card_set_exists(set_id),
                 Error::<T>::CardSetNotFound
             );
 
@@ -1238,8 +796,8 @@ pub mod pallet {
             }
 
             // 2. Set creator prize (if caller == set creator)
-            if let Some(set_meta) = CardSetMetadataStore::<T>::get(config.set_id) {
-                if set_meta.creator == who {
+            if let Some(set_creator) = T::CardRegistry::get_set_creator(config.set_id) {
+                if set_creator == who {
                     let set_creator_prize = config
                         .prize_config
                         .set_creator_share
@@ -1249,31 +807,20 @@ pub mod pallet {
             }
 
             // 3. Card creator prize (if caller created any cards in the set)
-            if let Some(card_set_bounded) = CardSets::<T>::get(config.set_id) {
-                let mut my_cards: u32 = 0;
-                let total_cards = card_set_bounded.cards.len() as u32;
-
-                for entry in card_set_bounded.cards.iter() {
-                    if let Some(card_meta) = CardMetadataStore::<T>::get(entry.card_id.0) {
-                        if card_meta.creator == who {
-                            my_cards += 1;
-                        }
-                    }
-                }
-
-                if my_cards > 0 && total_cards > 0 {
-                    let card_creators_pot = config
-                        .prize_config
-                        .card_creators_share
-                        .mul_floor(tournament_state.total_pot);
-                    let my: BalanceOf<T> = my_cards.into();
-                    let total: BalanceOf<T> = total_cards.into();
-                    let card_creator_prize = card_creators_pot
-                        .saturating_mul(my)
-                        .checked_div(&total)
-                        .unwrap_or(BalanceOf::<T>::zero());
-                    total_prize = total_prize.saturating_add(card_creator_prize);
-                }
+            let (my_cards, total_cards) =
+                T::CardRegistry::count_cards_created_by(config.set_id, &who);
+            if my_cards > 0 && total_cards > 0 {
+                let card_creators_pot = config
+                    .prize_config
+                    .card_creators_share
+                    .mul_floor(tournament_state.total_pot);
+                let my: BalanceOf<T> = my_cards.into();
+                let total: BalanceOf<T> = total_cards.into();
+                let card_creator_prize = card_creators_pot
+                    .saturating_mul(my)
+                    .checked_div(&total)
+                    .unwrap_or(BalanceOf::<T>::zero());
+                total_prize = total_prize.saturating_add(card_creator_prize);
             }
 
             // Ensure there's actually a prize to claim
@@ -1322,7 +869,8 @@ pub mod pallet {
             );
             ensure!(!board.is_empty(), Error::<T>::EmptyGhostBoard);
 
-            let card_set = CardSets::<T>::get(set_id).ok_or(Error::<T>::CardSetNotFound)?;
+            let card_set =
+                T::CardRegistry::get_card_set(set_id).ok_or(Error::<T>::CardSetNotFound)?;
             for unit in board.iter() {
                 ensure!(
                     card_set

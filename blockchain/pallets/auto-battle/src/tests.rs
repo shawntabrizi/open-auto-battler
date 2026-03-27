@@ -5,17 +5,25 @@ use oab_battle::CommitTurnAction;
 use oab_game::GamePhase;
 
 fn bounded_set_entries(
-    entries: Vec<crate::CardSetEntryInput>,
-) -> BoundedVec<crate::CardSetEntryInput, <Test as crate::Config>::MaxSetSize> {
+    entries: Vec<pallet_oab_card_registry::pallet::CardSetEntryInput>,
+) -> BoundedVec<
+    pallet_oab_card_registry::pallet::CardSetEntryInput,
+    <Test as pallet_oab_card_registry::Config>::MaxSetSize,
+> {
     BoundedVec::try_from(entries).unwrap()
 }
 
-fn bounded_set_name(name: &[u8]) -> BoundedVec<u8, <Test as crate::Config>::MaxStringLen> {
+fn bounded_set_name(
+    name: &[u8],
+) -> BoundedVec<u8, <Test as pallet_oab_card_registry::Config>::MaxStringLen> {
     BoundedVec::try_from(name.to_vec()).unwrap()
 }
 
-fn sample_card_data(attack: i32, health: i32) -> crate::UserCardData<Test> {
-    crate::UserCardData::<Test> {
+fn sample_card_data(
+    attack: i32,
+    health: i32,
+) -> pallet_oab_card_registry::pallet::UserCardData<Test> {
+    pallet_oab_card_registry::pallet::UserCardData::<Test> {
         stats: oab_battle::types::UnitStats { attack, health },
         economy: oab_battle::types::EconomyStats {
             play_cost: 1,
@@ -43,7 +51,7 @@ fn ghost_unit(card_id: u32) -> oab_battle::bounded::GhostBoardUnit {
 /// Insert a ghost opponent directly into regular ghost storage for a given bracket.
 /// Reads the first card from the given set so the ghost is always valid for battle.
 fn seed_ghost(set_id: u32, round: i32, wins: i32, lives: i32) {
-    let card_id = crate::CardSets::<Test>::get(set_id)
+    let card_id = pallet_oab_card_registry::pallet::CardSets::<Test>::get(set_id)
         .expect("set must exist to seed ghost")
         .cards[0]
         .card_id
@@ -62,7 +70,7 @@ fn seed_ghost(set_id: u32, round: i32, wins: i32, lives: i32) {
 fn seed_tournament_ghost(tournament_id: u32, round: i32, wins: i32, lives: i32) {
     let config = crate::Tournaments::<Test>::get(tournament_id)
         .expect("tournament must exist to seed ghost");
-    let card_id = crate::CardSets::<Test>::get(config.set_id)
+    let card_id = pallet_oab_card_registry::pallet::CardSets::<Test>::get(config.set_id)
         .expect("set must exist to seed ghost")
         .cards[0]
         .card_id
@@ -81,25 +89,28 @@ fn create_custom_set(creator: u64, card_stats: &[(i32, i32)], name: &[u8]) -> (u
     let mut card_ids = Vec::new();
 
     for (attack, health) in card_stats.iter().copied() {
-        assert_ok!(AutoBattle::submit_card(
+        assert_ok!(CardRegistry::submit_card(
             RuntimeOrigin::signed(creator),
             sample_card_data(attack, health)
         ));
-        let card_id = crate::NextUserCardId::<Test>::get() - 1;
+        let card_id = pallet_oab_card_registry::pallet::NextUserCardId::<Test>::get() - 1;
         card_ids.push(card_id);
-        entries.push(crate::CardSetEntryInput {
+        entries.push(pallet_oab_card_registry::pallet::CardSetEntryInput {
             card_id,
             rarity: 10,
         });
     }
 
-    assert_ok!(AutoBattle::create_card_set(
+    assert_ok!(CardRegistry::create_card_set(
         RuntimeOrigin::signed(creator),
         bounded_set_entries(entries),
         bounded_set_name(name)
     ));
 
-    (crate::NextSetId::<Test>::get() - 1, card_ids)
+    (
+        pallet_oab_card_registry::pallet::NextSetId::<Test>::get() - 1,
+        card_ids,
+    )
 }
 
 #[test]
@@ -274,7 +285,7 @@ fn test_no_active_game_error() {
 fn test_submit_card_and_metadata() {
     new_test_ext().execute_with(|| {
         let account_id = 1;
-        let card_data = crate::UserCardData::<Test> {
+        let card_data = pallet_oab_card_registry::pallet::UserCardData::<Test> {
             stats: oab_battle::types::UnitStats {
                 attack: 1,
                 health: 1,
@@ -288,46 +299,49 @@ fn test_submit_card_and_metadata() {
         };
 
         // Submit first card
-        assert_ok!(AutoBattle::submit_card(
+        assert_ok!(CardRegistry::submit_card(
             RuntimeOrigin::signed(account_id),
             card_data.clone()
         ));
 
         // Verify storage
         let card_hash = <Test as frame_system::Config>::Hashing::hash_of(&card_data);
-        let card_id = crate::UserCardHashes::<Test>::get(card_hash).unwrap();
+        let card_id =
+            pallet_oab_card_registry::pallet::UserCardHashes::<Test>::get(card_hash).unwrap();
         assert!(card_id >= 45); // 46 cards registered in genesis (0-45)
-        assert!(crate::UserCards::<Test>::contains_key(card_id));
+        assert!(pallet_oab_card_registry::pallet::UserCards::<Test>::contains_key(card_id));
 
         // Verify creator info in metadata store
-        let meta_entry = crate::CardMetadataStore::<Test>::get(card_id).unwrap();
+        let meta_entry =
+            pallet_oab_card_registry::pallet::CardMetadataStore::<Test>::get(card_id).unwrap();
         assert_eq!(meta_entry.creator, account_id);
 
         // Submit same card again (should fail)
         assert_noop!(
-            AutoBattle::submit_card(RuntimeOrigin::signed(account_id), card_data),
-            Error::<Test>::CardAlreadyExists
+            CardRegistry::submit_card(RuntimeOrigin::signed(account_id), card_data),
+            pallet_oab_card_registry::Error::<Test>::CardAlreadyExists
         );
 
         // Submit metadata
-        let metadata = crate::CardMetadata::<Test> {
+        let metadata = pallet_oab_card_registry::pallet::CardMetadata::<Test> {
             name: BoundedVec::try_from(b"Test Card".to_vec()).unwrap(),
             emoji: BoundedVec::try_from("🍎".as_bytes().to_vec()).unwrap(),
             description: BoundedVec::try_from(b"A test card".to_vec()).unwrap(),
         };
-        assert_ok!(AutoBattle::set_card_metadata(
+        assert_ok!(CardRegistry::set_card_metadata(
             RuntimeOrigin::signed(account_id),
             card_id,
             metadata.clone()
         ));
 
         // Verify metadata
-        let meta_entry = crate::CardMetadataStore::<Test>::get(card_id).unwrap();
+        let meta_entry =
+            pallet_oab_card_registry::pallet::CardMetadataStore::<Test>::get(card_id).unwrap();
         assert_eq!(meta_entry.creator, account_id);
         assert_eq!(meta_entry.metadata.name, metadata.name);
 
         // Submit different card
-        let card_data_2 = crate::UserCardData::<Test> {
+        let card_data_2 = pallet_oab_card_registry::pallet::UserCardData::<Test> {
             stats: oab_battle::types::UnitStats {
                 attack: 2,
                 health: 2,
@@ -339,15 +353,16 @@ fn test_submit_card_and_metadata() {
             shop_abilities: BoundedVec::try_from(vec![]).unwrap(),
             battle_abilities: BoundedVec::try_from(vec![]).unwrap(),
         };
-        assert_ok!(AutoBattle::submit_card(
+        assert_ok!(CardRegistry::submit_card(
             RuntimeOrigin::signed(account_id),
             card_data_2.clone()
         ));
 
         let card_hash_2 = <Test as frame_system::Config>::Hashing::hash_of(&card_data_2);
-        let card_id_2 = crate::UserCardHashes::<Test>::get(card_hash_2).unwrap();
+        let card_id_2 =
+            pallet_oab_card_registry::pallet::UserCardHashes::<Test>::get(card_hash_2).unwrap();
         assert!(card_id_2 > card_id);
-        assert!(crate::UserCards::<Test>::contains_key(card_id_2));
+        assert!(pallet_oab_card_registry::pallet::UserCards::<Test>::contains_key(card_id_2));
     });
 }
 
@@ -358,36 +373,37 @@ fn test_create_card_set() {
 
         // Cards 1-5 already exist from genesis
         let entries = vec![
-            crate::CardSetEntryInput {
+            pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 1,
                 rarity: 10,
             },
-            crate::CardSetEntryInput {
+            pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 2,
                 rarity: 5,
             },
-            crate::CardSetEntryInput {
+            pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 3,
                 rarity: 0,
             }, // Token
         ];
 
-        assert_ok!(AutoBattle::create_card_set(
+        assert_ok!(CardRegistry::create_card_set(
             RuntimeOrigin::signed(account_id),
             bounded_set_entries(entries),
             bounded_set_name(b"Test Set")
         ));
 
         // Verify set was created
-        let set_id = crate::NextSetId::<Test>::get() - 1;
-        let set = crate::CardSets::<Test>::get(set_id).unwrap();
+        let set_id = pallet_oab_card_registry::pallet::NextSetId::<Test>::get() - 1;
+        let set = pallet_oab_card_registry::pallet::CardSets::<Test>::get(set_id).unwrap();
         assert_eq!(set.cards.len(), 3);
         assert_eq!(set.cards[0].card_id.0, 1);
         assert_eq!(set.cards[0].rarity, 10);
         assert_eq!(set.cards[2].rarity, 0);
 
         // Verify set metadata was stored
-        let set_meta = crate::CardSetMetadataStore::<Test>::get(set_id).unwrap();
+        let set_meta =
+            pallet_oab_card_registry::pallet::CardSetMetadataStore::<Test>::get(set_id).unwrap();
         assert_eq!(set_meta.name.to_vec(), b"Test Set".to_vec());
 
         // Try to start game with new set
@@ -407,11 +423,11 @@ fn test_create_card_set_rarity_overflow() {
 
         // Cards 1 and 2 exist from genesis
         let entries = vec![
-            crate::CardSetEntryInput {
+            pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 1,
                 rarity: u32::MAX,
             },
-            crate::CardSetEntryInput {
+            pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 2,
                 rarity: 1,
             },
@@ -419,12 +435,12 @@ fn test_create_card_set_rarity_overflow() {
 
         // Should fail due to overflow
         assert_noop!(
-            AutoBattle::create_card_set(
+            CardRegistry::create_card_set(
                 RuntimeOrigin::signed(account_id),
                 bounded_set_entries(entries),
                 bounded_set_name(b"Overflow Set")
             ),
-            Error::<Test>::RarityOverflow
+            pallet_oab_card_registry::Error::<Test>::RarityOverflow
         );
     });
 }
@@ -435,19 +451,19 @@ fn test_create_card_set_zero_rarity() {
         let account_id = 1;
 
         // Cards 1 exists from genesis
-        let entries = vec![crate::CardSetEntryInput {
+        let entries = vec![pallet_oab_card_registry::pallet::CardSetEntryInput {
             card_id: 1,
             rarity: 0,
         }];
 
         // Should fail because total rarity is 0
         assert_noop!(
-            AutoBattle::create_card_set(
+            CardRegistry::create_card_set(
                 RuntimeOrigin::signed(account_id),
                 bounded_set_entries(entries),
                 bounded_set_name(b"Zero Set")
             ),
-            Error::<Test>::InvalidRarity
+            pallet_oab_card_registry::Error::<Test>::InvalidRarity
         );
     });
 }
@@ -459,18 +475,18 @@ fn test_create_card_set_duplicate() {
 
         // Cards 1-5 already exist from genesis
         let entries = vec![
-            crate::CardSetEntryInput {
+            pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 1,
                 rarity: 10,
             },
-            crate::CardSetEntryInput {
+            pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 2,
                 rarity: 5,
             },
         ];
 
         // First creation should succeed
-        assert_ok!(AutoBattle::create_card_set(
+        assert_ok!(CardRegistry::create_card_set(
             RuntimeOrigin::signed(account_id),
             bounded_set_entries(entries.clone()),
             bounded_set_name(b"First Set")
@@ -478,12 +494,12 @@ fn test_create_card_set_duplicate() {
 
         // Second creation with same cards (different name) should fail
         assert_noop!(
-            AutoBattle::create_card_set(
+            CardRegistry::create_card_set(
                 RuntimeOrigin::signed(account_id),
                 bounded_set_entries(entries),
                 bounded_set_name(b"Different Name")
             ),
-            Error::<Test>::SetAlreadyExists
+            pallet_oab_card_registry::Error::<Test>::SetAlreadyExists
         );
     });
 }
@@ -1163,21 +1179,21 @@ fn test_claim_prize_double_claim() {
 
         // Create a set where account 1 is the creator
         let entries = vec![
-            crate::CardSetEntryInput {
+            pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 1,
                 rarity: 10,
             },
-            crate::CardSetEntryInput {
+            pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 2,
                 rarity: 5,
             },
         ];
-        assert_ok!(AutoBattle::create_card_set(
+        assert_ok!(CardRegistry::create_card_set(
             RuntimeOrigin::signed(1),
             bounded_set_entries(entries),
             bounded_set_name(b"Prize Test Set")
         ));
-        let set_id = crate::NextSetId::<Test>::get() - 1;
+        let set_id = pallet_oab_card_registry::pallet::NextSetId::<Test>::get() - 1;
 
         // Create tournament with this set
         assert_ok!(AutoBattle::create_tournament(
@@ -1212,21 +1228,21 @@ fn test_claim_prize_set_creator() {
 
         // Account 1 creates a card set
         let entries = vec![
-            crate::CardSetEntryInput {
+            pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 1,
                 rarity: 10,
             },
-            crate::CardSetEntryInput {
+            pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 2,
                 rarity: 5,
             },
         ];
-        assert_ok!(AutoBattle::create_card_set(
+        assert_ok!(CardRegistry::create_card_set(
             RuntimeOrigin::signed(1),
             bounded_set_entries(entries),
             bounded_set_name(b"Creator Test")
         ));
-        let set_id = crate::NextSetId::<Test>::get() - 1;
+        let set_id = pallet_oab_card_registry::pallet::NextSetId::<Test>::get() - 1;
 
         // Create tournament with 100 entry fee
         // prize: 60% player, 20% set creator, 20% card creators
@@ -1367,16 +1383,16 @@ fn test_no_perfect_runs_player_share_stays_in_pallet() {
         System::set_block_number(1);
 
         // Account 1 creates set
-        let entries = vec![crate::CardSetEntryInput {
+        let entries = vec![pallet_oab_card_registry::pallet::CardSetEntryInput {
             card_id: 1,
             rarity: 10,
         }];
-        assert_ok!(AutoBattle::create_card_set(
+        assert_ok!(CardRegistry::create_card_set(
             RuntimeOrigin::signed(1),
             bounded_set_entries(entries),
             bounded_set_name(b"No Win Set")
         ));
-        let set_id = crate::NextSetId::<Test>::get() - 1;
+        let set_id = pallet_oab_card_registry::pallet::NextSetId::<Test>::get() - 1;
 
         assert_ok!(AutoBattle::create_tournament(
             RuntimeOrigin::root(),
@@ -1459,18 +1475,18 @@ fn test_end_game_grants_achievements() {
 
         // Bronze requires winning a battle — this battle was lost (empty board) so no bronze.
         // Silver and gold granted by end_game (wins >= 10, lives >= 3).
-        let bits = crate::VictoryAchievements::<Test>::get(player, 0);
+        let bits = pallet_oab_card_registry::pallet::VictoryAchievements::<Test>::get(player, 0);
         assert_eq!(
-            bits & crate::pallet::ACHIEVEMENT_BRONZE,
+            bits & pallet_oab_card_registry::pallet::ACHIEVEMENT_BRONZE,
             0,
             "no bronze from lost battle"
         );
         assert!(
-            bits & crate::pallet::ACHIEVEMENT_SILVER != 0,
+            bits & pallet_oab_card_registry::pallet::ACHIEVEMENT_SILVER != 0,
             "should have silver"
         );
         assert!(
-            bits & crate::pallet::ACHIEVEMENT_GOLD != 0,
+            bits & pallet_oab_card_registry::pallet::ACHIEVEMENT_GOLD != 0,
             "should have gold"
         );
     });
@@ -1500,7 +1516,7 @@ fn test_end_game_no_silver_gold_on_loss() {
         assert_ok!(AutoBattle::end_game(RuntimeOrigin::signed(player)));
 
         // No achievements — battle was lost (empty board) and wins < 10
-        let bits = crate::VictoryAchievements::<Test>::get(player, 0);
+        let bits = pallet_oab_card_registry::pallet::VictoryAchievements::<Test>::get(player, 0);
         assert_eq!(bits, 0, "no achievements from lost battle with low wins");
     });
 }
@@ -1571,18 +1587,18 @@ fn test_end_tournament_game_archives_and_records_stats() {
         assert_eq!(tstate.total_perfect_runs, 1);
 
         // Bronze requires winning — this battle was lost (empty board). Silver/gold from end_tournament_game.
-        let bits = crate::VictoryAchievements::<Test>::get(player, 0);
+        let bits = pallet_oab_card_registry::pallet::VictoryAchievements::<Test>::get(player, 0);
         assert_eq!(
-            bits & crate::pallet::ACHIEVEMENT_BRONZE,
+            bits & pallet_oab_card_registry::pallet::ACHIEVEMENT_BRONZE,
             0,
             "no bronze from lost battle"
         );
         assert!(
-            bits & crate::pallet::ACHIEVEMENT_SILVER != 0,
+            bits & pallet_oab_card_registry::pallet::ACHIEVEMENT_SILVER != 0,
             "should have silver"
         );
         assert!(
-            bits & crate::pallet::ACHIEVEMENT_GOLD != 0,
+            bits & pallet_oab_card_registry::pallet::ACHIEVEMENT_GOLD != 0,
             "should have gold"
         );
     });

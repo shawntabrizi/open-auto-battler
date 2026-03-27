@@ -26,6 +26,7 @@ oab-battle = { workspace = true }
 oab-assets = { workspace = true }
 oab-game = { workspace = true }
 pallet-auto-battle.workspace = true
+pallet-oab-card-registry.workspace = true
 polkadot-sdk = { workspace = true, features = ["cumulus-pallet-aura-ext", "cumulus-pallet-session-benchmarking", "cumulus-pallet-weight-reclaim", "cumulus-pallet-xcm", "cumulus-pallet-xcmp-queue", "cumulus-primitives-aura", "cumulus-primitives-core", "cumulus-primitives-utility", "pallet-aura", "pallet-authorship", "pallet-balances", "pallet-collator-selection", "pallet-message-queue", "pallet-nfts", "pallet-session", "pallet-sudo", "pallet-timestamp", "pallet-transaction-payment", "pallet-transaction-payment-rpc-runtime-api", "pallet-utility", "pallet-xcm", "parachains-common", "polkadot-parachain-primitives", "polkadot-runtime-common", "runtime", "staging-parachain-info", "staging-xcm", "staging-xcm-builder", "staging-xcm-executor"], default-features = false }
 scale-info = { features = ["derive"], workspace = true }
 serde_json = { workspace = true, default-features = false, features = ["alloc"] }
@@ -41,6 +42,7 @@ std = [
 	"oab-assets/std",
 	"oab-game/std",
 	"pallet-auto-battle/std",
+	"pallet-oab-card-registry/std",
 	"polkadot-sdk/std",
 	"scale-info/std",
 	"serde_json/std",
@@ -51,12 +53,14 @@ runtime-benchmarks = [
 	"cumulus-pallet-parachain-system/runtime-benchmarks",
 	"hex-literal",
 	"pallet-auto-battle/runtime-benchmarks",
+	"pallet-oab-card-registry/runtime-benchmarks",
 	"polkadot-sdk/runtime-benchmarks",
 ]
 
 try-runtime = [
 	"cumulus-pallet-parachain-system/try-runtime",
 	"pallet-auto-battle/try-runtime",
+	"pallet-oab-card-registry/try-runtime",
 	"polkadot-sdk/try-runtime",
 ]
 

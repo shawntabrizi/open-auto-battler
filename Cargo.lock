@@ -1266,6 +1266,7 @@ dependencies = [
  "oab-battle",
  "oab-game",
  "pallet-auto-battle",
+ "pallet-oab-card-registry",
  "parity-scale-codec",
  "polkadot-sdk 2503.2.0",
  "scale-info",
@@ -8110,6 +8111,7 @@ dependencies = [
  "oab-assets",
  "oab-battle",
  "oab-game",
+ "pallet-oab-card-registry",
  "parity-scale-codec",
  "polkadot-sdk 2503.2.0",
  "polkadot-sdk-frame",
@@ -9021,6 +9023,17 @@ dependencies = [
  "pallet-nomination-pools",
  "parity-scale-codec",
  "sp-api",
+]
+
+[[package]]
+name = "pallet-oab-card-registry"
+version = "0.1.0"
+dependencies = [
+ "oab-assets",
+ "oab-battle",
+ "parity-scale-codec",
+ "polkadot-sdk-frame",
+ "scale-info",
 ]
 
 [[package]]
