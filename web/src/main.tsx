@@ -32,6 +32,11 @@ import { GameOverPreview } from './components/GameOverPreview.tsx';
 import { TransactionOverlay } from './components/TransactionOverlay.tsx';
 import { ArenaGamePage } from './components/ArenaGamePage.tsx';
 import { PracticeGamePage } from './components/PracticeGamePage.tsx';
+import { ConstructedPage } from './components/ConstructedPage.tsx';
+import { DeckListPage } from './components/DeckListPage.tsx';
+import { DeckEditorPage } from './components/DeckEditorPage.tsx';
+import { ConstructedBattlePage } from './components/ConstructedBattlePage.tsx';
+import { ConstructedGamePage } from './components/ConstructedGamePage.tsx';
 import { SetsPage } from './components/SetsPage.tsx';
 import { CreatorPage } from './components/CreatorPage.tsx';
 import { VersusRedirect } from './components/VersusRedirect.tsx';
@@ -80,6 +85,11 @@ async function boot() {
           <Route path="/sets" element={<SetsPage />} />
           <Route path="/practice" element={<PracticePage />} />
           <Route path="/practice/game" element={<PracticeGamePage />} />
+          <Route path="/constructed" element={<ConstructedPage />} />
+          <Route path="/constructed/decks" element={<DeckListPage />} />
+          <Route path="/constructed/edit/:deckId" element={<DeckEditorPage />} />
+          <Route path="/constructed/battle" element={<ConstructedBattlePage />} />
+          <Route path="/constructed/game" element={<ConstructedGamePage />} />
           <Route path="/versus" element={<VersusRedirect />} />
           <Route path="/versus/lobby" element={<VersusPage />} />
           <Route path="/versus/game" element={<VersusGame />} />

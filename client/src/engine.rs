@@ -141,6 +141,27 @@ impl GameEngine {
         Ok(())
     }
 
+    /// Load the full card pool as a synthetic set containing every non-token card.
+    /// Used by constructed mode which is not tied to a specific set.
+    #[wasm_bindgen]
+    pub fn load_full_card_pool(&mut self) {
+        use oab_battle::state::{CardSet, CardSetEntry};
+
+        let card_pool = oab_assets::cards::build_pool();
+        let card_set = CardSet {
+            cards: card_pool
+                .keys()
+                .map(|&id| CardSetEntry { card_id: id, rarity: 1 })
+                .collect(),
+        };
+
+        let num_cards = card_pool.len();
+        self.state.card_pool = card_pool;
+        self.card_set = Some(card_set);
+
+        log::info(&format!("Loaded full card pool: {} cards", num_cards));
+    }
+
     /// Get card metadata (id, name, emoji) for all cards.
     /// Used by the frontend to build the emoji display map.
     #[wasm_bindgen]
@@ -728,6 +749,19 @@ impl GameEngine {
         seed: u64,
     ) -> JsValue {
         log::info("=== P2P BATTLE START ===");
+
+        // Finalize the shop turn: rollback to start_board, replay actions,
+        // and remove used hand cards so the bag stays accurate.
+        if self.state.phase == GamePhase::Shop {
+            let action = CommitTurnAction {
+                actions: self.action_log.clone(),
+            };
+            self.state.board = self.start_board.clone();
+            self.state.shop_mana = self.start_shop_mana;
+            if let Err(e) = verify_and_apply_turn(&mut self.state, &action) {
+                log::error(&format!("P2P turn finalization failed: {:?}", e));
+            }
+        }
 
         // Set phase to Battle
         self.state.shop_mana = 0;

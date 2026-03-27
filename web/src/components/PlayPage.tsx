@@ -93,6 +93,19 @@ export function PlayPage() {
               </Link>
             </div>
 
+            {/* Constructed */}
+            <Link
+              to="/constructed"
+              className="theme-panel group block w-full p-3 lg:p-4 rounded-xl border border-special/30 bg-special/5 hover:border-special/50 hover:bg-special/10 active:scale-[0.99] transition-all text-center"
+            >
+              <h3 className="font-button text-sm lg:text-base font-bold text-special">
+                CONSTRUCTED
+              </h3>
+              <p className="text-special/60 mt-0.5 text-[10px] lg:text-xs">
+                Build a deck, then battle
+              </p>
+            </Link>
+
             {/* Tutorial */}
             <button
               onClick={() => openTutorial('how-to-play')}
