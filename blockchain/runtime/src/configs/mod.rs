@@ -380,9 +380,15 @@ impl oab_game_common::GameEngine for Runtime {
     type MaxGhostsPerBracket = ConstU32<10>;
 }
 
-impl pallet_auto_battle::Config for Runtime {
+impl pallet_oab_arena::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type WeightInfo = pallet_auto_battle::weights::SubstrateWeight<Runtime>;
+    type WeightInfo = ();
+    type AdminOrigin = EnsureRoot<AccountId>;
+}
+
+impl pallet_oab_tournament::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = ();
     type Currency = Balances;
     type TournamentOrigin = EnsureRoot<AccountId>;
     type PalletId = AutoBattlePalletId;
