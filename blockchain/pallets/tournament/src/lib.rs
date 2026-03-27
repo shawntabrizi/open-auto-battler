@@ -2,6 +2,12 @@
 
 extern crate alloc;
 
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
+
 pub use pallet::*;
 
 pub mod weights;
@@ -31,7 +37,7 @@ pub mod pallet {
     /// Configure the pallet by specifying the parameters and types on which it depends.
     /// Inherits game engine capabilities (Randomness, CardRegistry, Max* bounds) from GameEngine.
     #[pallet::config]
-    pub trait Config: frame_system::Config + oab_game_common::GameEngine {
+    pub trait Config: frame_system::Config + oab_common::GameEngine {
         /// Because this pallet emits events, it depends on the runtime's definition of an event.
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
@@ -51,18 +57,18 @@ pub mod pallet {
 
     /// Type alias for the bounded local game state using pallet config.
     pub type BoundedLocalGameState<T> = CoreBoundedLocalGameState<
-        <T as oab_game_common::GameEngine>::MaxBagSize,
-        <T as oab_game_common::GameEngine>::MaxBoardSize,
-        <T as oab_game_common::GameEngine>::MaxHandActions,
+        <T as oab_common::GameEngine>::MaxBagSize,
+        <T as oab_common::GameEngine>::MaxBoardSize,
+        <T as oab_common::GameEngine>::MaxHandActions,
     >;
 
     /// Type alias for the bounded turn action using pallet config.
     pub type BoundedCommitTurnAction<T> =
-        CoreBoundedCommitTurnAction<<T as oab_game_common::GameEngine>::MaxHandActions>;
+        CoreBoundedCommitTurnAction<<T as oab_common::GameEngine>::MaxHandActions>;
 
     /// Type alias for bounded ghost board using pallet config.
     pub type BoundedGhostBoard<T> =
-        CoreBoundedGhostBoard<<T as oab_game_common::GameEngine>::MaxBoardSize>;
+        CoreBoundedGhostBoard<<T as oab_common::GameEngine>::MaxBoardSize>;
 
     /// Type alias for the balance type from the configured Currency.
     pub type BalanceOf<T> = <<T as Config>::Currency as fungible::Inspect<
@@ -204,10 +210,7 @@ pub mod pallet {
             NMapKey<Blake2_128Concat, i32>, // wins
             NMapKey<Blake2_128Concat, i32>, // lives
         ),
-        BoundedVec<
-            oab_game_common::GhostEntry<T>,
-            <T as oab_game_common::GameEngine>::MaxGhostsPerBracket,
-        >,
+        BoundedVec<oab_common::GhostEntry<T>, <T as oab_common::GameEngine>::MaxGhostsPerBracket>,
         ValueQuery,
     >;
 
@@ -291,11 +294,11 @@ pub mod pallet {
         CardSetNotFound,
     }
 
-    impl<T: Config> From<oab_game_common::GameError> for Error<T> {
-        fn from(e: oab_game_common::GameError) -> Self {
+    impl<T: Config> From<oab_common::GameError> for Error<T> {
+        fn from(e: oab_common::GameError) -> Self {
             match e {
-                oab_game_common::GameError::CardSetNotFound => Error::<T>::CardSetNotFound,
-                oab_game_common::GameError::InvalidTurn => Error::<T>::InvalidTurn,
+                oab_common::GameError::CardSetNotFound => Error::<T>::CardSetNotFound,
+                oab_common::GameError::InvalidTurn => Error::<T>::InvalidTurn,
             }
         }
     }
@@ -389,12 +392,9 @@ pub mod pallet {
                 state.total_entries = state.total_entries.saturating_add(1);
             });
 
-            let (state, seed) = oab_game_common::initialize_game_state::<T>(
-                &who,
-                config.set_id,
-                b"tournament_start",
-            )
-            .map_err(|e| -> Error<T> { e.into() })?;
+            let (state, seed) =
+                oab_common::initialize_game_state::<T>(&who, config.set_id, b"tournament_start")
+                    .map_err(|e| -> Error<T> { e.into() })?;
 
             let session = TournamentGameSession::<T> {
                 state,
@@ -432,7 +432,7 @@ pub mod pallet {
 
             let tid = session.tournament_id;
 
-            let mut battle = oab_game_common::prepare_battle::<T>(
+            let mut battle = oab_common::prepare_battle::<T>(
                 &who,
                 session.set_id,
                 session.config.clone(),
@@ -452,10 +452,10 @@ pub mod pallet {
             .unwrap_or_default();
 
             // Store player's board as tournament ghost
-            let ghost = oab_game_common::create_ghost_board::<T>(&battle.core_state);
+            let ghost = oab_common::create_ghost_board::<T>(&battle.core_state);
             Self::store_tournament_ghost(&who, tid, &battle.bracket, ghost);
 
-            let turn = oab_game_common::execute_and_advance::<T>(
+            let turn = oab_common::execute_and_advance::<T>(
                 &who,
                 &mut battle,
                 enemy_units,
@@ -464,7 +464,7 @@ pub mod pallet {
 
             // Grant bronze achievements for cards on board if battle was won
             if turn.result == BattleResult::Victory {
-                oab_game_common::grant_bronze_achievements::<T>(&who, &battle.core_state);
+                oab_common::grant_bronze_achievements::<T>(&who, &battle.core_state);
             }
 
             // If game is over, mark as Completed for end_tournament_game to finalize
@@ -629,7 +629,7 @@ pub mod pallet {
             let tid = session.tournament_id;
             let wins = session.state.wins;
 
-            oab_game_common::finalize_game_achievements::<T>(&who, &session.config, &session.state);
+            oab_common::finalize_game_achievements::<T>(&who, &session.config, &session.state);
 
             // Update tournament statistics
             TournamentPlayerStats::<T>::mutate(tid, &who, |stats| {
@@ -685,7 +685,7 @@ pub mod pallet {
                 bracket.wins,
                 bracket.lives,
             ));
-            oab_game_common::select_ghost_from_pool::<T>(&ghosts, card_set, seed)
+            oab_common::select_ghost_from_pool::<T>(&ghosts, card_set, seed)
         }
 
         /// Store a ghost board in the tournament-specific ghost pool.
@@ -694,7 +694,7 @@ pub mod pallet {
             owner: &T::AccountId,
             tournament_id: u32,
             bracket: &MatchmakingBracket,
-            ghost: oab_game_common::BoundedGhostBoard<T>,
+            ghost: oab_common::BoundedGhostBoard<T>,
         ) {
             if ghost.units.is_empty() {
                 return;
@@ -703,7 +703,7 @@ pub mod pallet {
             TournamentGhostOpponents::<T>::mutate(
                 (tournament_id, bracket.round, bracket.wins, bracket.lives),
                 |ghosts| {
-                    oab_game_common::push_ghost_to_pool::<T>(ghosts, owner, ghost);
+                    oab_common::push_ghost_to_pool::<T>(ghosts, owner, ghost);
                 },
             );
         }

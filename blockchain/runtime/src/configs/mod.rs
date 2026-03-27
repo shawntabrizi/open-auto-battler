@@ -367,7 +367,7 @@ impl pallet_oab_card_registry::Config for Runtime {
     type MaxSetSize = ConstU32<100>;
 }
 
-impl oab_game_common::GameEngine for Runtime {
+impl oab_common::GameEngine for Runtime {
     type Randomness = ParentHashRandomness;
     type CardRegistry = CardRegistry;
     type MaxBagSize = ConstU32<50>;

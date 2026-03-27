@@ -1264,8 +1264,8 @@ dependencies = [
  "log",
  "oab-assets",
  "oab-battle",
+ "oab-common",
  "oab-game",
- "oab-game-common",
  "pallet-oab-arena",
  "pallet-oab-card-registry",
  "pallet-oab-tournament",
@@ -7738,18 +7738,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "oab-game"
-version = "0.1.0"
-dependencies = [
- "bounded-collections",
- "oab-battle",
- "parity-scale-codec",
- "scale-info",
- "serde",
-]
-
-[[package]]
-name = "oab-game-common"
+name = "oab-common"
 version = "0.1.0"
 dependencies = [
  "oab-battle",
@@ -7758,6 +7747,17 @@ dependencies = [
  "parity-scale-codec",
  "polkadot-sdk-frame",
  "scale-info",
+]
+
+[[package]]
+name = "oab-game"
+version = "0.1.0"
+dependencies = [
+ "bounded-collections",
+ "oab-battle",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
 ]
 
 [[package]]
@@ -9030,10 +9030,11 @@ name = "pallet-oab-arena"
 version = "0.1.0"
 dependencies = [
  "oab-battle",
+ "oab-common",
  "oab-game",
- "oab-game-common",
  "pallet-oab-card-registry",
  "parity-scale-codec",
+ "polkadot-sdk 2503.2.0",
  "polkadot-sdk-frame",
  "scale-info",
 ]
@@ -9054,10 +9055,11 @@ name = "pallet-oab-tournament"
 version = "0.1.0"
 dependencies = [
  "oab-battle",
+ "oab-common",
  "oab-game",
- "oab-game-common",
  "pallet-oab-card-registry",
  "parity-scale-codec",
+ "polkadot-sdk 2503.2.0",
  "polkadot-sdk-frame",
  "scale-info",
 ]

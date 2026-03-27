@@ -6,7 +6,6 @@ use frame::{
 };
 use polkadot_sdk::pallet_balances;
 
-// Configure a mock runtime to test the pallet.
 #[frame_construct_runtime]
 mod test_runtime {
     #[runtime::runtime]
@@ -27,7 +26,7 @@ mod test_runtime {
     #[runtime::pallet_index(0)]
     pub type System = frame_system;
     #[runtime::pallet_index(1)]
-    pub type AutoBattle = crate;
+    pub type Arena = crate;
     #[runtime::pallet_index(2)]
     pub type Balances = pallet_balances;
     #[runtime::pallet_index(3)]
@@ -81,12 +80,7 @@ impl pallet_oab_card_registry::Config for Test {
     type MaxSetSize = ConstU32<100>;
 }
 
-frame::deps::frame_support::parameter_types! {
-    pub const AutoBattlePalletId: frame::deps::frame_support::PalletId =
-        frame::deps::frame_support::PalletId(*b"autobttl");
-}
-
-impl oab_game_common::GameEngine for Test {
+impl oab_common::GameEngine for Test {
     type Randomness = MockRandomness;
     type CardRegistry = CardRegistry;
     type MaxBagSize = ConstU32<50>;
@@ -102,16 +96,11 @@ impl oab_game_common::GameEngine for Test {
 impl crate::Config for Test {
     type RuntimeEvent = RuntimeEvent;
     type WeightInfo = ();
-    type Currency = Balances;
-    type TournamentOrigin = frame_system::EnsureRoot<u64>;
-    type PalletId = AutoBattlePalletId;
+    type AdminOrigin = frame_system::EnsureRoot<u64>;
 }
 
-// Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> TestState {
     let mut t = GenesisConfig::<Test>::default().build_storage().unwrap();
-
-    // Fund test accounts
     pallet_balances::GenesisConfig::<Test> {
         balances: vec![
             (1, 10_000),
@@ -124,13 +113,10 @@ pub fn new_test_ext() -> TestState {
     }
     .assimilate_storage(&mut t)
     .unwrap();
-
-    // Initialize CardRegistry genesis
     pallet_oab_card_registry::GenesisConfig::<Test> {
         _phantom: Default::default(),
     }
     .assimilate_storage(&mut t)
     .unwrap();
-
     t.into()
 }

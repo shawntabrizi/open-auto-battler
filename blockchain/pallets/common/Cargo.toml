@@ -1,5 +1,5 @@
 [package]
-name = "oab-game-common"
+name = "oab-common"
 description = "Shared types and battle logic for Open Auto Battler game-mode pallets."
 version = "0.1.0"
 license.workspace = true

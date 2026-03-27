@@ -28,7 +28,7 @@ oab-game = { workspace = true }
 pallet-oab-arena.workspace = true
 pallet-oab-tournament.workspace = true
 pallet-oab-card-registry.workspace = true
-oab-game-common.workspace = true
+oab-common.workspace = true
 polkadot-sdk = { workspace = true, features = ["cumulus-pallet-aura-ext", "cumulus-pallet-session-benchmarking", "cumulus-pallet-weight-reclaim", "cumulus-pallet-xcm", "cumulus-pallet-xcmp-queue", "cumulus-primitives-aura", "cumulus-primitives-core", "cumulus-primitives-utility", "pallet-aura", "pallet-authorship", "pallet-balances", "pallet-collator-selection", "pallet-message-queue", "pallet-nfts", "pallet-session", "pallet-sudo", "pallet-timestamp", "pallet-transaction-payment", "pallet-transaction-payment-rpc-runtime-api", "pallet-utility", "pallet-xcm", "parachains-common", "polkadot-parachain-primitives", "polkadot-runtime-common", "runtime", "staging-parachain-info", "staging-xcm", "staging-xcm-builder", "staging-xcm-executor"], default-features = false }
 scale-info = { features = ["derive"], workspace = true }
 serde_json = { workspace = true, default-features = false, features = ["alloc"] }
@@ -46,7 +46,7 @@ std = [
 	"pallet-oab-arena/std",
 	"pallet-oab-tournament/std",
 	"pallet-oab-card-registry/std",
-	"oab-game-common/std",
+	"oab-common/std",
 	"polkadot-sdk/std",
 	"scale-info/std",
 	"serde_json/std",
