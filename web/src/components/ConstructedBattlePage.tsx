@@ -9,7 +9,7 @@ import { TopBar } from './TopBar';
 import type { CardView } from '../types';
 
 export function ConstructedBattlePage() {
-  const { decks, selectedDeckId, selectDeck, loadDecks, loaded } = useConstructedStore();
+  const { decks, selectedDeckId, loadDecks, loaded } = useConstructedStore();
   const { engine, initEngine, engineReady, gameStarted, cardSet } = useGameStore();
 
   useInitGuard(() => {
@@ -45,7 +45,7 @@ export function ConstructedBattlePage() {
     );
   }
 
-  const validDecks = decks.filter((d) => d.cards.length === 50);
+  const selectedDeck = decks.find((d) => d.id === selectedDeckId && d.cards.length === 50);
 
   const cardLookup = new Map<number, CardView>();
   if (cardSet) {
@@ -58,22 +58,16 @@ export function ConstructedBattlePage() {
   };
 
   const handleStart = () => {
-    if (!engine || !selectedDeckId) return;
-    const deck = decks.find((d) => d.id === selectedDeckId);
-    if (!deck || deck.cards.length !== 50) {
-      toast.error('Selected deck is not complete');
-      return;
-    }
+    if (!engine || !selectedDeck) return;
 
     try {
-      // Ensure full card pool is loaded
       if (typeof engine.load_full_card_pool === 'function') {
         engine.load_full_card_pool();
       } else {
         engine.load_card_set(0);
       }
       const seed = BigInt(Date.now());
-      engine.new_run_constructed(seed, deck.cards);
+      engine.new_run_constructed(seed, selectedDeck.cards);
       useGameStore.setState({
         view: engine.get_view(),
         cardSet: engine.get_card_set(),
@@ -86,85 +80,43 @@ export function ConstructedBattlePage() {
     }
   };
 
-  const selectedDeck = validDecks.find((d) => d.id === selectedDeckId);
+  const previewCards = selectedDeck ? getPreviewCards(selectedDeck.cards) : [];
 
   return (
     <div className="app-shell min-h-screen min-h-svh flex flex-col text-white">
       <TopBar backTo="/constructed" backLabel="Constructed" title="Battle" />
       <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
-          {validDecks.length === 0 ? (
+          {!selectedDeck ? (
             <>
-              <p className="text-base-400 text-sm mb-4">No complete decks.</p>
+              <p className="text-base-400 text-sm mb-4">No deck selected.</p>
               <Link
                 to="/constructed/decks"
                 className="theme-button btn-primary inline-block font-bold py-3 px-8 rounded-xl text-sm transition-all"
               >
-                Build a Deck
+                Select a Deck
               </Link>
             </>
           ) : (
-            <>
-              {/* Deck selection */}
-              <div
-                role="radiogroup"
-                aria-label="Select a deck"
-                className="flex flex-col gap-3 mb-6"
-              >
-                {validDecks.map((deck) => {
-                  const isSelected = selectedDeckId === deck.id;
-                  return (
-                    <div
-                      key={deck.id}
-                      onClick={() => selectDeck(deck.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          selectDeck(deck.id);
-                        }
-                      }}
-                      role="radio"
-                      aria-checked={isSelected}
-                      tabIndex={0}
-                      className={`theme-panel relative flex flex-col items-center text-center rounded-xl border p-3 cursor-pointer transition-all ${
-                        isSelected
-                          ? 'set-tile-selected border-2'
-                          : 'border-base-700/40 bg-surface-dark/60 hover:border-base-500/80'
-                      }`}
-                    >
-                      <div className="absolute top-2.5 right-2.5">
-                        <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                            isSelected ? 'set-radio-selected' : 'border-base-600'
-                          }`}
-                        >
-                          {isSelected && (
-                            <div className="set-radio-dot h-2.5 w-2.5 rounded-full" />
-                          )}
-                        </div>
-                      </div>
-                      <h3 className="font-button font-bold text-sm lg:text-lg text-white">
-                        {deck.name}
-                      </h3>
-                      <p className="text-base-500 text-[10px] lg:text-sm">50 cards</p>
-                      <div className="set-tile">
-                        <CardFan cards={getPreviewCards(deck.cards)} />
-                      </div>
-                    </div>
-                  );
-                })}
+            <div className="flex flex-col items-center">
+              <h2 className="text-xl lg:text-2xl font-heading font-bold text-white">
+                {selectedDeck.name}
+              </h2>
+              <p className="text-base-500 text-xs lg:text-sm">50 cards</p>
+              <div className="set-tile">
+                {previewCards.length > 0 ? (
+                  <CardFan cards={previewCards} />
+                ) : (
+                  <div className="set-card-fan flex items-center justify-center">
+                    <span className="text-base-600 text-sm">...</span>
+                  </div>
+                )}
               </div>
 
-              {/* Start button */}
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 mt-6 w-full">
                 <button
                   onClick={handleStart}
-                  disabled={!selectedDeck}
-                  className={`theme-button w-full font-black py-3 lg:py-4 rounded-xl text-sm lg:text-base transition-all transform uppercase tracking-wider ${
-                    selectedDeck
-                      ? 'btn-primary hover:scale-105'
-                      : 'bg-base-700 text-base-500 cursor-not-allowed'
-                  }`}
+                  className="theme-button btn-primary w-full font-black py-3 lg:py-4 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 uppercase tracking-wider"
                 >
                   Start Battle
                 </button>
@@ -172,10 +124,10 @@ export function ConstructedBattlePage() {
                   to="/constructed/decks"
                   className="text-base-400 hover:text-base-200 text-sm transition-colors"
                 >
-                  Edit Decks
+                  Change Deck
                 </Link>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

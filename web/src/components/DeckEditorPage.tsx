@@ -38,8 +38,6 @@ function DeckColumnsView({
     return map;
   }, [deckSummary]);
 
-  const isEmpty = deckSummary.length === 0;
-
   return (
     <div className="flex gap-1.5 lg:gap-2 items-start lg:justify-center">
       {MANA_COSTS.map((cost) => {
@@ -156,7 +154,7 @@ export function DeckEditorPage() {
   // All available cards (sorted/filtered)
   const allCards = useMemo(() => {
     if (!cardSet) return [];
-    return [...cardSet].sort((a, b) => {
+    return [...cardSet].filter((c) => c.play_cost > 0).sort((a, b) => {
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       return a.play_cost - b.play_cost || a.name.localeCompare(b.name);
     });
@@ -259,9 +257,9 @@ export function DeckEditorPage() {
         </button>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
-        {/* Left: Card pool */}
-        <div className="flex-1 min-h-0 flex flex-col p-3 lg:p-4 lg:order-1 order-2">
+      <div className="flex-1 min-h-0 flex flex-col">
+        {/* Card pool */}
+        <div className="flex-1 min-h-0 flex flex-col p-3 lg:p-4 order-2">
           <div className="flex-shrink-0 pb-2">
             <CardFilterBar
               searchQuery={searchQuery}
@@ -296,7 +294,7 @@ export function DeckEditorPage() {
         </div>
 
         {/* Right/Top: Deck view — MTG-style mana curve columns */}
-        <div className="w-full lg:w-[28rem] xl:w-[34rem] flex-shrink-0 border-b lg:border-b-0 lg:border-r border-base-700/40 flex flex-col bg-surface-dark/30 lg:order-0 order-1">
+        <div className="w-full flex-shrink-0 border-b border-base-700/40 flex flex-col bg-surface-dark/30 order-1 max-h-[40vh]">
           <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto custom-scrollbar p-3 lg:p-4">
             <DeckColumnsView deckSummary={deckSummary} onRemove={removeCard} />
           </div>
