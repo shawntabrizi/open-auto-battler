@@ -163,7 +163,7 @@ export interface GameView {
   phase: string; // Changed from enum to string to match Rust core/src/view.rs
   // Note: bag is removed from hot path - use fetchBag() for full bag data
   bag_count: number;
-  game_seed: number;
+  game_seed: number | bigint;
   can_afford: boolean[];
   can_undo: boolean;
 }
