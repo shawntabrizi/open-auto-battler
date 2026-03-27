@@ -1,5 +1,5 @@
 use crate::{
-    AccountId, BalancesConfig, CardRegistryConfig, CollatorSelectionConfig, ParachainInfoConfig,
+    AccountId, BalancesConfig, CollatorSelectionConfig, OabCardRegistryConfig, ParachainInfoConfig,
     PolkadotXcmConfig, RuntimeGenesisConfig, SessionConfig, SessionKeys, SudoConfig,
     EXISTENTIAL_DEPOSIT,
 };
@@ -67,7 +67,7 @@ fn testnet_genesis(
             safe_xcm_version: Some(SAFE_XCM_VERSION)
         },
         sudo: SudoConfig { key: Some(root) },
-        card_registry: CardRegistryConfig::default(),
+        oab_card_registry: OabCardRegistryConfig::default(),
     })
 }
 

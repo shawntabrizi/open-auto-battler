@@ -71,13 +71,16 @@ impl
     }
 }
 
-impl pallet_oab_card_registry::Config for Test {
-    type RuntimeEvent = RuntimeEvent;
-    type WeightInfo = ();
+impl pallet_oab_card_registry::CardConfig for Test {
     type MaxAbilities = ConstU32<5>;
     type MaxStringLen = ConstU32<32>;
     type MaxConditions = ConstU32<5>;
     type MaxSetSize = ConstU32<100>;
+}
+
+impl pallet_oab_card_registry::Config for Test {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = ();
 }
 
 impl oab_common::GameEngine for Test {
@@ -86,10 +89,6 @@ impl oab_common::GameEngine for Test {
     type MaxBagSize = ConstU32<50>;
     type MaxBoardSize = ConstU32<5>;
     type MaxHandActions = ConstU32<10>;
-    type MaxAbilities = ConstU32<5>;
-    type MaxStringLen = ConstU32<32>;
-    type MaxConditions = ConstU32<5>;
-    type MaxSetSize = ConstU32<100>;
     type MaxGhostsPerBracket = ConstU32<10>;
 }
 

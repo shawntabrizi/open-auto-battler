@@ -7,14 +7,14 @@ fn bounded_set_entries(
     entries: Vec<pallet_oab_card_registry::pallet::CardSetEntryInput>,
 ) -> BoundedVec<
     pallet_oab_card_registry::pallet::CardSetEntryInput,
-    <Test as pallet_oab_card_registry::Config>::MaxSetSize,
+    <Test as pallet_oab_card_registry::CardConfig>::MaxSetSize,
 > {
     BoundedVec::try_from(entries).unwrap()
 }
 
 fn bounded_set_name(
     name: &[u8],
-) -> BoundedVec<u8, <Test as pallet_oab_card_registry::Config>::MaxStringLen> {
+) -> BoundedVec<u8, <Test as pallet_oab_card_registry::CardConfig>::MaxStringLen> {
     BoundedVec::try_from(name.to_vec()).unwrap()
 }
 

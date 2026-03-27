@@ -37,7 +37,11 @@ use scale_info::TypeInfo;
 /// Trait that captures the shared capabilities game-mode pallets need.
 /// Each pallet's `Config` extends this as a supertrait.
 /// Implemented once on `Runtime` in the runtime config.
-pub trait GameEngine: frame_system::Config {
+///
+/// Extends `pallet_oab_card_registry::CardConfig` so the 4 card-related
+/// constants (MaxAbilities, MaxStringLen, MaxConditions, MaxSetSize) are
+/// defined once and shared by card-registry and all game-mode pallets.
+pub trait GameEngine: pallet_oab_card_registry::CardConfig {
     type Randomness: Randomness<Self::Hash, BlockNumberFor<Self>>;
     type CardRegistry: CardRegistryProvider<Self::AccountId>;
 
@@ -48,14 +52,6 @@ pub trait GameEngine: frame_system::Config {
     #[allow(missing_docs)]
     type MaxHandActions: Get<u32>;
     #[allow(missing_docs)]
-    type MaxAbilities: Get<u32>;
-    #[allow(missing_docs)]
-    type MaxStringLen: Get<u32>;
-    #[allow(missing_docs)]
-    type MaxConditions: Get<u32>;
-    #[allow(missing_docs)]
-    type MaxSetSize: Get<u32>;
-    #[allow(missing_docs)]
     type MaxGhostsPerBracket: Get<u32>;
 }
 
@@ -64,10 +60,10 @@ pub trait GameEngine: frame_system::Config {
 pub type BoundedGameState<T> = CoreBoundedGameState<
     <T as GameEngine>::MaxBagSize,
     <T as GameEngine>::MaxBoardSize,
-    <T as GameEngine>::MaxAbilities,
-    <T as GameEngine>::MaxStringLen,
+    <T as pallet_oab_card_registry::CardConfig>::MaxAbilities,
+    <T as pallet_oab_card_registry::CardConfig>::MaxStringLen,
     <T as GameEngine>::MaxHandActions,
-    <T as GameEngine>::MaxConditions,
+    <T as pallet_oab_card_registry::CardConfig>::MaxConditions,
 >;
 
 pub type BoundedLocalGameState<T> = CoreBoundedLocalGameState<

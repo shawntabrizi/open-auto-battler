@@ -11,8 +11,23 @@ extern crate alloc;
 pub use pallet::*;
 
 use alloc::collections::BTreeMap;
+use frame::prelude::Get;
 use oab_battle::types::{CardId, UnitCard};
 use oab_battle::CardSet;
+
+/// Bounds shared between the card registry and game-mode pallets.
+/// Implemented once on `Runtime`; card-registry's Config and
+/// `oab_common::GameEngine` both extend this.
+pub trait CardConfig: frame::deps::frame_system::Config {
+    /// Maximum number of abilities per card.
+    type MaxAbilities: Get<u32>;
+    /// Maximum length of strings (names, descriptions).
+    type MaxStringLen: Get<u32>;
+    /// Maximum number of conditions per ability.
+    type MaxConditions: Get<u32>;
+    /// Maximum number of cards in a set.
+    type MaxSetSize: Get<u32>;
+}
 
 /// Trait for reading card registry data.
 /// Implemented by this pallet, consumed by game-mode pallets.
@@ -59,26 +74,10 @@ pub mod pallet {
     pub struct Pallet<T>(_);
 
     #[pallet::config]
-    pub trait Config: frame_system::Config {
+    pub trait Config: frame_system::Config + crate::CardConfig {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         type WeightInfo: WeightInfo;
-
-        /// Maximum number of abilities per card.
-        #[pallet::constant]
-        type MaxAbilities: Get<u32>;
-
-        /// Maximum length of strings (names, descriptions).
-        #[pallet::constant]
-        type MaxStringLen: Get<u32>;
-
-        /// Maximum number of conditions per ability.
-        #[pallet::constant]
-        type MaxConditions: Get<u32>;
-
-        /// Maximum number of cards in a set.
-        #[pallet::constant]
-        type MaxSetSize: Get<u32>;
     }
 
     // ── Weight trait ─────────────────────────────────────────────────────
@@ -107,9 +106,11 @@ pub mod pallet {
 
     // ── Type aliases ─────────────────────────────────────────────────────
 
-    pub type BoundedCardSet<T> = CoreBoundedCardSet<<T as Config>::MaxSetSize>;
-    pub type BoundedBattleAbility<T> = CoreBoundedBattleAbility<<T as Config>::MaxConditions>;
-    pub type BoundedShopAbility<T> = CoreBoundedShopAbility<<T as Config>::MaxConditions>;
+    pub type BoundedCardSet<T> = CoreBoundedCardSet<<T as crate::CardConfig>::MaxSetSize>;
+    pub type BoundedBattleAbility<T> =
+        CoreBoundedBattleAbility<<T as crate::CardConfig>::MaxConditions>;
+    pub type BoundedShopAbility<T> =
+        CoreBoundedShopAbility<<T as crate::CardConfig>::MaxConditions>;
 
     // ── Types ────────────────────────────────────────────────────────────
 

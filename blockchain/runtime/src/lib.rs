@@ -318,11 +318,11 @@ mod runtime {
 
     // OAB Pallets
     #[runtime::pallet_index(50)]
-    pub type AutoBattle = pallet_oab_arena;
+    pub type OabArena = pallet_oab_arena;
     #[runtime::pallet_index(52)]
-    pub type CardRegistry = pallet_oab_card_registry;
+    pub type OabCardRegistry = pallet_oab_card_registry;
     #[runtime::pallet_index(53)]
-    pub type Tournament = pallet_oab_tournament;
+    pub type OabTournament = pallet_oab_tournament;
 
     // NFTs
     #[runtime::pallet_index(51)]

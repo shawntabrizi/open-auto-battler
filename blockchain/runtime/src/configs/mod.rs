@@ -61,8 +61,8 @@ use xcm::latest::prelude::BodyId;
 // Local module imports
 use super::{
     weights::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight},
-    AccountId, Aura, Balance, Balances, Block, BlockNumber, CardRegistry, CollatorSelection,
-    ConsensusHook, Hash, MessageQueue, Nonce, OriginCaller, PalletInfo, ParachainSystem, Runtime,
+    AccountId, Aura, Balance, Balances, Block, BlockNumber, CollatorSelection, ConsensusHook, Hash,
+    MessageQueue, Nonce, OabCardRegistry, OriginCaller, PalletInfo, ParachainSystem, Runtime,
     RuntimeCall, RuntimeEvent, RuntimeFreezeReason, RuntimeHoldReason, RuntimeOrigin, RuntimeTask,
     Session, SessionKeys, System, WeightToFee, XcmpQueue, AVERAGE_ON_INITIALIZE_RATIO, DAYS,
     EXISTENTIAL_DEPOSIT, HOURS, MAXIMUM_BLOCK_WEIGHT, MICRO_UNIT, NORMAL_DISPATCH_RATIO,
@@ -355,28 +355,27 @@ impl
 }
 
 parameter_types! {
-    pub const AutoBattlePalletId: PalletId = PalletId(*b"autobttl");
+    pub const OabTournamentPalletId: PalletId = PalletId(*b"autobttl");
+}
+
+impl pallet_oab_card_registry::CardConfig for Runtime {
+    type MaxAbilities = ConstU32<5>;
+    type MaxStringLen = ConstU32<32>;
+    type MaxConditions = ConstU32<5>;
+    type MaxSetSize = ConstU32<100>;
 }
 
 impl pallet_oab_card_registry::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type WeightInfo = ();
-    type MaxAbilities = ConstU32<5>;
-    type MaxStringLen = ConstU32<32>;
-    type MaxConditions = ConstU32<5>;
-    type MaxSetSize = ConstU32<100>;
 }
 
 impl oab_common::GameEngine for Runtime {
     type Randomness = ParentHashRandomness;
-    type CardRegistry = CardRegistry;
+    type CardRegistry = OabCardRegistry;
     type MaxBagSize = ConstU32<50>;
     type MaxBoardSize = ConstU32<5>;
     type MaxHandActions = ConstU32<10>;
-    type MaxAbilities = ConstU32<5>;
-    type MaxStringLen = ConstU32<32>;
-    type MaxConditions = ConstU32<5>;
-    type MaxSetSize = ConstU32<100>;
     type MaxGhostsPerBracket = ConstU32<10>;
 }
 
@@ -391,7 +390,7 @@ impl pallet_oab_tournament::Config for Runtime {
     type WeightInfo = ();
     type Currency = Balances;
     type TournamentOrigin = EnsureRoot<AccountId>;
-    type PalletId = AutoBattlePalletId;
+    type PalletId = OabTournamentPalletId;
 }
 
 parameter_types! {
