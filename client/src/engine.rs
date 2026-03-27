@@ -69,6 +69,12 @@ pub struct GameEngine {
 
 #[wasm_bindgen]
 impl GameEngine {
+    fn to_js_value<T: Serialize>(value: &T) -> Result<JsValue, serde_wasm_bindgen::Error> {
+        let serializer =
+            serde_wasm_bindgen::Serializer::new().serialize_large_number_types_as_bigints(true);
+        value.serialize(&serializer)
+    }
+
     /// Create a new game engine with an optional seed
     #[wasm_bindgen(constructor)]
     pub fn new(seed: Option<u64>) -> Self {
@@ -304,7 +310,7 @@ impl GameEngine {
             &self.shop_ctx.hand_used,
             can_undo,
         );
-        match serde_wasm_bindgen::to_value(&view) {
+        match Self::to_js_value(&view) {
             Ok(val) => val,
             Err(e) => {
                 log::error(&format!("get_view serialization failed: {:?}", e));
@@ -667,7 +673,7 @@ impl GameEngine {
     /// Get the full game state as JSON (for P2P sync)
     #[wasm_bindgen]
     pub fn get_state(&self) -> JsValue {
-        match serde_wasm_bindgen::to_value(&self.state) {
+        match Self::to_js_value(&self.state) {
             Ok(val) => val,
             Err(e) => {
                 log::error(&format!("get_state serialization failed: {:?}", e));
@@ -686,7 +692,7 @@ impl GameEngine {
             config,
         };
 
-        match serde_wasm_bindgen::to_value(&snapshot) {
+        match Self::to_js_value(&snapshot) {
             Ok(val) => val,
             Err(e) => {
                 log::error(&format!("get_local_session serialization failed: {:?}", e));
