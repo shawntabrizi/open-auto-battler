@@ -14,6 +14,7 @@ const MOCK_VIEW: GameView = {
   wins: 7,
   phase: 'completed',
   bag_count: 0,
+  game_seed: 0,
   can_afford: [],
   can_undo: false,
 };
