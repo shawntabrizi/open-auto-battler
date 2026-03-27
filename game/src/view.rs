@@ -78,6 +78,8 @@ pub struct GameView {
     pub phase: String,
     /// Cards remaining in bag (lightweight - use get_full_bag_json for full data)
     pub bag_count: u32,
+    /// Deterministic seed for shop trigger RNG (needed by bots for local inference)
+    pub game_seed: u64,
     /// Whether we can afford each hand card
     pub can_afford: Vec<bool>,
     /// Whether undo is available
@@ -149,6 +151,7 @@ impl GameView {
                 GamePhase::Completed => String::from("completed"),
             },
             bag_count: state.bag.len() as u32,
+            game_seed: state.game_seed,
             can_afford,
             can_undo,
         }

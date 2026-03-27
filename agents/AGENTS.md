@@ -25,6 +25,12 @@ Read the following documents when relevant:
 - **No Engine Panics**: Core engine/runtime code must not use `panic!`, `unwrap()`, or `expect()` for normal control flow. Use explicit error handling or deterministic no-op behavior instead.
 - **Formatting**: After making changes, always run `cargo fmt` (Rust) and `prettier` (web/client) on affected files.
 
+## Deployment
+- **Blockchain deploy script**: `blockchain/deploy.sh` builds the runtime, generates a chain spec, and deploys to the VPS via SSH + Docker.
+  - `blockchain/deploy.sh` — rolling update (preserves chain data)
+  - `blockchain/deploy.sh --fresh` — wipes chain data for a new genesis
+  - Node runs at `ws://51.159.158.173:9944` (aliased to `wss://oab-rpc.shawntabrizi.com`)
+
 ## Workflow Expectations
 - Maintain the visual style established in `web/src/index.css`.
 - Prefer minimal, targeted edits over broad refactors.
