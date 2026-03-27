@@ -419,7 +419,7 @@ const CreateTestTournament: React.FC<{ onCreated: () => void }> = ({ onCreated }
       const endBlock = blockNumber + 1000;
       const entryFee = BigInt(1_000_000_000_000);
 
-      const innerCall = api.tx.AutoBattle.create_tournament({
+      const innerCall = api.tx.OabTournament.create_tournament({
         set_id: selectedSetId,
         entry_fee: entryFee,
         start_block: startBlock,

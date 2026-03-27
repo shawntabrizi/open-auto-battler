@@ -32,7 +32,7 @@ export const useAchievementStore = create<AchievementStore>((set, get) => ({
     if (!api || !accountAddress) return;
 
     try {
-      const entries = await api.query.AutoBattle.VictoryAchievements.getEntries(accountAddress);
+      const entries = await api.query.OabCardRegistry.VictoryAchievements.getEntries(accountAddress);
       const achievements = new Map<number, number>();
       for (const entry of entries) {
         // Key is (AccountId, card_id), value is u8 bitmap

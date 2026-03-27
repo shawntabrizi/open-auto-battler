@@ -517,7 +517,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
       const codecs = await getTypedCodecs(auto_battle);
       const cardDataCoercer = await createCallArgCoercer(
         auto_battle,
-        'AutoBattle',
+        'OabCardRegistry',
         'submit_card',
         'card_data'
       );
@@ -676,7 +676,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
 
     try {
       console.log(`Refreshing game state for ${selectedAccount.address}...`);
-      const game = await api.query.AutoBattle.ActiveGame.getValue(selectedAccount.address);
+      const game = await api.query.OabArena.ActiveGame.getValue(selectedAccount.address);
       set({ chainState: game });
 
       if (game) {
@@ -690,8 +690,8 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
             injectCardsIntoEngine(engine, allCards);
 
             // 2. Fetch raw SCALE bytes from the blockchain
-            const gameKey = await api.query.AutoBattle.ActiveGame.getKey(selectedAccount.address);
-            const cardSetKey = await api.query.AutoBattle.CardSets.getKey(game.set_id);
+            const gameKey = await api.query.OabArena.ActiveGame.getKey(selectedAccount.address);
+            const cardSetKey = await api.query.OabCardRegistry.CardSets.getKey(game.set_id);
 
             const gameRawHex = await client.rawQuery(gameKey);
             const cardSetRawHex = await client.rawQuery(cardSetKey);
@@ -744,9 +744,9 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
 
     try {
       // Start game with selected set_id
-      const tx = api.tx.AutoBattle.start_game({ set_id });
+      const tx = api.tx.OabArena.start_game({ set_id });
 
-      await submitTx(tx, selectedAccount.polkadotSigner, `AutoBattle.start_game(set_id=${set_id})`);
+      await submitTx(tx, selectedAccount.polkadotSigner, `OabArena.start_game(set_id=${set_id})`);
       await get().refreshGameState();
     } catch (err) {
       console.error('Start game failed:', err);
@@ -764,16 +764,16 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
 
       // Get commit action from engine and decode via SCALE
       const actionRaw = engine.get_commit_action_scale();
-      const action = codecs.tx.AutoBattle.submit_turn.dec(actionRaw);
+      const action = codecs.tx.OabArena.submit_turn.dec(actionRaw);
 
       // Submit the turn - this runs shop actions + battle on-chain
-      const tx = api.tx.AutoBattle.submit_turn(action);
-      const txResult = await submitTx(tx, selectedAccount.polkadotSigner, 'AutoBattle.submit_turn');
+      const tx = api.tx.OabArena.submit_turn(action);
+      const txResult = await submitTx(tx, selectedAccount.polkadotSigner, 'OabArena.submit_turn');
 
       // Extract BattleReported event from transaction result
       // PAPI events: e.type is pallet name, e.value.type is event variant
       const battleEvent = txResult.events.find(
-        (e: any) => e.type === 'AutoBattle' && e.value?.type === 'BattleReported'
+        (e: any) => e.type === 'OabArena' && e.value?.type === 'BattleReported'
       );
 
       if (battleEvent) {
@@ -838,7 +838,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     try {
-      const tx = api.tx.AutoBattle.end_game({});
+      const tx = api.tx.OabArena.end_game({});
       await submitTx(tx, selectedAccount.polkadotSigner, 'Saving Results');
       set({ chainState: null });
     } catch (err) {
@@ -853,8 +853,8 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
     }
 
     try {
-      const tx = api.tx.AutoBattle.abandon_game({});
-      await submitTx(tx, selectedAccount.polkadotSigner, 'AutoBattle.abandon_game');
+      const tx = api.tx.OabArena.abandon_game({});
+      await submitTx(tx, selectedAccount.polkadotSigner, 'OabArena.abandon_game');
       set({ chainState: null });
       useGameStore.getState().resetActiveSessionView();
     } catch (err) {
@@ -894,8 +894,8 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
 
     try {
       // Fetch all UserCards and CardMetadataStore
-      const cardEntries = await api.query.AutoBattle.UserCards.getEntries();
-      const metadataEntries = await api.query.AutoBattle.CardMetadataStore.getEntries();
+      const cardEntries = await api.query.OabCardRegistry.UserCards.getEntries();
+      const metadataEntries = await api.query.OabCardRegistry.CardMetadataStore.getEntries();
 
       const metadataMap = new Map();
       metadataEntries.forEach((entry: any) => {
@@ -934,12 +934,12 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
     if (!api) return;
 
     try {
-      const setEntries = await api.query.AutoBattle.CardSets.getEntries();
+      const setEntries = await api.query.OabCardRegistry.CardSets.getEntries();
 
       // Fetch set metadata
       let metadataMap = new Map<number, string>();
       try {
-        const metaEntries = await api.query.AutoBattle.CardSetMetadataStore.getEntries();
+        const metaEntries = await api.query.OabCardRegistry.CardSetMetadataStore.getEntries();
         metaEntries.forEach((entry: any) => {
           metadataMap.set(Number(entry.keyArgs[0]), entry.value.name.asText());
         });
@@ -974,9 +974,9 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
     try {
       let poolEntries: any[] = [];
       try {
-        poolEntries = await api.query.AutoBattle.GhostOpponents.getEntries(setId);
+        poolEntries = await api.query.OabArena.GhostOpponents.getEntries(setId);
       } catch {
-        poolEntries = await api.query.AutoBattle.GhostOpponents.getEntries();
+        poolEntries = await api.query.OabArena.GhostOpponents.getEntries();
       }
 
       let candidates = collectGhostCandidates(poolEntries, setId);
@@ -985,9 +985,9 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
         try {
           let archiveEntries: any[] = [];
           try {
-            archiveEntries = await api.query.AutoBattle.GhostArchive.getEntries(setId);
+            archiveEntries = await api.query.OabArena.GhostArchive.getEntries(setId);
           } catch {
-            archiveEntries = await api.query.AutoBattle.GhostArchive.getEntries();
+            archiveEntries = await api.query.OabArena.GhostArchive.getEntries();
           }
           candidates = collectGhostCandidates(archiveEntries, setId);
         } catch {
@@ -1026,16 +1026,16 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
       const cardDataForChain = cardDataCoercer ? cardDataCoercer(cardData) : cardData;
 
       // 1. Submit the card data
-      const cardTx = api.tx.AutoBattle.submit_card({ card_data: cardDataForChain });
-      await submitTx(cardTx, selectedAccount.polkadotSigner, 'AutoBattle.submit_card');
+      const cardTx = api.tx.OabCardRegistry.submit_card({ card_data: cardDataForChain });
+      await submitTx(cardTx, selectedAccount.polkadotSigner, 'OabCardRegistry.submit_card');
 
       // We need to wait for the card to be indexed to get the ID,
       // but for simplicity in this prototype, we'll just fetch next card ID
-      const nextId = await api.query.AutoBattle.NextUserCardId.getValue();
+      const nextId = await api.query.OabCardRegistry.NextUserCardId.getValue();
       const cardId = Number(nextId) - 1;
 
       // 2. Set metadata
-      const metaTx = api.tx.AutoBattle.set_card_metadata({
+      const metaTx = api.tx.OabCardRegistry.set_card_metadata({
         card_id: cardId,
         metadata: {
           name: Binary.fromText(metadata.name),
@@ -1046,7 +1046,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
       await submitTx(
         metaTx,
         selectedAccount.polkadotSigner,
-        `AutoBattle.set_card_metadata(${cardId})`
+        `OabCardRegistry.set_card_metadata(${cardId})`
       );
 
       await get().fetchCards();
@@ -1061,11 +1061,11 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     try {
-      const setTx = api.tx.AutoBattle.create_card_set({
+      const setTx = api.tx.OabCardRegistry.create_card_set({
         cards,
         name: Binary.fromText(name || ''),
       });
-      await submitTx(setTx, selectedAccount.polkadotSigner, 'AutoBattle.create_card_set');
+      await submitTx(setTx, selectedAccount.polkadotSigner, 'OabCardRegistry.create_card_set');
       await get().fetchSets();
     } catch (err) {
       console.error('Create card set failed:', err);

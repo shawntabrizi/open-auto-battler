@@ -69,12 +69,12 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
     set({ isLoadingTournament: true });
     try {
-      const nextId = await api.query.AutoBattle.NextTournamentId.getValue();
+      const nextId = await api.query.OabTournament.NextTournamentId.getValue();
       const blockNumber = useArenaStore.getState().blockNumber ?? 0;
 
       // Scan backwards to find the most recent active or upcoming tournament
       for (let id = Number(nextId) - 1; id >= 0; id--) {
-        const config = await api.query.AutoBattle.Tournaments.getValue(id);
+        const config = await api.query.OabTournament.Tournaments.getValue(id);
         if (!config) continue;
 
         const startBlock = Number(config.start_block);
@@ -82,7 +82,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
         // Active if current block is within range
         if (blockNumber >= startBlock && blockNumber <= endBlock) {
-          const state = await api.query.AutoBattle.TournamentStates.getValue(id);
+          const state = await api.query.OabTournament.TournamentStates.getValue(id);
           set({
             activeTournament: {
               id,
@@ -122,7 +122,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     if (!api || !selectedAccount || !activeTournament) return;
 
     try {
-      const stats = await api.query.AutoBattle.TournamentPlayerStats.getValue(
+      const stats = await api.query.OabTournament.TournamentPlayerStats.getValue(
         activeTournament.id,
         selectedAccount.address
       );
@@ -145,7 +145,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     if (!api) return;
 
     try {
-      const entries = await api.query.AutoBattle.TournamentPlayerStats.getEntries(tournamentId);
+      const entries = await api.query.OabTournament.TournamentPlayerStats.getEntries(tournamentId);
       const stats: LeaderboardEntry[] = entries
         .map((entry: any) => ({
           account: String(entry.keyArgs[1]),
@@ -182,7 +182,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     };
 
     try {
-      const game = await api.query.AutoBattle.ActiveTournamentGame.getValue(
+      const game = await api.query.OabTournament.ActiveTournamentGame.getValue(
         selectedAccount.address
       );
 
@@ -220,10 +220,10 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
         }
 
         // Fetch raw SCALE bytes
-        const gameKey = await api.query.AutoBattle.ActiveTournamentGame.getKey(
+        const gameKey = await api.query.OabTournament.ActiveTournamentGame.getKey(
           selectedAccount.address
         );
-        const cardSetKey = await api.query.AutoBattle.CardSets.getKey(game.set_id);
+        const cardSetKey = await api.query.OabCardRegistry.CardSets.getKey(game.set_id);
 
         const gameRawHex = await client.rawQuery(gameKey);
         const cardSetRawHex = await client.rawQuery(cardSetKey);
@@ -264,8 +264,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     try {
-      const tx = api.tx.AutoBattle.join_tournament({ tournament_id: tournamentId });
-      await submitTx(tx, selectedAccount.polkadotSigner, 'AutoBattle.join_tournament');
+      const tx = api.tx.OabTournament.join_tournament({ tournament_id: tournamentId });
+      await submitTx(tx, selectedAccount.polkadotSigner, 'OabTournament.join_tournament');
       await get().refreshTournamentGameState(true);
     } catch (err) {
       console.error('Join tournament failed:', err);
@@ -283,19 +283,19 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
       // Get commit action from engine and decode via SCALE
       const actionRaw = engine.get_commit_action_scale();
-      const action = codecs.tx.AutoBattle.submit_turn.dec(actionRaw);
+      const action = codecs.tx.OabTournament.submit_tournament_turn.dec(actionRaw);
 
       // Submit tournament turn
-      const tx = api.tx.AutoBattle.submit_tournament_turn(action);
+      const tx = api.tx.OabTournament.submit_tournament_turn(action);
       const txResult = await submitTx(
         tx,
         selectedAccount.polkadotSigner,
-        'AutoBattle.submit_tournament_turn'
+        'OabTournament.submit_tournament_turn'
       );
 
       // Extract BattleReported event
       const battleEvent = txResult.events.find(
-        (e: any) => e.type === 'AutoBattle' && e.value?.type === 'BattleReported'
+        (e: any) => e.type === 'OabTournament' && e.value?.type === 'BattleReported'
       );
 
       if (battleEvent) {
@@ -347,7 +347,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     try {
-      const tx = api.tx.AutoBattle.end_tournament_game({});
+      const tx = api.tx.OabTournament.end_tournament_game({});
       const txResult = await submitTx(
         tx,
         selectedAccount.polkadotSigner,
@@ -356,7 +356,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
       // Extract TournamentGameCompleted event for the wins count
       const completedEvent = txResult.events.find(
-        (e: any) => e.type === 'AutoBattle' && e.value?.type === 'TournamentGameCompleted'
+        (e: any) => e.type === 'OabTournament' && e.value?.type === 'TournamentGameCompleted'
       );
       const wins = completedEvent ? Number(completedEvent.value.value.wins) : 0;
 
@@ -376,8 +376,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     }
 
     try {
-      const tx = api.tx.AutoBattle.abandon_tournament({});
-      await submitTx(tx, selectedAccount.polkadotSigner, 'AutoBattle.abandon_tournament');
+      const tx = api.tx.OabTournament.abandon_tournament({});
+      await submitTx(tx, selectedAccount.polkadotSigner, 'OabTournament.abandon_tournament');
       set({ hasActiveTournamentGame: false });
       useGameStore.getState().resetActiveSessionView();
       await get().fetchPlayerStats();

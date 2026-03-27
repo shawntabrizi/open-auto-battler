@@ -69,7 +69,7 @@ export function StatsPage() {
         let tournamentWins = 0;
         let tournamentPerfectRuns = 0;
         try {
-          const entries = await api.query.AutoBattle.TournamentPlayerStats.getEntries();
+          const entries = await api.query.OabTournament.TournamentPlayerStats.getEntries();
           for (const entry of entries) {
             if (entry.keyArgs[1] === selectedAccount.address) {
               tournamentGames += entry.value.total_games ?? 0;

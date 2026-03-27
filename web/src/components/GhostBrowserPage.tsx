@@ -202,9 +202,9 @@ export function GhostBrowserPage() {
       try {
         let entries: any[] = [];
         try {
-          entries = await api.query.AutoBattle.GhostOpponents.getEntries(selectedSetId);
+          entries = await api.query.OabArena.GhostOpponents.getEntries(selectedSetId);
         } catch {
-          entries = await api.query.AutoBattle.GhostOpponents.getEntries();
+          entries = await api.query.OabArena.GhostOpponents.getEntries();
         }
 
         if (cancelled) return;
