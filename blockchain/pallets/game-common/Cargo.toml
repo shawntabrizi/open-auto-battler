@@ -1,0 +1,21 @@
+[package]
+name = "oab-game-common"
+description = "Shared types and battle logic for Open Auto Battler game-mode pallets."
+version = "0.1.0"
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+edition.workspace = true
+
+[dependencies]
+codec = { features = ["derive"], workspace = true }
+frame = { workspace = true, features = ["experimental", "runtime"], default-features = false }
+scale-info = { features = ["derive"], workspace = true }
+oab-battle = { workspace = true, features = ["bounded"] }
+oab-game = { workspace = true, features = ["bounded"] }
+pallet-oab-card-registry = { workspace = true }
+
+[features]
+default = ["std"]
+std = ["codec/std", "frame/std", "scale-info/std", "oab-battle/std", "oab-game/std", "pallet-oab-card-registry/std"]

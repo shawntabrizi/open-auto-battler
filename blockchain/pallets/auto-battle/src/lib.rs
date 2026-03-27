@@ -44,48 +44,14 @@ pub mod pallet {
     pub struct Pallet<T>(_);
 
     /// Configure the pallet by specifying the parameters and types on which it depends.
+    /// Inherits game engine capabilities (Randomness, CardRegistry, Max* bounds) from GameEngine.
     #[pallet::config]
-    pub trait Config: frame_system::Config {
+    pub trait Config: frame_system::Config + oab_game_common::GameEngine {
         /// Because this pallet emits events, it depends on the runtime's definition of an event.
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         /// Type representing the weight of this pallet
         type WeightInfo: WeightInfo;
-
-        /// Source of randomness
-        type Randomness: Randomness<Self::Hash, BlockNumberFor<Self>>;
-
-        /// Maximum number of cards in the bag
-        #[pallet::constant]
-        type MaxBagSize: Get<u32>;
-
-        /// Maximum number of board slots
-        #[pallet::constant]
-        type MaxBoardSize: Get<u32>;
-
-        /// Maximum number of cards that can be played/burned from hand in one turn.
-        #[pallet::constant]
-        type MaxHandActions: Get<u32>;
-
-        /// Maximum number of abilities per card.
-        #[pallet::constant]
-        type MaxAbilities: Get<u32>;
-
-        /// Maximum length of strings (names, descriptions, template IDs).
-        #[pallet::constant]
-        type MaxStringLen: Get<u32>;
-
-        /// Maximum number of ghost opponents stored per matchmaking bracket.
-        #[pallet::constant]
-        type MaxGhostsPerBracket: Get<u32>;
-
-        /// Maximum number of conditions per ability.
-        #[pallet::constant]
-        type MaxConditions: Get<u32>;
-
-        /// Maximum number of cards in a set.
-        #[pallet::constant]
-        type MaxSetSize: Get<u32>;
 
         /// Currency for tournament entry fees and prize payouts.
         type Currency: fungible::Inspect<Self::AccountId> + fungible::Mutate<Self::AccountId>;
@@ -96,42 +62,40 @@ pub mod pallet {
         /// Pallet ID used to derive the pallet's account for holding tournament funds.
         #[pallet::constant]
         type PalletId: Get<frame::deps::frame_support::PalletId>;
-
-        /// The card registry provider for card/set lookups and achievements.
-        type CardRegistry: pallet_oab_card_registry::CardRegistryProvider<Self::AccountId>;
     }
 
     /// Type alias for the bounded game state using pallet config.
     pub type BoundedGameState<T> = CoreBoundedGameState<
-        <T as Config>::MaxBagSize,
-        <T as Config>::MaxBoardSize,
-        <T as Config>::MaxAbilities,
-        <T as Config>::MaxStringLen,
-        <T as Config>::MaxHandActions,
-        <T as Config>::MaxConditions,
+        <T as oab_game_common::GameEngine>::MaxBagSize,
+        <T as oab_game_common::GameEngine>::MaxBoardSize,
+        <T as oab_game_common::GameEngine>::MaxAbilities,
+        <T as oab_game_common::GameEngine>::MaxStringLen,
+        <T as oab_game_common::GameEngine>::MaxHandActions,
+        <T as oab_game_common::GameEngine>::MaxConditions,
     >;
 
     /// Type alias for the bounded local game state using pallet config.
     pub type BoundedLocalGameState<T> = CoreBoundedLocalGameState<
-        <T as Config>::MaxBagSize,
-        <T as Config>::MaxBoardSize,
-        <T as Config>::MaxHandActions,
+        <T as oab_game_common::GameEngine>::MaxBagSize,
+        <T as oab_game_common::GameEngine>::MaxBoardSize,
+        <T as oab_game_common::GameEngine>::MaxHandActions,
     >;
 
     /// Type alias for the bounded game session using pallet config.
     pub type BoundedGameSession<T> = CoreBoundedGameSession<
-        <T as Config>::MaxBagSize,
-        <T as Config>::MaxBoardSize,
-        <T as Config>::MaxHandActions,
+        <T as oab_game_common::GameEngine>::MaxBagSize,
+        <T as oab_game_common::GameEngine>::MaxBoardSize,
+        <T as oab_game_common::GameEngine>::MaxHandActions,
     >;
 
     /// Type alias for the bounded turn action using pallet config.
     /// MaxHandActions is used as the max number of actions in a turn.
     pub type BoundedCommitTurnAction<T> =
-        CoreBoundedCommitTurnAction<<T as Config>::MaxHandActions>;
+        CoreBoundedCommitTurnAction<<T as oab_game_common::GameEngine>::MaxHandActions>;
 
     /// Type alias for bounded ghost board using pallet config.
-    pub type BoundedGhostBoard<T> = CoreBoundedGhostBoard<<T as Config>::MaxBoardSize>;
+    pub type BoundedGhostBoard<T> =
+        CoreBoundedGhostBoard<<T as oab_game_common::GameEngine>::MaxBoardSize>;
 
     /// Type alias for the balance type from the configured Currency.
     pub type BalanceOf<T> = <<T as Config>::Currency as fungible::Inspect<
@@ -259,7 +223,7 @@ pub mod pallet {
             NMapKey<Blake2_128Concat, i32>, // wins
             NMapKey<Blake2_128Concat, i32>, // lives
         ),
-        BoundedVec<GhostEntry<T>, <T as Config>::MaxGhostsPerBracket>,
+        BoundedVec<GhostEntry<T>, <T as oab_game_common::GameEngine>::MaxGhostsPerBracket>,
         ValueQuery,
     >;
 
@@ -337,7 +301,7 @@ pub mod pallet {
             NMapKey<Blake2_128Concat, i32>, // wins
             NMapKey<Blake2_128Concat, i32>, // lives
         ),
-        BoundedVec<GhostEntry<T>, <T as Config>::MaxGhostsPerBracket>,
+        BoundedVec<GhostEntry<T>, <T as oab_game_common::GameEngine>::MaxGhostsPerBracket>,
         ValueQuery,
     >;
 

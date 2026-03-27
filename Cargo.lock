@@ -1265,6 +1265,7 @@ dependencies = [
  "oab-assets",
  "oab-battle",
  "oab-game",
+ "oab-game-common",
  "pallet-auto-battle",
  "pallet-oab-card-registry",
  "parity-scale-codec",
@@ -7747,6 +7748,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "oab-game-common"
+version = "0.1.0"
+dependencies = [
+ "oab-battle",
+ "oab-game",
+ "pallet-oab-card-registry",
+ "parity-scale-codec",
+ "polkadot-sdk-frame",
+ "scale-info",
+]
+
+[[package]]
 name = "object"
 version = "0.30.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8111,6 +8124,7 @@ dependencies = [
  "oab-assets",
  "oab-battle",
  "oab-game",
+ "oab-game-common",
  "pallet-oab-card-registry",
  "parity-scale-codec",
  "polkadot-sdk 2503.2.0",

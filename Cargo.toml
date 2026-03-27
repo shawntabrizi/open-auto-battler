@@ -8,6 +8,7 @@ members = [
     "client",
     "blockchain/pallets/auto-battle",
     "blockchain/pallets/card-registry",
+    "blockchain/pallets/game-common",
     "blockchain/runtime",
 ]
 
@@ -25,6 +26,7 @@ oab-game = { version = "0.1.0", path = "./game", default-features = false }
 auto-battle-runtime = { path = "./blockchain/runtime", default-features = false }
 pallet-auto-battle = { version = "0.1.0", path = "./blockchain/pallets/auto-battle", default-features = false }
 pallet-oab-card-registry = { version = "0.1.0", path = "./blockchain/pallets/card-registry", default-features = false }
+oab-game-common = { version = "0.1.0", path = "./blockchain/pallets/game-common", default-features = false }
 docify = { version = "0.2.9" }
 log = { version = "0.4.22", default-features = false }
 polkadot-sdk = { version = "2503.0.1", default-features = false }

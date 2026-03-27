@@ -19,6 +19,7 @@ oab-battle = { workspace = true, features = ["bounded"] }
 oab-assets = { workspace = true, features = ["bounded"] }
 oab-game = { workspace = true, features = ["bounded"] }
 pallet-oab-card-registry = { workspace = true }
+oab-game-common = { workspace = true }
 
 [dev-dependencies]
 polkadot-sdk = { workspace = true, features = ["pallet-balances", "std"] }
@@ -26,5 +27,5 @@ polkadot-sdk = { workspace = true, features = ["pallet-balances", "std"] }
 [features]
 default = ["std"]
 runtime-benchmarks = ["frame/runtime-benchmarks"]
-std = ["codec/std", "frame/std", "scale-info/std", "oab-battle/std", "oab-assets/std", "oab-game/std", "pallet-oab-card-registry/std"]
+std = ["codec/std", "frame/std", "scale-info/std", "oab-battle/std", "oab-assets/std", "oab-game/std", "pallet-oab-card-registry/std", "oab-game-common/std"]
 try-runtime = ["frame/try-runtime"]

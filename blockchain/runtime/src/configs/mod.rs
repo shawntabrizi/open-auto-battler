@@ -367,10 +367,9 @@ impl pallet_oab_card_registry::Config for Runtime {
     type MaxSetSize = ConstU32<100>;
 }
 
-impl pallet_auto_battle::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type WeightInfo = pallet_auto_battle::weights::SubstrateWeight<Runtime>;
+impl oab_game_common::GameEngine for Runtime {
     type Randomness = ParentHashRandomness;
+    type CardRegistry = CardRegistry;
     type MaxBagSize = ConstU32<50>;
     type MaxBoardSize = ConstU32<5>;
     type MaxHandActions = ConstU32<10>;
@@ -379,10 +378,14 @@ impl pallet_auto_battle::Config for Runtime {
     type MaxConditions = ConstU32<5>;
     type MaxSetSize = ConstU32<100>;
     type MaxGhostsPerBracket = ConstU32<10>;
+}
+
+impl pallet_auto_battle::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = pallet_auto_battle::weights::SubstrateWeight<Runtime>;
     type Currency = Balances;
     type TournamentOrigin = EnsureRoot<AccountId>;
     type PalletId = AutoBattlePalletId;
-    type CardRegistry = CardRegistry;
 }
 
 parameter_types! {

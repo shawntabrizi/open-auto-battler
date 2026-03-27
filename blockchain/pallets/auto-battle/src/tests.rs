@@ -36,7 +36,10 @@ fn sample_card_data(
 
 fn bounded_ghost_board(
     units: Vec<oab_battle::bounded::GhostBoardUnit>,
-) -> BoundedVec<oab_battle::bounded::GhostBoardUnit, <Test as crate::Config>::MaxBoardSize> {
+) -> BoundedVec<
+    oab_battle::bounded::GhostBoardUnit,
+    <Test as oab_game_common::GameEngine>::MaxBoardSize,
+> {
     BoundedVec::try_from(units).unwrap()
 }
 

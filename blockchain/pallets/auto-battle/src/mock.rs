@@ -86,22 +86,25 @@ frame::deps::frame_support::parameter_types! {
         frame::deps::frame_support::PalletId(*b"autobttl");
 }
 
-impl crate::Config for Test {
-    type RuntimeEvent = RuntimeEvent;
-    type WeightInfo = ();
+impl oab_game_common::GameEngine for Test {
     type Randomness = MockRandomness;
+    type CardRegistry = CardRegistry;
     type MaxBagSize = ConstU32<50>;
     type MaxBoardSize = ConstU32<5>;
     type MaxHandActions = ConstU32<10>;
     type MaxAbilities = ConstU32<5>;
     type MaxStringLen = ConstU32<32>;
     type MaxConditions = ConstU32<5>;
-    type MaxGhostsPerBracket = ConstU32<10>;
     type MaxSetSize = ConstU32<100>;
+    type MaxGhostsPerBracket = ConstU32<10>;
+}
+
+impl crate::Config for Test {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = ();
     type Currency = Balances;
     type TournamentOrigin = frame_system::EnsureRoot<u64>;
     type PalletId = AutoBattlePalletId;
-    type CardRegistry = CardRegistry;
 }
 
 // Build genesis storage according to the mock runtime.
