@@ -56,6 +56,9 @@ function convertEffect(v: any): any {
       } else if (key === 'card_id') {
         // CardId is #[serde(transparent)] — just a number
         result[key] = typeof val === 'number' ? val : Number(val);
+      } else if (key === 'spawn_location') {
+        // SpawnLocation is a simple enum — serde expects a string
+        result[key] = papiEnumStr(val);
       } else {
         result[key] = val;
       }
