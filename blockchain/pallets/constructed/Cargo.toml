@@ -1,0 +1,30 @@
+[package]
+name = "pallet-oab-constructed"
+description = "FRAME pallet for Open Auto Battler constructed (deck-building) game mode."
+version = "0.1.0"
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+edition.workspace = true
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+codec = { features = ["derive"], workspace = true }
+frame = { workspace = true, features = ["experimental", "runtime"], default-features = false }
+scale-info = { features = ["derive"], workspace = true }
+oab-battle = { workspace = true, features = ["bounded"] }
+oab-game = { workspace = true, features = ["bounded"] }
+oab-common = { workspace = true }
+pallet-oab-card-registry = { workspace = true }
+
+[dev-dependencies]
+polkadot-sdk = { workspace = true, features = ["pallet-balances"], default-features = true }
+
+[features]
+default = ["std"]
+runtime-benchmarks = ["frame/runtime-benchmarks"]
+std = ["codec/std", "frame/std", "scale-info/std", "oab-battle/std", "oab-game/std", "oab-common/std", "pallet-oab-card-registry/std"]
+try-runtime = ["frame/try-runtime"]

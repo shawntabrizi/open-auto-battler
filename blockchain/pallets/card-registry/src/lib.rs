@@ -54,6 +54,10 @@ pub trait CardRegistryProvider<AccountId> {
 
     /// Set the achievement bitmap for (player, card_id).
     fn set_achievements(who: &AccountId, card_id: u32, bitmap: u8);
+
+    /// Build a synthetic card set containing every non-token card,
+    /// plus the full card pool. Used by constructed mode.
+    fn get_full_card_pool() -> (CardSet, BTreeMap<CardId, UnitCard>);
 }
 
 #[frame::pallet]
@@ -568,6 +572,28 @@ pub mod pallet {
 
         fn set_achievements(who: &T::AccountId, card_id: u32, bitmap: u8) {
             VictoryAchievements::<T>::insert(who, card_id, bitmap);
+        }
+
+        fn get_full_card_pool() -> (CardSet, BTreeMap<CardId, UnitCard>) {
+            use oab_battle::state::CardSetEntry;
+
+            let next_id = NextUserCardId::<T>::get();
+            let mut entries = alloc::vec::Vec::new();
+            let mut pool = BTreeMap::new();
+
+            for id in 0..next_id {
+                if let Some(user_data) = UserCards::<T>::get(id) {
+                    let card_id = CardId(id);
+                    let unit_card = Self::entry_to_unit_card(card_id, user_data);
+                    // Exclude tokens (play_cost == 0)
+                    if unit_card.economy.play_cost > 0 {
+                        entries.push(CardSetEntry { card_id, rarity: 1 });
+                        pool.insert(card_id, unit_card);
+                    }
+                }
+            }
+
+            (CardSet { cards: entries }, pool)
         }
     }
 

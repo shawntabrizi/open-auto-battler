@@ -10,6 +10,7 @@ members = [
     "blockchain/pallets/common",
     "blockchain/pallets/arena",
     "blockchain/pallets/tournament",
+    "blockchain/pallets/constructed",
     "blockchain/runtime",
 ]
 
@@ -29,6 +30,7 @@ pallet-oab-card-registry = { version = "0.1.0", path = "./blockchain/pallets/car
 oab-common = { version = "0.1.0", path = "./blockchain/pallets/common", default-features = false }
 pallet-oab-arena = { version = "0.1.0", path = "./blockchain/pallets/arena", default-features = false }
 pallet-oab-tournament = { version = "0.1.0", path = "./blockchain/pallets/tournament", default-features = false }
+pallet-oab-constructed = { version = "0.1.0", path = "./blockchain/pallets/constructed", default-features = false }
 docify = { version = "0.2.9" }
 log = { version = "0.4.22", default-features = false }
 polkadot-sdk = { version = "2503.0.1", default-features = false }

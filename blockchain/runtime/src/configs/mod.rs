@@ -393,6 +393,11 @@ impl pallet_oab_tournament::Config for Runtime {
     type PalletId = OabTournamentPalletId;
 }
 
+impl pallet_oab_constructed::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = ();
+}
+
 parameter_types! {
     pub const CollectionDeposit: Balance = 10 * UNIT;
     pub const ItemDeposit: Balance = UNIT / 100;

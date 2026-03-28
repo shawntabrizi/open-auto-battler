@@ -1,8 +1,8 @@
-//! # OAB Arena Pallet
+//! # OAB Constructed Pallet
 //!
-//! FRAME pallet for the Open Auto Battler arena (sealed) game mode.
-//! Players start a sealed game, submit turns each round, and the pallet
-//! manages ghost-opponent matchmaking and achievement tracking.
+//! FRAME pallet for the Open Auto Battler constructed game mode.
+//! Players bring their own 50-card deck (validated on-chain), then play
+//! the standard 10-win / 3-life game loop with ghost opponents.
 //!
 //! Delegates core game logic to [`oab_common`].
 
@@ -23,23 +23,18 @@ pub mod pallet {
 
     use alloc::vec::Vec;
     use frame::prelude::*;
-    use oab_battle::bounded::{GhostBoardUnit, MatchmakingBracket};
-    use oab_battle::{BattleResult, CardSet, CombatUnit};
+    use oab_battle::bounded::MatchmakingBracket;
+    use oab_battle::state::CardSet;
+    use oab_battle::types::CardId;
+    use oab_battle::{BattleResult, CombatUnit};
     use oab_game::GamePhase;
     use pallet_oab_card_registry::CardRegistryProvider;
 
     // ── Type aliases (convenience re-exports from oab_common) ──────
 
-    /// Bounded game session type.
     pub type BoundedGameSession<T> = oab_common::BoundedGameSession<T>;
-
-    /// Bounded local game state type.
     pub type BoundedLocalGameState<T> = oab_common::BoundedLocalGameState<T>;
-
-    /// Bounded commit turn action type.
     pub type BoundedCommitTurnAction<T> = oab_common::BoundedCommitTurnAction<T>;
-
-    /// Bounded ghost board type.
     pub type BoundedGhostBoard<T> = oab_common::BoundedGhostBoard<T>;
 
     // ── Pallet declaration ──────────────────────────────────────────────
@@ -51,14 +46,8 @@ pub mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config + oab_common::GameEngine {
-        /// Because this pallet emits events, it depends on the runtime's definition of an event.
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
-        /// Type representing the weight of this pallet.
         type WeightInfo: WeightInfo;
-
-        /// Origin that can backfill ghost boards (e.g. root or sudo).
-        type AdminOrigin: EnsureOrigin<Self::RuntimeOrigin>;
     }
 
     // ── WeightInfo trait ────────────────────────────────────────────────
@@ -68,12 +57,11 @@ pub mod pallet {
         fn submit_turn() -> Weight;
         fn abandon_game() -> Weight;
         fn end_game() -> Weight;
-        fn backfill_ghost_board() -> Weight;
     }
 
     impl WeightInfo for () {
         fn start_game() -> Weight {
-            Weight::from_parts(100_000_000, 0)
+            Weight::from_parts(150_000_000, 0)
         }
         fn submit_turn() -> Weight {
             Weight::from_parts(400_000_000, 0)
@@ -84,41 +72,21 @@ pub mod pallet {
         fn end_game() -> Weight {
             Weight::from_parts(120_000_000, 0)
         }
-        fn backfill_ghost_board() -> Weight {
-            Weight::from_parts(180_000_000, 0)
-        }
-    }
-
-    // ── Types ───────────────────────────────────────────────────────────
-
-    /// An archived ghost entry with full context for off-chain analysis.
-    /// The bracket is implicit in the storage key.
-    #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
-    #[scale_info(skip_type_params(T))]
-    pub struct GhostArchiveEntry<T: Config> {
-        /// The player who created this ghost board.
-        pub owner: T::AccountId,
-        /// The ghost board data.
-        pub board: BoundedGhostBoard<T>,
-        /// Block number when the ghost was created.
-        pub created_at: BlockNumberFor<T>,
     }
 
     // ── Storage ─────────────────────────────────────────────────────────
 
-    /// Map of active arena games: AccountId -> GameSession.
+    /// Map of active constructed games: AccountId -> GameSession.
     #[pallet::storage]
     pub type ActiveGame<T: Config> =
         StorageMap<_, Blake2_128Concat, T::AccountId, BoundedGameSession<T>, OptionQuery>;
 
-    /// Ghost opponents indexed by matchmaking bracket.
-    /// Key: (set_id, round, wins, lives)
-    /// Value: Vector of ghost entries for that bracket.
+    /// Ghost opponents for constructed mode, indexed by bracket.
+    /// Key: (round, wins, lives) — no set_id since constructed uses the full pool.
     #[pallet::storage]
     pub type GhostOpponents<T: Config> = StorageNMap<
         _,
         (
-            NMapKey<Blake2_128Concat, u32>, // set_id
             NMapKey<Blake2_128Concat, i32>, // round
             NMapKey<Blake2_128Concat, i32>, // wins
             NMapKey<Blake2_128Concat, i32>, // lives
@@ -127,33 +95,12 @@ pub mod pallet {
         ValueQuery,
     >;
 
-    /// Archive of all ghost boards ever created (for off-chain analytics).
-    /// Key: (set_id, round, wins, lives, archive_id)
-    /// Value: Individual ghost archive entry.
-    #[pallet::storage]
-    pub type GhostArchive<T: Config> = StorageNMap<
-        _,
-        (
-            NMapKey<Blake2_128Concat, u32>, // set_id
-            NMapKey<Blake2_128Concat, i32>, // round
-            NMapKey<Blake2_128Concat, i32>, // wins
-            NMapKey<Blake2_128Concat, i32>, // lives
-            NMapKey<Blake2_128Concat, u64>, // archive_id
-        ),
-        GhostArchiveEntry<T>,
-        OptionQuery,
-    >;
-
-    /// Next available ghost archive ID (global counter).
-    #[pallet::storage]
-    pub type NextGhostArchiveId<T: Config> = StorageValue<_, u64, ValueQuery>;
-
     // ── Events ──────────────────────────────────────────────────────────
 
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
-        /// A new arena game has started.
+        /// A new constructed game has started.
         GameStarted { owner: T::AccountId, seed: u64 },
         /// A battle result has been reported.
         BattleReported {
@@ -164,22 +111,14 @@ pub mod pallet {
             battle_seed: u64,
             opponent_board: BoundedGhostBoard<T>,
         },
-        /// An arena game has been abandoned.
+        /// A constructed game has been abandoned.
         GameAbandoned { owner: T::AccountId },
-        /// An arena game has been finalized.
+        /// A constructed game has been finalized.
         GameEnded {
             owner: T::AccountId,
             wins: i32,
             lives: i32,
             round: i32,
-        },
-        /// A ghost board has been backfilled into a matchmaking bracket.
-        GhostBoardBackfilled {
-            set_id: u32,
-            round: i32,
-            wins: i32,
-            lives: i32,
-            pool_size: u32,
         },
     }
 
@@ -195,14 +134,10 @@ pub mod pallet {
         InvalidTurn,
         /// Tried to perform an action in the wrong phase.
         WrongPhase,
-        /// The specified card set does not exist.
+        /// The submitted deck is invalid (wrong size, invalid cards, too many copies).
+        InvalidDeck,
+        /// Card set not found (internal error).
         CardSetNotFound,
-        /// The supplied ghost bracket is invalid.
-        InvalidGhostBracket,
-        /// The supplied ghost board cannot be empty.
-        EmptyGhostBoard,
-        /// A card in the supplied ghost board is not part of the target set.
-        GhostCardNotInSet,
     }
 
     impl<T: Config> From<oab_common::GameError> for Error<T> {
@@ -210,7 +145,7 @@ pub mod pallet {
             match e {
                 oab_common::GameError::CardSetNotFound => Error::<T>::CardSetNotFound,
                 oab_common::GameError::InvalidTurn => Error::<T>::InvalidTurn,
-                oab_common::GameError::InvalidDeck => Error::<T>::InvalidTurn,
+                oab_common::GameError::InvalidDeck => Error::<T>::InvalidDeck,
             }
         }
     }
@@ -219,11 +154,17 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-        /// Start a new arena game session.
-        /// Generates a random seed and initializes the game state with a deterministic bag.
+        /// Start a new constructed game with a user-provided deck.
+        ///
+        /// The deck must contain exactly 50 card IDs. Each card must exist
+        /// in the card registry (no tokens), and no card may appear more than
+        /// 5 times.
         #[pallet::call_index(0)]
         #[pallet::weight(T::WeightInfo::start_game())]
-        pub fn start_game(origin: OriginFor<T>, set_id: u32) -> DispatchResult {
+        pub fn start_game(
+            origin: OriginFor<T>,
+            deck: BoundedVec<u32, T::MaxBagSize>,
+        ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
             ensure!(
@@ -231,14 +172,23 @@ pub mod pallet {
                 Error::<T>::GameAlreadyActive
             );
 
-            let (state, seed) =
-                oab_common::initialize_game_state::<T>(&who, set_id, b"arena_start")
-                    .map_err(|e| -> Error<T> { e.into() })?;
+            // Build a synthetic "full" card set from all cards in the registry
+            // so validate_deck can check every card exists and isn't a token.
+            let (card_set, card_pool) = Self::build_full_card_set();
+
+            let (state, seed) = oab_common::initialize_constructed_game_state::<T>(
+                &who,
+                deck.into_inner(),
+                &card_set,
+                &card_pool,
+                b"constructed_start",
+            )
+            .map_err(|e| -> Error<T> { e.into() })?;
 
             let session = BoundedGameSession::<T> {
                 state,
-                set_id,
-                config: oab_game::sealed::default_config(),
+                set_id: 0,
+                config: oab_game::constructed::default_config(),
             };
 
             ActiveGame::<T>::insert(&who, session);
@@ -268,11 +218,11 @@ pub mod pallet {
                 session.config.clone(),
                 session.state.clone().into(),
                 action,
-                b"arena_battle",
+                b"constructed_battle",
             )
             .map_err(|e| -> Error<T> { e.into() })?;
 
-            // Select ghost from arena pool, fallback to empty board
+            // Select ghost from constructed pool, fallback to empty board
             let enemy_units =
                 Self::select_ghost_opponent(&battle.bracket, &battle.card_set, battle.battle_seed)
                     .unwrap_or_default();
@@ -281,15 +231,17 @@ pub mod pallet {
             let ghost = oab_common::create_ghost_board::<T>(&battle.core_state);
             Self::store_ghost(&who, &battle.bracket, ghost);
 
-            let turn =
-                oab_common::execute_and_advance::<T>(&who, &mut battle, enemy_units, b"arena_shop");
+            let turn = oab_common::execute_and_advance::<T>(
+                &who,
+                &mut battle,
+                enemy_units,
+                b"constructed_shop",
+            );
 
-            // Grant bronze achievements for cards on board if battle was won
             if turn.result == BattleResult::Victory {
                 oab_common::grant_bronze_achievements::<T>(&who, &battle.core_state);
             }
 
-            // If game is over, mark as Completed for end_game to finalize
             if turn.game_over {
                 battle.core_state.phase = GamePhase::Completed;
             }
@@ -310,7 +262,7 @@ pub mod pallet {
             Ok(())
         }
 
-        /// Abandon an active arena game.
+        /// Abandon an active constructed game.
         #[pallet::call_index(2)]
         #[pallet::weight(T::WeightInfo::abandon_game())]
         pub fn abandon_game(origin: OriginFor<T>) -> DispatchResult {
@@ -322,15 +274,13 @@ pub mod pallet {
             );
 
             ActiveGame::<T>::remove(&who);
-
             Self::deposit_event(Event::GameAbandoned { owner: who });
 
             Ok(())
         }
 
-        /// Finalize a completed arena game.
+        /// Finalize a completed constructed game.
         ///
-        /// Must be called after `submit_turn` ends the game (phase == Completed).
         /// Archives the final board as a ghost, grants silver/gold achievements,
         /// and removes the game session.
         #[pallet::call_index(3)]
@@ -344,7 +294,18 @@ pub mod pallet {
                 Error::<T>::WrongPhase
             );
 
-            Self::finalize_arena_game(&who, session.set_id, &session.config, &session.state);
+            // Store ghost and grant achievements
+            let ghost = oab_common::build_ghost_from_state::<T>(&session.state);
+            if !ghost.units.is_empty() {
+                let bracket = MatchmakingBracket {
+                    set_id: 0,
+                    round: session.state.round,
+                    wins: session.state.wins,
+                    lives: session.state.lives,
+                };
+                Self::store_ghost(&who, &bracket, ghost);
+            }
+            oab_common::finalize_game_achievements::<T>(&who, &session.config, &session.state);
 
             ActiveGame::<T>::remove(&who);
 
@@ -357,86 +318,30 @@ pub mod pallet {
 
             Ok(())
         }
-
-        /// Backfill a ghost board into a specific matchmaking bracket.
-        /// Only callable by AdminOrigin (e.g. root/sudo).
-        #[pallet::call_index(4)]
-        #[pallet::weight(T::WeightInfo::backfill_ghost_board())]
-        pub fn backfill_ghost_board(
-            origin: OriginFor<T>,
-            set_id: u32,
-            round: i32,
-            wins: i32,
-            lives: i32,
-            board: BoundedVec<GhostBoardUnit, T::MaxBoardSize>,
-        ) -> DispatchResult {
-            T::AdminOrigin::ensure_origin(origin)?;
-
-            ensure!(
-                round > 0 && wins >= 0 && lives > 0,
-                Error::<T>::InvalidGhostBracket
-            );
-            ensure!(!board.is_empty(), Error::<T>::EmptyGhostBoard);
-
-            let card_set =
-                T::CardRegistry::get_card_set(set_id).ok_or(Error::<T>::CardSetNotFound)?;
-            for unit in board.iter() {
-                ensure!(
-                    card_set
-                        .cards
-                        .iter()
-                        .any(|entry| entry.card_id == unit.card_id),
-                    Error::<T>::GhostCardNotInSet
-                );
-            }
-
-            let bracket = MatchmakingBracket {
-                set_id,
-                round,
-                wins,
-                lives,
-            };
-            let ghost = BoundedGhostBoard::<T> { units: board };
-
-            // Use a fixed zero account as the backfill owner
-            let owner =
-                T::AccountId::decode(&mut frame::traits::TrailingZeroInput::zeroes()).unwrap();
-
-            Self::store_ghost(&owner, &bracket, ghost);
-
-            let pool_size = GhostOpponents::<T>::get((set_id, round, wins, lives)).len() as u32;
-            Self::deposit_event(Event::GhostBoardBackfilled {
-                set_id,
-                round,
-                wins,
-                lives,
-                pool_size,
-            });
-
-            Ok(())
-        }
     }
 
     // ── Helper functions ────────────────────────────────────────────────
 
     impl<T: Config> Pallet<T> {
-        /// Select a ghost opponent from the arena ghost pool.
+        /// Get the full card pool from the card registry.
+        fn build_full_card_set() -> (
+            CardSet,
+            alloc::collections::BTreeMap<CardId, oab_battle::types::UnitCard>,
+        ) {
+            T::CardRegistry::get_full_card_pool()
+        }
+
+        /// Select a ghost opponent from the constructed ghost pool.
         fn select_ghost_opponent(
             bracket: &MatchmakingBracket,
             card_set: &CardSet,
             seed: u64,
         ) -> Option<Vec<CombatUnit>> {
-            let ghosts = GhostOpponents::<T>::get((
-                bracket.set_id,
-                bracket.round,
-                bracket.wins,
-                bracket.lives,
-            ));
+            let ghosts = GhostOpponents::<T>::get((bracket.round, bracket.wins, bracket.lives));
             oab_common::select_ghost_from_pool::<T>(&ghosts, card_set, seed)
         }
 
-        /// Store a ghost board for the given bracket.
-        /// Uses FIFO rotation when at capacity, and archives permanently.
+        /// Store a ghost board in the constructed ghost pool.
         fn store_ghost(
             owner: &T::AccountId,
             bracket: &MatchmakingBracket,
@@ -446,56 +351,9 @@ pub mod pallet {
                 return;
             }
 
-            GhostOpponents::<T>::mutate(
-                (bracket.set_id, bracket.round, bracket.wins, bracket.lives),
-                |ghosts| {
-                    oab_common::push_ghost_to_pool::<T>(ghosts, owner, ghost.clone());
-                },
-            );
-
-            // Archive permanently for off-chain analysis
-            let archive_id = NextGhostArchiveId::<T>::get();
-            let archive_entry = GhostArchiveEntry {
-                owner: owner.clone(),
-                board: ghost,
-                created_at: frame_system::Pallet::<T>::block_number(),
-            };
-            GhostArchive::<T>::insert(
-                (
-                    bracket.set_id,
-                    bracket.round,
-                    bracket.wins,
-                    bracket.lives,
-                    archive_id,
-                ),
-                archive_entry,
-            );
-            NextGhostArchiveId::<T>::put(archive_id.saturating_add(1));
-        }
-
-        /// Finalize a completed arena game: archive the final board as a ghost
-        /// and grant silver/gold achievements.
-        fn finalize_arena_game(
-            who: &T::AccountId,
-            set_id: u32,
-            config: &oab_game::GameConfig,
-            state: &BoundedLocalGameState<T>,
-        ) {
-            // Build ghost board from the session's board and store it
-            let ghost = oab_common::build_ghost_from_state::<T>(state);
-
-            if !ghost.units.is_empty() {
-                let bracket = MatchmakingBracket {
-                    set_id,
-                    round: state.round,
-                    wins: state.wins,
-                    lives: state.lives,
-                };
-                Self::store_ghost(who, &bracket, ghost);
-            }
-
-            // Grant silver/gold achievements
-            oab_common::finalize_game_achievements::<T>(who, config, state);
+            GhostOpponents::<T>::mutate((bracket.round, bracket.wins, bracket.lives), |ghosts| {
+                oab_common::push_ghost_to_pool::<T>(ghosts, owner, ghost);
+            });
         }
     }
 }

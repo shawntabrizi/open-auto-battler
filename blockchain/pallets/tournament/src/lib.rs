@@ -299,6 +299,7 @@ pub mod pallet {
             match e {
                 oab_common::GameError::CardSetNotFound => Error::<T>::CardSetNotFound,
                 oab_common::GameError::InvalidTurn => Error::<T>::InvalidTurn,
+                oab_common::GameError::InvalidDeck => Error::<T>::InvalidTurn,
             }
         }
     }

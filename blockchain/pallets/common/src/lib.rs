@@ -121,6 +121,7 @@ pub struct TurnResult<T: GameEngine> {
 pub enum GameError {
     CardSetNotFound,
     InvalidTurn,
+    InvalidDeck,
 }
 
 // ── Shared functions ─────────────────────────────────────────────────
@@ -240,6 +241,58 @@ pub fn initialize_game_state<T: GameEngine>(
         config.clone(),
         oab_game::LocalGameState {
             bag: create_starting_bag(&card_set, seed, config.bag_size as usize),
+            hand: Vec::new(),
+            board: vec![None; config.board_size as usize],
+            mana_limit: config.mana_limit_for_round(1),
+            shop_mana: 0,
+            round: 1,
+            lives: config.starting_lives,
+            wins: 0,
+            phase: GamePhase::Shop,
+            next_card_id: 1000,
+            game_seed: seed,
+        },
+    );
+
+    state.draw_hand(config.hand_size as usize);
+    apply_shop_start_triggers(&mut state);
+
+    let (_, _, _config, local_state) = state.decompose();
+    Ok((local_state.into(), seed))
+}
+
+/// Initialize a new constructed game state with a user-provided deck.
+///
+/// The deck is validated against the full card pool (no tokens, copy limit,
+/// exact bag size). The card pool is built from ALL cards in the registry.
+pub fn initialize_constructed_game_state<T: GameEngine>(
+    who: &T::AccountId,
+    deck: Vec<u32>,
+    card_set: &CardSet,
+    card_pool: &BTreeMap<CardId, UnitCard>,
+    seed_context: &[u8],
+) -> Result<(BoundedLocalGameState<T>, u64), GameError> {
+    let config = oab_game::constructed::default_config();
+
+    // Validate deck against the card set
+    oab_game::constructed::validate_deck(
+        &deck,
+        card_set,
+        oab_game::constructed::MAX_COPIES_PER_CARD,
+        config.bag_size as usize,
+    )
+    .map_err(|_| GameError::InvalidDeck)?;
+
+    let seed = generate_next_seed::<T>(who, seed_context);
+
+    let bag: Vec<CardId> = deck.into_iter().map(CardId).collect();
+
+    let mut state = GameState::reconstruct(
+        card_pool.clone(),
+        0, // constructed doesn't use a specific set_id
+        config.clone(),
+        oab_game::LocalGameState {
+            bag,
             hand: Vec::new(),
             board: vec![None; config.board_size as usize],
             mana_limit: config.mana_limit_for_round(1),

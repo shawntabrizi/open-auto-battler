@@ -323,6 +323,8 @@ mod runtime {
     pub type OabCardRegistry = pallet_oab_card_registry;
     #[runtime::pallet_index(53)]
     pub type OabTournament = pallet_oab_tournament;
+    #[runtime::pallet_index(54)]
+    pub type OabConstructed = pallet_oab_constructed;
 
     // NFTs
     #[runtime::pallet_index(51)]
