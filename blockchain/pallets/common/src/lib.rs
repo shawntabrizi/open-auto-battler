@@ -369,6 +369,61 @@ pub fn prepare_battle<T: GameEngine>(
     })
 }
 
+/// Like [`prepare_battle`] but takes a pre-built card set and pool directly.
+/// Used by constructed mode where the card pool isn't tied to a specific set_id.
+pub fn prepare_battle_with_pool<T: GameEngine>(
+    who: &T::AccountId,
+    card_set: CardSet,
+    card_pool: BTreeMap<CardId, UnitCard>,
+    config: oab_game::GameConfig,
+    local_state: oab_game::LocalGameState,
+    action: BoundedCommitTurnAction<T>,
+    battle_seed_context: &[u8],
+) -> Result<PreparedBattle, GameError> {
+    let mut core_state = GameState::reconstruct(card_pool, 0, config, local_state);
+
+    let core_action: CommitTurnAction = action.into();
+    verify_and_apply_turn(&mut core_state, &core_action).map_err(|_| GameError::InvalidTurn)?;
+
+    core_state.shop_mana = 0;
+
+    let battle_seed = generate_next_seed::<T>(who, battle_seed_context);
+
+    let mut player_slots = Vec::new();
+    let player_units: Vec<CombatUnit> = core_state
+        .board
+        .iter()
+        .enumerate()
+        .filter_map(|(slot, board_unit)| {
+            let board_unit = board_unit.as_ref()?;
+            player_slots.push(slot);
+            core_state.card_pool.get(&board_unit.card_id).map(|card| {
+                let mut cu = CombatUnit::from_card(card.clone());
+                cu.attack_buff = board_unit.perm_attack;
+                cu.health_buff = board_unit.perm_health;
+                cu.health = cu.health.saturating_add(board_unit.perm_health).max(0);
+                cu
+            })
+        })
+        .collect();
+
+    let bracket = MatchmakingBracket {
+        set_id: 0,
+        round: core_state.round,
+        wins: core_state.wins,
+        lives: core_state.lives,
+    };
+
+    Ok(PreparedBattle {
+        core_state,
+        card_set,
+        player_units,
+        player_slots,
+        bracket,
+        battle_seed,
+    })
+}
+
 /// Execute the battle, apply results, and advance to the next round if not game over.
 pub fn execute_and_advance<T: GameEngine>(
     who: &T::AccountId,

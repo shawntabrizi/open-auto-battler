@@ -212,9 +212,13 @@ pub mod pallet {
                 Error::<T>::WrongPhase
             );
 
-            let mut battle = oab_common::prepare_battle::<T>(
+            // Build full card pool for constructed (not tied to a specific set)
+            let (card_set, card_pool) = Self::build_full_card_set();
+
+            let mut battle = oab_common::prepare_battle_with_pool::<T>(
                 &who,
-                session.set_id,
+                card_set,
+                card_pool,
                 session.config.clone(),
                 session.state.clone().into(),
                 action,

@@ -339,6 +339,14 @@ interface ArenaStore {
   submitCard: (cardData: any, metadata: any) => Promise<void>;
   createCardSet: (cards: { card_id: number; rarity: number }[], name?: string) => Promise<void>;
 
+  // Constructed mode
+  constructedChainState: any;
+  startConstructedGame: (deck: number[]) => Promise<void>;
+  refreshConstructedGameState: (force?: boolean) => Promise<void>;
+  submitConstructedTurnOnChain: () => Promise<void>;
+  endConstructedGame: () => Promise<void>;
+  abandonConstructedGame: () => Promise<void>;
+
   // Auth
   login: () => void;
   logout: () => void;
@@ -447,6 +455,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
 
   // Game state
   chainState: null,
+  constructedChainState: null,
   blockNumber: null,
   isRefreshing: false,
   lastRefresh: 0,
@@ -859,6 +868,167 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
       useGameStore.getState().resetActiveSessionView();
     } catch (err) {
       console.error('Abandon game failed:', err);
+      throw err;
+    }
+  },
+
+  // ── Constructed mode ────────────────────────────────────────────────
+
+  startConstructedGame: async (deck: number[]) => {
+    const { api, selectedAccount } = get();
+    if (!api || !selectedAccount) return;
+
+    try {
+      const tx = api.tx.OabConstructed.start_game({ deck });
+      await submitTx(tx, selectedAccount.polkadotSigner, 'OabConstructed.start_game');
+      await get().refreshConstructedGameState(true);
+    } catch (err) {
+      console.error('Start constructed game failed:', err);
+      throw err;
+    }
+  },
+
+  refreshConstructedGameState: async (_force = false) => {
+    const { api, client, selectedAccount } = get();
+    if (!api || !selectedAccount) return;
+
+    try {
+      const game = await api.query.OabConstructed.ActiveGame.getValue(selectedAccount.address);
+      set({ constructedChainState: game });
+
+      if (game) {
+        const engine = useGameStore.getState().engine;
+        if (engine) {
+          const { allCards } = get();
+          injectCardsIntoEngine(engine, allCards);
+
+          // Fetch raw SCALE bytes for constructed game session
+          const gameKey = await api.query.OabConstructed.ActiveGame.getKey(selectedAccount.address);
+          const gameRawHex = await client.rawQuery(gameKey);
+
+          if (!gameRawHex) {
+            throw new Error('Failed to fetch raw SCALE bytes');
+          }
+
+          const gameRaw = Binary.fromHex(gameRawHex).asBytes();
+
+          // For constructed, we load the full card pool instead of a specific set.
+          // Load all cards into engine and use set 0 as the card set for SCALE decoding.
+          if (typeof engine.load_full_card_pool === 'function') {
+            engine.load_full_card_pool();
+          } else {
+            engine.load_card_set(0);
+          }
+
+          // Get the card set SCALE bytes (set 0) for init_from_scale
+          const cardSetKey = await api.query.OabCardRegistry.CardSets.getKey(0);
+          const cardSetRawHex = await client.rawQuery(cardSetKey);
+
+          if (cardSetRawHex) {
+            const cardSetRaw = Binary.fromHex(cardSetRawHex).asBytes();
+            engine.init_from_scale(gameRaw, cardSetRaw);
+          }
+
+          const view = engine.get_view();
+          const cardSet = engine.get_card_set();
+          const existingNames = useGameStore.getState().cardNameMap;
+
+          useGameStore.setState({
+            view,
+            cardSet,
+            gameStarted: true,
+            isLoading: false,
+            engineReady: true,
+            currentSetId: 0,
+            cardNameMap: Object.keys(existingNames).length > 0 ? existingNames : {},
+          });
+        }
+      } else {
+        set({ constructedChainState: null });
+      }
+    } catch (err) {
+      console.error('Refresh constructed game state failed:', err);
+    }
+  },
+
+  submitConstructedTurnOnChain: async () => {
+    const { api, codecs, selectedAccount } = get();
+    const { engine } = useGameStore.getState();
+    if (!api || !codecs || !selectedAccount || !engine) return;
+
+    try {
+      const playerBoard = engine.get_board();
+      const actionRaw = engine.get_commit_action_scale();
+      const action = codecs.tx.OabConstructed.submit_turn.dec(actionRaw);
+
+      const tx = api.tx.OabConstructed.submit_turn(action);
+      const txResult = await submitTx(tx, selectedAccount.polkadotSigner, 'OabConstructed.submit_turn');
+
+      const battleEvent = txResult.events.find(
+        (e: any) => e.type === 'OabConstructed' && e.value?.type === 'BattleReported'
+      );
+
+      if (battleEvent) {
+        const { battle_seed, opponent_board } = battleEvent.value.value;
+
+        const rawUnits = Array.isArray(opponent_board)
+          ? opponent_board
+          : opponent_board?.units || [];
+        const opponentUnits = rawUnits.map((u: any) => ({
+          card_id: typeof u.card_id === 'number' ? u.card_id : Number(u.card_id?.value ?? u.card_id),
+          perm_attack: typeof u.perm_attack === 'number' ? u.perm_attack : Number(u.perm_attack || 0),
+          perm_health: typeof u.perm_health === 'number' ? u.perm_health : Number(u.perm_health || 0),
+        }));
+
+        const battleOutput = engine.resolve_battle_p2p(
+          playerBoard,
+          opponentUnits,
+          BigInt(battle_seed)
+        );
+
+        useGameStore.setState({
+          battleOutput,
+          selection: null,
+          showBattleOverlay: true,
+          afterBattleCallback: async () => {
+            await get().refreshConstructedGameState(true);
+          },
+        });
+      } else {
+        console.warn('No BattleReported event found');
+        await get().refreshConstructedGameState(true);
+      }
+    } catch (err) {
+      console.error('Submit constructed turn failed:', err);
+    }
+  },
+
+  endConstructedGame: async () => {
+    const { api, selectedAccount } = get();
+    if (!api || !selectedAccount) return;
+
+    try {
+      const tx = api.tx.OabConstructed.end_game({});
+      await submitTx(tx, selectedAccount.polkadotSigner, 'Saving Results');
+      set({ constructedChainState: null });
+    } catch (err) {
+      console.error('End constructed game failed:', err);
+    }
+  },
+
+  abandonConstructedGame: async () => {
+    const { api, selectedAccount } = get();
+    if (!api || !selectedAccount) {
+      throw new Error('Blockchain account is not ready');
+    }
+
+    try {
+      const tx = api.tx.OabConstructed.abandon_game({});
+      await submitTx(tx, selectedAccount.polkadotSigner, 'OabConstructed.abandon_game');
+      set({ constructedChainState: null });
+      useGameStore.getState().resetActiveSessionView();
+    } catch (err) {
+      console.error('Abandon constructed game failed:', err);
       throw err;
     }
   },

@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useConstructedStore } from '../store/constructedStore';
+import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
+import { useIsSubmitting } from '../store/txStore';
 import { useInitGuard } from '../hooks';
 import { CardFan } from './CardFan';
 import { TopBar } from './TopBar';
@@ -10,14 +12,50 @@ import type { CardView } from '../types';
 
 export function ConstructedBattlePage() {
   const { decks, selectedDeckId, loadDecks, loaded } = useConstructedStore();
-  const { engine, initEngine, engineReady, gameStarted, cardSet } = useGameStore();
+  const {
+    isConnected,
+    isConnecting,
+    connect,
+    selectedAccount,
+    constructedChainState,
+    refreshConstructedGameState,
+    startConstructedGame,
+    fetchCards,
+    hydrateGameEngineFromChainData,
+    connectionError,
+  } = useArenaStore();
+  const { engine, initEngine, engineReady, cardSet, gameStarted } = useGameStore();
+  const isSubmitting = useIsSubmitting();
+  const refreshCalled = useRef(false);
 
   useInitGuard(() => {
     void initEngine();
     void loadDecks();
-  }, [initEngine, loadDecks]);
+    if (!isConnected) {
+      void connect();
+    }
+  }, [initEngine, loadDecks, connect, isConnected]);
 
-  // Load full card pool for previews and game start
+  useEffect(() => {
+    if (isConnected) {
+      void fetchCards();
+    }
+  }, [isConnected, fetchCards]);
+
+  useEffect(() => {
+    if (engine && isConnected) {
+      hydrateGameEngineFromChainData();
+    }
+  }, [engine, hydrateGameEngineFromChainData, isConnected]);
+
+  useEffect(() => {
+    if (!engine || !isConnected || !selectedAccount) return;
+    if (refreshCalled.current) return;
+    refreshCalled.current = true;
+    void refreshConstructedGameState();
+  }, [engine, isConnected, selectedAccount, refreshConstructedGameState]);
+
+  // Load full card pool for previews
   useEffect(() => {
     if (engine && !cardSet) {
       try {
@@ -33,8 +71,47 @@ export function ConstructedBattlePage() {
     }
   }, [engine, cardSet]);
 
-  if (gameStarted) {
+  // Active game on chain — go to game page
+  if (constructedChainState || gameStarted) {
     return <Navigate to="/constructed/game" replace />;
+  }
+
+  if (!isConnected) {
+    return (
+      <div className="app-shell min-h-screen min-h-svh text-white flex flex-col">
+        <TopBar backTo="/constructed" backLabel="Constructed" title="Battle" />
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4">
+          <div className="theme-panel w-full max-w-md rounded-3xl border border-base-800 bg-base-900/70 p-6 lg:p-8 text-center">
+            <h1 className="theme-title-text mt-2 text-2xl lg:text-4xl font-black tracking-tight text-transparent bg-clip-text">
+              Blockchain Required
+            </h1>
+            <p className="mt-3 text-sm lg:text-base text-base-300">
+              Constructed battles run on the blockchain. Connect to a node before starting.
+            </p>
+            {connectionError && (
+              <p className="mt-3 rounded-xl theme-error-panel border px-3 py-2 text-xs text-negative">
+                {connectionError}
+              </p>
+            )}
+            <div className="mt-5 flex flex-col gap-3">
+              <button
+                onClick={() => void connect()}
+                disabled={isConnecting}
+                className="theme-button btn-primary rounded-xl px-4 py-3 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:bg-base-700 disabled:text-base-400"
+              >
+                {isConnecting ? 'CONNECTING...' : 'RETRY CONNECTION'}
+              </button>
+              <Link
+                to="/network"
+                className="theme-button theme-surface-button rounded-xl border px-4 py-3 text-sm font-bold transition-colors"
+              >
+                NETWORK SETTINGS
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!loaded || !engineReady) {
@@ -57,23 +134,10 @@ export function ConstructedBattlePage() {
     return unique.slice(0, 5).map((id) => cardLookup.get(id)).filter(Boolean) as CardView[];
   };
 
-  const handleStart = () => {
-    if (!engine || !selectedDeck) return;
-
+  const handleStart = async () => {
+    if (!selectedDeck) return;
     try {
-      if (typeof engine.load_full_card_pool === 'function') {
-        engine.load_full_card_pool();
-      } else {
-        engine.load_card_set(0);
-      }
-      const seed = BigInt(Date.now());
-      engine.new_run_constructed(seed, selectedDeck.cards);
-      useGameStore.setState({
-        view: engine.get_view(),
-        cardSet: engine.get_card_set(),
-        gameStarted: true,
-        isLoading: false,
-      });
+      await startConstructedGame(selectedDeck.cards);
     } catch (err) {
       console.error('Failed to start constructed game:', err);
       toast.error(`Failed to start: ${err}`);
@@ -115,10 +179,11 @@ export function ConstructedBattlePage() {
 
               <div className="flex flex-col gap-3 mt-6 w-full">
                 <button
-                  onClick={handleStart}
-                  className="theme-button btn-primary w-full font-black py-3 lg:py-4 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 uppercase tracking-wider"
+                  onClick={() => void handleStart()}
+                  disabled={isSubmitting}
+                  className="theme-button btn-primary w-full font-black py-3 lg:py-4 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 uppercase tracking-wider disabled:opacity-50"
                 >
-                  Start Battle
+                  {isSubmitting ? 'Starting...' : 'Start Battle'}
                 </button>
                 <Link
                   to="/constructed/decks"
