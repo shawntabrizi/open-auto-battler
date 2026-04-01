@@ -8,7 +8,7 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 
 use crate::state::{GamePhase, GameState};
-use oab_battle::types::*;
+use oab_battle::types::{CardId, IndexValue, ManaValue, RoundValue, StatValue, UnitCard};
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -19,10 +19,10 @@ use serde::{Deserialize, Serialize};
 pub struct CardView {
     pub id: CardId,
     pub name: String,
-    pub attack: i32,
-    pub health: i32,
-    pub play_cost: i32,
-    pub burn_value: i32,
+    pub attack: StatValue,
+    pub health: StatValue,
+    pub play_cost: ManaValue,
+    pub burn_value: ManaValue,
     pub shop_abilities: Vec<oab_battle::types::ShopAbility>,
     pub battle_abilities: Vec<oab_battle::types::Ability>,
 }
@@ -48,10 +48,10 @@ impl From<&UnitCard> for CardView {
 pub struct BoardUnitView {
     pub id: CardId,
     pub name: String,
-    pub attack: i32,
-    pub health: i32,
-    pub play_cost: i32,
-    pub burn_value: i32,
+    pub attack: StatValue,
+    pub health: StatValue,
+    pub play_cost: ManaValue,
+    pub burn_value: ManaValue,
     pub shop_abilities: Vec<oab_battle::types::ShopAbility>,
     pub battle_abilities: Vec<oab_battle::types::Ability>,
 }
@@ -65,19 +65,19 @@ pub struct GameView {
     /// Board slots (None = empty)
     pub board: Vec<Option<BoardUnitView>>,
     /// Current mana (transient, per-turn)
-    pub mana: i32,
+    pub mana: ManaValue,
     /// Maximum mana capacity
-    pub mana_limit: i32,
+    pub mana_limit: ManaValue,
     /// Current round
-    pub round: i32,
+    pub round: RoundValue,
     /// Lives remaining
-    pub lives: i32,
+    pub lives: RoundValue,
     /// Wins accumulated
-    pub wins: i32,
+    pub wins: RoundValue,
     /// Current game phase
     pub phase: String,
     /// Cards remaining in bag (lightweight - use get_full_bag_json for full data)
-    pub bag_count: u32,
+    pub bag_count: IndexValue,
     /// Deterministic seed for shop trigger RNG (needed by bots for local inference)
     pub game_seed: u64,
     /// Whether we can afford each hand card
@@ -90,7 +90,7 @@ impl GameView {
     /// Construct a GameView from state plus transient per-turn data
     pub fn from_state(
         state: &GameState,
-        current_mana: i32,
+        current_mana: ManaValue,
         hand_used: &[bool],
         can_undo: bool,
     ) -> Self {
@@ -150,7 +150,7 @@ impl GameView {
                 GamePhase::Battle => String::from("battle"),
                 GamePhase::Completed => String::from("completed"),
             },
-            bag_count: state.bag.len() as u32,
+            bag_count: state.bag.len() as IndexValue,
             game_seed: state.game_seed,
             can_afford,
             can_undo,

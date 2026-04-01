@@ -4,18 +4,18 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
-  echo "Usage: $0 [--blockchain]"
+  echo "Usage: $0 [--no-chain]"
   echo ""
-  echo "  --blockchain    Start the Substrate node and enable blockchain features"
-  echo "  (default)       Offline mode — no blockchain, no node required"
+  echo "  (default)       Start the Substrate node and enable blockchain features"
+  echo "  --no-chain      Offline mode — no blockchain, no node required"
   exit 0
 }
 
-BLOCKCHAIN=false
+BLOCKCHAIN=true
 
 for arg in "$@"; do
   case $arg in
-    --blockchain) BLOCKCHAIN=true ;;
+    --no-chain) BLOCKCHAIN=false ;;
     --help|-h) usage ;;
     *) echo "Unknown option: $arg"; usage ;;
   esac

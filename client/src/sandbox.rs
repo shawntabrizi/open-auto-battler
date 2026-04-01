@@ -17,7 +17,7 @@ use wasm_bindgen::prelude::*;
 /// Sandbox unit for custom battles
 #[derive(Debug, Clone, Deserialize)]
 pub struct SandboxUnit {
-    pub card_id: u32,
+    pub card_id: u16,
 }
 
 /// Get all available unit templates for sandbox mode

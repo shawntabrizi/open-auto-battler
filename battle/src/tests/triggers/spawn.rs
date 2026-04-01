@@ -385,7 +385,7 @@ fn test_missing_spawn_card_fizzles_without_panic() {
     let spawner = create_dummy_card(1, "BrokenSpawner", 2, 5).with_battle_ability(create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::SpawnUnit {
-            card_id: CardId(999_999),
+            card_id: CardId(65535),
             spawn_location: SpawnLocation::Front,
         },
     ));

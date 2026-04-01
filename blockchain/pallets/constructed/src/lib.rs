@@ -87,9 +87,9 @@ pub mod pallet {
     pub type GhostOpponents<T: Config> = StorageNMap<
         _,
         (
-            NMapKey<Blake2_128Concat, i32>, // round
-            NMapKey<Blake2_128Concat, i32>, // wins
-            NMapKey<Blake2_128Concat, i32>, // lives
+            NMapKey<Blake2_128Concat, u8>, // round
+            NMapKey<Blake2_128Concat, u8>, // wins
+            NMapKey<Blake2_128Concat, u8>, // lives
         ),
         BoundedVec<oab_common::GhostEntry<T>, <T as oab_common::GameEngine>::MaxGhostsPerBracket>,
         ValueQuery,
@@ -105,7 +105,7 @@ pub mod pallet {
         /// A battle result has been reported.
         BattleReported {
             owner: T::AccountId,
-            round: i32,
+            round: u8,
             result: BattleResult,
             new_seed: u64,
             battle_seed: u64,
@@ -116,9 +116,9 @@ pub mod pallet {
         /// A constructed game has been finalized.
         GameEnded {
             owner: T::AccountId,
-            wins: i32,
-            lives: i32,
-            round: i32,
+            wins: u8,
+            lives: u8,
+            round: u8,
         },
     }
 
@@ -163,7 +163,7 @@ pub mod pallet {
         #[pallet::weight(T::WeightInfo::start_game())]
         pub fn start_game(
             origin: OriginFor<T>,
-            deck: BoundedVec<u32, T::MaxBagSize>,
+            deck: BoundedVec<u16, T::MaxBagSize>,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 

@@ -18,7 +18,7 @@ use oab_battle::bounded::{
     BoundedGhostBoard as CoreBoundedGhostBoard, GhostBoardUnit, MatchmakingBracket,
 };
 use oab_battle::rng::BattleRng;
-use oab_battle::types::{CardId, UnitCard};
+use oab_battle::types::{CardId, ManaValue, RoundValue, SetIdValue, StatValue, UnitCard};
 use oab_battle::{
     apply_shop_start_triggers, apply_shop_start_triggers_with_result, resolve_battle,
     verify_and_apply_turn, BattleResult, CardSet, CombatUnit, CommitTurnAction, XorShiftRng,
@@ -109,7 +109,7 @@ pub struct PreparedBattle {
 pub struct TurnResult<T: GameEngine> {
     pub result: BattleResult,
     pub game_over: bool,
-    pub completed_round: i32,
+    pub completed_round: RoundValue,
     pub opponent_ghost: BoundedGhostBoard<T>,
     pub new_seed: u64,
 }
@@ -188,7 +188,7 @@ pub fn create_ghost_board<T: GameEngine>(core_state: &GameState) -> BoundedGhost
 pub fn apply_player_permanent_stat_deltas(
     core_state: &mut GameState,
     player_slots: &[usize],
-    deltas: &BTreeMap<oab_battle::battle::UnitId, (i32, i32)>,
+    deltas: &BTreeMap<oab_battle::battle::UnitId, (StatValue, StatValue)>,
 ) {
     for (unit_id, (attack_delta, health_delta)) in deltas {
         let unit_index = unit_id.raw() as usize;
@@ -226,7 +226,7 @@ pub fn apply_player_permanent_stat_deltas(
 /// Initialize a new game state for a given card set.
 pub fn initialize_game_state<T: GameEngine>(
     who: &T::AccountId,
-    set_id: u32,
+    set_id: SetIdValue,
     seed_context: &[u8],
 ) -> Result<(BoundedLocalGameState<T>, u64), GameError> {
     let card_set = T::CardRegistry::get_card_set(set_id).ok_or(GameError::CardSetNotFound)?;
@@ -267,7 +267,7 @@ pub fn initialize_game_state<T: GameEngine>(
 /// exact bag size). The card pool is built from ALL cards in the registry.
 pub fn initialize_constructed_game_state<T: GameEngine>(
     who: &T::AccountId,
-    deck: Vec<u32>,
+    deck: Vec<u16>,
     card_set: &CardSet,
     card_pool: &BTreeMap<CardId, UnitCard>,
     seed_context: &[u8],
@@ -316,7 +316,7 @@ pub fn initialize_constructed_game_state<T: GameEngine>(
 /// Verify a turn action, extract player board, and prepare for battle.
 pub fn prepare_battle<T: GameEngine>(
     who: &T::AccountId,
-    set_id: u32,
+    set_id: SetIdValue,
     config: oab_game::GameConfig,
     local_state: oab_game::LocalGameState,
     action: BoundedCommitTurnAction<T>,
@@ -458,7 +458,7 @@ pub fn execute_and_advance<T: GameEngine>(
     );
 
     battle.core_state.shop_mana =
-        oab_battle::battle::player_shop_mana_delta_from_events(&events).max(0);
+        oab_battle::battle::player_shop_mana_delta_from_events(&events).max(0) as ManaValue;
     let permanent_deltas = oab_battle::battle::player_permanent_stat_deltas_from_events(&events);
     apply_player_permanent_stat_deltas(
         &mut battle.core_state,
@@ -489,7 +489,7 @@ pub fn execute_and_advance<T: GameEngine>(
     }
 
     let completed_round = battle.core_state.round;
-    let game_over = battle.core_state.lives <= 0
+    let game_over = battle.core_state.lives == 0
         || battle.core_state.wins >= battle.core_state.config.wins_to_victory;
 
     let new_seed = if !game_over {

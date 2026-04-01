@@ -37,11 +37,11 @@ pub fn debug(label: &str, msg: &str) {
 #[inline(always)]
 pub fn state_summary(
     phase: &str,
-    round: i32,
-    mana: i32,
-    mana_limit: i32,
-    lives: i32,
-    wins: i32,
+    round: u8,
+    mana: u8,
+    mana_limit: u8,
+    lives: u8,
+    wins: u8,
     bag_count: usize,
     board_count: usize,
 ) {

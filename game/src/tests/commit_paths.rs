@@ -6,10 +6,10 @@ use oab_battle::types::*;
 fn add_card(
     state: &mut GameState,
     name: &str,
-    attack: i32,
-    health: i32,
-    play_cost: i32,
-    burn_value: i32,
+    attack: StatValue,
+    health: StatValue,
+    play_cost: ManaValue,
+    burn_value: ManaValue,
 ) -> CardId {
     let id = state.generate_card_id();
     let card = UnitCard::new(id, name, attack, health, play_cost, burn_value);

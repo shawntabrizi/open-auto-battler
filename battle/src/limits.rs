@@ -3,17 +3,18 @@
 //! This module provides safeguards against runaway battle computations.
 
 use crate::battle::UnitId;
+use crate::types::LimitValue;
 use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-pub const MAX_RECURSION_DEPTH: u32 = 50;
-pub const MAX_SPAWNS_PER_BATTLE: u32 = 100;
-pub const MAX_TRIGGERS_PER_PHASE: u32 = 200;
-pub const MAX_TRIGGER_DEPTH: u32 = 10;
-pub const MAX_BATTLE_ROUNDS: u32 = 100;
+pub const MAX_RECURSION_DEPTH: LimitValue = 50;
+pub const MAX_SPAWNS_PER_BATTLE: LimitValue = 100;
+pub const MAX_TRIGGERS_PER_PHASE: LimitValue = 200;
+pub const MAX_TRIGGER_DEPTH: LimitValue = 10;
+pub const MAX_BATTLE_ROUNDS: LimitValue = 100;
 
 #[derive(
     Debug,
@@ -40,26 +41,41 @@ pub enum Team {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(tag = "type", content = "payload"))]
 pub enum LimitReason {
-    RoundLimit { current: u32, max: u32 },
-    RecursionLimit { current: u32, max: u32 },
-    SpawnLimit { current: u32, max: u32 },
-    TriggerLimit { current: u32, max: u32 },
-    TriggerDepthLimit { current: u32, max: u32 },
+    RoundLimit {
+        current: LimitValue,
+        max: LimitValue,
+    },
+    RecursionLimit {
+        current: LimitValue,
+        max: LimitValue,
+    },
+    SpawnLimit {
+        current: LimitValue,
+        max: LimitValue,
+    },
+    TriggerLimit {
+        current: LimitValue,
+        max: LimitValue,
+    },
+    TriggerDepthLimit {
+        current: LimitValue,
+        max: LimitValue,
+    },
 }
 
 /// Tracks execution limits to prevent infinite loops and stack overflows
 #[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen)]
 pub struct BattleLimits {
-    pub recursion_depth: u32,
-    pub trigger_depth: u32,
-    pub total_spawns: u32,
-    pub phase_triggers: u32,
-    pub total_rounds: u32,
+    pub recursion_depth: LimitValue,
+    pub trigger_depth: LimitValue,
+    pub total_spawns: LimitValue,
+    pub phase_triggers: LimitValue,
+    pub total_rounds: LimitValue,
     pub current_executing_team: Option<Team>,
     pub limit_exceeded_by: Option<Team>,
     pub limit_exceeded_reason: Option<LimitReason>,
-    pub next_player_index: u32,
-    pub next_enemy_index: u32,
+    pub next_player_index: u16,
+    pub next_enemy_index: u16,
 }
 
 impl BattleLimits {
@@ -96,12 +112,12 @@ impl BattleLimits {
         match team {
             Team::Player => {
                 let id = self.next_player_index;
-                self.next_player_index += 1;
+                self.next_player_index = self.next_player_index.saturating_add(1);
                 UnitId::player(id)
             }
             Team::Enemy => {
                 let id = self.next_enemy_index;
-                self.next_enemy_index += 1;
+                self.next_enemy_index = self.next_enemy_index.saturating_add(1);
                 UnitId::enemy(id)
             }
         }

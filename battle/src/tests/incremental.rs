@@ -11,7 +11,7 @@ use crate::error::GameError;
 use crate::state::ShopState;
 use crate::types::*;
 
-fn make_card(id: u32, name: &str, atk: i32, hp: i32, cost: i32, burn: i32) -> UnitCard {
+fn make_card(id: u16, name: &str, atk: i16, hp: i16, cost: u8, burn: u8) -> UnitCard {
     UnitCard::new(CardId(id), name, atk, hp, cost, burn)
 }
 
@@ -132,7 +132,7 @@ fn play_into_occupied_slot_with_insert_shift() {
 fn play_into_occupied_slot_on_full_board() {
     let mut state = base_state();
     state.shop_mana = 5;
-    for i in 0..5 {
+    for i in 0u16..5 {
         let c = make_card(i + 1, "Occ", 1, 1, 0, 0);
         state.card_pool.insert(c.id, c);
         state.board[i as usize] = Some(BoardUnit::new(CardId(i + 1)));

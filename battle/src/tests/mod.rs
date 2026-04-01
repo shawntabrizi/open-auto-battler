@@ -16,11 +16,11 @@ use alloc::collections::BTreeMap;
 // HELPER FUNCTIONS (Boilerplate Reduction)
 // ==========================================
 
-fn create_dummy_card(id: u32, name: &str, atk: i32, hp: i32) -> UnitCard {
+fn create_dummy_card(id: u16, name: &str, atk: i16, hp: i16) -> UnitCard {
     UnitCard::new(CardId(id), name, atk, hp, 1, 1)
 }
 
-fn create_board_unit(id: u32, name: &str, atk: i32, hp: i32) -> CombatUnit {
+fn create_board_unit(id: u16, name: &str, atk: i16, hp: i16) -> CombatUnit {
     CombatUnit::from_card(create_dummy_card(id, name, atk, hp))
 }
 
@@ -33,7 +33,7 @@ fn create_ability(trigger: AbilityTrigger, effect: AbilityEffect) -> Ability {
     }
 }
 
-fn create_tester_unit(id: u32, name: &str, attack: i32, health: i32) -> CombatUnit {
+fn create_tester_unit(id: u16, name: &str, attack: i16, health: i16) -> CombatUnit {
     let ability = Ability {
         trigger: AbilityTrigger::OnStart,
         effect: AbilityEffect::ModifyStats {
@@ -140,7 +140,7 @@ fn run_battle_with_pool(
     )
 }
 
-fn has_ability_trigger(events: &[CombatEvent], source_id: UnitId, ability_index: u32) -> bool {
+fn has_ability_trigger(events: &[CombatEvent], source_id: UnitId, ability_index: u8) -> bool {
     events.iter().any(|event| {
         matches!(
             event,
@@ -152,7 +152,7 @@ fn has_ability_trigger(events: &[CombatEvent], source_id: UnitId, ability_index:
     })
 }
 
-fn count_ability_triggers(events: &[CombatEvent], source_id: UnitId, ability_index: u32) -> usize {
+fn count_ability_triggers(events: &[CombatEvent], source_id: UnitId, ability_index: u8) -> usize {
     events
         .iter()
         .filter(|event| {
@@ -170,7 +170,7 @@ fn count_ability_triggers(events: &[CombatEvent], source_id: UnitId, ability_ind
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct AbilityTriggerRef {
     source_id: UnitId,
-    ability_index: u32,
+    ability_index: u8,
 }
 
 fn collect_ability_triggers(events: &[CombatEvent]) -> Vec<AbilityTriggerRef> {

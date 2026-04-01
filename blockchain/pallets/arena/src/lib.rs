@@ -24,7 +24,7 @@ pub mod pallet {
     use alloc::vec::Vec;
     use frame::prelude::*;
     use oab_battle::bounded::{GhostBoardUnit, MatchmakingBracket};
-    use oab_battle::{BattleResult, CardSet, CombatUnit};
+    use oab_battle::{BattleResult, CardSet, CombatUnit, RoundValue, SetIdValue};
     use oab_game::GamePhase;
     use pallet_oab_card_registry::CardRegistryProvider;
 
@@ -118,10 +118,10 @@ pub mod pallet {
     pub type GhostOpponents<T: Config> = StorageNMap<
         _,
         (
-            NMapKey<Blake2_128Concat, u32>, // set_id
-            NMapKey<Blake2_128Concat, i32>, // round
-            NMapKey<Blake2_128Concat, i32>, // wins
-            NMapKey<Blake2_128Concat, i32>, // lives
+            NMapKey<Blake2_128Concat, SetIdValue>, // set_id
+            NMapKey<Blake2_128Concat, RoundValue>, // round
+            NMapKey<Blake2_128Concat, RoundValue>, // wins
+            NMapKey<Blake2_128Concat, RoundValue>, // lives
         ),
         BoundedVec<oab_common::GhostEntry<T>, <T as oab_common::GameEngine>::MaxGhostsPerBracket>,
         ValueQuery,
@@ -134,11 +134,11 @@ pub mod pallet {
     pub type GhostArchive<T: Config> = StorageNMap<
         _,
         (
-            NMapKey<Blake2_128Concat, u32>, // set_id
-            NMapKey<Blake2_128Concat, i32>, // round
-            NMapKey<Blake2_128Concat, i32>, // wins
-            NMapKey<Blake2_128Concat, i32>, // lives
-            NMapKey<Blake2_128Concat, u64>, // archive_id
+            NMapKey<Blake2_128Concat, SetIdValue>, // set_id
+            NMapKey<Blake2_128Concat, RoundValue>, // round
+            NMapKey<Blake2_128Concat, RoundValue>, // wins
+            NMapKey<Blake2_128Concat, RoundValue>, // lives
+            NMapKey<Blake2_128Concat, u64>,        // archive_id
         ),
         GhostArchiveEntry<T>,
         OptionQuery,
@@ -158,7 +158,7 @@ pub mod pallet {
         /// A battle result has been reported.
         BattleReported {
             owner: T::AccountId,
-            round: i32,
+            round: RoundValue,
             result: BattleResult,
             new_seed: u64,
             battle_seed: u64,
@@ -169,16 +169,16 @@ pub mod pallet {
         /// An arena game has been finalized.
         GameEnded {
             owner: T::AccountId,
-            wins: i32,
-            lives: i32,
-            round: i32,
+            wins: RoundValue,
+            lives: RoundValue,
+            round: RoundValue,
         },
         /// A ghost board has been backfilled into a matchmaking bracket.
         GhostBoardBackfilled {
-            set_id: u32,
-            round: i32,
-            wins: i32,
-            lives: i32,
+            set_id: SetIdValue,
+            round: RoundValue,
+            wins: RoundValue,
+            lives: RoundValue,
             pool_size: u32,
         },
     }
@@ -223,7 +223,7 @@ pub mod pallet {
         /// Generates a random seed and initializes the game state with a deterministic bag.
         #[pallet::call_index(0)]
         #[pallet::weight(T::WeightInfo::start_game())]
-        pub fn start_game(origin: OriginFor<T>, set_id: u32) -> DispatchResult {
+        pub fn start_game(origin: OriginFor<T>, set_id: SetIdValue) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
             ensure!(
@@ -364,18 +364,15 @@ pub mod pallet {
         #[pallet::weight(T::WeightInfo::backfill_ghost_board())]
         pub fn backfill_ghost_board(
             origin: OriginFor<T>,
-            set_id: u32,
-            round: i32,
-            wins: i32,
-            lives: i32,
+            set_id: SetIdValue,
+            round: RoundValue,
+            wins: RoundValue,
+            lives: RoundValue,
             board: BoundedVec<GhostBoardUnit, T::MaxBoardSize>,
         ) -> DispatchResult {
             T::AdminOrigin::ensure_origin(origin)?;
 
-            ensure!(
-                round > 0 && wins >= 0 && lives > 0,
-                Error::<T>::InvalidGhostBracket
-            );
+            ensure!(round > 0 && lives > 0, Error::<T>::InvalidGhostBracket);
             ensure!(!board.is_empty(), Error::<T>::EmptyGhostBoard);
 
             let card_set =
@@ -477,7 +474,7 @@ pub mod pallet {
         /// and grant silver/gold achievements.
         fn finalize_arena_game(
             who: &T::AccountId,
-            set_id: u32,
+            set_id: SetIdValue,
             config: &oab_game::GameConfig,
             state: &BoundedLocalGameState<T>,
         ) {
