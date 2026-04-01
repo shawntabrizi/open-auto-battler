@@ -215,8 +215,14 @@ export function Arena() {
         // Tap same unit again — deselect
         setSelection(null);
       } else if (selection?.type === 'hand') {
-        // Insert hand card at this occupied slot (engine shifts units)
-        playHandCard(selection.index, index);
+        // If the hand card can't be played (board full or can't afford), just select the board unit
+        const boardFull = unitCount >= 5;
+        if (boardFull || !canPlaceSelectedHand) {
+          setSelection({ type: 'board', index });
+        } else {
+          // Insert hand card at this occupied slot (engine shifts units)
+          playHandCard(selection.index, index);
+        }
       } else {
         // Select this board unit (show abilities); swap only via drag-and-drop
         setSelection({ type: 'board', index });
@@ -224,8 +230,13 @@ export function Arena() {
     } else {
       // Clicked an empty slot
       if (selection?.type === 'hand') {
-        // Place the selected hand card on this slot
-        playHandCard(selection.index, index);
+        if (!canPlaceSelectedHand) {
+          // Can't afford it — just deselect
+          setSelection(null);
+        } else {
+          // Place the selected hand card on this slot
+          playHandCard(selection.index, index);
+        }
       } else if (selection?.type === 'board') {
         // Move selected board unit to empty slot
         swapBoardPositions(selection.index, index);
