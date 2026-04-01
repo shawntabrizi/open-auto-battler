@@ -1,0 +1,11 @@
+[package]
+name = "oab-contract-tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+oab-battle = { path = "../../battle", default-features = true }
+oab-game = { path = "../../game", default-features = true }
+oab-assets = { path = "../../assets", default-features = true }
+parity-scale-codec = { workspace = true, features = ["std", "derive"] }
