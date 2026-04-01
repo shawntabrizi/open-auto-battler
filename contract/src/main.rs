@@ -106,19 +106,19 @@ fn default_config() -> GameConfig {
 
 #[derive(Debug, Clone, Encode, Decode)]
 struct GameConfig {
-    starting_lives: i32,
-    wins_to_victory: i32,
-    starting_mana_limit: i32,
-    max_mana_limit: i32,
+    starting_lives: RoundValue,
+    wins_to_victory: RoundValue,
+    starting_mana_limit: ManaValue,
+    max_mana_limit: ManaValue,
     full_mana_each_round: bool,
-    board_size: u32,
-    hand_size: u32,
-    bag_size: u32,
+    board_size: IndexValue,
+    hand_size: IndexValue,
+    bag_size: IndexValue,
 }
 
 impl GameConfig {
-    fn mana_limit_for_round(&self, round: i32) -> i32 {
-        (self.starting_mana_limit + round - 1).min(self.max_mana_limit)
+    fn mana_limit_for_round(&self, round: RoundValue) -> ManaValue {
+        (self.starting_mana_limit + round.saturating_sub(1)).min(self.max_mana_limit)
     }
 }
 
@@ -127,27 +127,16 @@ impl GameConfig {
 /// The card set is stored in a separate storage key.
 #[derive(Debug, Clone, Encode, Decode)]
 struct ArenaSession {
-    /// Cards remaining in bag
     bag: Vec<CardId>,
-    /// Player's current hand
     hand: Vec<CardId>,
-    /// Board slots (index 0 = front)
     board: Vec<Option<BoardUnit>>,
-    /// Current mana limit
-    mana_limit: i32,
-    /// Available shop mana
-    shop_mana: i32,
-    /// Current round
-    round: i32,
-    /// Lives remaining
-    lives: i32,
-    /// Wins accumulated
-    wins: i32,
-    /// 0 = Shop, 1 = Completed
+    mana_limit: ManaValue,
+    shop_mana: ManaValue,
+    round: RoundValue,
+    lives: RoundValue,
+    wins: RoundValue,
     phase: u8,
-    /// Next unique card ID counter
-    next_card_id: u32,
-    /// Deterministic seed
+    next_card_id: u16,
     game_seed: u64,
 }
 
@@ -212,9 +201,8 @@ fn caller_address() -> [u8; 20] {
 
 // ── Storage helpers ──────────────────────────────────────────────────────────
 
-/// Storage key for a player's game session: keccak256("game" ++ address)
 fn game_storage_key(addr: &[u8; 20]) -> [u8; 32] {
-    let mut key_input = [0u8; 24]; // "game" (4) + address (20)
+    let mut key_input = [0u8; 24];
     key_input[0..4].copy_from_slice(b"game");
     key_input[4..24].copy_from_slice(addr);
     let mut key = [0u8; 32];
@@ -222,7 +210,6 @@ fn game_storage_key(addr: &[u8; 20]) -> [u8; 32] {
     key
 }
 
-/// Storage key for a player's card set: keccak256("cset" ++ address)
 fn card_set_storage_key(addr: &[u8; 20]) -> [u8; 32] {
     let mut key_input = [0u8; 24];
     key_input[0..4].copy_from_slice(b"cset");
@@ -234,10 +221,9 @@ fn card_set_storage_key(addr: &[u8; 20]) -> [u8; 32] {
 
 fn load_session(addr: &[u8; 20]) -> Option<ArenaSession> {
     let key = game_storage_key(addr);
-    let mut buf = [0u8; 16 * 1024]; // 16 KB buffer should be enough for session
+    let mut buf = [0u8; 16 * 1024];
     let mut buf_ref: &mut [u8] = &mut buf;
-    let result = api::get_storage(StorageFlags::empty(), &key, &mut buf_ref);
-    match result {
+    match api::get_storage(StorageFlags::empty(), &key, &mut buf_ref) {
         Ok(()) => ArenaSession::decode(&mut &*buf_ref).ok(),
         Err(_) => None,
     }
@@ -245,19 +231,17 @@ fn load_session(addr: &[u8; 20]) -> Option<ArenaSession> {
 
 fn save_session(addr: &[u8; 20], session: &ArenaSession) {
     let key = game_storage_key(addr);
-    let encoded = session.encode();
-    api::set_storage(StorageFlags::empty(), &key, &encoded);
+    api::set_storage(StorageFlags::empty(), &key, &session.encode());
 }
 
 fn save_card_set(addr: &[u8; 20], card_set: &CardSet) {
     let key = card_set_storage_key(addr);
-    let encoded = card_set.encode();
-    api::set_storage(StorageFlags::empty(), &key, &encoded);
+    api::set_storage(StorageFlags::empty(), &key, &card_set.encode());
 }
 
 fn load_card_set(addr: &[u8; 20]) -> Option<CardSet> {
     let key = card_set_storage_key(addr);
-    let mut buf = [0u8; 2 * 1024]; // card set is ~393 bytes
+    let mut buf = [0u8; 2 * 1024];
     let mut buf_ref: &mut [u8] = &mut buf;
     match api::get_storage(StorageFlags::empty(), &key, &mut buf_ref) {
         Ok(()) => CardSet::decode(&mut &*buf_ref).ok(),
@@ -290,42 +274,37 @@ fn create_starting_bag(set: &CardSet, seed: u64, bag_size: usize) -> Vec<CardId>
     if set.cards.is_empty() {
         return Vec::new();
     }
-
     let mut bag = Vec::with_capacity(bag_size);
     let mut rng = XorShiftRng::seed_from_u64(seed);
-
-    let total_weight: u32 = set.cards.iter().map(|e| e.rarity).sum();
+    let total_weight: u32 = set.cards.iter().map(|e| e.rarity as u32).sum();
     if total_weight == 0 {
         return Vec::new();
     }
-
     for _ in 0..bag_size {
         let mut target = rng.gen_range(total_weight as usize) as u32;
         for entry in &set.cards {
             if entry.rarity == 0 {
                 continue;
             }
-            if target < entry.rarity {
+            if target < entry.rarity as u32 {
                 bag.push(entry.card_id);
                 break;
             }
-            target -= entry.rarity;
+            target -= entry.rarity as u32;
         }
     }
-
     bag
 }
 
 // ── Hand drawing (matches oab_game::state::draw_hand) ────────────────────────
 
-fn derive_hand_indices(bag_len: usize, game_seed: u64, round: i32, hand_size: usize) -> Vec<usize> {
+fn derive_hand_indices(bag_len: usize, game_seed: u64, round: RoundValue, hand_size: usize) -> Vec<usize> {
     if bag_len == 0 {
         return Vec::new();
     }
     let hand_count = hand_size.min(bag_len);
     let seed = game_seed ^ (round as u64);
     let mut rng = XorShiftRng::seed_from_u64(seed);
-
     let mut indices: Vec<usize> = (0..bag_len).collect();
     for i in 0..hand_count {
         let j = i + rng.gen_range(bag_len - i);
@@ -368,44 +347,51 @@ fn derive_seed(addr: &[u8; 20], context: &[u8], nonce: u64) -> u64 {
     u64::from_le_bytes(hash[0..8].try_into().unwrap())
 }
 
+// ── ShopState reconstruction helper ──────────────────────────────────────────
+
+fn make_shop_state(
+    session: &ArenaSession,
+    card_pool: &BTreeMap<CardId, UnitCard>,
+) -> oab_battle::state::ShopState {
+    oab_battle::state::ShopState {
+        card_pool: card_pool.clone(),
+        set_id: 0,
+        hand: session.hand.clone(),
+        board: session.board.clone(),
+        mana_limit: session.mana_limit,
+        shop_mana: session.shop_mana,
+        round: session.round,
+        game_seed: session.game_seed,
+    }
+}
+
+fn sync_from_shop_state(session: &mut ArenaSession, shop: &oab_battle::state::ShopState) {
+    session.hand = shop.hand.clone();
+    session.board = shop.board.clone();
+    session.shop_mana = shop.shop_mana;
+}
+
 // ── Game logic ───────────────────────────────────────────────────────────────
 
 fn handle_start_game(calldata: &[u8]) {
     let addr = caller_address();
-
-    // Must not have an active game
     if load_session(&addr).is_some() {
-        return; // Game already active
+        return;
     }
 
-    // Decode params: (bytes cardSetAndPool, uint64 seedNonce)
-    // cardSetAndPool = SCALE-encoded (CardSet, Vec<UnitCard>)
     if calldata.len() < 4 + 64 {
         return;
     }
     let params = &calldata[4..];
-    let off_data = match read_u256_as_usize(params, 0) {
-        Some(v) => v,
-        None => return,
-    };
-    let seed_nonce = match read_u256_as_u64(params, 32) {
-        Some(v) => v,
-        None => return,
-    };
-    let data_bytes = match read_abi_bytes(params, off_data) {
-        Some(v) => v,
-        None => return,
-    };
+    let off_data = match read_u256_as_usize(params, 0) { Some(v) => v, None => return };
+    let seed_nonce = match read_u256_as_u64(params, 32) { Some(v) => v, None => return };
+    let data_bytes = match read_abi_bytes(params, off_data) { Some(v) => v, None => return };
 
     let (card_set, all_cards): (CardSet, Vec<UnitCard>) =
-        match Decode::decode(&mut &data_bytes[..]) {
-            Ok(v) => v,
-            Err(_) => return,
-        };
+        match Decode::decode(&mut &data_bytes[..]) { Ok(v) => v, Err(_) => return };
 
     let config = default_config();
     let seed = derive_seed(&addr, b"start", seed_nonce);
-
     let bag = create_starting_bag(&card_set, seed, config.bag_size as usize);
 
     let mut session = ArenaSession {
@@ -422,17 +408,15 @@ fn handle_start_game(calldata: &[u8]) {
         game_seed: seed,
     };
 
-    // Draw initial hand
     draw_hand(&mut session, config.hand_size as usize);
-
-    // Apply shop start triggers
     let card_pool = build_card_pool_from_set(&card_set, &all_cards);
-    apply_shop_start_on_session(&mut session, &card_pool);
+    let mut shop = make_shop_state(&session, &card_pool);
+    apply_shop_start_triggers(&mut shop);
+    sync_from_shop_state(&mut session, &shop);
 
     save_session(&addr, &session);
     save_card_set(&addr, &card_set);
 
-    // Return the seed as confirmation
     let mut output = [0u8; 32];
     output[24..32].copy_from_slice(&seed.to_be_bytes());
     api::return_value(ReturnFlags::empty(), &output);
@@ -440,77 +424,35 @@ fn handle_start_game(calldata: &[u8]) {
 
 fn handle_submit_turn(calldata: &[u8]) {
     let addr = caller_address();
-
-    let mut session = match load_session(&addr) {
-        Some(s) => s,
-        None => return, // No active game
-    };
-
+    let mut session = match load_session(&addr) { Some(s) => s, None => return };
     if session.phase != PHASE_SHOP {
-        return; // Wrong phase
+        return;
     }
 
-    // Decode params: (bytes turnAction, bytes enemyAndCards)
-    // turnAction = SCALE-encoded CommitTurnAction
-    // enemyAndCards = SCALE-encoded (Vec<CombatUnit>, Vec<UnitCard>)
     if calldata.len() < 4 + 64 {
         return;
     }
     let params = &calldata[4..];
-    let off_action = match read_u256_as_usize(params, 0) {
-        Some(v) => v,
-        None => return,
-    };
-    let off_enemy = match read_u256_as_usize(params, 32) {
-        Some(v) => v,
-        None => return,
-    };
-    let action_bytes = match read_abi_bytes(params, off_action) {
-        Some(v) => v,
-        None => return,
-    };
-    let enemy_bytes = match read_abi_bytes(params, off_enemy) {
-        Some(v) => v,
-        None => return,
-    };
+    let off_action = match read_u256_as_usize(params, 0) { Some(v) => v, None => return };
+    let off_enemy = match read_u256_as_usize(params, 32) { Some(v) => v, None => return };
+    let action_bytes = match read_abi_bytes(params, off_action) { Some(v) => v, None => return };
+    let enemy_bytes = match read_abi_bytes(params, off_enemy) { Some(v) => v, None => return };
 
-    let action: CommitTurnAction = match Decode::decode(&mut &action_bytes[..]) {
-        Ok(v) => v,
-        Err(_) => return,
-    };
+    let action: CommitTurnAction = match Decode::decode(&mut &action_bytes[..]) { Ok(v) => v, Err(_) => return };
     let (enemy_units, all_cards): (Vec<CombatUnit>, Vec<UnitCard>) =
-        match Decode::decode(&mut &enemy_bytes[..]) {
-            Ok(v) => v,
-            Err(_) => return,
-        };
+        match Decode::decode(&mut &enemy_bytes[..]) { Ok(v) => v, Err(_) => return };
 
-    let card_set = match load_card_set(&addr) {
-        Some(cs) => cs,
-        None => return,
-    };
+    let card_set = match load_card_set(&addr) { Some(cs) => cs, None => return };
     let card_pool = build_card_pool_from_set(&card_set, &all_cards);
     let config = default_config();
 
-    // Reconstruct ShopState for turn verification
-    let mut shop_state = oab_battle::state::ShopState {
-        card_pool: card_pool.clone(),
-        set_id: 0,
-        hand: session.hand.clone(),
-        board: session.board.clone(),
-        mana_limit: session.mana_limit,
-        shop_mana: session.shop_mana,
-        round: session.round,
-        game_seed: session.game_seed,
-    };
-
-    // Verify and apply the turn
+    let mut shop_state = make_shop_state(&session, &card_pool);
     if verify_and_apply_turn(&mut shop_state, &action).is_err() {
-        return; // Invalid turn
+        return;
     }
-
     shop_state.shop_mana = 0;
 
-    // Extract player combat units from board
+    // Extract player combat units
     let mut player_slots = Vec::new();
     let player_units: Vec<CombatUnit> = shop_state
         .board
@@ -529,20 +471,10 @@ fn handle_submit_turn(calldata: &[u8]) {
         })
         .collect();
 
-    // Generate battle seed
     let battle_seed = derive_seed(&addr, b"battle", session.game_seed);
-
-    // Run the battle
     let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-    let events = resolve_battle(
-        player_units,
-        enemy_units,
-        &mut rng,
-        &card_pool,
-        config.board_size as usize,
-    );
+    let events = resolve_battle(player_units, enemy_units, &mut rng, &card_pool, config.board_size as usize);
 
-    // Extract result
     let result = events
         .iter()
         .rev()
@@ -555,10 +487,7 @@ fn handle_submit_turn(calldata: &[u8]) {
         })
         .unwrap_or(BattleResult::Draw);
 
-    // Apply mana delta from battle
-    let mana_delta = oab_battle::battle::player_shop_mana_delta_from_events(&events).max(0);
-
-    // Apply permanent stat deltas
+    let mana_delta: ManaValue = oab_battle::battle::player_shop_mana_delta_from_events(&events).max(0) as ManaValue;
     let permanent_deltas = oab_battle::battle::player_permanent_stat_deltas_from_events(&events);
     for (unit_id, (attack_delta, health_delta)) in &permanent_deltas {
         let unit_index = unit_id.raw() as usize;
@@ -583,7 +512,6 @@ fn handle_submit_turn(calldata: &[u8]) {
         }
     }
 
-    // Update wins/lives
     match result {
         BattleResult::Victory => session.wins += 1,
         BattleResult::Defeat => session.lives -= 1,
@@ -591,37 +519,26 @@ fn handle_submit_turn(calldata: &[u8]) {
     }
 
     let completed_round = session.round;
-    let game_over =
-        session.lives <= 0 || session.wins >= config.wins_to_victory;
+    let game_over = session.lives == 0 || session.wins >= config.wins_to_victory;
 
     if !game_over {
-        // Advance to next round
         let new_seed = derive_seed(&addr, b"shop", session.game_seed);
         session.game_seed = new_seed;
         session.round += 1;
         session.mana_limit = config.mana_limit_for_round(session.round);
-        if config.full_mana_each_round {
-            session.shop_mana = session.mana_limit;
-        } else {
-            session.shop_mana = mana_delta;
-        }
+        session.shop_mana = if config.full_mana_each_round { session.mana_limit } else { mana_delta };
         session.board = shop_state.board;
         session.hand = Vec::new();
-        session.bag = {
-            // Reconstruct bag: unused hand cards return to bag
-            let mut bag = session.bag.clone();
-            bag.extend(shop_state.hand.iter());
-            bag
-        };
+        let mut bag = session.bag.clone();
+        bag.extend(shop_state.hand.iter());
+        session.bag = bag;
         session.phase = PHASE_SHOP;
 
-        // Draw new hand
         draw_hand(&mut session, config.hand_size as usize);
-
-        // Apply shop start triggers for next round
-        apply_shop_start_on_session_with_result(&mut session, &card_pool, Some(result.clone()));
+        let mut shop = make_shop_state(&session, &card_pool);
+        oab_battle::apply_shop_start_triggers_with_result(&mut shop, Some(result.clone()));
+        sync_from_shop_state(&mut session, &shop);
     } else {
-        // Game over
         session.board = shop_state.board;
         session.hand = shop_state.hand;
         session.shop_mana = mana_delta;
@@ -630,28 +547,21 @@ fn handle_submit_turn(calldata: &[u8]) {
 
     save_session(&addr, &session);
 
-    // Return: (uint8 result, int32 wins, int32 lives, int32 round)
     let mut output = [0u8; 128];
-    // result at slot 0
     output[31] = match result {
         BattleResult::Victory => 0,
         BattleResult::Defeat => 1,
         BattleResult::Draw => 2,
     };
-    // wins at slot 1
-    output[60..64].copy_from_slice(&(session.wins as u32).to_be_bytes());
-    // lives at slot 2
-    output[92..96].copy_from_slice(&(session.lives as u32).to_be_bytes());
-    // round at slot 3
-    output[124..128].copy_from_slice(&(completed_round as u32).to_be_bytes());
-
+    output[63] = session.wins;
+    output[95] = session.lives;
+    output[127] = completed_round;
     api::return_value(ReturnFlags::empty(), &output);
 }
 
 fn handle_get_game_state(calldata: &[u8]) {
     let _ = calldata;
     let addr = caller_address();
-
     let session = match load_session(&addr) {
         Some(s) => s,
         None => {
@@ -660,19 +570,13 @@ fn handle_get_game_state(calldata: &[u8]) {
     };
 
     let encoded = session.encode();
-
-    // ABI encode as bytes
     let padded_len = (encoded.len() + 31) / 32 * 32;
     let total = 64 + padded_len;
     let mut output = alloc::vec![0u8; total];
-    // offset to bytes = 32
     output[31] = 32;
-    // length
     let len_bytes = (encoded.len() as u64).to_be_bytes();
     output[56..64].copy_from_slice(&len_bytes);
-    // data
     output[64..64 + encoded.len()].copy_from_slice(&encoded);
-
     api::return_value(ReturnFlags::empty(), &output);
 }
 
@@ -682,50 +586,9 @@ fn handle_abandon_game() {
         return;
     }
     delete_session(&addr);
-    // Return success (1)
     let mut output = [0u8; 32];
     output[31] = 1;
     api::return_value(ReturnFlags::empty(), &output);
-}
-
-// ── Shop trigger helpers ─────────────────────────────────────────────────────
-
-fn apply_shop_start_on_session(session: &mut ArenaSession, card_pool: &BTreeMap<CardId, UnitCard>) {
-    let mut shop_state = oab_battle::state::ShopState {
-        card_pool: card_pool.clone(),
-        set_id: 0,
-        hand: session.hand.clone(),
-        board: session.board.clone(),
-        mana_limit: session.mana_limit,
-        shop_mana: session.shop_mana,
-        round: session.round,
-        game_seed: session.game_seed,
-    };
-    apply_shop_start_triggers(&mut shop_state);
-    session.hand = shop_state.hand;
-    session.board = shop_state.board;
-    session.shop_mana = shop_state.shop_mana;
-}
-
-fn apply_shop_start_on_session_with_result(
-    session: &mut ArenaSession,
-    card_pool: &BTreeMap<CardId, UnitCard>,
-    result: Option<BattleResult>,
-) {
-    let mut shop_state = oab_battle::state::ShopState {
-        card_pool: card_pool.clone(),
-        set_id: 0,
-        hand: session.hand.clone(),
-        board: session.board.clone(),
-        mana_limit: session.mana_limit,
-        shop_mana: session.shop_mana,
-        round: session.round,
-        game_seed: session.game_seed,
-    };
-    oab_battle::apply_shop_start_triggers_with_result(&mut shop_state, result);
-    session.hand = shop_state.hand;
-    session.board = shop_state.board;
-    session.shop_mana = shop_state.shop_mana;
 }
 
 // ── Contract entry points ────────────────────────────────────────────────────
@@ -737,16 +600,12 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-    // Reset bump allocator for each call
     HEAP_POS.store(0, core::sync::atomic::Ordering::Relaxed);
-
     let calldata = read_calldata();
     if calldata.len() < 4 {
         return;
     }
-
     let selector: [u8; 4] = calldata[..4].try_into().unwrap();
-
     match selector {
         START_GAME => handle_start_game(&calldata),
         SUBMIT_TURN => handle_submit_turn(&calldata),
