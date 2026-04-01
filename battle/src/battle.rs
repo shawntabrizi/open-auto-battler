@@ -214,7 +214,8 @@ struct PendingTrigger {
     max_triggers: Option<u32>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Encode, Decode, DecodeWithMemTracking, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct CombatUnit {
     pub instance_id: UnitInstanceId,
     pub team: Team,

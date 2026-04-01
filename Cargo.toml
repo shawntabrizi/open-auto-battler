@@ -13,6 +13,9 @@ members = [
     "blockchain/pallets/constructed",
     "blockchain/runtime",
 ]
+exclude = [
+    "contract",
+]
 
 [workspace.package]
 license = "MIT-0"

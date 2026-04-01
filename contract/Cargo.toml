@@ -1,0 +1,20 @@
+[package]
+name = "oab-contract"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "contract"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+
+[dependencies]
+polkavm-derive = { version = "0.32" }
+uapi = { package = "pallet-revive-uapi", version = "0.11", default-features = false }
+oab-battle = { path = "../battle", default-features = false }
+parity-scale-codec = { version = "3.7", default-features = false }
