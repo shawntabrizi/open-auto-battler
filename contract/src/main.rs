@@ -547,11 +547,13 @@ fn handle_submit_turn(calldata: &[u8]) {
 
     save_session(&addr, &session);
 
-    let mut output = [0u8; 128];
+    // Return: (uint8 result, uint8 wins, uint8 lives, uint8 round, uint64 battleSeed)
+    let mut output = [0u8; 160];
     output[31] = match result { BattleResult::Victory => 0, BattleResult::Defeat => 1, BattleResult::Draw => 2 };
     output[63] = session.wins;
     output[95] = session.lives;
     output[127] = completed_round;
+    output[152..160].copy_from_slice(&battle_seed.to_be_bytes());
     api::return_value(ReturnFlags::empty(), &output);
 }
 
