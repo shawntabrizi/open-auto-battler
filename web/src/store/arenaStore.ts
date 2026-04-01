@@ -21,6 +21,8 @@ import { createCallArgCoercer } from '../utils/papiCoercion';
 import { initEmojiMap } from '../utils/emoji';
 import { submitTx } from '../utils/tx';
 import { useSettingsStore } from './settingsStore';
+import type { GameBackend } from '../backends/types';
+import { createPalletBackend } from '../backends/pallet';
 
 // ============================================================================
 // PAPI-to-serde conversion helpers
@@ -231,69 +233,10 @@ function syncGameStoreWithBlockchainContent(cards: any[], sets: any[]) {
   }
 }
 
-function deriveLocalBattleSeed(
-  blockNumber: number | null,
-  setId: number,
-  round: number,
-  wins: number,
-  lives: number
-): number {
-  const seed = ((blockNumber ?? 1) ^ (setId << 16) ^ (round << 8) ^ (wins << 4) ^ lives) >>> 0;
-  return seed === 0 ? 1 : seed;
-}
-
-function nextXorShift32(seed: number): number {
-  let x = seed >>> 0;
-  if (x === 0) x = 1;
-  x ^= x << 13;
-  x ^= x >>> 17;
-  x ^= x << 5;
-  return x >>> 0;
-}
-
-function bracketDistance(
-  candidate: { round: number; wins: number; lives: number },
-  target: { round: number; wins: number; lives: number }
-): number {
-  return (
-    Math.abs(candidate.round - target.round) * 100 +
-    Math.abs(candidate.wins - target.wins) * 10 +
-    Math.abs(candidate.lives - target.lives) * 5
-  );
-}
-
-function normalizeGhostBoard(ghost: any): any[] {
-  const board = ghost?.board ?? ghost;
-  const rawUnits = Array.isArray(board) ? board : board?.units || [];
-
-  return rawUnits.map((unit: any) => ({
-    card_id:
-      typeof unit.card_id === 'number' ? unit.card_id : Number(unit.card_id?.value ?? unit.card_id),
-    perm_attack:
-      typeof unit.perm_attack === 'number' ? unit.perm_attack : Number(unit.perm_attack || 0),
-    perm_health:
-      typeof unit.perm_health === 'number' ? unit.perm_health : Number(unit.perm_health || 0),
-  }));
-}
-
-function collectGhostCandidates(entries: any[], setId: number) {
-  return entries
-    .map((entry: any) => {
-      const [entrySetId, round, wins, lives] = entry.keyArgs.map((value: any) => Number(value));
-      const ghosts = Array.isArray(entry.value) ? entry.value : entry.value ? [entry.value] : [];
-
-      return {
-        setId: entrySetId,
-        round,
-        wins,
-        lives,
-        ghosts,
-      };
-    })
-    .filter((entry: any) => entry.setId === setId && entry.ghosts.length > 0);
-}
-
 interface ArenaStore {
+  // Backend
+  backend: GameBackend | null;
+
   // Connection state
   client: any;
   api: any;
@@ -431,6 +374,9 @@ export const getDevAccounts = () => {
 };
 
 export const useArenaStore = create<ArenaStore>((set, get) => ({
+  // Backend
+  backend: null,
+
   // Connection state
   client: null,
   api: null,
@@ -469,6 +415,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
       client: null,
       api: null,
       codecs: null,
+      backend: null,
       isConnected: false,
       isConnecting: false,
       isLoggedIn: false,
@@ -593,10 +540,19 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
         }
       }
 
+      const backend = createPalletBackend({
+        getApi: () => get().api,
+        getClient: () => get().client,
+        getCodecs: () => get().codecs,
+        getSelectedAccount: () => get().selectedAccount,
+        getBlockNumber: () => get().blockNumber,
+      });
+
       set({
         client,
         api,
         codecs,
+        backend,
         accounts: allAccounts,
         selectedAccount: allAccounts[0],
         cardDataCoercer,
@@ -661,10 +617,9 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
   },
 
   refreshGameState: async (force = false) => {
-    const { api, client, selectedAccount, isRefreshing, lastRefresh } = get();
-    if (!api || !selectedAccount || isRefreshing) return;
+    const { backend, selectedAccount, isRefreshing, lastRefresh } = get();
+    if (!backend || !selectedAccount || isRefreshing) return;
 
-    // Throttle refreshes unless forced (e.g. 500ms cooldown)
     const now = Date.now();
     if (!force && now - lastRefresh < 500) {
       console.log('Refresh throttled...');
@@ -673,7 +628,6 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
 
     set({ isRefreshing: true, lastRefresh: now });
 
-    // Internal helper to wait for engine to be ready
     const waitForEngine = async (maxRetries = 10): Promise<any> => {
       for (let i = 0; i < maxRetries; i++) {
         const { engine } = useGameStore.getState();
@@ -685,11 +639,10 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
 
     try {
       console.log(`Refreshing game state for ${selectedAccount.address}...`);
-      const game = await api.query.OabArena.ActiveGame.getValue(selectedAccount.address);
-      set({ chainState: game });
+      const gameStateRaw = await backend.getGameState();
+      set({ chainState: gameStateRaw ? true : null }); // truthy if active game exists
 
-      if (game) {
-        // Sync local WASM engine with chain state
+      if (gameStateRaw) {
         const engine = await waitForEngine();
 
         if (engine) {
@@ -698,24 +651,8 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
             const { allCards } = get();
             injectCardsIntoEngine(engine, allCards);
 
-            // 2. Fetch raw SCALE bytes from the blockchain
-            const gameKey = await api.query.OabArena.ActiveGame.getKey(selectedAccount.address);
-            const cardSetKey = await api.query.OabCardRegistry.CardSets.getKey(game.set_id);
+            engine.init_from_scale(gameStateRaw.stateBytes, gameStateRaw.cardSetBytes);
 
-            const gameRawHex = await client.rawQuery(gameKey);
-            const cardSetRawHex = await client.rawQuery(cardSetKey);
-
-            if (!gameRawHex || !cardSetRawHex) {
-              throw new Error('Failed to fetch raw SCALE bytes from chain');
-            }
-
-            const gameRaw = Binary.fromHex(gameRawHex).asBytes();
-            const cardSetRaw = Binary.fromHex(cardSetRawHex).asBytes();
-
-            // 3. Send to WASM via SCALE bridge
-            engine.init_from_scale(gameRaw, cardSetRaw);
-
-            // 4. Receive view and update store
             const view = engine.get_view();
             const cardSet = engine.get_card_set();
 
@@ -724,7 +661,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
             useGameStore.setState({
               view,
               cardSet,
-              currentSetId: Number(game.set_id),
+              currentSetId: view?.set_id ?? 0,
               gameStarted: true,
               cardNameMap: {
                 ...existingNames,
@@ -748,14 +685,11 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
   },
 
   startGame: async (set_id = 0) => {
-    const { api, selectedAccount } = get();
-    if (!api || !selectedAccount) return;
+    const { backend } = get();
+    if (!backend) return;
 
     try {
-      // Start game with selected set_id
-      const tx = api.tx.OabArena.start_game({ set_id });
-
-      await submitTx(tx, selectedAccount.polkadotSigner, `OabArena.start_game(set_id=${set_id})`);
+      await backend.startGame(set_id);
       await get().refreshGameState();
     } catch (err) {
       console.error('Start game failed:', err);
@@ -763,92 +697,56 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
   },
 
   submitTurnOnChain: async () => {
-    const { api, codecs, selectedAccount } = get();
+    const { backend } = get();
     const { engine } = useGameStore.getState();
-    if (!api || !codecs || !selectedAccount || !engine) return;
+    if (!backend || !engine) return;
 
     try {
       // Capture player board BEFORE submitting (chain will modify state)
       const playerBoard = engine.get_board();
 
-      // Get commit action from engine and decode via SCALE
-      const actionRaw = engine.get_commit_action_scale();
-      const action = codecs.tx.OabArena.submit_turn.dec(actionRaw);
+      // Get SCALE-encoded action from engine
+      const actionScale = engine.get_commit_action_scale();
 
-      // Submit the turn - this runs shop actions + battle on-chain
-      const tx = api.tx.OabArena.submit_turn(action);
-      const txResult = await submitTx(tx, selectedAccount.polkadotSigner, 'OabArena.submit_turn');
+      // Submit turn through backend (handles PAPI/contract differences)
+      const turnResult = await backend.submitTurn(actionScale, new Uint8Array());
 
-      // Extract BattleReported event from transaction result
-      // PAPI events: e.type is pallet name, e.value.type is event variant
-      const battleEvent = txResult.events.find(
-        (e: any) => e.type === 'OabArena' && e.value?.type === 'BattleReported'
+      // Replay battle locally with the chain's seed and opponent
+      const battleOutput = engine.resolve_battle_p2p(
+        playerBoard,
+        turnResult.opponentBoard,
+        turnResult.battleSeed
       );
 
-      if (battleEvent) {
-        const { battle_seed, opponent_board, result: chainResult } = battleEvent.value.value;
-
-        // Convert opponent ghost board units to the format resolve_battle_p2p expects
-        // PAPI decodes BoundedGhostBoard as a flat array (not {units: [...]})
-        const rawUnits = Array.isArray(opponent_board)
-          ? opponent_board
-          : opponent_board?.units || [];
-        const opponentUnits = rawUnits.map((u: any) => ({
-          card_id:
-            typeof u.card_id === 'number' ? u.card_id : Number(u.card_id?.value ?? u.card_id),
-          perm_attack:
-            typeof u.perm_attack === 'number' ? u.perm_attack : Number(u.perm_attack || 0),
-          perm_health:
-            typeof u.perm_health === 'number' ? u.perm_health : Number(u.perm_health || 0),
-        }));
-
-        // Replay battle locally with the chain's seed and opponent
-        const battleOutput = engine.resolve_battle_p2p(
-          playerBoard,
-          opponentUnits,
-          BigInt(battle_seed)
-        );
-
-        // Verify local result matches chain result
-        if (battleOutput?.events) {
-          const localEndEvent = battleOutput.events.find((e: any) => e.type === 'BattleEnd');
-          const localResult = localEndEvent?.payload?.result;
-          const chainResultStr =
-            typeof chainResult === 'string'
-              ? chainResult
-              : (chainResult?.type ?? String(chainResult));
-
-          if (localResult && localResult !== chainResultStr) {
-            console.warn(`Battle result mismatch! Chain: ${chainResultStr}, Local: ${localResult}`);
-          }
+      // Verify local result matches chain result
+      if (battleOutput?.events) {
+        const localEndEvent = battleOutput.events.find((e: any) => e.type === 'BattleEnd');
+        const localResult = localEndEvent?.payload?.result;
+        if (localResult && localResult !== turnResult.result) {
+          console.warn(`Battle result mismatch! Chain: ${turnResult.result}, Local: ${localResult}`);
         }
-
-        // Set up blockchain-aware continue: defer refreshGameState to "Continue" click
-        useGameStore.setState({
-          battleOutput,
-          selection: null,
-          showBattleOverlay: true,
-          afterBattleCallback: async () => {
-            await get().refreshGameState(true);
-          },
-        });
-      } else {
-        // No battle event found — fall back to refresh
-        console.warn('No BattleReported event found in tx result');
-        await get().refreshGameState(true);
       }
+
+      // Set up blockchain-aware continue: defer refreshGameState to "Continue" click
+      useGameStore.setState({
+        battleOutput,
+        selection: null,
+        showBattleOverlay: true,
+        afterBattleCallback: async () => {
+          await get().refreshGameState(true);
+        },
+      });
     } catch (err) {
       console.error('Submit turn failed:', err);
     }
   },
 
   endGame: async () => {
-    const { api, selectedAccount } = get();
-    if (!api || !selectedAccount) return;
+    const { backend } = get();
+    if (!backend) return;
 
     try {
-      const tx = api.tx.OabArena.end_game({});
-      await submitTx(tx, selectedAccount.polkadotSigner, 'Saving Results');
+      await backend.endGame();
       set({ chainState: null });
     } catch (err) {
       console.error('End game failed:', err);
@@ -856,14 +754,13 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
   },
 
   abandonGame: async () => {
-    const { api, selectedAccount } = get();
-    if (!api || !selectedAccount) {
-      throw new Error('Blockchain account is not ready');
+    const { backend } = get();
+    if (!backend) {
+      throw new Error('Blockchain backend is not ready');
     }
 
     try {
-      const tx = api.tx.OabArena.abandon_game({});
-      await submitTx(tx, selectedAccount.polkadotSigner, 'OabArena.abandon_game');
+      await backend.abandonGame();
       set({ chainState: null });
       useGameStore.getState().resetActiveSessionView();
     } catch (err) {
@@ -1137,51 +1034,13 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
   },
 
   getLocalBattleOpponent: async (setId, round, wins, lives) => {
-    const { api, blockNumber } = get();
-    if (!api) return null;
+    const { backend } = get();
+    if (!backend) return null;
 
-    const targetBracket = { round, wins, lives };
     try {
-      let poolEntries: any[] = [];
-      try {
-        poolEntries = await api.query.OabArena.GhostOpponents.getEntries(setId);
-      } catch {
-        poolEntries = await api.query.OabArena.GhostOpponents.getEntries();
-      }
-
-      let candidates = collectGhostCandidates(poolEntries, setId);
-
-      if (candidates.length === 0) {
-        try {
-          let archiveEntries: any[] = [];
-          try {
-            archiveEntries = await api.query.OabArena.GhostArchive.getEntries(setId);
-          } catch {
-            archiveEntries = await api.query.OabArena.GhostArchive.getEntries();
-          }
-          candidates = collectGhostCandidates(archiveEntries, setId);
-        } catch {
-          // Ghost archive support is optional for local opponent selection.
-        }
-      }
-
-      const selectedBracket = [...candidates].sort(
-        (a, b) => bracketDistance(a, targetBracket) - bracketDistance(b, targetBracket)
-      )[0];
-
-      if (!selectedBracket) {
-        return null;
-      }
-
-      const seed = deriveLocalBattleSeed(blockNumber, setId, round, wins, lives);
-      const index = nextXorShift32(seed) % selectedBracket.ghosts.length;
-      const board = normalizeGhostBoard(selectedBracket.ghosts[index]);
-
-      if (board.length === 0) {
-        return null;
-      }
-
-      return { board, seed };
+      const result = await backend.getGhostOpponent(setId, round, wins, lives);
+      if (!result) return null;
+      return { board: result.board, seed: Number(result.seed) };
     } catch (err) {
       console.error('Failed to fetch blockchain-controlled local opponent:', err);
       return null;
