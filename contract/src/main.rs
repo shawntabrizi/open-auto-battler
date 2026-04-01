@@ -542,10 +542,6 @@ fn handle_submit_turn(calldata: &[u8]) {
     if verify_and_apply_turn(&mut shop_state, &action).is_err() { return; }
     shop_state.shop_mana = 0;
 
-    // Store player's board as ghost BEFORE battle (so they fight someone else's ghost)
-    let player_ghost = create_ghost_from_board(&shop_state.board);
-    push_ghost(session.set_id, session.round, session.wins, session.lives, player_ghost);
-
     // Extract player combat units
     let mut player_slots = Vec::new();
     let player_units: Vec<CombatUnit> = shop_state.board.iter().enumerate()
@@ -561,9 +557,13 @@ fn handle_submit_turn(calldata: &[u8]) {
             })
         }).collect();
 
-    // Select ghost opponent from the pool (fallback to empty board = easy win)
+    // Select ghost opponent BEFORE storing player's board (prevents self-matching)
     let battle_seed = derive_seed(&addr, b"battle", session.game_seed);
     let enemy_units = select_ghost(session.set_id, session.round, session.wins, session.lives, battle_seed, &card_pool);
+
+    // Now store player's board as ghost for future opponents
+    let player_ghost = create_ghost_from_board(&shop_state.board);
+    push_ghost(session.set_id, session.round, session.wins, session.lives, player_ghost);
 
     let mut rng = XorShiftRng::seed_from_u64(battle_seed);
     let events = resolve_battle(player_units, enemy_units, &mut rng, &card_pool, config.board_size as usize);
