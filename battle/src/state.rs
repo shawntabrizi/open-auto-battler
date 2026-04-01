@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
-use crate::types::*;
+use crate::types::{BoardUnit, CardId, ManaValue, RarityValue, RoundValue, SetIdValue, UnitCard};
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct CardSetEntry {
     pub card_id: CardId,
-    pub rarity: u32,
+    pub rarity: RarityValue,
 }
 
 /// A set of cards available for a game
@@ -43,17 +43,17 @@ pub struct ShopState {
     /// Global pool of all card definitions
     pub card_pool: BTreeMap<CardId, UnitCard>,
     /// Set ID used for this game
-    pub set_id: u32,
+    pub set_id: SetIdValue,
     /// Player's current hand for the shop phase
     pub hand: Vec<CardId>,
     /// Units on the player's board (index 0 is front)
     pub board: Vec<Option<BoardUnit>>,
     /// Maximum mana that can be held
-    pub mana_limit: i32,
+    pub mana_limit: ManaValue,
     /// Current mana available during the shop turn
-    pub shop_mana: i32,
+    pub shop_mana: ManaValue,
     /// Current round number (1-indexed, used for deterministic shop RNG)
-    pub round: i32,
+    pub round: RoundValue,
     /// Seed for deterministic shop trigger RNG
     pub game_seed: u64,
 }

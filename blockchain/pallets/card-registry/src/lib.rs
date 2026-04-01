@@ -33,27 +33,27 @@ pub trait CardConfig: frame::deps::frame_system::Config {
 /// Implemented by this pallet, consumed by game-mode pallets.
 pub trait CardRegistryProvider<AccountId> {
     /// Get a card set by ID. Returns None if the set doesn't exist.
-    fn get_card_set(set_id: u32) -> Option<CardSet>;
+    fn get_card_set(set_id: u16) -> Option<CardSet>;
 
     /// Check whether a card set exists.
-    fn card_set_exists(set_id: u32) -> bool;
+    fn card_set_exists(set_id: u16) -> bool;
 
     /// Build a card pool (CardId -> UnitCard) from a CardSet.
     /// Looks up each card's data from storage.
     fn get_card_pool(card_set: &CardSet) -> BTreeMap<CardId, UnitCard>;
 
     /// Get the creator of a card set.
-    fn get_set_creator(set_id: u32) -> Option<AccountId>;
+    fn get_set_creator(set_id: u16) -> Option<AccountId>;
 
     /// Count how many cards in a set were created by `who`.
     /// Returns (cards_by_who, total_cards_in_set).
-    fn count_cards_created_by(set_id: u32, who: &AccountId) -> (u32, u32);
+    fn count_cards_created_by(set_id: u16, who: &AccountId) -> (u32, u32);
 
     /// Read the current achievement bitmap for (player, card_id).
-    fn get_achievements(who: &AccountId, card_id: u32) -> u8;
+    fn get_achievements(who: &AccountId, card_id: u16) -> u8;
 
     /// Set the achievement bitmap for (player, card_id).
-    fn set_achievements(who: &AccountId, card_id: u32, bitmap: u8);
+    fn set_achievements(who: &AccountId, card_id: u16, bitmap: u8);
 
     /// Build a synthetic card set containing every non-token card,
     /// plus the full card pool. Used by constructed mode.
@@ -203,8 +203,8 @@ pub mod pallet {
         Eq,
     )]
     pub struct CardSetEntryInput {
-        pub card_id: u32,
-        pub rarity: u32,
+        pub card_id: u16,
+        pub rarity: u8,
     }
 
     /// Achievement bitmap flags.
@@ -216,35 +216,35 @@ pub mod pallet {
 
     #[pallet::storage]
     pub type UserCards<T: Config> =
-        StorageMap<_, Blake2_128Concat, u32, UserCardData<T>, OptionQuery>;
+        StorageMap<_, Blake2_128Concat, u16, UserCardData<T>, OptionQuery>;
 
     #[pallet::storage]
     pub type CardSets<T: Config> =
-        StorageMap<_, Blake2_128Concat, u32, BoundedCardSet<T>, OptionQuery>;
+        StorageMap<_, Blake2_128Concat, u16, BoundedCardSet<T>, OptionQuery>;
 
     #[pallet::storage]
-    pub type NextUserCardId<T: Config> = StorageValue<_, u32, ValueQuery>;
+    pub type NextUserCardId<T: Config> = StorageValue<_, u16, ValueQuery>;
 
     #[pallet::storage]
-    pub type NextSetId<T: Config> = StorageValue<_, u32, ValueQuery>;
+    pub type NextSetId<T: Config> = StorageValue<_, u16, ValueQuery>;
 
     #[pallet::storage]
-    pub type UserCardHashes<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, u32, OptionQuery>;
+    pub type UserCardHashes<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, u16, OptionQuery>;
 
     #[pallet::storage]
-    pub type CardSetHashes<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, u32, OptionQuery>;
+    pub type CardSetHashes<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, u16, OptionQuery>;
 
     #[pallet::storage]
     pub type CardMetadataStore<T: Config> =
-        StorageMap<_, Blake2_128Concat, u32, CardMetadataEntry<T>, OptionQuery>;
+        StorageMap<_, Blake2_128Concat, u16, CardMetadataEntry<T>, OptionQuery>;
 
     #[pallet::storage]
     pub type CardSetMetadataStore<T: Config> =
-        StorageMap<_, Blake2_128Concat, u32, SetMetadata<T>, OptionQuery>;
+        StorageMap<_, Blake2_128Concat, u16, SetMetadata<T>, OptionQuery>;
 
     #[pallet::storage]
     pub type VictoryAchievements<T: Config> =
-        StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, u32, u8, ValueQuery>;
+        StorageDoubleMap<_, Blake2_128Concat, T::AccountId, Blake2_128Concat, u16, u8, ValueQuery>;
 
     // ── Events ───────────────────────────────────────────────────────────
 
@@ -253,20 +253,20 @@ pub mod pallet {
     pub enum Event<T: Config> {
         CardSubmitted {
             creator: T::AccountId,
-            card_id: u32,
+            card_id: u16,
             card_hash: T::Hash,
         },
         CardMetadataUpdated {
             creator: T::AccountId,
-            card_id: u32,
+            card_id: u16,
         },
         SetCreated {
             creator: T::AccountId,
-            set_id: u32,
+            set_id: u16,
         },
         SetMetadataUpdated {
             updater: T::AccountId,
-            set_id: u32,
+            set_id: u16,
         },
     }
 
@@ -348,10 +348,10 @@ pub mod pallet {
             for (i, card_set) in sets.into_iter().enumerate() {
                 let bounded = BoundedCardSet::<T>::from(card_set);
                 let set_hash = T::Hashing::hash_of(&bounded);
-                CardSetHashes::<T>::insert(set_hash, i as u32);
-                CardSets::<T>::insert(i as u32, bounded);
+                CardSetHashes::<T>::insert(set_hash, i as u16);
+                CardSets::<T>::insert(i as u16, bounded);
             }
-            NextSetId::<T>::put(num_sets as u32);
+            NextSetId::<T>::put(num_sets as u16);
 
             // Store set metadata
             for set_meta in set_metas {
@@ -359,7 +359,7 @@ pub mod pallet {
                     name: BoundedVec::truncate_from(set_meta.name.as_bytes().to_vec()),
                     creator: default_creator.clone(),
                 };
-                CardSetMetadataStore::<T>::insert(set_meta.id, metadata);
+                CardSetMetadataStore::<T>::insert(set_meta.id as u16, metadata);
             }
         }
     }
@@ -412,7 +412,7 @@ pub mod pallet {
         #[pallet::weight(T::WeightInfo::set_card_metadata())]
         pub fn set_card_metadata(
             origin: OriginFor<T>,
-            card_id: u32,
+            card_id: u16,
             metadata: CardMetadata<T>,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
@@ -451,7 +451,7 @@ pub mod pallet {
             let mut total_rarity: u32 = 0;
             for entry in &cards {
                 total_rarity = total_rarity
-                    .checked_add(entry.rarity)
+                    .checked_add(entry.rarity as u32)
                     .ok_or(Error::<T>::RarityOverflow)?;
             }
             ensure!(total_rarity > 0, Error::<T>::InvalidRarity);
@@ -499,7 +499,7 @@ pub mod pallet {
         #[pallet::weight(T::WeightInfo::set_set_metadata())]
         pub fn set_set_metadata(
             origin: OriginFor<T>,
-            set_id: u32,
+            set_id: u16,
             name: BoundedVec<u8, T::MaxStringLen>,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
@@ -525,11 +525,11 @@ pub mod pallet {
     // ── Trait Implementation ─────────────────────────────────────────────
 
     impl<T: Config> CardRegistryProvider<T::AccountId> for Pallet<T> {
-        fn get_card_set(set_id: u32) -> Option<CardSet> {
+        fn get_card_set(set_id: u16) -> Option<CardSet> {
             CardSets::<T>::get(set_id).map(|bounded| bounded.into())
         }
 
-        fn card_set_exists(set_id: u32) -> bool {
+        fn card_set_exists(set_id: u16) -> bool {
             CardSets::<T>::contains_key(set_id)
         }
 
@@ -546,11 +546,11 @@ pub mod pallet {
             pool
         }
 
-        fn get_set_creator(set_id: u32) -> Option<T::AccountId> {
+        fn get_set_creator(set_id: u16) -> Option<T::AccountId> {
             CardSetMetadataStore::<T>::get(set_id).map(|meta| meta.creator)
         }
 
-        fn count_cards_created_by(set_id: u32, who: &T::AccountId) -> (u32, u32) {
+        fn count_cards_created_by(set_id: u16, who: &T::AccountId) -> (u32, u32) {
             let Some(card_set) = CardSets::<T>::get(set_id) else {
                 return (0, 0);
             };
@@ -566,11 +566,11 @@ pub mod pallet {
             (mine, total)
         }
 
-        fn get_achievements(who: &T::AccountId, card_id: u32) -> u8 {
+        fn get_achievements(who: &T::AccountId, card_id: u16) -> u8 {
             VictoryAchievements::<T>::get(who, card_id)
         }
 
-        fn set_achievements(who: &T::AccountId, card_id: u32, bitmap: u8) {
+        fn set_achievements(who: &T::AccountId, card_id: u16, bitmap: u8) {
             VictoryAchievements::<T>::insert(who, card_id, bitmap);
         }
 

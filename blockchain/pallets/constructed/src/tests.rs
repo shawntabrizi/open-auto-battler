@@ -5,11 +5,11 @@ use oab_game::GamePhase;
 
 /// Build a valid 50-card deck from genesis cards.
 /// Uses cards 1-10, 5 copies each = 50 total.
-fn valid_deck() -> Vec<u32> {
-    (0..50).map(|i| (i % 10) as u32 + 1).collect()
+fn valid_deck() -> Vec<u16> {
+    (0..50).map(|i| (i % 10) as u16 + 1).collect()
 }
 
-fn bounded_deck(deck: Vec<u32>) -> BoundedVec<u32, <Test as oab_common::GameEngine>::MaxBagSize> {
+fn bounded_deck(deck: Vec<u16>) -> BoundedVec<u16, <Test as oab_common::GameEngine>::MaxBagSize> {
     BoundedVec::try_from(deck).unwrap()
 }
 
@@ -20,7 +20,7 @@ fn bounded_ghost_board(
     BoundedVec::try_from(units).unwrap()
 }
 
-fn ghost_unit(card_id: u32) -> oab_battle::bounded::GhostBoardUnit {
+fn ghost_unit(card_id: u16) -> oab_battle::bounded::GhostBoardUnit {
     oab_battle::bounded::GhostBoardUnit {
         card_id: oab_battle::types::CardId(card_id),
         perm_attack: 0,
@@ -29,7 +29,7 @@ fn ghost_unit(card_id: u32) -> oab_battle::bounded::GhostBoardUnit {
 }
 
 /// Insert a ghost opponent directly into constructed ghost storage for a given bracket.
-fn seed_ghost(round: i32, wins: i32, lives: i32) {
+fn seed_ghost(round: u8, wins: u8, lives: u8) {
     let board = oab_common::BoundedGhostBoard::<Test> {
         units: BoundedVec::try_from(vec![ghost_unit(1)]).unwrap(),
     };
@@ -85,7 +85,7 @@ fn test_cannot_start_two_games() {
 fn test_reject_wrong_size_deck() {
     new_test_ext().execute_with(|| {
         // 49 cards — too few
-        let short_deck: Vec<u32> = (0..49).map(|i| (i % 10) as u32 + 1).collect();
+        let short_deck: Vec<u16> = (0..49).map(|i| (i % 10) as u16 + 1).collect();
         assert_noop!(
             Constructed::start_game(RuntimeOrigin::signed(1), bounded_deck(short_deck)),
             Error::<Test>::InvalidDeck
@@ -97,7 +97,7 @@ fn test_reject_wrong_size_deck() {
 fn test_reject_too_many_copies() {
     new_test_ext().execute_with(|| {
         // 50 copies of card 1 — exceeds MAX_COPIES_PER_CARD (5)
-        let bad_deck: Vec<u32> = vec![1u32; 50];
+        let bad_deck: Vec<u16> = vec![1u16; 50];
         assert_noop!(
             Constructed::start_game(RuntimeOrigin::signed(1), bounded_deck(bad_deck)),
             Error::<Test>::InvalidDeck
@@ -294,7 +294,7 @@ fn test_end_game_grants_achievements() {
 
         // Check achievements were granted (silver + gold for perfect 10-win run)
         let achievements =
-            pallet_oab_card_registry::pallet::VictoryAchievements::<Test>::get(account_id, 1u32);
+            pallet_oab_card_registry::pallet::VictoryAchievements::<Test>::get(account_id, 1u16);
         assert!(
             achievements & pallet_oab_card_registry::pallet::ACHIEVEMENT_SILVER != 0,
             "Silver achievement should be granted"
@@ -325,7 +325,7 @@ fn test_ghost_stored_after_submit_turn() {
 
         // Ghost pool should have at least one entry
         // The bracket depends on the game state, but round=1 is where we started
-        let ghosts = crate::GhostOpponents::<Test>::get((1i32, 0i32, 3i32));
+        let ghosts = crate::GhostOpponents::<Test>::get((1u8, 0u8, 3u8));
         // With empty board, ghost has no units so it won't be stored
         // But the turn was processed successfully
         assert!(ActiveGame::<Test>::get(account_id).is_some() || true);

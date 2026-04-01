@@ -40,7 +40,7 @@ pub struct BattleOutput {
     pub events: Vec<CombatEvent>,
     pub initial_player_units: Vec<UnitView>,
     pub initial_enemy_units: Vec<UnitView>,
-    pub round: u32, // The round this battle was for (for display during animation)
+    pub round: u8, // The round this battle was for (for display during animation)
 }
 
 /// Snapshot of turn state for undo functionality
@@ -55,16 +55,16 @@ struct TurnSnapshot {
 #[wasm_bindgen]
 pub struct GameEngine {
     state: GameState,
-    set_id: u32,
+    set_id: u16,
     card_set: Option<CardSet>, // Loaded card set for bag generation
     last_battle_output: Option<BattleOutput>,
     // Per-turn local tracking (transient, not persisted)
     shop_ctx: ShopTurnContext,   // canonical incremental shop context
     action_log: Vec<TurnAction>, // Ordered list of actions taken this turn
     start_board: Vec<Option<BoardUnit>>, // board state at the start of the turn
-    start_shop_mana: i32,        // mana state at the start of the turn
+    start_shop_mana: u8,         // mana state at the start of the turn
     undo_history: Vec<TurnSnapshot>, // Stack of snapshots for undo
-    custom_sets: std::collections::HashMap<u32, CardSet>, // Blockchain sets injected via add_set
+    custom_sets: std::collections::HashMap<u16, CardSet>, // Blockchain sets injected via add_set
 }
 
 #[wasm_bindgen]
@@ -116,7 +116,7 @@ impl GameEngine {
     /// Load cards and sets from statically compiled card data.
     /// Must be called before new_run() or init_from_scale().
     #[wasm_bindgen]
-    pub fn load_card_set(&mut self, set_id: u32) -> Result<(), String> {
+    pub fn load_card_set(&mut self, set_id: u16) -> Result<(), String> {
         log::action(
             "load_card_set",
             &format!("Loading cards for set_id={}", set_id),
@@ -186,7 +186,7 @@ impl GameEngine {
     /// Returns card views with their set rarity weight.
     /// Checks custom (blockchain) sets first, then falls back to genesis sets.
     #[wasm_bindgen]
-    pub fn get_set_cards(&self, set_id: u32) -> Result<JsValue, String> {
+    pub fn get_set_cards(&self, set_id: u16) -> Result<JsValue, String> {
         use oab_game::view::CardView;
         use serde::Serialize;
 
@@ -196,17 +196,17 @@ impl GameEngine {
         struct SetCardView {
             id: oab_battle::types::CardId,
             name: String,
-            attack: i32,
-            health: i32,
-            play_cost: i32,
-            burn_value: i32,
+            attack: i16,
+            health: i16,
+            play_cost: u8,
+            burn_value: u8,
             shop_abilities: Vec<oab_battle::types::ShopAbility>,
             battle_abilities: Vec<oab_battle::types::Ability>,
-            rarity: u32,
+            rarity: u8,
         }
 
         impl SetCardView {
-            fn from_card_and_rarity(card: CardView, rarity: u32) -> Self {
+            fn from_card_and_rarity(card: CardView, rarity: u8) -> Self {
                 Self {
                     id: card.id,
                     name: card.name,
@@ -253,7 +253,7 @@ impl GameEngine {
     /// Add a card set to the engine.
     /// Used by the frontend to inject blockchain sets for preview/play.
     #[wasm_bindgen]
-    pub fn add_set(&mut self, set_id: u32, cards_js: JsValue) -> Result<(), String> {
+    pub fn add_set(&mut self, set_id: u16, cards_js: JsValue) -> Result<(), String> {
         let entries: Vec<oab_battle::state::CardSetEntry> =
             serde_wasm_bindgen::from_value(cards_js)
                 .map_err(|e| format!("Failed to parse set entries: {:?}", e))?;
@@ -394,7 +394,7 @@ impl GameEngine {
         }
 
         let action = TurnAction::BurnFromHand {
-            hand_index: hand_index as u32,
+            hand_index: hand_index as u8,
         };
         self.save_snapshot();
         if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
@@ -420,8 +420,8 @@ impl GameEngine {
         }
 
         let action = TurnAction::PlayFromHand {
-            hand_index: hand_index as u32,
-            board_slot: board_slot as u32,
+            hand_index: hand_index as u8,
+            board_slot: board_slot as u8,
         };
         self.save_snapshot();
         if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
@@ -448,8 +448,8 @@ impl GameEngine {
         }
 
         let action = TurnAction::SwapBoard {
-            slot_a: slot_a as u32,
-            slot_b: slot_b as u32,
+            slot_a: slot_a as u8,
+            slot_b: slot_b as u8,
         };
         self.save_snapshot();
         if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
@@ -470,8 +470,8 @@ impl GameEngine {
         }
 
         let action = TurnAction::MoveBoard {
-            from_slot: from as u32,
-            to_slot: to as u32,
+            from_slot: from as u8,
+            to_slot: to as u8,
         };
         self.save_snapshot();
         if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
@@ -492,7 +492,7 @@ impl GameEngine {
         }
 
         let action = TurnAction::BurnFromBoard {
-            board_slot: board_slot as u32,
+            board_slot: board_slot as u8,
         };
         self.save_snapshot();
         if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
@@ -619,7 +619,7 @@ impl GameEngine {
     /// Start a new P2P run with a custom number of lives.
     /// Victory condition becomes wins >= lives (symmetric resolution).
     #[wasm_bindgen]
-    pub fn new_run_p2p(&mut self, seed: u64, lives: i32) {
+    pub fn new_run_p2p(&mut self, seed: u64, lives: u8) {
         let lives = lives.max(1).min(10);
         self.new_run(seed);
         self.state.lives = lives;
@@ -630,7 +630,7 @@ impl GameEngine {
     /// Start a new constructed run with a user-provided deck.
     #[wasm_bindgen]
     pub fn new_run_constructed(&mut self, seed: u64, deck_js: JsValue) -> Result<(), String> {
-        let deck: Vec<u32> = serde_wasm_bindgen::from_value(deck_js)
+        let deck: Vec<u16> = serde_wasm_bindgen::from_value(deck_js)
             .map_err(|e| format!("Failed to parse deck: {:?}", e))?;
 
         let card_set = self
@@ -674,7 +674,7 @@ impl GameEngine {
         &mut self,
         seed: u64,
         deck_js: JsValue,
-        lives: i32,
+        lives: u8,
     ) -> Result<(), String> {
         self.new_run_constructed(seed, deck_js)?;
         let lives = lives.max(1).min(10);
@@ -685,12 +685,12 @@ impl GameEngine {
     }
 
     #[wasm_bindgen]
-    pub fn get_starting_lives(&self) -> i32 {
+    pub fn get_starting_lives(&self) -> u8 {
         self.state.config.starting_lives
     }
 
     #[wasm_bindgen]
-    pub fn get_wins_to_victory(&self) -> i32 {
+    pub fn get_wins_to_victory(&self) -> u8 {
         self.state.config.wins_to_victory
     }
 
@@ -857,13 +857,17 @@ impl GameEngine {
         // Apply the battle result (wins/lives)
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {
-                oab_battle::battle::BattleResult::Victory => self.state.wins += 1,
-                oab_battle::battle::BattleResult::Defeat => self.state.lives -= 1,
+                oab_battle::battle::BattleResult::Victory => {
+                    self.state.wins = self.state.wins.saturating_add(1)
+                }
+                oab_battle::battle::BattleResult::Defeat => {
+                    self.state.lives = self.state.lives.saturating_sub(1)
+                }
                 _ => {} // Draw
             }
             log::info(&format!("P2P Battle Result: {:?}", result));
         }
-        self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
+        self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0) as u8;
         let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
         self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);
 
@@ -874,7 +878,7 @@ impl GameEngine {
             events,
             initial_player_units,
             initial_enemy_units,
-            round: self.state.round as u32,
+            round: self.state.round,
         };
 
         self.last_battle_output = Some(output.clone());
@@ -1056,7 +1060,7 @@ impl GameEngine {
     fn apply_player_permanent_stat_deltas(
         &mut self,
         player_slots: &[usize],
-        deltas: &std::collections::BTreeMap<UnitId, (i32, i32)>,
+        deltas: &std::collections::BTreeMap<UnitId, (i16, i16)>,
     ) {
         for (unit_id, (attack_delta, health_delta)) in deltas {
             let unit_index = unit_id.raw() as usize;
@@ -1127,14 +1131,18 @@ impl GameEngine {
             &self.state.card_pool,
             self.state.config.board_size as usize,
         );
-        self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0);
+        self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0) as u8;
         let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
         self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);
 
         if let Some(CombatEvent::BattleEnd { result }) = events.last() {
             match result {
-                oab_battle::battle::BattleResult::Victory => self.state.wins += 1,
-                oab_battle::battle::BattleResult::Defeat => self.state.lives -= 1,
+                oab_battle::battle::BattleResult::Victory => {
+                    self.state.wins = self.state.wins.saturating_add(1)
+                }
+                oab_battle::battle::BattleResult::Defeat => {
+                    self.state.lives = self.state.lives.saturating_sub(1)
+                }
                 _ => {} // DRAW
             }
             log::info(&format!("Battle Result: {:?}", result));
@@ -1165,7 +1173,7 @@ impl GameEngine {
             events,
             initial_player_units,
             initial_enemy_units,
-            round: self.state.round as u32,
+            round: self.state.round,
         });
 
         log::info("=== BATTLE END ===");

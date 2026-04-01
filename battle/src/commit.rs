@@ -11,8 +11,9 @@ use crate::error::{GameError, GameResult};
 use crate::rng::{BattleRng, XorShiftRng};
 use crate::state::ShopState;
 use crate::types::{
-    CardId, CommitTurnAction, CompareOp, ShopAbility, ShopCondition, ShopEffect, ShopMatcher,
-    ShopScope, ShopTarget, ShopTrigger, StatType, TurnAction,
+    CardId, CommitTurnAction, CompareOp, CountValue, IndexValue, ManaValue, ShopAbility,
+    ShopCondition, ShopEffect, ShopMatcher, ShopScope, ShopTarget, ShopTrigger, SignedIndex,
+    StatType, StatValue, TurnAction,
 };
 use crate::BattleResult;
 
@@ -45,7 +46,7 @@ pub fn apply_shop_start_triggers_with_result(
     state: &mut ShopState,
     previous_battle_result: Option<BattleResult>,
 ) {
-    state.shop_mana = state.shop_mana.clamp(0, state.mana_limit);
+    state.shop_mana = state.shop_mana.min(state.mana_limit);
     let mut start_rng = shop_rng(state, SHOP_START_SALT);
     execute_shop_trigger(state, ShopTrigger::OnShopStart, None, None, &mut start_rng);
 
@@ -59,7 +60,7 @@ pub fn apply_shop_start_triggers_with_result(
         execute_shop_trigger(state, trigger, None, None, &mut outcome_rng);
     }
 
-    state.shop_mana = state.shop_mana.clamp(0, state.mana_limit);
+    state.shop_mana = state.shop_mana.min(state.mana_limit);
 }
 
 /// Apply `OnBuy` triggers for a successful shop buy action.
@@ -128,7 +129,7 @@ pub fn prepare_board_slot_for_insert<T>(
 ) -> GameResult<Option<usize>> {
     if target >= board.len() {
         return Err(GameError::InvalidBoardSlot {
-            index: target as u32,
+            index: target as IndexValue,
         });
     }
     if board[target].is_none() {
@@ -163,22 +164,30 @@ pub fn validate_move_board_positions<T>(
     to: usize,
 ) -> GameResult<()> {
     if from >= board.len() {
-        return Err(GameError::InvalidBoardSlot { index: from as u32 });
+        return Err(GameError::InvalidBoardSlot {
+            index: from as IndexValue,
+        });
     }
     if to >= board.len() {
-        return Err(GameError::InvalidBoardSlot { index: to as u32 });
+        return Err(GameError::InvalidBoardSlot {
+            index: to as IndexValue,
+        });
     }
     if from == to {
         return Err(GameError::InvalidBoardMove {
-            from_slot: from as u32,
-            to_slot: to as u32,
+            from_slot: from as IndexValue,
+            to_slot: to as IndexValue,
         });
     }
     if board[from].is_none() {
-        return Err(GameError::BoardSlotEmpty { index: from as u32 });
+        return Err(GameError::BoardSlotEmpty {
+            index: from as IndexValue,
+        });
     }
     if board[to].is_none() {
-        return Err(GameError::BoardSlotEmpty { index: to as u32 });
+        return Err(GameError::BoardSlotEmpty {
+            index: to as IndexValue,
+        });
     }
 
     Ok(())
@@ -207,7 +216,7 @@ pub struct ShopTurnContext {
     /// Which hand cards have already been used this turn.
     pub hand_used: Vec<bool>,
     /// Current mana available during the shop turn.
-    pub current_mana: i32,
+    pub current_mana: ManaValue,
     /// Index of the next action (used for deterministic trigger RNG).
     pub action_index: usize,
 }
@@ -217,7 +226,7 @@ impl ShopTurnContext {
     pub fn new(state: &ShopState) -> Self {
         Self {
             hand_used: vec![false; state.hand.len()],
-            current_mana: state.shop_mana.clamp(0, state.mana_limit),
+            current_mana: state.shop_mana.min(state.mana_limit),
             action_index: 0,
         }
     }
@@ -254,7 +263,10 @@ pub fn apply_single_action(
                 .map(|c| c.economy.burn_value)
                 .unwrap_or(0);
 
-            ctx.current_mana = (ctx.current_mana + burn_value).min(state.mana_limit);
+            ctx.current_mana = ctx
+                .current_mana
+                .saturating_add(burn_value)
+                .min(state.mana_limit);
             ctx.hand_used[hi] = true;
         }
 
@@ -296,7 +308,7 @@ pub fn apply_single_action(
                 apply_board_insert_shift(&mut state.board, empty_slot, bs);
             }
 
-            ctx.current_mana -= play_cost;
+            ctx.current_mana = ctx.current_mana.saturating_sub(play_cost);
             ctx.hand_used[hi] = true;
             state.board[bs] = Some(crate::types::BoardUnit::new(card_id));
 
@@ -322,7 +334,10 @@ pub fn apply_single_action(
                 .map(|c| c.economy.burn_value)
                 .unwrap_or(0);
 
-            ctx.current_mana = (ctx.current_mana + burn_value).min(state.mana_limit);
+            ctx.current_mana = ctx
+                .current_mana
+                .saturating_add(burn_value)
+                .min(state.mana_limit);
 
             state.shop_mana = ctx.current_mana;
             apply_on_sell_triggers(state, ctx.action_index, sold_unit.card_id, bs);
@@ -401,7 +416,7 @@ pub fn verify_and_apply_turn(state: &mut ShopState, action: &CommitTurnAction) -
 }
 
 fn shop_rng(state: &ShopState, salt: u64) -> XorShiftRng {
-    let round_mix = (state.round.max(0) as u64).wrapping_mul(0x9e37_79b9_7f4a_7c15);
+    let round_mix = (state.round as u64).wrapping_mul(0x9e37_79b9_7f4a_7c15);
     XorShiftRng::seed_from_u64(state.game_seed ^ round_mix ^ salt)
 }
 
@@ -533,10 +548,14 @@ fn apply_shop_effect<R: BattleRng>(
             }
         }
         ShopEffect::GainMana { amount } => {
-            state.shop_mana = state
-                .shop_mana
-                .saturating_add(*amount)
-                .clamp(0, state.mana_limit);
+            if *amount >= 0 {
+                state.shop_mana = state
+                    .shop_mana
+                    .saturating_add(*amount as u8)
+                    .min(state.mana_limit);
+            } else {
+                state.shop_mana = state.shop_mana.saturating_sub(amount.unsigned_abs());
+            }
         }
     }
 }
@@ -623,7 +642,7 @@ fn resolve_self_position_target(
     state: &ShopState,
     source_slot: Option<usize>,
     source_on_board: bool,
-    index: i32,
+    index: SignedIndex,
 ) -> Vec<usize> {
     let Some(source_slot) = source_slot else {
         return Vec::new();
@@ -636,7 +655,7 @@ fn resolve_self_position_target(
             None
         }
     } else {
-        let offset = source_slot as i32 + index;
+        let offset = source_slot as isize + index as isize;
         if offset < 0 {
             None
         } else {
@@ -665,7 +684,7 @@ fn resolve_absolute_position_target(
     source_slot: Option<usize>,
     source_on_board: bool,
     trigger_source_slot: Option<usize>,
-    index: i32,
+    index: SignedIndex,
 ) -> Vec<usize> {
     let candidates = resolve_scope_slots(
         state,
@@ -796,8 +815,8 @@ fn shop_matcher_pass(
                 source_on_board,
                 trigger_source_slot,
             )
-            .len() as u32;
-            compare_u32(count, *op, *value)
+            .len() as CountValue;
+            compare_count(count, *op, *value)
         }
         ShopMatcher::StatValueCompare {
             scope,
@@ -818,7 +837,7 @@ fn shop_matcher_pass(
 
             targets.iter().any(|slot| {
                 shop_stat_value(state, *slot, *stat)
-                    .map(|actual| compare_i32(actual, *op, *value))
+                    .map(|actual| compare_stat(actual, *op, *value))
                     .unwrap_or(false)
             })
         }
@@ -847,14 +866,14 @@ fn shop_matcher_pass(
     }
 }
 
-fn shop_stat_value(state: &ShopState, slot: usize, stat: StatType) -> Option<i32> {
+fn shop_stat_value(state: &ShopState, slot: usize, stat: StatType) -> Option<StatValue> {
     let unit = state.board.get(slot)?.as_ref()?;
     let card = state.card_pool.get(&unit.card_id)?;
 
     match stat {
         StatType::Health => Some(card.stats.health.saturating_add(unit.perm_health)),
         StatType::Attack => Some(card.stats.attack.saturating_add(unit.perm_attack)),
-        StatType::Mana => Some(card.economy.play_cost),
+        StatType::Mana => Some(card.economy.play_cost as StatValue),
     }
 }
 
@@ -871,7 +890,7 @@ fn cleanup_dead_units(state: &mut ShopState) {
     }
 }
 
-fn compare_i32(actual: i32, op: CompareOp, expected: i32) -> bool {
+fn compare_stat(actual: StatValue, op: CompareOp, expected: StatValue) -> bool {
     match op {
         CompareOp::GreaterThan => actual > expected,
         CompareOp::LessThan => actual < expected,
@@ -881,7 +900,7 @@ fn compare_i32(actual: i32, op: CompareOp, expected: i32) -> bool {
     }
 }
 
-fn compare_u32(actual: u32, op: CompareOp, expected: u32) -> bool {
+fn compare_count(actual: CountValue, op: CompareOp, expected: CountValue) -> bool {
     match op {
         CompareOp::GreaterThan => actual > expected,
         CompareOp::LessThan => actual < expected,

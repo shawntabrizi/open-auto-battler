@@ -2,7 +2,7 @@ use super::*;
 use crate::battle::{CombatUnit, UnitId};
 use crate::types::*;
 
-fn trigger_ref(source_id: UnitId, ability_index: u32) -> AbilityTriggerRef {
+fn trigger_ref(source_id: UnitId, ability_index: u8) -> AbilityTriggerRef {
     AbilityTriggerRef {
         source_id,
         ability_index,

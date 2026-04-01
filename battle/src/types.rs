@@ -11,6 +11,30 @@ use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
+// ── Semantic type aliases ────────────────────────────────────────────
+// Centralised here so a future resize is a one-line change.
+
+/// Attack, health, damage, stat modifications (signed: health can go negative, debuffs exist).
+pub type StatValue = i16;
+/// Stored mana, play cost, burn value (always >= 0).
+pub type ManaValue = u8;
+/// GainMana amounts / mana deltas (can be negative for debuffs).
+pub type ManaDelta = i8;
+/// Round number, lives, wins (always >= 0).
+pub type RoundValue = u8;
+/// Board slot, hand index, small unsigned counts.
+pub type IndexValue = u8;
+/// Position index where -1 means "back".
+pub type SignedIndex = i8;
+/// Target counts, trigger limits.
+pub type CountValue = u8;
+/// Battle execution limit counters.
+pub type LimitValue = u8;
+/// Card rarity / draft weight.
+pub type RarityValue = u8;
+/// Card set identifier.
+pub type SetIdValue = u16;
+
 /// Unique identifier for cards
 #[derive(
     Debug,
@@ -29,10 +53,10 @@ use serde::{Deserialize, Serialize};
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(transparent))]
-pub struct CardId(pub u32);
+pub struct CardId(pub u16);
 
-impl From<u32> for CardId {
-    fn from(id: u32) -> Self {
+impl From<u16> for CardId {
+    fn from(id: u16) -> Self {
         Self(id)
     }
 }
@@ -156,7 +180,7 @@ pub enum Matcher {
         scope: TargetScope,
         stat: StatType,
         op: CompareOp,
-        value: i32,
+        value: StatValue,
     },
 
     /// Compare explicit ability target unit(s) stat to a constant value.
@@ -164,7 +188,7 @@ pub enum Matcher {
         target: AbilityTarget,
         stat: StatType,
         op: CompareOp,
-        value: i32,
+        value: StatValue,
     },
 
     /// Compare one unit's stat to another unit's stat
@@ -179,11 +203,14 @@ pub enum Matcher {
     UnitCount {
         scope: TargetScope,
         op: CompareOp,
-        value: u32,
+        value: CountValue,
     },
 
     /// Check if unit is at a specific position
-    IsPosition { scope: TargetScope, index: i32 },
+    IsPosition {
+        scope: TargetScope,
+        index: SignedIndex,
+    },
 }
 
 /// Shop matchers that must be met for an ability to activate.
@@ -198,16 +225,19 @@ pub enum ShopMatcher {
         scope: ShopScope,
         stat: StatType,
         op: CompareOp,
-        value: i32,
+        value: StatValue,
     },
     /// Count units in a scope and compare to a value.
     UnitCount {
         scope: ShopScope,
         op: CompareOp,
-        value: u32,
+        value: CountValue,
     },
     /// Check if unit is at a specific position.
-    IsPosition { scope: ShopScope, index: i32 },
+    IsPosition {
+        scope: ShopScope,
+        index: SignedIndex,
+    },
 }
 
 /// Structural battle conditions that control the flow of evaluation.
@@ -322,17 +352,20 @@ pub enum SpawnLocation {
 #[cfg_attr(feature = "std", serde(tag = "type"))]
 pub enum AbilityEffect {
     /// Deal damage to target
-    Damage { amount: i32, target: AbilityTarget },
+    Damage {
+        amount: StatValue,
+        target: AbilityTarget,
+    },
     /// Modify health and/or attack stats (positive = buff/heal, negative = debuff/damage)
     ModifyStats {
-        health: i32,
-        attack: i32,
+        health: StatValue,
+        attack: StatValue,
         target: AbilityTarget,
     },
     /// Permanently modify health and/or attack stats on board units (until sold)
     ModifyStatsPermanent {
-        health: i32,
-        attack: i32,
+        health: StatValue,
+        attack: StatValue,
         target: AbilityTarget,
     },
     /// Spawn a new unit on the board
@@ -343,7 +376,7 @@ pub enum AbilityEffect {
     /// Destroy a target directly
     Destroy { target: AbilityTarget },
     /// Add mana for next shop via battle event processing.
-    GainMana { amount: i32 },
+    GainMana { amount: ManaDelta },
 }
 
 /// Shop ability effect types.
@@ -353,8 +386,8 @@ pub enum AbilityEffect {
 pub enum ShopEffect {
     /// Permanently modify health and/or attack stats on board units (until sold).
     ModifyStatsPermanent {
-        health: i32,
-        attack: i32,
+        health: StatValue,
+        attack: StatValue,
         target: ShopTarget,
     },
     /// Spawn a new unit on the board.
@@ -365,7 +398,7 @@ pub enum ShopEffect {
     /// Destroy a target directly.
     Destroy { target: ShopTarget },
     /// Modify current shop mana.
-    GainMana { amount: i32 },
+    GainMana { amount: ManaDelta },
 }
 
 /// Battle ability target specifications.
@@ -376,17 +409,23 @@ pub enum ShopEffect {
 #[cfg_attr(feature = "std", serde(tag = "type", content = "data"))]
 pub enum AbilityTarget {
     /// Specific position (0=front, -1=back). scope=SelfUnit means relative.
-    Position { scope: TargetScope, index: i32 },
+    Position {
+        scope: TargetScope,
+        index: SignedIndex,
+    },
     /// Neighbors of the unit(s) in scope.
     Adjacent { scope: TargetScope },
     /// Random units from scope.
-    Random { scope: TargetScope, count: u32 },
+    Random {
+        scope: TargetScope,
+        count: CountValue,
+    },
     /// Selection based on stats (e.g., Highest Attack).
     Standard {
         scope: TargetScope,
         stat: StatType,
         order: SortOrder,
-        count: u32,
+        count: CountValue,
     },
     /// Everyone in scope.
     All { scope: TargetScope },
@@ -400,15 +439,18 @@ pub enum AbilityTarget {
 #[cfg_attr(feature = "std", serde(tag = "type", content = "data"))]
 pub enum ShopTarget {
     /// Specific position (0=front, -1=back). scope=SelfUnit means relative.
-    Position { scope: ShopScope, index: i32 },
+    Position {
+        scope: ShopScope,
+        index: SignedIndex,
+    },
     /// Random units from scope.
-    Random { scope: ShopScope, count: u32 },
+    Random { scope: ShopScope, count: CountValue },
     /// Selection based on stats (e.g., Highest Attack).
     Standard {
         scope: ShopScope,
         stat: StatType,
         order: SortOrder,
-        count: u32,
+        count: CountValue,
     },
     /// Everyone in scope.
     All { scope: ShopScope },
@@ -427,7 +469,7 @@ pub struct Ability {
     /// Optional limit on how many times this ability can trigger per battle.
     /// If None, the ability can trigger unlimited times.
     #[cfg_attr(feature = "std", serde(default))]
-    pub max_triggers: Option<u32>,
+    pub max_triggers: Option<CountValue>,
 }
 
 /// A shop ability.
@@ -443,7 +485,7 @@ pub struct ShopAbility {
     /// Optional limit on how many times this ability can trigger per shop phase.
     /// If None, the ability can trigger unlimited times.
     #[cfg_attr(feature = "std", serde(default))]
-    pub max_triggers: Option<u32>,
+    pub max_triggers: Option<CountValue>,
 }
 
 /// Combat stats for a unit
@@ -452,8 +494,8 @@ pub struct ShopAbility {
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct UnitStats {
-    pub attack: i32,
-    pub health: i32,
+    pub attack: StatValue,
+    pub health: StatValue,
 }
 
 /// Economy stats shared by all cards
@@ -462,8 +504,8 @@ pub struct UnitStats {
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct EconomyStats {
-    pub play_cost: i32,
-    pub burn_value: i32,
+    pub play_cost: ManaValue,
+    pub burn_value: ManaValue,
 }
 
 /// A unit card in the game (MVP: units only)
@@ -484,10 +526,10 @@ impl UnitCard {
     pub fn new(
         id: CardId,
         name: &str,
-        attack: i32,
-        health: i32,
-        play_cost: i32,
-        burn_value: i32,
+        attack: StatValue,
+        health: StatValue,
+        play_cost: ManaValue,
+        burn_value: ManaValue,
     ) -> Self {
         Self {
             id,
@@ -529,9 +571,9 @@ impl UnitCard {
 pub struct BoardUnit {
     pub card_id: CardId,
     /// Permanent attack change applied to this unit while on board
-    pub perm_attack: i32,
+    pub perm_attack: StatValue,
     /// Permanent health change applied to this unit while on board
-    pub perm_health: i32,
+    pub perm_health: StatValue,
 }
 
 impl BoardUnit {
@@ -552,15 +594,24 @@ impl BoardUnit {
 #[cfg_attr(feature = "std", serde(tag = "type"))]
 pub enum TurnAction {
     /// Burn a card from hand for mana
-    BurnFromHand { hand_index: u32 },
+    BurnFromHand { hand_index: IndexValue },
     /// Play a card from hand to a board slot
-    PlayFromHand { hand_index: u32, board_slot: u32 },
+    PlayFromHand {
+        hand_index: IndexValue,
+        board_slot: IndexValue,
+    },
     /// Burn a unit from the board for mana
-    BurnFromBoard { board_slot: u32 },
+    BurnFromBoard { board_slot: IndexValue },
     /// Swap two board positions
-    SwapBoard { slot_a: u32, slot_b: u32 },
+    SwapBoard {
+        slot_a: IndexValue,
+        slot_b: IndexValue,
+    },
     /// Reorder an occupied board slot into another occupied slot (shift intermediate units)
-    MoveBoard { from_slot: u32, to_slot: u32 },
+    MoveBoard {
+        from_slot: IndexValue,
+        to_slot: IndexValue,
+    },
 }
 
 /// A committed turn as an ordered list of actions

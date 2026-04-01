@@ -100,7 +100,7 @@ pub mod pallet {
     #[derive(Encode, Decode, TypeInfo, CloneNoBound, PartialEqNoBound, MaxEncodedLen)]
     #[scale_info(skip_type_params(T))]
     pub struct TournamentConfig<T: Config> {
-        pub set_id: u32,
+        pub set_id: u16,
         pub entry_fee: BalanceOf<T>,
         pub start_block: BlockNumberFor<T>,
         pub end_block: BlockNumberFor<T>,
@@ -148,7 +148,7 @@ pub mod pallet {
     #[scale_info(skip_type_params(T))]
     pub struct TournamentGameSession<T: Config> {
         pub state: BoundedLocalGameState<T>,
-        pub set_id: u32,
+        pub set_id: u16,
         pub config: oab_game::GameConfig,
         pub tournament_id: u32,
     }
@@ -206,9 +206,9 @@ pub mod pallet {
         _,
         (
             NMapKey<Blake2_128Concat, u32>, // tournament_id
-            NMapKey<Blake2_128Concat, i32>, // round
-            NMapKey<Blake2_128Concat, i32>, // wins
-            NMapKey<Blake2_128Concat, i32>, // lives
+            NMapKey<Blake2_128Concat, u8>,  // round
+            NMapKey<Blake2_128Concat, u8>,  // wins
+            NMapKey<Blake2_128Concat, u8>,  // lives
         ),
         BoundedVec<oab_common::GhostEntry<T>, <T as oab_common::GameEngine>::MaxGhostsPerBracket>,
         ValueQuery,
@@ -220,7 +220,7 @@ pub mod pallet {
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
         /// A new tournament has been created.
-        TournamentCreated { tournament_id: u32, set_id: u32 },
+        TournamentCreated { tournament_id: u32, set_id: u16 },
         /// A player has joined a tournament and started a game.
         TournamentGameStarted {
             owner: T::AccountId,
@@ -230,7 +230,7 @@ pub mod pallet {
         /// A battle result has been reported.
         BattleReported {
             owner: T::AccountId,
-            round: i32,
+            round: u8,
             result: BattleResult,
             new_seed: u64,
             battle_seed: u64,
@@ -240,7 +240,7 @@ pub mod pallet {
         TournamentGameCompleted {
             owner: T::AccountId,
             tournament_id: u32,
-            wins: i32,
+            wins: u8,
         },
         /// A tournament game has been abandoned.
         TournamentGameAbandoned {
@@ -256,9 +256,9 @@ pub mod pallet {
         /// A game has been finalized via end_tournament_game.
         GameEnded {
             owner: T::AccountId,
-            wins: i32,
-            lives: i32,
-            round: i32,
+            wins: u8,
+            lives: u8,
+            round: u8,
         },
     }
 
@@ -313,7 +313,7 @@ pub mod pallet {
         #[pallet::weight(T::WeightInfo::create_tournament())]
         pub fn create_tournament(
             origin: OriginFor<T>,
-            set_id: u32,
+            set_id: u16,
             entry_fee: BalanceOf<T>,
             start_block: BlockNumberFor<T>,
             end_block: BlockNumberFor<T>,

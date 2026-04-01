@@ -13,8 +13,9 @@ use crate::rng::BattleRng;
 use alloc::collections::BTreeMap;
 
 use crate::types::{
-    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CardId, CompareOp, Condition, Matcher,
-    SortOrder, SpawnLocation, StatType, TargetScope, UnitCard,
+    Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CardId, CompareOp, Condition,
+    CountValue, IndexValue, ManaDelta, ManaValue, Matcher, SignedIndex, SortOrder, SpawnLocation,
+    StatType, StatValue, TargetScope, UnitCard,
 };
 
 #[cfg(feature = "std")]
@@ -43,16 +44,16 @@ pub use crate::limits::Team;
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "std", serde(transparent))]
-pub struct UnitId(pub u32);
+pub struct UnitId(pub u16);
 
 impl UnitId {
-    const ENEMY_MASK: u32 = 0x8000_0000;
+    const ENEMY_MASK: u16 = 0x8000;
 
-    pub fn player(index: u32) -> Self {
+    pub fn player(index: u16) -> Self {
         Self(index)
     }
 
-    pub fn enemy(index: u32) -> Self {
+    pub fn enemy(index: u16) -> Self {
         Self(index | Self::ENEMY_MASK)
     }
 
@@ -64,7 +65,7 @@ impl UnitId {
         !self.is_player()
     }
 
-    pub fn raw(&self) -> u32 {
+    pub fn raw(&self) -> u16 {
         self.0
     }
 }
@@ -78,8 +79,8 @@ pub struct UnitView {
     pub instance_id: UnitInstanceId,
     pub card_id: crate::types::CardId,
     pub name: String,
-    pub attack: i32,
-    pub health: i32,
+    pub attack: StatValue,
+    pub health: StatValue,
     pub battle_abilities: Vec<Ability>,
 }
 
@@ -106,16 +107,16 @@ pub enum CombatEvent {
     },
     AbilityTrigger {
         source_instance_id: UnitInstanceId,
-        ability_index: u32,
+        ability_index: IndexValue,
     },
     Clash {
-        p_dmg: i32,
-        e_dmg: i32,
+        p_dmg: StatValue,
+        e_dmg: StatValue,
     },
     DamageTaken {
         target_instance_id: UnitInstanceId,
         team: Team,
-        remaining_hp: i32,
+        remaining_hp: StatValue,
     },
     UnitDeath {
         team: Team,
@@ -127,24 +128,24 @@ pub enum CombatEvent {
     AbilityDamage {
         source_instance_id: UnitInstanceId,
         target_instance_id: UnitInstanceId,
-        damage: i32,
-        remaining_hp: i32,
+        damage: StatValue,
+        remaining_hp: StatValue,
     },
     AbilityModifyStats {
         source_instance_id: UnitInstanceId,
         target_instance_id: UnitInstanceId,
-        health_change: i32,
-        attack_change: i32,
-        new_attack: i32,
-        new_health: i32,
+        health_change: StatValue,
+        attack_change: StatValue,
+        new_attack: StatValue,
+        new_health: StatValue,
     },
     AbilityModifyStatsPermanent {
         source_instance_id: UnitInstanceId,
         target_instance_id: UnitInstanceId,
-        health_change: i32,
-        attack_change: i32,
-        new_attack: i32,
-        new_health: i32,
+        health_change: StatValue,
+        attack_change: StatValue,
+        new_attack: StatValue,
+        new_health: StatValue,
     },
     AbilityDestroy {
         source_instance_id: UnitInstanceId,
@@ -153,7 +154,7 @@ pub enum CombatEvent {
     AbilityGainMana {
         source_instance_id: UnitInstanceId,
         team: Team,
-        amount: i32,
+        amount: ManaDelta,
     },
     UnitSpawn {
         team: Team,
@@ -189,12 +190,12 @@ pub enum BattlePhase {
 /// Priority data used for sorting triggers
 #[derive(Debug)]
 struct TriggerPriority {
-    attack: i32,
-    health: i32,
+    attack: StatValue,
+    health: StatValue,
     unit_position: usize,
     ability_order: usize,
     /// Random value assigned per-trigger for fair tiebreaking (from seed)
-    tiebreaker: u32,
+    tiebreaker: u16,
 }
 
 /// Trigger struct with support for location-based spawning.
@@ -211,22 +212,22 @@ struct PendingTrigger {
     /// Index of this ability in the source unit's abilities vec (for tracking trigger counts)
     ability_index: usize,
     /// Max triggers allowed for this ability (None = unlimited)
-    max_triggers: Option<u32>,
+    max_triggers: Option<CountValue>,
 }
 
 #[derive(Debug, Clone)]
 pub struct CombatUnit {
     pub instance_id: UnitInstanceId,
     pub team: Team,
-    pub attack: i32,
-    pub health: i32,
+    pub attack: StatValue,
+    pub health: StatValue,
     pub abilities: Vec<Ability>,
     pub card_id: crate::types::CardId,
-    pub attack_buff: i32,
-    pub health_buff: i32,
-    pub play_cost: i32,
+    pub attack_buff: StatValue,
+    pub health_buff: StatValue,
+    pub play_cost: ManaValue,
     /// Tracks how many times each ability has triggered this battle (indexed by ability position)
-    pub ability_trigger_counts: Vec<u32>,
+    pub ability_trigger_counts: Vec<CountValue>,
 }
 
 impl CombatUnit {
@@ -261,11 +262,11 @@ impl CombatUnit {
         }
     }
 
-    fn effective_attack(&self) -> i32 {
+    fn effective_attack(&self) -> StatValue {
         self.attack.saturating_add(self.attack_buff).max(0)
     }
 
-    pub fn effective_health(&self) -> i32 {
+    pub fn effective_health(&self) -> StatValue {
         self.health.max(0)
     }
 
@@ -273,7 +274,7 @@ impl CombatUnit {
         self.health > 0
     }
 
-    pub fn take_damage(&mut self, amount: i32) {
+    pub fn take_damage(&mut self, amount: StatValue) {
         let actual_damage = amount.max(0);
         self.health = self.health.saturating_sub(actual_damage);
     }
@@ -494,8 +495,8 @@ pub fn resolve_battle<R: BattleRng>(
 }
 
 /// Extract total next-shop mana delta for a team from battle events.
-pub fn shop_mana_delta_from_events(events: &[CombatEvent], team: Team) -> i32 {
-    let mut total = 0_i32;
+pub fn shop_mana_delta_from_events(events: &[CombatEvent], team: Team) -> i16 {
+    let mut total = 0i16;
     for event in events {
         if let CombatEvent::AbilityGainMana {
             team: event_team,
@@ -504,7 +505,7 @@ pub fn shop_mana_delta_from_events(events: &[CombatEvent], team: Team) -> i32 {
         } = event
         {
             if *event_team == team {
-                total = total.saturating_add(*amount);
+                total = total.saturating_add(*amount as i16);
             }
         }
     }
@@ -512,7 +513,7 @@ pub fn shop_mana_delta_from_events(events: &[CombatEvent], team: Team) -> i32 {
 }
 
 /// Convenience helper for the local player's next-shop mana delta.
-pub fn player_shop_mana_delta_from_events(events: &[CombatEvent]) -> i32 {
+pub fn player_shop_mana_delta_from_events(events: &[CombatEvent]) -> i16 {
     shop_mana_delta_from_events(events, Team::Player)
 }
 
@@ -520,8 +521,8 @@ pub fn player_shop_mana_delta_from_events(events: &[CombatEvent]) -> i32 {
 pub fn permanent_stat_deltas_from_events(
     events: &[CombatEvent],
     team: Team,
-) -> BTreeMap<UnitId, (i32, i32)> {
-    let mut deltas: BTreeMap<UnitId, (i32, i32)> = BTreeMap::new();
+) -> BTreeMap<UnitId, (StatValue, StatValue)> {
+    let mut deltas: BTreeMap<UnitId, (StatValue, StatValue)> = BTreeMap::new();
     for event in events {
         let CombatEvent::AbilityModifyStatsPermanent {
             target_instance_id,
@@ -547,7 +548,7 @@ pub fn permanent_stat_deltas_from_events(
 /// Convenience helper for permanent deltas applied to the local player's board.
 pub fn player_permanent_stat_deltas_from_events(
     events: &[CombatEvent],
-) -> BTreeMap<UnitId, (i32, i32)> {
+) -> BTreeMap<UnitId, (StatValue, StatValue)> {
     permanent_stat_deltas_from_events(events, Team::Player)
 }
 
@@ -607,10 +608,10 @@ fn resolve_trigger_queue<R: BattleRng>(
     // Assign tiebreaker to each trigger based on seed + unit identity.
     // We rotate the ID before XORing to ensure the team bit (bit 31) mixes with
     // different bits of the random base, preventing consistent team bias.
-    let random_base = rng.next_u32();
+    let random_base = rng.next_u32() as u16;
     for trigger in queue.iter_mut() {
-        // Rotate ID by 16 bits so team bit (31) moves to bit 15, mixing fairly with random_base
-        trigger.priority.tiebreaker = random_base ^ trigger.source_id.raw().rotate_left(16);
+        // Rotate ID by 8 bits so team bit (15) moves to bit 7, mixing fairly with random_base
+        trigger.priority.tiebreaker = random_base ^ trigger.source_id.raw().rotate_left(8);
     }
 
     queue.sort_by(|a, b| {
@@ -672,7 +673,7 @@ fn resolve_trigger_queue<R: BattleRng>(
         limits.record_trigger(trigger.team)?;
         events.push(CombatEvent::AbilityTrigger {
             source_instance_id: trigger.source_id,
-            ability_index: trigger.ability_index as u32,
+            ability_index: trigger.ability_index as IndexValue,
         });
 
         // D. Increment trigger count for this ability (if unit is still alive)
@@ -1818,7 +1819,7 @@ fn resolve_adjacent(
 fn resolve_relative_position(
     source_id: UnitInstanceId,
     source_team: Team,
-    index: i32,
+    index: SignedIndex,
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
     source_position_override: Option<usize>,
@@ -1877,7 +1878,7 @@ fn resolve_relative_position(
 fn resolve_absolute_position(
     scope: TargetScope,
     source_team: Team,
-    index: i32,
+    index: SignedIndex,
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
 ) -> Vec<UnitInstanceId> {
@@ -1910,7 +1911,7 @@ fn resolve_stat_based(
     source_team: Team,
     stat: StatType,
     order: SortOrder,
-    count: u32,
+    count: CountValue,
     player_units: &[CombatUnit],
     enemy_units: &[CombatUnit],
     trigger_target_id: Option<UnitInstanceId>,
@@ -1943,11 +1944,11 @@ fn resolve_stat_based(
         .collect()
 }
 
-fn get_stat_value(unit: &CombatUnit, stat: StatType) -> i32 {
+fn get_stat_value(unit: &CombatUnit, stat: StatType) -> StatValue {
     match stat {
         StatType::Health => unit.effective_health(),
         StatType::Attack => unit.effective_attack(),
-        StatType::Mana => unit.play_cost,
+        StatType::Mana => unit.play_cost as StatValue,
     }
 }
 
@@ -2037,7 +2038,7 @@ fn evaluate_matcher<R: BattleRng>(
 
             scoped_targets
                 .iter()
-                .any(|unit| compare_i32(get_stat_value(unit, *stat), *op, *value))
+                .any(|unit| compare_stat(get_stat_value(unit, *stat), *op, *value))
         }
         Matcher::TargetStatValueCompare {
             target,
@@ -2061,7 +2062,7 @@ fn evaluate_matcher<R: BattleRng>(
 
             target_ids.iter().any(|target_id| {
                 find_unit_in_slices(*target_id, player_units, enemy_units)
-                    .map(|unit| compare_i32(get_stat_value(unit, *stat), *op, *value))
+                    .map(|unit| compare_stat(get_stat_value(unit, *stat), *op, *value))
                     .unwrap_or(false)
             })
         }
@@ -2090,7 +2091,7 @@ fn evaluate_matcher<R: BattleRng>(
 
             let source_val = get_stat_value(source, *source_stat);
             scoped_targets.iter().any(|target_unit| {
-                compare_i32(source_val, *op, get_stat_value(target_unit, *target_stat))
+                compare_stat(source_val, *op, get_stat_value(target_unit, *target_stat))
             })
         }
         Matcher::UnitCount { scope, op, value } => {
@@ -2102,8 +2103,8 @@ fn evaluate_matcher<R: BattleRng>(
                 enemy_units,
                 trigger_target_id,
             )
-            .len() as u32;
-            compare_u32(count, *op, *value)
+            .len() as CountValue;
+            compare_count(count, *op, *value)
         }
         Matcher::IsPosition { scope, index } => {
             let scoped_targets: Vec<&CombatUnit> = if *scope == TargetScope::SelfUnit {
@@ -2139,7 +2140,7 @@ fn evaluate_matcher<R: BattleRng>(
     }
 }
 
-fn compare_i32(a: i32, op: CompareOp, b: i32) -> bool {
+fn compare_stat(a: StatValue, op: CompareOp, b: StatValue) -> bool {
     match op {
         CompareOp::GreaterThan => a > b,
         CompareOp::LessThan => a < b,
@@ -2149,7 +2150,7 @@ fn compare_i32(a: i32, op: CompareOp, b: i32) -> bool {
     }
 }
 
-fn compare_u32(a: u32, op: CompareOp, b: u32) -> bool {
+fn compare_count(a: CountValue, op: CompareOp, b: CountValue) -> bool {
     match op {
         CompareOp::GreaterThan => a > b,
         CompareOp::LessThan => a < b,

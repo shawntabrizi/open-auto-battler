@@ -33,22 +33,23 @@ pub fn create_starting_bag(set: &CardSet, seed: u64, bag_size: usize) -> Vec<Car
     let mut rng = XorShiftRng::seed_from_u64(seed);
 
     // Calculate total weight for weighted selection
-    let total_weight: u32 = set.cards.iter().map(|entry| entry.rarity).sum();
+    let total_weight: u16 = set.cards.iter().map(|entry| entry.rarity as u16).sum();
     if total_weight == 0 {
         return Vec::new();
     }
 
     for _ in 0..bag_size {
-        let mut target = rng.gen_range(total_weight as usize) as u32;
+        let mut target = rng.gen_range(total_weight as usize) as u16;
         for entry in &set.cards {
-            if entry.rarity == 0 {
+            let r = entry.rarity as u16;
+            if r == 0 {
                 continue;
             }
-            if target < entry.rarity {
+            if target < r {
                 bag.push(entry.card_id);
                 break;
             }
-            target -= entry.rarity;
+            target -= r;
         }
     }
 

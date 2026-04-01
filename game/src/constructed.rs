@@ -37,7 +37,7 @@ pub fn default_config() -> GameConfig {
 /// - Every card exists in the set with rarity > 0 (no tokens)
 /// - No card appears more than `max_copies_per_card` times
 pub fn validate_deck(
-    deck: &[u32],
+    deck: &[u16],
     set: &CardSet,
     max_copies_per_card: usize,
     bag_size: usize,
@@ -51,11 +51,11 @@ pub fn validate_deck(
     }
 
     // Build lookup of valid (non-token) cards in the set
-    let valid_cards: BTreeMap<CardId, u32> =
+    let valid_cards: BTreeMap<CardId, oab_battle::types::RarityValue> =
         set.cards.iter().map(|e| (e.card_id, e.rarity)).collect();
 
     // Count copies of each card
-    let mut counts: BTreeMap<u32, usize> = BTreeMap::new();
+    let mut counts: BTreeMap<u16, usize> = BTreeMap::new();
     for &card_id in deck {
         match valid_cards.get(&CardId(card_id)) {
             None => return Err(format!("Card {} is not in the selected set", card_id)),
@@ -119,24 +119,24 @@ mod tests {
         }
     }
 
-    fn valid_deck() -> alloc::vec::Vec<u32> {
+    fn valid_deck() -> alloc::vec::Vec<u16> {
         // 50 cards, 10 copies each of cards 1-5
-        (0..50).map(|i| (i % 5) as u32 + 1).collect()
+        (0..50).map(|i| (i % 5) as u16 + 1).collect()
     }
 
     #[test]
     fn valid_deck_passes() {
         let set = test_set();
         // 5 copies each = within MAX_COPIES_PER_CARD limit
-        let deck: alloc::vec::Vec<u32> = (0..50).map(|i| (i % 5) as u32 + 1).collect();
+        let deck: alloc::vec::Vec<u16> = (0..50).map(|i| (i % 5) as u16 + 1).collect();
         assert!(validate_deck(&deck, &set, 10, 50).is_ok());
     }
 
     #[test]
     fn wrong_size_rejected() {
         let set = test_set();
-        let short: alloc::vec::Vec<u32> = alloc::vec![1; 49];
-        let long: alloc::vec::Vec<u32> = alloc::vec![1; 51];
+        let short: alloc::vec::Vec<u16> = alloc::vec![1; 49];
+        let long: alloc::vec::Vec<u16> = alloc::vec![1; 51];
         assert!(validate_deck(&short, &set, 50, 50).is_err());
         assert!(validate_deck(&long, &set, 50, 50).is_err());
     }
@@ -145,7 +145,7 @@ mod tests {
     fn card_not_in_set_rejected() {
         let set = test_set();
         let mut deck = valid_deck();
-        deck[0] = 999;
+        deck[0] = 999u16;
         assert!(validate_deck(&deck, &set, 50, 50).is_err());
     }
 

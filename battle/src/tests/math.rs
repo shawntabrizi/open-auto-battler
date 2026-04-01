@@ -24,8 +24,8 @@ fn test_saturating_stat_buffs() {
     let buff_ability = create_ability(
         AbilityTrigger::OnStart,
         AbilityEffect::ModifyStats {
-            health: i32::MAX,
-            attack: i32::MAX,
+            health: i16::MAX,
+            attack: i16::MAX,
             target: AbilityTarget::All {
                 scope: TargetScope::SelfUnit,
             },
@@ -64,7 +64,7 @@ fn test_saturating_stat_buffs() {
         update.1 > 0,
         "Health should be a large positive number, not wrapped around"
     );
-    assert_eq!(update.0, i32::MAX, "Saturating add should cap at i32::MAX");
+    assert_eq!(update.0, i16::MAX, "Saturating add should cap at i16::MAX");
 }
 
 #[test]
@@ -88,7 +88,7 @@ fn test_negative_attack_prevention() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    let enemy_health_updates: Vec<i32> = events
+    let enemy_health_updates: Vec<i16> = events
         .iter()
         .filter_map(|e| {
             if let CombatEvent::DamageTaken {

@@ -46,7 +46,7 @@ fn test_berserker_combo() {
 
     let events = run_battle(&p_board, &e_board, 42);
 
-    let orc_buffs: Vec<i32> = events
+    let orc_buffs: Vec<i16> = events
         .iter()
         .filter_map(|e| {
             if let CombatEvent::AbilityModifyStats {
@@ -64,7 +64,7 @@ fn test_berserker_combo() {
         .collect();
 
     assert_eq!(
-        orc_buffs.iter().sum::<i32>(),
+        orc_buffs.iter().sum::<i16>(),
         4,
         "Orc should gain +4 Attack total (+2 Self, +2 Smith)"
     );

@@ -19,8 +19,8 @@ fn bounded_set_name(
 }
 
 fn sample_card_data(
-    attack: i32,
-    health: i32,
+    attack: i16,
+    health: i16,
 ) -> pallet_oab_card_registry::pallet::UserCardData<Test> {
     pallet_oab_card_registry::pallet::UserCardData::<Test> {
         stats: oab_battle::types::UnitStats { attack, health },
@@ -40,7 +40,7 @@ fn bounded_ghost_board(
     BoundedVec::try_from(units).unwrap()
 }
 
-fn ghost_unit(card_id: u32) -> oab_battle::bounded::GhostBoardUnit {
+fn ghost_unit(card_id: u16) -> oab_battle::bounded::GhostBoardUnit {
     oab_battle::bounded::GhostBoardUnit {
         card_id: oab_battle::types::CardId(card_id),
         perm_attack: 0,
@@ -50,7 +50,7 @@ fn ghost_unit(card_id: u32) -> oab_battle::bounded::GhostBoardUnit {
 
 /// Insert a ghost opponent directly into arena ghost storage for a given bracket.
 /// Reads the first card from the given set so the ghost is always valid for battle.
-fn seed_ghost(set_id: u32, round: i32, wins: i32, lives: i32) {
+fn seed_ghost(set_id: u16, round: u8, wins: u8, lives: u8) {
     let card_id = pallet_oab_card_registry::pallet::CardSets::<Test>::get(set_id)
         .expect("set must exist to seed ghost")
         .cards[0]
@@ -65,7 +65,7 @@ fn seed_ghost(set_id: u32, round: i32, wins: i32, lives: i32) {
     });
 }
 
-fn create_custom_set(creator: u64, card_stats: &[(i32, i32)], name: &[u8]) -> (u32, Vec<u32>) {
+fn create_custom_set(creator: u64, card_stats: &[(i16, i16)], name: &[u8]) -> (u16, Vec<u16>) {
     let mut entries = Vec::new();
     let mut card_ids = Vec::new();
 
@@ -395,15 +395,15 @@ fn test_create_card_set() {
 }
 
 #[test]
-fn test_create_card_set_rarity_overflow() {
+fn test_create_card_set_high_rarity_succeeds() {
     new_test_ext().execute_with(|| {
         let account_id = 1;
 
-        // Cards 1 and 2 exist from genesis
+        // With u8 rarity, max per-entry is 255. Two entries sum to 256 in u32 — no overflow.
         let entries = vec![
             pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 1,
-                rarity: u32::MAX,
+                rarity: u8::MAX,
             },
             pallet_oab_card_registry::pallet::CardSetEntryInput {
                 card_id: 2,
@@ -411,15 +411,12 @@ fn test_create_card_set_rarity_overflow() {
             },
         ];
 
-        // Should fail due to overflow
-        assert_noop!(
-            CardRegistry::create_card_set(
-                RuntimeOrigin::signed(account_id),
-                bounded_set_entries(entries),
-                bounded_set_name(b"Overflow Set")
-            ),
-            pallet_oab_card_registry::Error::<Test>::RarityOverflow
-        );
+        // u8 rarity values can never overflow a u32 accumulator, so this succeeds.
+        assert_ok!(CardRegistry::create_card_set(
+            RuntimeOrigin::signed(account_id),
+            bounded_set_entries(entries),
+            bounded_set_name(b"High Rarity Set")
+        ));
     });
 }
 
@@ -529,10 +526,6 @@ fn test_backfill_ghost_board_validates_bracket_and_board() {
             Error::<Test>::InvalidGhostBracket
         );
         assert_noop!(
-            Arena::backfill_ghost_board(RuntimeOrigin::root(), 0, 1, -1, 3, board.clone()),
-            Error::<Test>::InvalidGhostBracket
-        );
-        assert_noop!(
             Arena::backfill_ghost_board(RuntimeOrigin::root(), 0, 1, 0, 0, board.clone()),
             Error::<Test>::InvalidGhostBracket
         );
@@ -629,7 +622,7 @@ fn test_backfill_ghost_board_rotates_when_pool_is_full() {
         let (set_id, card_ids) = create_custom_set(1, &[(3, 4)], b"Rotation Ghost Set");
         let archive_before = crate::NextGhostArchiveId::<Test>::get();
 
-        for perm_attack in 0..12 {
+        for perm_attack in 0i16..12 {
             let mut unit = ghost_unit(card_ids[0]);
             unit.perm_attack = perm_attack;
             assert_ok!(Arena::backfill_ghost_board(

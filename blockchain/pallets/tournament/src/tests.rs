@@ -22,8 +22,8 @@ fn bounded_set_name(
 }
 
 fn sample_card_data(
-    attack: i32,
-    health: i32,
+    attack: i16,
+    health: i16,
 ) -> pallet_oab_card_registry::pallet::UserCardData<Test> {
     pallet_oab_card_registry::pallet::UserCardData::<Test> {
         stats: oab_battle::types::UnitStats { attack, health },
@@ -36,7 +36,7 @@ fn sample_card_data(
     }
 }
 
-fn ghost_unit(card_id: u32) -> oab_battle::bounded::GhostBoardUnit {
+fn ghost_unit(card_id: u16) -> oab_battle::bounded::GhostBoardUnit {
     oab_battle::bounded::GhostBoardUnit {
         card_id: oab_battle::types::CardId(card_id),
         perm_attack: 0,
@@ -46,7 +46,7 @@ fn ghost_unit(card_id: u32) -> oab_battle::bounded::GhostBoardUnit {
 
 /// Insert a ghost opponent directly into tournament ghost storage.
 /// Looks up the set from the tournament config so the ghost is always valid.
-fn seed_tournament_ghost(tournament_id: u32, round: i32, wins: i32, lives: i32) {
+fn seed_tournament_ghost(tournament_id: u32, round: u8, wins: u8, lives: u8) {
     let config = crate::Tournaments::<Test>::get(tournament_id)
         .expect("tournament must exist to seed ghost");
     let card_id = pallet_oab_card_registry::pallet::CardSets::<Test>::get(config.set_id)
@@ -63,7 +63,7 @@ fn seed_tournament_ghost(tournament_id: u32, round: i32, wins: i32, lives: i32) 
     });
 }
 
-fn create_custom_set(creator: u64, card_stats: &[(i32, i32)], name: &[u8]) -> (u32, Vec<u32>) {
+fn create_custom_set(creator: u64, card_stats: &[(i16, i16)], name: &[u8]) -> (u16, Vec<u16>) {
     let mut entries = Vec::new();
     let mut card_ids = Vec::new();
 

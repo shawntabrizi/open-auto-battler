@@ -16,8 +16,9 @@ use crate::limits::{LimitReason, Team};
 use crate::state::CardSetEntry;
 use crate::types::{
     Ability, AbilityEffect, AbilityTarget, AbilityTrigger, CardId, CommitTurnAction, Condition,
-    EconomyStats, Matcher, ShopAbility, ShopCondition, ShopEffect, ShopMatcher, ShopTarget,
-    ShopTrigger, SpawnLocation, TurnAction, UnitCard, UnitStats,
+    CountValue, EconomyStats, ManaDelta, Matcher, RoundValue, SetIdValue, ShopAbility,
+    ShopCondition, ShopEffect, ShopMatcher, ShopTarget, ShopTrigger, SpawnLocation, StatValue,
+    TurnAction, UnitCard, UnitStats,
 };
 
 // --- Ghost Opponent Types ---
@@ -29,13 +30,13 @@ use crate::types::{
 )]
 pub struct MatchmakingBracket {
     /// Card set ID - ghosts only battle within the same set
-    pub set_id: u32,
+    pub set_id: SetIdValue,
     /// Current round number (1-10+)
-    pub round: i32,
+    pub round: RoundValue,
     /// Wins accumulated (0-10)
-    pub wins: i32,
+    pub wins: RoundValue,
     /// Lives remaining (1-3)
-    pub lives: i32,
+    pub lives: RoundValue,
 }
 
 /// A unit on a ghost board (CardId + permanent stat deltas).
@@ -45,8 +46,8 @@ pub struct MatchmakingBracket {
 )]
 pub struct GhostBoardUnit {
     pub card_id: CardId,
-    pub perm_attack: i32,
-    pub perm_health: i32,
+    pub perm_attack: StatValue,
+    pub perm_health: StatValue,
 }
 
 /// A stored ghost board representing a player's board state.
@@ -234,17 +235,17 @@ impl<MaxConditions: Get<u32>> From<BoundedShopCondition<MaxConditions>> for Shop
 )]
 pub enum BoundedBattleEffect {
     Damage {
-        amount: i32,
+        amount: StatValue,
         target: AbilityTarget,
     },
     ModifyStats {
-        health: i32,
-        attack: i32,
+        health: StatValue,
+        attack: StatValue,
         target: AbilityTarget,
     },
     ModifyStatsPermanent {
-        health: i32,
-        attack: i32,
+        health: StatValue,
+        attack: StatValue,
         target: AbilityTarget,
     },
     SpawnUnit {
@@ -255,7 +256,7 @@ pub enum BoundedBattleEffect {
         target: AbilityTarget,
     },
     GainMana {
-        amount: i32,
+        amount: ManaDelta,
     },
 }
 
@@ -336,8 +337,8 @@ impl From<BoundedBattleEffect> for AbilityEffect {
 )]
 pub enum BoundedShopEffect {
     ModifyStatsPermanent {
-        health: i32,
-        attack: i32,
+        health: StatValue,
+        attack: StatValue,
         target: ShopTarget,
     },
     SpawnUnit {
@@ -348,7 +349,7 @@ pub enum BoundedShopEffect {
         target: ShopTarget,
     },
     GainMana {
-        amount: i32,
+        amount: ManaDelta,
     },
 }
 
@@ -413,7 +414,7 @@ where
     pub trigger: AbilityTrigger,
     pub effect: BoundedBattleEffect,
     pub conditions: BoundedVec<BoundedBattleCondition<MaxConditions>, MaxConditions>,
-    pub max_triggers: Option<u32>,
+    pub max_triggers: Option<CountValue>,
 }
 
 impl<MaxConditions: Get<u32>> Clone for BoundedBattleAbility<MaxConditions> {
@@ -487,7 +488,7 @@ where
     pub trigger: ShopTrigger,
     pub effect: BoundedShopEffect,
     pub conditions: BoundedVec<BoundedShopCondition<MaxConditions>, MaxConditions>,
-    pub max_triggers: Option<u32>,
+    pub max_triggers: Option<CountValue>,
 }
 
 impl<MaxConditions: Get<u32>> Clone for BoundedShopAbility<MaxConditions> {
@@ -809,8 +810,8 @@ where
     pub instance_id: UnitId,
     pub card_id: CardId,
     pub name: BoundedVec<u8, MaxStringLen>,
-    pub attack: i32,
-    pub health: i32,
+    pub attack: StatValue,
+    pub health: StatValue,
     pub battle_abilities: BoundedVec<BoundedBattleAbility<MaxConditions>, MaxAbilities>,
 }
 
@@ -926,16 +927,16 @@ where
     },
     AbilityTrigger {
         source_instance_id: UnitId,
-        ability_index: u32,
+        ability_index: crate::types::IndexValue,
     },
     Clash {
-        p_dmg: i32,
-        e_dmg: i32,
+        p_dmg: StatValue,
+        e_dmg: StatValue,
     },
     DamageTaken {
         target_instance_id: UnitId,
         team: Team,
-        remaining_hp: i32,
+        remaining_hp: StatValue,
     },
     UnitDeath {
         team: Team,
@@ -948,24 +949,24 @@ where
     AbilityDamage {
         source_instance_id: UnitId,
         target_instance_id: UnitId,
-        damage: i32,
-        remaining_hp: i32,
+        damage: StatValue,
+        remaining_hp: StatValue,
     },
     AbilityModifyStats {
         source_instance_id: UnitId,
         target_instance_id: UnitId,
-        health_change: i32,
-        attack_change: i32,
-        new_attack: i32,
-        new_health: i32,
+        health_change: StatValue,
+        attack_change: StatValue,
+        new_attack: StatValue,
+        new_health: StatValue,
     },
     AbilityModifyStatsPermanent {
         source_instance_id: UnitId,
         target_instance_id: UnitId,
-        health_change: i32,
-        attack_change: i32,
-        new_attack: i32,
-        new_health: i32,
+        health_change: StatValue,
+        attack_change: StatValue,
+        new_attack: StatValue,
+        new_health: StatValue,
     },
     AbilityDestroy {
         source_instance_id: UnitId,
@@ -974,7 +975,7 @@ where
     AbilityGainMana {
         source_instance_id: UnitId,
         team: Team,
-        amount: i32,
+        amount: ManaDelta,
     },
     UnitSpawn {
         team: Team,

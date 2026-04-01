@@ -11,7 +11,7 @@ use scale_info::TypeInfo;
 
 use oab_battle::rng::{BattleRng, XorShiftRng};
 use oab_battle::state::{find_empty_board_slot, ShopState};
-use oab_battle::types::*;
+use oab_battle::types::{BoardUnit, CardId, ManaValue, RoundValue, SetIdValue, UnitCard};
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -41,19 +41,19 @@ pub struct LocalGameState {
     /// Units on the player's board (5 slots, index 0 is front)
     pub board: Vec<Option<BoardUnit>>,
     /// Maximum mana that can be held (increases each round)
-    pub mana_limit: i32,
+    pub mana_limit: ManaValue,
     /// Current mana available during the shop turn
-    pub shop_mana: i32,
+    pub shop_mana: ManaValue,
     /// Current round number (1-indexed)
-    pub round: i32,
+    pub round: RoundValue,
     /// Lives remaining
-    pub lives: i32,
+    pub lives: RoundValue,
     /// Wins accumulated
-    pub wins: i32,
+    pub wins: RoundValue,
     /// Current game phase
     pub phase: GamePhase,
     /// Counter for generating unique card IDs
-    pub next_card_id: u32,
+    pub next_card_id: u16,
     /// Seed for deterministic hand derivation
     pub game_seed: u64,
 }
@@ -63,7 +63,7 @@ pub struct LocalGameState {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GameSession {
     pub state: LocalGameState,
-    pub set_id: u32,
+    pub set_id: SetIdValue,
     pub config: crate::GameConfig,
 }
 
@@ -85,13 +85,13 @@ pub struct GameState {
     /// Cards remaining in the bag (unordered pool)
     pub bag: Vec<CardId>,
     /// Lives remaining
-    pub lives: i32,
+    pub lives: RoundValue,
     /// Wins accumulated
-    pub wins: i32,
+    pub wins: RoundValue,
     /// Current game phase
     pub phase: GamePhase,
     /// Counter for generating unique card IDs
-    pub next_card_id: u32,
+    pub next_card_id: u16,
 }
 
 impl core::ops::Deref for GameState {
@@ -155,7 +155,7 @@ impl GameState {
     /// Construct a full GameState from card_pool, config, and a flat LocalGameState
     pub fn reconstruct(
         card_pool: BTreeMap<CardId, UnitCard>,
-        set_id: u32,
+        set_id: SetIdValue,
         config: crate::GameConfig,
         local: LocalGameState,
     ) -> Self {
@@ -184,7 +184,7 @@ impl GameState {
         self,
     ) -> (
         BTreeMap<CardId, UnitCard>,
-        u32,
+        SetIdValue,
         crate::GameConfig,
         LocalGameState,
     ) {
@@ -252,7 +252,7 @@ impl GameState {
 pub fn derive_hand_indices_logic(
     bag_len: usize,
     game_seed: u64,
-    round: i32,
+    round: RoundValue,
     hand_size: usize,
 ) -> Vec<usize> {
     if bag_len == 0 {

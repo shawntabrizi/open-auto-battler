@@ -33,28 +33,33 @@ pub use view::*;
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GameConfig {
     /// Starting lives for the player.
-    pub starting_lives: i32,
+    pub starting_lives: oab_battle::types::RoundValue,
     /// Wins needed for victory.
-    pub wins_to_victory: i32,
+    pub wins_to_victory: oab_battle::types::RoundValue,
     /// Mana limit at round 1.
-    pub starting_mana_limit: i32,
+    pub starting_mana_limit: oab_battle::types::ManaValue,
     /// Maximum mana limit (cap for progression).
-    pub max_mana_limit: i32,
+    pub max_mana_limit: oab_battle::types::ManaValue,
     /// If true, shop_mana is set to mana_limit at the start of each round
     /// (players don't need to burn cards for mana).
     pub full_mana_each_round: bool,
     /// Number of board slots.
-    pub board_size: u32,
+    pub board_size: oab_battle::types::IndexValue,
     /// Number of cards drawn per round as the player's hand.
-    pub hand_size: u32,
+    pub hand_size: oab_battle::types::IndexValue,
     /// Number of cards in the starting bag/deck.
-    pub bag_size: u32,
+    pub bag_size: oab_battle::types::IndexValue,
 }
 
 impl GameConfig {
     /// Calculate the mana limit for a given round.
-    pub fn mana_limit_for_round(&self, round: i32) -> i32 {
-        (self.starting_mana_limit + round - 1).min(self.max_mana_limit)
+    pub fn mana_limit_for_round(
+        &self,
+        round: oab_battle::types::RoundValue,
+    ) -> oab_battle::types::ManaValue {
+        self.starting_mana_limit
+            .saturating_add(round.saturating_sub(1))
+            .min(self.max_mana_limit)
     }
 }
 

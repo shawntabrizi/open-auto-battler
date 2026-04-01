@@ -12,7 +12,7 @@ use parity_scale_codec::{Decode, DecodeWithMemTracking, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
 use oab_battle::bounded::BoundedUnitCard;
-use oab_battle::types::{BoardUnit, CardId};
+use oab_battle::types::{BoardUnit, CardId, ManaValue, RoundValue, SetIdValue};
 
 use crate::state::{derive_hand_indices_logic, GamePhase, GameSession, GameState, LocalGameState};
 
@@ -81,13 +81,13 @@ where
     pub bag: BoundedVec<CardId, MaxBagSize>,
     pub hand: BoundedVec<CardId, MaxHandActions>,
     pub board: BoundedVec<Option<BoardUnit>, MaxBoardSize>,
-    pub mana_limit: i32,
-    pub shop_mana: i32,
-    pub round: i32,
-    pub lives: i32,
-    pub wins: i32,
+    pub mana_limit: ManaValue,
+    pub shop_mana: ManaValue,
+    pub round: RoundValue,
+    pub lives: RoundValue,
+    pub wins: RoundValue,
     pub phase: GamePhase,
-    pub next_card_id: u32,
+    pub next_card_id: u16,
     pub game_seed: u64,
 }
 
@@ -227,7 +227,7 @@ where
     MaxHandActions: Get<u32>,
 {
     pub state: BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>,
-    pub set_id: u32,
+    pub set_id: SetIdValue,
     pub config: crate::GameConfig,
 }
 
@@ -347,7 +347,7 @@ pub struct BoundedGameState<
         BoundedUnitCard<MaxAbilities, MaxStringLen, MaxConditions>,
         MaxBagSize,
     >,
-    pub set_id: u32,
+    pub set_id: SetIdValue,
     pub local_state: BoundedLocalGameState<MaxBagSize, MaxBoardSize, MaxHandActions>,
 }
 
