@@ -167,7 +167,7 @@ export const useSandboxStore = create<SandboxStore>((set, get) => ({
 
     try {
       const output = wasmModule.run_sandbox_battle(playerUnits, enemyUnits, BigInt(battleSeed));
-      set({ battleOutput: output, isBattling: true });
+      set({ battleOutput: output, isBattling: true, selectedTemplate: null });
     } catch (err) {
       console.error('Failed to run sandbox battle:', err);
     }
