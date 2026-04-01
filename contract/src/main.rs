@@ -196,6 +196,27 @@ fn caller_address() -> [u8; 20] {
     addr
 }
 
+// ── Admin storage ────────────────────────────────────────────────────────────
+
+/// Fixed storage key for the admin (deployer) address.
+const ADMIN_KEY: [u8; 32] = [
+    0xad, 0xad, 0xad, 0xad, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+
+fn save_admin(addr: &[u8; 20]) {
+    api::set_storage(StorageFlags::empty(), &ADMIN_KEY, addr);
+}
+
+fn is_admin(addr: &[u8; 20]) -> bool {
+    let mut buf = [0u8; 20];
+    let mut buf_ref: &mut [u8] = &mut buf;
+    match api::get_storage(StorageFlags::empty(), &ADMIN_KEY, &mut buf_ref) {
+        Ok(()) => buf_ref == *addr,
+        Err(_) => false,
+    }
+}
+
 // ── Storage keys ─────────────────────────────────────────────────────────────
 
 fn hash_key(prefix: &[u8], suffix: &[u8]) -> [u8; 32] {
@@ -359,11 +380,13 @@ fn sync_from_shop_state(session: &mut ArenaSession, shop: &oab_battle::state::Sh
 // ── Admin: registerCard ──────────────────────────────────────────────────────
 
 fn handle_register_card(calldata: &[u8]) {
+    if !is_admin(&caller_address()) { return; }
     if calldata.len() < 4 + 32 { return; }
     let params = &calldata[4..];
     let off = match read_u256_as_usize(params, 0) { Some(v) => v, None => return };
     let data = match read_abi_bytes(params, off) { Some(v) => v, None => return };
     let card: UnitCard = match Decode::decode(&mut &data[..]) { Ok(v) => v, Err(_) => return };
+    if load_card(card.id).is_some() { return; } // Already registered, immutable
     save_card(&card);
     let mut output = [0u8; 32];
     output[31] = 1;
@@ -373,12 +396,14 @@ fn handle_register_card(calldata: &[u8]) {
 // ── Admin: registerSet ───────────────────────────────────────────────────────
 
 fn handle_register_set(calldata: &[u8]) {
+    if !is_admin(&caller_address()) { return; }
     if calldata.len() < 4 + 64 { return; }
     let params = &calldata[4..];
     let set_id = match read_u256_as_u16(params, 0) { Some(v) => v, None => return };
     let off = match read_u256_as_usize(params, 32) { Some(v) => v, None => return };
     let data = match read_abi_bytes(params, off) { Some(v) => v, None => return };
     let card_set: CardSet = match Decode::decode(&mut &data[..]) { Ok(v) => v, Err(_) => return };
+    if load_card_set(set_id).is_some() { return; } // Already registered, immutable
     save_card_set(set_id, &card_set);
     let mut output = [0u8; 32];
     output[31] = 1;
@@ -564,7 +589,10 @@ fn handle_abandon_game() {
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
-pub extern "C" fn deploy() {}
+pub extern "C" fn deploy() {
+    let addr = caller_address();
+    save_admin(&addr);
+}
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
