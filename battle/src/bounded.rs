@@ -21,34 +21,9 @@ use crate::types::{
     TurnAction, UnitCard, UnitStats,
 };
 
-// --- Ghost Opponent Types ---
+// --- Ghost Opponent Types (re-exported from types.rs) ---
 
-/// Matchmaking bracket for ghost opponent lookup.
-/// Ghosts are indexed by these fields to ensure fair matchups within the same card set.
-#[derive(
-    Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen, Clone, PartialEq, Eq, Debug,
-)]
-pub struct MatchmakingBracket {
-    /// Card set ID - ghosts only battle within the same set
-    pub set_id: SetIdValue,
-    /// Current round number (1-10+)
-    pub round: RoundValue,
-    /// Wins accumulated (0-10)
-    pub wins: RoundValue,
-    /// Lives remaining (1-3)
-    pub lives: RoundValue,
-}
-
-/// A unit on a ghost board (CardId + permanent stat deltas).
-/// Stores minimal data needed to reconstruct buffed combat units.
-#[derive(
-    Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen, Clone, PartialEq, Eq, Debug,
-)]
-pub struct GhostBoardUnit {
-    pub card_id: CardId,
-    pub perm_attack: StatValue,
-    pub perm_health: StatValue,
-}
+pub use crate::types::{GhostBoardUnit, MatchmakingBracket};
 
 /// A stored ghost board representing a player's board state.
 /// Contains card references and permanent stat deltas; full card stats

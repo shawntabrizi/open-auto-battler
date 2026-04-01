@@ -150,7 +150,8 @@ const PHASE_COMPLETED: u8 = 1;
 const REGISTER_CARD: [u8; 4] = [0xd6, 0xc0, 0x9c, 0x1d];
 const REGISTER_SET: [u8; 4] = [0xd8, 0xf4, 0x1b, 0x6a];
 const START_GAME: [u8; 4] = [0xe8, 0xc0, 0x12, 0x7d];
-const SUBMIT_TURN: [u8; 4] = [0x20, 0xfa, 0x49, 0x07];
+// keccak256("submitTurn(bytes)")[0..4]
+const SUBMIT_TURN: [u8; 4] = [0x21, 0x70, 0x81, 0xfe];
 const GET_GAME_STATE: [u8; 4] = [0x17, 0x60, 0xf3, 0xa3];
 const ABANDON_GAME: [u8; 4] = [0xd6, 0xb5, 0x6d, 0xed];
 
@@ -243,6 +244,16 @@ fn game_storage_key(addr: &[u8; 20]) -> [u8; 32] {
     hash_key(b"game", addr)
 }
 
+/// Storage key for ghost opponent pool: keccak256("ghst" ++ set_id ++ round ++ wins ++ lives)
+fn ghost_pool_key(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue) -> [u8; 32] {
+    let mut suffix = [0u8; 5]; // u16 + u8 + u8 + u8
+    suffix[0..2].copy_from_slice(&set_id.to_le_bytes());
+    suffix[2] = round;
+    suffix[3] = wins;
+    suffix[4] = lives;
+    hash_key(b"ghst", &suffix)
+}
+
 // ── Storage read/write helpers ───────────────────────────────────────────────
 
 fn storage_read<T: Decode>(key: &[u8; 32], buf: &mut [u8]) -> Option<T> {
@@ -273,6 +284,65 @@ fn save_session(addr: &[u8; 20], session: &ArenaSession) {
 
 fn delete_session(addr: &[u8; 20]) {
     storage_delete(&game_storage_key(addr));
+}
+
+// ── Ghost opponent storage ───────────────────────────────────────────────────
+
+/// A ghost pool: FIFO list of opponent boards for a bracket.
+type GhostPool = Vec<Vec<GhostBoardUnit>>;
+
+const MAX_GHOSTS_PER_BRACKET: usize = 10;
+
+fn load_ghost_pool(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue) -> GhostPool {
+    let key = ghost_pool_key(set_id, round, wins, lives);
+    let mut buf = [0u8; 416];
+    storage_read::<GhostPool>(&key, &mut buf).unwrap_or_default()
+}
+
+fn save_ghost_pool(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue, pool: &GhostPool) {
+    let key = ghost_pool_key(set_id, round, wins, lives);
+    storage_write(&key, &pool.encode());
+}
+
+/// Push a ghost board into the bracket pool with FIFO rotation.
+fn push_ghost(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue, board: Vec<GhostBoardUnit>) {
+    if board.is_empty() { return; }
+    let mut pool = load_ghost_pool(set_id, round, wins, lives);
+    if pool.len() >= MAX_GHOSTS_PER_BRACKET {
+        pool.remove(0); // FIFO: drop oldest
+    }
+    pool.push(board);
+    save_ghost_pool(set_id, round, wins, lives, &pool);
+}
+
+/// Select a ghost opponent from the bracket pool using the battle seed.
+fn select_ghost(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue, seed: u64, card_pool: &BTreeMap<CardId, UnitCard>) -> Vec<CombatUnit> {
+    let pool = load_ghost_pool(set_id, round, wins, lives);
+    if pool.is_empty() { return Vec::new(); }
+
+    let mut rng = XorShiftRng::seed_from_u64(seed);
+    let index = rng.gen_range(pool.len());
+    let ghost = &pool[index];
+
+    // Convert ghost board units to combat units
+    ghost.iter().filter_map(|unit| {
+        card_pool.get(&unit.card_id).map(|card| {
+            let mut cu = CombatUnit::from_card(card.clone());
+            cu.attack_buff = unit.perm_attack;
+            cu.health_buff = unit.perm_health;
+            cu.health = cu.health.saturating_add(unit.perm_health);
+            cu
+        })
+    }).collect()
+}
+
+/// Extract ghost board from the player's current board state.
+fn create_ghost_from_board(board: &[Option<BoardUnit>]) -> Vec<GhostBoardUnit> {
+    board.iter().flatten().map(|bu| GhostBoardUnit {
+        card_id: bu.card_id,
+        perm_attack: bu.perm_attack,
+        perm_health: bu.perm_health,
+    }).collect()
 }
 
 fn load_card(card_id: CardId) -> Option<UnitCard> {
@@ -456,15 +526,12 @@ fn handle_submit_turn(calldata: &[u8]) {
     let mut session = match load_session(&addr) { Some(s) => s, None => return };
     if session.phase != PHASE_SHOP { return; }
 
-    if calldata.len() < 4 + 64 { return; }
+    // Decode params: (bytes action) — single bytes param
+    if calldata.len() < 4 + 32 { return; }
     let params = &calldata[4..];
     let off_action = match read_u256_as_usize(params, 0) { Some(v) => v, None => return };
-    let off_enemy = match read_u256_as_usize(params, 32) { Some(v) => v, None => return };
     let action_bytes = match read_abi_bytes(params, off_action) { Some(v) => v, None => return };
-    let enemy_bytes = match read_abi_bytes(params, off_enemy) { Some(v) => v, None => return };
-
     let action: CommitTurnAction = match Decode::decode(&mut &action_bytes[..]) { Ok(v) => v, Err(_) => return };
-    let enemy_units: Vec<CombatUnit> = match Decode::decode(&mut &enemy_bytes[..]) { Ok(v) => v, Err(_) => return };
 
     // Load card pool from on-chain storage
     let card_set = match load_card_set(session.set_id) { Some(cs) => cs, None => return };
@@ -474,6 +541,10 @@ fn handle_submit_turn(calldata: &[u8]) {
     let mut shop_state = make_shop_state(&session, &card_pool);
     if verify_and_apply_turn(&mut shop_state, &action).is_err() { return; }
     shop_state.shop_mana = 0;
+
+    // Store player's board as ghost BEFORE battle (so they fight someone else's ghost)
+    let player_ghost = create_ghost_from_board(&shop_state.board);
+    push_ghost(session.set_id, session.round, session.wins, session.lives, player_ghost);
 
     // Extract player combat units
     let mut player_slots = Vec::new();
@@ -490,7 +561,10 @@ fn handle_submit_turn(calldata: &[u8]) {
             })
         }).collect();
 
+    // Select ghost opponent from the pool (fallback to empty board = easy win)
     let battle_seed = derive_seed(&addr, b"battle", session.game_seed);
+    let enemy_units = select_ghost(session.set_id, session.round, session.wins, session.lives, battle_seed, &card_pool);
+
     let mut rng = XorShiftRng::seed_from_u64(battle_seed);
     let events = resolve_battle(player_units, enemy_units, &mut rng, &card_pool, config.board_size as usize);
 

@@ -147,24 +147,22 @@ export function createContractBackend(deps: {
       return { seed: seedNonce };
     },
 
-    async submitTurn(actionScale: Uint8Array, enemyBoard: Uint8Array): Promise<TurnResult> {
-      const data = encodeSubmitTurn(actionScale, enemyBoard);
+    async submitTurn(actionScale: Uint8Array, _enemyBoard: Uint8Array): Promise<TurnResult> {
+      // Contract selects the ghost opponent internally — we only send the action.
+      const data = encodeSubmitTurn(actionScale);
 
-      // For contract calls, we need to simulate first to get the return value,
-      // then send the actual transaction.
+      // Simulate first to get the return value (result, wins, lives, round, battleSeed)
       const returnData = await callView(data);
       const result = decodeSubmitTurnResult(returnData);
 
-      // Now send the actual transaction
+      // Send the actual transaction
       await sendTx(data);
 
-      // The enemy board was provided by us, so we already know it.
-      // Decode enemy units from the SCALE bytes we sent.
-      const opponentBoard: GhostBoardUnit[] = []; // Caller already has this
-
+      // The contract picked the opponent — we don't know the board here.
+      // The caller will need to get it from getGameState or skip local replay.
       return {
         battleSeed: result.battleSeed,
-        opponentBoard,
+        opponentBoard: [], // Ghost selected on-chain, not available to frontend
         result: result.result,
         wins: result.wins,
         lives: result.lives,

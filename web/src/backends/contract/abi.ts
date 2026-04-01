@@ -12,7 +12,7 @@ export const SELECTORS = {
   registerCard:  '0xd6c09c1d' as const,
   registerSet:   '0xd8f41b6a' as const,
   startGame:     '0xe8c0127d' as const,
-  submitTurn:    '0x20fa4907' as const,
+  submitTurn:    '0x217081fe' as const,  // keccak256("submitTurn(bytes)")
   getGameState:  '0x1760f3a3' as const,
   abandonGame:   '0xd6b56ded' as const,
 } as const;
@@ -46,19 +46,11 @@ export function encodeStartGame(setId: number, seedNonce: bigint): `0x${string}`
   return `0x${SELECTORS.startGame.slice(2)}${encodeUint(setId)}${encodeUint(seedNonce)}` as `0x${string}`;
 }
 
-/** Build calldata for submitTurn(bytes actionScale, bytes enemyBoardScale) */
-export function encodeSubmitTurn(actionScale: Uint8Array, enemyBoardScale: Uint8Array): `0x${string}` {
-  // ABI layout: selector + offset1 + offset2 + bytes1 + bytes2
+/** Build calldata for submitTurn(bytes actionScale) — contract selects opponent internally */
+export function encodeSubmitTurn(actionScale: Uint8Array): `0x${string}` {
   const action = encodeBytes(actionScale);
-  const enemy = encodeBytes(enemyBoardScale);
-
-  // offset to first bytes = 64 (2 words for the two offset pointers)
-  const offset1 = encodeUint(64);
-  // offset to second bytes = 64 + 32 + padded_action_len
-  const actionWordsLen = action.data.length / 2; // bytes
-  const offset2 = encodeUint(64 + actionWordsLen);
-
-  return `0x${SELECTORS.submitTurn.slice(2)}${offset1}${offset2}${action.data}${enemy.data}` as `0x${string}`;
+  const offset = encodeUint(32);
+  return `0x${SELECTORS.submitTurn.slice(2)}${offset}${action.data}` as `0x${string}`;
 }
 
 /** Build calldata for getGameState() */
