@@ -21,29 +21,17 @@ import {
   encodeSubmitTurn,
   encodeGetGameState,
   encodeAbandonGame,
+  encodeGetSet,
   decodeSubmitTurnResult,
   decodeGetGameStateResult,
 } from './abi';
-
-// ── Chain definition for Polkadot Hub TestNet ────────────────────────────────
-
-const polkadotHubTestnet: Chain = {
-  id: 420420417,
-  name: 'Polkadot Hub TestNet',
-  nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 },
-  rpcUrls: {
-    default: { http: ['https://eth-rpc-testnet.polkadot.io/'] },
-  },
-  blockExplorers: {
-    default: { name: 'Blockscout', url: 'https://blockscout-testnet.polkadot.io/' },
-  },
-};
 
 // ── ContractBackend ──────────────────────────────────────────────────────────
 
 export function createContractBackend(deps: {
   rpcUrl?: string;
   contractAddress: `0x${string}`;
+  chainId?: number;
 }): GameBackend {
   const contractAddress = deps.contractAddress;
   let publicClient: PublicClient | null = null;
@@ -51,14 +39,17 @@ export function createContractBackend(deps: {
   let accounts: Account[] = [];
   let _selectedAccount: Account | null = null;
   let _isConnected = false;
-  let chain: Chain = {
-    ...polkadotHubTestnet,
-    rpcUrls: deps.rpcUrl
-      ? { default: { http: [deps.rpcUrl] } }
-      : polkadotHubTestnet.rpcUrls,
+  let _activeSetId: number = 0; // Track which set the current game uses
+
+  const chain: Chain = {
+    id: deps.chainId ?? 420420420, // Local dev node default
+    name: 'PolkaVM',
+    nativeCurrency: { name: 'DEV', symbol: 'DEV', decimals: 18 },
+    rpcUrls: {
+      default: { http: [deps.rpcUrl ?? 'http://localhost:8545'] },
+    },
   };
 
-  /** Send a transaction to the contract and wait for receipt. */
   async function sendTx(data: `0x${string}`): Promise<`0x${string}`> {
     if (!walletClient || !_selectedAccount) throw new Error('Not connected');
     const hash = await walletClient.sendTransaction({
@@ -67,13 +58,11 @@ export function createContractBackend(deps: {
       data,
       chain,
     });
-    // Wait for receipt
     const receipt = await publicClient!.waitForTransactionReceipt({ hash });
     if (receipt.status === 'reverted') throw new Error('Transaction reverted');
     return hash;
   }
 
-  /** Call a view function on the contract (no gas, no signing). */
   async function callView(data: `0x${string}`): Promise<`0x${string}`> {
     if (!publicClient) throw new Error('Not connected');
     const result = await publicClient.call({
@@ -83,18 +72,18 @@ export function createContractBackend(deps: {
     return (result.data ?? '0x') as `0x${string}`;
   }
 
+  /** Decode ABI-wrapped bytes response into Uint8Array */
+  function decodeBytesResponse(data: `0x${string}`): Uint8Array | null {
+    return decodeGetGameStateResult(data); // Same ABI layout: offset + length + data
+  }
+
   const backend: GameBackend = {
     name: 'PolkaVM Contract',
 
     async connect() {
-      // Set up public client for reads
-      const transport: Transport = deps.rpcUrl
-        ? http(deps.rpcUrl)
-        : http(polkadotHubTestnet.rpcUrls.default.http[0]);
-
+      const transport: Transport = http(chain.rpcUrls.default.http[0]);
       publicClient = createPublicClient({ chain, transport });
 
-      // Check for injected Ethereum provider (MetaMask etc.)
       const ethereum = (window as any).ethereum;
       if (ethereum) {
         walletClient = createWalletClient({
@@ -102,7 +91,6 @@ export function createContractBackend(deps: {
           transport: custom(ethereum),
         });
 
-        // Request account access
         const addresses = await walletClient.requestAddresses();
         accounts = addresses.map((addr: `0x${string}`, i: number) => ({
           name: `Account ${i + 1}`,
@@ -114,6 +102,8 @@ export function createContractBackend(deps: {
         if (accounts.length > 0) {
           _selectedAccount = accounts[0];
         }
+      } else {
+        throw new Error('No Ethereum wallet found. Install MetaMask.');
       }
 
       _isConnected = true;
@@ -128,7 +118,6 @@ export function createContractBackend(deps: {
     },
 
     get isConnected() { return _isConnected; },
-
     async getAccounts() { return accounts; },
     get selectedAccount() { return _selectedAccount; },
     selectAccount(account: Account) { _selectedAccount = account; },
@@ -136,33 +125,23 @@ export function createContractBackend(deps: {
     // ── Arena game ─────────────────────────────────────────────────────
 
     async startGame(setId: number): Promise<{ seed: bigint }> {
-      // Generate a random seed nonce
+      _activeSetId = setId;
       const seedNonce = BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
-      const data = encodeStartGame(setId, seedNonce);
-      await sendTx(data);
-
-      // Read back the game state to get the seed
-      // (The contract returns the seed but we can't easily read tx return values)
-      // For now, use the nonce as an approximation; the real seed comes from getGameState
+      await sendTx(encodeStartGame(setId, seedNonce));
       return { seed: seedNonce };
     },
 
     async submitTurn(actionScale: Uint8Array, _enemyBoard: Uint8Array): Promise<TurnResult> {
-      // Contract selects the ghost opponent internally — we only send the action.
       const data = encodeSubmitTurn(actionScale);
 
-      // Simulate first to get the return value (result, wins, lives, round, battleSeed)
+      // Simulate to get return value, then send actual TX
       const returnData = await callView(data);
       const result = decodeSubmitTurnResult(returnData);
-
-      // Send the actual transaction
       await sendTx(data);
 
-      // The contract picked the opponent — we don't know the board here.
-      // The caller will need to get it from getGameState or skip local replay.
       return {
         battleSeed: result.battleSeed,
-        opponentBoard: [], // Ghost selected on-chain, not available to frontend
+        opponentBoard: [], // Ghost selected on-chain
         result: result.result,
         wins: result.wins,
         lives: result.lives,
@@ -171,22 +150,19 @@ export function createContractBackend(deps: {
     },
 
     async getGameState(): Promise<GameStateRaw | null> {
-      const data = encodeGetGameState();
-      const returnData = await callView(data);
-      const scaleBytes = decodeGetGameStateResult(returnData);
-      if (!scaleBytes || scaleBytes.length === 0) return null;
+      const returnData = await callView(encodeGetGameState());
+      const stateBytes = decodeGetGameStateResult(returnData);
+      if (!stateBytes || stateBytes.length === 0) return null;
 
-      // The contract returns the ArenaSession SCALE bytes.
-      // We also need the card set bytes — load from the session's set_id.
-      // For now, return the session bytes; card set handling TBD.
-      return {
-        stateBytes: scaleBytes,
-        cardSetBytes: new Uint8Array(), // TODO: fetch card set from contract
-      };
+      // Fetch the card set for the active game
+      const setData = await callView(encodeGetSet(_activeSetId));
+      const cardSetBytes = decodeBytesResponse(setData) ?? new Uint8Array();
+
+      return { stateBytes, cardSetBytes };
     },
 
     async endGame(): Promise<void> {
-      // Contract games auto-complete — no separate endGame needed.
+      // Contract games auto-complete
     },
 
     async abandonGame(): Promise<void> {
@@ -196,21 +172,19 @@ export function createContractBackend(deps: {
     // ── Card data ──────────────────────────────────────────────────────
 
     async getCards(): Promise<CardData[]> {
-      // Cards are stored in the contract by the admin.
-      // For now, use the baked-in card data from oab-assets (loaded by WASM engine).
-      // A full implementation would read cards from contract storage.
+      // The WASM engine has baked-in card data from oab-assets.
+      // We don't need to fetch individual cards from the contract for the UI.
+      // The contract stores them for on-chain battle resolution.
       return [];
     },
 
     async getSets(): Promise<SetData[]> {
-      // Sets are stored in the contract by the admin.
-      // Same as above — use baked-in data for now.
+      // Same — the WASM engine has baked-in set data.
       return [];
     },
 
     async getGhostOpponent(): Promise<{ board: GhostBoardUnit[]; seed: bigint } | null> {
-      // Contract doesn't have on-chain ghost pool yet.
-      // The frontend provides the opponent board directly.
+      // Ghost selection happens on-chain in submitTurn
       return null;
     },
   };

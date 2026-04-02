@@ -38,7 +38,7 @@ interface ContractStore {
   refreshGameState: () => Promise<void>;
 }
 
-const DEFAULT_RPC = 'https://eth-rpc-testnet.polkadot.io/';
+const DEFAULT_RPC = 'http://localhost:8545';
 const DEFAULT_CONTRACT = '0x' + '0'.repeat(40); // Placeholder — set via UI or config
 
 export const useContractStore = create<ContractStore>((set, get) => ({

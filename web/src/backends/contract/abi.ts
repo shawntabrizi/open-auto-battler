@@ -15,6 +15,8 @@ export const SELECTORS = {
   submitTurn:    '0x217081fe' as const,  // keccak256("submitTurn(bytes)")
   getGameState:  '0x1760f3a3' as const,
   abandonGame:   '0xd6b56ded' as const,
+  getCard:       '0xcd25ba26' as const,
+  getSet:        '0x3e42c388' as const,
 } as const;
 
 // ── ABI encoding helpers ─────────────────────────────────────────────────────
@@ -134,4 +136,14 @@ export function decodeGetGameStateResult(data: `0x${string}`): Uint8Array | null
 export function decodeStartGameResult(data: `0x${string}`): bigint {
   const hex = data.startsWith('0x') ? data.slice(2) : data;
   return BigInt('0x' + hex.slice(48, 64));
+}
+
+/** Build calldata for getCard(uint16 cardId) */
+export function encodeGetCard(cardId: number): `0x${string}` {
+  return `0x${SELECTORS.getCard.slice(2)}${encodeUint(cardId)}` as `0x${string}`;
+}
+
+/** Build calldata for getSet(uint16 setId) */
+export function encodeGetSet(setId: number): `0x${string}` {
+  return `0x${SELECTORS.getSet.slice(2)}${encodeUint(setId)}` as `0x${string}`;
 }
