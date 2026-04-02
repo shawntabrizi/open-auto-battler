@@ -101,6 +101,7 @@ export function createContractBackend(deps: {
     const result = await publicClient.call({
       to: contractAddress,
       data,
+      account: _selectedAccount?.address as `0x${string}` | undefined,
     });
     return (result.data ?? '0x') as `0x${string}`;
   }
