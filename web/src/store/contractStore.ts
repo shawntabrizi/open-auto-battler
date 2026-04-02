@@ -218,12 +218,15 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       if (gameState && gameState.stateBytes.length > 0) {
         const { engine } = useGameStore.getState();
         if (engine) {
+          // Ensure the card pool is loaded before init_from_scale
+          try { engine.load_card_set(0); } catch {}
           engine.init_from_scale(gameState.stateBytes, gameState.cardSetBytes);
           const view = engine.get_view();
           const cardSet = engine.get_card_set();
           useGameStore.setState({
             view,
             cardSet,
+            currentSetId: 0,
             gameStarted: true,
           });
         }
