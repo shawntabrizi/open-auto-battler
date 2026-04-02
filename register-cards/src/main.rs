@@ -23,7 +23,7 @@ fn encode_bytes(data: &[u8]) -> String {
     let len = encode_uint(data.len() as u64);
     let hex: String = data.iter().map(|b| format!("{:02x}", b)).collect();
     let padded_len = ((hex.len() + 63) / 64) * 64;
-    format!("{}{:<width$}", len, hex, width = padded_len)
+    format!("{}{:0<width$}", len, hex, width = padded_len)
 }
 
 fn encode_register_card(card: &UnitCard) -> String {
