@@ -81,6 +81,13 @@ export const useContractStore = create<ContractStore>((set, get) => ({
         selectedAccount: accounts[0] ?? null,
       });
 
+      // Initialize the WASM engine with baked-in card data
+      // (the contract stores cards on-chain, but the engine has them baked in)
+      const { engine, init: initEngine } = useGameStore.getState();
+      if (!engine) {
+        await initEngine();
+      }
+
       return true;
     } catch (err) {
       console.error('Contract connection failed:', err);
@@ -116,11 +123,17 @@ export const useContractStore = create<ContractStore>((set, get) => ({
 
   startGame: async (setId: number) => {
     const { backend } = get();
-    if (!backend) return;
+    if (!backend) {
+      console.error('Contract startGame: no backend connected');
+      return;
+    }
 
     try {
-      await backend.startGame(setId);
+      console.log(`Contract: starting game with set ${setId}...`);
+      const result = await backend.startGame(setId);
+      console.log('Contract: game started, seed:', result.seed);
       await get().refreshGameState();
+      console.log('Contract: game state refreshed, hasActiveGame:', get().hasActiveGame);
     } catch (err) {
       console.error('Contract start game failed:', err);
     }
