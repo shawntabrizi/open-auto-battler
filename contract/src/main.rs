@@ -154,6 +154,8 @@ const START_GAME: [u8; 4] = [0xe8, 0xc0, 0x12, 0x7d];
 const SUBMIT_TURN: [u8; 4] = [0x21, 0x70, 0x81, 0xfe];
 const GET_GAME_STATE: [u8; 4] = [0x17, 0x60, 0xf3, 0xa3];
 const ABANDON_GAME: [u8; 4] = [0xd6, 0xb5, 0x6d, 0xed];
+const GET_CARD: [u8; 4] = [0xcd, 0x25, 0xba, 0x26];
+const GET_SET: [u8; 4] = [0x3e, 0x42, 0xc3, 0x88];
 
 // ── ABI helpers ──────────────────────────────────────────────────────────────
 
@@ -661,6 +663,39 @@ fn handle_abandon_game() {
     api::return_value(ReturnFlags::empty(), &output);
 }
 
+// ── Read: getCard, getSet ────────────────────────────────────────────────────
+
+fn handle_get_card(calldata: &[u8]) {
+    if calldata.len() < 4 + 32 { return; }
+    let params = &calldata[4..];
+    let card_id = match read_u256_as_u16(params, 0) { Some(v) => v, None => return };
+    let card = match load_card(CardId(card_id)) { Some(c) => c, None => return };
+    let encoded = card.encode();
+    // Return as ABI bytes
+    let padded_len = (encoded.len() + 31) / 32 * 32;
+    let total = 64 + padded_len;
+    let mut output = alloc::vec![0u8; total];
+    output[31] = 32;
+    output[56..64].copy_from_slice(&(encoded.len() as u64).to_be_bytes());
+    output[64..64 + encoded.len()].copy_from_slice(&encoded);
+    api::return_value(ReturnFlags::empty(), &output);
+}
+
+fn handle_get_set(calldata: &[u8]) {
+    if calldata.len() < 4 + 32 { return; }
+    let params = &calldata[4..];
+    let set_id = match read_u256_as_u16(params, 0) { Some(v) => v, None => return };
+    let card_set = match load_card_set(set_id) { Some(s) => s, None => return };
+    let encoded = card_set.encode();
+    let padded_len = (encoded.len() + 31) / 32 * 32;
+    let total = 64 + padded_len;
+    let mut output = alloc::vec![0u8; total];
+    output[31] = 32;
+    output[56..64].copy_from_slice(&(encoded.len() as u64).to_be_bytes());
+    output[64..64 + encoded.len()].copy_from_slice(&encoded);
+    api::return_value(ReturnFlags::empty(), &output);
+}
+
 // ── Contract entry points ────────────────────────────────────────────────────
 
 #[no_mangle]
@@ -684,6 +719,8 @@ pub extern "C" fn call() {
         SUBMIT_TURN => handle_submit_turn(&calldata),
         GET_GAME_STATE => handle_get_game_state(&calldata),
         ABANDON_GAME => handle_abandon_game(),
+        GET_CARD => handle_get_card(&calldata),
+        GET_SET => handle_get_set(&calldata),
         _ => {}
     }
 }
