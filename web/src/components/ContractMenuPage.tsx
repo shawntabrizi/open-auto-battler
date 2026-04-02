@@ -3,9 +3,13 @@ import { TopBar } from './TopBar';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 
-/** Contract mode main menu — connect wallet and choose game mode. */
+/** Contract mode main menu — connect wallet, select account, and choose game mode. */
 export function ContractMenuPage() {
-  const { isConnected, isConnecting, connect, disconnect, connectionError, rpcUrl, contractAddress, setConfig } = useContractStore();
+  const {
+    isConnected, isConnecting, connect, disconnect, connectionError,
+    rpcUrl, contractAddress, setConfig,
+    accounts, selectedAccount, selectAccount,
+  } = useContractStore();
   const [editRpc, setEditRpc] = useState(rpcUrl);
   const [editContract, setEditContract] = useState(contractAddress);
 
@@ -17,7 +21,8 @@ export function ContractMenuPage() {
           CONTRACT MODE
         </h1>
         <p className="text-base-400 text-sm max-w-md text-center">
-          Play on a PolkaVM smart contract via Ethereum JSON-RPC. Connect MetaMask or any injected wallet.
+          Play on a PolkaVM smart contract via Ethereum JSON-RPC.
+          {' '}Connects to MetaMask if available, otherwise uses dev accounts.
         </p>
 
         {!isConnected ? (
@@ -48,7 +53,7 @@ export function ContractMenuPage() {
               disabled={isConnecting}
               className="theme-button btn-primary w-full font-bold py-3 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
             >
-              {isConnecting ? 'CONNECTING...' : 'CONNECT WALLET'}
+              {isConnecting ? 'CONNECTING...' : 'CONNECT'}
             </button>
             {connectionError && (
               <p className="max-w-md rounded-xl theme-error-panel border px-3 py-2 text-center text-xs text-negative">
@@ -57,12 +62,43 @@ export function ContractMenuPage() {
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4 w-full max-w-sm">
-            <div className="text-center">
-              <p className="text-positive text-sm font-medium">Connected</p>
-              <p className="text-base-500 text-xs font-mono mt-1">
-                {useContractStore.getState().selectedAccount?.address?.slice(0, 10)}...
-              </p>
+          <div className="flex flex-col items-center gap-4 w-full max-w-md">
+            {/* Account selector */}
+            <div className="w-full">
+              <label className="block text-xs text-base-500 mb-2">Account</label>
+              <div className="flex flex-col gap-2">
+                {accounts.map((account: any) => {
+                  const isSelected = selectedAccount?.address === account.address;
+                  const addr = account.address;
+                  const short = `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+                  return (
+                    <button
+                      key={addr}
+                      onClick={() => selectAccount(account)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all ${
+                        isSelected
+                          ? 'border-accent bg-accent/10 text-white'
+                          : 'border-base-700 bg-base-900 text-base-400 hover:border-base-500 hover:text-base-200'
+                      }`}
+                    >
+                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                        isSelected ? 'bg-accent' : 'bg-base-700'
+                      }`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm">{account.name}</div>
+                        <div className="font-mono text-xs text-base-500 truncate">{short}</div>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                        account.source === 'extension'
+                          ? 'bg-purple-500/20 text-purple-300'
+                          : 'bg-blue-500/20 text-blue-300'
+                      }`}>
+                        {account.source === 'extension' ? 'MetaMask' : 'Dev'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <Link

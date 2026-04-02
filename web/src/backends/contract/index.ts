@@ -50,17 +50,49 @@ export function createContractBackend(deps: {
     },
   };
 
-  async function sendTx(data: `0x${string}`): Promise<`0x${string}`> {
-    if (!walletClient || !_selectedAccount) throw new Error('Not connected');
-    const hash = await walletClient.sendTransaction({
-      account: _selectedAccount.address as `0x${string}`,
-      to: contractAddress,
-      data,
-      chain,
+  /** Whether we're using MetaMask (true) or raw JSON-RPC dev accounts (false). */
+  let _useWallet = false;
+
+  /** Send a raw JSON-RPC eth_sendTransaction (for dev accounts, no wallet needed). */
+  async function sendRawTx(from: string, data: `0x${string}`): Promise<`0x${string}`> {
+    if (!publicClient) throw new Error('Not connected');
+    const rpcUrl = chain.rpcUrls.default.http[0];
+    const body = {
+      jsonrpc: '2.0',
+      method: 'eth_sendTransaction',
+      params: [{ from, to: contractAddress, data, gas: '0x10000000' }],
+      id: Date.now(),
+    };
+    const resp = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     });
-    const receipt = await publicClient!.waitForTransactionReceipt({ hash });
+    const json = await resp.json();
+    if (json.error) throw new Error(`RPC error: ${json.error.message ?? JSON.stringify(json.error)}`);
+    const txHash = json.result as `0x${string}`;
+    // Wait for receipt
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
     if (receipt.status === 'reverted') throw new Error('Transaction reverted');
-    return hash;
+    return txHash;
+  }
+
+  async function sendTx(data: `0x${string}`): Promise<`0x${string}`> {
+    if (!_selectedAccount) throw new Error('No account selected');
+
+    if (_useWallet && walletClient) {
+      const hash = await walletClient.sendTransaction({
+        account: _selectedAccount.address as `0x${string}`,
+        to: contractAddress,
+        data,
+        chain,
+      });
+      const receipt = await publicClient!.waitForTransactionReceipt({ hash });
+      if (receipt.status === 'reverted') throw new Error('Transaction reverted');
+      return hash;
+    } else {
+      return sendRawTx(_selectedAccount.address, data);
+    }
   }
 
   async function callView(data: `0x${string}`): Promise<`0x${string}`> {
@@ -81,31 +113,63 @@ export function createContractBackend(deps: {
     name: 'PolkaVM Contract',
 
     async connect() {
-      const transport: Transport = http(chain.rpcUrls.default.http[0]);
+      const rpcUrl = chain.rpcUrls.default.http[0];
+      const transport: Transport = http(rpcUrl);
       publicClient = createPublicClient({ chain, transport });
 
+      // Try MetaMask first
       const ethereum = (window as any).ethereum;
       if (ethereum) {
-        walletClient = createWalletClient({
-          chain,
-          transport: custom(ethereum),
-        });
-
-        const addresses = await walletClient.requestAddresses();
-        accounts = addresses.map((addr: `0x${string}`, i: number) => ({
-          name: `Account ${i + 1}`,
-          address: addr,
-          signer: ethereum,
-          source: 'extension',
-        }));
-
-        if (accounts.length > 0) {
-          _selectedAccount = accounts[0];
+        try {
+          walletClient = createWalletClient({
+            chain,
+            transport: custom(ethereum),
+          });
+          const addresses = await walletClient.requestAddresses();
+          if (addresses.length > 0) {
+            accounts = addresses.map((addr: `0x${string}`, i: number) => ({
+              name: `MetaMask ${i + 1}`,
+              address: addr,
+              signer: ethereum,
+              source: 'extension',
+            }));
+            _useWallet = true;
+          }
+        } catch (e) {
+          console.warn('MetaMask connection failed, trying dev accounts:', e);
+          walletClient = null;
         }
-      } else {
-        throw new Error('No Ethereum wallet found. Install MetaMask.');
       }
 
+      // Fall back to dev accounts from the node (eth_accounts)
+      if (accounts.length === 0) {
+        try {
+          const resp = await fetch(rpcUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0', method: 'eth_accounts', params: [], id: 1,
+            }),
+          });
+          const json = await resp.json();
+          const devAddresses: string[] = json.result ?? [];
+          accounts = devAddresses.map((addr, i) => ({
+            name: `Dev Account ${i + 1}`,
+            address: addr,
+            signer: null,
+            source: 'dev',
+          }));
+          _useWallet = false;
+        } catch (e) {
+          throw new Error(`Cannot connect: no wallet and dev accounts unavailable (${e})`);
+        }
+      }
+
+      if (accounts.length === 0) {
+        throw new Error('No accounts available');
+      }
+
+      _selectedAccount = accounts[0];
       _isConnected = true;
     },
 
