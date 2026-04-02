@@ -22,7 +22,6 @@ import {
   encodeGetGameState,
   encodeAbandonGame,
   encodeGetSet,
-  decodeSubmitTurnResult,
   decodeGetGameStateResult,
 } from './abi';
 
@@ -51,8 +50,10 @@ export function createContractBackend(deps: {
     },
   };
 
-  /** Whether we're using MetaMask (true) or raw JSON-RPC dev accounts (false). */
   let _useWallet = false;
+
+  // BattleReported event topic = keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
+  const BATTLE_REPORTED_TOPIC = '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694ddef23dd55af68e089bd';
 
   /** Send a raw JSON-RPC eth_sendTransaction (for dev accounts, no wallet needed). */
   async function sendRawTx(from: string, data: `0x${string}`): Promise<`0x${string}`> {
@@ -215,28 +216,87 @@ export function createContractBackend(deps: {
     async submitTurn(actionScale: Uint8Array, _enemyBoard: Uint8Array): Promise<TurnResult> {
       const data = encodeSubmitTurn(actionScale);
 
-      // Try to simulate first to get return value
-      let result: ReturnType<typeof decodeSubmitTurnResult> | null = null;
-      try {
-        const returnData = await callView(data);
-        if (returnData && returnData.length >= 322) { // 5 words = 320 hex chars + 0x
-          result = decodeSubmitTurnResult(returnData);
-        }
-      } catch (e) {
-        console.warn('submitTurn simulation failed, proceeding with TX:', e);
+      // Send transaction and get receipt with logs
+      if (!_selectedAccount) throw new Error('No account selected');
+
+      let receipt: any;
+      if (_useWallet && walletClient) {
+        const hash = await walletClient.sendTransaction({
+          account: _selectedAccount.address as `0x${string}`,
+          to: contractAddress,
+          data,
+          chain,
+        });
+        receipt = await publicClient!.waitForTransactionReceipt({ hash });
+      } else {
+        const rpcUrl = chain.rpcUrls.default.http[0];
+        const txResp = await fetch(rpcUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0', method: 'eth_sendTransaction',
+            params: [{ from: _selectedAccount.address, to: contractAddress, data, gas: '0x10000000' }],
+            id: Date.now(),
+          }),
+        });
+        const txJson = await txResp.json();
+        if (txJson.error) throw new Error(txJson.error.message);
+        const txHash = txJson.result;
+        receipt = await publicClient!.waitForTransactionReceipt({ hash: txHash });
       }
 
-      // Send the actual transaction
-      await sendTx(data);
+      if (receipt.status === 'reverted') throw new Error('Transaction reverted');
 
-      return {
-        battleSeed: result?.battleSeed ?? 0n,
-        opponentBoard: [],
-        result: result?.result ?? 'Draw',
-        wins: result?.wins ?? 0,
-        lives: result?.lives ?? 0,
-        round: result?.round ?? 0,
-      };
+      // Parse BattleReported event from logs
+      const battleLog = receipt.logs?.find(
+        (log: any) => log.topics?.[0]?.toLowerCase() === BATTLE_REPORTED_TOPIC
+      );
+
+      if (battleLog?.data) {
+        // Event data: result(1) + wins(1) + lives(1) + round(1) + battleSeed(8) + ghost(SCALE)
+        const hex = (battleLog.data as string).startsWith('0x')
+          ? (battleLog.data as string).slice(2)
+          : (battleLog.data as string);
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < bytes.length; i++) {
+          bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+        }
+
+        const resultByte = bytes[0];
+        const wins = bytes[1];
+        const lives = bytes[2];
+        const round = bytes[3];
+        const battleSeed = BigInt('0x' + hex.slice(8, 24));
+
+        // Decode SCALE-encoded Vec<GhostBoardUnit> from bytes[12..]
+        // Each GhostBoardUnit = CardId(u16) + perm_attack(i16) + perm_health(i16) = 6 bytes
+        // SCALE Vec prefix: compact length
+        const ghostBytes = bytes.slice(12);
+        const opponentBoard: GhostBoardUnit[] = [];
+        if (ghostBytes.length > 0) {
+          const count = ghostBytes[0] / 4; // SCALE compact encoding for small numbers
+          let offset = 1; // skip compact length byte
+          for (let i = 0; i < count && offset + 6 <= ghostBytes.length; i++) {
+            const card_id = ghostBytes[offset] | (ghostBytes[offset + 1] << 8);
+            const perm_attack = (ghostBytes[offset + 2] | (ghostBytes[offset + 3] << 8)) << 16 >> 16; // sign-extend i16
+            const perm_health = (ghostBytes[offset + 4] | (ghostBytes[offset + 5] << 8)) << 16 >> 16;
+            opponentBoard.push({ card_id, perm_attack, perm_health });
+            offset += 6;
+          }
+        }
+
+        const resultMap: Record<number, 'Victory' | 'Defeat' | 'Draw'> = { 0: 'Victory', 1: 'Defeat', 2: 'Draw' };
+        return {
+          battleSeed,
+          opponentBoard,
+          result: resultMap[resultByte] ?? 'Draw',
+          wins, lives, round,
+        };
+      }
+
+      // Fallback: no event found
+      console.warn('No BattleReported event in receipt');
+      return { battleSeed: 0n, opponentBoard: [], result: 'Draw', wins: 0, lives: 0, round: 0 };
     },
 
     async getGameState(): Promise<GameStateRaw | null> {

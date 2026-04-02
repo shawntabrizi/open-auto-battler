@@ -39,7 +39,7 @@ interface ContractStore {
 }
 
 const DEFAULT_RPC = 'http://localhost:8545';
-const DEFAULT_CONTRACT = '0xd023de31a4480edb9a16d763793e2af095385347';
+const DEFAULT_CONTRACT = '0x809ea52ad397b8b442f33bf6ac4e013bdcf0d740';
 
 export const useContractStore = create<ContractStore>((set, get) => ({
   backend: null,
@@ -145,31 +145,46 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     if (!backend || !engine) return;
 
     try {
+      // Capture player board BEFORE submitting
+      const playerBoard = engine.get_board();
       const actionScale = engine.get_commit_action_scale();
 
-      // Contract selects opponent internally — no enemy board needed
+      // Submit turn — contract selects opponent and emits BattleReported event
       const turnResult = await backend.submitTurn(actionScale, new Uint8Array());
 
-      // Refresh state from chain first (so we have the updated round/wins/lives)
-      await get().refreshGameState();
+      // If we got the opponent board from the event, replay the battle locally
+      if (turnResult.battleSeed && turnResult.opponentBoard.length > 0) {
+        const battleOutput = engine.resolve_battle_p2p(
+          playerBoard,
+          turnResult.opponentBoard,
+          turnResult.battleSeed,
+        );
 
-      // Show a minimal battle result overlay so the UI advances
-      const resultLabel = turnResult.result || 'Draw';
-      useGameStore.setState({
-        battleOutput: {
-          events: [
-            { type: 'BattleEnd', payload: { result: resultLabel } },
-          ],
-          initial_player_units: [],
-          initial_enemy_units: [],
-          round: turnResult.round || 1,
-        },
-        selection: null,
-        showBattleOverlay: true,
-        afterBattleCallback: async () => {
-          await get().refreshGameState();
-        },
-      });
+        useGameStore.setState({
+          battleOutput,
+          selection: null,
+          showBattleOverlay: true,
+          afterBattleCallback: async () => {
+            await get().refreshGameState();
+          },
+        });
+      } else {
+        // No replay data — show result and advance
+        await get().refreshGameState();
+        useGameStore.setState({
+          battleOutput: {
+            events: [{ type: 'BattleEnd', payload: { result: turnResult.result || 'Draw' } }],
+            initial_player_units: [],
+            initial_enemy_units: [],
+            round: turnResult.round || 1,
+          },
+          selection: null,
+          showBattleOverlay: true,
+          afterBattleCallback: async () => {
+            await get().refreshGameState();
+          },
+        });
+      }
     } catch (err) {
       console.error('Contract submit turn failed:', err);
     }

@@ -318,16 +318,16 @@ fn push_ghost(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: Ro
 }
 
 /// Select a ghost opponent from the bracket pool using the battle seed.
-fn select_ghost(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue, seed: u64, card_pool: &BTreeMap<CardId, UnitCard>) -> Vec<CombatUnit> {
+/// Returns (combat_units, raw_ghost_board) so we can emit the ghost in events.
+fn select_ghost(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue, seed: u64, card_pool: &BTreeMap<CardId, UnitCard>) -> (Vec<CombatUnit>, Vec<GhostBoardUnit>) {
     let pool = load_ghost_pool(set_id, round, wins, lives);
-    if pool.is_empty() { return Vec::new(); }
+    if pool.is_empty() { return (Vec::new(), Vec::new()); }
 
     let mut rng = XorShiftRng::seed_from_u64(seed);
     let index = rng.gen_range(pool.len());
     let ghost = &pool[index];
 
-    // Convert ghost board units to combat units
-    ghost.iter().filter_map(|unit| {
+    let units = ghost.iter().filter_map(|unit| {
         card_pool.get(&unit.card_id).map(|card| {
             let mut cu = CombatUnit::from_card(card.clone());
             cu.attack_buff = unit.perm_attack;
@@ -335,7 +335,9 @@ fn select_ghost(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: 
             cu.health = cu.health.saturating_add(unit.perm_health);
             cu
         })
-    }).collect()
+    }).collect();
+
+    (units, ghost.clone())
 }
 
 /// Extract ghost board from the player's current board state.
@@ -561,7 +563,7 @@ fn handle_submit_turn(calldata: &[u8]) {
 
     // Select ghost opponent BEFORE storing player's board (prevents self-matching)
     let battle_seed = derive_seed(&addr, b"battle", session.game_seed);
-    let enemy_units = select_ghost(session.set_id, session.round, session.wins, session.lives, battle_seed, &card_pool);
+    let (enemy_units, opponent_ghost) = select_ghost(session.set_id, session.round, session.wins, session.lives, battle_seed, &card_pool);
 
     // Now store player's board as ghost for future opponents
     let player_ghost = create_ghost_from_board(&shop_state.board);
@@ -623,9 +625,28 @@ fn handle_submit_turn(calldata: &[u8]) {
 
     save_session(&addr, &session);
 
-    // Return: (uint8 result, uint8 wins, uint8 lives, uint8 round, uint64 battleSeed)
+    // Emit BattleReported event with opponent board so frontend can replay
+    // Topic[0] = keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
+    let event_topic: [u8; 32] = [
+        0x96, 0xfd, 0x17, 0x36, 0xea, 0x4f, 0xbe, 0xf3,
+        0x2e, 0x32, 0x8d, 0x70, 0x05, 0x02, 0x1b, 0x05,
+        0xc7, 0xee, 0x31, 0xf3, 0x26, 0x94, 0xdd, 0xef,
+        0x23, 0xdd, 0x55, 0xaf, 0x68, 0xe0, 0x89, 0xbd,
+    ];
+    // Event data: result(1) + wins(1) + lives(1) + round(1) + battleSeed(8) + opponent_ghost(SCALE)
+    let ghost_encoded = opponent_ghost.encode();
+    let mut event_data = Vec::with_capacity(12 + ghost_encoded.len());
+    event_data.push(match result { BattleResult::Victory => 0, BattleResult::Defeat => 1, BattleResult::Draw => 2 });
+    event_data.push(session.wins);
+    event_data.push(session.lives);
+    event_data.push(completed_round);
+    event_data.extend_from_slice(&battle_seed.to_be_bytes());
+    event_data.extend_from_slice(&ghost_encoded);
+    api::deposit_event(&[event_topic], &event_data);
+
+    // Also return the basic result for eth_call compatibility
     let mut output = [0u8; 160];
-    output[31] = match result { BattleResult::Victory => 0, BattleResult::Defeat => 1, BattleResult::Draw => 2 };
+    output[31] = event_data[0]; // result
     output[63] = session.wins;
     output[95] = session.lives;
     output[127] = completed_round;
