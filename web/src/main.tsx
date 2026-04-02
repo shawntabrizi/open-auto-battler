@@ -75,7 +75,7 @@ async function boot() {
     <HashRouter>
       <ThemeController />
       <ParticleBackground />
-      <AuthGate>
+      <AuthGate skipPaths={['/contract']}>
         <HamburgerMenu />
         <Routes>
           <Route path="/" element={<HomePage />} />
