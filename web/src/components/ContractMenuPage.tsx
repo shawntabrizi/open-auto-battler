@@ -45,16 +45,28 @@ export function ContractMenuPage() {
                 className="w-full bg-base-900 border border-base-700 rounded-lg px-3 py-2 text-sm text-white font-mono"
               />
             </div>
-            <button
-              onClick={() => {
-                setConfig(editRpc, editContract);
-                void connect();
-              }}
-              disabled={isConnecting}
-              className="theme-button btn-primary w-full font-bold py-3 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
-            >
-              {isConnecting ? 'CONNECTING...' : 'CONNECT'}
-            </button>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => {
+                  setConfig(editRpc, editContract);
+                  void connect(true);
+                }}
+                disabled={isConnecting}
+                className="theme-button btn-primary flex-1 font-bold py-3 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
+              >
+                {isConnecting ? 'CONNECTING...' : 'DEV ACCOUNTS'}
+              </button>
+              <button
+                onClick={() => {
+                  setConfig(editRpc, editContract);
+                  void connect(false);
+                }}
+                disabled={isConnecting}
+                className="theme-button btn-secondary flex-1 font-bold py-3 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
+              >
+                METAMASK
+              </button>
+            </div>
             {connectionError && (
               <p className="max-w-md rounded-xl theme-error-panel border px-3 py-2 text-center text-xs text-negative">
                 {connectionError}

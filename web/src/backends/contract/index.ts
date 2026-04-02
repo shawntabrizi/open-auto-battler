@@ -32,6 +32,7 @@ export function createContractBackend(deps: {
   rpcUrl?: string;
   contractAddress: `0x${string}`;
   chainId?: number;
+  skipWallet?: boolean;
 }): GameBackend {
   const contractAddress = deps.contractAddress;
   let publicClient: PublicClient | null = null;
@@ -41,7 +42,7 @@ export function createContractBackend(deps: {
   let _isConnected = false;
   let _activeSetId: number = 0; // Track which set the current game uses
 
-  const chain: Chain = {
+  let chain: Chain = {
     id: deps.chainId ?? 420420420, // Local dev node default
     name: 'PolkaVM',
     nativeCurrency: { name: 'DEV', symbol: 'DEV', decimals: 18 },
@@ -115,10 +116,25 @@ export function createContractBackend(deps: {
     async connect() {
       const rpcUrl = chain.rpcUrls.default.http[0];
       const transport: Transport = http(rpcUrl);
+
+      // Auto-detect chain ID from the node
+      try {
+        const resp = await fetch(rpcUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_chainId', params: [], id: 1 }),
+        });
+        const json = await resp.json();
+        const detectedChainId = parseInt(json.result, 16);
+        if (detectedChainId) {
+          chain = { ...chain, id: detectedChainId };
+        }
+      } catch {}
+
       publicClient = createPublicClient({ chain, transport });
 
-      // Try MetaMask first
-      const ethereum = (window as any).ethereum;
+      // Try MetaMask first (unless skipWallet is set)
+      const ethereum = !deps.skipWallet ? (window as any).ethereum : null;
       if (ethereum) {
         try {
           walletClient = createWalletClient({

@@ -28,7 +28,7 @@ interface ContractStore {
   isRefreshing: boolean;
 
   // Actions
-  connect: () => Promise<boolean>;
+  connect: (useDevAccounts?: boolean) => Promise<boolean>;
   disconnect: () => void;
   selectAccount: (account: any) => void;
   setConfig: (rpcUrl: string, contractAddress: string) => void;
@@ -57,7 +57,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     set({ rpcUrl, contractAddress });
   },
 
-  connect: async () => {
+  connect: async (useDevAccounts?: boolean) => {
     const { rpcUrl, contractAddress } = get();
     get().disconnect();
     set({ isConnecting: true, connectionError: null });
@@ -66,6 +66,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       const backend = createContractBackend({
         rpcUrl,
         contractAddress: contractAddress as `0x${string}`,
+        skipWallet: useDevAccounts,
       });
 
       await backend.connect();
