@@ -9,6 +9,7 @@ import { create } from 'zustand';
 import type { GameBackend } from '../backends/types';
 import { createContractBackend } from '../backends/contract';
 import { useGameStore } from './gameStore';
+import deployment from '../../../contract/deployment.json';
 
 interface ContractStore {
   // Connection
@@ -38,8 +39,8 @@ interface ContractStore {
   refreshGameState: () => Promise<void>;
 }
 
-const DEFAULT_RPC = 'http://localhost:8545';
-const DEFAULT_CONTRACT = '0x809ea52ad397b8b442f33bf6ac4e013bdcf0d740';
+const DEFAULT_RPC = deployment.rpcUrl || 'http://localhost:8545';
+const DEFAULT_CONTRACT = deployment.address || '0x' + '0'.repeat(40);
 
 export const useContractStore = create<ContractStore>((set, get) => ({
   backend: null,

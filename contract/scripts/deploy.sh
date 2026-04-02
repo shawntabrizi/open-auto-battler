@@ -3,13 +3,9 @@
 # Deploy the OAB arena contract to a local revive-dev-node.
 #
 # Prerequisites:
-#   - revive-dev-node running at localhost:9944
-#   - eth-rpc running at localhost:8545
-#   - Foundry installed (cast): curl -L https://foundry.paradigm.xyz | bash && foundryup
-#
-# The dev node provides a pre-funded dev account:
-#   Private key: 0x5fb92d6e98884f76de468fa3f6278f8807c48bebc13595d45af5bdc4da702133
-#   Address: 0xf24FF3a9CF04c71Dbc94D0b566f7A27B94566cac (Alith)
+#   - revive-dev-node running (e.g. revive-dev-node --dev)
+#   - eth-rpc running (e.g. eth-rpc --dev)
+#   - contract.polkavm built (cd contract && make)
 #
 # Usage:
 #   cd contract
@@ -17,79 +13,107 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONTRACT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_DIR="$(cd "$CONTRACT_DIR/.." && pwd)"
+
 RPC_URL="${1:-http://localhost:8545}"
-# Standard dev account private key (Alith - pre-funded on dev nodes)
-PRIVATE_KEY="0x5fb92d6e98884f76de468fa3f6278f8807c48bebc13595d45af5bdc4da702133"
 
 echo "=== OAB Contract Deployment ==="
 echo "RPC: $RPC_URL"
 echo ""
 
-# Check prerequisites
-if ! command -v cast &> /dev/null; then
-    echo "Error: Foundry 'cast' not found. Install with:"
-    echo "  curl -L https://foundry.paradigm.xyz | bash && foundryup"
-    exit 1
-fi
-
-if [ ! -f contract.polkavm ]; then
-    echo "Error: contract.polkavm not found. Build with: make"
+if [ ! -f "$CONTRACT_DIR/contract.polkavm" ]; then
+    echo "Error: contract.polkavm not found. Build with: cd contract && make"
     exit 1
 fi
 
 # Check connection
 echo "Checking connection..."
-BLOCK=$(cast block-number --rpc-url "$RPC_URL" 2>/dev/null || echo "FAIL")
-if [ "$BLOCK" = "FAIL" ]; then
+RESULT=$(curl -sf -X POST "$RPC_URL" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' 2>/dev/null || echo "FAIL")
+if [ "$RESULT" = "FAIL" ]; then
     echo "Error: Cannot connect to $RPC_URL"
     echo "Start the dev node with:"
     echo "  Terminal 1: revive-dev-node --dev"
     echo "  Terminal 2: eth-rpc --dev"
     exit 1
 fi
-echo "Connected. Block: $BLOCK"
+echo "Connected."
+
+# Get dev account
+FROM=$(curl -s -X POST "$RPC_URL" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}' \
+  | python3 -c "import sys,json; accts=json.load(sys.stdin)['result']; print(accts[0] if accts else '')")
+
+if [ -z "$FROM" ]; then
+    echo "Error: No dev accounts available"
+    exit 1
+fi
+echo "Using account: $FROM"
+
+# Get chain ID
+CHAIN_ID=$(curl -s -X POST "$RPC_URL" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
+  | python3 -c "import sys,json; print(int(json.load(sys.stdin)['result'],16))")
+echo "Chain ID: $CHAIN_ID"
 
 # Deploy contract
 echo ""
 echo "Deploying contract..."
-BYTECODE="0x$(xxd -p contract.polkavm | tr -d '\n')"
+BYTECODE="0x$(xxd -p "$CONTRACT_DIR/contract.polkavm" | tr -d '\n')"
 
-DEPLOY_TX=$(cast send --rpc-url "$RPC_URL" \
-    --private-key "$PRIVATE_KEY" \
-    --create "$BYTECODE" \
-    --json 2>&1)
+TX_HASH=$(curl -s -X POST "$RPC_URL" \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_sendTransaction\",\"params\":[{\"from\":\"$FROM\",\"data\":\"$BYTECODE\",\"gas\":\"0x10000000\"}],\"id\":1}" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin).get('result',''))")
 
-CONTRACT_ADDRESS=$(echo "$DEPLOY_TX" | jq -r '.contractAddress // empty')
+echo "Deploy TX: $TX_HASH"
+sleep 3
+
+CONTRACT_ADDRESS=$(curl -s -X POST "$RPC_URL" \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getTransactionReceipt\",\"params\":[\"$TX_HASH\"],\"id\":1}" \
+  | python3 -c "import sys,json; r=json.load(sys.stdin).get('result',{}); print(r.get('contractAddress','') if r else '')")
+
 if [ -z "$CONTRACT_ADDRESS" ]; then
-    echo "Deployment failed:"
-    echo "$DEPLOY_TX"
+    echo "Deployment failed!"
     exit 1
 fi
-
 echo "Contract deployed at: $CONTRACT_ADDRESS"
 
 # Register cards and sets
 echo ""
 echo "Registering cards and sets..."
-REGISTER_TOOL="../../register-cards"
+REGISTER_TOOL="$REPO_DIR/register-cards"
 
 if [ -d "$REGISTER_TOOL" ]; then
-    ADMIN_ADDR=$(cast wallet address --private-key "$PRIVATE_KEY" 2>/dev/null || echo "")
-    if [ -n "$ADMIN_ADDR" ]; then
-        cargo run --manifest-path "$REGISTER_TOOL/Cargo.toml" -- "$RPC_URL" "$CONTRACT_ADDRESS" "$ADMIN_ADDR"
-    else
-        cargo run --manifest-path "$REGISTER_TOOL/Cargo.toml" -- "$RPC_URL" "$CONTRACT_ADDRESS"
-    fi
+    cargo run --release --manifest-path "$REGISTER_TOOL/Cargo.toml" -- "$RPC_URL" "$CONTRACT_ADDRESS" "$FROM"
 else
-    echo "register-cards tool not found at $REGISTER_TOOL"
-    echo "The contract is deployed but needs cards registered."
-    echo "Run: cd register-cards && cargo run -- $RPC_URL $CONTRACT_ADDRESS"
+    echo "register-cards tool not found. Run manually:"
+    echo "  cd register-cards && cargo run -- $RPC_URL $CONTRACT_ADDRESS"
 fi
+
+# Write deployment.json for the frontend
+DEPLOYMENT_FILE="$CONTRACT_DIR/deployment.json"
+cat > "$DEPLOYMENT_FILE" <<EOJSON
+{
+  "address": "$CONTRACT_ADDRESS",
+  "rpcUrl": "$RPC_URL",
+  "chainId": $CHAIN_ID
+}
+EOJSON
+echo ""
+echo "Written: $DEPLOYMENT_FILE"
 
 echo ""
 echo "=== Deployment Complete ==="
 echo "Contract: $CONTRACT_ADDRESS"
 echo "RPC:      $RPC_URL"
+echo "Chain ID: $CHAIN_ID"
 echo ""
-echo "To play, open the web UI and navigate to /#/contract/"
-echo "Enter the RPC URL and contract address above."
+echo "The frontend will auto-detect this address from contract/deployment.json"
+echo "Navigate to /#/contract/ to play."
