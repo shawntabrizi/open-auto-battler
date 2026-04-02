@@ -16,6 +16,7 @@ members = [
 ]
 exclude = [
     "contract",
+    "register-cards",
 ]
 
 [workspace.package]
