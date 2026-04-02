@@ -215,25 +215,43 @@ export function createContractBackend(deps: {
     async submitTurn(actionScale: Uint8Array, _enemyBoard: Uint8Array): Promise<TurnResult> {
       const data = encodeSubmitTurn(actionScale);
 
-      // Simulate to get return value, then send actual TX
-      const returnData = await callView(data);
-      const result = decodeSubmitTurnResult(returnData);
+      // Try to simulate first to get return value
+      let result: ReturnType<typeof decodeSubmitTurnResult> | null = null;
+      try {
+        const returnData = await callView(data);
+        if (returnData && returnData.length >= 322) { // 5 words = 320 hex chars + 0x
+          result = decodeSubmitTurnResult(returnData);
+        }
+      } catch (e) {
+        console.warn('submitTurn simulation failed, proceeding with TX:', e);
+      }
+
+      // Send the actual transaction
       await sendTx(data);
 
       return {
-        battleSeed: result.battleSeed,
-        opponentBoard: [], // Ghost selected on-chain
-        result: result.result,
-        wins: result.wins,
-        lives: result.lives,
-        round: result.round,
+        battleSeed: result?.battleSeed ?? 0n,
+        opponentBoard: [],
+        result: result?.result ?? 'Draw',
+        wins: result?.wins ?? 0,
+        lives: result?.lives ?? 0,
+        round: result?.round ?? 0,
       };
     },
 
     async getGameState(): Promise<GameStateRaw | null> {
       const returnData = await callView(encodeGetGameState());
-      const stateBytes = decodeGetGameStateResult(returnData);
-      if (!stateBytes || stateBytes.length === 0) return null;
+      const arenaSessionBytes = decodeGetGameStateResult(returnData);
+      if (!arenaSessionBytes || arenaSessionBytes.length === 0) return null;
+
+      // The WASM engine expects BoundedGameSession = { state, set_id, config }
+      // The contract returns ArenaSession = { state_fields..., set_id }
+      // which is already state + set_id in SCALE. We just append the config bytes.
+      // default_config() SCALE = [3, 10, 3, 10, 0, 5, 5, 50]
+      const DEFAULT_CONFIG_SCALE = new Uint8Array([3, 10, 3, 10, 0, 5, 5, 50]);
+      const stateBytes = new Uint8Array(arenaSessionBytes.length + DEFAULT_CONFIG_SCALE.length);
+      stateBytes.set(arenaSessionBytes);
+      stateBytes.set(DEFAULT_CONFIG_SCALE, arenaSessionBytes.length);
 
       // Fetch the card set for the active game
       const setData = await callView(encodeGetSet(_activeSetId));
