@@ -39,7 +39,7 @@ interface ContractStore {
 }
 
 const DEFAULT_RPC = 'http://localhost:8545';
-const DEFAULT_CONTRACT = '0x' + '0'.repeat(40); // Placeholder — set via UI or config
+const DEFAULT_CONTRACT = '0xd023de31a4480edb9a16d763793e2af095385347';
 
 export const useContractStore = create<ContractStore>((set, get) => ({
   backend: null,
