@@ -8,15 +8,9 @@ import { isInHost } from '../services/hostEnvironment';
 import { storageService } from '../services/storage';
 import { auto_battle } from '@polkadot-api/descriptors';
 import { useGameStore } from './gameStore';
-import { sr25519CreateDerive } from '@polkadot-labs/hdkd';
-import {
-  DEV_PHRASE,
-  entropyToMiniSecret,
-  mnemonicToEntropy,
-  generateMnemonic,
-} from '@polkadot-labs/hdkd-helpers';
-import { getPolkadotSigner } from 'polkadot-api/signer';
-import { AccountId } from '@polkadot-api/substrate-bindings';
+import { generateMnemonic } from '@polkadot-labs/hdkd-helpers';
+import { seedToAccount } from '@polkadot-apps/keys';
+import { accountIdFromBytes, truncateAddress } from '@polkadot-apps/address';
 import { createCallArgCoercer } from '../utils/papiCoercion';
 import { initEmojiMap } from '../utils/emoji';
 import { submitTx } from '../utils/tx';
@@ -363,7 +357,7 @@ interface ArenaStore {
 }
 
 /** Convert raw public key bytes to SS58 address (generic substrate prefix 42). */
-const toSs58 = (publicKey: Uint8Array): string => AccountId(42).dec(publicKey);
+const toSs58 = (publicKey: Uint8Array): string => accountIdFromBytes(publicKey, 42);
 
 const LOCAL_ACCOUNTS_KEY = 'oab-local-accounts';
 
@@ -387,17 +381,11 @@ function saveStoredLocalAccounts(accounts: StoredLocalAccount[]) {
 }
 
 function deriveAccountFromMnemonic(mnemonic: string, name: string) {
-  const miniSecret = entropyToMiniSecret(mnemonicToEntropy(mnemonic));
-  const derive = sr25519CreateDerive(miniSecret);
-  const accountId = AccountId(42);
-  const hdkdKeyPair = derive('//0');
-  const address = accountId.dec(hdkdKeyPair.publicKey);
-  const polkadotSigner = getPolkadotSigner(hdkdKeyPair.publicKey, 'Sr25519', hdkdKeyPair.sign);
-
+  const account = seedToAccount(mnemonic, '//0', 42, 'sr25519');
   return {
-    address,
+    address: account.ss58Address,
     name,
-    polkadotSigner,
+    polkadotSigner: account.signer,
     source: 'local' as const,
   };
 }
@@ -411,20 +399,15 @@ function getLocalAccounts() {
 const SHOW_DEV_ACCOUNTS = false;
 const DEV_ACCOUNTS = ['Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Ferdie'];
 
+const DEV_PHRASE = 'bottom drive obey lake curtain smoke basket hold race lonely fit walk';
+
 export const getDevAccounts = () => {
-  const miniSecret = entropyToMiniSecret(mnemonicToEntropy(DEV_PHRASE));
-  const derive = sr25519CreateDerive(miniSecret);
-  const accountId = AccountId(42);
-
   return DEV_ACCOUNTS.map((name) => {
-    const hdkdKeyPair = derive(`//${name}`);
-    const address = accountId.dec(hdkdKeyPair.publicKey);
-    const polkadotSigner = getPolkadotSigner(hdkdKeyPair.publicKey, 'Sr25519', hdkdKeyPair.sign);
-
+    const account = seedToAccount(DEV_PHRASE, `//${name}`, 42, 'sr25519');
     return {
-      address,
+      address: account.ss58Address,
       name,
-      polkadotSigner,
+      polkadotSigner: account.signer,
       source: 'dev',
     };
   });
@@ -1304,7 +1287,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     const alice = getDevAccounts()[0];
-    const label = selectedAccount.name ?? selectedAccount.address.slice(0, 6);
+    const label = selectedAccount.name ?? truncateAddress(selectedAccount.address);
     await fundAndMintStyleNfts(api, alice, selectedAccount.address, label);
   },
 

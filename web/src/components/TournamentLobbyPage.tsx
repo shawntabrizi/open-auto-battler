@@ -8,11 +8,8 @@ import { TopBar } from './TopBar';
 import { useInitGuard } from '../hooks';
 import { submitTx } from '../utils/tx';
 
-const formatBalance = (raw: bigint, decimals = 12) =>
-  (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 4,
-  });
+import { formatBalance } from '../utils/format';
+import { truncateAddress } from '@polkadot-apps/address';
 
 const formatPerbill = (value: number) => {
   const pct = value / 10_000_000;
@@ -220,7 +217,7 @@ export function TournamentLobbyPage() {
               {accounts.map((acc: any) => (
                 <option key={acc.address} value={acc.address}>
                   {acc.source === 'dev' ? '🛠️ ' : ''}
-                  {acc.name} ({acc.address.slice(0, 6)}...)
+                  {acc.name} ({truncateAddress(acc.address)})
                 </option>
               ))}
             </select>
@@ -368,7 +365,7 @@ export function TournamentLobbyPage() {
                         >
                           <td className="py-px lg:py-0.5">{i + 1}</td>
                           <td className="py-px lg:py-0.5 font-mono">
-                            {entry.account.slice(0, 6)}...{entry.account.slice(-4)}
+                            {truncateAddress(entry.account)}
                           </td>
                           <td className="text-right py-px lg:py-0.5">{entry.stats.total_games}</td>
                           <td className="text-right py-px lg:py-0.5">{entry.stats.total_wins}</td>

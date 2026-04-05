@@ -39,9 +39,10 @@ type GhostBracketView = {
   ghosts: ActiveGhostBoardView[];
 };
 
+import { truncateAddress } from '@polkadot-apps/address';
+
 function shortAddress(address: string): string {
-  if (address.length <= 12) return address;
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  return truncateAddress(address);
 }
 
 function normalizeOwner(owner: unknown): string {

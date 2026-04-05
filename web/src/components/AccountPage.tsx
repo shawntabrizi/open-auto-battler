@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useArenaStore } from '../store/arenaStore';
 import { TopBar } from './TopBar';
 
-const formatBalance = (raw: bigint, decimals = 12) =>
-  (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 4,
-  });
+import { formatBalance } from '../utils/format';
 
 interface AccountInfo {
   nonce: number;

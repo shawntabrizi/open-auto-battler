@@ -5,11 +5,7 @@ import { useTutorialStore } from '../store/tutorialStore';
 import { TopBar } from './TopBar';
 import { PlayBattleIcon } from './Icons';
 
-const formatBalance = (raw: bigint, decimals = 12) =>
-  (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 4,
-  });
+import { formatBalance } from '../utils/format';
 
 export function PlayPage() {
   const { isConnected, blockNumber } = useArenaStore();

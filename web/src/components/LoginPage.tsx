@@ -5,12 +5,8 @@ import { useSettingsStore, PRESET_ENDPOINTS } from '../store/settingsStore';
 
 import { useInitGuard } from '../hooks';
 import toast from 'react-hot-toast';
-
-const formatBalance = (raw: bigint, decimals = 12) =>
-  (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 4,
-  });
+import { formatBalance } from '../utils/format';
+import { truncateAddress } from '@polkadot-apps/address';
 
 type EndpointOption = 'local' | 'hosted' | 'custom';
 
@@ -261,7 +257,7 @@ export function LoginPage() {
                     {accounts.map((acc) => (
                       <option key={acc.address} value={acc.address}>
                         {acc.source === 'dev' ? '[dev] ' : acc.source === 'local' ? '[local] ' : ''}
-                        {acc.name} ({acc.address.slice(0, 6)}...{acc.address.slice(-4)})
+                        {acc.name} ({truncateAddress(acc.address)})
                       </option>
                     ))}
                   </select>
