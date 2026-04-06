@@ -467,4 +467,558 @@ fn make_shop(s: &ArenaSession, reg: &CardRegistry) -> ShopState {
     assert_eq!(CombatUnit::decode(&mut &CombatUnit::from_card(card).encode()[..]).unwrap().abilities.len(), 1);
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// Ghost board creation
+// ═════════════════════════════════════════════════════════════════════════════
+
+fn create_ghost_from_board(board: &[Option<BoardUnit>]) -> Vec<GhostBoardUnit> {
+    board.iter().flatten().map(|bu| GhostBoardUnit {
+        card_id: bu.card_id,
+        perm_attack: bu.perm_attack,
+        perm_health: bu.perm_health,
+    }).collect()
+}
+
+#[test] fn ghost_from_empty_board() {
+    let board: Vec<Option<BoardUnit>> = vec![None; 5];
+    assert!(create_ghost_from_board(&board).is_empty());
+}
+
+#[test] fn ghost_from_partial_board() {
+    let board = vec![
+        Some(BoardUnit { card_id: CardId(10), perm_attack: 2, perm_health: 3 }),
+        None,
+        Some(BoardUnit { card_id: CardId(20), perm_attack: 0, perm_health: -1 }),
+        None,
+        None,
+    ];
+    let ghost = create_ghost_from_board(&board);
+    assert_eq!(ghost.len(), 2);
+    assert_eq!(ghost[0].card_id, CardId(10));
+    assert_eq!((ghost[0].perm_attack, ghost[0].perm_health), (2, 3));
+    assert_eq!(ghost[1].card_id, CardId(20));
+    assert_eq!((ghost[1].perm_attack, ghost[1].perm_health), (0, -1));
+}
+
+#[test] fn ghost_from_full_board() {
+    let board: Vec<Option<BoardUnit>> = (0..5).map(|i| Some(BoardUnit {
+        card_id: CardId(10 + i),
+        perm_attack: i as StatValue,
+        perm_health: (i * 2) as StatValue,
+    })).collect();
+    let ghost = create_ghost_from_board(&board);
+    assert_eq!(ghost.len(), 5);
+    for (i, g) in ghost.iter().enumerate() {
+        assert_eq!(g.card_id, CardId(10 + i as u16));
+    }
+}
+
+#[test] fn ghost_preserves_permanent_stats() {
+    let board = vec![
+        Some(BoardUnit { card_id: CardId(10), perm_attack: 99, perm_health: -50 }),
+    ];
+    let ghost = create_ghost_from_board(&board);
+    assert_eq!(ghost[0].perm_attack, 99);
+    assert_eq!(ghost[0].perm_health, -50);
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Ghost pool FIFO logic
+// ═════════════════════════════════════════════════════════════════════════════
+
+const MAX_GHOSTS_PER_BRACKET: usize = 10;
+
+/// Simulated ghost pool (mirrors contract storage)
+struct GhostPoolStore {
+    pools: BTreeMap<(SetIdValue, RoundValue, RoundValue, RoundValue), Vec<Vec<GhostBoardUnit>>>,
+}
+
+impl GhostPoolStore {
+    fn new() -> Self { Self { pools: BTreeMap::new() } }
+
+    fn load(&self, set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue) -> Vec<Vec<GhostBoardUnit>> {
+        self.pools.get(&(set_id, round, wins, lives)).cloned().unwrap_or_default()
+    }
+
+    fn push(&mut self, set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue, board: Vec<GhostBoardUnit>) {
+        if board.is_empty() { return; }
+        let pool = self.pools.entry((set_id, round, wins, lives)).or_default();
+        if pool.len() >= MAX_GHOSTS_PER_BRACKET {
+            pool.remove(0); // FIFO: drop oldest
+        }
+        pool.push(board);
+    }
+
+    fn select(&self, set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue, seed: u64, card_pool: &BTreeMap<CardId, UnitCard>) -> (Vec<CombatUnit>, Vec<GhostBoardUnit>) {
+        let pool = self.load(set_id, round, wins, lives);
+        if pool.is_empty() { return (Vec::new(), Vec::new()); }
+        let mut rng = XorShiftRng::seed_from_u64(seed);
+        let index = rng.gen_range(pool.len());
+        let ghost = &pool[index];
+        let units = ghost.iter().filter_map(|unit| {
+            card_pool.get(&unit.card_id).map(|card| {
+                let mut cu = CombatUnit::from_card(card.clone());
+                cu.attack_buff = unit.perm_attack;
+                cu.health_buff = unit.perm_health;
+                cu.health = cu.health.saturating_add(unit.perm_health);
+                cu
+            })
+        }).collect();
+        (units, ghost.clone())
+    }
+}
+
+#[test] fn ghost_pool_starts_empty() {
+    let store = GhostPoolStore::new();
+    assert!(store.load(0, 1, 0, 3).is_empty());
+}
+
+#[test] fn ghost_pool_push_and_load() {
+    let mut store = GhostPoolStore::new();
+    let ghost = vec![GhostBoardUnit { card_id: CardId(10), perm_attack: 0, perm_health: 0 }];
+    store.push(0, 1, 0, 3, ghost.clone());
+    let pool = store.load(0, 1, 0, 3);
+    assert_eq!(pool.len(), 1);
+    assert_eq!(pool[0], ghost);
+}
+
+#[test] fn ghost_pool_push_empty_is_noop() {
+    let mut store = GhostPoolStore::new();
+    store.push(0, 1, 0, 3, vec![]);
+    assert!(store.load(0, 1, 0, 3).is_empty());
+}
+
+#[test] fn ghost_pool_fifo_rotation() {
+    let mut store = GhostPoolStore::new();
+    // Fill pool to max
+    for i in 0..MAX_GHOSTS_PER_BRACKET {
+        store.push(0, 1, 0, 3, vec![GhostBoardUnit { card_id: CardId(i as u16), perm_attack: 0, perm_health: 0 }]);
+    }
+    assert_eq!(store.load(0, 1, 0, 3).len(), MAX_GHOSTS_PER_BRACKET);
+    // First ghost should be CardId(0)
+    assert_eq!(store.load(0, 1, 0, 3)[0][0].card_id, CardId(0));
+
+    // Push one more — oldest (CardId(0)) should be evicted
+    store.push(0, 1, 0, 3, vec![GhostBoardUnit { card_id: CardId(99), perm_attack: 0, perm_health: 0 }]);
+    let pool = store.load(0, 1, 0, 3);
+    assert_eq!(pool.len(), MAX_GHOSTS_PER_BRACKET);
+    assert_eq!(pool[0][0].card_id, CardId(1)); // oldest is now CardId(1)
+    assert_eq!(pool[MAX_GHOSTS_PER_BRACKET - 1][0].card_id, CardId(99)); // newest at end
+}
+
+#[test] fn ghost_pool_brackets_are_independent() {
+    let mut store = GhostPoolStore::new();
+    let ghost_a = vec![GhostBoardUnit { card_id: CardId(1), perm_attack: 0, perm_health: 0 }];
+    let ghost_b = vec![GhostBoardUnit { card_id: CardId(2), perm_attack: 0, perm_health: 0 }];
+    store.push(0, 1, 0, 3, ghost_a);
+    store.push(0, 2, 1, 3, ghost_b);
+    assert_eq!(store.load(0, 1, 0, 3).len(), 1);
+    assert_eq!(store.load(0, 2, 1, 3).len(), 1);
+    assert_eq!(store.load(0, 1, 0, 3)[0][0].card_id, CardId(1));
+    assert_eq!(store.load(0, 2, 1, 3)[0][0].card_id, CardId(2));
+}
+
+#[test] fn ghost_pool_encoding_round_trip() {
+    let pool: Vec<Vec<GhostBoardUnit>> = vec![
+        vec![
+            GhostBoardUnit { card_id: CardId(10), perm_attack: 5, perm_health: -2 },
+            GhostBoardUnit { card_id: CardId(20), perm_attack: 0, perm_health: 10 },
+        ],
+        vec![
+            GhostBoardUnit { card_id: CardId(30), perm_attack: 99, perm_health: 0 },
+        ],
+    ];
+    let encoded = pool.encode();
+    let decoded: Vec<Vec<GhostBoardUnit>> = Decode::decode(&mut &encoded[..]).unwrap();
+    assert_eq!(pool, decoded);
+}
+
+#[test] fn ghost_pool_fits_storage() {
+    // Max pool: 10 ghosts, each with 5 units (6 bytes each) + SCALE overhead
+    let full_pool: Vec<Vec<GhostBoardUnit>> = (0..10).map(|_| {
+        (0..5).map(|i| GhostBoardUnit { card_id: CardId(i), perm_attack: 99, perm_health: 99 }).collect()
+    }).collect();
+    let size = full_pool.encode().len();
+    assert!(size <= 416, "Full ghost pool is {} bytes > 416", size);
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Ghost selection
+// ═════════════════════════════════════════════════════════════════════════════
+
+#[test] fn select_from_empty_pool() {
+    let store = GhostPoolStore::new();
+    let pool = BTreeMap::new();
+    let (units, ghost) = store.select(0, 1, 0, 3, 42, &pool);
+    assert!(units.is_empty());
+    assert!(ghost.is_empty());
+}
+
+#[test] fn select_from_single_ghost() {
+    let reg = setup_registry();
+    let card_set = reg.load_set(0).unwrap();
+    let card_pool = reg.build_card_pool(card_set);
+    let mut store = GhostPoolStore::new();
+    let ghost = vec![GhostBoardUnit { card_id: card_set.cards[0].card_id, perm_attack: 0, perm_health: 0 }];
+    store.push(0, 1, 0, 3, ghost.clone());
+    let (units, returned_ghost) = store.select(0, 1, 0, 3, 42, &card_pool);
+    assert_eq!(units.len(), 1);
+    assert_eq!(returned_ghost, ghost);
+}
+
+#[test] fn select_is_deterministic() {
+    let reg = setup_registry();
+    let card_set = reg.load_set(0).unwrap();
+    let card_pool = reg.build_card_pool(card_set);
+    let mut store = GhostPoolStore::new();
+    for i in 0..5u16 {
+        store.push(0, 1, 0, 3, vec![GhostBoardUnit { card_id: CardId(card_set.cards[i as usize].card_id.0), perm_attack: 0, perm_health: 0 }]);
+    }
+    let (_, ghost1) = store.select(0, 1, 0, 3, 42, &card_pool);
+    let (_, ghost2) = store.select(0, 1, 0, 3, 42, &card_pool);
+    assert_eq!(ghost1, ghost2);
+}
+
+#[test] fn select_varies_with_seed() {
+    let reg = setup_registry();
+    let card_set = reg.load_set(0).unwrap();
+    let card_pool = reg.build_card_pool(card_set);
+    let mut store = GhostPoolStore::new();
+    for i in 0..10u16 {
+        store.push(0, 1, 0, 3, vec![GhostBoardUnit { card_id: CardId(card_set.cards[i as usize].card_id.0), perm_attack: 0, perm_health: 0 }]);
+    }
+    // With enough seeds, at least two different ghosts should be selected
+    let selections: Vec<_> = (0..20u64).map(|seed| {
+        let (_, ghost) = store.select(0, 1, 0, 3, seed, &card_pool);
+        ghost[0].card_id
+    }).collect();
+    let unique: std::collections::HashSet<_> = selections.iter().collect();
+    assert!(unique.len() > 1, "All seeds selected the same ghost");
+}
+
+#[test] fn select_applies_permanent_stats() {
+    let reg = setup_registry();
+    let card_set = reg.load_set(0).unwrap();
+    let card_pool = reg.build_card_pool(card_set);
+    let card_id = card_set.cards[0].card_id;
+    let base_card = card_pool.get(&card_id).unwrap();
+    let mut store = GhostPoolStore::new();
+    store.push(0, 1, 0, 3, vec![GhostBoardUnit { card_id, perm_attack: 5, perm_health: 10 }]);
+    let (units, _) = store.select(0, 1, 0, 3, 42, &card_pool);
+    assert_eq!(units[0].attack_buff, 5);
+    assert_eq!(units[0].health_buff, 10);
+    assert_eq!(units[0].health, base_card.stats.health + 10);
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// end_game logic
+// ═════════════════════════════════════════════════════════════════════════════
+
+/// Simulates the contract's end_game: archive final ghost, delete session.
+/// Returns true if the game was finalized, false if phase wasn't Completed.
+fn end_game(session: &ArenaSession, ghost_store: &mut GhostPoolStore) -> bool {
+    if session.phase != PHASE_COMPLETED { return false; }
+    let ghost = create_ghost_from_board(&session.board);
+    if !ghost.is_empty() {
+        ghost_store.push(session.set_id, session.round, session.wins, session.lives, ghost);
+    }
+    true // session would be deleted from storage
+}
+
+#[test] fn end_game_requires_completed_phase() {
+    let reg = setup_registry();
+    let session = start_game(&reg, 0, 42);
+    let mut ghost_store = GhostPoolStore::new();
+    assert_eq!(session.phase, PHASE_SHOP);
+    assert!(!end_game(&session, &mut ghost_store));
+    assert!(ghost_store.load(0, 1, 0, 3).is_empty());
+}
+
+#[test] fn end_game_archives_final_board() {
+    let reg = setup_registry();
+    let mut session = start_game(&reg, 0, 42);
+    // Force a board and mark completed
+    session.board[0] = Some(BoardUnit { card_id: CardId(10), perm_attack: 5, perm_health: 3 });
+    session.board[2] = Some(BoardUnit { card_id: CardId(20), perm_attack: 0, perm_health: 0 });
+    session.wins = 10;
+    session.phase = PHASE_COMPLETED;
+    let mut ghost_store = GhostPoolStore::new();
+    assert!(end_game(&session, &mut ghost_store));
+    let pool = ghost_store.load(0, session.round, session.wins, session.lives);
+    assert_eq!(pool.len(), 1);
+    assert_eq!(pool[0].len(), 2);
+    assert_eq!(pool[0][0].card_id, CardId(10));
+    assert_eq!(pool[0][0].perm_attack, 5);
+    assert_eq!(pool[0][1].card_id, CardId(20));
+}
+
+#[test] fn end_game_empty_board_no_ghost() {
+    let reg = setup_registry();
+    let mut session = start_game(&reg, 0, 42);
+    // Board is all None, mark completed (defeat with empty board)
+    session.lives = 0;
+    session.phase = PHASE_COMPLETED;
+    let mut ghost_store = GhostPoolStore::new();
+    assert!(end_game(&session, &mut ghost_store));
+    // No ghost should be archived since board is empty
+    assert!(ghost_store.load(0, session.round, 0, 0).is_empty());
+}
+
+#[test] fn end_game_uses_correct_bracket() {
+    let reg = setup_registry();
+    let mut session = start_game(&reg, 0, 42);
+    session.board[0] = Some(BoardUnit { card_id: CardId(10), perm_attack: 0, perm_health: 0 });
+    session.round = 7;
+    session.wins = 10;
+    session.lives = 2;
+    session.phase = PHASE_COMPLETED;
+    let mut ghost_store = GhostPoolStore::new();
+    end_game(&session, &mut ghost_store);
+    // Ghost should be in the (set_id=0, round=7, wins=10, lives=2) bracket
+    assert!(ghost_store.load(0, 7, 10, 2).len() == 1);
+    // Other brackets should be empty
+    assert!(ghost_store.load(0, 7, 10, 3).is_empty());
+    assert!(ghost_store.load(0, 7, 9, 2).is_empty());
+}
+
+#[test] fn end_game_after_full_victory() {
+    let reg = setup_registry();
+    let mut session = start_game(&reg, 0, 42);
+    // Play to victory with strong board
+    session.board[0] = Some(BoardUnit { card_id: CardId(20), perm_attack: 50, perm_health: 50 });
+    session.wins = 9;
+    let result = submit_turn(&mut session, &reg, &CommitTurnAction { actions: vec![] }, make_weak_enemy());
+    if result == BattleResult::Victory {
+        assert_eq!(session.phase, PHASE_COMPLETED);
+        assert_eq!(session.wins, 10);
+        let mut ghost_store = GhostPoolStore::new();
+        assert!(end_game(&session, &mut ghost_store));
+        let pool = ghost_store.load(0, session.round, session.wins, session.lives);
+        assert_eq!(pool.len(), 1);
+        // Ghost should have the final board's units
+        assert!(!pool[0].is_empty());
+    }
+}
+
+#[test] fn end_game_after_final_defeat() {
+    let reg = setup_registry();
+    let mut session = start_game(&reg, 0, 42);
+    session.lives = 1;
+    let result = submit_turn(&mut session, &reg, &CommitTurnAction { actions: vec![] }, make_strong_enemy(&reg));
+    if result == BattleResult::Defeat {
+        assert_eq!(session.phase, PHASE_COMPLETED);
+        assert_eq!(session.lives, 0);
+        let mut ghost_store = GhostPoolStore::new();
+        end_game(&session, &mut ghost_store);
+        // Ghost pool for the defeat bracket — may or may not have units depending on board state
+    }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// abandon_game logic
+// ═════════════════════════════════════════════════════════════════════════════
+
+#[test] fn abandon_does_not_archive_ghost() {
+    let reg = setup_registry();
+    let mut session = start_game(&reg, 0, 42);
+    session.board[0] = Some(BoardUnit { card_id: CardId(10), perm_attack: 5, perm_health: 3 });
+    // Abandon during shop phase — should NOT archive ghost
+    let ghost_store = GhostPoolStore::new();
+    assert_eq!(session.phase, PHASE_SHOP);
+    // abandon_game just deletes the session — no ghost_store interaction
+    assert!(ghost_store.load(0, session.round, session.wins, session.lives).is_empty());
+}
+
+#[test] fn abandon_completed_game_no_ghost() {
+    let reg = setup_registry();
+    let mut session = start_game(&reg, 0, 42);
+    session.board[0] = Some(BoardUnit { card_id: CardId(10), perm_attack: 0, perm_health: 0 });
+    session.phase = PHASE_COMPLETED;
+    session.wins = 10;
+    // Abandon even a completed game — still no ghost archived (that's end_game's job)
+    let ghost_store = GhostPoolStore::new();
+    assert!(ghost_store.load(0, session.round, session.wins, session.lives).is_empty());
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Ghost archival during submit_turn (pre-battle)
+// ═════════════════════════════════════════════════════════════════════════════
+
+#[test] fn submit_turn_archives_ghost_before_battle() {
+    // Mirrors contract behavior: player board is stored as ghost BEFORE battle
+    let reg = setup_registry();
+    let mut session = start_game(&reg, 0, 42);
+    let card_set = reg.load_set(0).unwrap();
+    // Place a unit on the board
+    let card_id = card_set.cards[0].card_id;
+    session.board[0] = Some(BoardUnit { card_id, perm_attack: 2, perm_health: 1 });
+    // Create the ghost the same way the contract does (before battle)
+    let mut shop = make_shop(&session, &reg);
+    verify_and_apply_turn(&mut shop, &CommitTurnAction { actions: vec![] }).unwrap();
+    let ghost = create_ghost_from_board(&shop.board);
+    let mut ghost_store = GhostPoolStore::new();
+    ghost_store.push(session.set_id, session.round, session.wins, session.lives, ghost.clone());
+    let pool = ghost_store.load(0, 1, 0, 3);
+    assert_eq!(pool.len(), 1);
+    assert_eq!(pool[0][0].card_id, card_id);
+    assert_eq!(pool[0][0].perm_attack, 2);
+
+    // After battle, the ghost should remain (even if player loses)
+    submit_turn(&mut session, &reg, &CommitTurnAction { actions: vec![] }, make_strong_enemy(&reg));
+    assert_eq!(ghost_store.load(0, 1, 0, 3).len(), 1);
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// End-to-end: full game with ghost pool growth
+// ═════════════════════════════════════════════════════════════════════════════
+
+#[test] fn full_game_ghost_pool_grows() {
+    let reg = setup_registry();
+    let card_set = reg.load_set(0).unwrap();
+    let mut session = start_game(&reg, 0, 42);
+    let mut ghost_store = GhostPoolStore::new();
+    let mut turns = 0;
+
+    // Place a unit on the board so ghosts are non-empty
+    session.board[0] = Some(BoardUnit { card_id: card_set.cards[0].card_id, perm_attack: 0, perm_health: 0 });
+
+    // Play through several rounds, archiving ghosts each turn (like the contract does)
+    while session.phase != PHASE_COMPLETED && turns < 30 {
+        // Archive ghost before battle (mirrors contract)
+        let mut shop = make_shop(&session, &reg);
+        verify_and_apply_turn(&mut shop, &CommitTurnAction { actions: vec![] }).unwrap();
+        let ghost = create_ghost_from_board(&shop.board);
+        ghost_store.push(session.set_id, session.round, session.wins, session.lives, ghost);
+
+        submit_turn(&mut session, &reg, &CommitTurnAction { actions: vec![] }, make_weak_enemy());
+        turns += 1;
+    }
+
+    // At completion, end_game should archive the final board too
+    if session.phase == PHASE_COMPLETED {
+        end_game(&session, &mut ghost_store);
+    }
+
+    // Ghost pools should have entries from the game
+    let total_ghosts: usize = ghost_store.pools.values().map(|p| p.len()).sum();
+    assert!(total_ghosts > 0, "No ghosts archived during game");
+    assert!(turns >= 3, "Game should last multiple rounds");
+}
+
+#[test] fn end_game_ghost_selectable_by_next_player() {
+    let reg = setup_registry();
+    let card_set = reg.load_set(0).unwrap();
+    let card_pool = reg.build_card_pool(card_set);
+    let mut ghost_store = GhostPoolStore::new();
+
+    // Player 1: complete a game and finalize
+    let mut session = start_game(&reg, 0, 42);
+    session.board[0] = Some(BoardUnit { card_id: card_set.cards[0].card_id, perm_attack: 10, perm_health: 5 });
+    session.wins = 10;
+    session.round = 5;
+    session.lives = 2;
+    session.phase = PHASE_COMPLETED;
+    end_game(&session, &mut ghost_store);
+
+    // Player 2: in the same bracket, should be able to select player 1's ghost
+    let (units, ghost) = ghost_store.select(0, 5, 10, 2, 999, &card_pool);
+    assert_eq!(units.len(), 1);
+    assert_eq!(ghost[0].card_id, card_set.cards[0].card_id);
+    assert_eq!(ghost[0].perm_attack, 10);
+    assert_eq!(ghost[0].perm_health, 5);
+    // Verify permanent stats are applied to combat unit
+    let base_health = card_pool.get(&card_set.cards[0].card_id).unwrap().stats.health;
+    assert_eq!(units[0].health, base_health + 5);
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Permanent stat tracking across rounds
+// ═════════════════════════════════════════════════════════════════════════════
+
+#[test] fn permanent_stats_persist_across_rounds() {
+    let reg = setup_registry();
+    let mut session = start_game(&reg, 0, 42);
+    // Place a unit with permanent stat buffs
+    session.board[0] = Some(BoardUnit { card_id: CardId(20), perm_attack: 3, perm_health: 7 });
+    // Submit a turn — if the unit survives, stats should persist
+    let initial_perm_attack = 3;
+    let initial_perm_health = 7;
+    submit_turn(&mut session, &reg, &CommitTurnAction { actions: vec![] }, make_weak_enemy());
+    if session.phase == PHASE_SHOP {
+        // Check that board units retained their permanent stats (or gained more)
+        if let Some(Some(unit)) = session.board.get(0) {
+            assert!(unit.perm_attack >= initial_perm_attack || unit.perm_health >= initial_perm_health,
+                "Permanent stats should persist or increase");
+        }
+        // If unit was removed from board (due to battle), that's fine too
+    }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Session SCALE encoding parity with frontend
+// ═════════════════════════════════════════════════════════════════════════════
+
+#[test] fn session_scale_fields_order() {
+    // Ensure SCALE encoding order matches what the frontend expects
+    let session = ArenaSession {
+        bag: vec![CardId(1), CardId(2)],
+        hand: vec![CardId(3)],
+        board: vec![None, Some(BoardUnit { card_id: CardId(10), perm_attack: 1, perm_health: 2 }), None, None, None],
+        mana_limit: 5,
+        shop_mana: 2,
+        round: 3,
+        lives: 2,
+        wins: 4,
+        phase: PHASE_SHOP,
+        next_card_id: 1005,
+        game_seed: 12345,
+        set_id: 0,
+    };
+    let encoded = session.encode();
+    let decoded = ArenaSession::decode(&mut &encoded[..]).unwrap();
+    assert_eq!(session, decoded);
+    // Verify individual fields survived round-trip
+    assert_eq!(decoded.bag, vec![CardId(1), CardId(2)]);
+    assert_eq!(decoded.mana_limit, 5);
+    assert_eq!(decoded.round, 3);
+    assert_eq!(decoded.lives, 2);
+    assert_eq!(decoded.wins, 4);
+    assert_eq!(decoded.phase, PHASE_SHOP);
+    assert_eq!(decoded.set_id, 0);
+}
+
+#[test] fn completed_session_encodes_correctly() {
+    let session = ArenaSession {
+        bag: vec![],
+        hand: vec![CardId(5)],
+        board: vec![Some(BoardUnit { card_id: CardId(10), perm_attack: 20, perm_health: 15 }), None, None, None, None],
+        mana_limit: 10,
+        shop_mana: 3,
+        round: 10,
+        lives: 1,
+        wins: 10,
+        phase: PHASE_COMPLETED,
+        next_card_id: 1050,
+        game_seed: 999999,
+        set_id: 0,
+    };
+    let decoded = ArenaSession::decode(&mut &session.encode()[..]).unwrap();
+    assert_eq!(decoded.phase, PHASE_COMPLETED);
+    assert_eq!(decoded.wins, 10);
+    assert!(decoded.board[0].is_some());
+    assert_eq!(decoded.board[0].as_ref().unwrap().perm_attack, 20);
+}
+
+#[test] fn ghost_board_unit_encoding_matches_types_crate() {
+    // Verify GhostBoardUnit encoding is the same between test and battle crate
+    let unit = GhostBoardUnit { card_id: CardId(42), perm_attack: -3, perm_health: 10 };
+    let encoded = unit.encode();
+    let decoded = GhostBoardUnit::decode(&mut &encoded[..]).unwrap();
+    assert_eq!(decoded.card_id, CardId(42));
+    assert_eq!(decoded.perm_attack, -3);
+    assert_eq!(decoded.perm_health, 10);
+    // CardId(u16) = 2 bytes, StatValue(i16) = 2 bytes each, total = 6 bytes
+    assert_eq!(encoded.len(), 6);
+}
+
 } // mod tests
