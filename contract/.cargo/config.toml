@@ -7,3 +7,4 @@ json-target-spec = true
 
 [env]
 RUSTC_BOOTSTRAP = "1"
+PVM_ENTRY_POINT_CRATE = "oab-contract"
