@@ -1,24 +1,23 @@
 # OAB Smart Contract (PolkaVM)
 
-The OAB arena game can run as a PolkaVM smart contract, deployed to any chain with `pallet-revive`. This guide covers local development setup.
+The OAB arena game can run as a PolkaVM smart contract, deployed to any chain with `pallet-revive`. Built with [`cargo-pvm-contract`](https://github.com/paritytech/cargo-pvm-contract) macros for automatic dispatch, ABI generation, and allocator setup.
 
 ## Prerequisites
 
 ### Rust Toolchain
 
-You need Rust nightly with the RISC-V target for compiling the contract:
+You need Rust nightly with the `rust-src` component:
 
 ```bash
-rustup toolchain install nightly
-rustup component add rust-src --toolchain nightly
+rustup toolchain install nightly --component rust-src --profile minimal
 ```
 
-### polkatool
+### cargo-pvm-contract (local)
 
-Links the compiled RISC-V binary into a PolkaVM blob:
+The contract depends on the `cargo-pvm-contract` crates via path dependencies. Clone the repo alongside this project:
 
 ```bash
-cargo install polkatool
+cd .. && git clone https://github.com/paritytech/cargo-pvm-contract.git
 ```
 
 ### revive-dev-node
@@ -58,10 +57,10 @@ The binary is called `eth-rpc`. The same macOS libclang fix applies if the build
 
 ```bash
 cd contract
-make
+env -u CARGO -u RUSTUP_TOOLCHAIN cargo +nightly build --release
 ```
 
-This produces `contract.polkavm` (~78 KB). The build uses `RUSTC_BOOTSTRAP=1` for `-Zbuild-std` support with the custom RISC-V target.
+This produces `target/contract.release.polkavm` (~81 KB) and `target/contract.release.abi.json`. The build uses `cargo-pvm-contract-builder` which handles the RISC-V target, PolkaVM linking, and ABI generation automatically.
 
 ## Run a Local Dev Node
 
@@ -108,12 +107,15 @@ Navigate to `/#/contract` to connect and play.
 
 ```
 contract/
-  src/main.rs          # Contract source (PolkaVM, no_std)
-  Makefile             # Build: cargo + polkatool link
-  contract.polkavm     # Compiled contract blob
+  src/main.rs          # Contract source (pvm-contract-macros, no_std)
+  build.rs             # PvmBuilder: PolkaVM linking + ABI generation
+  OabArena.sol         # Solidity interface for ABI generation
   deployment.json      # Auto-generated after deploy (address, rpcUrl, chainId)
   scripts/deploy.sh    # Deploy + register cards
   tests-native/        # Native Rust tests (mirrors contract logic)
+  target/
+    contract.release.polkavm    # Compiled PolkaVM bytecode
+    contract.release.abi.json   # Generated ABI (Ethereum JSON format)
 register-cards/        # CLI tool that registers card/set data on the contract
 ```
 
