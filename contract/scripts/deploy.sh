@@ -23,8 +23,14 @@ echo "=== OAB Contract Deployment ==="
 echo "RPC: $RPC_URL"
 echo ""
 
-if [ ! -f "$CONTRACT_DIR/contract.polkavm" ]; then
-    echo "Error: contract.polkavm not found. Build with: cd contract && make"
+POLKAVM="$CONTRACT_DIR/target/contract.release.polkavm"
+if [ ! -f "$POLKAVM" ]; then
+    # Fall back to old location
+    POLKAVM="$CONTRACT_DIR/contract.polkavm"
+fi
+if [ ! -f "$POLKAVM" ]; then
+    echo "Error: contract.polkavm not found. Build with:"
+    echo "  cd contract && env -u CARGO -u RUSTUP_TOOLCHAIN cargo +nightly build --release"
     exit 1
 fi
 
@@ -64,7 +70,7 @@ echo "Chain ID: $CHAIN_ID"
 # Deploy contract
 echo ""
 echo "Deploying contract..."
-BYTECODE="0x$(xxd -p "$CONTRACT_DIR/contract.polkavm" | tr -d '\n')"
+BYTECODE="0x$(xxd -p "$POLKAVM" | tr -d '\n')"
 
 TX_HASH=$(curl -s -X POST "$RPC_URL" \
   -H "Content-Type: application/json" \

@@ -60,7 +60,7 @@ cd contract
 env -u CARGO -u RUSTUP_TOOLCHAIN cargo +nightly build --release
 ```
 
-This produces `target/contract.release.polkavm` (~81 KB) and `target/contract.release.abi.json`. The build uses `cargo-pvm-contract-builder` which handles the RISC-V target, PolkaVM linking, and ABI generation automatically.
+This produces `target/contract.release.polkavm` (~97 KB), `target/contract.release.abi.json`, and `target/contract.release.cdm.json`. The build uses `cargo-pvm-contract-builder` which handles the RISC-V target, PolkaVM linking, ABI generation, and CDM metadata extraction automatically.
 
 ## Run a Local Dev Node
 
