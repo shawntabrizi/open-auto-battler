@@ -83,7 +83,7 @@ const MAX_GHOSTS_PER_BRACKET: usize = 10;
 
 // ── Contract ────────────────────────────────────────────────────────────────
 
-#[pvm::contract]
+#[pvm::contract(cdm = "@oab/arena")]
 mod oab_arena {
     use super::*;
     use alloc::collections::BTreeMap;
