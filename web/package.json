@@ -38,7 +38,7 @@
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.12.0",
-    "viem": "^2.47.6",
+    "viem": "^2.47.10",
     "vite-plugin-top-level-await": "^1.6.0",
     "zustand": "^5.0.0"
   },
