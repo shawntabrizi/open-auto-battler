@@ -97,7 +97,8 @@ echo "Registering cards and sets..."
 REGISTER_TOOL="$REPO_DIR/register-cards"
 
 if [ -d "$REGISTER_TOOL" ]; then
-    cargo run --release --manifest-path "$REGISTER_TOOL/Cargo.toml" -- "$RPC_URL" "$CONTRACT_ADDRESS" "$FROM"
+    # Build from the register-cards directory to avoid inheriting contract/.cargo/config.toml
+    (cd "$REGISTER_TOOL" && cargo run --release -- "$RPC_URL" "$CONTRACT_ADDRESS" "$FROM")
 else
     echo "register-cards tool not found. Run manually:"
     echo "  cd register-cards && cargo run -- $RPC_URL $CONTRACT_ADDRESS"

@@ -32,8 +32,11 @@ echo "--- Building WASM ---"
 cleanup() {
     echo "--- Stopping processes ---"
     kill $NODE_PID $RPC_PID $WEB_PID 2>/dev/null
+    # Also kill by name in case PIDs were lost
+    pkill -f "revive-dev-node" 2>/dev/null || true
+    pkill -f "eth-rpc" 2>/dev/null || true
 }
-trap cleanup EXIT
+trap cleanup EXIT INT TERM
 
 if [ "$MODE" = "contract" ]; then
   # ── Contract mode ────────────────────────────────────────────────────
@@ -42,15 +45,37 @@ if [ "$MODE" = "contract" ]; then
   env -u CARGO -u RUSTUP_TOOLCHAIN cargo +nightly build --release
   cd "$SCRIPT_DIR"
 
+  # Kill any stale processes from previous runs
+  echo "--- Cleaning up stale processes ---"
+  pkill -f "revive-dev-node" 2>/dev/null || true
+  pkill -f "eth-rpc" 2>/dev/null || true
+  sleep 1
+
   echo "--- Starting revive-dev-node ---"
   revive-dev-node --dev &
   NODE_PID=$!
-  sleep 2
+
+  # Wait for node RPC to be ready
+  echo "Waiting for node..."
+  for i in $(seq 1 30); do
+    if curl -sf -X POST http://localhost:9944 -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"system_health","params":[],"id":1}' >/dev/null 2>&1; then
+      break
+    fi
+    sleep 1
+  done
 
   echo "--- Starting eth-rpc ---"
   eth-rpc --dev &
   RPC_PID=$!
-  sleep 2
+
+  # Wait for eth-rpc to be ready
+  echo "Waiting for eth-rpc..."
+  for i in $(seq 1 30); do
+    if curl -sf -X POST http://localhost:8545 -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' >/dev/null 2>&1; then
+      break
+    fi
+    sleep 1
+  done
 
   echo "--- Deploying Contract ---"
   cd "$SCRIPT_DIR/contract"
