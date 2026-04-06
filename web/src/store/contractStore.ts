@@ -27,6 +27,7 @@ interface ContractStore {
   // Game state
   hasActiveGame: boolean;
   isRefreshing: boolean;
+  isSubmitting: boolean;
 
   // Actions
   connect: (useDevAccounts?: boolean) => Promise<boolean>;
@@ -53,6 +54,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
   accounts: [],
   hasActiveGame: false,
   isRefreshing: false,
+  isSubmitting: false,
 
   setConfig: (rpcUrl: string, contractAddress: string) => {
     set({ rpcUrl, contractAddress });
@@ -141,10 +143,11 @@ export const useContractStore = create<ContractStore>((set, get) => ({
   },
 
   submitTurnOnChain: async () => {
-    const { backend } = get();
+    const { backend, isSubmitting } = get();
     const { engine } = useGameStore.getState();
-    if (!backend || !engine) return;
+    if (!backend || !engine || isSubmitting) return;
 
+    set({ isSubmitting: true });
     try {
       // Capture player board BEFORE submitting
       const playerBoard = engine.get_board();
@@ -188,6 +191,8 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       }
     } catch (err) {
       console.error('Contract submit turn failed:', err);
+    } finally {
+      set({ isSubmitting: false });
     }
   },
 

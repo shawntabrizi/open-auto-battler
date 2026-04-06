@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useContractStore } from '../store/contractStore';
 import { useGameStore } from '../store/gameStore';
-import { GameOverScreen } from './GameOverScreen';
+import { ContractGameOverScreen } from './ContractGameOverScreen';
 import { GameShell } from './GameShell';
 import { Navigate } from 'react-router-dom';
 
 /** Contract arena gameplay — renders GameShell with contract-backed commit. */
 export function ContractArenaGamePage() {
-  const { isConnected, hasActiveGame, submitTurnOnChain, refreshGameState } = useContractStore();
+  const { isConnected, hasActiveGame, submitTurnOnChain, refreshGameState, isSubmitting } = useContractStore();
   const { init, view } = useGameStore();
 
   useEffect(() => { void init(); }, [init]);
@@ -17,7 +17,7 @@ export function ContractArenaGamePage() {
   }, [isConnected, refreshGameState]);
 
   if (view?.phase === 'completed') {
-    return <GameOverScreen />;
+    return <ContractGameOverScreen />;
   }
 
   if (!hasActiveGame) {
@@ -29,9 +29,9 @@ export function ContractArenaGamePage() {
       <GameShell
         hideEndTurn={true}
         customAction={{
-          label: 'Commit',
+          label: isSubmitting ? 'Committing...' : 'Commit',
           onClick: () => void submitTurnOnChain(),
-          disabled: false,
+          disabled: isSubmitting,
           variant: 'chain',
         }}
       />

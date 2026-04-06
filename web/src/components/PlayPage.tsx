@@ -106,6 +106,19 @@ export function PlayPage() {
               </Link>
             </div>
 
+            {/* Smart Contract mode */}
+            <Link
+              to="/contract"
+              className="theme-panel group block w-full p-3 lg:p-4 rounded-xl border border-accent/30 bg-gradient-to-br from-accent/8 to-surface-dark/10 hover:border-accent/50 hover:bg-accent/10 active:scale-[0.99] transition-all text-center"
+            >
+              <h3 className="font-button text-sm lg:text-base font-bold text-white">
+                SMART CONTRACT
+              </h3>
+              <p className="theme-secondary-text mt-0.5 text-[10px] lg:text-xs">
+                Play on a PolkaVM contract via JSON-RPC
+              </p>
+            </Link>
+
             {/* Tutorial */}
             <button
               onClick={() => openTutorial('how-to-play')}

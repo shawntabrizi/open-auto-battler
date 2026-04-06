@@ -5,7 +5,13 @@ import { useIsSubmitting } from '../store/txStore';
 import { TrophyIcon, SkullIcon, StarIcon, LivesIcon, HourglassIcon } from './Icons';
 import { TopBar } from './TopBar';
 
-export function GameOverScreen() {
+interface GameOverScreenProps {
+  backTo?: string;
+  backLabel?: string;
+  onNewRun?: () => Promise<void> | void;
+}
+
+export function GameOverScreen({ backTo = '/', backLabel = 'Menu', onNewRun }: GameOverScreenProps = {}) {
   const { view, newRun, winsToVictory } = useGameStore();
   const { chainState, endGame } = useArenaStore();
   const isSubmitting = useIsSubmitting();
@@ -71,7 +77,7 @@ export function GameOverScreen() {
 
   return (
     <div className="h-full flex flex-col relative overflow-hidden">
-      <TopBar backTo="/" backLabel="Menu" />
+      <TopBar backTo={backTo} backLabel={backLabel} />
       <div className="flex-1 flex items-center justify-center relative">
         {/* Background */}
         <div className="absolute inset-0 bg-board-bg" />
@@ -190,10 +196,14 @@ export function GameOverScreen() {
           >
             <button
               onClick={async () => {
-                if (chainState) {
-                  await endGame();
+                if (onNewRun) {
+                  await onNewRun();
+                } else {
+                  if (chainState) {
+                    await endGame();
+                  }
+                  newRun();
                 }
-                newRun();
               }}
               disabled={isSubmitting}
               className="battle-btn font-button font-bold text-sm lg:text-xl px-8 lg:px-14 py-2.5 lg:py-4 rounded-xl tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed"
