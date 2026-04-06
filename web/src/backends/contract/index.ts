@@ -21,6 +21,7 @@ import {
   encodeSubmitTurn,
   encodeGetGameState,
   encodeAbandonGame,
+  encodeEndGame,
   encodeGetSet,
   decodeGetGameStateResult,
 } from './abi';
@@ -321,7 +322,7 @@ export function createContractBackend(deps: {
     },
 
     async endGame(): Promise<void> {
-      // Contract games auto-complete
+      await sendTx(encodeEndGame());
     },
 
     async abandonGame(): Promise<void> {

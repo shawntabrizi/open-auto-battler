@@ -154,6 +154,8 @@ const START_GAME: [u8; 4] = [0xe8, 0xc0, 0x12, 0x7d];
 const SUBMIT_TURN: [u8; 4] = [0x21, 0x70, 0x81, 0xfe];
 const GET_GAME_STATE: [u8; 4] = [0x17, 0x60, 0xf3, 0xa3];
 const ABANDON_GAME: [u8; 4] = [0xd6, 0xb5, 0x6d, 0xed];
+// keccak256("endGame()")[0..4]
+const END_GAME: [u8; 4] = [0xcc, 0xaa, 0x31, 0xe4];
 const GET_CARD: [u8; 4] = [0xcd, 0x25, 0xba, 0x26];
 const GET_SET: [u8; 4] = [0x3e, 0x42, 0xc3, 0x88];
 
@@ -684,6 +686,28 @@ fn handle_abandon_game() {
     api::return_value(ReturnFlags::empty(), &output);
 }
 
+// ── Player: endGame ─────────────────────────────────────────────────────────
+
+fn handle_end_game() {
+    let addr = caller_address();
+    let session = match load_session(&addr) {
+        Some(s) => s,
+        None => return,
+    };
+    if session.phase != PHASE_COMPLETED { return; }
+
+    // Archive the final board as a ghost opponent for future players
+    let ghost = create_ghost_from_board(&session.board);
+    if !ghost.is_empty() {
+        push_ghost(session.set_id, session.round, session.wins, session.lives, ghost);
+    }
+
+    delete_session(&addr);
+    let mut output = [0u8; 32];
+    output[31] = 1;
+    api::return_value(ReturnFlags::empty(), &output);
+}
+
 // ── Read: getCard, getSet ────────────────────────────────────────────────────
 
 fn handle_get_card(calldata: &[u8]) {
@@ -740,6 +764,7 @@ pub extern "C" fn call() {
         SUBMIT_TURN => handle_submit_turn(&calldata),
         GET_GAME_STATE => handle_get_game_state(&calldata),
         ABANDON_GAME => handle_abandon_game(),
+        END_GAME => handle_end_game(),
         GET_CARD => handle_get_card(&calldata),
         GET_SET => handle_get_set(&calldata),
         _ => {}

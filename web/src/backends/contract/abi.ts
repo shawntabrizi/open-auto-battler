@@ -15,6 +15,7 @@ export const SELECTORS = {
   submitTurn:    '0x217081fe' as const,  // keccak256("submitTurn(bytes)")
   getGameState:  '0x1760f3a3' as const,
   abandonGame:   '0xd6b56ded' as const,
+  endGame:       '0xccaa31e4' as const,
   getCard:       '0xcd25ba26' as const,
   getSet:        '0x3e42c388' as const,
 } as const;
@@ -63,6 +64,11 @@ export function encodeGetGameState(): `0x${string}` {
 /** Build calldata for abandonGame() */
 export function encodeAbandonGame(): `0x${string}` {
   return `0x${SELECTORS.abandonGame.slice(2)}` as `0x${string}`;
+}
+
+/** Build calldata for endGame() */
+export function encodeEndGame(): `0x${string}` {
+  return `0x${SELECTORS.endGame.slice(2)}` as `0x${string}`;
 }
 
 /** Build calldata for registerCard(bytes cardScale) */

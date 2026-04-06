@@ -5,13 +5,13 @@ import { GameOverScreen } from './GameOverScreen';
 
 /** Game over screen wired to the contract backend. */
 export function ContractGameOverScreen() {
-  const abandonGame = useContractStore((s) => s.abandonGame);
+  const endGame = useContractStore((s) => s.endGame);
   const resetActiveSessionView = useGameStore((s) => s.resetActiveSessionView);
   const navigate = useNavigate();
 
   const handleNewRun = async () => {
     try {
-      await abandonGame();
+      await endGame();
     } catch {}
     resetActiveSessionView();
     navigate('/contract/arena');

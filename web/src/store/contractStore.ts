@@ -36,6 +36,7 @@ interface ContractStore {
   setConfig: (rpcUrl: string, contractAddress: string) => void;
   startGame: (setId: number) => Promise<void>;
   submitTurnOnChain: () => Promise<void>;
+  endGame: () => Promise<void>;
   abandonGame: () => Promise<void>;
   refreshGameState: () => Promise<void>;
 }
@@ -193,6 +194,20 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       console.error('Contract submit turn failed:', err);
     } finally {
       set({ isSubmitting: false });
+    }
+  },
+
+  endGame: async () => {
+    const { backend } = get();
+    if (!backend) return;
+
+    try {
+      await backend.endGame();
+      set({ hasActiveGame: false });
+      useGameStore.getState().resetActiveSessionView();
+    } catch (err) {
+      console.error('Contract end game failed:', err);
+      throw err;
     }
   },
 
