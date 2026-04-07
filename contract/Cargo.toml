@@ -19,7 +19,7 @@ panic = "abort"
 overflow-checks = false
 
 [dependencies]
-pvm_contract = { git = "https://github.com/paritytech/cargo-pvm-contract.git", rev = "2e4449a04df94a171c65329993bf936f6bef9494", package = "pvm_contract" }
+pvm_contract = { git = "https://github.com/paritytech/cargo-pvm-contract.git", branch = "charles/cdm-integration", package = "pvm_contract" }
 picoalloc = { version = "5", default-features = false }
 pallet-revive-uapi = { version = "0.9", default-features = false }
 polkavm-derive = "0.31.0"
@@ -31,4 +31,4 @@ oab-game = { path = "../game", default-features = false }
 abi-gen = []
 
 [build-dependencies]
-cargo-pvm-contract-builder = { git = "https://github.com/paritytech/cargo-pvm-contract.git", rev = "2e4449a04df94a171c65329993bf936f6bef9494", package = "cargo-pvm-contract-builder" }
+cargo-pvm-contract-builder = { git = "https://github.com/paritytech/cargo-pvm-contract.git", branch = "charles/cdm-integration", package = "cargo-pvm-contract-builder" }
