@@ -12,8 +12,8 @@ export function ContractArenaPage() {
   const { initEngine, engine } = useGameStore();
 
   useEffect(() => {
-    void initEngine();
-  }, [initEngine]);
+    if (!engine) void initEngine();
+  }, [engine, initEngine]);
 
   useEffect(() => {
     if (isConnected) void refreshGameState();

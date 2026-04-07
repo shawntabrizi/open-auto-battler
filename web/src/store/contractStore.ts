@@ -159,8 +159,9 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       // Submit turn — contract selects opponent and emits BattleReported event
       const turnResult = await backend.submitTurn(actionScale, new Uint8Array());
 
-      // If we got the opponent board from the event, replay the battle locally
-      if (turnResult.battleSeed && turnResult.opponentBoard.length > 0) {
+      // Replay locally whenever the contract gave us a deterministic battle seed,
+      // even if the opponent board is empty because no ghost existed yet.
+      if (turnResult.battleSeed) {
         const battleOutput = engine.resolve_battle_p2p(
           playerBoard,
           turnResult.opponentBoard,
@@ -176,8 +177,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
           },
         });
       } else {
-        // No replay data — show result and advance
-        await get().refreshGameState();
+        // No replay data — fall back to a synthetic one-screen result.
         useGameStore.setState({
           battleOutput: {
             events: [{ type: 'BattleEnd', payload: { result: turnResult.result || 'Draw' } }],
@@ -238,25 +238,30 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       const gameState = await backend.getGameState();
       set({ hasActiveGame: !!gameState });
 
-      if (gameState && gameState.stateBytes.length > 0) {
-        const { engine } = useGameStore.getState();
-        if (engine) {
-          const activeSetId = gameState.setId ?? 0;
+      if (!gameState || gameState.stateBytes.length === 0) {
+        useGameStore.getState().resetActiveSessionView();
+        return;
+      }
 
-          // Ensure the card pool is loaded before init_from_scale
-          try {
-            engine.load_card_set(activeSetId);
-          } catch {}
-          engine.init_from_scale(gameState.stateBytes, gameState.cardSetBytes);
-          const view = engine.get_view();
-          const cardSet = engine.get_card_set();
-          useGameStore.setState({
-            view,
-            cardSet,
-            currentSetId: view?.set_id ?? activeSetId,
-            gameStarted: true,
-          });
-        }
+      const { engine } = useGameStore.getState();
+      if (engine) {
+        const activeSetId = gameState.setId ?? 0;
+
+        // Ensure the card pool is loaded before init_from_scale
+        try {
+          engine.load_card_set(activeSetId);
+        } catch {}
+        engine.init_from_scale(gameState.stateBytes, gameState.cardSetBytes);
+        const view = engine.get_view();
+        const cardSet = engine.get_card_set();
+        useGameStore.setState({
+          view,
+          cardSet,
+          currentSetId: view?.set_id ?? activeSetId,
+          gameStarted: true,
+          startingLives: engine.get_starting_lives(),
+          winsToVictory: engine.get_wins_to_victory(),
+        });
       }
     } catch (err) {
       console.error('Contract refresh game state failed:', err);

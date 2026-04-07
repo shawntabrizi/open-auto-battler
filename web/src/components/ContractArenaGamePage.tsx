@@ -9,22 +9,32 @@ import { Navigate } from 'react-router-dom';
 export function ContractArenaGamePage() {
   const { isConnected, hasActiveGame, submitTurnOnChain, refreshGameState, isSubmitting } =
     useContractStore();
-  const { initEngine, view } = useGameStore();
+  const { initEngine, engine, view, showBattleOverlay } = useGameStore();
 
   useEffect(() => {
-    void initEngine();
-  }, [initEngine]);
+    if (!engine) void initEngine();
+  }, [engine, initEngine]);
 
   useEffect(() => {
     if (isConnected) void refreshGameState();
   }, [isConnected, refreshGameState]);
 
-  if (view?.phase === 'completed') {
+  if (view?.phase === 'completed' && !showBattleOverlay) {
     return <ContractGameOverScreen />;
   }
 
   if (!hasActiveGame) {
     return <Navigate to="/contract/arena" replace />;
+  }
+
+  if (!view) {
+    return (
+      <div className="h-screen h-svh bg-board-bg text-base-200 overflow-hidden font-sans selection:bg-accent/30 flex items-center justify-center">
+        <div className="text-sm lg:text-base text-base-400 uppercase tracking-wider">
+          Loading game...
+        </div>
+      </div>
+    );
   }
 
   return (

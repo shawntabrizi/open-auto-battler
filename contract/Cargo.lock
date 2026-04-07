@@ -429,11 +429,22 @@ version = "0.1.0"
 dependencies = [
  "cargo-pvm-contract-builder",
  "oab-battle",
+ "oab-game",
  "pallet-revive-uapi",
  "parity-scale-codec",
  "picoalloc",
  "polkavm-derive 0.31.0",
  "pvm_contract",
+]
+
+[[package]]
+name = "oab-game"
+version = "0.1.0"
+dependencies = [
+ "oab-battle",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
 ]
 
 [[package]]

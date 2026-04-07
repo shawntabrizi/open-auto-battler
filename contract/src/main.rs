@@ -6,14 +6,15 @@
 #![no_main]
 #![no_std]
 
+use pvm::{Address, Decode, Encode};
 use pvm_contract as pvm;
-use pvm::{Address, Encode, Decode};
 
 use oab_battle::battle::{resolve_battle, BattleResult, CombatUnit};
 use oab_battle::rng::{BattleRng, XorShiftRng};
 use oab_battle::state::CardSet;
 use oab_battle::types::*;
 use oab_battle::{apply_shop_start_triggers, verify_and_apply_turn};
+use oab_game::GamePhase;
 
 // ── Storage layout ──────────────────────────────────────────────────────────
 
@@ -69,14 +70,11 @@ struct ArenaSession {
     round: RoundValue,
     lives: RoundValue,
     wins: RoundValue,
-    phase: u8,
+    phase: GamePhase,
     next_card_id: u16,
     game_seed: u64,
     set_id: SetIdValue,
 }
-
-const PHASE_SHOP: u8 = 0;
-const PHASE_COMPLETED: u8 = 1;
 
 type GhostPool = alloc::vec::Vec<alloc::vec::Vec<GhostBoardUnit>>;
 const MAX_GHOSTS_PER_BRACKET: usize = 10;
@@ -92,8 +90,16 @@ mod oab_arena {
 
     // ── Ghost helpers ───────────────────────────────────────────────────
 
-    fn push_ghost(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue, board: Vec<GhostBoardUnit>) {
-        if board.is_empty() { return; }
+    fn push_ghost(
+        set_id: SetIdValue,
+        round: RoundValue,
+        wins: RoundValue,
+        lives: RoundValue,
+        board: Vec<GhostBoardUnit>,
+    ) {
+        if board.is_empty() {
+            return;
+        }
         let bracket = (set_id, round, wins, lives);
         let mut pool = Storage::ghost_pools().get(&bracket).unwrap_or_default();
         if pool.len() >= MAX_GHOSTS_PER_BRACKET {
@@ -103,34 +109,50 @@ mod oab_arena {
         Storage::ghost_pools().insert(&bracket, &pool);
     }
 
-    fn select_ghost(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue, seed: u64, card_pool: &BTreeMap<CardId, UnitCard>) -> (Vec<CombatUnit>, Vec<GhostBoardUnit>) {
+    fn select_ghost(
+        set_id: SetIdValue,
+        round: RoundValue,
+        wins: RoundValue,
+        lives: RoundValue,
+        seed: u64,
+        card_pool: &BTreeMap<CardId, UnitCard>,
+    ) -> (Vec<CombatUnit>, Vec<GhostBoardUnit>) {
         let bracket = (set_id, round, wins, lives);
         let pool = Storage::ghost_pools().get(&bracket).unwrap_or_default();
-        if pool.is_empty() { return (Vec::new(), Vec::new()); }
+        if pool.is_empty() {
+            return (Vec::new(), Vec::new());
+        }
 
         let mut rng = XorShiftRng::seed_from_u64(seed);
         let index = rng.gen_range(pool.len());
         let ghost = &pool[index];
 
-        let units = ghost.iter().filter_map(|unit| {
-            card_pool.get(&unit.card_id).map(|card| {
-                let mut cu = CombatUnit::from_card(card.clone());
-                cu.attack_buff = unit.perm_attack;
-                cu.health_buff = unit.perm_health;
-                cu.health = cu.health.saturating_add(unit.perm_health);
-                cu
+        let units = ghost
+            .iter()
+            .filter_map(|unit| {
+                card_pool.get(&unit.card_id).map(|card| {
+                    let mut cu = CombatUnit::from_card(card.clone());
+                    cu.attack_buff = unit.perm_attack;
+                    cu.health_buff = unit.perm_health;
+                    cu.health = cu.health.saturating_add(unit.perm_health);
+                    cu
+                })
             })
-        }).collect();
+            .collect();
 
         (units, ghost.clone())
     }
 
     fn create_ghost_from_board(board: &[Option<BoardUnit>]) -> Vec<GhostBoardUnit> {
-        board.iter().flatten().map(|bu| GhostBoardUnit {
-            card_id: bu.card_id,
-            perm_attack: bu.perm_attack,
-            perm_health: bu.perm_health,
-        }).collect()
+        board
+            .iter()
+            .flatten()
+            .map(|bu| GhostBoardUnit {
+                card_id: bu.card_id,
+                perm_attack: bu.perm_attack,
+                perm_health: bu.perm_health,
+            })
+            .collect()
     }
 
     // ── Card pool ───────────────────────────────────────────────────────
@@ -148,16 +170,25 @@ mod oab_arena {
     // ── Game helpers ────────────────────────────────────────────────────
 
     fn create_starting_bag(set: &CardSet, seed: u64, bag_size: usize) -> Vec<CardId> {
-        if set.cards.is_empty() { return Vec::new(); }
+        if set.cards.is_empty() {
+            return Vec::new();
+        }
         let mut bag = Vec::with_capacity(bag_size);
         let mut rng = XorShiftRng::seed_from_u64(seed);
         let total_weight: u32 = set.cards.iter().map(|e| e.rarity as u32).sum();
-        if total_weight == 0 { return Vec::new(); }
+        if total_weight == 0 {
+            return Vec::new();
+        }
         for _ in 0..bag_size {
             let mut target = rng.gen_range(total_weight as usize) as u32;
             for entry in &set.cards {
-                if entry.rarity == 0 { continue; }
-                if target < entry.rarity as u32 { bag.push(entry.card_id); break; }
+                if entry.rarity == 0 {
+                    continue;
+                }
+                if target < entry.rarity as u32 {
+                    bag.push(entry.card_id);
+                    break;
+                }
                 target -= entry.rarity as u32;
             }
         }
@@ -167,7 +198,9 @@ mod oab_arena {
     fn draw_hand(session: &mut ArenaSession, hand_size: usize) {
         session.bag.append(&mut session.hand);
         let bag_len = session.bag.len();
-        if bag_len == 0 { return; }
+        if bag_len == 0 {
+            return;
+        }
         let hand_count = hand_size.min(bag_len);
         let seed = session.game_seed ^ (session.round as u64);
         let mut rng = XorShiftRng::seed_from_u64(seed);
@@ -179,7 +212,9 @@ mod oab_arena {
         indices.truncate(hand_count);
         indices.sort_unstable_by(|a, b| b.cmp(a));
         let mut drawn = Vec::with_capacity(hand_count);
-        for idx in indices { drawn.push(session.bag.remove(idx)); }
+        for idx in indices {
+            drawn.push(session.bag.remove(idx));
+        }
         drawn.reverse();
         session.hand = drawn;
     }
@@ -194,12 +229,19 @@ mod oab_arena {
         u64::from_le_bytes(hash[0..8].try_into().unwrap())
     }
 
-    fn make_shop_state(session: &ArenaSession, card_pool: &BTreeMap<CardId, UnitCard>) -> oab_battle::state::ShopState {
+    fn make_shop_state(
+        session: &ArenaSession,
+        card_pool: &BTreeMap<CardId, UnitCard>,
+    ) -> oab_battle::state::ShopState {
         oab_battle::state::ShopState {
-            card_pool: card_pool.clone(), set_id: 0,
-            hand: session.hand.clone(), board: session.board.clone(),
-            mana_limit: session.mana_limit, shop_mana: session.shop_mana,
-            round: session.round, game_seed: session.game_seed,
+            card_pool: card_pool.clone(),
+            set_id: 0,
+            hand: session.hand.clone(),
+            board: session.board.clone(),
+            mana_limit: session.mana_limit,
+            shop_mana: session.shop_mana,
+            round: session.round,
+            game_seed: session.game_seed,
         }
     }
 
@@ -213,10 +255,9 @@ mod oab_arena {
 
     // keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
     const BATTLE_REPORTED_TOPIC: [u8; 32] = [
-        0x96, 0xfd, 0x17, 0x36, 0xea, 0x4f, 0xbe, 0xf3,
-        0x2e, 0x32, 0x8d, 0x70, 0x05, 0x02, 0x1b, 0x05,
-        0xc7, 0xee, 0x31, 0xf3, 0x26, 0x94, 0xdd, 0xef,
-        0x23, 0xdd, 0x55, 0xaf, 0x68, 0xe0, 0x89, 0xbd,
+        0x96, 0xfd, 0x17, 0x36, 0xea, 0x4f, 0xbe, 0xf3, 0x2e, 0x32, 0x8d, 0x70, 0x05, 0x02, 0x1b,
+        0x05, 0xc7, 0xee, 0x31, 0xf3, 0x26, 0x94, 0xdd, 0xef, 0x23, 0xdd, 0x55, 0xaf, 0x68, 0xe0,
+        0x89, 0xbd,
     ];
 
     // ── Contract entry points ───────────────────────────────────────────
@@ -230,9 +271,16 @@ mod oab_arena {
     /// Admin: store a SCALE-encoded card definition on-chain.
     #[pvm::method]
     pub fn register_card(data: Vec<u8>) -> bool {
-        if Storage::admin().get() != Some(pvm::caller()) { return false; }
-        let card: UnitCard = match Decode::decode(&mut &data[..]) { Ok(v) => v, Err(_) => return false };
-        if Storage::cards().contains(&card.id.0) { return false; }
+        if Storage::admin().get() != Some(pvm::caller()) {
+            return false;
+        }
+        let card: UnitCard = match Decode::decode(&mut &data[..]) {
+            Ok(v) => v,
+            Err(_) => return false,
+        };
+        if Storage::cards().contains(&card.id.0) {
+            return false;
+        }
         Storage::cards().insert(&card.id.0, &card);
         true
     }
@@ -240,9 +288,16 @@ mod oab_arena {
     /// Admin: store a SCALE-encoded card set on-chain.
     #[pvm::method]
     pub fn register_set(set_id: u16, data: Vec<u8>) -> bool {
-        if Storage::admin().get() != Some(pvm::caller()) { return false; }
-        let card_set: CardSet = match Decode::decode(&mut &data[..]) { Ok(v) => v, Err(_) => return false };
-        if Storage::card_sets().contains(&set_id) { return false; }
+        if Storage::admin().get() != Some(pvm::caller()) {
+            return false;
+        }
+        let card_set: CardSet = match Decode::decode(&mut &data[..]) {
+            Ok(v) => v,
+            Err(_) => return false,
+        };
+        if Storage::card_sets().contains(&set_id) {
+            return false;
+        }
         Storage::card_sets().insert(&set_id, &card_set);
         true
     }
@@ -251,22 +306,36 @@ mod oab_arena {
     #[pvm::method]
     pub fn start_game(set_id: u16, seed_nonce: u64) -> u64 {
         let caller = pvm::caller();
-        if Storage::sessions().contains(&caller) { return 0; }
+        if Storage::sessions().contains(&caller) {
+            return 0;
+        }
 
-        let card_set = match Storage::card_sets().get(&set_id) { Some(cs) => cs, None => return 0 };
+        let card_set = match Storage::card_sets().get(&set_id) {
+            Some(cs) => cs,
+            None => return 0,
+        };
         let card_pool = build_card_pool_from_storage(&card_set);
-        if card_pool.is_empty() { return 0; }
+        if card_pool.is_empty() {
+            return 0;
+        }
 
         let config = default_config();
         let seed = derive_seed(&caller, b"start", seed_nonce);
         let bag = create_starting_bag(&card_set, seed, config.bag_size as usize);
 
         let mut session = ArenaSession {
-            bag, hand: Vec::new(),
+            bag,
+            hand: Vec::new(),
             board: vec![None; config.board_size as usize],
-            mana_limit: config.mana_limit_for_round(1), shop_mana: 0,
-            round: 1, lives: config.starting_lives, wins: 0,
-            phase: PHASE_SHOP, next_card_id: 1000, game_seed: seed, set_id,
+            mana_limit: config.mana_limit_for_round(1),
+            shop_mana: 0,
+            round: 1,
+            lives: config.starting_lives,
+            wins: 0,
+            phase: GamePhase::Shop,
+            next_card_id: 1000,
+            game_seed: seed,
+            set_id,
         };
 
         draw_hand(&mut session, config.hand_size as usize);
@@ -284,22 +353,38 @@ mod oab_arena {
     #[pvm::method]
     pub fn submit_turn(action: Vec<u8>) -> u64 {
         let caller = pvm::caller();
-        let mut session = match Storage::sessions().get(&caller) { Some(s) => s, None => return 0 };
-        if session.phase != PHASE_SHOP { return 0; }
+        let mut session = match Storage::sessions().get(&caller) {
+            Some(s) => s,
+            None => return 0,
+        };
+        if session.phase != GamePhase::Shop {
+            return 0;
+        }
 
-        let action: CommitTurnAction = match Decode::decode(&mut &action[..]) { Ok(v) => v, Err(_) => return 0 };
+        let action: CommitTurnAction = match Decode::decode(&mut &action[..]) {
+            Ok(v) => v,
+            Err(_) => return 0,
+        };
 
-        let card_set = match Storage::card_sets().get(&session.set_id) { Some(cs) => cs, None => return 0 };
+        let card_set = match Storage::card_sets().get(&session.set_id) {
+            Some(cs) => cs,
+            None => return 0,
+        };
         let card_pool = build_card_pool_from_storage(&card_set);
         let config = default_config();
 
         let mut shop_state = make_shop_state(&session, &card_pool);
-        if verify_and_apply_turn(&mut shop_state, &action).is_err() { return 0; }
+        if verify_and_apply_turn(&mut shop_state, &action).is_err() {
+            return 0;
+        }
         shop_state.shop_mana = 0;
 
         // Extract player combat units
         let mut player_slots = Vec::new();
-        let player_units: Vec<CombatUnit> = shop_state.board.iter().enumerate()
+        let player_units: Vec<CombatUnit> = shop_state
+            .board
+            .iter()
+            .enumerate()
             .filter_map(|(slot, bu)| {
                 let bu = bu.as_ref()?;
                 player_slots.push(slot);
@@ -310,35 +395,74 @@ mod oab_arena {
                     cu.health = cu.health.saturating_add(bu.perm_health).max(0);
                     cu
                 })
-            }).collect();
+            })
+            .collect();
 
         // Select ghost opponent BEFORE storing player's board
         let battle_seed = derive_seed(&caller, b"battle", session.game_seed);
-        let (enemy_units, opponent_ghost) = select_ghost(session.set_id, session.round, session.wins, session.lives, battle_seed, &card_pool);
+        let (enemy_units, opponent_ghost) = select_ghost(
+            session.set_id,
+            session.round,
+            session.wins,
+            session.lives,
+            battle_seed,
+            &card_pool,
+        );
 
         // Store player's board as ghost for future opponents
         let player_ghost = create_ghost_from_board(&shop_state.board);
-        push_ghost(session.set_id, session.round, session.wins, session.lives, player_ghost);
+        push_ghost(
+            session.set_id,
+            session.round,
+            session.wins,
+            session.lives,
+            player_ghost,
+        );
 
         let mut rng = XorShiftRng::seed_from_u64(battle_seed);
-        let events = resolve_battle(player_units, enemy_units, &mut rng, &card_pool, config.board_size as usize);
+        let events = resolve_battle(
+            player_units,
+            enemy_units,
+            &mut rng,
+            &card_pool,
+            config.board_size as usize,
+        );
 
-        let result = events.iter().rev().find_map(|e| {
-            if let oab_battle::battle::CombatEvent::BattleEnd { result } = e { Some(result.clone()) } else { None }
-        }).unwrap_or(BattleResult::Draw);
+        let result = events
+            .iter()
+            .rev()
+            .find_map(|e| {
+                if let oab_battle::battle::CombatEvent::BattleEnd { result } = e {
+                    Some(result.clone())
+                } else {
+                    None
+                }
+            })
+            .unwrap_or(BattleResult::Draw);
 
-        let mana_delta: ManaValue = oab_battle::battle::player_shop_mana_delta_from_events(&events).max(0) as ManaValue;
-        let permanent_deltas = oab_battle::battle::player_permanent_stat_deltas_from_events(&events);
+        let mana_delta: ManaValue =
+            oab_battle::battle::player_shop_mana_delta_from_events(&events).max(0) as ManaValue;
+        let permanent_deltas =
+            oab_battle::battle::player_permanent_stat_deltas_from_events(&events);
         for (unit_id, (attack_delta, health_delta)) in &permanent_deltas {
             let idx = unit_id.raw() as usize;
-            if idx == 0 || idx > player_slots.len() { continue; }
+            if idx == 0 || idx > player_slots.len() {
+                continue;
+            }
             let slot = player_slots[idx - 1];
             let remove = if let Some(Some(bu)) = shop_state.board.get_mut(slot) {
                 bu.perm_attack = bu.perm_attack.saturating_add(*attack_delta);
                 bu.perm_health = bu.perm_health.saturating_add(*health_delta);
-                card_pool.get(&bu.card_id).map(|c| c.stats.health.saturating_add(bu.perm_health) <= 0).unwrap_or(false)
-            } else { false };
-            if remove { shop_state.board[slot] = None; }
+                card_pool
+                    .get(&bu.card_id)
+                    .map(|c| c.stats.health.saturating_add(bu.perm_health) <= 0)
+                    .unwrap_or(false)
+            } else {
+                false
+            };
+            if remove {
+                shop_state.board[slot] = None;
+            }
         }
 
         match result {
@@ -355,13 +479,17 @@ mod oab_arena {
             session.game_seed = new_seed;
             session.round += 1;
             session.mana_limit = config.mana_limit_for_round(session.round);
-            session.shop_mana = if config.full_mana_each_round { session.mana_limit } else { mana_delta };
+            session.shop_mana = if config.full_mana_each_round {
+                session.mana_limit
+            } else {
+                mana_delta
+            };
             session.board = shop_state.board;
             let mut bag = session.bag.clone();
             bag.extend(shop_state.hand.iter());
             session.bag = bag;
             session.hand = Vec::new();
-            session.phase = PHASE_SHOP;
+            session.phase = GamePhase::Shop;
 
             draw_hand(&mut session, config.hand_size as usize);
             let mut shop = make_shop_state(&session, &card_pool);
@@ -371,7 +499,7 @@ mod oab_arena {
             session.board = shop_state.board;
             session.hand = shop_state.hand;
             session.shop_mana = mana_delta;
-            session.phase = PHASE_COMPLETED;
+            session.phase = GamePhase::Completed;
         }
 
         Storage::sessions().insert(&caller, &session);
@@ -379,7 +507,11 @@ mod oab_arena {
         // Emit BattleReported event with opponent board for frontend replay
         let ghost_encoded = opponent_ghost.encode();
         let mut event_data = Vec::with_capacity(12 + ghost_encoded.len());
-        let result_byte = match result { BattleResult::Victory => 0u8, BattleResult::Defeat => 1, BattleResult::Draw => 2 };
+        let result_byte = match result {
+            BattleResult::Victory => 0u8,
+            BattleResult::Defeat => 1,
+            BattleResult::Draw => 2,
+        };
         event_data.push(result_byte);
         event_data.push(session.wins);
         event_data.push(session.lives);
@@ -404,7 +536,9 @@ mod oab_arena {
     #[pvm::method]
     pub fn abandon_game() -> bool {
         let caller = pvm::caller();
-        if !Storage::sessions().contains(&caller) { return false; }
+        if !Storage::sessions().contains(&caller) {
+            return false;
+        }
         Storage::sessions().remove(&caller);
         true
     }
@@ -413,12 +547,23 @@ mod oab_arena {
     #[pvm::method]
     pub fn end_game() -> bool {
         let caller = pvm::caller();
-        let session = match Storage::sessions().get(&caller) { Some(s) => s, None => return false };
-        if session.phase != PHASE_COMPLETED { return false; }
+        let session = match Storage::sessions().get(&caller) {
+            Some(s) => s,
+            None => return false,
+        };
+        if session.phase != GamePhase::Completed {
+            return false;
+        }
 
         let ghost = create_ghost_from_board(&session.board);
         if !ghost.is_empty() {
-            push_ghost(session.set_id, session.round, session.wins, session.lives, ghost);
+            push_ghost(
+                session.set_id,
+                session.round,
+                session.wins,
+                session.lives,
+                ghost,
+            );
         }
 
         Storage::sessions().remove(&caller);

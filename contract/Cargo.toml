@@ -25,6 +25,7 @@ pallet-revive-uapi = { version = "0.9", default-features = false }
 polkavm-derive = "0.31.0"
 parity-scale-codec = { version = "3.7", default-features = false, features = ["derive"] }
 oab-battle = { path = "../battle", default-features = false }
+oab-game = { path = "../game", default-features = false }
 
 [features]
 abi-gen = []

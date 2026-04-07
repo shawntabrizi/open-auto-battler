@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { useContractStore } from '../store/contractStore';
 import { useGameStore } from '../store/gameStore';
 import { GameOverScreen } from './GameOverScreen';
@@ -12,16 +13,12 @@ export function ContractGameOverScreen() {
   const handleNewRun = async () => {
     try {
       await endGame();
-    } catch {}
-    resetActiveSessionView();
-    navigate('/contract/arena');
+      resetActiveSessionView();
+      navigate('/contract/arena');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to finalize contract run');
+    }
   };
 
-  return (
-    <GameOverScreen
-      backTo="/contract"
-      backLabel="Contract"
-      onNewRun={handleNewRun}
-    />
-  );
+  return <GameOverScreen backTo="/contract" backLabel="Contract" onNewRun={handleNewRun} />;
 }

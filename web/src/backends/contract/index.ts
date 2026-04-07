@@ -37,6 +37,13 @@ import {
   decodeGetGameStateResult,
 } from './abi';
 
+export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
+  // revive's Mapping getter currently materializes a zeroed ArenaSession for
+  // missing keys instead of returning an empty byte payload. Treat that sentinel
+  // as "no active game" so the frontend doesn't restore an empty shop.
+  return data.every((byte) => byte === 0);
+}
+
 // ── ContractBackend ──────────────────────────────────────────────────────────
 
 export function createContractBackend(deps: {
@@ -358,6 +365,7 @@ export function createContractBackend(deps: {
       const returnData = await callView(encodeGetGameState());
       const arenaSessionBytes = decodeGetGameStateResult(returnData);
       if (!arenaSessionBytes || arenaSessionBytes.length === 0) return null;
+      if (isMissingArenaSessionPayload(arenaSessionBytes)) return null;
 
       _activeSetId = decodeArenaSessionSetId(arenaSessionBytes);
 
