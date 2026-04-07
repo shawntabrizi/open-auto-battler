@@ -6,6 +6,7 @@
  */
 
 import { create } from 'zustand';
+import { toast } from 'react-hot-toast';
 import type { GameBackend } from '../backends/types';
 import { createContractBackend } from '../backends/contract';
 import { useGameStore } from './gameStore';
@@ -87,7 +88,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
 
       // Initialize the WASM engine with baked-in card data
       // (the contract stores cards on-chain, but the engine has them baked in)
-      const { engine, init: initEngine } = useGameStore.getState();
+      const { engine, initEngine } = useGameStore.getState();
       if (!engine) {
         await initEngine();
       }
@@ -140,6 +141,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       console.log('Contract: game state refreshed, hasActiveGame:', get().hasActiveGame);
     } catch (err) {
       console.error('Contract start game failed:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to start contract game');
     }
   },
 
@@ -162,7 +164,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
         const battleOutput = engine.resolve_battle_p2p(
           playerBoard,
           turnResult.opponentBoard,
-          turnResult.battleSeed,
+          turnResult.battleSeed
         );
 
         useGameStore.setState({
@@ -192,6 +194,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       }
     } catch (err) {
       console.error('Contract submit turn failed:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to submit contract turn');
     } finally {
       set({ isSubmitting: false });
     }
@@ -238,15 +241,19 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       if (gameState && gameState.stateBytes.length > 0) {
         const { engine } = useGameStore.getState();
         if (engine) {
+          const activeSetId = gameState.setId ?? 0;
+
           // Ensure the card pool is loaded before init_from_scale
-          try { engine.load_card_set(0); } catch {}
+          try {
+            engine.load_card_set(activeSetId);
+          } catch {}
           engine.init_from_scale(gameState.stateBytes, gameState.cardSetBytes);
           const view = engine.get_view();
           const cardSet = engine.get_card_set();
           useGameStore.setState({
             view,
             cardSet,
-            currentSetId: 0,
+            currentSetId: view?.set_id ?? activeSetId,
             gameStarted: true,
           });
         }

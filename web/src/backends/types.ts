@@ -34,6 +34,8 @@ export interface GameStateRaw {
   stateBytes: Uint8Array;
   /** SCALE-encoded card set bytes. */
   cardSetBytes: Uint8Array;
+  /** Active card set ID, when the backend can determine it. */
+  setId?: number;
 }
 
 export interface CardData {
@@ -129,6 +131,6 @@ export interface GameBackend {
     setId: number,
     round: number,
     wins: number,
-    lives: number,
+    lives: number
   ): Promise<{ board: GhostBoardUnit[]; seed: bigint } | null>;
 }

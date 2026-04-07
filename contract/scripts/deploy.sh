@@ -104,6 +104,23 @@ else
     echo "  cd register-cards && cargo run -- $RPC_URL $CONTRACT_ADDRESS"
 fi
 
+# Verify that set 0 is readable before telling the frontend the deployment is ready.
+# Selector = keccak256("getSet(uint16)")[0..4]
+echo ""
+echo "Verifying on-chain set registration..."
+GET_SET_0_DATA="0xd6ea4a5f0000000000000000000000000000000000000000000000000000000000000000"
+SET0_RESULT=$(curl -s -X POST "$RPC_URL" \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$CONTRACT_ADDRESS\",\"data\":\"$GET_SET_0_DATA\"},\"latest\"],\"id\":1}" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin).get('result','0x'))")
+
+if [ "$SET0_RESULT" = "0x" ] || [ -z "$SET0_RESULT" ]; then
+    echo "Error: set 0 is not readable after registration."
+    echo "Contract deployment is incomplete; refusing to write deployment.json."
+    exit 1
+fi
+echo "Set 0 verified."
+
 # Write deployment.json for the frontend
 DEPLOYMENT_FILE="$CONTRACT_DIR/deployment.json"
 cat > "$DEPLOYMENT_FILE" <<EOJSON

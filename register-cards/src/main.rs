@@ -12,6 +12,9 @@ use oab_battle::types::UnitCard;
 use parity_scale_codec::Encode;
 use serde_json::json;
 use std::env;
+use std::thread::sleep;
+use std::time::Duration;
+use tiny_keccak::{Hasher, Keccak};
 
 // ── ABI encoding helpers ─────────────────────────────────────────────────────
 
@@ -26,17 +29,104 @@ fn encode_bytes(data: &[u8]) -> String {
     format!("{}{:0<width$}", len, hex, width = padded_len)
 }
 
+fn selector_hex(signature: &str) -> String {
+    let mut keccak = Keccak::v256();
+    keccak.update(signature.as_bytes());
+
+    let mut hash = [0u8; 32];
+    keccak.finalize(&mut hash);
+
+    hash[..4].iter().map(|b| format!("{:02x}", b)).collect()
+}
+
 fn encode_register_card(card: &UnitCard) -> String {
     let scale = card.encode();
-    format!("0xd6c09c1d{}{}", encode_uint(32), encode_bytes(&scale))
+    format!(
+        "0x{}{}{}",
+        selector_hex("registerCard(bytes)"),
+        encode_uint(32),
+        encode_bytes(&scale)
+    )
 }
 
 fn encode_register_set(set_id: u16, card_set: &CardSet) -> String {
     let scale = card_set.encode();
-    format!("0xd8f41b6a{}{}{}", encode_uint(set_id as u64), encode_uint(64), encode_bytes(&scale))
+    format!(
+        "0x{}{}{}{}",
+        selector_hex("registerSet(uint16,bytes)"),
+        encode_uint(set_id as u64),
+        encode_uint(64),
+        encode_bytes(&scale)
+    )
 }
 
 // ── JSON-RPC ─────────────────────────────────────────────────────────────────
+
+fn eth_call(
+    rpc_url: &str,
+    from: &str,
+    to: &str,
+    data: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let body = json!({
+        "jsonrpc": "2.0",
+        "method": "eth_call",
+        "params": [{
+            "from": from,
+            "to": to,
+            "data": data,
+        }, "latest"],
+        "id": 1
+    });
+
+    let resp: serde_json::Value = ureq::post(rpc_url)
+        .set("Content-Type", "application/json")
+        .send_json(&body)?
+        .into_json()?;
+
+    if let Some(error) = resp.get("error") {
+        return Err(format!("RPC error: {}", error).into());
+    }
+
+    Ok(resp["result"].as_str().unwrap_or("0x").to_string())
+}
+
+fn wait_for_receipt(rpc_url: &str, tx_hash: &str) -> Result<(), Box<dyn std::error::Error>> {
+    for _ in 0..60 {
+        let body = json!({
+            "jsonrpc": "2.0",
+            "method": "eth_getTransactionReceipt",
+            "params": [tx_hash],
+            "id": 1
+        });
+
+        let resp: serde_json::Value = ureq::post(rpc_url)
+            .set("Content-Type", "application/json")
+            .send_json(&body)?
+            .into_json()?;
+
+        if let Some(error) = resp.get("error") {
+            return Err(format!("RPC error: {}", error).into());
+        }
+
+        if let Some(receipt) = resp.get("result") {
+            let status = receipt
+                .get("status")
+                .and_then(|v| v.as_str())
+                .unwrap_or("0x0");
+
+            if status != "0x1" {
+                return Err(format!("transaction reverted: {tx_hash}").into());
+            }
+
+            return Ok(());
+        }
+
+        sleep(Duration::from_millis(250));
+    }
+
+    Err(format!("timed out waiting for receipt: {tx_hash}").into())
+}
 
 fn eth_send_transaction(
     rpc_url: &str,
@@ -65,7 +155,9 @@ fn eth_send_transaction(
         return Err(format!("RPC error: {}", error).into());
     }
 
-    Ok(resp["result"].as_str().unwrap_or("unknown").to_string())
+    let tx_hash = resp["result"].as_str().unwrap_or("unknown").to_string();
+    wait_for_receipt(rpc_url, &tx_hash)?;
+    Ok(tx_hash)
 }
 
 fn eth_get_accounts(rpc_url: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
@@ -89,10 +181,22 @@ fn eth_get_accounts(rpc_url: &str) -> Result<Vec<String>, Box<dyn std::error::Er
         .collect())
 }
 
+fn decode_bool_result(data: &str) -> Result<bool, Box<dyn std::error::Error>> {
+    let clean = data.strip_prefix("0x").unwrap_or(data);
+    if clean.is_empty() {
+        return Err("empty ABI result".into());
+    }
+
+    Ok(clean.ends_with('1'))
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
-        eprintln!("Usage: {} <RPC_URL> <CONTRACT_ADDRESS> [FROM_ADDRESS]", args[0]);
+        eprintln!(
+            "Usage: {} <RPC_URL> <CONTRACT_ADDRESS> [FROM_ADDRESS]",
+            args[0]
+        );
         eprintln!("Example: {} http://localhost:8545 0x1234...abcd", args[0]);
         std::process::exit(1);
     }
@@ -124,6 +228,23 @@ fn main() {
 
     for (i, card) in all_cards.iter().enumerate() {
         let calldata = encode_register_card(card);
+        match eth_call(rpc_url, &from, contract_address, &calldata)
+            .and_then(|result| decode_bool_result(&result))
+        {
+            Ok(true) => {}
+            Ok(false) => {
+                eprintln!(
+                    "  Failed card {}: contract returned false during preflight",
+                    card.id.0
+                );
+                continue;
+            }
+            Err(e) => {
+                eprintln!("  Failed card {}: preflight failed: {}", card.id.0, e);
+                continue;
+            }
+        }
+
         match eth_send_transaction(rpc_url, &from, contract_address, &calldata) {
             Ok(hash) => {
                 if (i + 1) % 20 == 0 || i + 1 == all_cards.len() {
@@ -141,12 +262,38 @@ fn main() {
     for (i, card_set) in all_sets.iter().enumerate() {
         let set_id = set_metas[i].id as u16;
         let calldata = encode_register_set(set_id, card_set);
+        match eth_call(rpc_url, &from, contract_address, &calldata)
+            .and_then(|result| decode_bool_result(&result))
+        {
+            Ok(true) => {}
+            Ok(false) => {
+                eprintln!(
+                    "  Failed set {}: contract returned false during preflight",
+                    set_id
+                );
+                continue;
+            }
+            Err(e) => {
+                eprintln!("  Failed set {}: preflight failed: {}", set_id, e);
+                continue;
+            }
+        }
+
         match eth_send_transaction(rpc_url, &from, contract_address, &calldata) {
-            Ok(hash) => println!("  Set {} '{}' tx: {}...", set_id, set_metas[i].name, &hash[..10]),
+            Ok(hash) => println!(
+                "  Set {} '{}' tx: {}...",
+                set_id,
+                set_metas[i].name,
+                &hash[..10]
+            ),
             Err(e) => eprintln!("  Failed set {}: {}", set_id, e),
         }
     }
 
     println!("\n=== Done ===");
-    println!("{} cards, {} sets registered", all_cards.len(), all_sets.len());
+    println!(
+        "{} cards, {} sets registered",
+        all_cards.len(),
+        all_sets.len()
+    );
 }

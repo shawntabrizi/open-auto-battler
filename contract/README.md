@@ -86,6 +86,7 @@ cd contract
 ```
 
 This will:
+
 1. Deploy `contract.polkavm` to the local node
 2. Register all cards and sets on-chain (via the `register-cards` tool)
 3. Write `deployment.json` with the contract address and RPC URL
@@ -121,15 +122,19 @@ register-cards/        # CLI tool that registers card/set data on the contract
 
 ## Contract API
 
-| Function | Selector | Description |
-|---|---|---|
-| `registerCard(bytes)` | `0xd6c09c1d` | Admin: store a card definition |
-| `registerSet(uint16, bytes)` | `0xd8f41b6a` | Admin: store a card set |
-| `startGame(uint16, uint64)` | `0xe8c0127d` | Start a new arena game (set ID, seed nonce) |
-| `submitTurn(bytes, bytes)` | `0x217081fe` | Submit shop actions, resolve battle on-chain |
-| `getGameState()` | `0x1760f3a3` | Read current game state (view call) |
-| `abandonGame()` | `0xd6b56ded` | Forfeit the current game |
-| `getCard(uint16)` | `0xcd25ba26` | Read a card definition |
-| `getSet(uint16)` | `0x3e42c388` | Read a card set |
+Rust method names are exposed through the generated ABI as `camelCase`, and
+selectors should be derived from those ABI names instead of maintained by hand.
+
+| Function                     | Selector     | Description                                     |
+| ---------------------------- | ------------ | ----------------------------------------------- |
+| `registerCard(bytes)`        | `0x704b59f5` | Admin: store a card definition                  |
+| `registerSet(uint16, bytes)` | `0x199f7cb7` | Admin: store a card set                         |
+| `startGame(uint16, uint64)`  | `0xe576ed69` | Start a new arena game (set ID, seed nonce)     |
+| `submitTurn(bytes)`          | `0xe737f74d` | Submit shop actions and resolve battle on-chain |
+| `getGameState()`             | `0xb7d0628b` | Read current game state (view call)             |
+| `abandonGame()`              | `0xc398723a` | Forfeit the current game                        |
+| `endGame()`                  | `0x6cbc2ded` | Finalize a completed game                       |
+| `getCard(uint16)`            | `0xc5f6e877` | Read a card definition                          |
+| `getSet(uint16)`             | `0xd6ea4a5f` | Read a card set                                 |
 
 All game data is SCALE-encoded. The contract emits a `BattleReported` event after each turn with the battle result and opponent board for client-side replay.

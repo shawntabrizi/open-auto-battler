@@ -9,9 +9,11 @@ const CONTRACT_SET_ID = 0;
 /** Contract arena pre-game: start game with set 0, or redirect to active game. */
 export function ContractArenaPage() {
   const { isConnected, hasActiveGame, startGame, refreshGameState } = useContractStore();
-  const { init, engine } = useGameStore();
+  const { initEngine, engine } = useGameStore();
 
-  useEffect(() => { void init(); }, [init]);
+  useEffect(() => {
+    void initEngine();
+  }, [initEngine]);
 
   useEffect(() => {
     if (isConnected) void refreshGameState();

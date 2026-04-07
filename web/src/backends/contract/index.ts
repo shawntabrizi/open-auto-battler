@@ -15,8 +15,19 @@ import {
   type Transport,
   type Chain,
 } from 'viem';
-import type { GameBackend, TurnResult, GameStateRaw, CardData, SetData, GhostBoardUnit, Account } from '../types';
+import type {
+  GameBackend,
+  TurnResult,
+  GameStateRaw,
+  CardData,
+  SetData,
+  GhostBoardUnit,
+  Account,
+} from '../types';
 import {
+  decodeBoolResult,
+  decodeStartGameResult,
+  decodeSubmitTurnSeed,
   encodeStartGame,
   encodeSubmitTurn,
   encodeGetGameState,
@@ -54,7 +65,8 @@ export function createContractBackend(deps: {
   let _useWallet = false;
 
   // BattleReported event topic = keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
-  const BATTLE_REPORTED_TOPIC = '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694ddef23dd55af68e089bd';
+  const BATTLE_REPORTED_TOPIC =
+    '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694ddef23dd55af68e089bd';
 
   /** Send a raw JSON-RPC eth_sendTransaction (for dev accounts, no wallet needed). */
   async function sendRawTx(from: string, data: `0x${string}`): Promise<`0x${string}`> {
@@ -72,7 +84,8 @@ export function createContractBackend(deps: {
       body: JSON.stringify(body),
     });
     const json = await resp.json();
-    if (json.error) throw new Error(`RPC error: ${json.error.message ?? JSON.stringify(json.error)}`);
+    if (json.error)
+      throw new Error(`RPC error: ${json.error.message ?? JSON.stringify(json.error)}`);
     const txHash = json.result as `0x${string}`;
     // Wait for receipt
     const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
@@ -111,6 +124,15 @@ export function createContractBackend(deps: {
   /** Decode ABI-wrapped bytes response into Uint8Array */
   function decodeBytesResponse(data: `0x${string}`): Uint8Array | null {
     return decodeGetGameStateResult(data); // Same ABI layout: offset + length + data
+  }
+
+  function decodeArenaSessionSetId(data: Uint8Array): number {
+    if (data.length < 2) return 0;
+
+    // ArenaSession encodes `set_id: u16` as its final field.
+    const lo = data[data.length - 2] ?? 0;
+    const hi = data[data.length - 1] ?? 0;
+    return lo | (hi << 8);
   }
 
   const backend: GameBackend = {
@@ -167,7 +189,10 @@ export function createContractBackend(deps: {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              jsonrpc: '2.0', method: 'eth_accounts', params: [], id: 1,
+              jsonrpc: '2.0',
+              method: 'eth_accounts',
+              params: [],
+              id: 1,
             }),
           });
           const json = await resp.json();
@@ -200,22 +225,40 @@ export function createContractBackend(deps: {
       _isConnected = false;
     },
 
-    get isConnected() { return _isConnected; },
-    async getAccounts() { return accounts; },
-    get selectedAccount() { return _selectedAccount; },
-    selectAccount(account: Account) { _selectedAccount = account; },
+    get isConnected() {
+      return _isConnected;
+    },
+    async getAccounts() {
+      return accounts;
+    },
+    get selectedAccount() {
+      return _selectedAccount;
+    },
+    selectAccount(account: Account) {
+      _selectedAccount = account;
+    },
 
     // ── Arena game ─────────────────────────────────────────────────────
 
     async startGame(setId: number): Promise<{ seed: bigint }> {
-      _activeSetId = setId;
       const seedNonce = BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
-      await sendTx(encodeStartGame(setId, seedNonce));
-      return { seed: seedNonce };
+      const data = encodeStartGame(setId, seedNonce);
+      const simulatedSeed = decodeStartGameResult(await callView(data));
+      if (simulatedSeed === 0n) {
+        throw new Error(`Contract rejected startGame for set ${setId}`);
+      }
+
+      _activeSetId = setId;
+      await sendTx(data);
+      return { seed: simulatedSeed };
     },
 
     async submitTurn(actionScale: Uint8Array, _enemyBoard: Uint8Array): Promise<TurnResult> {
       const data = encodeSubmitTurn(actionScale);
+      const simulatedSeed = decodeSubmitTurnSeed(await callView(data));
+      if (simulatedSeed === 0n) {
+        throw new Error('Contract rejected submitTurn');
+      }
 
       // Send transaction and get receipt with logs
       if (!_selectedAccount) throw new Error('No account selected');
@@ -235,8 +278,11 @@ export function createContractBackend(deps: {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            jsonrpc: '2.0', method: 'eth_sendTransaction',
-            params: [{ from: _selectedAccount.address, to: contractAddress, data, gas: '0x10000000' }],
+            jsonrpc: '2.0',
+            method: 'eth_sendTransaction',
+            params: [
+              { from: _selectedAccount.address, to: contractAddress, data, gas: '0x10000000' },
+            ],
             id: Date.now(),
           }),
         });
@@ -279,19 +325,27 @@ export function createContractBackend(deps: {
           let offset = 1; // skip compact length byte
           for (let i = 0; i < count && offset + 6 <= ghostBytes.length; i++) {
             const card_id = ghostBytes[offset] | (ghostBytes[offset + 1] << 8);
-            const perm_attack = (ghostBytes[offset + 2] | (ghostBytes[offset + 3] << 8)) << 16 >> 16; // sign-extend i16
-            const perm_health = (ghostBytes[offset + 4] | (ghostBytes[offset + 5] << 8)) << 16 >> 16;
+            const perm_attack =
+              ((ghostBytes[offset + 2] | (ghostBytes[offset + 3] << 8)) << 16) >> 16; // sign-extend i16
+            const perm_health =
+              ((ghostBytes[offset + 4] | (ghostBytes[offset + 5] << 8)) << 16) >> 16;
             opponentBoard.push({ card_id, perm_attack, perm_health });
             offset += 6;
           }
         }
 
-        const resultMap: Record<number, 'Victory' | 'Defeat' | 'Draw'> = { 0: 'Victory', 1: 'Defeat', 2: 'Draw' };
+        const resultMap: Record<number, 'Victory' | 'Defeat' | 'Draw'> = {
+          0: 'Victory',
+          1: 'Defeat',
+          2: 'Draw',
+        };
         return {
           battleSeed,
           opponentBoard,
           result: resultMap[resultByte] ?? 'Draw',
-          wins, lives, round,
+          wins,
+          lives,
+          round,
         };
       }
 
@@ -304,6 +358,8 @@ export function createContractBackend(deps: {
       const returnData = await callView(encodeGetGameState());
       const arenaSessionBytes = decodeGetGameStateResult(returnData);
       if (!arenaSessionBytes || arenaSessionBytes.length === 0) return null;
+
+      _activeSetId = decodeArenaSessionSetId(arenaSessionBytes);
 
       // The WASM engine expects BoundedGameSession = { state, set_id, config }
       // The contract returns ArenaSession = { state_fields..., set_id }
@@ -318,15 +374,21 @@ export function createContractBackend(deps: {
       const setData = await callView(encodeGetSet(_activeSetId));
       const cardSetBytes = decodeBytesResponse(setData) ?? new Uint8Array();
 
-      return { stateBytes, cardSetBytes };
+      return { stateBytes, cardSetBytes, setId: _activeSetId };
     },
 
     async endGame(): Promise<void> {
-      await sendTx(encodeEndGame());
+      const data = encodeEndGame();
+      const allowed = decodeBoolResult('endGame', await callView(data));
+      if (!allowed) throw new Error('Contract rejected endGame');
+      await sendTx(data);
     },
 
     async abandonGame(): Promise<void> {
-      await sendTx(encodeAbandonGame());
+      const data = encodeAbandonGame();
+      const allowed = decodeBoolResult('abandonGame', await callView(data));
+      if (!allowed) throw new Error('Contract rejected abandonGame');
+      await sendTx(data);
     },
 
     // ── Card data ──────────────────────────────────────────────────────

@@ -7,10 +7,13 @@ import { Navigate } from 'react-router-dom';
 
 /** Contract arena gameplay — renders GameShell with contract-backed commit. */
 export function ContractArenaGamePage() {
-  const { isConnected, hasActiveGame, submitTurnOnChain, refreshGameState, isSubmitting } = useContractStore();
-  const { init, view } = useGameStore();
+  const { isConnected, hasActiveGame, submitTurnOnChain, refreshGameState, isSubmitting } =
+    useContractStore();
+  const { initEngine, view } = useGameStore();
 
-  useEffect(() => { void init(); }, [init]);
+  useEffect(() => {
+    void initEngine();
+  }, [initEngine]);
 
   useEffect(() => {
     if (isConnected) void refreshGameState();
