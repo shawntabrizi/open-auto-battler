@@ -81,6 +81,7 @@ checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
 [[package]]
 name = "cargo-pvm-contract-builder"
 version = "0.3.0"
+source = "git+https://github.com/paritytech/cargo-pvm-contract.git?rev=2e4449a04df94a171c65329993bf936f6bef9494#2e4449a04df94a171c65329993bf936f6bef9494"
 dependencies = [
  "anyhow",
  "object",
@@ -688,6 +689,7 @@ dependencies = [
 [[package]]
 name = "pvm-contract-macros"
 version = "0.3.0"
+source = "git+https://github.com/paritytech/cargo-pvm-contract.git?rev=2e4449a04df94a171c65329993bf936f6bef9494#2e4449a04df94a171c65329993bf936f6bef9494"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -699,6 +701,7 @@ dependencies = [
 [[package]]
 name = "pvm_contract"
 version = "0.3.0"
+source = "git+https://github.com/paritytech/cargo-pvm-contract.git?rev=2e4449a04df94a171c65329993bf936f6bef9494#2e4449a04df94a171c65329993bf936f6bef9494"
 dependencies = [
  "alloy-primitives",
  "const_format",

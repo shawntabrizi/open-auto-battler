@@ -1294,6 +1294,143 @@ mod tests {
     }
 
     // ═════════════════════════════════════════════════════════════════════════════
+    // Session lifecycle / stale-storage workaround
+    // ═════════════════════════════════════════════════════════════════════════════
+
+    /// Mirrors the contract's explicit session liveness flag.
+    ///
+    /// `clear_session_with_stale_payload` intentionally leaves the old session bytes behind to
+    /// simulate the broken downstream storage behavior while still exercising the contract-side
+    /// workaround.
+    struct SessionStore {
+        sessions: BTreeMap<u64, ArenaSession>,
+        session_active: BTreeMap<u64, bool>,
+    }
+
+    impl SessionStore {
+        fn new() -> Self {
+            Self {
+                sessions: BTreeMap::new(),
+                session_active: BTreeMap::new(),
+            }
+        }
+
+        fn session_is_active(&self, caller: u64) -> bool {
+            self.session_active.get(&caller) == Some(&true)
+        }
+
+        fn load_session(&self, caller: u64) -> Option<ArenaSession> {
+            if !self.session_is_active(caller) {
+                return None;
+            }
+            self.sessions.get(&caller).cloned()
+        }
+
+        fn store_session(&mut self, caller: u64, session: &ArenaSession) {
+            self.sessions.insert(caller, session.clone());
+            self.session_active.insert(caller, true);
+        }
+
+        fn clear_session_with_stale_payload(&mut self, caller: u64) {
+            self.session_active.insert(caller, false);
+        }
+    }
+
+    #[test]
+    fn inactive_session_flag_hides_stale_session_payload() {
+        let reg = setup_registry();
+        let caller = 7u64;
+        let session = start_game(&reg, 0, 42);
+        let mut store = SessionStore::new();
+
+        store.store_session(caller, &session);
+        store.clear_session_with_stale_payload(caller);
+
+        assert!(
+            store.sessions.contains_key(&caller),
+            "stale session bytes should still exist in this regression harness"
+        );
+        assert!(
+            store.load_session(caller).is_none(),
+            "inactive sessions must not rehydrate from stale storage bytes"
+        );
+        assert!(
+            !store.session_is_active(caller),
+            "clearing a session must flip liveness off even if stale bytes remain"
+        );
+    }
+
+    #[test]
+    fn completed_game_can_restart_even_if_stale_session_bytes_remain() {
+        let reg = setup_registry();
+        let caller = 9u64;
+        let mut store = SessionStore::new();
+
+        let mut completed = start_game(&reg, 0, 42);
+        completed.phase = PHASE_COMPLETED;
+        completed.round = 10;
+        completed.wins = 10;
+        completed.lives = 1;
+        store.store_session(caller, &completed);
+
+        store.clear_session_with_stale_payload(caller);
+        assert!(store.load_session(caller).is_none());
+
+        let fresh = start_game(&reg, 0, 99);
+        store.store_session(caller, &fresh);
+
+        let reloaded = store.load_session(caller).expect("fresh run should load");
+        assert_eq!(reloaded.phase, PHASE_SHOP);
+        assert_eq!(reloaded.round, 1);
+        assert_eq!(reloaded.wins, 0);
+        assert_eq!(reloaded.lives, default_config().starting_lives);
+        assert_eq!(
+            reloaded.board,
+            vec![None; default_config().board_size as usize]
+        );
+        assert!(
+            !reloaded.hand.is_empty(),
+            "new run should draw a fresh hand"
+        );
+        assert_ne!(
+            reloaded.game_seed, completed.game_seed,
+            "restart should replace the old session rather than reusing stale bytes"
+        );
+    }
+
+    #[test]
+    fn abandoned_game_can_restart_even_if_stale_session_bytes_remain() {
+        let reg = setup_registry();
+        let caller = 11u64;
+        let mut store = SessionStore::new();
+
+        let first = start_game(&reg, 0, 7);
+        store.store_session(caller, &first);
+
+        store.clear_session_with_stale_payload(caller);
+        assert!(store.load_session(caller).is_none());
+
+        let restarted = start_game(&reg, 0, 8);
+        store.store_session(caller, &restarted);
+
+        let loaded = store
+            .load_session(caller)
+            .expect("abandoned run should restart cleanly");
+        assert_eq!(loaded.phase, PHASE_SHOP);
+        assert_eq!(loaded.round, 1);
+        assert_eq!(loaded.wins, 0);
+        assert_eq!(loaded.lives, default_config().starting_lives);
+        assert!(
+            !loaded.hand.is_empty(),
+            "restart after abandon should redraw the hand"
+        );
+        assert_ne!(
+            loaded.game_seed, first.game_seed,
+            "restart should overwrite any stale payload from the abandoned run"
+        );
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════════
     // end_game logic
     // ═════════════════════════════════════════════════════════════════════════════
 

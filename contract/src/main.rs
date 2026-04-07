@@ -24,6 +24,7 @@ struct Storage {
     cards: pvm::storage::Mapping<u16, UnitCard>,
     card_sets: pvm::storage::Mapping<u16, CardSet>,
     sessions: pvm::storage::Mapping<Address, ArenaSession>,
+    session_active: pvm::storage::Mapping<Address, bool>,
     ghost_pools: pvm::storage::Mapping<(u16, u8, u8, u8), GhostPool>,
 }
 
@@ -153,6 +154,29 @@ mod oab_arena {
                 perm_health: bu.perm_health,
             })
             .collect()
+    }
+
+    // ── Session storage helpers ────────────────────────────────────────
+
+    fn session_is_active(caller: &Address) -> bool {
+        Storage::session_active().get(caller) == Some(true)
+    }
+
+    fn load_session(caller: &Address) -> Option<ArenaSession> {
+        if !session_is_active(caller) {
+            return None;
+        }
+        Storage::sessions().get(caller)
+    }
+
+    fn store_session(caller: &Address, session: &ArenaSession) {
+        Storage::sessions().insert(caller, session);
+        Storage::session_active().insert(caller, &true);
+    }
+
+    fn clear_session(caller: &Address) {
+        Storage::session_active().insert(caller, &false);
+        Storage::sessions().remove(caller);
     }
 
     // ── Card pool ───────────────────────────────────────────────────────
@@ -306,7 +330,7 @@ mod oab_arena {
     #[pvm::method]
     pub fn start_game(set_id: u16, seed_nonce: u64) -> u64 {
         let caller = pvm::caller();
-        if Storage::sessions().contains(&caller) {
+        if session_is_active(&caller) {
             return 0;
         }
 
@@ -343,7 +367,7 @@ mod oab_arena {
         apply_shop_start_triggers(&mut shop);
         sync_from_shop_state(&mut session, &shop);
 
-        Storage::sessions().insert(&caller, &session);
+        store_session(&caller, &session);
         seed
     }
 
@@ -353,7 +377,7 @@ mod oab_arena {
     #[pvm::method]
     pub fn submit_turn(action: Vec<u8>) -> u64 {
         let caller = pvm::caller();
-        let mut session = match Storage::sessions().get(&caller) {
+        let mut session = match load_session(&caller) {
             Some(s) => s,
             None => return 0,
         };
@@ -502,7 +526,7 @@ mod oab_arena {
             session.phase = GamePhase::Completed;
         }
 
-        Storage::sessions().insert(&caller, &session);
+        store_session(&caller, &session);
 
         // Emit BattleReported event with opponent board for frontend replay
         let ghost_encoded = opponent_ghost.encode();
@@ -526,7 +550,8 @@ mod oab_arena {
     /// Read the caller's current game state (SCALE-encoded ArenaSession).
     #[pvm::method]
     pub fn get_game_state() -> Vec<u8> {
-        match Storage::sessions().get(&pvm::caller()) {
+        let caller = pvm::caller();
+        match load_session(&caller) {
             Some(session) => session.encode(),
             None => Vec::new(),
         }
@@ -536,10 +561,10 @@ mod oab_arena {
     #[pvm::method]
     pub fn abandon_game() -> bool {
         let caller = pvm::caller();
-        if !Storage::sessions().contains(&caller) {
+        if !session_is_active(&caller) {
             return false;
         }
-        Storage::sessions().remove(&caller);
+        clear_session(&caller);
         true
     }
 
@@ -547,7 +572,7 @@ mod oab_arena {
     #[pvm::method]
     pub fn end_game() -> bool {
         let caller = pvm::caller();
-        let session = match Storage::sessions().get(&caller) {
+        let session = match load_session(&caller) {
             Some(s) => s,
             None => return false,
         };
@@ -566,7 +591,7 @@ mod oab_arena {
             );
         }
 
-        Storage::sessions().remove(&caller);
+        clear_session(&caller);
         true
     }
 
