@@ -12,11 +12,7 @@ interface PlayerStats {
   tournamentPerfectRuns: number;
 }
 
-const formatBalance = (raw: bigint, decimals = 12) =>
-  (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 4,
-  });
+import { formatBalance } from '../utils/format';
 
 function StatCard({
   icon,

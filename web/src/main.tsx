@@ -47,7 +47,7 @@ import { ThemeController } from './theme/ThemeController.tsx';
 import { ParticleBackground } from './components/ParticleBackground.tsx';
 import { applyResolvedThemeToDocument } from './theme/themes.ts';
 import { useThemeStore } from './store/themeStore.ts';
-import { isInHost } from './services/hostEnvironment.ts';
+import { isInsideContainer } from '@polkadot-apps/host';
 import { initHostStorage } from './services/storage.ts';
 
 // Lazy-loaded features (code-split, no impact on main bundle)
@@ -57,7 +57,7 @@ import { CardInspectOverlay } from './components/CardInspectOverlay';
 
 async function boot() {
   // In host mode, hydrate stores from hostLocalStorage before first render
-  if (isInHost()) {
+  if (await isInsideContainer()) {
     await initHostStorage();
   }
 

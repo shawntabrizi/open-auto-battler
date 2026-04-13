@@ -1,91 +1,55 @@
 /**
- * Unified storage service that wraps hostLocalStorage (host mode) or
- * browser localStorage (standalone mode) behind a common async API.
+ * Unified storage service backed by @polkadot-apps/storage.
+ * Automatically routes to host storage (Triangle mode) or browser localStorage.
  */
 
-import { isInHost } from './hostEnvironment';
+import { createKvStore, type KvStore } from '@polkadot-apps/storage';
 
-// Lazy import to avoid loading product-sdk in standalone mode
-let _hostLocalStorage: any = null;
-async function getHostStorage() {
-  if (!_hostLocalStorage) {
-    const sdk = await import('@novasamatech/product-sdk');
-    _hostLocalStorage = sdk.hostLocalStorage;
+// Singleton KvStore instance, lazily initialized
+let _store: KvStore | null = null;
+let _storePromise: Promise<KvStore> | null = null;
+
+async function getStore(): Promise<KvStore> {
+  if (_store) return _store;
+  if (!_storePromise) {
+    _storePromise = createKvStore().then((s) => {
+      _store = s;
+      return s;
+    });
   }
-  return _hostLocalStorage;
+  return _storePromise;
 }
 
 export const storageService = {
   async readString(key: string): Promise<string | null> {
-    if (isInHost()) {
-      try {
-        const hs = await getHostStorage();
-        const val = await hs.readString(key);
-        return val ?? null;
-      } catch {
-        return null;
-      }
-    }
-    return localStorage.getItem(key);
+    const store = await getStore();
+    return store.get(key);
   },
 
   async writeString(key: string, value: string): Promise<void> {
-    if (isInHost()) {
-      try {
-        const hs = await getHostStorage();
-        await hs.writeString(key, value);
-      } catch {}
-      return;
-    }
-    localStorage.setItem(key, value);
+    const store = await getStore();
+    await store.set(key, value);
   },
 
   async readJSON<T = any>(key: string): Promise<T | null> {
-    if (isInHost()) {
-      try {
-        const hs = await getHostStorage();
-        const val = await hs.readJSON(key);
-        return val ?? null;
-      } catch {
-        return null;
-      }
-    }
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
+    const store = await getStore();
+    return store.getJSON<T>(key);
   },
 
   async writeJSON(key: string, value: any): Promise<void> {
-    if (isInHost()) {
-      try {
-        const hs = await getHostStorage();
-        await hs.writeJSON(key, value);
-      } catch {}
-      return;
-    }
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {}
+    const store = await getStore();
+    await store.setJSON(key, value);
   },
 
   async remove(key: string): Promise<void> {
-    if (isInHost()) {
-      try {
-        const hs = await getHostStorage();
-        await hs.clear(key);
-      } catch {}
-      return;
-    }
-    localStorage.removeItem(key);
+    const store = await getStore();
+    await store.remove(key);
   },
 };
 
 /**
  * Hydrate all Zustand stores from host storage before first render.
- * Only called when isInHost() is true.
+ * Called during boot when running in a host container.
  */
 export async function initHostStorage(): Promise<void> {
   const { useSettingsStore } = await import('../store/settingsStore');
