@@ -103,6 +103,15 @@ elif [ "$MODE" = "blockchain" ]; then
   NODE_PID=$!
   cd "$SCRIPT_DIR"
 
+  # Wait for chain RPC to be ready
+  echo "--- Waiting for chain RPC (ws://127.0.0.1:9944) ---"
+  until curl -s -o /dev/null -w '' --max-time 1 -X POST -H "Content-Type: application/json" \
+    -d '{"id":1,"jsonrpc":"2.0","method":"system_name"}' http://127.0.0.1:9944 2>/dev/null; do
+    sleep 1
+  done
+  echo "--- Chain RPC ready ---"
+
+  # Start Web App with blockchain enabled
   echo "--- Starting Web App (blockchain enabled) ---"
   cd "$SCRIPT_DIR/web"
   npm run dev:blockchain &
