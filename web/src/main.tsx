@@ -169,4 +169,4 @@ async function boot() {
   );
 }
 
-boot();
+void boot();

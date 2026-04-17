@@ -149,7 +149,7 @@ export function TopBar({
               <span
                 className="text-base-500 text-[9px] lg:text-xs font-mono break-all cursor-pointer hover:text-base-300 transition-colors"
                 onClick={() => {
-                  navigator.clipboard.writeText(selectedAccount.address);
+                  void navigator.clipboard.writeText(selectedAccount.address);
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}

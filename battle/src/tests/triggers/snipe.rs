@@ -289,7 +289,7 @@ fn test_mana_reaper_dual_kill() {
                 target_instance_id, ..
             } = e
             {
-                return Some(target_instance_id.clone());
+                return Some(*target_instance_id);
             }
             None
         })

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
+import type { GameEngine } from 'oab-client';
 import type { GameView, BattleOutput, Selection, CardView } from '../types';
 import { initEmojiMap } from '../utils/emoji';
 import { storageService } from '../services/storage';
@@ -36,7 +37,8 @@ interface PersistedLocalSession {
 }
 
 interface GameStore {
-  engine: import('oab-client').GameEngine | null;
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  engine: GameEngine | null;
   view: GameView | null;
   battleOutput: BattleOutput | null;
   cardSet: CardView[] | null; // Full set of unique cards (fetched once)
@@ -195,11 +197,11 @@ function savePersistedLocalSession(session: GameSessionSnapshot) {
     savedAt: Date.now(),
   };
   const serialized = JSON.stringify(payload, localSessionJsonReplacer);
-  storageService.writeString(LOCAL_SESSION_STORAGE_KEY, serialized);
+  void storageService.writeString(LOCAL_SESSION_STORAGE_KEY, serialized);
 }
 
 function clearPersistedLocalSession() {
-  storageService.remove(LOCAL_SESSION_STORAGE_KEY);
+  void storageService.remove(LOCAL_SESSION_STORAGE_KEY);
 }
 
 function canStillFieldAUnitThisRound(view: GameView | null): boolean {
@@ -740,7 +742,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   toggleShowRawJson: () => {
     set((state) => {
       const newValue = !state.showRawJson;
-      storageService.writeJSON('showRawJson', newValue);
+      void storageService.writeJSON('showRawJson', newValue);
       return { showRawJson: newValue };
     });
   },
@@ -748,20 +750,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   toggleShowCardNames: () => {
     set((state) => {
       const newValue = !state.showCardNames;
-      storageService.writeJSON('showCardNames', newValue);
+      void storageService.writeJSON('showCardNames', newValue);
       return { showCardNames: newValue };
     });
   },
 
   setCardDetailsPanelMode: (mode: CardDetailsPanelMode) => {
-    storageService.writeJSON('showGameCardDetailsPanel', mode);
+    void storageService.writeJSON('showGameCardDetailsPanel', mode);
     set({ showGameCardDetailsPanel: mode });
   },
 
   toggleShowBoardHelper: () => {
     set((state) => {
       const newValue = !state.showBoardHelper;
-      storageService.writeJSON('showBoardHelper', newValue);
+      void storageService.writeJSON('showBoardHelper', newValue);
       return { showBoardHelper: newValue };
     });
   },
@@ -769,7 +771,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   toggleShowAddress: () => {
     set((state) => {
       const newValue = !state.showAddress;
-      storageService.writeJSON('showAddress', newValue);
+      void storageService.writeJSON('showAddress', newValue);
       return { showAddress: newValue };
     });
   },
@@ -777,20 +779,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   toggleShowBalance: () => {
     set((state) => {
       const newValue = !state.showBalance;
-      storageService.writeJSON('showBalance', newValue);
+      void storageService.writeJSON('showBalance', newValue);
       return { showBalance: newValue };
     });
   },
 
   setDefaultBattleSpeed: (speed: number) => {
-    storageService.writeJSON('defaultBattleSpeed', speed);
+    void storageService.writeJSON('defaultBattleSpeed', speed);
     set({ defaultBattleSpeed: speed });
   },
 
   toggleReducedAnimations: () => {
     set((state) => {
       const newValue = !state.reducedAnimations;
-      storageService.writeJSON('reducedAnimations', newValue);
+      void storageService.writeJSON('reducedAnimations', newValue);
       return { reducedAnimations: newValue };
     });
   },

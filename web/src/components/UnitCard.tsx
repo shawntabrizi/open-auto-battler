@@ -1,6 +1,6 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { CardView, BoardUnitView } from '../types';
+import type { AnyAbility, CardView, BoardUnitView } from '../types';
 import { getCardArtSm } from '../utils/cardArt';
 import { getCardEmoji } from '../utils/emoji';
 import { useCustomizationStore } from '../store/customizationStore';
@@ -15,7 +15,7 @@ import { useGameStore } from '../store/gameStore';
 import { useCardInspectStore } from '../store/cardInspectStore';
 import { getRarityInfo } from '../utils/rarity';
 
-export type RarityTier = 'common' | 'uncommon' | 'rare' | 'mythic';
+type RarityTier = 'common' | 'uncommon' | 'rare' | 'mythic';
 
 /** Map a rarity weight (from sets.json) to a visual tier. */
 function rarityWeightToTier(weight: number): RarityTier {
@@ -28,8 +28,7 @@ function rarityWeightToTier(weight: number): RarityTier {
 /** Fallback: derive a visual rarity tier from play_cost + ability count. */
 function costBasedTier(card: CardView | BoardUnitView): RarityTier {
   const cost = card.play_cost;
-  const abilityCount =
-    ((card as any).shop_abilities?.length ?? 0) + ((card as any).battle_abilities?.length ?? 0);
+  const abilityCount = card.shop_abilities.length + card.battle_abilities.length;
   if (cost >= 5 || (cost >= 4 && abilityCount >= 2)) return 'mythic';
   if (cost >= 4 || (cost >= 3 && abilityCount >= 2)) return 'rare';
   if (cost >= 3 || abilityCount >= 2) return 'uncommon';
@@ -37,13 +36,13 @@ function costBasedTier(card: CardView | BoardUnitView): RarityTier {
 }
 
 /** Get the visual rarity tier. Uses actual rarity weight when available, falls back to cost heuristic. */
-export function getRarityTier(card: CardView | BoardUnitView, rarityWeight?: number): RarityTier {
+function getRarityTier(card: CardView | BoardUnitView, rarityWeight?: number): RarityTier {
   if (rarityWeight != null) return rarityWeightToTier(rarityWeight);
   return costBasedTier(card);
 }
 
 /** Border and glow styles per rarity tier. */
-export const RARITY_STYLES: Record<RarityTier, { border: string; glow: string }> = {
+const RARITY_STYLES: Record<RarityTier, { border: string; glow: string }> = {
   common: {
     border: 'border-card-burn/40',
     glow: '',
@@ -89,6 +88,7 @@ type TooltipPosition = {
   left: number;
   placement: TooltipPlacement;
 };
+type DisplayAbility = AnyAbility & { _type: 'shop' | 'battle' };
 
 export function UnitCard({
   card,
@@ -131,9 +131,9 @@ export function UnitCard({
 
   const openInspect = useCardInspectStore((s) => s.open);
 
-  const abilities = [
-    ...((card as any).shop_abilities ?? []).map((a: any) => ({ ...a, _type: 'shop' })),
-    ...((card as any).battle_abilities ?? []).map((a: any) => ({ ...a, _type: 'battle' })),
+  const abilities: DisplayAbility[] = [
+    ...card.shop_abilities.map((ability) => ({ ...ability, _type: 'shop' as const })),
+    ...card.battle_abilities.map((ability) => ({ ...ability, _type: 'battle' as const })),
   ];
   const resolveCardName = (cardId: number) => cardNameMap[cardId];
   const showArt = artSrc && !artFailed;
@@ -290,10 +290,7 @@ export function UnitCard({
             <span className="font-bold text-white">{card.attack}</span>
           </div>
           {(() => {
-            const abils = [
-              ...((card as any).shop_abilities ?? []),
-              ...((card as any).battle_abilities ?? []),
-            ];
+            const abils = [...card.shop_abilities, ...card.battle_abilities];
             return abils.length > 0 ? (
               <AbilityIcon className="text-accent w-3 h-3 lg:w-4 lg:h-4 drop-shadow" />
             ) : null;
@@ -374,7 +371,7 @@ export function UnitCard({
               className="bg-base-950/95 border border-base-600/60 rounded-lg px-3 py-2 shadow-xl backdrop-blur-sm min-w-[180px] max-w-[260px]"
             >
               <div className="text-[10px] lg:text-xs font-bold text-white mb-1">{card.name}</div>
-              {abilities.map((ability: any, i: number) => (
+              {abilities.map((ability, i: number) => (
                 <div
                   key={i}
                   className="flex items-start gap-1.5 text-[9px] lg:text-[11px] text-base-300 leading-snug"

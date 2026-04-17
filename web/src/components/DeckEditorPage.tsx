@@ -145,7 +145,7 @@ export function DeckEditorPage() {
       setDeckCards([...deck.cards]);
     } else {
       toast.error('Deck not found');
-      navigate('/constructed/decks', { replace: true });
+      void navigate('/constructed/decks', { replace: true });
     }
     setInitialized(true);
   }, [loaded, deckId, getDeck, initialized, navigate]);
@@ -205,7 +205,7 @@ export function DeckEditorPage() {
     if (!deck) return;
     await saveDeck({ ...deck, name: deckName, cards: deckCards });
     toast.success('Deck saved');
-    navigate('/constructed/decks');
+    void navigate('/constructed/decks');
   };
 
   // Build a summary of cards in the deck grouped by card

@@ -5,6 +5,7 @@ import {
   useCustomizationStore,
   type CustomizationType,
   type NftItem,
+  type CustomizationSelections,
   type ThemePreviewData,
 } from '../store/customizationStore';
 import { CustomizationPreview } from './CustomizationPreview';
@@ -23,7 +24,7 @@ const CATEGORIES: Record<
     description: string;
     specs: string;
     shape: TileShape;
-    selectionKey: string;
+    selectionKey: keyof CustomizationSelections;
   }
 > = {
   backgrounds: {
@@ -108,7 +109,7 @@ export function CustomizeCategoryPage() {
   }
 
   const filteredNfts = ownedNfts.filter((n) => n.type === cat.type);
-  const selectedNft = (selections as any)[cat.selectionKey] as NftItem | null | undefined;
+  const selectedNft = selections[cat.selectionKey];
 
   const handleSelect = (nft: NftItem) => selectCustomization(cat.type, nft);
   const handleDeselect = () => selectCustomization(cat.type, null);

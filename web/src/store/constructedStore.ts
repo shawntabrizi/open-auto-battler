@@ -77,9 +77,9 @@ export const useConstructedStore = create<ConstructedStore>((set, get) => ({
   selectDeck: (id: string | null) => {
     set({ selectedDeckId: id });
     if (id) {
-      storageService.writeString(SELECTED_DECK_KEY, id);
+      void storageService.writeString(SELECTED_DECK_KEY, id);
     } else {
-      storageService.remove(SELECTED_DECK_KEY);
+      void storageService.remove(SELECTED_DECK_KEY);
     }
   },
 

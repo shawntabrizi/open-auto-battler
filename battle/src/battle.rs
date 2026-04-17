@@ -572,7 +572,7 @@ fn finalize_with_limit_exceeded(
             None => BattleResult::Draw,
         },
     });
-    events.drain(..).collect()
+    core::mem::take(events)
 }
 
 // ==========================================
@@ -581,6 +581,7 @@ fn finalize_with_limit_exceeded(
 
 /// Resolves triggers depth-first.
 /// If a trigger causes a state change (Death), we resolve reactions IMMEDIATELY.
+#[allow(clippy::too_many_arguments)]
 fn resolve_trigger_queue<R: BattleRng>(
     queue: &mut Vec<PendingTrigger>,
     player_units: &mut Vec<CombatUnit>,
@@ -813,6 +814,7 @@ fn resolve_trigger_queue<R: BattleRng>(
 // EFFECT APPLICATION
 // ==========================================
 
+#[allow(clippy::too_many_arguments)]
 fn apply_ability_effect<R: BattleRng>(
     source_instance_id: UnitInstanceId,
     source_team: Team,
@@ -1098,6 +1100,7 @@ fn apply_ability_effect<R: BattleRng>(
 // HELPERS
 // ==========================================
 
+#[allow(clippy::too_many_arguments)]
 fn execute_phase<R: BattleRng>(
     phase: BattlePhase,
     player_units: &mut Vec<CombatUnit>,
@@ -1178,6 +1181,7 @@ fn execute_phase<R: BattleRng>(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn collect_and_resolve_triggers<R: BattleRng>(
     trigger_types: &[AbilityTrigger],
     player_units: &mut Vec<CombatUnit>,
@@ -1318,13 +1322,15 @@ fn execute_attack_clash(
     outcome
 }
 
+type FallenUnits = Vec<(usize, CombatUnit)>;
+
 /// Returns a tuple of (Index, Unit) for dead units
 fn execute_death_check_phase(
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
     events: &mut Vec<CombatEvent>,
     card_pool: &BTreeMap<CardId, UnitCard>,
-) -> (Vec<(usize, CombatUnit)>, Vec<(usize, CombatUnit)>) {
+) -> (FallenUnits, FallenUnits) {
     let mut player_dead = Vec::new();
     let mut i = 0;
     while i < player_units.len() {
@@ -1365,6 +1371,7 @@ fn execute_death_check_phase(
     (player_dead, enemy_dead)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn resolve_hurt_and_faint_loop<R: BattleRng>(
     player_units: &mut Vec<CombatUnit>,
     enemy_units: &mut Vec<CombatUnit>,
@@ -1596,6 +1603,7 @@ fn resolve_hurt_and_faint_loop<R: BattleRng>(
 }
 
 /// Resolve target unit IDs for an ability target.
+#[allow(clippy::too_many_arguments)]
 fn resolve_targets<R: BattleRng>(
     source_instance_id: UnitInstanceId,
     source_team: Team,
@@ -1905,6 +1913,7 @@ fn resolve_absolute_position(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn resolve_stat_based(
     scope: TargetScope,
     source_id: UnitInstanceId,

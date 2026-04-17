@@ -154,7 +154,7 @@ export function DeckListPage() {
   const handleNewDeck = async () => {
     const deck = createEmptyDeck();
     await saveDeck(deck);
-    navigate(`/constructed/edit/${deck.id}`);
+    void navigate(`/constructed/edit/${deck.id}`);
   };
 
   const handleDelete = async (id: string) => {

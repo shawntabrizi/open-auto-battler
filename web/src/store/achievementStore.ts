@@ -11,7 +11,7 @@ interface AchievementStore {
   isLoaded: boolean;
 
   /** Fetch achievement bitmaps for the given account from on-chain storage. */
-  fetchAchievements: (api: any, accountAddress: string) => Promise<void>;
+  fetchAchievements: (api: AchievementApi | null, accountAddress: string) => Promise<void>;
   /** Check if a card has the bronze achievement (played on board for a battle). */
   hasBronze: (cardId: number) => boolean;
   /** Check if a card has the silver achievement (10 wins). */
@@ -24,11 +24,26 @@ interface AchievementStore {
   clear: () => void;
 }
 
+interface AchievementEntry {
+  keyArgs: unknown[];
+  value: unknown;
+}
+
+interface AchievementApi {
+  query: {
+    OabCardRegistry: {
+      VictoryAchievements: {
+        getEntries: (accountAddress: string) => Promise<AchievementEntry[]>;
+      };
+    };
+  };
+}
+
 export const useAchievementStore = create<AchievementStore>((set, get) => ({
   achievements: new Map(),
   isLoaded: false,
 
-  fetchAchievements: async (api: any, accountAddress: string) => {
+  fetchAchievements: async (api: AchievementApi | null, accountAddress: string) => {
     if (!api || !accountAddress) return;
 
     try {

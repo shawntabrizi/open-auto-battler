@@ -1,10 +1,11 @@
 import { create } from 'zustand';
+import type * as OabClient from 'oab-client';
 import type { BattleOutput, SandboxUnit, CardView } from '../types';
 import type { SortOption } from '../components/CardFilterBar';
 import { initEmojiMap } from '../utils/emoji';
 import { useGameStore } from './gameStore';
 
-type WasmModule = typeof import('oab-client');
+type WasmModule = typeof OabClient;
 
 let wasmModule: WasmModule | null = null;
 

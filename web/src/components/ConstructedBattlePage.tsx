@@ -143,7 +143,7 @@ export function ConstructedBattlePage() {
       await startConstructedGame(selectedDeck.cards);
     } catch (err) {
       console.error('Failed to start constructed game:', err);
-      toast.error(`Failed to start: ${err}`);
+      toast.error(`Failed to start: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { ipfsUrl, fetchIpfsJson } from '../utils/ipfs';
 import { sanitizeTheme, resolveTheme, type ThemeDefinition } from '../theme/themes';
 import { useThemeStore } from './themeStore';
+import { isRecord } from '../utils/safe';
 
 export type CustomizationType =
   | 'board_bg'
@@ -43,10 +44,59 @@ interface CustomizationStore {
   ownedNfts: NftItem[];
   selections: CustomizationSelections;
   isLoading: boolean;
-  fetchUserNfts: (api: any, accountAddress: string) => Promise<void>;
+  fetchUserNfts: (api: NftsApi | null, accountAddress: string) => Promise<void>;
   selectCustomization: (type: CustomizationType, nft: NftItem | null) => void;
   clearSelections: () => void;
 }
+
+interface ThemePreviewSource {
+  base?: {
+    accent?: string;
+    positive?: string;
+    defeat?: string;
+    special?: string;
+    surfaceDark?: string;
+    decorative?: string;
+    titleGradient?: string;
+  };
+  battleShop?: { mana?: string };
+  unitCard?: { cardBurn?: string };
+  label?: string;
+}
+
+interface NftAccountEntry {
+  keyArgs: unknown[];
+}
+
+interface NftMetadataValue {
+  data?: string | { asText?: () => string };
+}
+
+interface ParsedNftMetadata {
+  type?: unknown;
+  image?: unknown;
+  name?: unknown;
+  description?: unknown;
+}
+
+interface NftsApi {
+  query: {
+    Nfts: {
+      Account: {
+        getEntries: (accountAddress: string) => Promise<NftAccountEntry[]>;
+      };
+      ItemMetadataOf: {
+        getValue: (collectionId: number, itemId: number) => Promise<NftMetadataValue | null>;
+      };
+    };
+  };
+}
+
+type CustomizationSetState = (
+  partial:
+    | Partial<CustomizationStore>
+    | ((state: CustomizationStore) => Partial<CustomizationStore>)
+) => void;
 
 const emptySelections: CustomizationSelections = {
   boardBackground: null,
@@ -91,7 +141,7 @@ function filterSelectionsByOwnership(
   };
 }
 
-function extractThemePreview(json: any, name: string): ThemePreviewData {
+function extractThemePreview(json: ThemePreviewSource, name: string): ThemePreviewData {
   const b = json.base || {};
   return {
     colors: [
@@ -111,13 +161,16 @@ function extractThemePreview(json: any, name: string): ThemePreviewData {
 }
 
 /** Pre-fetch theme preview data for all theme NFTs in the background. */
-function prefetchThemePreviews(nfts: NftItem[], set: (fn: (s: any) => any) => void): void {
+function prefetchThemePreviews(nfts: NftItem[], set: CustomizationSetState): void {
   for (const nft of nfts) {
     if (nft.type !== 'theme' || nft.themePreview) continue;
     fetchIpfsJson(nft.ipfsCid.startsWith('ipfs://') ? nft.ipfsCid : `ipfs://${nft.ipfsCid}`)
-      .then((json: any) => {
-        const preview = extractThemePreview(json, nft.name);
-        set((state: any) => ({
+      .then((json: unknown) => {
+        const preview = extractThemePreview(
+          (isRecord(json) ? json : {}) as ThemePreviewSource,
+          nft.name
+        );
+        set((state) => ({
           ownedNfts: state.ownedNfts.map((n: NftItem) =>
             n.collectionId === nft.collectionId && n.itemId === nft.itemId
               ? { ...n, themePreview: preview }
@@ -150,7 +203,7 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
   selections: { ...emptySelections },
   isLoading: false,
 
-  fetchUserNfts: async (api: any, accountAddress: string) => {
+  fetchUserNfts: async (api: NftsApi | null, accountAddress: string) => {
     if (!api || !accountAddress) return;
     set({ isLoading: true });
 
@@ -173,7 +226,7 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
 
           if (!metadataStr) continue;
 
-          const parsed = JSON.parse(metadataStr);
+          const parsed = JSON.parse(metadataStr) as ParsedNftMetadata;
           const validTypes: CustomizationType[] = [
             'board_bg',
             'hand_bg',
@@ -182,9 +235,13 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
             'card_art',
             'theme',
           ];
-          if (!validTypes.includes(parsed.type)) continue;
+          if (
+            typeof parsed.type !== 'string' ||
+            !validTypes.includes(parsed.type as CustomizationType)
+          )
+            continue;
 
-          const rawImage = parsed.image || '';
+          const rawImage = typeof parsed.image === 'string' ? parsed.image : '';
           const rawCid = rawImage.replace('ipfs://', '');
           // card_art CIDs point to a directory; use a sample card as the preview
           const previewImage =
@@ -194,10 +251,10 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
             collectionId,
             itemId,
             type: parsed.type as CustomizationType,
-            name: parsed.name || `Item #${itemId}`,
+            name: typeof parsed.name === 'string' ? parsed.name : `Item #${itemId}`,
             imageUrl: ipfsUrl(previewImage),
             ipfsCid: rawCid,
-            description: parsed.description,
+            description: typeof parsed.description === 'string' ? parsed.description : undefined,
           });
         } catch {
           // Skip items with invalid metadata

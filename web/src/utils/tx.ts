@@ -1,18 +1,84 @@
 import { toast } from 'react-hot-toast';
-import { useTxStore } from '../store/txStore';
 import { useArenaStore } from '../store/arenaStore';
+import { useTxStore } from '../store/txStore';
+import { getErrorMessage, isRecord } from './safe';
 
 const TX_TIMEOUT_MS = 30_000; // 30 seconds
+
+interface ChainEventValue {
+  type?: string;
+  value?: unknown;
+}
+
+interface ChainEventRecord {
+  type: string;
+  value?: ChainEventValue;
+}
+
+type TxWatchEvent =
+  | { type: 'signed'; txHash: string }
+  | { type: 'broadcasted' }
+  | { type: 'txBestBlocksState'; found?: boolean }
+  | {
+      type: 'finalized';
+      ok: boolean;
+      dispatchError?: unknown;
+      events?: ChainEventRecord[];
+      block: unknown;
+    }
+  | { type: string };
+
+interface WatchableTx {
+  signSubmitAndWatch: (signer: unknown) => {
+    subscribe: (observer: {
+      next: (event: TxWatchEvent) => void;
+      error: (err: unknown) => void;
+    }) => void;
+  };
+}
+
+export interface SubmitTxResult {
+  events: ChainEventRecord[] | undefined;
+  block: unknown;
+}
+
+function toError(error: unknown, fallback: string): Error {
+  return error instanceof Error ? error : new Error(getErrorMessage(error, fallback));
+}
+
+function extractFailedDispatchError(event: ChainEventRecord): unknown {
+  const payload = event.value?.value;
+  if (isRecord(payload) && 'dispatch_error' in payload) {
+    return payload.dispatch_error;
+  }
+  return payload;
+}
+
+function isSignedEvent(event: TxWatchEvent): event is Extract<TxWatchEvent, { type: 'signed' }> {
+  return event.type === 'signed' && 'txHash' in event;
+}
+
+function isBestBlockStateEvent(
+  event: TxWatchEvent
+): event is Extract<TxWatchEvent, { type: 'txBestBlocksState' }> {
+  return event.type === 'txBestBlocksState' && 'found' in event;
+}
+
+function isFinalizedEvent(
+  event: TxWatchEvent
+): event is Extract<TxWatchEvent, { type: 'finalized' }> {
+  return event.type === 'finalized' && 'ok' in event;
+}
 
 /**
  * Submit a PAPI transaction with lifecycle tracking and full error handling.
  *
  * Uses `signSubmitAndWatch` to emit granular progress states into txStore:
- *   signing → broadcasting → in-block → finalizing → idle
+ *   signing -> broadcasting -> in-block -> finalizing -> idle
  *
  * All existing callers continue to receive a Promise that resolves on finalization.
  */
-export function submitTx(tx: any, signer: any, label: string): Promise<any> {
+export function submitTx(tx: WatchableTx, signer: unknown, label: string): Promise<SubmitTxResult> {
   console.log(`[tx] Submitting: ${label}`);
 
   const account = useArenaStore.getState().selectedAccount;
@@ -20,10 +86,9 @@ export function submitTx(tx: any, signer: any, label: string): Promise<any> {
 
   useTxStore.setState({ status: 'signing', label, isExtensionSigner: isExtension });
 
-  return new Promise<any>((resolve, reject) => {
+  return new Promise<SubmitTxResult>((resolve, reject) => {
     let settled = false;
 
-    // Timeout guard
     const timer = setTimeout(() => {
       if (!settled) {
         settled = true;
@@ -41,25 +106,30 @@ export function submitTx(tx: any, signer: any, label: string): Promise<any> {
 
     try {
       tx.signSubmitAndWatch(signer).subscribe({
-        next(event: any) {
+        next(event) {
           if (settled) return;
 
           switch (event.type) {
             case 'signed':
-              console.log(`[tx] Signed: ${label} (${event.txHash})`);
-              useTxStore.setState({ status: 'broadcasting' });
+              if (isSignedEvent(event)) {
+                console.log(`[tx] Signed: ${label} (${event.txHash})`);
+                useTxStore.setState({ status: 'broadcasting' });
+              }
               break;
             case 'broadcasted':
               console.log(`[tx] Broadcasted: ${label}`);
               useTxStore.setState({ status: 'in-block' });
               break;
             case 'txBestBlocksState':
-              if (event.found) {
+              if (isBestBlockStateEvent(event) && event.found) {
                 console.log(`[tx] In best block: ${label}`);
                 useTxStore.setState({ status: 'finalizing' });
               }
               break;
             case 'finalized': {
+              if (!isFinalizedEvent(event)) {
+                break;
+              }
               settled = true;
               cleanup();
               console.log(`[tx] Finalized: ${label} (ok=${event.ok})`);
@@ -72,15 +142,12 @@ export function submitTx(tx: any, signer: any, label: string): Promise<any> {
                 return;
               }
 
-              // Check for ExtrinsicFailed event even when ok=true
-              // (belt-and-suspenders for edge cases)
               const failedEvent = event.events?.find(
-                (e: any) => e.type === 'System' && e.value?.type === 'ExtrinsicFailed'
+                (chainEvent: ChainEventRecord) =>
+                  chainEvent.type === 'System' && chainEvent.value?.type === 'ExtrinsicFailed'
               );
               if (failedEvent) {
-                const dispatchError =
-                  failedEvent.value?.value?.dispatch_error ?? failedEvent.value?.value;
-                const msg = formatDispatchError(dispatchError);
+                const msg = formatDispatchError(extractFailedDispatchError(failedEvent));
                 console.error(`[tx] Dispatch error in ${label}:`, msg);
                 toast.error(`${label}: ${msg}`);
                 reject(new Error(`${label}: ${msg}`));
@@ -92,53 +159,68 @@ export function submitTx(tx: any, signer: any, label: string): Promise<any> {
             }
           }
         },
-        error(err: any) {
+        error(err) {
           if (settled) return;
           settled = true;
           cleanup();
 
-          console.error(`[tx] Failed: ${label}`, err?.message);
-          if (err?.dispatchError) {
-            console.error(`[tx] Dispatch error:`, JSON.stringify(err.dispatchError, null, 2));
+          const dispatchError = isRecord(err) ? err.dispatchError : undefined;
+          console.error(`[tx] Failed: ${label}`, getErrorMessage(err, 'Unknown error'));
+          if (dispatchError) {
+            console.error(`[tx] Dispatch error:`, JSON.stringify(dispatchError, null, 2));
           }
 
           const msg = extractErrorMessage(err, label);
           toast.error(msg);
-          reject(err);
+          reject(toError(err, msg));
         },
       });
-    } catch (err: any) {
-      // signSubmitAndWatch itself threw (e.g. signer unavailable)
+    } catch (err) {
       settled = true;
       cleanup();
-      console.error(`[tx] Failed to start: ${label}`, err?.message);
+      console.error(`[tx] Failed to start: ${label}`, getErrorMessage(err, 'Unknown error'));
       const msg = extractErrorMessage(err, label);
       toast.error(msg);
-      reject(err);
+      reject(toError(err, msg));
     }
   });
 }
 
-function formatDispatchError(dispatchError: any): string {
+function formatDispatchError(dispatchError: unknown): string {
   if (!dispatchError) return 'Unknown dispatch error';
+  if (typeof dispatchError === 'string') return dispatchError;
 
-  // Module error: { Module: { index, error } } or { type: 'Module', value: { index, error } }
-  const mod = dispatchError?.Module ?? dispatchError?.value;
-  if (mod?.index !== undefined && mod?.error !== undefined) {
-    return `Module error (pallet ${mod.index}, error 0x${typeof mod.error === 'string' ? mod.error : mod.error.toString(16).padStart(8, '0')})`;
+  if (isRecord(dispatchError)) {
+    const moduleError = dispatchError.Module ?? dispatchError.value;
+    if (isRecord(moduleError) && 'index' in moduleError && 'error' in moduleError) {
+      const index = String(moduleError.index);
+      const rawError = moduleError.error;
+      const errorCode =
+        typeof rawError === 'string' ? rawError : Number(rawError).toString(16).padStart(8, '0');
+      return `Module error (pallet ${index}, error 0x${errorCode})`;
+    }
+
+    if (typeof dispatchError.type === 'string') {
+      return `${dispatchError.type}: ${JSON.stringify(dispatchError.value)}`;
+    }
   }
 
-  if (typeof dispatchError === 'string') return dispatchError;
-  if (dispatchError?.type) return `${dispatchError.type}: ${JSON.stringify(dispatchError.value)}`;
-  return JSON.stringify(dispatchError);
+  try {
+    return JSON.stringify(dispatchError);
+  } catch {
+    return 'Unknown dispatch error';
+  }
 }
 
-function extractErrorMessage(err: any, label: string): string {
-  if (err?.dispatchError) {
+function extractErrorMessage(err: unknown, label: string): string {
+  if (isRecord(err) && 'dispatchError' in err) {
     return `${label}: ${formatDispatchError(err.dispatchError)}`;
   }
-  if (err?.message?.includes('ExtrinsicFailed') || err?.message?.includes('Module')) {
-    return `${label}: ${err.message}`;
+
+  const message = getErrorMessage(err);
+  if (message.includes('ExtrinsicFailed') || message.includes('Module')) {
+    return `${label}: ${message}`;
   }
-  return `${label} failed: ${err?.message || 'Unknown error'}`;
+
+  return `${label} failed: ${message}`;
 }

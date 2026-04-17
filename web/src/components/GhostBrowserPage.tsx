@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useInitGuard } from '../hooks';
-import { useArenaStore } from '../store/arenaStore';
+import { useArenaStore, type ArenaAccount } from '../store/arenaStore';
 import type { BoardUnitView, CardView } from '../types';
 import { blockchainCardToCardView } from '../utils/blockchainCards';
 import { CardDetailPanel } from './CardDetailPanel';
@@ -39,6 +39,32 @@ type GhostBracketView = {
   ghosts: ActiveGhostBoardView[];
 };
 
+type RawGhostUnit = {
+  card_id?: unknown;
+  perm_attack?: unknown;
+  perm_health?: unknown;
+};
+
+type RawGhostBoard = RawGhostUnit[] | { units?: RawGhostUnit[] } | null | undefined;
+
+type RawGhost = {
+  owner?: unknown;
+  board?: RawGhostBoard;
+};
+
+type GhostEntry = {
+  keyArgs: unknown[];
+  value: unknown;
+};
+
+function decodeCompactNumber(value: unknown): number {
+  if (typeof value === 'number') return value;
+  if (value && typeof value === 'object' && 'value' in value) {
+    return Number(value.value);
+  }
+  return Number(value ?? 0);
+}
+
 function shortAddress(address: string): string {
   if (address.length <= 12) return address;
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -46,24 +72,35 @@ function shortAddress(address: string): string {
 
 function normalizeOwner(owner: unknown): string {
   if (typeof owner === 'string') return owner;
-  if (owner && typeof owner === 'object' && 'toString' in owner) {
-    const value = owner.toString();
-    if (value) return value;
+  if (owner && typeof owner === 'object' && 'value' in owner && typeof owner.value === 'string') {
+    return owner.value;
   }
-  return String(owner);
+  if (typeof owner === 'number' || typeof owner === 'bigint' || typeof owner === 'boolean') {
+    return String(owner);
+  }
+  return '';
 }
 
-function normalizeGhostBoard(ghost: any): GhostBoardUnitView[] {
-  const board = ghost?.board ?? ghost;
-  const rawUnits = Array.isArray(board) ? board : board?.units || [];
+function extractGhostUnits(value: unknown): RawGhostUnit[] {
+  if (Array.isArray(value)) {
+    return value as RawGhostUnit[];
+  }
+  if (value && typeof value === 'object' && 'board' in value) {
+    return extractGhostUnits(value.board);
+  }
+  if (value && typeof value === 'object' && 'units' in value && Array.isArray(value.units)) {
+    return value.units as RawGhostUnit[];
+  }
+  return [];
+}
 
-  return rawUnits.map((unit: any) => ({
-    cardId:
-      typeof unit.card_id === 'number' ? unit.card_id : Number(unit.card_id?.value ?? unit.card_id),
-    permAttack:
-      typeof unit.perm_attack === 'number' ? unit.perm_attack : Number(unit.perm_attack || 0),
-    permHealth:
-      typeof unit.perm_health === 'number' ? unit.perm_health : Number(unit.perm_health || 0),
+function normalizeGhostBoard(ghost: RawGhost | RawGhostBoard): GhostBoardUnitView[] {
+  const rawUnits = extractGhostUnits(ghost);
+
+  return rawUnits.map((unit: RawGhostUnit) => ({
+    cardId: decodeCompactNumber(unit.card_id),
+    permAttack: decodeCompactNumber(unit.perm_attack),
+    permHealth: decodeCompactNumber(unit.perm_health),
   }));
 }
 
@@ -81,7 +118,10 @@ function matchesFilter(value: number, filter: string): boolean {
   return filter === ALL_FILTER || value === Number(filter);
 }
 
-function describeOwner(owner: string, accounts: any[]): { label: string; address: string } {
+function describeOwner(
+  owner: string,
+  accounts: ArenaAccount[]
+): { label: string; address: string } {
   const knownAccount = accounts.find((account) => account.address === owner);
   if (!knownAccount) {
     return {
@@ -100,7 +140,7 @@ function paddedBoard(board: GhostBoardUnitView[]): Array<GhostBoardUnitView | nu
   return Array.from({ length: BOARD_SIZE }, (_, index) => board[index] ?? null);
 }
 
-function buildCatalogCard(card: any): GhostCatalogCard {
+function buildCatalogCard(card: unknown): GhostCatalogCard {
   return blockchainCardToCardView(card);
 }
 
@@ -200,20 +240,20 @@ export function GhostBrowserPage() {
       setGhosts([]);
 
       try {
-        let entries: any[] = [];
+        let entries: GhostEntry[] = [];
         try {
-          entries = await api.query.OabArena.GhostOpponents.getEntries(selectedSetId);
+          entries = (await api.query.OabArena.GhostOpponents.getEntries(
+            selectedSetId
+          )) as GhostEntry[];
         } catch {
-          entries = await api.query.OabArena.GhostOpponents.getEntries();
+          entries = (await api.query.OabArena.GhostOpponents.getEntries()) as GhostEntry[];
         }
 
         if (cancelled) return;
 
         const nextGhosts = entries
-          .flatMap((entry: any) => {
-            const [entrySetId, round, wins, lives] = entry.keyArgs.map((value: any) =>
-              Number(value)
-            );
+          .flatMap((entry) => {
+            const [entrySetId, round, wins, lives] = entry.keyArgs.map((value) => Number(value));
 
             if (entrySetId !== selectedSetId) {
               return [];
@@ -226,7 +266,7 @@ export function GhostBrowserPage() {
                 : [];
 
             return pool
-              .map((ghost: any, poolIndex: number) => {
+              .map((ghost, poolIndex: number) => {
                 const owner = normalizeOwner(ghost?.owner);
                 const board = normalizeGhostBoard(ghost);
 
