@@ -22,6 +22,10 @@ import { initEmojiMap } from '../utils/emoji';
 import { submitTx } from '../utils/tx';
 import { useSettingsStore } from './settingsStore';
 
+// Keep the host-backed provider path available for debugging, but default to
+// direct WS until host transport issues are resolved.
+const ENABLE_HOST_PAPI_PROVIDER = false;
+
 // ============================================================================
 // PAPI-to-serde conversion helpers
 //
@@ -490,13 +494,13 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
       const wsEndpoint = useSettingsStore.getState().endpoint;
       const wsProvider = withPolkadotSdkCompat(getWsProvider(wsEndpoint));
 
-      if (isInHost()) {
+      if (isInHost() && ENABLE_HOST_PAPI_PROVIDER) {
         // In host mode, discover genesis hash via WS (allowed in sandbox),
         // then route through host's shared connection for efficiency.
+        let tempClient: any = null;
         try {
-          const tempClient = createClient(wsProvider);
+          tempClient = createClient(wsProvider);
           const chainSpec = await tempClient.getChainSpecData();
-          tempClient.destroy();
           const provider = createPapiProvider(
             chainSpec.genesisHash as `0x${string}`,
             wsProvider // fallback if host doesn't support this chain
@@ -505,21 +509,40 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
         } catch (e) {
           console.warn('Host provider setup failed, falling back to WS:', e);
           client = createClient(wsProvider);
+        } finally {
+          tempClient?.destroy?.();
         }
       } else {
         client = createClient(wsProvider);
       }
 
-      // Subscribe to best blocks — first block confirms connection is live
-      client.bestBlocks$.subscribe((blocks: any[]) => {
-        if (blocks.length > 0) {
+      // Fail fast on transport or metadata issues before hydrating the store.
+      await client.getChainSpecData();
+
+      client.bestBlocks$.subscribe({
+        next: (blocks: any[]) => {
+          if (blocks.length === 0 || get().client !== client) return;
           set({
             blockNumber: blocks[0].number,
-            isConnected: true,
-            isConnecting: false,
             connectionError: null,
           });
-        }
+        },
+        error: (err: unknown) => {
+          if (get().client !== client) return;
+          console.error('Best block subscription failed:', err);
+          client.destroy();
+          set({
+            client: null,
+            api: null,
+            codecs: null,
+            cardDataCoercer: null,
+            isConnected: false,
+            isConnecting: false,
+            isLoggedIn: false,
+            blockNumber: null,
+            connectionError: err instanceof Error ? err.message : String(err),
+          });
+        },
       });
 
       const api = client.getTypedApi(auto_battle);
