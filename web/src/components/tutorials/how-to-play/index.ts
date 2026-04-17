@@ -9,4 +9,14 @@ import Battle from './07-battle';
 import Strategy from './08-strategy';
 import Closing from './09-closing';
 
-export const slides: ComponentType[] = [Welcome, Goal, Cards, Bag, Shop, RoundProgression, Battle, Strategy, Closing];
+export const slides: ComponentType[] = [
+  Welcome,
+  Goal,
+  Cards,
+  Bag,
+  Shop,
+  RoundProgression,
+  Battle,
+  Strategy,
+  Closing,
+];

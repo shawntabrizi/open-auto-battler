@@ -174,9 +174,7 @@ export const DEFAULT_WARM_THEME: ResolvedThemeDefinition = {
   assets: {
     particles: {
       icon: {
-        paths: [
-          'M7.2 9.6L9.6 2.4 16.8 6 22 14.4 16.8 19.2 6 16.8z',
-        ],
+        paths: ['M7.2 9.6L9.6 2.4 16.8 6 22 14.4 16.8 19.2 6 16.8z'],
       },
       size: 1,
       count: 40,

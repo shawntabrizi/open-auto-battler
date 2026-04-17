@@ -27,7 +27,9 @@ export default function Strategy() {
         {/* Clash indicator with shared label */}
         <div className="flex flex-col items-center shrink-0 gap-1">
           <span className="text-lg lg:text-2xl">⚔️</span>
-          <span className="text-[7px] lg:text-[10px] text-accent font-bold uppercase">← Attack first →</span>
+          <span className="text-[7px] lg:text-[10px] text-accent font-bold uppercase">
+            ← Attack first →
+          </span>
         </div>
 
         {/* Enemy board (mirrored) */}
@@ -50,20 +52,21 @@ export default function Strategy() {
 
       <div className="space-y-3 text-base-300 text-sm lg:text-base leading-relaxed">
         <p>
-          The unit in <span className="text-accent font-bold">position 1</span> (front) fights first.
-          When it falls, position 2 steps up, and so on.
+          The unit in <span className="text-accent font-bold">position 1</span> (front) fights
+          first. When it falls, position 2 steps up, and so on.
         </p>
         <p>
-          Combat is <span className="text-accent font-bold">deterministic</span>.
-          The same battle will always produce the same result. The only luck is which cards you draw.
+          Combat is <span className="text-accent font-bold">deterministic</span>. The same battle
+          will always produce the same result. The only luck is which cards you draw.
         </p>
         <p>
-          When abilities trigger, <span className="text-accent font-bold">stronger units act first</span>:
-          highest attack goes first, then highest health, then front position.
+          When abilities trigger,{' '}
+          <span className="text-accent font-bold">stronger units act first</span>: highest attack
+          goes first, then highest health, then front position.
         </p>
         <p>
-          <span className="text-white font-bold">Every decision counts.</span> Experiment with
-          board order, card synergies, and when to burn versus play to find the winning edge.
+          <span className="text-white font-bold">Every decision counts.</span> Experiment with board
+          order, card synergies, and when to burn versus play to find the winning edge.
         </p>
       </div>
     </div>

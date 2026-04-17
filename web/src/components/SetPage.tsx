@@ -85,7 +85,12 @@ export function SetPage() {
         </div>
       </div>
 
-      <CardDetailPanel card={selectedCard} isVisible={true} rarity={selectedCard ? rarityMap.get(selectedCard.id) : undefined} rarityTotalWeight={totalWeight} />
+      <CardDetailPanel
+        card={selectedCard}
+        isVisible={true}
+        rarity={selectedCard ? rarityMap.get(selectedCard.id) : undefined}
+        rarityTotalWeight={totalWeight}
+      />
     </div>
   );
 }

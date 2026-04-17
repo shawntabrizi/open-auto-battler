@@ -1,10 +1,6 @@
 import { create } from 'zustand';
 import { ipfsUrl, fetchIpfsJson } from '../utils/ipfs';
-import {
-  sanitizeTheme,
-  resolveTheme,
-  type ThemeDefinition,
-} from '../theme/themes';
+import { sanitizeTheme, resolveTheme, type ThemeDefinition } from '../theme/themes';
 import { useThemeStore } from './themeStore';
 
 export type CustomizationType =
@@ -109,8 +105,7 @@ function extractThemePreview(json: any, name: string): ThemePreviewData {
     bg: b.surfaceDark || '#111',
     font: b.decorative || 'serif',
     titleGradient:
-      b.titleGradient ||
-      `linear-gradient(to right, ${b.accent || '#888'}, ${b.accent || '#888'})`,
+      b.titleGradient || `linear-gradient(to right, ${b.accent || '#888'}, ${b.accent || '#888'})`,
     label: json.label || name,
   };
 }

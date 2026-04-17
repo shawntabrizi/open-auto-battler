@@ -15,9 +15,8 @@ export default function Welcome() {
         Welcome to Open Auto Battler!
       </h1>
       <p className="text-base-300 text-sm lg:text-lg leading-relaxed max-w-lg mx-auto mb-6 lg:mb-10">
-        Draft cards, build a team, and watch them clash automatically.
-        Each round you grow stronger, but so do your opponents. Can you rack up 10 wins before
-        your lives run out?
+        Draft cards, build a team, and watch them clash automatically. Each round you grow stronger,
+        but so do your opponents. Can you rack up 10 wins before your lives run out?
       </p>
 
       {/* VS card display */}
@@ -26,7 +25,13 @@ export default function Welcome() {
           <div className="flex gap-1 lg:gap-2">
             {leftCards.map((card) => (
               <div key={card.id} className="w-10 h-14 lg:w-16 lg:h-[5.25rem]">
-                <UnitCard card={card} showCost={false} showBurn={false} enableTilt={false} enableWobble={false} />
+                <UnitCard
+                  card={card}
+                  showCost={false}
+                  showBurn={false}
+                  enableTilt={false}
+                  enableWobble={false}
+                />
               </div>
             ))}
           </div>
@@ -41,7 +46,13 @@ export default function Welcome() {
           <div className="flex gap-1 lg:gap-2">
             {rightCards.map((card) => (
               <div key={card.id} className="w-10 h-14 lg:w-16 lg:h-[5.25rem]">
-                <UnitCard card={card} showCost={false} showBurn={false} enableTilt={false} enableWobble={false} />
+                <UnitCard
+                  card={card}
+                  showCost={false}
+                  showBurn={false}
+                  enableTilt={false}
+                  enableWobble={false}
+                />
               </div>
             ))}
           </div>

@@ -69,7 +69,16 @@ export interface GameShellProps {
 }
 
 export function GameShell({ hideEndTurn = false, customAction, className = '' }: GameShellProps) {
-  const { view, bag, cardSet, selection, showBag, showGameCardDetailsPanel, rarityMap, rarityTotalWeight } = useGameStore();
+  const {
+    view,
+    bag,
+    cardSet,
+    selection,
+    showBag,
+    showGameCardDetailsPanel,
+    rarityMap,
+    rarityTotalWeight,
+  } = useGameStore();
   const isNarrowScreen = useIsNarrowScreen();
 
   const {
@@ -164,7 +173,12 @@ export function GameShell({ hideEndTurn = false, customAction, className = '' }:
         </main>
 
         {/* Card Detail Panel */}
-        <CardDetailPanel card={cardToShow} isVisible={showCardPanel} rarity={cardToShow ? rarityMap.get(cardToShow.id) : undefined} rarityTotalWeight={rarityTotalWeight} />
+        <CardDetailPanel
+          card={cardToShow}
+          isVisible={showCardPanel}
+          rarity={cardToShow ? rarityMap.get(cardToShow.id) : undefined}
+          rarityTotalWeight={rarityTotalWeight}
+        />
 
         {/* Battle Overlay */}
         <BattleOverlay />

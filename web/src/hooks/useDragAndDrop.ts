@@ -31,7 +31,12 @@ export interface UseDragAndDropReturn {
 
 /** Build a context-aware hint for a hand card dropped outside a valid target. */
 function getHandDropHint(
-  view: { board: (BoardUnitView | null)[]; hand: (CardView | null)[]; can_afford: boolean[]; mana_limit: number } | null,
+  view: {
+    board: (BoardUnitView | null)[];
+    hand: (CardView | null)[];
+    can_afford: boolean[];
+    mana_limit: number;
+  } | null,
   handIndex: number
 ): string {
   if (!view) return 'Drop on the board to play or the flame to burn';

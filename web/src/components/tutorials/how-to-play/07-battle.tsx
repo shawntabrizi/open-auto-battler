@@ -20,7 +20,13 @@ export default function Battle() {
           <div className="flex gap-1 lg:gap-2">
             {playerCards.map((card) => (
               <div key={card.id} className="w-10 h-14 lg:w-16 lg:h-[5.25rem]">
-                <UnitCard card={card} showCost={false} showBurn={false} enableTilt={false} enableWobble={false} />
+                <UnitCard
+                  card={card}
+                  showCost={false}
+                  showBurn={false}
+                  enableTilt={false}
+                  enableWobble={false}
+                />
               </div>
             ))}
           </div>
@@ -35,7 +41,13 @@ export default function Battle() {
           <div className="flex gap-1 lg:gap-2">
             {enemyCards.map((card) => (
               <div key={card.id} className="w-10 h-14 lg:w-16 lg:h-[5.25rem]">
-                <UnitCard card={card} showCost={false} showBurn={false} enableTilt={false} enableWobble={false} />
+                <UnitCard
+                  card={card}
+                  showCost={false}
+                  showBurn={false}
+                  enableTilt={false}
+                  enableWobble={false}
+                />
               </div>
             ))}
           </div>
@@ -45,18 +57,17 @@ export default function Battle() {
       <div className="space-y-3 text-base-300 text-sm lg:text-base leading-relaxed">
         <p>
           After the shop, your board fights an opponent's board{' '}
-          <span className="text-accent font-bold">automatically</span>. The
-          front unit on each side clashes first.
+          <span className="text-accent font-bold">automatically</span>. The front unit on each side
+          clashes first.
         </p>
         <p>
-          Units deal damage equal to their{' '}
-          <span className="text-defeat font-bold">attack</span> and lose{' '}
-          <span className="text-positive font-bold">health</span> when hit. A
-          unit with 0 health is destroyed.
+          Units deal damage equal to their <span className="text-defeat font-bold">attack</span> and
+          lose <span className="text-positive font-bold">health</span> when hit. A unit with 0
+          health is destroyed.
         </p>
         <p>
-          Watch for <span className="text-accent font-bold">abilities</span>!
-          They fire during combat and can completely turn the tide.
+          Watch for <span className="text-accent font-bold">abilities</span>! They fire during
+          combat and can completely turn the tide.
         </p>
       </div>
     </div>

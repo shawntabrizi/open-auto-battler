@@ -25,10 +25,10 @@ export function parseSlides(markdown: string): Slide[] {
   // Split by slide separator
   const rawSlides = withoutFrontmatter
     .split(/\n---\n/)
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 
-  return rawSlides.map(content => {
+  return rawSlides.map((content) => {
     const { html, components } = parseSlideContent(content);
     return { html, components };
   });
@@ -47,36 +47,33 @@ function parseSlideContent(content: string): { html: string; components: Compone
 
   // Replace component declarations with placeholders
   // Use special markers for layout that won't be affected by markdown processing
-  const htmlContent = content.replace(
-    componentPattern,
-    (_, type, propsStr) => {
-      // Layout components use special markers (will be replaced after markdown processing)
-      if (type === 'two-column-start') {
-        return '%%%TWO_COL_START%%%';
-      }
-      if (type === 'column-break') {
-        return '%%%COL_BREAK%%%';
-      }
-      if (type === 'two-column-end') {
-        return '%%%TWO_COL_END%%%';
-      }
-      if (type === 'small-start') {
-        return '%%%SMALL_START%%%';
-      }
-      if (type === 'small-end') {
-        return '%%%SMALL_END%%%';
-      }
-
-      // React components get placeholders
-      try {
-        const props = JSON.parse(propsStr);
-        components.push({ type, props });
-      } catch {
-        console.warn('Failed to parse component props:', propsStr);
-      }
-      return `<div class="component-placeholder" data-component="${type}" data-props='${propsStr}'></div>`;
+  const htmlContent = content.replace(componentPattern, (_, type, propsStr) => {
+    // Layout components use special markers (will be replaced after markdown processing)
+    if (type === 'two-column-start') {
+      return '%%%TWO_COL_START%%%';
     }
-  );
+    if (type === 'column-break') {
+      return '%%%COL_BREAK%%%';
+    }
+    if (type === 'two-column-end') {
+      return '%%%TWO_COL_END%%%';
+    }
+    if (type === 'small-start') {
+      return '%%%SMALL_START%%%';
+    }
+    if (type === 'small-end') {
+      return '%%%SMALL_END%%%';
+    }
+
+    // React components get placeholders
+    try {
+      const props = JSON.parse(propsStr);
+      components.push({ type, props });
+    } catch {
+      console.warn('Failed to parse component props:', propsStr);
+    }
+    return `<div class="component-placeholder" data-component="${type}" data-props='${propsStr}'></div>`;
+  });
 
   // Render markdown first
   let html = renderMarkdown(htmlContent);
@@ -119,10 +116,10 @@ function renderMarkdown(md: string): string {
       // Skip separator row (|---|---|)
       if (row.match(/^\|[\s-:|]+\|$/)) return;
 
-      const cells = row.split('|').filter(c => c.trim());
+      const cells = row.split('|').filter((c) => c.trim());
       const tag = i === 0 ? 'th' : 'td';
       table += '<tr>';
-      cells.forEach(cell => {
+      cells.forEach((cell) => {
         table += `<${tag}>${cell.trim()}</${tag}>`;
       });
       table += '</tr>';
@@ -172,7 +169,7 @@ function renderMarkdown(md: string): string {
   // Paragraphs (lines not already wrapped)
   html = html
     .split('\n\n')
-    .map(block => {
+    .map((block) => {
       block = block.trim();
       if (!block) return '';
       if (block.startsWith('<')) return block;
@@ -184,8 +181,5 @@ function renderMarkdown(md: string): string {
 }
 
 function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

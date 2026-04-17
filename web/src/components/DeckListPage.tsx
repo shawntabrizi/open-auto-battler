@@ -145,7 +145,10 @@ export function DeckListPage() {
 
   const getPreviewCards = (deck: { cards: number[] }): CardView[] => {
     const unique = [...new Set(deck.cards)];
-    return unique.slice(0, 5).map((id) => cardLookup.get(id)).filter(Boolean) as CardView[];
+    return unique
+      .slice(0, 5)
+      .map((id) => cardLookup.get(id))
+      .filter(Boolean) as CardView[];
   };
 
   const handleNewDeck = async () => {

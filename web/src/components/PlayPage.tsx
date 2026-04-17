@@ -57,9 +57,7 @@ export function PlayPage() {
               to="/constructed"
               className="theme-panel group block w-full p-4 lg:p-5 rounded-xl border border-base-700 bg-base-900/30 hover:border-base-500 hover:bg-base-800/40 active:scale-[0.98] transition-all text-center"
             >
-              <h3 className="font-button text-base lg:text-lg font-bold text-white">
-                CONSTRUCTED
-              </h3>
+              <h3 className="font-button text-base lg:text-lg font-bold text-white">CONSTRUCTED</h3>
               <p className="theme-secondary-text mt-1 text-[10px] lg:text-xs">
                 Build a deck, then battle
               </p>
@@ -112,9 +110,7 @@ export function PlayPage() {
               className="theme-panel theme-button block w-full p-3 lg:p-4 rounded-xl border border-special/30 bg-special/5 hover:border-special/50 hover:bg-special/10 active:scale-[0.99] transition-all text-center"
             >
               <h3 className="font-button text-sm lg:text-base font-bold text-special">TUTORIAL</h3>
-              <p className="text-special/60 mt-0.5 text-[10px] lg:text-xs">
-                Learn how to play
-              </p>
+              <p className="text-special/60 mt-0.5 text-[10px] lg:text-xs">Learn how to play</p>
             </button>
           </div>
         </div>

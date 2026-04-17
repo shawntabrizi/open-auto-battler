@@ -4,8 +4,6 @@ import { useMenuStore } from '../store/menuStore';
 import { useArenaStore } from '../store/arenaStore';
 import { useGameStore } from '../store/gameStore';
 
-
-
 const formatBalance = (raw: bigint, decimals = 12) =>
   (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
     minimumFractionDigits: 0,

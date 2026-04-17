@@ -171,7 +171,11 @@ export function CustomizeCategoryPage() {
                   imageUrl={nft.type === 'theme' ? undefined : nft.imageUrl}
                   preview={
                     nft.type === 'theme' ? (
-                      <ThemeSwatch data={nft.themePreview} name={nft.name} className="w-full h-full" />
+                      <ThemeSwatch
+                        data={nft.themePreview}
+                        name={nft.name}
+                        className="w-full h-full"
+                      />
                     ) : undefined
                   }
                   subtitle={`#${nft.itemId}`}
@@ -210,7 +214,11 @@ export function CustomizeCategoryPage() {
                   imageUrl={nft.type === 'theme' ? undefined : nft.imageUrl}
                   preview={
                     nft.type === 'theme' ? (
-                      <ThemeSwatch data={nft.themePreview} name={nft.name} className="w-full h-full" />
+                      <ThemeSwatch
+                        data={nft.themePreview}
+                        name={nft.name}
+                        className="w-full h-full"
+                      />
                     ) : undefined
                   }
                   subtitle={`#${nft.itemId}`}
@@ -290,7 +298,15 @@ function NftTile({
 }
 
 /** Renders a mini theme preview from cached preview data. */
-function ThemeSwatch({ data, name, className }: { data?: ThemePreviewData; name: string; className?: string }) {
+function ThemeSwatch({
+  data,
+  name,
+  className,
+}: {
+  data?: ThemePreviewData;
+  name: string;
+  className?: string;
+}) {
   if (!data) {
     return (
       <div className={`${className} flex items-center justify-center`}>
@@ -330,7 +346,14 @@ function ThemeSwatch({ data, name, className }: { data?: ThemePreviewData; name:
 /** Renders the warm (default) theme swatch from built-in data — no fetch needed. */
 function WarmThemeSwatch({ className }: { className?: string }) {
   const b = DEFAULT_WARM_THEME.base;
-  const colors = [b.accent, DEFAULT_WARM_THEME.battleShop.mana, b.positive, b.defeat, b.special, DEFAULT_WARM_THEME.unitCard.cardBurn];
+  const colors = [
+    b.accent,
+    DEFAULT_WARM_THEME.battleShop.mana,
+    b.positive,
+    b.defeat,
+    b.special,
+    DEFAULT_WARM_THEME.unitCard.cardBurn,
+  ];
 
   return (
     <div

@@ -133,7 +133,10 @@ function buildCardNameMap(metas: Array<{ id: number; name: string }>): Record<nu
   return Object.fromEntries(metas.map((meta) => [meta.id, meta.name]));
 }
 
-function buildRarityMap(engine: any, setId: number): { rarityMap: Map<number, number>; rarityTotalWeight: number } {
+function buildRarityMap(
+  engine: any,
+  setId: number
+): { rarityMap: Map<number, number>; rarityTotalWeight: number } {
   try {
     const cards: { id: number; rarity: number }[] = engine.get_set_cards(setId);
     const rarityMap = new Map<number, number>();
@@ -252,12 +255,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // In standalone mode, read sync from localStorage.
   showRawJson: isInHost() ? false : JSON.parse(localStorage.getItem('showRawJson') || 'false'),
   showCardNames: isInHost() ? true : JSON.parse(localStorage.getItem('showCardNames') ?? 'true'),
-  showGameCardDetailsPanel: isInHost() ? ('auto' as CardDetailsPanelMode) : (JSON.parse(localStorage.getItem('showGameCardDetailsPanel') ?? '"auto"') as CardDetailsPanelMode),
-  showBoardHelper: isInHost() ? true : JSON.parse(localStorage.getItem('showBoardHelper') ?? 'true'),
+  showGameCardDetailsPanel: isInHost()
+    ? ('auto' as CardDetailsPanelMode)
+    : (JSON.parse(
+        localStorage.getItem('showGameCardDetailsPanel') ?? '"auto"'
+      ) as CardDetailsPanelMode),
+  showBoardHelper: isInHost()
+    ? true
+    : JSON.parse(localStorage.getItem('showBoardHelper') ?? 'true'),
   showAddress: isInHost() ? true : JSON.parse(localStorage.getItem('showAddress') ?? 'true'),
   showBalance: isInHost() ? true : JSON.parse(localStorage.getItem('showBalance') ?? 'true'),
-  defaultBattleSpeed: isInHost() ? 1 : JSON.parse(localStorage.getItem('defaultBattleSpeed') ?? '1'),
-  reducedAnimations: isInHost() ? false : JSON.parse(localStorage.getItem('reducedAnimations') ?? 'false'),
+  defaultBattleSpeed: isInHost()
+    ? 1
+    : JSON.parse(localStorage.getItem('defaultBattleSpeed') ?? '1'),
+  reducedAnimations: isInHost()
+    ? false
+    : JSON.parse(localStorage.getItem('reducedAnimations') ?? 'false'),
   showBag: false,
   dragShift: null,
   startingLives: 3,

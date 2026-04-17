@@ -131,7 +131,10 @@ export function ConstructedBattlePage() {
 
   const getPreviewCards = (cardIds: number[]): CardView[] => {
     const unique = [...new Set(cardIds)];
-    return unique.slice(0, 5).map((id) => cardLookup.get(id)).filter(Boolean) as CardView[];
+    return unique
+      .slice(0, 5)
+      .map((id) => cardLookup.get(id))
+      .filter(Boolean) as CardView[];
   };
 
   const handleStart = async () => {

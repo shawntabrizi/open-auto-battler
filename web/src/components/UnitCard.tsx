@@ -37,10 +37,7 @@ function costBasedTier(card: CardView | BoardUnitView): RarityTier {
 }
 
 /** Get the visual rarity tier. Uses actual rarity weight when available, falls back to cost heuristic. */
-export function getRarityTier(
-  card: CardView | BoardUnitView,
-  rarityWeight?: number
-): RarityTier {
+export function getRarityTier(card: CardView | BoardUnitView, rarityWeight?: number): RarityTier {
   if (rarityWeight != null) return rarityWeightToTier(rarityWeight);
   return costBasedTier(card);
 }
@@ -321,16 +318,17 @@ export function UnitCard({
       )}
 
       {/* Rarity label (top center) */}
-      {effectiveRarityWeight != null && (() => {
-        const info = getRarityInfo(effectiveRarityWeight);
-        return (
-          <div
-            className={`absolute top-0 left-1/2 -translate-x-1/2 z-10 px-1 lg:px-1.5 py-px rounded-b text-[5px] lg:text-[7px] font-stat font-bold uppercase tracking-wider ${info.color} bg-black/80`}
-          >
-            {info.label}
-          </div>
-        );
-      })()}
+      {effectiveRarityWeight != null &&
+        (() => {
+          const info = getRarityInfo(effectiveRarityWeight);
+          return (
+            <div
+              className={`absolute top-0 left-1/2 -translate-x-1/2 z-10 px-1 lg:px-1.5 py-px rounded-b text-[5px] lg:text-[7px] font-stat font-bold uppercase tracking-wider ${info.color} bg-black/80`}
+            >
+              {info.label}
+            </div>
+          );
+        })()}
 
       {/* Burn value badge (top right) — gold flame */}
       {showBurn && (

@@ -126,7 +126,8 @@ export async function initHostStorage(): Promise<void> {
   const gameUpdates: Record<string, any> = {};
   if (showRawJson !== null) gameUpdates.showRawJson = showRawJson;
   if (showCardNames !== null) gameUpdates.showCardNames = showCardNames;
-  if (showGameCardDetailsPanel !== null) gameUpdates.showGameCardDetailsPanel = showGameCardDetailsPanel;
+  if (showGameCardDetailsPanel !== null)
+    gameUpdates.showGameCardDetailsPanel = showGameCardDetailsPanel;
   if (showBoardHelper !== null) gameUpdates.showBoardHelper = showBoardHelper;
   if (showAddress !== null) gameUpdates.showAddress = showAddress;
   if (showBalance !== null) gameUpdates.showBalance = showBalance;

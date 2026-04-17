@@ -44,9 +44,15 @@ function DeckColumnsView({
         const entries = grouped.get(cost) ?? [];
         const colTotal = entries.reduce((sum, e) => sum + e.count, 0);
         return (
-          <div key={cost} className="flex flex-col items-center flex-shrink-0 lg:flex-shrink lg:flex-1 lg:min-w-0" style={{ width: '4.5rem', maxWidth: '5rem' }}>
+          <div
+            key={cost}
+            className="flex flex-col items-center flex-shrink-0 lg:flex-shrink lg:flex-1 lg:min-w-0"
+            style={{ width: '4.5rem', maxWidth: '5rem' }}
+          >
             {/* Mana cost header */}
-            <div className={`text-[10px] lg:text-xs font-mono mb-1 w-full text-center ${entries.length > 0 ? 'text-base-400' : 'text-base-700'}`}>
+            <div
+              className={`text-[10px] lg:text-xs font-mono mb-1 w-full text-center ${entries.length > 0 ? 'text-base-400' : 'text-base-700'}`}
+            >
               {cost}
             </div>
             {/* Stacked cards or empty slot */}
@@ -85,7 +91,9 @@ function DeckColumnsView({
               )}
             </div>
             {/* Column card count */}
-            <div className={`text-[9px] font-mono mt-1 ${colTotal > 0 ? 'text-base-500' : 'text-base-700/50'}`}>
+            <div
+              className={`text-[9px] font-mono mt-1 ${colTotal > 0 ? 'text-base-500' : 'text-base-700/50'}`}
+            >
               {colTotal}
             </div>
           </div>
@@ -154,10 +162,12 @@ export function DeckEditorPage() {
   // All available cards (sorted/filtered)
   const allCards = useMemo(() => {
     if (!cardSet) return [];
-    return [...cardSet].filter((c) => c.play_cost > 0).sort((a, b) => {
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
-      return a.play_cost - b.play_cost || a.name.localeCompare(b.name);
-    });
+    return [...cardSet]
+      .filter((c) => c.play_cost > 0)
+      .sort((a, b) => {
+        if (sortBy === 'name') return a.name.localeCompare(b.name);
+        return a.play_cost - b.play_cost || a.name.localeCompare(b.name);
+      });
   }, [cardSet, sortBy]);
 
   const filtered = useMemo(() => {

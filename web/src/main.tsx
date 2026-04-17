@@ -64,108 +64,108 @@ async function boot() {
   applyResolvedThemeToDocument(useThemeStore.getState().activeTheme);
 
   createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ThemedToaster />
-    <TransactionOverlay />
-    <TutorialOverlay />
-    <CardInspectOverlay />
-    <HashRouter>
-      <ThemeController />
-      <ParticleBackground />
-      <AuthGate>
-        <HamburgerMenu />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/play" element={<PlayPage />} />
-          <Route path="/cards" element={<SandboxPage />} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route path="/history/achievements" element={<AchievementsPage />} />
-          <Route path="/history/stats" element={<StatsPage />} />
-          <Route path="/history/battles" element={<BattleHistoryPage />} />
-          <Route path="/sets" element={<SetsPage />} />
-          <Route path="/practice" element={<PracticePage />} />
-          <Route path="/practice/game" element={<PracticeGamePage />} />
-          <Route path="/constructed" element={<ConstructedPage />} />
-          <Route path="/constructed/decks" element={<DeckListPage />} />
-          <Route path="/constructed/edit/:deckId" element={<DeckEditorPage />} />
-          <Route path="/constructed/battle" element={<ConstructedBattlePage />} />
-          <Route path="/constructed/game" element={<ConstructedGamePage />} />
-          <Route path="/versus" element={<VersusRedirect />} />
-          <Route path="/versus/lobby" element={<VersusPage />} />
-          <Route path="/versus/game" element={<VersusGame />} />
-          <Route path="/arena" element={<ArenaPage />} />
-          <Route path="/arena/game" element={<ArenaGamePage />} />
-          <Route path="/tournament" element={<TournamentRedirect />} />
-          <Route path="/tournament/lobby" element={<TournamentLobbyPage />} />
-          <Route path="/tournament/game" element={<TournamentGamePage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/network" element={<NetworkPage />} />
-          <Route path="/account" element={<AccountPage />} />
-          <Route path="/marketplace" element={<MarketplacePage />} />
-          <Route path="/customize" element={<CustomizePage />} />
-          <Route path="/customize/:category" element={<CustomizeCategoryPage />} />
-          <Route path="/sets/:setId" element={<SetPage />} />
-          <Route path="/dev" element={<DevPage />} />
-          <Route path="/dev/game-over" element={<GameOverPreview />} />
-          <Route path="/creator" element={<CreatorPage />} />
-          <Route path="/creator/card" element={<CreateCardPage />} />
-          <Route path="/creator/set" element={<CreateSetPage />} />
-          <Route path="/creator/mint" element={<MintNftPage />} />
-          <Route path="/history/ghosts" element={<GhostBrowserPage />} />
-          <Route
-            path="/embed"
-            element={
-              <Suspense fallback={<div className="min-h-screen bg-base-900" />}>
-                <EmbedPage />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/presentations"
-            element={
-              <Suspense
-                fallback={
-                  <div className="min-h-screen bg-base-900 text-white flex items-center justify-center">
-                    Loading...
-                  </div>
-                }
-              >
-                <PresentationsPage />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/presentations/:id"
-            element={
-              <Suspense
-                fallback={
-                  <div className="min-h-screen bg-base-900 text-white flex items-center justify-center">
-                    Loading...
-                  </div>
-                }
-              >
-                <PresentationViewer />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/presentations/:id/:slideNum"
-            element={
-              <Suspense
-                fallback={
-                  <div className="min-h-screen bg-base-900 text-white flex items-center justify-center">
-                    Loading...
-                  </div>
-                }
-              >
-                <PresentationViewer />
-              </Suspense>
-            }
-          />
-        </Routes>
-      </AuthGate>
-    </HashRouter>
-  </StrictMode>
+    <StrictMode>
+      <ThemedToaster />
+      <TransactionOverlay />
+      <TutorialOverlay />
+      <CardInspectOverlay />
+      <HashRouter>
+        <ThemeController />
+        <ParticleBackground />
+        <AuthGate>
+          <HamburgerMenu />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/play" element={<PlayPage />} />
+            <Route path="/cards" element={<SandboxPage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/history/achievements" element={<AchievementsPage />} />
+            <Route path="/history/stats" element={<StatsPage />} />
+            <Route path="/history/battles" element={<BattleHistoryPage />} />
+            <Route path="/sets" element={<SetsPage />} />
+            <Route path="/practice" element={<PracticePage />} />
+            <Route path="/practice/game" element={<PracticeGamePage />} />
+            <Route path="/constructed" element={<ConstructedPage />} />
+            <Route path="/constructed/decks" element={<DeckListPage />} />
+            <Route path="/constructed/edit/:deckId" element={<DeckEditorPage />} />
+            <Route path="/constructed/battle" element={<ConstructedBattlePage />} />
+            <Route path="/constructed/game" element={<ConstructedGamePage />} />
+            <Route path="/versus" element={<VersusRedirect />} />
+            <Route path="/versus/lobby" element={<VersusPage />} />
+            <Route path="/versus/game" element={<VersusGame />} />
+            <Route path="/arena" element={<ArenaPage />} />
+            <Route path="/arena/game" element={<ArenaGamePage />} />
+            <Route path="/tournament" element={<TournamentRedirect />} />
+            <Route path="/tournament/lobby" element={<TournamentLobbyPage />} />
+            <Route path="/tournament/game" element={<TournamentGamePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/network" element={<NetworkPage />} />
+            <Route path="/account" element={<AccountPage />} />
+            <Route path="/marketplace" element={<MarketplacePage />} />
+            <Route path="/customize" element={<CustomizePage />} />
+            <Route path="/customize/:category" element={<CustomizeCategoryPage />} />
+            <Route path="/sets/:setId" element={<SetPage />} />
+            <Route path="/dev" element={<DevPage />} />
+            <Route path="/dev/game-over" element={<GameOverPreview />} />
+            <Route path="/creator" element={<CreatorPage />} />
+            <Route path="/creator/card" element={<CreateCardPage />} />
+            <Route path="/creator/set" element={<CreateSetPage />} />
+            <Route path="/creator/mint" element={<MintNftPage />} />
+            <Route path="/history/ghosts" element={<GhostBrowserPage />} />
+            <Route
+              path="/embed"
+              element={
+                <Suspense fallback={<div className="min-h-screen bg-base-900" />}>
+                  <EmbedPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/presentations"
+              element={
+                <Suspense
+                  fallback={
+                    <div className="min-h-screen bg-base-900 text-white flex items-center justify-center">
+                      Loading...
+                    </div>
+                  }
+                >
+                  <PresentationsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/presentations/:id"
+              element={
+                <Suspense
+                  fallback={
+                    <div className="min-h-screen bg-base-900 text-white flex items-center justify-center">
+                      Loading...
+                    </div>
+                  }
+                >
+                  <PresentationViewer />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/presentations/:id/:slideNum"
+              element={
+                <Suspense
+                  fallback={
+                    <div className="min-h-screen bg-base-900 text-white flex items-center justify-center">
+                      Loading...
+                    </div>
+                  }
+                >
+                  <PresentationViewer />
+                </Suspense>
+              }
+            />
+          </Routes>
+        </AuthGate>
+      </HashRouter>
+    </StrictMode>
   );
 }
 

@@ -106,7 +106,9 @@ export function CardDetailPanel({
       return (
         <div className="flex min-h-full flex-col items-center justify-center py-6 lg:py-12 text-center">
           <div className="w-12 h-16 lg:w-32 lg:h-44 mb-2 lg:mb-4 board-slot-engraved rounded-lg border border-base-700/50 flex items-center justify-center">
-            <span className="text-base-600/60 text-xl lg:text-5xl font-heading font-bold select-none">?</span>
+            <span className="text-base-600/60 text-xl lg:text-5xl font-heading font-bold select-none">
+              ?
+            </span>
           </div>
           <h3 className="theme-title-text font-heading mb-1 bg-clip-text text-sm font-bold text-transparent lg:mb-2 lg:text-lg">
             Select a Card
@@ -145,27 +147,29 @@ export function CardDetailPanel({
         </div>
 
         {/* Rarity Section */}
-        {rarity != null && (() => {
-          const info = getRarityInfo(rarity);
-          const pct = rarityTotalWeight && rarityTotalWeight > 0
-            ? ((rarity / rarityTotalWeight) * 100)
-            : null;
-          return (
-            <div className={`theme-panel p-1.5 lg:p-3 border rounded-lg ${info.bgColor}`}>
-              <div className="text-[8px] lg:text-[10px] uppercase font-heading font-bold mb-0.5 lg:mb-1 text-base-400">
-                Rarity
+        {rarity != null &&
+          (() => {
+            const info = getRarityInfo(rarity);
+            const pct =
+              rarityTotalWeight && rarityTotalWeight > 0
+                ? (rarity / rarityTotalWeight) * 100
+                : null;
+            return (
+              <div className={`theme-panel p-1.5 lg:p-3 border rounded-lg ${info.bgColor}`}>
+                <div className="text-[8px] lg:text-[10px] uppercase font-heading font-bold mb-0.5 lg:mb-1 text-base-400">
+                  Rarity
+                </div>
+                <div className={`text-sm lg:text-xl font-stat font-bold ${info.color}`}>
+                  {info.label}
+                  {pct != null && (
+                    <span className="text-[10px] lg:text-sm text-base-400 font-normal ml-1.5">
+                      {pct < 1 ? pct.toFixed(2) : pct.toFixed(1)}%
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className={`text-sm lg:text-xl font-stat font-bold ${info.color}`}>
-                {info.label}
-                {pct != null && (
-                  <span className="text-[10px] lg:text-sm text-base-400 font-normal ml-1.5">
-                    {pct < 1 ? pct.toFixed(2) : pct.toFixed(1)}%
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })()}
+            );
+          })()}
 
         {/* Ability Section */}
         {allAbilities.length > 0 && (

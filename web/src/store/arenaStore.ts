@@ -3,7 +3,11 @@ import { createClient, Binary, getTypedCodecs } from 'polkadot-api';
 import { getWsProvider } from 'polkadot-api/ws-provider';
 import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
 import { getInjectedExtensions, connectInjectedExtension } from 'polkadot-api/pjs-signer';
-import { injectSpektrExtension, createPapiProvider, createAccountsProvider } from '@novasamatech/product-sdk';
+import {
+  injectSpektrExtension,
+  createPapiProvider,
+  createAccountsProvider,
+} from '@novasamatech/product-sdk';
 import { isInHost } from '../services/hostEnvironment';
 import { storageService } from '../services/storage';
 import { auto_battle } from '@polkadot-api/descriptors';
@@ -985,7 +989,11 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
       const action = codecs.tx.OabConstructed.submit_turn.dec(actionRaw);
 
       const tx = api.tx.OabConstructed.submit_turn(action);
-      const txResult = await submitTx(tx, selectedAccount.polkadotSigner, 'OabConstructed.submit_turn');
+      const txResult = await submitTx(
+        tx,
+        selectedAccount.polkadotSigner,
+        'OabConstructed.submit_turn'
+      );
 
       const battleEvent = txResult.events.find(
         (e: any) => e.type === 'OabConstructed' && e.value?.type === 'BattleReported'
@@ -998,9 +1006,12 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
           ? opponent_board
           : opponent_board?.units || [];
         const opponentUnits = rawUnits.map((u: any) => ({
-          card_id: typeof u.card_id === 'number' ? u.card_id : Number(u.card_id?.value ?? u.card_id),
-          perm_attack: typeof u.perm_attack === 'number' ? u.perm_attack : Number(u.perm_attack || 0),
-          perm_health: typeof u.perm_health === 'number' ? u.perm_health : Number(u.perm_health || 0),
+          card_id:
+            typeof u.card_id === 'number' ? u.card_id : Number(u.card_id?.value ?? u.card_id),
+          perm_attack:
+            typeof u.perm_attack === 'number' ? u.perm_attack : Number(u.perm_attack || 0),
+          perm_health:
+            typeof u.perm_health === 'number' ? u.perm_health : Number(u.perm_health || 0),
         }));
 
         const battleOutput = engine.resolve_battle_p2p(
@@ -1380,7 +1391,12 @@ const GENESIS_STYLE_ITEMS: [number, string, string, string][] = [
 ];
 
 /** Deterministic item ID for a given target address + style item. */
-function styleItemId(targetAddress: string, collectionId: number, type: string, name: string): number {
+function styleItemId(
+  targetAddress: string,
+  collectionId: number,
+  type: string,
+  name: string
+): number {
   const idSeed = targetAddress + collectionId + type + name;
   let hash = 0;
   for (let i = 0; i < idSeed.length; i++) {

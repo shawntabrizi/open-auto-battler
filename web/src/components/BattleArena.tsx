@@ -171,9 +171,7 @@ function computeBoardState(
       case 'AbilityDestroy': {
         const { target_instance_id } = event.payload;
         const update = (board: UnitView[]) =>
-          board.map((u) =>
-            u.instance_id === target_instance_id ? { ...u, health: 0 } : u
-          );
+          board.map((u) => (u.instance_id === target_instance_id ? { ...u, health: 0 } : u));
         player = update(player);
         enemy = update(enemy);
         break;

@@ -12,11 +12,7 @@ const TX_TIMEOUT_MS = 30_000; // 30 seconds
  *
  * All existing callers continue to receive a Promise that resolves on finalization.
  */
-export function submitTx(
-  tx: any,
-  signer: any,
-  label: string,
-): Promise<any> {
+export function submitTx(tx: any, signer: any, label: string): Promise<any> {
   console.log(`[tx] Submitting: ${label}`);
 
   const account = useArenaStore.getState().selectedAccount;
@@ -82,7 +78,8 @@ export function submitTx(
                 (e: any) => e.type === 'System' && e.value?.type === 'ExtrinsicFailed'
               );
               if (failedEvent) {
-                const dispatchError = failedEvent.value?.value?.dispatch_error ?? failedEvent.value?.value;
+                const dispatchError =
+                  failedEvent.value?.value?.dispatch_error ?? failedEvent.value?.value;
                 const msg = formatDispatchError(dispatchError);
                 console.error(`[tx] Dispatch error in ${label}:`, msg);
                 toast.error(`${label}: ${msg}`);

@@ -7,17 +7,18 @@ interface SlideIframeProps {
   requireFullscreen?: boolean;
 }
 
-export function SlideIframe({ src, title, height = '30vh', requireFullscreen = true }: SlideIframeProps) {
+export function SlideIframe({
+  src,
+  title,
+  height = '30vh',
+  requireFullscreen = true,
+}: SlideIframeProps) {
   const [fullscreen, setFullscreen] = useState(false);
 
   if (fullscreen) {
     return (
       <div className="fixed inset-0 z-50 bg-black">
-        <iframe
-          src={src}
-          className="w-full h-full border-0"
-          title={title}
-        />
+        <iframe src={src} className="w-full h-full border-0" title={title} />
         <button
           onClick={() => setFullscreen(false)}
           className="absolute top-3 right-3 px-3 py-1.5 bg-gray-800/80 hover:bg-gray-700 text-white text-sm rounded-lg border border-gray-600 backdrop-blur-sm transition-colors"
@@ -30,11 +31,7 @@ export function SlideIframe({ src, title, height = '30vh', requireFullscreen = t
 
   return (
     <div className="relative w-full" style={{ height }}>
-      <iframe
-        src={src}
-        className="w-full h-full border-0 rounded-lg"
-        title={title}
-      />
+      <iframe src={src} className="w-full h-full border-0 rounded-lg" title={title} />
       {requireFullscreen && (
         <div
           onClick={() => setFullscreen(true)}

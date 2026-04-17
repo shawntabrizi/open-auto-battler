@@ -314,104 +314,104 @@ export function Arena() {
                   : null;
 
               return Array.from({ length: 5 }).map((_, displayIndex) => {
-              const arrayIndex = 4 - displayIndex;
-              const unit = view.board[arrayIndex];
-              const slotId = `board-slot-${arrayIndex}`;
+                const arrayIndex = 4 - displayIndex;
+                const unit = view.board[arrayIndex];
+                const slotId = `board-slot-${arrayIndex}`;
 
-              const slotAnim = slotAnimations.get(arrayIndex);
-              let animClass = '';
+                const slotAnim = slotAnimations.get(arrayIndex);
+                let animClass = '';
 
-              if (slotAnim === 'placed') {
-                animClass = 'animate-card-land';
-              }
-
-              // CSS transform shifting: compute shift in array-index space,
-              // negate because display order is reversed from array order
-              let shift = 0;
-              if (dragShift) {
-                if (handInsertShiftMap) {
-                  shift = handInsertShiftMap.get(arrayIndex) ?? 0;
-                } else {
-                  // Board-rearrange shift
-                  shift = computeSlotShift(arrayIndex, dragShift.source, dragShift.target);
+                if (slotAnim === 'placed') {
+                  animClass = 'animate-card-land';
                 }
-              }
-              const shiftPx = shift * -slotStride;
 
-              return (
-                <div
-                  key={slotId}
-                  className="flex-1 min-w-0 h-full flex items-center justify-center overflow-visible"
-                  style={{ containerType: 'size' }}
-                >
+                // CSS transform shifting: compute shift in array-index space,
+                // negate because display order is reversed from array order
+                let shift = 0;
+                if (dragShift) {
+                  if (handInsertShiftMap) {
+                    shift = handInsertShiftMap.get(arrayIndex) ?? 0;
+                  } else {
+                    // Board-rearrange shift
+                    shift = computeSlotShift(arrayIndex, dragShift.source, dragShift.target);
+                  }
+                }
+                const shiftPx = shift * -slotStride;
+
+                return (
                   <div
-                    className="relative aspect-[3/4]"
-                    style={{ width: 'min(100cqw, calc(100cqh * 3 / 4))' }}
+                    key={slotId}
+                    className="flex-1 min-w-0 h-full flex items-center justify-center overflow-visible"
+                    style={{ containerType: 'size' }}
                   >
-                    <DroppableBoardSlot id={slotId}>
-                      {({ isOver }) => (
-                        <div className="relative w-full h-full">
-                          {/* Exit phantom — card that was just removed, animating out */}
-                          {exitingCards.has(arrayIndex) && (
-                            <div className="animate-card-exit absolute inset-0 z-10 pointer-events-none">
-                              <UnitCard
-                                card={exitingCards.get(arrayIndex)!}
-                                showCost={false}
-                                showBurn={false}
-                                enableTilt={false}
-                                enableWobble={false}
-                              />
-                            </div>
-                          )}
-                          {/* Current slot state */}
-                          {unit ? (
-                            <div className="relative w-full h-full">
-                              <div className="absolute inset-0">
-                                <EmptySlot isTarget={false} />
-                              </div>
-                              <div
-                                className={`relative z-10 w-full h-full ${animClass} ${isOver && !animClass && !shiftPx ? 'swap-target' : ''}`}
-                                style={{
-                                  transform: shiftPx ? `translateX(${shiftPx}px)` : undefined,
-                                  transition: dragShift ? 'transform 0.2s ease-out' : 'none',
-                                }}
-                              >
-                                <DraggableCard
-                                  id={`board-${arrayIndex}`}
-                                  card={unit}
+                    <div
+                      className="relative aspect-[3/4]"
+                      style={{ width: 'min(100cqw, calc(100cqh * 3 / 4))' }}
+                    >
+                      <DroppableBoardSlot id={slotId}>
+                        {({ isOver }) => (
+                          <div className="relative w-full h-full">
+                            {/* Exit phantom — card that was just removed, animating out */}
+                            {exitingCards.has(arrayIndex) && (
+                              <div className="animate-card-exit absolute inset-0 z-10 pointer-events-none">
+                                <UnitCard
+                                  card={exitingCards.get(arrayIndex)!}
                                   showCost={false}
-                                  showBurn={true}
-                                  isSelected={
-                                    selection?.type === 'board' && selection.index === arrayIndex
-                                  }
-                                  onClick={() => handleBoardSlotClick(arrayIndex)}
+                                  showBurn={false}
+                                  enableTilt={false}
                                   enableWobble={false}
                                 />
                               </div>
-                            </div>
-                          ) : (
-                            <EmptySlot
-                              onClick={() => handleBoardSlotClick(arrayIndex)}
-                              isTarget={canPlaceSelectedHand}
-                              isHovered={isOver}
-                            />
-                          )}
-                        </div>
-                      )}
-                    </DroppableBoardSlot>
-                    <div
-                      className={`board-helper board-helper--positions hidden lg:flex absolute left-1/2 top-full mt-2 -translate-x-1/2 w-[92%] justify-center rounded-full border px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm ${
-                        arrayIndex === 0
-                          ? 'theme-pill border-accent/30 bg-accent/10 text-accent font-bold'
-                          : 'theme-pill border-base-800/70 bg-surface-dark/45 text-base-300/80'
-                      }`}
-                    >
-                      {arrayIndex === 0 ? 'Front' : `${arrayIndex + 1}`}
+                            )}
+                            {/* Current slot state */}
+                            {unit ? (
+                              <div className="relative w-full h-full">
+                                <div className="absolute inset-0">
+                                  <EmptySlot isTarget={false} />
+                                </div>
+                                <div
+                                  className={`relative z-10 w-full h-full ${animClass} ${isOver && !animClass && !shiftPx ? 'swap-target' : ''}`}
+                                  style={{
+                                    transform: shiftPx ? `translateX(${shiftPx}px)` : undefined,
+                                    transition: dragShift ? 'transform 0.2s ease-out' : 'none',
+                                  }}
+                                >
+                                  <DraggableCard
+                                    id={`board-${arrayIndex}`}
+                                    card={unit}
+                                    showCost={false}
+                                    showBurn={true}
+                                    isSelected={
+                                      selection?.type === 'board' && selection.index === arrayIndex
+                                    }
+                                    onClick={() => handleBoardSlotClick(arrayIndex)}
+                                    enableWobble={false}
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <EmptySlot
+                                onClick={() => handleBoardSlotClick(arrayIndex)}
+                                isTarget={canPlaceSelectedHand}
+                                isHovered={isOver}
+                              />
+                            )}
+                          </div>
+                        )}
+                      </DroppableBoardSlot>
+                      <div
+                        className={`board-helper board-helper--positions hidden lg:flex absolute left-1/2 top-full mt-2 -translate-x-1/2 w-[92%] justify-center rounded-full border px-2 py-0.5 text-center text-[0.5rem] lg:text-xs font-heading uppercase tracking-wider shadow-[0_4px_14px_rgba(0,0,0,0.22)] backdrop-blur-sm ${
+                          arrayIndex === 0
+                            ? 'theme-pill border-accent/30 bg-accent/10 text-accent font-bold'
+                            : 'theme-pill border-base-800/70 bg-surface-dark/45 text-base-300/80'
+                        }`}
+                      >
+                        {arrayIndex === 0 ? 'Front' : `${arrayIndex + 1}`}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            });
+                );
+              });
             })()}
           </div>
         </div>

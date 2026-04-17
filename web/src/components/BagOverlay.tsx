@@ -50,7 +50,8 @@ export function BagOverlay() {
   return (
     <div
       className={`fixed ${
-        (showGameCardDetailsPanel === 'always' || (showGameCardDetailsPanel === 'auto' && !isNarrowScreen))
+        showGameCardDetailsPanel === 'always' ||
+        (showGameCardDetailsPanel === 'auto' && !isNarrowScreen)
           ? 'left-[11rem] lg:left-80'
           : 'left-0'
       } right-0 top-0 bottom-0 bg-black/95 lg:bg-black/90 backdrop-blur-md flex flex-col p-3 lg:p-8 overflow-hidden animate-in fade-in duration-300`}

@@ -65,11 +65,13 @@ export function SettingsPage() {
                   </div>
                 </div>
                 <div className="flex gap-1.5">
-                  {([
-                    { value: 'always', label: 'Always' },
-                    { value: 'auto', label: 'Auto' },
-                    { value: 'never', label: 'Never' },
-                  ] as const).map(({ value, label }) => (
+                  {(
+                    [
+                      { value: 'always', label: 'Always' },
+                      { value: 'auto', label: 'Auto' },
+                      { value: 'never', label: 'Never' },
+                    ] as const
+                  ).map(({ value, label }) => (
                     <button
                       key={value}
                       onClick={() => setCardDetailsPanelMode(value)}
