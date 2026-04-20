@@ -154,9 +154,7 @@ export function VersusPage() {
                   </h3>
                   <p className="text-[10px] lg:text-sm text-base-400">
                     Joining game:{' '}
-                    <span className="font-mono text-mana">
-                      {joinIdFromUrl.slice(0, 12)}...
-                    </span>
+                    <span className="font-mono text-mana">{joinIdFromUrl.slice(0, 12)}...</span>
                   </p>
                 </div>
               ) : (

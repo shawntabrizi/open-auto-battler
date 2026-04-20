@@ -35,9 +35,7 @@ export function ConstructedPage() {
                 BATTLE
               </h2>
               <p className="theme-secondary-text mt-0.5 text-xs lg:text-sm">
-                {hasSelection
-                  ? 'Start a constructed run'
-                  : 'Select a complete deck first'}
+                {hasSelection ? 'Start a constructed run' : 'Select a complete deck first'}
               </p>
             </Link>
 

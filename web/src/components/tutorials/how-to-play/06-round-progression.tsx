@@ -7,14 +7,20 @@ export default function RoundProgression() {
           <table className="text-xs lg:text-sm border-collapse">
             <thead>
               <tr>
-                <th className="px-2 lg:px-3 py-1 text-accent font-bold border-b border-base-700 text-left">Round</th>
-                <th className="px-2 lg:px-3 py-1 text-mana font-bold border-b border-base-700 text-left">Mana</th>
+                <th className="px-2 lg:px-3 py-1 text-accent font-bold border-b border-base-700 text-left">
+                  Round
+                </th>
+                <th className="px-2 lg:px-3 py-1 text-mana font-bold border-b border-base-700 text-left">
+                  Mana
+                </th>
               </tr>
             </thead>
             <tbody>
               {Array.from({ length: 8 }, (_, i) => (
                 <tr key={i}>
-                  <td className="px-2 lg:px-3 py-0.5 text-base-400 font-mono text-center">{i < 7 ? i + 1 : '8+'}</td>
+                  <td className="px-2 lg:px-3 py-0.5 text-base-400 font-mono text-center">
+                    {i < 7 ? i + 1 : '8+'}
+                  </td>
                   <td className="px-2 lg:px-3 py-0.5 text-white font-mono text-center">{i + 3}</td>
                 </tr>
               ))}
@@ -28,22 +34,23 @@ export default function RoundProgression() {
             Round Progression
           </h2>
           <p>
-            Units on your board <span className="text-white font-bold">carry over</span> between rounds.
-            This means you can continue to use them for future battles,
-            or <span className="text-defeat font-bold">burn</span> them for future resources!
+            Units on your board <span className="text-white font-bold">carry over</span> between
+            rounds. This means you can continue to use them for future battles, or{' '}
+            <span className="text-defeat font-bold">burn</span> them for future resources!
           </p>
           <p>
-            Cards you don't use go <span className="text-positive font-bold">back into your bag</span> and
-            can be drawn again later.
-            Burned cards are <span className="text-defeat font-bold">gone for good</span>,
-            so you can thin your bag to control and improve your future shop draws.
+            Cards you don't use go{' '}
+            <span className="text-positive font-bold">back into your bag</span> and can be drawn
+            again later. Burned cards are{' '}
+            <span className="text-defeat font-bold">gone for good</span>, so you can thin your bag
+            to control and improve your future shop draws.
           </p>
           <p>
             You start with a limit of <span className="text-mana font-bold">3 mana</span>. Each{' '}
-            <span className="text-accent font-bold">round</span>, your mana limit grows
-            by <span className="text-mana font-bold">1</span>, up to a maximum
-            of <span className="text-mana font-bold">10</span>, letting you
-            play stronger cards as the game goes on.
+            <span className="text-accent font-bold">round</span>, your mana limit grows by{' '}
+            <span className="text-mana font-bold">1</span>, up to a maximum of{' '}
+            <span className="text-mana font-bold">10</span>, letting you play stronger cards as the
+            game goes on.
           </p>
         </div>
       </div>

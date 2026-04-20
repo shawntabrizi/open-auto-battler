@@ -4,13 +4,29 @@
  */
 
 import { isInHost } from './hostEnvironment';
+import { ignoreError } from '../utils/safe';
+import type { ResolvedThemeDefinition } from '../theme/themes';
+import type { NftItem } from '../store/customizationStore';
+
+interface HostStorage {
+  readString: (key: string) => Promise<string | null | undefined>;
+  writeString: (key: string, value: string) => Promise<void>;
+  readJSON: <T = unknown>(key: string) => Promise<T | null | undefined>;
+  writeJSON: (key: string, value: unknown) => Promise<void>;
+  clear: (key: string) => Promise<void>;
+}
+
+interface StoredThemeData {
+  theme?: ResolvedThemeDefinition;
+  nft?: NftItem | null;
+}
 
 // Lazy import to avoid loading product-sdk in standalone mode
-let _hostLocalStorage: any = null;
-async function getHostStorage() {
+let _hostLocalStorage: HostStorage | null = null;
+async function getHostStorage(): Promise<HostStorage> {
   if (!_hostLocalStorage) {
     const sdk = await import('@novasamatech/product-sdk');
-    _hostLocalStorage = sdk.hostLocalStorage;
+    _hostLocalStorage = sdk.hostLocalStorage as HostStorage;
   }
   return _hostLocalStorage;
 }
@@ -34,18 +50,20 @@ export const storageService = {
       try {
         const hs = await getHostStorage();
         await hs.writeString(key, value);
-      } catch {}
+      } catch (error) {
+        ignoreError(error);
+      }
       return;
     }
     localStorage.setItem(key, value);
   },
 
-  async readJSON<T = any>(key: string): Promise<T | null> {
+  async readJSON<T = unknown>(key: string): Promise<T | null> {
     if (isInHost()) {
       try {
         const hs = await getHostStorage();
         const val = await hs.readJSON(key);
-        return val ?? null;
+        return (val ?? null) as T | null;
       } catch {
         return null;
       }
@@ -58,17 +76,21 @@ export const storageService = {
     }
   },
 
-  async writeJSON(key: string, value: any): Promise<void> {
+  async writeJSON(key: string, value: unknown): Promise<void> {
     if (isInHost()) {
       try {
         const hs = await getHostStorage();
         await hs.writeJSON(key, value);
-      } catch {}
+      } catch (error) {
+        ignoreError(error);
+      }
       return;
     }
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch {}
+    } catch (error) {
+      ignoreError(error);
+    }
   },
 
   async remove(key: string): Promise<void> {
@@ -76,7 +98,9 @@ export const storageService = {
       try {
         const hs = await getHostStorage();
         await hs.clear(key);
-      } catch {}
+      } catch (error) {
+        ignoreError(error);
+      }
       return;
     }
     localStorage.removeItem(key);
@@ -116,17 +140,18 @@ export async function initHostStorage(): Promise<void> {
     storageService.readJSON<boolean>('showBalance'),
     storageService.readJSON<number>('defaultBattleSpeed'),
     storageService.readJSON<boolean>('reducedAnimations'),
-    storageService.readJSON<any>('oab-selected-theme'),
+    storageService.readJSON<StoredThemeData>('oab-selected-theme'),
     storageService.readString('oab-logged-in'),
   ]);
 
   if (endpoint) useSettingsStore.setState({ endpoint });
   if (selectedSet !== null) useSettingsStore.setState({ selectedSetId: Number(selectedSet) });
 
-  const gameUpdates: Record<string, any> = {};
+  const gameUpdates: Record<string, unknown> = {};
   if (showRawJson !== null) gameUpdates.showRawJson = showRawJson;
   if (showCardNames !== null) gameUpdates.showCardNames = showCardNames;
-  if (showGameCardDetailsPanel !== null) gameUpdates.showGameCardDetailsPanel = showGameCardDetailsPanel;
+  if (showGameCardDetailsPanel !== null)
+    gameUpdates.showGameCardDetailsPanel = showGameCardDetailsPanel;
   if (showBoardHelper !== null) gameUpdates.showBoardHelper = showBoardHelper;
   if (showAddress !== null) gameUpdates.showAddress = showAddress;
   if (showBalance !== null) gameUpdates.showBalance = showBalance;

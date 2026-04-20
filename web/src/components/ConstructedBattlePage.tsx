@@ -131,7 +131,10 @@ export function ConstructedBattlePage() {
 
   const getPreviewCards = (cardIds: number[]): CardView[] => {
     const unique = [...new Set(cardIds)];
-    return unique.slice(0, 5).map((id) => cardLookup.get(id)).filter(Boolean) as CardView[];
+    return unique
+      .slice(0, 5)
+      .map((id) => cardLookup.get(id))
+      .filter(Boolean) as CardView[];
   };
 
   const handleStart = async () => {
@@ -140,7 +143,7 @@ export function ConstructedBattlePage() {
       await startConstructedGame(selectedDeck.cards);
     } catch (err) {
       console.error('Failed to start constructed game:', err);
-      toast.error(`Failed to start: ${err}`);
+      toast.error(`Failed to start: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 

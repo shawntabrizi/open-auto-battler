@@ -3,7 +3,11 @@ import { createClient, Binary, getTypedCodecs } from 'polkadot-api';
 import { getWsProvider } from 'polkadot-api/ws-provider';
 import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
 import { getInjectedExtensions, connectInjectedExtension } from 'polkadot-api/pjs-signer';
-import { injectSpektrExtension, createPapiProvider, createAccountsProvider } from '@novasamatech/product-sdk';
+import {
+  injectSpektrExtension,
+  createPapiProvider,
+  createAccountsProvider,
+} from '@novasamatech/product-sdk';
 import { isInHost } from '../services/hostEnvironment';
 import { storageService } from '../services/storage';
 import { auto_battle } from '@polkadot-api/descriptors';
@@ -19,10 +23,15 @@ import { getPolkadotSigner } from 'polkadot-api/signer';
 import { AccountId } from '@polkadot-api/substrate-bindings';
 import { createCallArgCoercer } from '../utils/papiCoercion';
 import { initEmojiMap } from '../utils/emoji';
-import { submitTx } from '../utils/tx';
+import { submitTx, type SubmitTxResult } from '../utils/tx';
 import { useSettingsStore } from './settingsStore';
 import type { GameBackend } from '../backends/types';
 import { createPalletBackend } from '../backends/pallet';
+import { ignoreError, isRecord } from '../utils/safe';
+
+// Keep the host-backed provider path available for debugging, but default to
+// direct WS until host transport issues are resolved.
+const ENABLE_HOST_PAPI_PROVIDER = false;
 
 // ============================================================================
 // PAPI-to-serde conversion helpers
@@ -246,8 +255,8 @@ interface ArenaStore {
   connectionError: string | null;
 
   // Account state
-  accounts: any[];
-  selectedAccount: any;
+  accounts: ArenaAccount[];
+  selectedAccount: ArenaAccount | null;
   isLoggedIn: boolean;
   /** True while restoring a previous login session from localStorage */
   isRestoringSession: boolean;
@@ -263,7 +272,7 @@ interface ArenaStore {
   // Actions
   disconnect: () => void;
   connect: () => Promise<boolean>;
-  selectAccount: (account: any) => Promise<void>;
+  selectAccount: (account: ArenaAccount | undefined) => Promise<void>;
   startGame: (set_id?: number) => Promise<void>;
   refreshGameState: (force?: boolean) => Promise<void>;
   submitTurnOnChain: () => Promise<void>;
@@ -305,12 +314,77 @@ interface ArenaStore {
   cardDataCoercer?: ((value: unknown) => any) | null;
 }
 
+export interface ArenaAccount {
+  address: string;
+  name: string;
+  polkadotSigner: unknown;
+  source: string;
+}
+
+type ChainEventRecord = NonNullable<SubmitTxResult['events']>[number];
+type RawOpponentUnit = {
+  card_id?: unknown;
+  perm_attack?: unknown;
+  perm_health?: unknown;
+};
+
+function decodeCompactNumber(value: unknown): number {
+  if (typeof value === 'number') return value;
+  if (isRecord(value) && 'value' in value) {
+    return Number(value.value);
+  }
+  return Number(value ?? 0);
+}
+
+function decodeBigInt(value: unknown): bigint {
+  if (typeof value === 'bigint') return value;
+  if (typeof value === 'number' || typeof value === 'string') {
+    return BigInt(value);
+  }
+  if (isRecord(value) && 'value' in value) {
+    return decodeBigInt(value.value);
+  }
+  return BigInt(0);
+}
+
+function getChainEventPayload(event: ChainEventRecord | undefined): Record<string, unknown> {
+  const payload = event?.value?.value;
+  return isRecord(payload) ? payload : {};
+}
+
+function getOpponentUnits(board: unknown): RawOpponentUnit[] {
+  if (Array.isArray(board)) {
+    return board as RawOpponentUnit[];
+  }
+  if (isRecord(board) && Array.isArray(board.units)) {
+    return board.units as RawOpponentUnit[];
+  }
+  return [];
+}
+
+function normalizeInjectedAccount(
+  source: string,
+  account: {
+    address: string;
+    name?: string;
+    polkadotSigner: unknown;
+    source?: string;
+  }
+): ArenaAccount {
+  return {
+    address: account.address,
+    name: account.name ?? 'Extension Account',
+    polkadotSigner: account.polkadotSigner,
+    source: account.source ?? source,
+  };
+}
+
 /** Convert raw public key bytes to SS58 address (generic substrate prefix 42). */
 const toSs58 = (publicKey: Uint8Array): string => AccountId(42).dec(publicKey);
 
 const LOCAL_ACCOUNTS_KEY = 'oab-local-accounts';
 
-interface StoredLocalAccount {
+export interface StoredLocalAccount {
   name: string;
   mnemonic: string;
 }
@@ -326,10 +400,10 @@ function loadStoredLocalAccounts(): StoredLocalAccount[] {
 }
 
 function saveStoredLocalAccounts(accounts: StoredLocalAccount[]) {
-  storageService.writeJSON(LOCAL_ACCOUNTS_KEY, accounts);
+  void storageService.writeJSON(LOCAL_ACCOUNTS_KEY, accounts);
 }
 
-function deriveAccountFromMnemonic(mnemonic: string, name: string) {
+function deriveAccountFromMnemonic(mnemonic: string, name: string): ArenaAccount {
   const miniSecret = entropyToMiniSecret(mnemonicToEntropy(mnemonic));
   const derive = sr25519CreateDerive(miniSecret);
   const accountId = AccountId(42);
@@ -345,7 +419,7 @@ function deriveAccountFromMnemonic(mnemonic: string, name: string) {
   };
 }
 
-function getLocalAccounts() {
+function getLocalAccounts(): ArenaAccount[] {
   return loadStoredLocalAccounts().map((stored) =>
     deriveAccountFromMnemonic(stored.mnemonic, stored.name)
   );
@@ -354,7 +428,7 @@ function getLocalAccounts() {
 const SHOW_DEV_ACCOUNTS = false;
 const DEV_ACCOUNTS = ['Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Ferdie'];
 
-export const getDevAccounts = () => {
+export const getDevAccounts = (): ArenaAccount[] => {
   const miniSecret = entropyToMiniSecret(mnemonicToEntropy(DEV_PHRASE));
   const derive = sr25519CreateDerive(miniSecret);
   const accountId = AccountId(42);
@@ -437,13 +511,13 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
       const wsEndpoint = useSettingsStore.getState().endpoint;
       const wsProvider = withPolkadotSdkCompat(getWsProvider(wsEndpoint));
 
-      if (isInHost()) {
+      if (isInHost() && ENABLE_HOST_PAPI_PROVIDER) {
         // In host mode, discover genesis hash via WS (allowed in sandbox),
         // then route through host's shared connection for efficiency.
+        let tempClient: any = null;
         try {
-          const tempClient = createClient(wsProvider);
+          tempClient = createClient(wsProvider);
           const chainSpec = await tempClient.getChainSpecData();
-          tempClient.destroy();
           const provider = createPapiProvider(
             chainSpec.genesisHash as `0x${string}`,
             wsProvider // fallback if host doesn't support this chain
@@ -452,21 +526,40 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
         } catch (e) {
           console.warn('Host provider setup failed, falling back to WS:', e);
           client = createClient(wsProvider);
+        } finally {
+          tempClient?.destroy?.();
         }
       } else {
         client = createClient(wsProvider);
       }
 
-      // Subscribe to best blocks — first block confirms connection is live
-      client.bestBlocks$.subscribe((blocks: any[]) => {
-        if (blocks.length > 0) {
+      // Fail fast on transport or metadata issues before hydrating the store.
+      await client.getChainSpecData();
+
+      client.bestBlocks$.subscribe({
+        next: (blocks: any[]) => {
+          if (blocks.length === 0 || get().client !== client) return;
           set({
             blockNumber: blocks[0].number,
-            isConnected: true,
-            isConnecting: false,
             connectionError: null,
           });
-        }
+        },
+        error: (err: unknown) => {
+          if (get().client !== client) return;
+          console.error('Best block subscription failed:', err);
+          client.destroy();
+          set({
+            client: null,
+            api: null,
+            codecs: null,
+            cardDataCoercer: null,
+            isConnected: false,
+            isConnecting: false,
+            isLoggedIn: false,
+            blockNumber: null,
+            connectionError: err instanceof Error ? err.message : String(err),
+          });
+        },
       });
 
       const api = client.getTypedApi(auto_battle);
@@ -478,25 +571,33 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
         'card_data'
       );
 
-      let allAccounts: any[] = [];
+      let allAccounts: ArenaAccount[] = [];
 
       if (isInHost()) {
         // Host mode: use host-managed accounts, suppress dev/local accounts
         try {
           await injectSpektrExtension();
-        } catch {}
+        } catch (error) {
+          ignoreError(error);
+        }
 
         // Get accounts from host via createAccountsProvider
         try {
           const accountsProvider = createAccountsProvider();
           const result = await accountsProvider.getNonProductAccounts();
           if (result.isOk()) {
-            const hostAccounts = result.value.map((acct: any) => ({
-              address: toSs58(acct.publicKey),
-              name: acct.name || 'Host Account',
-              polkadotSigner: accountsProvider.getNonProductAccountSigner(acct),
-              source: 'host' as const,
-            }));
+            const hostAccounts = result.value.map(
+              (acct): ArenaAccount => ({
+                address: toSs58(acct.publicKey),
+                name: acct.name || 'Host Account',
+                polkadotSigner: accountsProvider.getNonProductAccountSigner({
+                  dotNsIdentifier: '',
+                  derivationIndex: 0,
+                  publicKey: acct.publicKey,
+                }),
+                source: 'host' as const,
+              })
+            );
             allAccounts = [...allAccounts, ...hostAccounts];
           }
         } catch (e) {
@@ -509,10 +610,17 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
           for (const ext of extensions) {
             try {
               const pjs = await connectInjectedExtension(ext);
-              allAccounts = [...allAccounts, ...pjs.getAccounts()];
-            } catch {}
+              allAccounts = [
+                ...allAccounts,
+                ...pjs.getAccounts().map((account) => normalizeInjectedAccount(ext, account)),
+              ];
+            } catch (error) {
+              ignoreError(error);
+            }
           }
-        } catch {}
+        } catch (error) {
+          ignoreError(error);
+        }
       } else {
         // Standalone: current flow — dev accounts, local accounts, wallet extensions
         const devAccounts = SHOW_DEV_ACCOUNTS ? getDevAccounts() : [];
@@ -530,7 +638,10 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
           for (const ext of extensions) {
             try {
               const pjs = await connectInjectedExtension(ext);
-              allAccounts = [...allAccounts, ...pjs.getAccounts()];
+              allAccounts = [
+                ...allAccounts,
+                ...pjs.getAccounts().map((account) => normalizeInjectedAccount(ext, account)),
+              ];
             } catch (extErr) {
               console.warn(`Failed to connect extension "${ext}":`, extErr);
             }
@@ -606,12 +717,12 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
   },
 
   selectAccount: async (account) => {
-    set({ selectedAccount: account });
+    set({ selectedAccount: account ?? null });
     // Fetch achievements for the new account
     const { api } = get();
     if (api && account) {
       const { useAchievementStore } = await import('./achievementStore');
-      useAchievementStore.getState().fetchAchievements(api, account.address);
+      void useAchievementStore.getState().fetchAchievements(api, account.address);
     }
     await get().refreshGameState(true);
   },
@@ -859,28 +970,32 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
       const action = codecs.tx.OabConstructed.submit_turn.dec(actionRaw);
 
       const tx = api.tx.OabConstructed.submit_turn(action);
-      const txResult = await submitTx(tx, selectedAccount.polkadotSigner, 'OabConstructed.submit_turn');
+      const txResult = await submitTx(
+        tx,
+        selectedAccount.polkadotSigner,
+        'OabConstructed.submit_turn'
+      );
 
-      const battleEvent = txResult.events.find(
-        (e: any) => e.type === 'OabConstructed' && e.value?.type === 'BattleReported'
+      const battleEvent = txResult.events?.find(
+        (e: ChainEventRecord) => e.type === 'OabConstructed' && e.value?.type === 'BattleReported'
       );
 
       if (battleEvent) {
-        const { battle_seed, opponent_board } = battleEvent.value.value;
+        const battlePayload = getChainEventPayload(battleEvent);
+        const battleSeed = battlePayload.battle_seed;
+        const opponentBoard = battlePayload.opponent_board;
 
-        const rawUnits = Array.isArray(opponent_board)
-          ? opponent_board
-          : opponent_board?.units || [];
-        const opponentUnits = rawUnits.map((u: any) => ({
-          card_id: typeof u.card_id === 'number' ? u.card_id : Number(u.card_id?.value ?? u.card_id),
-          perm_attack: typeof u.perm_attack === 'number' ? u.perm_attack : Number(u.perm_attack || 0),
-          perm_health: typeof u.perm_health === 'number' ? u.perm_health : Number(u.perm_health || 0),
+        const rawUnits = getOpponentUnits(opponentBoard);
+        const opponentUnits = rawUnits.map((u: RawOpponentUnit) => ({
+          card_id: decodeCompactNumber(u.card_id),
+          perm_attack: decodeCompactNumber(u.perm_attack),
+          perm_health: decodeCompactNumber(u.perm_health),
         }));
 
         const battleOutput = engine.resolve_battle_p2p(
           playerBoard,
           opponentUnits,
-          BigInt(battle_seed)
+          decodeBigInt(battleSeed)
         );
 
         useGameStore.setState({
@@ -1004,7 +1119,7 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
       const setEntries = await api.query.OabCardRegistry.CardSets.getEntries();
 
       // Fetch set metadata
-      let metadataMap = new Map<number, string>();
+      const metadataMap = new Map<number, string>();
       try {
         const metaEntries = await api.query.OabCardRegistry.CardSetMetadataStore.getEntries();
         metaEntries.forEach((entry: any) => {
@@ -1180,13 +1295,13 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
     const { selectedAccount } = get();
     if (selectedAccount) {
       set({ isLoggedIn: true });
-      storageService.writeString('oab-logged-in', selectedAccount.address);
+      void storageService.writeString('oab-logged-in', selectedAccount.address);
     }
   },
 
   logout: () => {
     set({ isLoggedIn: false });
-    storageService.remove('oab-logged-in');
+    void storageService.remove('oab-logged-in');
   },
 
   getAccountBalance: async (address: string) => {
@@ -1216,7 +1331,12 @@ const GENESIS_STYLE_ITEMS: [number, string, string, string][] = [
 ];
 
 /** Deterministic item ID for a given target address + style item. */
-function styleItemId(targetAddress: string, collectionId: number, type: string, name: string): number {
+function styleItemId(
+  targetAddress: string,
+  collectionId: number,
+  type: string,
+  name: string
+): number {
   const idSeed = targetAddress + collectionId + type + name;
   let hash = 0;
   for (let i = 0; i < idSeed.length; i++) {

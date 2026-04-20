@@ -29,7 +29,7 @@ function syncRead(key: string): string | null {
 export const useSettingsStore = create<SettingsStore>((set) => ({
   endpoint: syncRead(STORAGE_KEY) || ENDPOINTS.hosted,
   setEndpoint: (url: string) => {
-    storageService.writeString(STORAGE_KEY, url);
+    void storageService.writeString(STORAGE_KEY, url);
     set({ endpoint: url });
   },
   selectedSetId: (() => {
@@ -37,7 +37,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
     return stored !== null ? Number(stored) : 0;
   })(),
   selectSet: (id: number) => {
-    storageService.writeString(SET_STORAGE_KEY, String(id));
+    void storageService.writeString(SET_STORAGE_KEY, String(id));
     set({ selectedSetId: id });
   },
 }));

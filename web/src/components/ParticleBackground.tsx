@@ -79,9 +79,8 @@ export function ParticleBackground() {
       [ar, ag, ab] = hexToRgb(pc.color);
     } else {
       const accentRgb =
-        getComputedStyle(document.documentElement)
-          .getPropertyValue('--color-accent')
-          .trim() || '212 168 67';
+        getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() ||
+        '212 168 67';
       [ar, ag, ab] = accentRgb.split(' ').map(Number);
     }
 

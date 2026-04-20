@@ -78,6 +78,7 @@ pub struct BattleLimits {
     pub next_enemy_index: u16,
 }
 
+#[allow(clippy::result_unit_err)]
 impl BattleLimits {
     pub fn new() -> Self {
         Self {

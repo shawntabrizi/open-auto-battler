@@ -288,7 +288,6 @@ pub mod pallet {
     #[pallet::genesis_config]
     #[derive(frame::prelude::DefaultNoBound)]
     pub struct GenesisConfig<T: Config> {
-        #[expect(clippy::type_complexity)]
         pub _phantom: core::marker::PhantomData<T>,
     }
 
@@ -313,14 +312,14 @@ pub mod pallet {
                         card.shop_abilities
                             .iter()
                             .cloned()
-                            .map(|a| BoundedShopAbility::<T>::from(a))
+                            .map(BoundedShopAbility::<T>::from)
                             .collect(),
                     ),
                     battle_abilities: BoundedVec::truncate_from(
                         card.battle_abilities
                             .iter()
                             .cloned()
-                            .map(|a| BoundedBattleAbility::<T>::from(a))
+                            .map(BoundedBattleAbility::<T>::from)
                             .collect(),
                     ),
                 };
@@ -376,7 +375,7 @@ pub mod pallet {
 
             let card_hash = T::Hashing::hash_of(&card_data);
             ensure!(
-                !UserCardHashes::<T>::contains_key(&card_hash),
+                !UserCardHashes::<T>::contains_key(card_hash),
                 Error::<T>::CardAlreadyExists
             );
 
@@ -394,7 +393,7 @@ pub mod pallet {
                 created_at: frame_system::Pallet::<T>::block_number(),
             };
 
-            UserCardHashes::<T>::insert(&card_hash, card_id);
+            UserCardHashes::<T>::insert(card_hash, card_id);
             CardMetadataStore::<T>::insert(card_id, metadata_entry);
             NextUserCardId::<T>::put(card_id.saturating_add(1));
 
@@ -471,12 +470,12 @@ pub mod pallet {
             let bounded_set = BoundedCardSet::<T>::from(card_set);
             let set_hash = T::Hashing::hash_of(&bounded_set);
             ensure!(
-                !CardSetHashes::<T>::contains_key(&set_hash),
+                !CardSetHashes::<T>::contains_key(set_hash),
                 Error::<T>::SetAlreadyExists
             );
 
             CardSets::<T>::insert(set_id, bounded_set);
-            CardSetHashes::<T>::insert(&set_hash, set_id);
+            CardSetHashes::<T>::insert(set_hash, set_id);
 
             let set_metadata = SetMetadata {
                 name,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useIsSubmitting } from '../store/txStore';
-import { useArenaStore, getDevAccounts } from '../store/arenaStore';
+import { useArenaStore, getDevAccounts, type ArenaAccount } from '../store/arenaStore';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useGameStore } from '../store/gameStore';
 import { Link, useNavigate } from 'react-router-dom';
@@ -82,14 +82,14 @@ export function TournamentLobbyPage() {
   const handleJoinTournament = async () => {
     if (!activeTournament) return;
     await joinTournament(activeTournament.id);
-    navigate('/tournament/game');
+    void navigate('/tournament/game');
   };
 
   const handlePlayAgain = async () => {
     if (!activeTournament) return;
     resetGameOver();
     await joinTournament(activeTournament.id);
-    navigate('/tournament/game');
+    void navigate('/tournament/game');
   };
 
   const handleBackToLobby = () => {
@@ -213,11 +213,11 @@ export function TournamentLobbyPage() {
             <select
               value={selectedAccount?.address}
               onChange={(e) =>
-                selectAccount(accounts.find((a: any) => a.address === e.target.value))
+                selectAccount(accounts.find((a: ArenaAccount) => a.address === e.target.value))
               }
               className="theme-input bg-base-800 border border-white/10 rounded lg:rounded-lg px-1.5 lg:px-2 py-1 lg:py-1.5 text-[10px] lg:text-xs outline-none focus:border-accent/50"
             >
-              {accounts.map((acc: any) => (
+              {accounts.map((acc: ArenaAccount) => (
                 <option key={acc.address} value={acc.address}>
                   {acc.source === 'dev' ? '🛠️ ' : ''}
                   {acc.name} ({acc.address.slice(0, 6)}...)

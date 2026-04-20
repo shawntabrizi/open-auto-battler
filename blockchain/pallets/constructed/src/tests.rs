@@ -13,32 +13,6 @@ fn bounded_deck(deck: Vec<u16>) -> BoundedVec<u16, <Test as oab_common::GameEngi
     BoundedVec::try_from(deck).unwrap()
 }
 
-fn bounded_ghost_board(
-    units: Vec<oab_battle::bounded::GhostBoardUnit>,
-) -> BoundedVec<oab_battle::bounded::GhostBoardUnit, <Test as oab_common::GameEngine>::MaxBoardSize>
-{
-    BoundedVec::try_from(units).unwrap()
-}
-
-fn ghost_unit(card_id: u16) -> oab_battle::bounded::GhostBoardUnit {
-    oab_battle::bounded::GhostBoardUnit {
-        card_id: oab_battle::types::CardId(card_id),
-        perm_attack: 0,
-        perm_health: 0,
-    }
-}
-
-/// Insert a ghost opponent directly into constructed ghost storage for a given bracket.
-fn seed_ghost(round: u8, wins: u8, lives: u8) {
-    let board = oab_common::BoundedGhostBoard::<Test> {
-        units: BoundedVec::try_from(vec![ghost_unit(1)]).unwrap(),
-    };
-    let entry = oab_common::GhostEntry::<Test> { owner: 0, board };
-    crate::GhostOpponents::<Test>::mutate((round, wins, lives), |pool| {
-        pool.try_push(entry).ok();
-    });
-}
-
 // ── Basic game lifecycle ────────────────────────────────────────────
 
 #[test]
@@ -327,8 +301,9 @@ fn test_ghost_stored_after_submit_turn() {
         // The bracket depends on the game state, but round=1 is where we started
         let ghosts = crate::GhostOpponents::<Test>::get((1u8, 0u8, 3u8));
         // With empty board, ghost has no units so it won't be stored
-        // But the turn was processed successfully
-        assert!(ActiveGame::<Test>::get(account_id).is_some() || true);
+        assert!(ghosts.is_empty());
+        // But the turn was processed successfully.
+        assert!(ActiveGame::<Test>::get(account_id).is_some());
     });
 }
 

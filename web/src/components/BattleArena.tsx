@@ -171,9 +171,7 @@ function computeBoardState(
       case 'AbilityDestroy': {
         const { target_instance_id } = event.payload;
         const update = (board: UnitView[]) =>
-          board.map((u) =>
-            u.instance_id === target_instance_id ? { ...u, health: 0 } : u
-          );
+          board.map((u) => (u.instance_id === target_instance_id ? { ...u, health: 0 } : u));
         player = update(player);
         enemy = update(enemy);
         break;
@@ -693,7 +691,17 @@ export function BattleArena({
         break;
       }
     }
-  }, [paused, eventIndex, battleOutput, onEventProcessed, unitMap]);
+  }, [
+    battleOutput,
+    enemyBoard,
+    eventIndex,
+    onEventProcessed,
+    paused,
+    playerBoard,
+    reducedAnimations,
+    resolveCardName,
+    unitMap,
+  ]);
 
   // Auto-advance timer (only in auto mode, waits for splash to finish)
   useEffect(() => {

@@ -35,10 +35,7 @@ export default function PresentationsPage() {
           ))}
         </div>
 
-        <Link
-          to="/"
-          className="inline-block mt-8 text-blue-400 hover:text-blue-300"
-        >
+        <Link to="/" className="inline-block mt-8 text-blue-400 hover:text-blue-300">
           ← Back to Home
         </Link>
       </div>

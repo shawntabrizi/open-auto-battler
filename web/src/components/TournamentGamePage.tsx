@@ -8,13 +8,8 @@ import { useInitGuard } from '../hooks';
 import { Navigate } from 'react-router-dom';
 
 export function TournamentGamePage() {
-  const {
-    isConnected,
-    selectedAccount,
-    fetchSets,
-    fetchCards,
-    hydrateGameEngineFromChainData,
-  } = useArenaStore();
+  const { isConnected, selectedAccount, fetchSets, fetchCards, hydrateGameEngineFromChainData } =
+    useArenaStore();
 
   const { init, engine, view } = useGameStore();
 

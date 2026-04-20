@@ -21,13 +21,16 @@ export default function Goal() {
 
       <div className="text-base-400 text-xs lg:text-sm leading-relaxed max-w-md mx-auto space-y-1">
         <p>
-          <span className="text-positive font-bold">Victory:</span> destroy all enemy units to earn a win.
+          <span className="text-positive font-bold">Victory:</span> destroy all enemy units to earn
+          a win.
         </p>
         <p>
-          <span className="text-defeat font-bold">Defeat:</span> lose all your units and you lose a life.
+          <span className="text-defeat font-bold">Defeat:</span> lose all your units and you lose a
+          life.
         </p>
         <p>
-          <span className="text-base-300 font-bold">Draw:</span> both sides wiped out. No win, no life lost.
+          <span className="text-base-300 font-bold">Draw:</span> both sides wiped out. No win, no
+          life lost.
         </p>
       </div>
     </div>

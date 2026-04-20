@@ -5,9 +5,7 @@ const DISMISSED_KEY = 'oab-desktop-banner-dismissed';
 
 export function DesktopRecommendedBanner() {
   const isMobile = useIsMobile();
-  const [dismissed, setDismissed] = useState(
-    () => sessionStorage.getItem(DISMISSED_KEY) === '1'
-  );
+  const [dismissed, setDismissed] = useState(() => sessionStorage.getItem(DISMISSED_KEY) === '1');
 
   if (!isMobile || dismissed) return null;
 

@@ -571,7 +571,7 @@ impl GameEngine {
             return Err("Not in battle phase".to_string());
         }
 
-        if self.state.wins >= self.state.config.wins_to_victory || self.state.lives <= 0 {
+        if self.state.wins >= self.state.config.wins_to_victory || self.state.lives == 0 {
             self.state.phase = GamePhase::Completed;
             return Ok(());
         }
@@ -620,7 +620,7 @@ impl GameEngine {
     /// Victory condition becomes wins >= lives (symmetric resolution).
     #[wasm_bindgen]
     pub fn new_run_p2p(&mut self, seed: u64, lives: u8) {
-        let lives = lives.max(1).min(10);
+        let lives = lives.clamp(1, 10);
         self.new_run(seed);
         self.state.lives = lives;
         self.state.config.starting_lives = lives;
@@ -677,7 +677,7 @@ impl GameEngine {
         lives: u8,
     ) -> Result<(), String> {
         self.new_run_constructed(seed, deck_js)?;
-        let lives = lives.max(1).min(10);
+        let lives = lives.clamp(1, 10);
         self.state.lives = lives;
         self.state.config.starting_lives = lives;
         self.state.config.wins_to_victory = lives;

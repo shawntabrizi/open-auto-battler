@@ -3,6 +3,7 @@ import { DEFAULT_WARM_THEME, type ResolvedThemeDefinition } from '../theme/theme
 import type { NftItem } from './customizationStore';
 import { storageService } from '../services/storage';
 import { isInHost } from '../services/hostEnvironment';
+import { ignoreError } from '../utils/safe';
 
 const THEME_STORAGE_KEY = 'oab-selected-theme';
 
@@ -24,7 +25,9 @@ function loadCachedTheme(): { theme: ResolvedThemeDefinition; nft: NftItem | nul
         return { theme: parsed.theme, nft: parsed.nft };
       }
     }
-  } catch {}
+  } catch (error) {
+    ignoreError(error);
+  }
   return { theme: DEFAULT_WARM_THEME, nft: null };
 }
 
@@ -34,11 +37,11 @@ export const useThemeStore = create<ThemeStore>((set) => ({
   activeTheme: cached.theme,
   activeThemeNft: cached.nft,
   setNftTheme: (theme, nft) => {
-    storageService.writeJSON(THEME_STORAGE_KEY, { theme, nft });
+    void storageService.writeJSON(THEME_STORAGE_KEY, { theme, nft });
     set({ activeTheme: theme, activeThemeNft: nft });
   },
   resetToWarm: () => {
-    storageService.remove(THEME_STORAGE_KEY);
+    void storageService.remove(THEME_STORAGE_KEY);
     set({ activeTheme: DEFAULT_WARM_THEME, activeThemeNft: null });
   },
 }));

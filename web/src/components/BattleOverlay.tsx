@@ -318,7 +318,9 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
             <div className="relative flex flex-col items-center gap-3 lg:gap-5 pointer-events-auto">
               {/* Radial burst behind banner */}
               {/* result-burst-victory | result-burst-defeat | result-burst-draw */}
-              <div className={`result-burst ${resultKey === 'victory' ? 'result-burst-victory' : resultKey === 'defeat' ? 'result-burst-defeat' : 'result-burst-draw'}`} />
+              <div
+                className={`result-burst ${resultKey === 'victory' ? 'result-burst-victory' : resultKey === 'defeat' ? 'result-burst-defeat' : 'result-burst-draw'}`}
+              />
 
               {/* Result banner */}
               {/* battle-result-victory | battle-result-defeat | battle-result-draw */}

@@ -105,11 +105,6 @@ function IframeViewport({
 }
 
 export function DevPage() {
-  // Prevent recursive iframes
-  if (window !== window.top) {
-    return null;
-  }
-
   const [activePage, setActivePage] = useState('Local Game');
   const [viewports, setViewports] = useState<ViewportConfig[]>([
     { preset: 'iPhone SE' },
@@ -117,6 +112,7 @@ export function DevPage() {
     { preset: 'iPad Pro 11"' },
   ]);
   const [routeVersion, setRouteVersion] = useState(0);
+  const isEmbedded = window !== window.top;
 
   const handlePageChange = useCallback((page: string) => {
     setActivePage(page);
@@ -135,6 +131,11 @@ export function DevPage() {
     if (viewports.length <= 1) return;
     setViewports((prev) => prev.filter((_, i) => i !== index));
   };
+
+  // Prevent recursive iframes
+  if (isEmbedded) {
+    return null;
+  }
 
   const route = PAGES[activePage] ?? '/';
 

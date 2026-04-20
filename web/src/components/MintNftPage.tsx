@@ -4,6 +4,7 @@ import { useIsSubmitting } from '../store/txStore';
 import { toast } from 'react-hot-toast';
 import { uploadToPinata, ipfsUrl } from '../utils/ipfs';
 import { submitTx } from '../utils/tx';
+import { getErrorMessage, ignoreError } from '../utils/safe';
 import { IpfsImage } from './IpfsImage';
 import { TopBar } from './TopBar';
 import { DesktopRecommendedBanner } from './DesktopRecommendedBanner';
@@ -50,7 +51,7 @@ export const MintNftPage: React.FC = () => {
     if (!api || !isConnected) return;
     setCollectionExists(null);
     api.query.Nfts.Collection.getValue(collectionId)
-      .then((val: any) => setCollectionExists(val !== undefined && val !== null))
+      .then((val: unknown) => setCollectionExists(val !== undefined && val !== null))
       .catch(() => setCollectionExists(false));
   }, [api, isConnected, collectionId]);
 
@@ -90,7 +91,9 @@ export const MintNftPage: React.FC = () => {
     setPinataKey(key);
     try {
       localStorage.setItem(PINATA_KEY_STORAGE, key);
-    } catch {}
+    } catch (error) {
+      ignoreError(error);
+    }
   };
 
   const handleFileUpload = async (file: File) => {
@@ -103,8 +106,8 @@ export const MintNftPage: React.FC = () => {
       const hash = await uploadToPinata(file, pinataKey);
       setCid(hash);
       toast.success('Uploaded to IPFS!');
-    } catch (err: any) {
-      toast.error(err.message || 'Upload failed');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Upload failed'));
     } finally {
       setIsUploading(false);
     }

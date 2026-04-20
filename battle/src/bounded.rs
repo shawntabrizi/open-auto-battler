@@ -395,7 +395,7 @@ where
 impl<MaxConditions: Get<u32>> Clone for BoundedBattleAbility<MaxConditions> {
     fn clone(&self) -> Self {
         Self {
-            trigger: self.trigger.clone(),
+            trigger: self.trigger,
             effect: self.effect.clone(),
             conditions: self.conditions.clone(),
             max_triggers: self.max_triggers,
@@ -1433,12 +1433,12 @@ where
                 new_attack,
                 new_health,
             } => Self::AbilityModifyStats {
-                source_instance_id: source_instance_id,
-                target_instance_id: target_instance_id,
-                health_change: health_change,
-                attack_change: attack_change,
-                new_attack: new_attack,
-                new_health: new_health,
+                source_instance_id,
+                target_instance_id,
+                health_change,
+                attack_change,
+                new_attack,
+                new_health,
             },
             crate::battle::CombatEvent::AbilityModifyStatsPermanent {
                 source_instance_id,

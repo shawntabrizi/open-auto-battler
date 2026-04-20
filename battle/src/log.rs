@@ -35,6 +35,7 @@ pub fn debug(label: &str, msg: &str) {
 
 /// Log game state summary
 #[inline(always)]
+#[allow(clippy::too_many_arguments)]
 pub fn state_summary(
     phase: &str,
     round: u8,

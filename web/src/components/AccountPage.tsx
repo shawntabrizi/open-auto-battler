@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useArenaStore } from '../store/arenaStore';
+import { useArenaStore, type ArenaAccount, type StoredLocalAccount } from '../store/arenaStore';
 import { TopBar } from './TopBar';
 
 const formatBalance = (raw: bigint, decimals = 12) =>
@@ -69,7 +69,7 @@ export function AccountPage() {
     if (!selectedAccount || !nameInput.trim()) return;
     // Update the account name in the store's accounts array
     const { accounts } = useArenaStore.getState();
-    const updated = accounts.map((a: any) =>
+    const updated = accounts.map((a: ArenaAccount) =>
       a.address === selectedAccount.address ? { ...a, name: nameInput.trim() } : a
     );
     useArenaStore.setState({
@@ -80,8 +80,10 @@ export function AccountPage() {
     // Persist for local accounts
     if (selectedAccount.source === 'local') {
       try {
-        const stored = JSON.parse(localStorage.getItem('oab-local-accounts') || '[]');
-        const updatedStored = stored.map((s: any) => {
+        const stored = JSON.parse(
+          localStorage.getItem('oab-local-accounts') || '[]'
+        ) as StoredLocalAccount[];
+        const updatedStored = stored.map((s) => {
           // Match by old name since that's the key we have
           if (s.name === selectedAccount.name) {
             return { ...s, name: nameInput.trim() };

@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { Binary } from 'polkadot-api';
 import { useArenaStore } from './arenaStore';
 import { useGameStore } from './gameStore';
-import { submitTx } from '../utils/tx';
+import { submitTx, type SubmitTxResult } from '../utils/tx';
+import { isRecord } from '../utils/safe';
 
 interface TournamentInfo {
   id: number;
@@ -33,6 +34,57 @@ interface PlayerStats {
 interface LeaderboardEntry {
   account: string;
   stats: PlayerStats;
+}
+
+interface TournamentPlayerStatsEntry {
+  keyArgs: unknown[];
+  value: {
+    perfect_runs: unknown;
+    total_wins: unknown;
+    total_games: unknown;
+  };
+}
+
+interface TournamentBattleUnit {
+  card_id?: unknown;
+  perm_attack?: unknown;
+  perm_health?: unknown;
+}
+
+type TournamentEventRecord = NonNullable<SubmitTxResult['events']>[number];
+
+function decodeCompactNumber(value: unknown): number {
+  if (typeof value === 'number') return value;
+  if (isRecord(value) && 'value' in value) {
+    return Number(value.value);
+  }
+  return Number(value ?? 0);
+}
+
+function decodeBigInt(value: unknown): bigint {
+  if (typeof value === 'bigint') return value;
+  if (typeof value === 'number' || typeof value === 'string') {
+    return BigInt(value);
+  }
+  if (isRecord(value) && 'value' in value) {
+    return decodeBigInt(value.value);
+  }
+  return BigInt(0);
+}
+
+function getChainEventPayload(event: TournamentEventRecord | undefined): Record<string, unknown> {
+  const payload = event?.value?.value;
+  return isRecord(payload) ? payload : {};
+}
+
+function getOpponentUnits(board: unknown): TournamentBattleUnit[] {
+  if (Array.isArray(board)) {
+    return board as TournamentBattleUnit[];
+  }
+  if (isRecord(board) && Array.isArray(board.units)) {
+    return board.units as TournamentBattleUnit[];
+  }
+  return [];
 }
 
 interface TournamentStore {
@@ -145,9 +197,11 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     if (!api) return;
 
     try {
-      const entries = await api.query.OabTournament.TournamentPlayerStats.getEntries(tournamentId);
+      const entries = (await api.query.OabTournament.TournamentPlayerStats.getEntries(
+        tournamentId
+      )) as TournamentPlayerStatsEntry[];
       const stats: LeaderboardEntry[] = entries
-        .map((entry: any) => ({
+        .map((entry) => ({
           account: String(entry.keyArgs[1]),
           stats: {
             perfect_runs: Number(entry.value.perfect_runs),
@@ -172,7 +226,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     if (!api || !selectedAccount) return;
 
     // Internal helper to wait for engine to be ready
-    const waitForEngine = async (maxRetries = 10): Promise<any> => {
+    const waitForEngine = async (maxRetries = 10) => {
       for (let i = 0; i < maxRetries; i++) {
         const { engine } = useGameStore.getState();
         if (engine) return engine;
@@ -294,29 +348,27 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       );
 
       // Extract BattleReported event
-      const battleEvent = txResult.events.find(
-        (e: any) => e.type === 'OabTournament' && e.value?.type === 'BattleReported'
+      const battleEvent = txResult.events?.find(
+        (e: TournamentEventRecord) =>
+          e.type === 'OabTournament' && e.value?.type === 'BattleReported'
       );
 
       if (battleEvent) {
-        const { battle_seed, opponent_board } = battleEvent.value.value;
+        const battlePayload = getChainEventPayload(battleEvent);
+        const battleSeed = battlePayload.battle_seed;
+        const opponentBoard = battlePayload.opponent_board;
 
-        const rawUnits = Array.isArray(opponent_board)
-          ? opponent_board
-          : opponent_board?.units || [];
-        const opponentUnits = rawUnits.map((u: any) => ({
-          card_id:
-            typeof u.card_id === 'number' ? u.card_id : Number(u.card_id?.value ?? u.card_id),
-          perm_attack:
-            typeof u.perm_attack === 'number' ? u.perm_attack : Number(u.perm_attack || 0),
-          perm_health:
-            typeof u.perm_health === 'number' ? u.perm_health : Number(u.perm_health || 0),
+        const rawUnits = getOpponentUnits(opponentBoard);
+        const opponentUnits = rawUnits.map((u: TournamentBattleUnit) => ({
+          card_id: decodeCompactNumber(u.card_id),
+          perm_attack: decodeCompactNumber(u.perm_attack),
+          perm_health: decodeCompactNumber(u.perm_health),
         }));
 
         const battleOutput = engine.resolve_battle_p2p(
           playerBoard,
           opponentUnits,
-          BigInt(battle_seed)
+          decodeBigInt(battleSeed)
         );
 
         // After battle animation, refresh state and finalize if game ended
@@ -355,15 +407,17 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       );
 
       // Extract TournamentGameCompleted event for the wins count
-      const completedEvent = txResult.events.find(
-        (e: any) => e.type === 'OabTournament' && e.value?.type === 'TournamentGameCompleted'
+      const completedEvent = txResult.events?.find(
+        (e: TournamentEventRecord) =>
+          e.type === 'OabTournament' && e.value?.type === 'TournamentGameCompleted'
       );
-      const wins = completedEvent ? Number(completedEvent.value.value.wins) : 0;
+      const completedPayload = getChainEventPayload(completedEvent);
+      const wins = completedEvent ? Number(completedPayload.wins ?? 0) : 0;
 
       set({ hasActiveTournamentGame: false, tournamentGameOver: true, lastGameWins: wins });
-      get().fetchPlayerStats();
-      get().fetchAllPlayerStats(get().activeTournament?.id ?? 0);
-      get().fetchActiveTournament();
+      void get().fetchPlayerStats();
+      void get().fetchAllPlayerStats(get().activeTournament?.id ?? 0);
+      void get().fetchActiveTournament();
     } catch (err) {
       console.error('End tournament game failed:', err);
     }
@@ -404,16 +458,24 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
 // ── PAPI-to-serde conversion helpers (copied from arenaStore) ──
 
-function papiEnumStr(v: any): string {
+function papiEnumStr(v: unknown): string {
   if (typeof v === 'string') return v;
-  return v?.type ?? String(v);
+  if (isRecord(v) && typeof v.type === 'string') return v.type;
+  return String(v);
 }
 
-function convertEffect(v: any): any {
+function getValueRecord(v: unknown): Record<string, unknown> {
+  if (isRecord(v) && isRecord(v.value)) {
+    return v.value;
+  }
+  return {};
+}
+
+function convertEffect(v: unknown): unknown {
   if (!v) return v;
-  const result: any = { type: papiEnumStr(v) };
-  const data = v.value;
-  if (data && typeof data === 'object') {
+  const result: Record<string, unknown> = { type: papiEnumStr(v) };
+  const data = getValueRecord(v);
+  if (Object.keys(data).length > 0) {
     for (const [key, val] of Object.entries(data)) {
       if (key === 'target') {
         result[key] = convertTarget(val);
@@ -427,12 +489,12 @@ function convertEffect(v: any): any {
   return result;
 }
 
-function convertTarget(v: any): any {
+function convertTarget(v: unknown): unknown {
   if (!v) return v;
   const tag = papiEnumStr(v);
-  const data = v.value;
-  if (data && typeof data === 'object') {
-    const converted: any = {};
+  const data = getValueRecord(v);
+  if (Object.keys(data).length > 0) {
+    const converted: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(data)) {
       if (
         ['scope', 'target_scope', 'stat', 'source_stat', 'target_stat', 'order', 'op'].includes(key)
@@ -447,12 +509,12 @@ function convertTarget(v: any): any {
   return { type: tag };
 }
 
-function convertMatcher(v: any): any {
+function convertMatcher(v: unknown): unknown {
   if (!v) return v;
   const tag = papiEnumStr(v);
-  const data = v.value;
-  if (data && typeof data === 'object') {
-    const converted: any = {};
+  const data = getValueRecord(v);
+  if (Object.keys(data).length > 0) {
+    const converted: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(data)) {
       if (key === 'target') {
         converted[key] = convertTarget(val);
@@ -469,28 +531,39 @@ function convertMatcher(v: any): any {
   return { type: tag };
 }
 
-function convertCondition(v: any): any {
+function convertCondition(v: unknown): unknown {
   if (!v) return v;
   const tag = papiEnumStr(v);
+  const data = isRecord(v) ? v.value : undefined;
   if (tag === 'Is') {
-    return { type: 'Is', data: convertMatcher(v.value) };
+    return { type: 'Is', data: convertMatcher(data) };
   }
   if (tag === 'AnyOf') {
-    return { type: 'AnyOf', data: (v.value || []).map(convertMatcher) };
+    return { type: 'AnyOf', data: (Array.isArray(data) ? data : []).map(convertMatcher) };
   }
   return { type: tag };
 }
 
-function convertAbility(a: any): any {
+function convertAbility(a: unknown): unknown {
+  if (!isRecord(a)) {
+    return {
+      trigger: 'Unknown',
+      effect: undefined,
+      conditions: [],
+      max_triggers: null,
+    };
+  }
   return {
     trigger: papiEnumStr(a.trigger),
     effect: convertEffect(a.effect),
-    conditions: (a.conditions || []).map(convertCondition),
+    conditions: (Array.isArray(a.conditions) ? a.conditions : []).map(convertCondition),
     max_triggers: a.max_triggers ?? null,
   };
 }
 
-function buildBlockchainCardNameMap(cards: any[]): Record<number, string> {
+function buildBlockchainCardNameMap(
+  cards: Array<{ id: number; metadata?: { name?: string } | null }>
+): Record<number, string> {
   return Object.fromEntries(
     cards.map((card) => [card.id, card.metadata?.name || `Card #${card.id}`])
   );

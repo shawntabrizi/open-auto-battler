@@ -7,9 +7,7 @@ const NARROW_BREAKPOINT = '(max-width: 640px)';
  * This naturally detects portrait phone screens vs landscape/tablet/desktop.
  */
 export function useIsNarrowScreen(): boolean {
-  const [isNarrow, setIsNarrow] = useState(
-    () => window.matchMedia(NARROW_BREAKPOINT).matches
-  );
+  const [isNarrow, setIsNarrow] = useState(() => window.matchMedia(NARROW_BREAKPOINT).matches);
 
   useEffect(() => {
     const mql = window.matchMedia(NARROW_BREAKPOINT);

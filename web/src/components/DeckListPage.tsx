@@ -145,13 +145,16 @@ export function DeckListPage() {
 
   const getPreviewCards = (deck: { cards: number[] }): CardView[] => {
     const unique = [...new Set(deck.cards)];
-    return unique.slice(0, 5).map((id) => cardLookup.get(id)).filter(Boolean) as CardView[];
+    return unique
+      .slice(0, 5)
+      .map((id) => cardLookup.get(id))
+      .filter(Boolean) as CardView[];
   };
 
   const handleNewDeck = async () => {
     const deck = createEmptyDeck();
     await saveDeck(deck);
-    navigate(`/constructed/edit/${deck.id}`);
+    void navigate(`/constructed/edit/${deck.id}`);
   };
 
   const handleDelete = async (id: string) => {

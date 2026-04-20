@@ -1,13 +1,12 @@
 import type {
   AnyAbility,
   BattleCondition,
-  BattleEffect,
   BattleMatcher,
   BattleScope,
   BattleTarget,
   CompareOp,
+  ShopAbility,
   ShopCondition,
-  ShopEffect,
   ShopMatcher,
   ShopScope,
   ShopTarget,
@@ -123,14 +122,11 @@ export function formatAbilityTrigger(trigger: string): string {
 }
 
 export function formatAbilityTarget(target: BattleTarget | ShopTarget): string {
-  const data = (target as any).data ?? target;
-
   switch (target.type) {
     case 'All':
-      return describeScope(data.scope);
+      return describeScope(target.data.scope);
     case 'Position': {
-      const scope = data.scope;
-      const index = data.index;
+      const { scope, index } = target.data;
       if (scope === 'SelfUnit') {
         if (index === -1) return 'the unit ahead';
         if (index === 1) return 'the unit behind';
@@ -139,22 +135,25 @@ export function formatAbilityTarget(target: BattleTarget | ShopTarget): string {
       const slot = index === 0 ? 'front' : index === -1 ? 'back' : `slot ${index + 1}`;
       return `the ${slot} ${describeScopeSingular(scope)}`;
     }
-    case 'Random':
-      return `${data.count === 1 ? 'a random' : `${data.count} random`} ${describeScopeSingular(data.scope)}`;
+    case 'Random': {
+      const { count, scope } = target.data;
+      return `${count === 1 ? 'a random' : `${count} random`} ${describeScopeSingular(scope)}`;
+    }
     case 'Standard': {
-      const order = data.order === 'Ascending' ? 'lowest' : 'highest';
-      const count = data.count === 1 ? 'the' : `the ${data.count}`;
-      return `${count} ${order} ${String(data.stat).toLowerCase()} ${describeScopeSingular(data.scope)}`;
+      const { order, count, stat, scope } = target.data;
+      const orderLabel = order === 'Ascending' ? 'lowest' : 'highest';
+      const countLabel = count === 1 ? 'the' : `the ${count}`;
+      return `${countLabel} ${orderLabel} ${String(stat).toLowerCase()} ${describeScopeSingular(scope)}`;
     }
     case 'Adjacent':
-      return `units adjacent to ${describeScope(data.scope)}`;
+      return `units adjacent to ${describeScope(target.data.scope)}`;
     default:
       return 'unknown target';
   }
 }
 
 export function formatAbilityEffect(
-  effect: BattleEffect | ShopEffect,
+  effect: AnyAbility['effect'],
   options: AbilityTextOptions = {}
 ): string {
   switch (effect.type) {
@@ -227,21 +226,25 @@ function formatShopCondition(condition: ShopCondition): string {
   return condition.data.map(formatShopMatcher).join(' or ');
 }
 
+function isShopAbility(ability: AnyAbility): ability is ShopAbility {
+  return (
+    ability.trigger === 'OnBuy' ||
+    ability.trigger === 'OnSell' ||
+    ability.trigger === 'OnShopStart' ||
+    ability.trigger === 'AfterLoss' ||
+    ability.trigger === 'AfterWin' ||
+    ability.trigger === 'AfterDraw'
+  );
+}
+
 function formatAbilityConditions(ability: AnyAbility): string {
   if (ability.conditions.length === 0) {
     return '';
   }
 
-  const text =
-    'trigger' in ability &&
-    (ability.trigger === 'OnBuy' ||
-      ability.trigger === 'OnSell' ||
-      ability.trigger === 'OnShopStart' ||
-      ability.trigger === 'AfterLoss' ||
-      ability.trigger === 'AfterWin' ||
-      ability.trigger === 'AfterDraw')
-      ? (ability.conditions as ShopCondition[]).map(formatShopCondition).join(' and ')
-      : (ability.conditions as BattleCondition[]).map(formatBattleCondition).join(' and ');
+  const text = isShopAbility(ability)
+    ? ability.conditions.map(formatShopCondition).join(' and ')
+    : ability.conditions.map(formatBattleCondition).join(' and ');
 
   return ` if ${text}`;
 }
@@ -291,7 +294,7 @@ export function formatAbilitySummary(
   ability: AnyAbility,
   options: AbilityTextOptions = {}
 ): string {
-  const effect = formatAbilityEffect(ability.effect as BattleEffect | ShopEffect, options);
+  const effect = formatAbilityEffect(ability.effect, options);
   const conditionText = formatAbilityConditions(ability);
   const triggerLimit =
     ability.max_triggers == null
@@ -305,9 +308,7 @@ export function formatAbilitySentence(
   options: AbilityTextOptions = {}
 ): string {
   const trigger = formatTriggerClause(ability.trigger);
-  const effect = lowercaseFirst(
-    formatAbilityEffect(ability.effect as BattleEffect | ShopEffect, options)
-  );
+  const effect = lowercaseFirst(formatAbilityEffect(ability.effect, options));
   const conditionText = formatAbilityConditions(ability);
   const triggerLimit =
     ability.max_triggers == null

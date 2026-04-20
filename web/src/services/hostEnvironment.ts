@@ -5,9 +5,13 @@
 
 export type HostMode = 'desktop-webview' | 'web-iframe' | 'standalone';
 
+type HostMarkedWindow = Window & {
+  __HOST_WEBVIEW_MARK__?: boolean;
+};
+
 function detect(): HostMode {
   if (typeof window === 'undefined') return 'standalone';
-  if ((window as any).__HOST_WEBVIEW_MARK__) return 'desktop-webview';
+  if ((window as HostMarkedWindow).__HOST_WEBVIEW_MARK__) return 'desktop-webview';
   try {
     if (window !== window.top) return 'web-iframe';
   } catch {

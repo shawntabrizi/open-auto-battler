@@ -5,6 +5,7 @@ import {
   useCustomizationStore,
   type CustomizationType,
   type NftItem,
+  type CustomizationSelections,
   type ThemePreviewData,
 } from '../store/customizationStore';
 import { CustomizationPreview } from './CustomizationPreview';
@@ -23,7 +24,7 @@ const CATEGORIES: Record<
     description: string;
     specs: string;
     shape: TileShape;
-    selectionKey: string;
+    selectionKey: keyof CustomizationSelections;
   }
 > = {
   backgrounds: {
@@ -108,7 +109,7 @@ export function CustomizeCategoryPage() {
   }
 
   const filteredNfts = ownedNfts.filter((n) => n.type === cat.type);
-  const selectedNft = (selections as any)[cat.selectionKey] as NftItem | null | undefined;
+  const selectedNft = selections[cat.selectionKey];
 
   const handleSelect = (nft: NftItem) => selectCustomization(cat.type, nft);
   const handleDeselect = () => selectCustomization(cat.type, null);
@@ -171,7 +172,11 @@ export function CustomizeCategoryPage() {
                   imageUrl={nft.type === 'theme' ? undefined : nft.imageUrl}
                   preview={
                     nft.type === 'theme' ? (
-                      <ThemeSwatch data={nft.themePreview} name={nft.name} className="w-full h-full" />
+                      <ThemeSwatch
+                        data={nft.themePreview}
+                        name={nft.name}
+                        className="w-full h-full"
+                      />
                     ) : undefined
                   }
                   subtitle={`#${nft.itemId}`}
@@ -210,7 +215,11 @@ export function CustomizeCategoryPage() {
                   imageUrl={nft.type === 'theme' ? undefined : nft.imageUrl}
                   preview={
                     nft.type === 'theme' ? (
-                      <ThemeSwatch data={nft.themePreview} name={nft.name} className="w-full h-full" />
+                      <ThemeSwatch
+                        data={nft.themePreview}
+                        name={nft.name}
+                        className="w-full h-full"
+                      />
                     ) : undefined
                   }
                   subtitle={`#${nft.itemId}`}
@@ -290,7 +299,15 @@ function NftTile({
 }
 
 /** Renders a mini theme preview from cached preview data. */
-function ThemeSwatch({ data, name, className }: { data?: ThemePreviewData; name: string; className?: string }) {
+function ThemeSwatch({
+  data,
+  name,
+  className,
+}: {
+  data?: ThemePreviewData;
+  name: string;
+  className?: string;
+}) {
   if (!data) {
     return (
       <div className={`${className} flex items-center justify-center`}>
@@ -330,7 +347,14 @@ function ThemeSwatch({ data, name, className }: { data?: ThemePreviewData; name:
 /** Renders the warm (default) theme swatch from built-in data — no fetch needed. */
 function WarmThemeSwatch({ className }: { className?: string }) {
   const b = DEFAULT_WARM_THEME.base;
-  const colors = [b.accent, DEFAULT_WARM_THEME.battleShop.mana, b.positive, b.defeat, b.special, DEFAULT_WARM_THEME.unitCard.cardBurn];
+  const colors = [
+    b.accent,
+    DEFAULT_WARM_THEME.battleShop.mana,
+    b.positive,
+    b.defeat,
+    b.special,
+    DEFAULT_WARM_THEME.unitCard.cardBurn,
+  ];
 
   return (
     <div

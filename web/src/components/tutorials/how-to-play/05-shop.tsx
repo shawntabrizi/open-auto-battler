@@ -63,8 +63,7 @@ export default function Shop() {
         <div className="space-y-2 lg:space-y-3 text-base-300 text-sm lg:text-base leading-relaxed">
           <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white">The Shop Phase</h2>
           <p>
-            Each round starts with the <span className="text-accent font-bold">Shop Phase</span>
-            .
+            Each round starts with the <span className="text-accent font-bold">Shop Phase</span>.
           </p>
           <p>
             You draw <span className="text-white font-bold">5 random cards</span> from your bag into
@@ -79,8 +78,8 @@ export default function Shop() {
             board by spending mana.
           </p>
           <p>
-            Tap a card to select it, then tap an empty board slot to place
-            it. You can also drag cards directly to the board.
+            Tap a card to select it, then tap an empty board slot to place it. You can also drag
+            cards directly to the board.
           </p>
         </div>
       </div>

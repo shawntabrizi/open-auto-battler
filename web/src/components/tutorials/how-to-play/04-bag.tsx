@@ -23,9 +23,7 @@ export default function Bag() {
 
         {/* Text */}
         <div className="space-y-2 lg:space-y-3 text-base-300 text-sm lg:text-base leading-relaxed">
-          <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white">
-            Your Bag
-          </h2>
+          <h2 className="text-2xl lg:text-3xl font-heading font-bold text-white">Your Bag</h2>
           <p>
             At the start of each run, a{' '}
             <span className="text-white font-bold">bag of 50 cards</span> is randomly generated for
@@ -33,8 +31,8 @@ export default function Bag() {
           </p>
           <p>
             Each round, you draw cards from this bag into your hand. The bag is your{' '}
-            <span className="text-accent font-bold">entire arsenal</span> for the run. Every
-            card you'll ever see comes from it.
+            <span className="text-accent font-bold">entire arsenal</span> for the run. Every card
+            you'll ever see comes from it.
           </p>
           <p>
             Check your bag early! Knowing what's inside lets you{' '}

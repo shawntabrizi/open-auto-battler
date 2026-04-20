@@ -59,7 +59,8 @@ export const useConstructedStore = create<ConstructedStore>((set, get) => ({
     const { decks } = get();
     const idx = decks.findIndex((d) => d.id === deck.id);
     const updated = { ...deck, updatedAt: Date.now() };
-    const next = idx >= 0 ? decks.map((d) => (d.id === deck.id ? updated : d)) : [...decks, updated];
+    const next =
+      idx >= 0 ? decks.map((d) => (d.id === deck.id ? updated : d)) : [...decks, updated];
     set({ decks: next });
     await storageService.writeJSON(DECKS_STORAGE_KEY, next);
   },
@@ -76,9 +77,9 @@ export const useConstructedStore = create<ConstructedStore>((set, get) => ({
   selectDeck: (id: string | null) => {
     set({ selectedDeckId: id });
     if (id) {
-      storageService.writeString(SELECTED_DECK_KEY, id);
+      void storageService.writeString(SELECTED_DECK_KEY, id);
     } else {
-      storageService.remove(SELECTED_DECK_KEY);
+      void storageService.remove(SELECTED_DECK_KEY);
     }
   },
 
