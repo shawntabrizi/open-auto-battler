@@ -834,7 +834,9 @@ export const useArenaStore = create<ArenaStore>((set, get) => ({
         const localEndEvent = battleOutput.events.find((e: any) => e.type === 'BattleEnd');
         const localResult = localEndEvent?.payload?.result;
         if (localResult && localResult !== turnResult.result) {
-          console.warn(`Battle result mismatch! Chain: ${turnResult.result}, Local: ${localResult}`);
+          console.warn(
+            `Battle result mismatch! Chain: ${turnResult.result}, Local: ${localResult}`
+          );
         }
       }
 

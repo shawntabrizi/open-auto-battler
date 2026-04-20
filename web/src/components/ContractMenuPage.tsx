@@ -6,9 +6,17 @@ import { useState } from 'react';
 /** Contract mode main menu — connect wallet, select account, and choose game mode. */
 export function ContractMenuPage() {
   const {
-    isConnected, isConnecting, connect, disconnect, connectionError,
-    rpcUrl, contractAddress, setConfig,
-    accounts, selectedAccount, selectAccount,
+    isConnected,
+    isConnecting,
+    connect,
+    disconnect,
+    connectionError,
+    rpcUrl,
+    contractAddress,
+    setConfig,
+    accounts,
+    selectedAccount,
+    selectAccount,
   } = useContractStore();
   const [editRpc, setEditRpc] = useState(rpcUrl);
   const [editContract, setEditContract] = useState(contractAddress);
@@ -21,8 +29,8 @@ export function ContractMenuPage() {
           CONTRACT MODE
         </h1>
         <p className="text-base-400 text-sm max-w-md text-center">
-          Play on a PolkaVM smart contract via Ethereum JSON-RPC.
-          {' '}Connects to MetaMask if available, otherwise uses dev accounts.
+          Play on a PolkaVM smart contract via Ethereum JSON-RPC. Connects to MetaMask if available,
+          otherwise uses dev accounts.
         </p>
 
         {!isConnected ? (
@@ -93,18 +101,22 @@ export function ContractMenuPage() {
                           : 'border-base-700 bg-base-900 text-base-400 hover:border-base-500 hover:text-base-200'
                       }`}
                     >
-                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                        isSelected ? 'bg-accent' : 'bg-base-700'
-                      }`} />
+                      <div
+                        className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                          isSelected ? 'bg-accent' : 'bg-base-700'
+                        }`}
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-sm">{account.name}</div>
                         <div className="font-mono text-xs text-base-500 truncate">{short}</div>
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                        account.source === 'extension'
-                          ? 'bg-purple-500/20 text-purple-300'
-                          : 'bg-blue-500/20 text-blue-300'
-                      }`}>
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full ${
+                          account.source === 'extension'
+                            ? 'bg-purple-500/20 text-purple-300'
+                            : 'bg-blue-500/20 text-blue-300'
+                        }`}
+                      >
                         {account.source === 'extension' ? 'MetaMask' : 'Dev'}
                       </span>
                     </button>

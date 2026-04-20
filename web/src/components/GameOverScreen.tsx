@@ -11,7 +11,11 @@ interface GameOverScreenProps {
   onNewRun?: () => Promise<void> | void;
 }
 
-export function GameOverScreen({ backTo = '/', backLabel = 'Menu', onNewRun }: GameOverScreenProps = {}) {
+export function GameOverScreen({
+  backTo = '/',
+  backLabel = 'Menu',
+  onNewRun,
+}: GameOverScreenProps = {}) {
   const { view, newRun, winsToVictory } = useGameStore();
   const { chainState, endGame } = useArenaStore();
   const isSubmitting = useIsSubmitting();

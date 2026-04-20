@@ -8,7 +8,14 @@
  */
 
 import { Binary } from 'polkadot-api';
-import type { GameBackend, TurnResult, GameStateRaw, CardData, SetData, GhostBoardUnit } from '../types';
+import type {
+  GameBackend,
+  TurnResult,
+  GameStateRaw,
+  CardData,
+  SetData,
+  GhostBoardUnit,
+} from '../types';
 import { submitTx } from '../../utils/tx';
 
 // ── Ghost opponent helpers (moved from arenaStore) ───────────────────────────
@@ -17,9 +24,12 @@ function normalizeGhostBoard(ghost: any): GhostBoardUnit[] {
   const board = ghost?.board ?? ghost;
   const rawUnits = Array.isArray(board) ? board : board?.units || [];
   return rawUnits.map((unit: any) => ({
-    card_id: typeof unit.card_id === 'number' ? unit.card_id : Number(unit.card_id?.value ?? unit.card_id),
-    perm_attack: typeof unit.perm_attack === 'number' ? unit.perm_attack : Number(unit.perm_attack || 0),
-    perm_health: typeof unit.perm_health === 'number' ? unit.perm_health : Number(unit.perm_health || 0),
+    card_id:
+      typeof unit.card_id === 'number' ? unit.card_id : Number(unit.card_id?.value ?? unit.card_id),
+    perm_attack:
+      typeof unit.perm_attack === 'number' ? unit.perm_attack : Number(unit.perm_attack || 0),
+    perm_health:
+      typeof unit.perm_health === 'number' ? unit.perm_health : Number(unit.perm_health || 0),
   }));
 }
 
@@ -99,11 +109,17 @@ export function createPalletBackend(deps: {
     // Lifecycle managed by arenaStore — these are no-ops here
     async connect() {},
     disconnect() {},
-    get isConnected() { return !!getApi(); },
+    get isConnected() {
+      return !!getApi();
+    },
 
     // Account management handled by arenaStore
-    async getAccounts() { return []; },
-    get selectedAccount() { return getSelectedAccount(); },
+    async getAccounts() {
+      return [];
+    },
+    get selectedAccount() {
+      return getSelectedAccount();
+    },
     selectAccount() {},
 
     // ── Arena game ─────────────────────────────────────────────────────
@@ -140,15 +156,14 @@ export function createPalletBackend(deps: {
       const { battle_seed, opponent_board, result: chainResult } = (battleEvent.value as any).value;
 
       const opponentBoard = normalizeGhostBoard(opponent_board);
-      const resultStr = typeof chainResult === 'string'
-        ? chainResult
-        : (chainResult?.type ?? String(chainResult));
+      const resultStr =
+        typeof chainResult === 'string' ? chainResult : (chainResult?.type ?? String(chainResult));
 
       return {
         battleSeed: BigInt(battle_seed),
         opponentBoard,
         result: resultStr as TurnResult['result'],
-        wins: 0,   // Caller reads from refreshed state
+        wins: 0, // Caller reads from refreshed state
         lives: 0,
         round: 0,
       };
