@@ -129,7 +129,7 @@ export function createPalletBackend(deps: {
       const txResult = await submitTx(tx, account.polkadotSigner, 'OabArena.submit_turn');
 
       // Extract BattleReported event
-      const battleEvent = txResult.events.find(
+      const battleEvent = txResult.events?.find(
         (e: any) => e.type === 'OabArena' && e.value?.type === 'BattleReported'
       );
 
@@ -137,7 +137,7 @@ export function createPalletBackend(deps: {
         throw new Error('No BattleReported event found in transaction result');
       }
 
-      const { battle_seed, opponent_board, result: chainResult } = battleEvent.value.value;
+      const { battle_seed, opponent_board, result: chainResult } = (battleEvent.value as any).value;
 
       const opponentBoard = normalizeGhostBoard(opponent_board);
       const resultStr = typeof chainResult === 'string'
