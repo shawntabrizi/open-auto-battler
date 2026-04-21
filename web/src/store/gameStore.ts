@@ -92,7 +92,7 @@ interface GameStore {
   burnBoardUnit: (boardSlot: number) => void;
   undo: () => void;
   endTurn: () => void;
-  continueAfterBattle: () => void;
+  continueAfterBattle: () => void | Promise<void>;
   newRun: () => void;
   setSelection: (selection: Selection | null) => void;
   closeBattleOverlay: () => void;
@@ -112,8 +112,8 @@ interface GameStore {
   startVersusGame: (seed: number, lives?: number) => void;
   resolveVersusBattle: (opponentBoard: any, seed: number) => void;
   // Blockchain mode: optional callback override for "Continue" after battle
-  afterBattleCallback: (() => void) | null;
-  setAfterBattleCallback: (cb: (() => void) | null) => void;
+  afterBattleCallback: (() => void | Promise<void>) | null;
+  setAfterBattleCallback: (cb: (() => void | Promise<void>) | null) => void;
   mobileTab: 'hand' | 'board';
   setMobileTab: (tab: 'hand' | 'board') => void;
   resetActiveSessionView: () => void;
@@ -549,14 +549,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  continueAfterBattle: () => {
+  continueAfterBattle: async () => {
     const { engine, afterBattleCallback } = get();
     if (!engine) return;
     try {
       if (afterBattleCallback) {
-        // Blockchain mode: use the override callback (refreshes from chain)
-        afterBattleCallback();
-        set({ showBattleOverlay: false, battleOutput: null, afterBattleCallback: null });
+        // Blockchain mode: wait for the chain refresh before dismissing the
+        // overlay so we don't flash stale or half-restored game state.
+        try {
+          await afterBattleCallback();
+        } finally {
+          set({ showBattleOverlay: false, battleOutput: null, afterBattleCallback: null });
+        }
       } else {
         // Local/P2P mode: advance round locally
         engine.continue_after_battle();
@@ -658,7 +662,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return engine.get_commit_action();
   },
   getCommitWarning: () => getCommitWarning(get().view),
-  setAfterBattleCallback: (cb: (() => void) | null) => {
+  setAfterBattleCallback: (cb: (() => void | Promise<void>) | null) => {
     set({ afterBattleCallback: cb });
   },
   setMobileTab: (tab: 'hand' | 'board') => set({ mobileTab: tab }),

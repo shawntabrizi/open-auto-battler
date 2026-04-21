@@ -6,7 +6,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 OUTPUT_DIR="${OUTPUT_DIR:-$REPO_ROOT/target/coverage/oab-core}"
 FAIL_UNDER_LINES="${FAIL_UNDER_LINES:-0}"
 ENGINE_FAIL_UNDER_LINES="${ENGINE_FAIL_UNDER_LINES:-0}"
-ENGINE_IGNORE_REGEX="${ENGINE_IGNORE_REGEX:-(core/src/(log|opponents|units|view|rng|types)\\.rs)$}"
+ENGINE_IGNORE_REGEX="${ENGINE_IGNORE_REGEX:-(battle/src/(log|opponents|units|view|rng|types)\\.rs)$}"
 
 if ! cargo llvm-cov --version >/dev/null 2>&1; then
     echo "cargo-llvm-cov is required."
@@ -27,7 +27,7 @@ pushd "$REPO_ROOT" >/dev/null
 
 echo "--- Running core coverage collection ---"
 cargo llvm-cov clean --workspace
-cargo llvm-cov -p oab-core --no-report
+cargo llvm-cov -p oab-battle --no-report
 
 SUMMARY_ARGS=(llvm-cov report --summary-only)
 if [[ "$FAIL_UNDER_LINES" != "0" ]]; then

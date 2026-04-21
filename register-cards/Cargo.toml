@@ -1,0 +1,14 @@
+[package]
+name = "oab-register-cards"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+oab-battle = { path = "../battle", default-features = true }
+oab-assets = { path = "../assets", default-features = true }
+parity-scale-codec = { version = "3.7", features = ["std", "derive"] }
+ureq = { version = "2", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tiny-keccak = { version = "2", features = ["keccak"] }

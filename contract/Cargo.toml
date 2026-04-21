@@ -1,0 +1,34 @@
+[workspace]
+
+[package]
+name = "oab-contract"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "build.rs"
+
+[[bin]]
+name = "contract"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+overflow-checks = false
+
+[dependencies]
+pvm_contract = { git = "https://github.com/paritytech/cargo-pvm-contract.git", branch = "charles/cdm-integration", package = "pvm_contract" }
+picoalloc = { version = "5", default-features = false }
+pallet-revive-uapi = { version = "0.9", default-features = false }
+polkavm-derive = "0.31.0"
+parity-scale-codec = { version = "3.7", default-features = false, features = ["derive"] }
+oab-battle = { path = "../battle", default-features = false }
+oab-game = { path = "../game", default-features = false }
+
+[features]
+abi-gen = []
+
+[build-dependencies]
+cargo-pvm-contract-builder = { git = "https://github.com/paritytech/cargo-pvm-contract.git", branch = "charles/cdm-integration", package = "cargo-pvm-contract-builder" }

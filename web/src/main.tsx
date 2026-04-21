@@ -43,6 +43,9 @@ import { VersusRedirect } from './components/VersusRedirect.tsx';
 import { TournamentRedirect } from './components/TournamentRedirect.tsx';
 import { TournamentLobbyPage } from './components/TournamentLobbyPage.tsx';
 import { TournamentGamePage } from './components/TournamentGamePage.tsx';
+import { ContractMenuPage } from './components/ContractMenuPage.tsx';
+import { ContractArenaPage } from './components/ContractArenaPage.tsx';
+import { ContractArenaGamePage } from './components/ContractArenaGamePage.tsx';
 import { ThemeController } from './theme/ThemeController.tsx';
 import { ParticleBackground } from './components/ParticleBackground.tsx';
 import { applyResolvedThemeToDocument } from './theme/themes.ts';
@@ -72,7 +75,7 @@ async function boot() {
       <HashRouter>
         <ThemeController />
         <ParticleBackground />
-        <AuthGate>
+        <AuthGate skipPaths={['/contract']}>
           <HamburgerMenu />
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -95,6 +98,9 @@ async function boot() {
             <Route path="/versus/game" element={<VersusGame />} />
             <Route path="/arena" element={<ArenaPage />} />
             <Route path="/arena/game" element={<ArenaGamePage />} />
+            <Route path="/contract" element={<ContractMenuPage />} />
+            <Route path="/contract/arena" element={<ContractArenaPage />} />
+            <Route path="/contract/arena/game" element={<ContractArenaGamePage />} />
             <Route path="/tournament" element={<TournamentRedirect />} />
             <Route path="/tournament/lobby" element={<TournamentLobbyPage />} />
             <Route path="/tournament/game" element={<TournamentGamePage />} />

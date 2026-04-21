@@ -12,6 +12,11 @@ members = [
     "blockchain/pallets/tournament",
     "blockchain/pallets/constructed",
     "blockchain/runtime",
+    "contract/tests-native",
+]
+exclude = [
+    "contract",
+    "register-cards",
 ]
 
 [workspace.package]

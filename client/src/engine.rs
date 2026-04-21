@@ -972,8 +972,16 @@ impl GameEngine {
         self.set_id = self.state.set_id;
         log::debug("init_from_scale", "set_id assigned...");
 
-        log::debug("init_from_scale", "starting planning phase...");
-        self.start_planning_phase();
+        if self.state.phase == GamePhase::Shop {
+            log::debug("init_from_scale", "starting planning phase...");
+            self.start_planning_phase();
+        } else {
+            log::debug(
+                "init_from_scale",
+                "restoring non-shop phase without planning init...",
+            );
+            self.reset_turn_context();
+        }
 
         log::info("init_from_scale completed successfully");
         Ok(())
@@ -1050,6 +1058,10 @@ impl GameEngine {
             self.state.draw_hand(self.state.config.hand_size as usize);
         }
 
+        self.reset_turn_context();
+    }
+
+    fn reset_turn_context(&mut self) {
         self.shop_ctx = ShopTurnContext::new(&self.state);
         self.action_log = Vec::new();
         self.start_board = self.state.board.clone();

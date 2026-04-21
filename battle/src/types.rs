@@ -624,3 +624,32 @@ pub struct CommitTurnAction {
     /// Ordered list of actions to execute
     pub actions: Vec<TurnAction>,
 }
+
+// ── Ghost opponent types ─────────────────────────────────────────────────────
+// These are always available (no feature gate). The `bounded` module
+// wraps them in BoundedVec for pallet storage; contracts use plain Vec.
+
+/// A unit on a ghost board (CardId + permanent stat deltas).
+/// Stores minimal data needed to reconstruct buffed combat units.
+#[derive(
+    Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct GhostBoardUnit {
+    pub card_id: CardId,
+    pub perm_attack: StatValue,
+    pub perm_health: StatValue,
+}
+
+/// Matchmaking bracket for ghost opponent lookup.
+/// Ghosts are indexed by these fields to ensure fair matchups within the same card set.
+#[derive(
+    Debug, Clone, PartialEq, Eq, Encode, Decode, DecodeWithMemTracking, TypeInfo, MaxEncodedLen,
+)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct MatchmakingBracket {
+    pub set_id: SetIdValue,
+    pub round: RoundValue,
+    pub wins: RoundValue,
+    pub lives: RoundValue,
+}
