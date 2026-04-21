@@ -114,8 +114,8 @@ export function createPalletBackend(deps: {
     },
 
     // Account management handled by arenaStore
-    async getAccounts() {
-      return [];
+    getAccounts() {
+      return Promise.resolve([]);
     },
     get selectedAccount() {
       return getSelectedAccount();
@@ -242,13 +242,15 @@ export function createPalletBackend(deps: {
       const api = requireApi();
       const setEntries = await api.query.OabCardRegistry.CardSets.getEntries();
 
-      let metadataMap = new Map<number, string>();
+      const metadataMap = new Map<number, string>();
       try {
         const metaEntries = await api.query.OabCardRegistry.CardSetMetadataStore.getEntries();
         metaEntries.forEach((entry: any) => {
           metadataMap.set(Number(entry.keyArgs[0]), entry.value.name.asText());
         });
-      } catch {}
+      } catch {
+        // Metadata is optional; fall back to default set names below.
+      }
 
       return setEntries.map((entry: any) => {
         const id = Number(entry.keyArgs[0]);
@@ -283,7 +285,9 @@ export function createPalletBackend(deps: {
             archiveEntries = await api.query.OabArena.GhostArchive.getEntries();
           }
           candidates = collectGhostCandidates(archiveEntries, setId);
-        } catch {}
+        } catch {
+          // Archive query is best-effort; empty candidates is acceptable.
+        }
       }
 
       const selectedBracket = [...candidates].sort(

@@ -161,7 +161,9 @@ export function createContractBackend(deps: {
         if (detectedChainId) {
           chain = { ...chain, id: detectedChainId };
         }
-      } catch {}
+      } catch {
+        // Ignore chain ID detection failures; fall back to configured chain.
+      }
 
       publicClient = createPublicClient({ chain, transport });
 
@@ -212,7 +214,9 @@ export function createContractBackend(deps: {
           }));
           _useWallet = false;
         } catch (e) {
-          throw new Error(`Cannot connect: no wallet and dev accounts unavailable (${e})`);
+          throw new Error(
+            `Cannot connect: no wallet and dev accounts unavailable (${e instanceof Error ? e.message : String(e)})`,
+          );
         }
       }
 
@@ -235,8 +239,8 @@ export function createContractBackend(deps: {
     get isConnected() {
       return _isConnected;
     },
-    async getAccounts() {
-      return accounts;
+    getAccounts() {
+      return Promise.resolve(accounts);
     },
     get selectedAccount() {
       return _selectedAccount;
@@ -401,21 +405,21 @@ export function createContractBackend(deps: {
 
     // ── Card data ──────────────────────────────────────────────────────
 
-    async getCards(): Promise<CardData[]> {
+    getCards(): Promise<CardData[]> {
       // The WASM engine has baked-in card data from oab-assets.
       // We don't need to fetch individual cards from the contract for the UI.
       // The contract stores them for on-chain battle resolution.
-      return [];
+      return Promise.resolve([]);
     },
 
-    async getSets(): Promise<SetData[]> {
+    getSets(): Promise<SetData[]> {
       // Same — the WASM engine has baked-in set data.
-      return [];
+      return Promise.resolve([]);
     },
 
-    async getGhostOpponent(): Promise<{ board: GhostBoardUnit[]; seed: bigint } | null> {
+    getGhostOpponent(): Promise<{ board: GhostBoardUnit[]; seed: bigint } | null> {
       // Ghost selection happens on-chain in submitTurn
-      return null;
+      return Promise.resolve(null);
     },
   };
 

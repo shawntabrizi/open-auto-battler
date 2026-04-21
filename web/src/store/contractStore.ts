@@ -250,7 +250,9 @@ export const useContractStore = create<ContractStore>((set, get) => ({
         // Ensure the card pool is loaded before init_from_scale
         try {
           engine.load_card_set(activeSetId);
-        } catch {}
+        } catch {
+          // Card set may already be loaded; init_from_scale handles the state.
+        }
         engine.init_from_scale(gameState.stateBytes, gameState.cardSetBytes);
         const view = engine.get_view();
         const cardSet = engine.get_card_set();
