@@ -215,7 +215,7 @@ export function createContractBackend(deps: {
           _useWallet = false;
         } catch (e) {
           throw new Error(
-            `Cannot connect: no wallet and dev accounts unavailable (${e instanceof Error ? e.message : String(e)})`,
+            `Cannot connect: no wallet and dev accounts unavailable (${e instanceof Error ? e.message : String(e)})`
           );
         }
       }

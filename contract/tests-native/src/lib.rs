@@ -1771,7 +1771,7 @@ mod tests {
         );
         if session.phase == PHASE_SHOP {
             // Check that board units retained their permanent stats (or gained more)
-            if let Some(Some(unit)) = session.board.get(0) {
+            if let Some(Some(unit)) = session.board.first() {
                 assert!(
                     unit.perm_attack >= initial_perm_attack
                         || unit.perm_health >= initial_perm_health,
