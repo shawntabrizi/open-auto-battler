@@ -10,7 +10,6 @@ import { UI_LAYERS } from '../constants/uiLayers';
 import { useCardTilt } from '../hooks/useCardTilt';
 import { SwordIcon, HeartIcon, AbilityIcon } from './Icons';
 import { CARD_TEXT, type CardSizeVariant } from '../constants/cardSizes';
-import { useAchievementStore } from '../store/achievementStore';
 import { useGameStore } from '../store/gameStore';
 import { useCardInspectStore } from '../store/cardInspectStore';
 import { getRarityInfo } from '../utils/rarity';
@@ -119,7 +118,6 @@ export function UnitCard({
   });
 
   const cardNameMap = useGameStore((s) => s.cardNameMap);
-  const isHolographic = useAchievementStore((s) => s.isHolographic(card.id));
   const artSrc = getCardArtSm(card.id);
   const [artFailed, setArtFailed] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -237,7 +235,6 @@ export function UnitCard({
       className={`
         unit-card card relative w-full h-full ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none rounded-lg border-2 transition-all duration-200
         bg-black ${rarityStyle.border} ${rarityStyle.glow}
-        ${isHolographic ? 'card-holographic' : ''}
         ${isSelected ? 'card-selected ring-2 ring-accent' : ''}
         ${enableWobble ? 'wobble-card' : ''}
         ${enableTilt ? 'card-tilt' : ''}
@@ -336,9 +333,6 @@ export function UnitCard({
         </div>
       )}
 
-      {/* Holographic shimmer overlay */}
-      {isHolographic && <div className="holo-shimmer" />}
-
       {/* Card style frame overlay - behind stats/badges but above card art */}
       {cardStyle && (
         <img
@@ -389,9 +383,6 @@ export function UnitCard({
     </div>
   );
 
-  if (isHolographic) {
-    return <div className="holo-border w-full h-full">{cardEl}</div>;
-  }
   return cardEl;
 }
 

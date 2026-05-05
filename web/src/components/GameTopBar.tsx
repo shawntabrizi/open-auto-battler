@@ -1,11 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { useVersusStore } from '../store/versusStore';
 import { useCustomizationStore } from '../store/customizationStore';
 import { useMenuStore } from '../store/menuStore';
 import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
-import { LivesIcon, StarIcon, BagIcon, HourglassIcon, WarningIcon } from './Icons';
-const BATTLE_TIMER_SECONDS = 20;
+import { LivesIcon, StarIcon, BagIcon } from './Icons';
 
 interface HUDProps {
   hideEndTurn?: boolean;
@@ -41,35 +39,9 @@ function useCommitConfirmation(commitWarning: string | null, disabled: boolean) 
 
 /** Inline battle / custom-action buttons that sit inside the HUD bar */
 function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
-  const { view, endTurn, engine, getCommitWarning, setSelection } = useGameStore();
-  const { status, setIsReady, sendMessage, isReady, opponentReady, battleTimer } = useVersusStore();
-  const [waitingTimer, setWaitingTimer] = useState<number | null>(null);
-  const waitingTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (status === 'in-game' && isReady && !opponentReady && view?.phase === 'shop') {
-      setWaitingTimer(BATTLE_TIMER_SECONDS);
-      waitingTimerRef.current = setInterval(() => {
-        setWaitingTimer((prev) => (prev !== null && prev > 1 ? prev - 1 : prev));
-      }, 1000);
-    }
-    if (!isReady || opponentReady) {
-      if (waitingTimerRef.current) {
-        clearInterval(waitingTimerRef.current);
-        waitingTimerRef.current = null;
-      }
-      setWaitingTimer(null);
-    }
-    return () => {
-      if (waitingTimerRef.current) clearInterval(waitingTimerRef.current);
-    };
-  }, [isReady, opponentReady, status, view?.phase]);
-
-  const isWaiting = status === 'in-game' && isReady && !opponentReady;
-  const opponentWaiting = status === 'in-game' && !isReady && opponentReady;
-  const displayTimer = isWaiting ? waitingTimer : opponentWaiting ? battleTimer : null;
+  const { view, endTurn, getCommitWarning, setSelection } = useGameStore();
   const commitWarning = getCommitWarning();
-  const battleConfirmation = useCommitConfirmation(commitWarning, isWaiting);
+  const battleConfirmation = useCommitConfirmation(commitWarning, false);
   const customActionConfirmation = useCommitConfirmation(
     commitWarning,
     Boolean(customAction?.disabled)
@@ -80,71 +52,25 @@ function InlineEndTurn({ hideEndTurn, customAction }: HUDProps) {
 
   const handleEndTurn = () => {
     setSelection(null);
-
-    if (status === 'in-game') {
-      const board = engine?.get_board();
-      setIsReady(true);
-      sendMessage({ type: 'END_TURN_READY', board });
-    } else {
-      endTurn();
-    }
+    endTurn();
   };
 
   return (
     <div className="flex items-center gap-2 lg:gap-3">
       {!hideEndTurn && (
-        <>
-          {displayTimer !== null && (
-            <div
-              className={`flex items-center gap-2 px-3 py-1 rounded-lg ${
-                opponentWaiting
-                  ? displayTimer <= 5
-                    ? 'bg-negative animate-pulse'
-                    : 'bg-card-attack'
-                  : 'bg-mana'
-              }`}
-            >
-              <span className="text-white text-sm font-bold flex items-center gap-1">
-                {opponentWaiting ? (
-                  <>
-                    <WarningIcon className="w-4 h-4" /> Submit in:
-                  </>
-                ) : (
-                  <>
-                    <HourglassIcon className="w-4 h-4" /> Waiting:
-                  </>
-                )}
-              </span>
-              <span
-                className={`text-white text-lg font-bold ${displayTimer <= 5 ? 'text-accent' : ''}`}
-              >
-                {displayTimer}s
-              </span>
-            </div>
-          )}
-          <button
-            onClick={() => battleConfirmation.trigger(handleEndTurn)}
-            disabled={isWaiting}
-            data-game-end-turn-action="true"
-            aria-keyshortcuts={GAME_SHORTCUTS.commit}
-            title={`Focus ${isWaiting ? 'Waiting' : battleConfirmation.isConfirming ? 'Are you sure' : 'Battle'} button (${GAME_SHORTCUTS.commit})`}
-            className={`theme-button rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-button uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
-              isWaiting
-                ? 'bg-base-600 scale-95 opacity-80 cursor-not-allowed'
-                : battleConfirmation.isConfirming
-                  ? 'bg-negative hover:bg-negative/85 text-white border-negative/50'
-                  : opponentWaiting && displayTimer !== null && displayTimer <= 5
-                    ? 'animate-pulse bg-negative hover:bg-negative border-negative/50'
-                    : 'battle-btn border-accent/40'
-            }`}
-          >
-            {isWaiting
-              ? 'Waiting...'
-              : battleConfirmation.isConfirming
-                ? 'Are you sure?'
-                : 'Battle!'}
-          </button>
-        </>
+        <button
+          onClick={() => battleConfirmation.trigger(handleEndTurn)}
+          data-game-end-turn-action="true"
+          aria-keyshortcuts={GAME_SHORTCUTS.commit}
+          title={`Focus ${battleConfirmation.isConfirming ? 'Are you sure' : 'Battle'} button (${GAME_SHORTCUTS.commit})`}
+          className={`theme-button rounded-lg text-xs lg:text-sm px-2 lg:px-3 border font-bold font-button uppercase tracking-wider flex items-center h-7 lg:h-10 transition-all ${
+            battleConfirmation.isConfirming
+              ? 'bg-negative hover:bg-negative/85 text-white border-negative/50'
+              : 'battle-btn border-accent/40'
+          }`}
+        >
+          {battleConfirmation.isConfirming ? 'Are you sure?' : 'Battle!'}
+        </button>
       )}
       {customAction && (
         <button

@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useArenaStore } from '../store/arenaStore';
-import { useGameStore } from '../store/gameStore';
+import { useContractStore } from '../store/contractStore';
 import { useMenuStore } from '../store/menuStore';
-import { useSettingsStore } from '../store/settingsStore';
 import { useShortcutHelpStore } from '../store/shortcutHelpStore';
 import { useTutorialStore } from '../store/tutorialStore';
 import { UI_LAYERS } from '../constants/uiLayers';
@@ -11,43 +9,14 @@ import { useFocusTrap } from '../hooks';
 import { GAME_SHORTCUTS } from './GameKeyboardShortcuts';
 import { GearIcon, CloseIcon } from './Icons';
 
-/** Person icon for account */
-function PersonIcon({ className = 'w-5 h-5' }: { className?: string }) {
+function PaletteIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+      <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10c1.38 0 2.5-1.12 2.5-2.5 0-.61-.23-1.21-.64-1.67-.08-.1-.13-.21-.13-.33 0-.28.22-.5.5-.5H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9zm5.5 11c-.83 0-1.5-.67-1.5-1.5S16.67 10 17.5 10s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
     </svg>
   );
 }
 
-/** Shopping bag icon */
-function ShopIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0020 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
-    </svg>
-  );
-}
-
-/** Logout / exit icon */
-function LogoutIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
-    </svg>
-  );
-}
-
-/** Network / globe icon */
-function NetworkIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-    </svg>
-  );
-}
-
-/** Lightbulb icon for tutorial */
 function TutorialIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -64,7 +33,6 @@ function KeyboardIcon({ className = 'w-5 h-5' }: { className?: string }) {
   );
 }
 
-/** Home / return icon */
 function HomeIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -73,7 +41,6 @@ function HomeIcon({ className = 'w-5 h-5' }: { className?: string }) {
   );
 }
 
-/** Warning / abandon icon */
 function AbandonIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -82,16 +49,7 @@ function AbandonIcon({ className = 'w-5 h-5' }: { className?: string }) {
   );
 }
 
-function CreatorIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-    </svg>
-  );
-}
-
-// Routes that are considered "in-game" (shop/battle phase)
-const GAME_ROUTES = ['/practice/game', '/arena/game', '/tournament/game', '/versus/game'];
+const GAME_ROUTES = ['/contract/arena/game'];
 
 function isGameRoute(pathname: string) {
   return GAME_ROUTES.includes(pathname);
@@ -99,17 +57,13 @@ function isGameRoute(pathname: string) {
 
 const MENU_ITEMS = [
   { to: '/settings', icon: GearIcon, label: 'Settings' },
-  { to: '/account', icon: PersonIcon, label: 'Account' },
-  { to: '/network', icon: NetworkIcon, label: 'Network' },
-  { to: '/marketplace', icon: ShopIcon, label: 'Marketplace' },
-  { to: '/creator', icon: CreatorIcon, label: 'Creator Studio' },
+  { to: '/customize', icon: PaletteIcon, label: 'Customize' },
 ] as const;
 
 /**
  * Global hamburger menu button + slide-out panel.
- * Shows different items depending on context:
- * - Standard menu: Settings, Account, Network, Shop, Log Out
- * - In-game menu: Settings, Tutorial, Return to Menu, Abandon
+ * - Standard: Settings, Customize
+ * - In-game: Settings, Tutorial, Keyboard Shortcuts, Return, Abandon
  */
 export function HamburgerMenu() {
   const { isOpen: open } = useMenuStore();
@@ -119,9 +73,7 @@ export function HamburgerMenu() {
   const panelRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isConnected, logout, abandonGame, blockNumber } = useArenaStore();
-  const { newRun } = useGameStore();
-  const endpoint = useSettingsStore((s) => s.endpoint);
+  const { isConnected, abandonGame } = useContractStore();
   const openTutorial = useTutorialStore((s) => s.open);
   const openShortcutHelp = useShortcutHelpStore((s) => s.open);
 
@@ -138,31 +90,20 @@ export function HamburgerMenu() {
     onEscape: () => setOpen(false),
   });
 
-  // Reset abandon confirm when panel closes
   useEffect(() => {
     if (!open) setShowAbandonConfirm(false);
   }, [open]);
 
-  const handleLogout = () => {
-    logout();
-    setOpen(false);
-    void navigate('/');
-  };
-
   const handleReturnToMenu = () => {
     setOpen(false);
-    void navigate('/');
+    void navigate('/contract');
   };
 
   const handleAbandon = async () => {
     try {
-      if (location.pathname === '/arena/game' || location.pathname === '/tournament/game') {
-        await abandonGame();
-      } else {
-        newRun();
-      }
+      await abandonGame();
       setOpen(false);
-      void navigate('/');
+      void navigate('/contract');
     } catch (err) {
       console.error('Abandon failed:', err);
     }
@@ -170,16 +111,13 @@ export function HamburgerMenu() {
 
   return (
     <>
-      {/* Backdrop + Panel */}
       {open && (
         <div className="fixed inset-0" style={{ zIndex: UI_LAYERS.globalMenu }}>
-          {/* Dark backdrop */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setOpen(false)}
           />
 
-          {/* Slide-out panel from right */}
           <div
             ref={panelRef}
             role="dialog"
@@ -188,10 +126,9 @@ export function HamburgerMenu() {
             tabIndex={-1}
             className="theme-panel absolute top-0 right-0 flex h-full w-72 animate-slide-in-right flex-col border-l border-base-700/70 bg-surface-mid/95 shadow-2xl backdrop-blur-md lg:w-80"
           >
-            {/* Panel header */}
             <div className="flex items-center justify-between border-b border-base-700/60 px-4 py-4">
               <Link
-                to="/"
+                to="/contract"
                 onClick={() => setOpen(false)}
                 className="font-heading text-sm tracking-widest uppercase text-base-200 hover:text-white transition-colors lg:text-base"
               >
@@ -208,7 +145,6 @@ export function HamburgerMenu() {
 
             {inGame ? (
               <>
-                {/* In-game menu items */}
                 <nav className="flex-1 space-y-2 overflow-y-auto px-2 py-3">
                   <Link
                     to="/settings"
@@ -257,7 +193,6 @@ export function HamburgerMenu() {
                   </button>
                 </nav>
 
-                {/* Abandon at bottom */}
                 <div className="border-t border-base-700/60 p-2">
                   {showAbandonConfirm ? (
                     <div className="theme-panel theme-error-panel rounded-xl border p-3 text-center">
@@ -294,7 +229,6 @@ export function HamburgerMenu() {
               </>
             ) : (
               <>
-                {/* Standard menu items */}
                 <nav className="flex-1 min-h-0 space-y-2 overflow-y-auto px-2 py-3">
                   {MENU_ITEMS.map(({ to, icon: Icon, label }) => (
                     <Link
@@ -313,7 +247,6 @@ export function HamburgerMenu() {
                   ))}
                 </nav>
 
-                {/* Network status */}
                 {isConnected && (
                   <div className="border-t border-base-700/60 px-4 py-3 shrink-0">
                     <div className="theme-panel rounded-xl border border-base-700/50 bg-base-900/30 px-4 py-3">
@@ -326,23 +259,9 @@ export function HamburgerMenu() {
                           Connected
                         </span>
                       </div>
-                      <div className="text-[10px] text-base-500 font-mono truncate">{endpoint}</div>
-                      {blockNumber != null && (
-                        <div className="text-[10px] text-base-500">
-                          Block #{blockNumber.toLocaleString()}
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
-
-                {/* Logout at bottom */}
-                <div className="border-t border-base-700/60 p-2 shrink-0">
-                  <button onClick={handleLogout} className={`${dangerMenuItemClassName} w-full`}>
-                    <LogoutIcon className="text-negative w-5 h-5 transition-colors" />
-                    <span className="font-button text-sm lg:text-base tracking-wide">Log Out</span>
-                  </button>
-                </div>
               </>
             )}
           </div>

@@ -10,27 +10,29 @@ Read the following documents when relevant:
 - `agents/CORE_ENGINE.md` for game rules and engine structure.
 - `agents/WASM_BRIDGE.md` for Rust-to-WASM boundaries.
 - `agents/WEB_UI.md` for frontend state and components.
-- `agents/BLOCKCHAIN_PALLET.md` for on-chain logic and storage.
 - `agents/SERIALIZATION_CONTRACTS.md` for SCALE and JSON contracts.
 - `agents/TESTING_GUIDE.md` for test locations and expectations.
 - `agents/FORMATTING.md` for mandatory formatting rules.
-- `agents/POLKADOT_API.md` for frontend-to-chain interactions and SCALE rules.
-- `agents/SUBSTRATE.md` for pallet structure, storage, and bounded types.
 - `agents/REACT.md` for frontend patterns and state management.
 
 ## Global Requirements
-- **WASM Bridge**: The project relies on a SCALE-encoded bridge between the Substrate chain and the browser WASM engine. Any changes to data structures must be reflected in both `core/` and the frontend formatting logic.
-- **Named Arguments**: Never use positional arguments for extrinsics.
-- **Bounded Complexity**: Respect the limits defined in the Pallet's `Config`.
-- **No Engine Panics**: Core engine/runtime code must not use `panic!`, `unwrap()`, or `expect()` for normal control flow. Use explicit error handling or deterministic no-op behavior instead.
-- **Formatting**: After making changes, always run `cargo fmt` (Rust) and `prettier` (web/client) on affected files.
+- **WASM Bridge**: The web app uses a SCALE-encoded bridge between the PolkaVM
+  smart contract and the browser WASM engine. Any change to game state types
+  must be reflected in `core/`, the contract (`contract/`), and the frontend.
+- **No Engine Panics**: Core engine/runtime code must not use `panic!`,
+  `unwrap()`, or `expect()` for normal control flow. Use explicit error
+  handling or deterministic no-op behavior instead.
+- **Formatting**: After making changes, always run `cargo fmt` (Rust) and
+  `prettier` (web) on affected files.
 
-## Deployment
-- **Blockchain deploy script**: `blockchain/deploy.sh` builds the runtime, generates a chain spec, and deploys to the VPS via SSH + Docker.
-  - `blockchain/deploy.sh` — rolling update (preserves chain data)
-  - `blockchain/deploy.sh --fresh` — wipes chain data for a new genesis
-  - Node runs at `ws://51.159.158.173:9944` (aliased to `wss://oab-rpc.shawntabrizi.com`)
+## Layout
+- `battle/`, `assets/`, `game/` — deterministic game engine, card data, rules.
+- `client/` — `wasm-bindgen` bridge that exposes the engine to the browser.
+- `contract/` — PolkaVM smart contract that runs the arena game on-chain.
+- `web/` — React frontend (contract-only).
 
 ## Workflow Expectations
 - Maintain the visual style established in `web/src/index.css`.
 - Prefer minimal, targeted edits over broad refactors.
+- Use `./start.sh` to bring up the dev node, deploy the contract, and start
+  the web app for local testing.

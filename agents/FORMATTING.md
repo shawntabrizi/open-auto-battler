@@ -7,7 +7,7 @@ These rules are mandatory for all agents working on this repository.
 - After making web or client changes, run `prettier` on the affected files.
 
 ## Scope
-- Rust: `core/`, `client/`, `blockchain/`.
+- Rust: `battle/`, `assets/`, `game/`, `client/`, `contract/`.
 - Web: `web/`.
 
 ## Notes

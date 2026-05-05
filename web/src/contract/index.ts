@@ -1,8 +1,6 @@
 /**
- * Contract Backend — implements GameBackend for the PolkaVM smart contract.
- *
- * Communicates with the OAB arena contract on Polkadot Hub via Ethereum
- * JSON-RPC using viem. Signs transactions with MetaMask or injected wallets.
+ * Contract Backend — talks to the OAB arena PolkaVM contract on Polkadot Hub
+ * via Ethereum JSON-RPC using viem. Signs with MetaMask or dev accounts.
  */
 
 import {
@@ -15,15 +13,6 @@ import {
   type Transport,
   type Chain,
 } from 'viem';
-import type {
-  GameBackend,
-  TurnResult,
-  GameStateRaw,
-  CardData,
-  SetData,
-  GhostBoardUnit,
-  Account,
-} from '../types';
 import {
   decodeBoolResult,
   decodeStartGameResult,
@@ -37,6 +26,50 @@ import {
   decodeGetGameStateResult,
 } from './abi';
 
+// ── Shared types ─────────────────────────────────────────────────────────────
+
+export interface TurnResult {
+  battleSeed: bigint;
+  opponentBoard: GhostBoardUnit[];
+  result: 'Victory' | 'Defeat' | 'Draw';
+  wins: number;
+  lives: number;
+  round: number;
+}
+
+export interface GhostBoardUnit {
+  card_id: number;
+  perm_attack: number;
+  perm_health: number;
+}
+
+export interface GameStateRaw {
+  stateBytes: Uint8Array;
+  cardSetBytes: Uint8Array;
+  setId?: number;
+}
+
+export interface Account {
+  name: string;
+  address: string;
+  signer: any;
+  source: 'extension' | 'dev';
+}
+
+export interface ContractBackend {
+  connect(): Promise<void>;
+  disconnect(): void;
+  readonly isConnected: boolean;
+  getAccounts(): Promise<Account[]>;
+  readonly selectedAccount: Account | null;
+  selectAccount(account: Account): void;
+  startGame(setId: number): Promise<{ seed: bigint }>;
+  submitTurn(actionScale: Uint8Array): Promise<TurnResult>;
+  getGameState(): Promise<GameStateRaw | null>;
+  endGame(): Promise<void>;
+  abandonGame(): Promise<void>;
+}
+
 export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
   // revive's Mapping getter currently materializes a zeroed ArenaSession for
   // missing keys instead of returning an empty byte payload. Treat that sentinel
@@ -44,24 +77,22 @@ export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
   return data.every((byte) => byte === 0);
 }
 
-// ── ContractBackend ──────────────────────────────────────────────────────────
-
 export function createContractBackend(deps: {
   rpcUrl?: string;
   contractAddress: `0x${string}`;
   chainId?: number;
   skipWallet?: boolean;
-}): GameBackend {
+}): ContractBackend {
   const contractAddress = deps.contractAddress;
   let publicClient: PublicClient | null = null;
   let walletClient: WalletClient | null = null;
   let accounts: Account[] = [];
   let _selectedAccount: Account | null = null;
   let _isConnected = false;
-  let _activeSetId: number = 0; // Track which set the current game uses
+  let _activeSetId: number = 0;
 
   let chain: Chain = {
-    id: deps.chainId ?? 420420420, // Local dev node default
+    id: deps.chainId ?? 420420420,
     name: 'PolkaVM',
     nativeCurrency: { name: 'DEV', symbol: 'DEV', decimals: 18 },
     rpcUrls: {
@@ -75,7 +106,6 @@ export function createContractBackend(deps: {
   const BATTLE_REPORTED_TOPIC =
     '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694ddef23dd55af68e089bd';
 
-  /** Send a raw JSON-RPC eth_sendTransaction (for dev accounts, no wallet needed). */
   async function sendRawTx(from: string, data: `0x${string}`): Promise<`0x${string}`> {
     if (!publicClient) throw new Error('Not connected');
     const rpcUrl = chain.rpcUrls.default.http[0];
@@ -94,7 +124,6 @@ export function createContractBackend(deps: {
     if (json.error)
       throw new Error(`RPC error: ${json.error.message ?? JSON.stringify(json.error)}`);
     const txHash = json.result as `0x${string}`;
-    // Wait for receipt
     const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
     if (receipt.status === 'reverted') throw new Error('Transaction reverted');
     return txHash;
@@ -128,28 +157,22 @@ export function createContractBackend(deps: {
     return (result.data ?? '0x') as `0x${string}`;
   }
 
-  /** Decode ABI-wrapped bytes response into Uint8Array */
   function decodeBytesResponse(data: `0x${string}`): Uint8Array | null {
-    return decodeGetGameStateResult(data); // Same ABI layout: offset + length + data
+    return decodeGetGameStateResult(data);
   }
 
   function decodeArenaSessionSetId(data: Uint8Array): number {
     if (data.length < 2) return 0;
-
-    // ArenaSession encodes `set_id: u16` as its final field.
     const lo = data[data.length - 2] ?? 0;
     const hi = data[data.length - 1] ?? 0;
     return lo | (hi << 8);
   }
 
-  const backend: GameBackend = {
-    name: 'PolkaVM Contract',
-
+  const backend: ContractBackend = {
     async connect() {
       const rpcUrl = chain.rpcUrls.default.http[0];
       const transport: Transport = http(rpcUrl);
 
-      // Auto-detect chain ID from the node
       try {
         const resp = await fetch(rpcUrl, {
           method: 'POST',
@@ -167,7 +190,6 @@ export function createContractBackend(deps: {
 
       publicClient = createPublicClient({ chain, transport });
 
-      // Try MetaMask first (unless skipWallet is set)
       const ethereum = !deps.skipWallet ? (window as any).ethereum : null;
       if (ethereum) {
         try {
@@ -191,7 +213,6 @@ export function createContractBackend(deps: {
         }
       }
 
-      // Fall back to dev accounts from the node (eth_accounts)
       if (accounts.length === 0) {
         try {
           const resp = await fetch(rpcUrl, {
@@ -249,8 +270,6 @@ export function createContractBackend(deps: {
       _selectedAccount = account;
     },
 
-    // ── Arena game ─────────────────────────────────────────────────────
-
     async startGame(setId: number): Promise<{ seed: bigint }> {
       const seedNonce = BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
       const data = encodeStartGame(setId, seedNonce);
@@ -264,14 +283,13 @@ export function createContractBackend(deps: {
       return { seed: simulatedSeed };
     },
 
-    async submitTurn(actionScale: Uint8Array, _enemyBoard: Uint8Array): Promise<TurnResult> {
+    async submitTurn(actionScale: Uint8Array): Promise<TurnResult> {
       const data = encodeSubmitTurn(actionScale);
       const simulatedSeed = decodeSubmitTurnSeed(await callView(data));
       if (simulatedSeed === 0n) {
         throw new Error('Contract rejected submitTurn');
       }
 
-      // Send transaction and get receipt with logs
       if (!_selectedAccount) throw new Error('No account selected');
 
       let receipt: any;
@@ -305,13 +323,11 @@ export function createContractBackend(deps: {
 
       if (receipt.status === 'reverted') throw new Error('Transaction reverted');
 
-      // Parse BattleReported event from logs
       const battleLog = receipt.logs?.find(
         (log: any) => log.topics?.[0]?.toLowerCase() === BATTLE_REPORTED_TOPIC
       );
 
       if (battleLog?.data) {
-        // Event data: result(1) + wins(1) + lives(1) + round(1) + battleSeed(8) + ghost(SCALE)
         const hex = (battleLog.data as string).startsWith('0x')
           ? (battleLog.data as string).slice(2)
           : (battleLog.data as string);
@@ -326,18 +342,15 @@ export function createContractBackend(deps: {
         const round = bytes[3];
         const battleSeed = BigInt('0x' + hex.slice(8, 24));
 
-        // Decode SCALE-encoded Vec<GhostBoardUnit> from bytes[12..]
-        // Each GhostBoardUnit = CardId(u16) + perm_attack(i16) + perm_health(i16) = 6 bytes
-        // SCALE Vec prefix: compact length
         const ghostBytes = bytes.slice(12);
         const opponentBoard: GhostBoardUnit[] = [];
         if (ghostBytes.length > 0) {
-          const count = ghostBytes[0] / 4; // SCALE compact encoding for small numbers
-          let offset = 1; // skip compact length byte
+          const count = ghostBytes[0] / 4;
+          let offset = 1;
           for (let i = 0; i < count && offset + 6 <= ghostBytes.length; i++) {
             const card_id = ghostBytes[offset] | (ghostBytes[offset + 1] << 8);
             const perm_attack =
-              ((ghostBytes[offset + 2] | (ghostBytes[offset + 3] << 8)) << 16) >> 16; // sign-extend i16
+              ((ghostBytes[offset + 2] | (ghostBytes[offset + 3] << 8)) << 16) >> 16;
             const perm_health =
               ((ghostBytes[offset + 4] | (ghostBytes[offset + 5] << 8)) << 16) >> 16;
             opponentBoard.push({ card_id, perm_attack, perm_health });
@@ -360,7 +373,6 @@ export function createContractBackend(deps: {
         };
       }
 
-      // Fallback: no event found
       console.warn('No BattleReported event in receipt');
       return { battleSeed: 0n, opponentBoard: [], result: 'Draw', wins: 0, lives: 0, round: 0 };
     },
@@ -373,16 +385,14 @@ export function createContractBackend(deps: {
 
       _activeSetId = decodeArenaSessionSetId(arenaSessionBytes);
 
-      // The WASM engine expects BoundedGameSession = { state, set_id, config }
-      // The contract returns ArenaSession = { state_fields..., set_id }
-      // which is already state + set_id in SCALE. We just append the config bytes.
-      // default_config() SCALE = [3, 10, 3, 10, 0, 5, 5, 50]
+      // The WASM engine expects BoundedGameSession = { state, set_id, config }.
+      // The contract returns ArenaSession = { state_fields..., set_id }, so we
+      // append the default config bytes to make it a full BoundedGameSession.
       const DEFAULT_CONFIG_SCALE = new Uint8Array([3, 10, 3, 10, 0, 5, 5, 50]);
       const stateBytes = new Uint8Array(arenaSessionBytes.length + DEFAULT_CONFIG_SCALE.length);
       stateBytes.set(arenaSessionBytes);
       stateBytes.set(DEFAULT_CONFIG_SCALE, arenaSessionBytes.length);
 
-      // Fetch the card set for the active game
       const setData = await callView(encodeGetSet(_activeSetId));
       const cardSetBytes = decodeBytesResponse(setData) ?? new Uint8Array();
 
@@ -401,25 +411,6 @@ export function createContractBackend(deps: {
       const allowed = decodeBoolResult('abandonGame', await callView(data));
       if (!allowed) throw new Error('Contract rejected abandonGame');
       await sendTx(data);
-    },
-
-    // ── Card data ──────────────────────────────────────────────────────
-
-    getCards(): Promise<CardData[]> {
-      // The WASM engine has baked-in card data from oab-assets.
-      // We don't need to fetch individual cards from the contract for the UI.
-      // The contract stores them for on-chain battle resolution.
-      return Promise.resolve([]);
-    },
-
-    getSets(): Promise<SetData[]> {
-      // Same — the WASM engine has baked-in set data.
-      return Promise.resolve([]);
-    },
-
-    getGhostOpponent(): Promise<{ board: GhostBoardUnit[]; seed: bigint } | null> {
-      // Ghost selection happens on-chain in submitTurn
-      return Promise.resolve(null);
     },
   };
 

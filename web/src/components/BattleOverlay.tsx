@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { useSandboxStore } from '../store/sandboxStore';
 import { BattleArena } from './BattleArena';
-import { CloseIcon } from './Icons';
 import { UI_LAYERS } from '../constants/uiLayers';
 import type { BattleAbility, BattleOutput, CombatEvent } from '../types';
 import { formatAbilitySummary } from '../utils/abilityText';
@@ -123,30 +121,13 @@ function formatEvent(
 
 // --- Component ---
 
-interface BattleOverlayProps {
-  mode?: 'game' | 'sandbox';
-}
-
-export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
-  // Use hooks for both stores but decide which values to use based on mode
-  const gameBattleOutput = useGameStore((state) => state.battleOutput);
-  const gameShowOverlay = useGameStore((state) => state.showBattleOverlay);
-  const gameContinue = useGameStore((state) => state.continueAfterBattle);
+export function BattleOverlay() {
+  const battleOutput = useGameStore((state) => state.battleOutput);
+  const showOverlay = useGameStore((state) => state.showBattleOverlay);
+  const onContinue = useGameStore((state) => state.continueAfterBattle);
   const cardNameMap = useGameStore((state) => state.cardNameMap);
 
-  const sandboxBattleOutput = useSandboxStore((state) => state.battleOutput);
-  const sandboxShowOverlay = useSandboxStore((state) => state.isBattling);
-  const sandboxClose = useSandboxStore((state) => state.closeBattle);
-  const sandboxSeed = useSandboxStore((state) => state.battleSeed);
-
-  // Derive active states based on mode
-  const isSandbox = mode === 'sandbox';
-  const battleOutput = isSandbox ? sandboxBattleOutput : gameBattleOutput;
-  const showOverlay = isSandbox ? sandboxShowOverlay : gameShowOverlay;
-  const onContinue = isSandbox ? sandboxClose : gameContinue;
-  const title = isSandbox
-    ? `Sandbox Battle (Seed: ${sandboxSeed})`
-    : `Round ${battleOutput?.round} Battle`;
+  const title = `Round ${battleOutput?.round} Battle`;
 
   const [battleFinished, setBattleFinished] = useState(false);
   const [showContinue, setShowContinue] = useState(false);
@@ -206,17 +187,6 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
     const timer = setTimeout(() => setShowSplash(false), 1500);
     return () => clearTimeout(timer);
   };
-
-  // Escape key to close (especially useful in sandbox)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showOverlay && isSandbox) {
-        onContinue();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showOverlay, isSandbox, onContinue]);
 
   if (!showOverlay || !battleOutput) {
     return null;
@@ -278,16 +248,6 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
         </div>
       )}
 
-      {/* Top bar — title + close */}
-      {isSandbox && (
-        <button
-          onClick={onContinue}
-          aria-label="Close (Esc)"
-          className="theme-button theme-surface-button absolute top-3 right-3 z-10 rounded-lg border p-2 transition-colors lg:top-4 lg:right-4"
-        >
-          <CloseIcon className="text-base-300 w-4 h-4 lg:w-5 lg:h-5" />
-        </button>
-      )}
       <div className="relative z-10 flex items-center justify-center px-4 lg:px-8 py-1.5 lg:py-4">
         <h2 className="text-sm lg:text-xl font-heading font-bold text-base-300/80 tracking-widest uppercase">
           {title}
@@ -353,7 +313,7 @@ export function BattleOverlay({ mode = 'game' }: BattleOverlayProps) {
                     onClick={onContinue}
                     className="theme-button btn-primary px-10 lg:px-20 py-2.5 lg:py-3 rounded-lg font-semibold text-sm lg:text-lg transition-all"
                   >
-                    {isSandbox ? 'Close' : 'Continue'}
+                    Continue
                   </button>
                 </div>
               )}

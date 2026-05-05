@@ -1,17 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
-    "oab",
     "battle",
     "assets",
     "game",
     "client",
-    "blockchain/pallets/card-registry",
-    "blockchain/pallets/common",
-    "blockchain/pallets/arena",
-    "blockchain/pallets/tournament",
-    "blockchain/pallets/constructed",
-    "blockchain/runtime",
     "contract/tests-native",
 ]
 exclude = [
@@ -30,25 +23,12 @@ edition = "2021"
 oab-battle = { version = "0.1.0", path = "./battle", default-features = false }
 oab-assets = { version = "0.1.0", path = "./assets", default-features = false }
 oab-game = { version = "0.1.0", path = "./game", default-features = false }
-auto-battle-runtime = { path = "./blockchain/runtime", default-features = false }
-pallet-oab-card-registry = { version = "0.1.0", path = "./blockchain/pallets/card-registry", default-features = false }
-oab-common = { version = "0.1.0", path = "./blockchain/pallets/common", default-features = false }
-pallet-oab-arena = { version = "0.1.0", path = "./blockchain/pallets/arena", default-features = false }
-pallet-oab-tournament = { version = "0.1.0", path = "./blockchain/pallets/tournament", default-features = false }
-pallet-oab-constructed = { version = "0.1.0", path = "./blockchain/pallets/constructed", default-features = false }
-docify = { version = "0.2.9" }
 log = { version = "0.4.22", default-features = false }
-polkadot-sdk = { version = "2503.0.1", default-features = false }
 serde = { version = "1.0.214", default-features = false }
 codec = { version = "3.7.4", default-features = false, package = "parity-scale-codec" }
 parity-scale-codec = { version = "3.7.4", default-features = false }
-cumulus-pallet-parachain-system = { version = "0.20.0", default-features = false }
-hex-literal = { version = "0.4.1", default-features = false }
 scale-info = { version = "2.11.6", default-features = false }
 serde_json = { version = "1.0.132", default-features = false }
-smallvec = { version = "1.11.0", default-features = false }
-substrate-wasm-builder = { version = "26.0.1", default-features = false }
-frame = { version = "0.9.1", default-features = false, package = "polkadot-sdk-frame" }
 bounded-collections = { version = "0.2.4", default-features = false }
 wasm-bindgen = "0.2"
 serde-wasm-bindgen = "0.6"
@@ -57,9 +37,6 @@ console_log = "1.0"
 web-sys = { version = "0.3", features = ["console"] }
 getrandom = { version = "0.2", features = ["js"] }
 wasm-bindgen-test = "0.3"
-subxt = { version = "0.38" }
-subxt-signer = { version = "0.38", features = ["sr25519", "subxt"] }
-tokio = { version = "1", features = ["full"] }
 
 [profile.release]
 opt-level = 3

@@ -1,6 +1,4 @@
-import { useEffect } from 'react';
-import { Link, useParams, Navigate } from 'react-router-dom';
-import { useArenaStore } from '../store/arenaStore';
+import { useParams, Navigate } from 'react-router-dom';
 import {
   useCustomizationStore,
   type CustomizationType,
@@ -92,17 +90,9 @@ const SHAPE_CLASSES: Record<TileShape, { sm: string; lg: string; rounded: string
 
 export function CustomizeCategoryPage() {
   const { category } = useParams<{ category: string }>();
-  const { isConnected, api, selectedAccount } = useArenaStore();
-  const { ownedNfts, selections, isLoading, fetchUserNfts, selectCustomization } =
-    useCustomizationStore();
+  const { ownedNfts, selections, isLoading, selectCustomization } = useCustomizationStore();
 
   const cat = category ? CATEGORIES[category] : undefined;
-
-  useEffect(() => {
-    if (isConnected && api && selectedAccount) {
-      void fetchUserNfts(api, selectedAccount.address);
-    }
-  }, [isConnected, api, selectedAccount, fetchUserNfts]);
 
   if (!cat) {
     return <Navigate to="/customize" replace />;
@@ -132,21 +122,7 @@ export function CustomizeCategoryPage() {
         </div>
       ) : filteredNfts.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-base-500 text-xs lg:text-sm">
-          <p>
-            {isConnected
-              ? `No ${cat.label.toLowerCase()} NFTs found.`
-              : 'Connect to a blockchain node to browse NFTs.'}
-          </p>
-          {isConnected && (
-            <Link to="/creator/mint" className="mt-2 text-accent text-xs hover:underline">
-              Mint one
-            </Link>
-          )}
-          {!isConnected && (
-            <Link to="/network" className="mt-2 text-accent text-xs hover:underline">
-              Network Settings
-            </Link>
-          )}
+          <p>No {cat.label.toLowerCase()} options available.</p>
         </div>
       ) : (
         <>

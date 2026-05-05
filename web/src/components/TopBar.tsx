@@ -1,14 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useMenuStore } from '../store/menuStore';
-import { useArenaStore } from '../store/arenaStore';
+import { useContractStore } from '../store/contractStore';
 import { useGameStore } from '../store/gameStore';
-
-const formatBalance = (raw: bigint, decimals = 12) =>
-  (Number(raw) / Math.pow(10, decimals)).toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 4,
-  });
 
 /** Three-line hamburger icon */
 function MenuIcon({ className = 'w-5 h-5' }: { className?: string }) {
@@ -32,16 +26,6 @@ interface TopBarProps {
   hasCardPanel?: boolean;
 }
 
-/**
- * Standard top navigation bar.
- *
- * Layout: [← Back] .........[Title]......... [☰ Hamburger]
- *
- * - Back button: left-aligned (optional)
- * - Title: centered absolutely (optional)
- * - Hamburger: right-aligned, opens the global slide-out menu
- * - hasCardPanel: adds left margin to clear the card detail panel
- */
 export function TopBar({
   backTo,
   backState,
@@ -51,17 +35,13 @@ export function TopBar({
 }: TopBarProps) {
   const location = useLocation();
   const openMenu = useMenuStore((s) => s.open);
-  const selectedAccount = useArenaStore((s) => s.selectedAccount);
-  const isConnected = useArenaStore((s) => s.isConnected);
-  const isLoggedIn = useArenaStore((s) => s.isLoggedIn);
+  const selectedAccount = useContractStore((s) => s.selectedAccount);
+  const isConnected = useContractStore((s) => s.isConnected);
   const showAddress = useGameStore((s) => s.showAddress);
-  const showBalance = useGameStore((s) => s.showBalance);
-  const getAccountBalance = useArenaStore((s) => s.getAccountBalance);
-  const fundSelectedAccount = useArenaStore((s) => s.fundSelectedAccount);
+  const [copied, setCopied] = useState(false);
 
   // If the caller navigated here with returnTo state (e.g. from hamburger menu),
   // use that as the back destination instead of the hardcoded backTo prop.
-  // Skip if an explicit backState prop was provided (caller is manually wiring state).
   const returnTo =
     !backState &&
     location.state &&
@@ -73,47 +53,6 @@ export function TopBar({
 
   const effectiveBackTo = returnTo ?? backTo;
   const effectiveBackLabel = returnTo ? 'Back' : backLabel;
-  const [balance, setBalance] = useState<bigint | null>(null);
-  const [showFundPopup, setShowFundPopup] = useState(false);
-  const [isFunding, setIsFunding] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const fetchBalance = useCallback(async () => {
-    if (!selectedAccount || !isConnected) {
-      setBalance(null);
-      return;
-    }
-    try {
-      const bal = await getAccountBalance(selectedAccount.address);
-      setBalance(bal);
-    } catch {
-      setBalance(null);
-    }
-  }, [selectedAccount, isConnected, getAccountBalance]);
-
-  useEffect(() => {
-    void fetchBalance();
-  }, [fetchBalance]);
-
-  // Show fund popup when logged in with zero balance
-  useEffect(() => {
-    if (isLoggedIn && balance !== null && balance === BigInt(0)) {
-      setShowFundPopup(true);
-    } else {
-      setShowFundPopup(false);
-    }
-  }, [isLoggedIn, balance]);
-
-  const handleFund = async () => {
-    setIsFunding(true);
-    try {
-      await fundSelectedAccount();
-      await fetchBalance();
-    } finally {
-      setIsFunding(false);
-      setShowFundPopup(false);
-    }
-  };
 
   return (
     <div
@@ -131,7 +70,7 @@ export function TopBar({
           <span>&larr;</span>
           <span>{effectiveBackLabel}</span>
         </Link>
-      ) : selectedAccount && isLoggedIn ? (
+      ) : selectedAccount && isConnected ? (
         <span className="inline-flex items-center gap-1.5 lg:gap-2 text-xs lg:text-sm text-base-300 z-10 min-w-0">
           <span className="relative flex h-2 w-2 lg:h-2.5 lg:w-2.5 shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-positive opacity-75"></span>
@@ -141,9 +80,6 @@ export function TopBar({
             <span>
               Signed in as{' '}
               <span className="text-white font-medium">{selectedAccount.name || 'Unknown'}</span>
-              {showBalance && balance !== null && (
-                <span className="text-base-400"> ({formatBalance(balance)})</span>
-              )}
             </span>
             {showAddress && (
               <span
@@ -181,39 +117,6 @@ export function TopBar({
       >
         <MenuIcon className="w-4 h-4 lg:w-5 lg:h-5" />
       </button>
-
-      {/* Zero balance fund popup */}
-      {showFundPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="theme-panel bg-base-900 border border-base-700 rounded-xl p-6 lg:p-8 max-w-md lg:max-w-lg mx-4 text-center shadow-xl">
-            <h3 className="text-lg lg:text-xl font-heading font-bold text-white mb-1">
-              Account Balance: 0
-            </h3>
-            <p className="text-sm text-white font-medium">{selectedAccount?.name || 'Unknown'}</p>
-            <p className="text-[10px] lg:text-xs text-base-500 font-mono break-all mb-4">
-              {selectedAccount?.address}
-            </p>
-            <p className="text-sm text-base-400 mb-5">
-              Your account has zero balance. Fund it to start playing.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={() => setShowFundPopup(false)}
-                className="theme-button theme-surface-button px-4 py-2 rounded-lg border transition-colors text-sm"
-              >
-                Dismiss
-              </button>
-              <button
-                onClick={handleFund}
-                disabled={isFunding}
-                className="theme-button btn-primary px-6 py-2 rounded-lg font-bold text-sm transition-colors disabled:opacity-50"
-              >
-                {isFunding ? 'Funding...' : 'Fund Account'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -128,7 +128,6 @@ export async function initHostStorage(): Promise<void> {
     defaultBattleSpeed,
     reducedAnimations,
     themeData,
-    loggedIn,
   ] = await Promise.all([
     storageService.readString('oab-ws-endpoint'),
     storageService.readString('oab-selected-set'),
@@ -141,7 +140,6 @@ export async function initHostStorage(): Promise<void> {
     storageService.readJSON<number>('defaultBattleSpeed'),
     storageService.readJSON<boolean>('reducedAnimations'),
     storageService.readJSON<StoredThemeData>('oab-selected-theme'),
-    storageService.readString('oab-logged-in'),
   ]);
 
   if (endpoint) useSettingsStore.setState({ endpoint });
@@ -164,11 +162,5 @@ export async function initHostStorage(): Promise<void> {
       activeTheme: themeData.theme,
       activeThemeNft: themeData.nft ?? null,
     });
-  }
-
-  // Mark session restoration hint so arenaStore.connect() knows to look for saved login
-  if (loggedIn) {
-    const { useArenaStore } = await import('../store/arenaStore');
-    useArenaStore.setState({ isRestoringSession: true });
   }
 }

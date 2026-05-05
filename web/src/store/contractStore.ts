@@ -1,20 +1,16 @@
 /**
  * Contract store — manages the PolkaVM contract backend connection and game state.
- *
- * Separate from arenaStore to keep pallet and contract code isolated.
- * Uses the same GameBackend interface and WASM engine as the pallet path.
  */
 
 import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
-import type { GameBackend } from '../backends/types';
-import { createContractBackend } from '../backends/contract';
+import { createContractBackend, type ContractBackend } from '../contract';
 import { useGameStore } from './gameStore';
 import deployment from '../../../contract/deployment.json';
 
 interface ContractStore {
   // Connection
-  backend: GameBackend | null;
+  backend: ContractBackend | null;
   isConnected: boolean;
   isConnecting: boolean;
   connectionError: string | null;
@@ -157,7 +153,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       const actionScale = engine.get_commit_action_scale();
 
       // Submit turn — contract selects opponent and emits BattleReported event
-      const turnResult = await backend.submitTurn(actionScale, new Uint8Array());
+      const turnResult = await backend.submitTurn(actionScale);
 
       // Replay locally whenever the contract gave us a deterministic battle seed,
       // even if the opponent board is empty because no ghost existed yet.

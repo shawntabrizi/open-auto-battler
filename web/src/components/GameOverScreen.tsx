@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { useArenaStore } from '../store/arenaStore';
 import { useIsSubmitting } from '../store/txStore';
 import { TrophyIcon, SkullIcon, StarIcon, LivesIcon, HourglassIcon } from './Icons';
 import { TopBar } from './TopBar';
@@ -12,12 +11,11 @@ interface GameOverScreenProps {
 }
 
 export function GameOverScreen({
-  backTo = '/',
+  backTo = '/contract',
   backLabel = 'Menu',
   onNewRun,
 }: GameOverScreenProps = {}) {
   const { view, newRun, winsToVictory } = useGameStore();
-  const { chainState, endGame } = useArenaStore();
   const isSubmitting = useIsSubmitting();
 
   const [showTitle, setShowTitle] = useState(false);
@@ -203,9 +201,6 @@ export function GameOverScreen({
                 if (onNewRun) {
                   await onNewRun();
                 } else {
-                  if (chainState) {
-                    await endGame();
-                  }
                   newRun();
                 }
               }}
