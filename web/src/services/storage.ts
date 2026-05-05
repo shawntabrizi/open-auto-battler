@@ -3,30 +3,21 @@
  * browser localStorage (standalone mode) behind a common async API.
  */
 
+import { getHostLocalStorage, type HostLocalStorage } from '@parity/product-sdk-host';
 import { isInHost } from './hostEnvironment';
 import { ignoreError } from '../utils/safe';
 import type { ResolvedThemeDefinition } from '../theme/themes';
 import type { NftItem } from '../store/customizationStore';
-
-interface HostStorage {
-  readString: (key: string) => Promise<string | null | undefined>;
-  writeString: (key: string, value: string) => Promise<void>;
-  readJSON: <T = unknown>(key: string) => Promise<T | null | undefined>;
-  writeJSON: (key: string, value: unknown) => Promise<void>;
-  clear: (key: string) => Promise<void>;
-}
 
 interface StoredThemeData {
   theme?: ResolvedThemeDefinition;
   nft?: NftItem | null;
 }
 
-// Lazy import to avoid loading product-sdk in standalone mode
-let _hostLocalStorage: HostStorage | null = null;
-async function getHostStorage(): Promise<HostStorage> {
+let _hostLocalStorage: HostLocalStorage | null = null;
+async function getHostStorage(): Promise<HostLocalStorage | null> {
   if (!_hostLocalStorage) {
-    const sdk = await import('@novasamatech/product-sdk');
-    _hostLocalStorage = sdk.hostLocalStorage as HostStorage;
+    _hostLocalStorage = await getHostLocalStorage();
   }
   return _hostLocalStorage;
 }
@@ -36,6 +27,7 @@ export const storageService = {
     if (isInHost()) {
       try {
         const hs = await getHostStorage();
+        if (!hs) return null;
         const val = await hs.readString(key);
         return val ?? null;
       } catch {
@@ -49,7 +41,7 @@ export const storageService = {
     if (isInHost()) {
       try {
         const hs = await getHostStorage();
-        await hs.writeString(key, value);
+        if (hs) await hs.writeString(key, value);
       } catch (error) {
         ignoreError(error);
       }
@@ -62,6 +54,7 @@ export const storageService = {
     if (isInHost()) {
       try {
         const hs = await getHostStorage();
+        if (!hs) return null;
         const val = await hs.readJSON(key);
         return (val ?? null) as T | null;
       } catch {
@@ -80,7 +73,7 @@ export const storageService = {
     if (isInHost()) {
       try {
         const hs = await getHostStorage();
-        await hs.writeJSON(key, value);
+        if (hs) await hs.writeJSON(key, value);
       } catch (error) {
         ignoreError(error);
       }
@@ -97,7 +90,7 @@ export const storageService = {
     if (isInHost()) {
       try {
         const hs = await getHostStorage();
-        await hs.clear(key);
+        if (hs) await hs.clear(key);
       } catch (error) {
         ignoreError(error);
       }
