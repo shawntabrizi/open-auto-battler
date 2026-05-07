@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'node_modules', '.papi', 'src/pkg', 'src/wasm'],
+    ignores: ['dist', 'node_modules', '.papi', '.cdm', 'src/pkg', 'src/wasm'],
   },
   js.configs.recommended,
   {

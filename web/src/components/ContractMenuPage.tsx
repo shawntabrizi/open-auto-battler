@@ -3,7 +3,7 @@ import { TopBar } from './TopBar';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 
-/** Contract mode main menu — connect wallet, select account, and choose game mode. */
+/** Contract mode main menu — connect signer, select account, and choose game mode. */
 export function ContractMenuPage() {
   const {
     isConnected,
@@ -11,15 +11,13 @@ export function ContractMenuPage() {
     connect,
     disconnect,
     connectionError,
-    rpcUrl,
-    contractAddress,
+    wsUrl,
     setConfig,
     accounts,
     selectedAccount,
     selectAccount,
   } = useContractStore();
-  const [editRpc, setEditRpc] = useState(rpcUrl);
-  const [editContract, setEditContract] = useState(contractAddress);
+  const [editWs, setEditWs] = useState(wsUrl);
 
   return (
     <div className="app-shell min-h-screen min-h-svh flex flex-col text-white">
@@ -29,34 +27,25 @@ export function ContractMenuPage() {
           CONTRACT MODE
         </h1>
         <p className="text-base-400 text-sm max-w-md text-center">
-          Play on a PolkaVM smart contract via Ethereum JSON-RPC. Connects to MetaMask if available,
-          otherwise uses dev accounts.
+          Play on a PolkaVM smart contract on Polkadot Asset Hub. Connects via the Polkadot host
+          when running inside one, otherwise uses dev accounts (Alice, Bob…).
         </p>
 
         {!isConnected ? (
           <div className="flex flex-col items-center gap-4 w-full max-w-md">
             <div className="w-full">
-              <label className="block text-xs text-base-500 mb-1">RPC Endpoint</label>
+              <label className="block text-xs text-base-500 mb-1">Asset Hub WS Endpoint</label>
               <input
                 type="text"
-                value={editRpc}
-                onChange={(e) => setEditRpc(e.target.value)}
+                value={editWs}
+                onChange={(e) => setEditWs(e.target.value)}
                 className="w-full bg-base-900 border border-base-700 rounded-lg px-3 py-2 text-sm text-white"
-              />
-            </div>
-            <div className="w-full">
-              <label className="block text-xs text-base-500 mb-1">Contract Address</label>
-              <input
-                type="text"
-                value={editContract}
-                onChange={(e) => setEditContract(e.target.value)}
-                className="w-full bg-base-900 border border-base-700 rounded-lg px-3 py-2 text-sm text-white font-mono"
               />
             </div>
             <div className="flex gap-3 w-full">
               <button
                 onClick={() => {
-                  setConfig(editRpc, editContract);
+                  setConfig(editWs);
                   void connect(true);
                 }}
                 disabled={isConnecting}
@@ -66,13 +55,13 @@ export function ContractMenuPage() {
               </button>
               <button
                 onClick={() => {
-                  setConfig(editRpc, editContract);
+                  setConfig(editWs);
                   void connect(false);
                 }}
                 disabled={isConnecting}
                 className="theme-button btn-secondary flex-1 font-bold py-3 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
               >
-                METAMASK
+                HOST
               </button>
             </div>
             {connectionError && (
@@ -87,7 +76,7 @@ export function ContractMenuPage() {
             <div className="w-full">
               <label className="block text-xs text-base-500 mb-2">Account</label>
               <div className="flex flex-col gap-2">
-                {accounts.map((account: any) => {
+                {accounts.map((account) => {
                   const isSelected = selectedAccount?.address === account.address;
                   const addr = account.address;
                   const short = `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -112,12 +101,12 @@ export function ContractMenuPage() {
                       </div>
                       <span
                         className={`text-[10px] px-2 py-0.5 rounded-full ${
-                          account.source === 'extension'
+                          account.source === 'host'
                             ? 'bg-purple-500/20 text-purple-300'
                             : 'bg-blue-500/20 text-blue-300'
                         }`}
                       >
-                        {account.source === 'extension' ? 'MetaMask' : 'Dev'}
+                        {account.source === 'host' ? 'Host' : 'Dev'}
                       </span>
                     </button>
                   );

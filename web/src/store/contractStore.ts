@@ -4,9 +4,8 @@
 
 import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
-import { createContractBackend, type ContractBackend } from '../contract';
+import { createContractBackend, type Account, type ContractBackend } from '../contract';
 import { useGameStore } from './gameStore';
-import deployment from '../../../contract/deployment.json';
 
 interface ContractStore {
   // Connection
@@ -14,12 +13,11 @@ interface ContractStore {
   isConnected: boolean;
   isConnecting: boolean;
   connectionError: string | null;
-  contractAddress: string;
-  rpcUrl: string;
+  wsUrl: string;
 
   // Account
-  selectedAccount: any;
-  accounts: any[];
+  selectedAccount: Account | null;
+  accounts: Account[];
 
   // Game state
   hasActiveGame: boolean;
@@ -29,8 +27,8 @@ interface ContractStore {
   // Actions
   connect: (useDevAccounts?: boolean) => Promise<boolean>;
   disconnect: () => void;
-  selectAccount: (account: any) => void;
-  setConfig: (rpcUrl: string, contractAddress: string) => void;
+  selectAccount: (account: Account) => void;
+  setConfig: (wsUrl: string) => void;
   startGame: (setId: number) => Promise<void>;
   submitTurnOnChain: () => Promise<void>;
   endGame: () => Promise<void>;
@@ -38,36 +36,33 @@ interface ContractStore {
   refreshGameState: () => Promise<void>;
 }
 
-const DEFAULT_RPC = deployment.rpcUrl || 'http://localhost:8545';
-const DEFAULT_CONTRACT = deployment.address || '0x' + '0'.repeat(40);
+const DEFAULT_WS = 'ws://127.0.0.1:10020';
 
 export const useContractStore = create<ContractStore>((set, get) => ({
   backend: null,
   isConnected: false,
   isConnecting: false,
   connectionError: null,
-  contractAddress: DEFAULT_CONTRACT,
-  rpcUrl: DEFAULT_RPC,
+  wsUrl: DEFAULT_WS,
   selectedAccount: null,
   accounts: [],
   hasActiveGame: false,
   isRefreshing: false,
   isSubmitting: false,
 
-  setConfig: (rpcUrl: string, contractAddress: string) => {
-    set({ rpcUrl, contractAddress });
+  setConfig: (wsUrl: string) => {
+    set({ wsUrl });
   },
 
   connect: async (useDevAccounts?: boolean) => {
-    const { rpcUrl, contractAddress } = get();
+    const { wsUrl } = get();
     get().disconnect();
     set({ isConnecting: true, connectionError: null });
 
     try {
       const backend = createContractBackend({
-        rpcUrl,
-        contractAddress: contractAddress as `0x${string}`,
-        skipWallet: useDevAccounts,
+        wsUrl,
+        useDevAccounts,
       });
 
       await backend.connect();

@@ -1,30 +1,18 @@
 /**
- * Contract Backend — talks to the OAB arena PolkaVM contract on Polkadot Hub
- * via Ethereum JSON-RPC using viem. Signs with MetaMask or dev accounts.
+ * Contract Backend — talks to the OAB arena PolkaVM contract on Polkadot Asset Hub
+ * via PAPI + @dotdm/cdm. Signs with @parity/product-sdk-signer (DevProvider for
+ * local zombienet, HostProvider when running inside a Polkadot Triangle host).
  */
 
-import {
-  createPublicClient,
-  createWalletClient,
-  custom,
-  http,
-  type PublicClient,
-  type WalletClient,
-  type Transport,
-  type Chain,
-} from 'viem';
-import {
-  decodeBoolResult,
-  decodeStartGameResult,
-  decodeSubmitTurnSeed,
-  encodeStartGame,
-  encodeSubmitTurn,
-  encodeGetGameState,
-  encodeAbandonGame,
-  encodeEndGame,
-  encodeGetSet,
-  decodeGetGameStateResult,
-} from './abi';
+import { Binary, createClient, type SS58String } from 'polkadot-api';
+import { getWsProvider } from 'polkadot-api/ws-provider/web';
+import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
+import type { PolkadotClient } from 'polkadot-api';
+import { createCdm, type Cdm } from '@dotdm/cdm';
+import { SignerManager } from '@parity/product-sdk-signer';
+import cdmJson from '../../cdm.json';
+// Augments @dotdm/cdm's CdmContracts with @oab/arena method types:
+import '../../.cdm/cdm.d.ts';
 
 // ── Shared types ─────────────────────────────────────────────────────────────
 
@@ -51,9 +39,8 @@ export interface GameStateRaw {
 
 export interface Account {
   name: string;
-  address: string;
-  signer: any;
-  source: 'extension' | 'dev';
+  address: SS58String;
+  source: 'dev' | 'host';
 }
 
 export interface ContractBackend {
@@ -70,6 +57,9 @@ export interface ContractBackend {
   abandonGame(): Promise<void>;
 }
 
+// keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
+const BATTLE_REPORTED_TOPIC = '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694ddef23dd55af68e089bd';
+
 export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
   // revive's Mapping getter currently materializes a zeroed ArenaSession for
   // missing keys instead of returning an empty byte payload. Treat that sentinel
@@ -78,181 +68,66 @@ export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
 }
 
 export function createContractBackend(deps: {
-  rpcUrl?: string;
-  contractAddress: `0x${string}`;
-  chainId?: number;
-  skipWallet?: boolean;
+  wsUrl?: string;
+  useDevAccounts?: boolean;
 }): ContractBackend {
-  const contractAddress = deps.contractAddress;
-  let publicClient: PublicClient | null = null;
-  let walletClient: WalletClient | null = null;
-  let accounts: Account[] = [];
+  const wsUrl = deps.wsUrl ?? 'ws://127.0.0.1:10020';
+  const providerType: 'dev' | 'host' = deps.useDevAccounts ? 'dev' : 'host';
+
+  let client: PolkadotClient | null = null;
+  let cdm: Cdm | null = null;
+  let signerManager: SignerManager | null = null;
+  let _accounts: Account[] = [];
   let _selectedAccount: Account | null = null;
   let _isConnected = false;
-  let _activeSetId: number = 0;
+  let _activeSetId = 0;
 
-  let chain: Chain = {
-    id: deps.chainId ?? 420420420,
-    name: 'PolkaVM',
-    nativeCurrency: { name: 'DEV', symbol: 'DEV', decimals: 18 },
-    rpcUrls: {
-      default: { http: [deps.rpcUrl ?? 'http://localhost:8545'] },
-    },
-  };
-
-  let _useWallet = false;
-
-  // BattleReported event topic = keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
-  const BATTLE_REPORTED_TOPIC =
-    '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694ddef23dd55af68e089bd';
-
-  async function sendRawTx(from: string, data: `0x${string}`): Promise<`0x${string}`> {
-    if (!publicClient) throw new Error('Not connected');
-    const rpcUrl = chain.rpcUrls.default.http[0];
-    const body = {
-      jsonrpc: '2.0',
-      method: 'eth_sendTransaction',
-      params: [{ from, to: contractAddress, data, gas: '0x10000000' }],
-      id: Date.now(),
-    };
-    const resp = await fetch(rpcUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const json = await resp.json();
-    if (json.error)
-      throw new Error(`RPC error: ${json.error.message ?? JSON.stringify(json.error)}`);
-    const txHash = json.result as `0x${string}`;
-    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
-    if (receipt.status === 'reverted') throw new Error('Transaction reverted');
-    return txHash;
-  }
-
-  async function sendTx(data: `0x${string}`): Promise<`0x${string}`> {
-    if (!_selectedAccount) throw new Error('No account selected');
-
-    if (_useWallet && walletClient) {
-      const hash = await walletClient.sendTransaction({
-        account: _selectedAccount.address as `0x${string}`,
-        to: contractAddress,
-        data,
-        chain,
-      });
-      const receipt = await publicClient!.waitForTransactionReceipt({ hash });
-      if (receipt.status === 'reverted') throw new Error('Transaction reverted');
-      return hash;
-    } else {
-      return sendRawTx(_selectedAccount.address, data);
-    }
-  }
-
-  async function callView(data: `0x${string}`): Promise<`0x${string}`> {
-    if (!publicClient) throw new Error('Not connected');
-    const result = await publicClient.call({
-      to: contractAddress,
-      data,
-      account: _selectedAccount?.address as `0x${string}` | undefined,
-    });
-    return (result.data ?? '0x') as `0x${string}`;
-  }
-
-  function decodeBytesResponse(data: `0x${string}`): Uint8Array | null {
-    return decodeGetGameStateResult(data);
-  }
-
-  function decodeArenaSessionSetId(data: Uint8Array): number {
-    if (data.length < 2) return 0;
-    const lo = data[data.length - 2] ?? 0;
-    const hi = data[data.length - 1] ?? 0;
-    return lo | (hi << 8);
+  function arena() {
+    if (!cdm) throw new Error('Not connected');
+    return cdm.getContract('@oab/arena');
   }
 
   const backend: ContractBackend = {
     async connect() {
-      const rpcUrl = chain.rpcUrls.default.http[0];
-      const transport: Transport = http(rpcUrl);
-
-      try {
-        const resp = await fetch(rpcUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_chainId', params: [], id: 1 }),
-        });
-        const json = await resp.json();
-        const detectedChainId = parseInt(json.result, 16);
-        if (detectedChainId) {
-          chain = { ...chain, id: detectedChainId };
-        }
-      } catch {
-        // Ignore chain ID detection failures; fall back to configured chain.
+      signerManager = new SignerManager({
+        ss58Prefix: 0,
+        dappName: 'oab',
+        persistence: null,
+      });
+      const result = await signerManager.connect(providerType);
+      if (!result.ok) {
+        throw new Error(`Signer connect failed: ${result.error.message}`);
       }
+      _accounts = result.value.map((acc) => ({
+        name: acc.name ?? '(unnamed)',
+        address: acc.address,
+        source: providerType,
+      }));
+      if (_accounts.length === 0) throw new Error('No accounts available');
+      _selectedAccount = _accounts[0];
+      const selected = signerManager.selectAccount(_selectedAccount.address);
+      if (!selected.ok) throw new Error(`Could not select account: ${selected.error.message}`);
 
-      publicClient = createPublicClient({ chain, transport });
+      const signer = signerManager.getSigner();
+      if (!signer) throw new Error('No signer for selected account');
 
-      const ethereum = !deps.skipWallet ? (window as any).ethereum : null;
-      if (ethereum) {
-        try {
-          walletClient = createWalletClient({
-            chain,
-            transport: custom(ethereum),
-          });
-          const addresses = await walletClient.requestAddresses();
-          if (addresses.length > 0) {
-            accounts = addresses.map((addr: `0x${string}`, i: number) => ({
-              name: `MetaMask ${i + 1}`,
-              address: addr,
-              signer: ethereum,
-              source: 'extension',
-            }));
-            _useWallet = true;
-          }
-        } catch (e) {
-          console.warn('MetaMask connection failed, trying dev accounts:', e);
-          walletClient = null;
-        }
-      }
-
-      if (accounts.length === 0) {
-        try {
-          const resp = await fetch(rpcUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jsonrpc: '2.0',
-              method: 'eth_accounts',
-              params: [],
-              id: 1,
-            }),
-          });
-          const json = await resp.json();
-          const devAddresses: string[] = json.result ?? [];
-          accounts = devAddresses.map((addr, i) => ({
-            name: `Dev Account ${i + 1}`,
-            address: addr,
-            signer: null,
-            source: 'dev',
-          }));
-          _useWallet = false;
-        } catch (e) {
-          throw new Error(
-            `Cannot connect: no wallet and dev accounts unavailable (${e instanceof Error ? e.message : String(e)})`
-          );
-        }
-      }
-
-      if (accounts.length === 0) {
-        throw new Error('No accounts available');
-      }
-
-      _selectedAccount = accounts[0];
+      client = createClient(withPolkadotSdkCompat(getWsProvider(wsUrl)));
+      cdm = createCdm(cdmJson, {
+        client,
+        defaultSigner: signer,
+        defaultOrigin: _selectedAccount.address,
+      });
       _isConnected = true;
     },
 
     disconnect() {
-      publicClient = null;
-      walletClient = null;
-      accounts = [];
+      cdm?.destroy();
+      client?.destroy();
+      signerManager?.disconnect();
+      cdm = null;
+      client = null;
+      signerManager = null;
+      _accounts = [];
       _selectedAccount = null;
       _isConnected = false;
     },
@@ -261,126 +136,61 @@ export function createContractBackend(deps: {
       return _isConnected;
     },
     getAccounts() {
-      return Promise.resolve(accounts);
+      return Promise.resolve(_accounts);
     },
     get selectedAccount() {
       return _selectedAccount;
     },
     selectAccount(account: Account) {
+      if (!signerManager || !cdm) return;
+      const r = signerManager.selectAccount(account.address);
+      if (!r.ok) return;
       _selectedAccount = account;
+      const signer = signerManager.getSigner();
+      if (signer) cdm.setDefaults({ signer, origin: account.address });
     },
 
     async startGame(setId: number): Promise<{ seed: bigint }> {
       const seedNonce = BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
-      const data = encodeStartGame(setId, seedNonce);
-      const simulatedSeed = decodeStartGameResult(await callView(data));
-      if (simulatedSeed === 0n) {
+      const dryRun = await arena().startGame.query(setId, seedNonce);
+      if (!dryRun.success || dryRun.value === 0n) {
         throw new Error(`Contract rejected startGame for set ${setId}`);
       }
-
       _activeSetId = setId;
-      await sendTx(data);
-      return { seed: simulatedSeed };
+      const tx = await arena().startGame.tx(setId, seedNonce);
+      if (!tx.ok) throw new Error('startGame tx failed');
+      return { seed: dryRun.value };
     },
 
     async submitTurn(actionScale: Uint8Array): Promise<TurnResult> {
-      const data = encodeSubmitTurn(actionScale);
-      const simulatedSeed = decodeSubmitTurnSeed(await callView(data));
-      if (simulatedSeed === 0n) {
+      const action = Binary.fromBytes(actionScale);
+      const dryRun = await arena().submitTurn.query(action);
+      if (!dryRun.success || dryRun.value === 0n) {
         throw new Error('Contract rejected submitTurn');
       }
+      const tx = await arena().submitTurn.tx(action);
+      if (!tx.ok) throw new Error('submitTurn tx failed');
 
-      if (!_selectedAccount) throw new Error('No account selected');
-
-      let receipt: any;
-      if (_useWallet && walletClient) {
-        const hash = await walletClient.sendTransaction({
-          account: _selectedAccount.address as `0x${string}`,
-          to: contractAddress,
-          data,
-          chain,
-        });
-        receipt = await publicClient!.waitForTransactionReceipt({ hash });
-      } else {
-        const rpcUrl = chain.rpcUrls.default.http[0];
-        const txResp = await fetch(rpcUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'eth_sendTransaction',
-            params: [
-              { from: _selectedAccount.address, to: contractAddress, data, gas: '0x10000000' },
-            ],
-            id: Date.now(),
-          }),
-        });
-        const txJson = await txResp.json();
-        if (txJson.error) throw new Error(txJson.error.message);
-        const txHash = txJson.result;
-        receipt = await publicClient!.waitForTransactionReceipt({ hash: txHash });
-      }
-
-      if (receipt.status === 'reverted') throw new Error('Transaction reverted');
-
-      const battleLog = receipt.logs?.find(
-        (log: any) => log.topics?.[0]?.toLowerCase() === BATTLE_REPORTED_TOPIC
-      );
-
-      if (battleLog?.data) {
-        const hex = (battleLog.data as string).startsWith('0x')
-          ? (battleLog.data as string).slice(2)
-          : (battleLog.data as string);
-        const bytes = new Uint8Array(hex.length / 2);
-        for (let i = 0; i < bytes.length; i++) {
-          bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-        }
-
-        const resultByte = bytes[0];
-        const wins = bytes[1];
-        const lives = bytes[2];
-        const round = bytes[3];
-        const battleSeed = BigInt('0x' + hex.slice(8, 24));
-
-        const ghostBytes = bytes.slice(12);
-        const opponentBoard: GhostBoardUnit[] = [];
-        if (ghostBytes.length > 0) {
-          const count = ghostBytes[0] / 4;
-          let offset = 1;
-          for (let i = 0; i < count && offset + 6 <= ghostBytes.length; i++) {
-            const card_id = ghostBytes[offset] | (ghostBytes[offset + 1] << 8);
-            const perm_attack =
-              ((ghostBytes[offset + 2] | (ghostBytes[offset + 3] << 8)) << 16) >> 16;
-            const perm_health =
-              ((ghostBytes[offset + 4] | (ghostBytes[offset + 5] << 8)) << 16) >> 16;
-            opponentBoard.push({ card_id, perm_attack, perm_health });
-            offset += 6;
-          }
-        }
-
-        const resultMap: Record<number, 'Victory' | 'Defeat' | 'Draw'> = {
-          0: 'Victory',
-          1: 'Defeat',
-          2: 'Draw',
-        };
+      const eventBytes = findBattleReportedEventData(tx.events);
+      if (!eventBytes) {
+        console.warn('No BattleReported event in tx');
         return {
-          battleSeed,
-          opponentBoard,
-          result: resultMap[resultByte] ?? 'Draw',
-          wins,
-          lives,
-          round,
+          battleSeed: 0n,
+          opponentBoard: [],
+          result: 'Draw',
+          wins: 0,
+          lives: 0,
+          round: 0,
         };
       }
-
-      console.warn('No BattleReported event in receipt');
-      return { battleSeed: 0n, opponentBoard: [], result: 'Draw', wins: 0, lives: 0, round: 0 };
+      return decodeBattleReported(eventBytes);
     },
 
     async getGameState(): Promise<GameStateRaw | null> {
-      const returnData = await callView(encodeGetGameState());
-      const arenaSessionBytes = decodeGetGameStateResult(returnData);
-      if (!arenaSessionBytes || arenaSessionBytes.length === 0) return null;
+      const r = await arena().getGameState.query();
+      if (!r.success) return null;
+      const arenaSessionBytes = r.value.asBytes();
+      if (arenaSessionBytes.length === 0) return null;
       if (isMissingArenaSessionPayload(arenaSessionBytes)) return null;
 
       _activeSetId = decodeArenaSessionSetId(arenaSessionBytes);
@@ -393,26 +203,166 @@ export function createContractBackend(deps: {
       stateBytes.set(arenaSessionBytes);
       stateBytes.set(DEFAULT_CONFIG_SCALE, arenaSessionBytes.length);
 
-      const setData = await callView(encodeGetSet(_activeSetId));
-      const cardSetBytes = decodeBytesResponse(setData) ?? new Uint8Array();
+      const setRes = await arena().getSet.query(_activeSetId);
+      const cardSetBytes = setRes.success ? setRes.value.asBytes() : new Uint8Array();
 
       return { stateBytes, cardSetBytes, setId: _activeSetId };
     },
 
     async endGame(): Promise<void> {
-      const data = encodeEndGame();
-      const allowed = decodeBoolResult('endGame', await callView(data));
-      if (!allowed) throw new Error('Contract rejected endGame');
-      await sendTx(data);
+      const dryRun = await arena().endGame.query();
+      if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected endGame');
+      const tx = await arena().endGame.tx();
+      if (!tx.ok) throw new Error('endGame tx failed');
     },
 
     async abandonGame(): Promise<void> {
-      const data = encodeAbandonGame();
-      const allowed = decodeBoolResult('abandonGame', await callView(data));
-      if (!allowed) throw new Error('Contract rejected abandonGame');
-      await sendTx(data);
+      const dryRun = await arena().abandonGame.query();
+      if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected abandonGame');
+      const tx = await arena().abandonGame.tx();
+      if (!tx.ok) throw new Error('abandonGame tx failed');
     },
   };
 
   return backend;
+}
+
+function decodeArenaSessionSetId(data: Uint8Array): number {
+  if (data.length < 2) return 0;
+  const lo = data[data.length - 2] ?? 0;
+  const hi = data[data.length - 1] ?? 0;
+  return lo | (hi << 8);
+}
+
+/**
+ * Walk PAPI's tagged-union events looking for Revive.ContractEmitted whose
+ * first topic matches our BattleReported signature, and return its raw `data`
+ * bytes. Returns null if the event isn't present.
+ *
+ * The shape we expect (PAPI v1.x):
+ *   { type: "Revive", value: { type: "ContractEmitted",
+ *     value: { contract, data: Binary, topics: Binary[] } } }
+ * but we walk defensively in case sdk-ink wraps or flattens it differently.
+ */
+function findBattleReportedEventData(events: unknown[]): Uint8Array | null {
+  const target = BATTLE_REPORTED_TOPIC.toLowerCase();
+  for (const evt of events) {
+    const inner = unwrapContractEmitted(evt);
+    if (!inner) continue;
+    const topics = inner.topics ?? [];
+    const topic0 = topicToHex(topics[0]);
+    if (topic0?.toLowerCase() === target) {
+      return binaryToBytes(inner.data);
+    }
+  }
+  return null;
+}
+
+interface ContractEmittedPayload {
+  contract: unknown;
+  data: unknown;
+  topics: unknown[];
+}
+
+function unwrapContractEmitted(evt: unknown): ContractEmittedPayload | null {
+  if (typeof evt !== 'object' || evt === null) return null;
+  const e = evt as Record<string, unknown>;
+  // PAPI tagged-union: { type: 'Revive', value: { type: 'ContractEmitted', value: {...} } }
+  if (e.type === 'Revive' && typeof e.value === 'object' && e.value !== null) {
+    const v = e.value as Record<string, unknown>;
+    if (v.type === 'ContractEmitted' && typeof v.value === 'object' && v.value !== null) {
+      return v.value as unknown as ContractEmittedPayload;
+    }
+  }
+  // Already-flattened: { contract, data, topics } directly on the event
+  if ('topics' in e && 'data' in e) return e as unknown as ContractEmittedPayload;
+  return null;
+}
+
+function topicToHex(topic: unknown): string | null {
+  if (typeof topic === 'string') return topic;
+  if (topic instanceof Uint8Array) return '0x' + bytesToHex(topic);
+  if (topic && typeof (topic as { asHex?: () => string }).asHex === 'function') {
+    return (topic as { asHex: () => string }).asHex();
+  }
+  if (topic && typeof (topic as { asBytes?: () => Uint8Array }).asBytes === 'function') {
+    return '0x' + bytesToHex((topic as { asBytes: () => Uint8Array }).asBytes());
+  }
+  return null;
+}
+
+function binaryToBytes(data: unknown): Uint8Array {
+  if (data instanceof Uint8Array) return data;
+  if (data && typeof (data as { asBytes?: () => Uint8Array }).asBytes === 'function') {
+    return (data as { asBytes: () => Uint8Array }).asBytes();
+  }
+  if (typeof data === 'string') {
+    const hex = data.startsWith('0x') ? data.slice(2) : data;
+    const out = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+    return out;
+  }
+  return new Uint8Array();
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  let hex = '';
+  for (const b of bytes) hex += b.toString(16).padStart(2, '0');
+  return hex;
+}
+
+/**
+ * Decode the OAB BattleReported event payload. The contract emits a packed
+ * (NOT standard Solidity ABI) byte layout to keep the on-chain encoder small:
+ *   byte 0:    result (0=Victory, 1=Defeat, 2=Draw)
+ *   byte 1:    wins
+ *   byte 2:    lives
+ *   byte 3:    round
+ *   bytes 4-11: battleSeed (uint64, big-endian)
+ *   bytes 12+:  SCALE-encoded Vec<GhostBoardUnit> (1-byte compact prefix, then
+ *               6 bytes per unit: u16 card_id LE, i16 attack LE, i16 health LE)
+ */
+function decodeBattleReported(bytes: Uint8Array): TurnResult {
+  if (bytes.length < 12) {
+    return { battleSeed: 0n, opponentBoard: [], result: 'Draw', wins: 0, lives: 0, round: 0 };
+  }
+  const resultByte = bytes[0];
+  const wins = bytes[1];
+  const lives = bytes[2];
+  const round = bytes[3];
+
+  let battleSeed = 0n;
+  for (let i = 4; i < 12; i++) {
+    battleSeed = (battleSeed << 8n) | BigInt(bytes[i] ?? 0);
+  }
+
+  const ghostBytes = bytes.slice(12);
+  const opponentBoard: GhostBoardUnit[] = [];
+  if (ghostBytes.length > 0) {
+    const count = (ghostBytes[0] ?? 0) / 4;
+    let offset = 1;
+    for (let i = 0; i < count && offset + 6 <= ghostBytes.length; i++) {
+      const card_id = (ghostBytes[offset] ?? 0) | ((ghostBytes[offset + 1] ?? 0) << 8);
+      const perm_attack =
+        (((ghostBytes[offset + 2] ?? 0) | ((ghostBytes[offset + 3] ?? 0) << 8)) << 16) >> 16;
+      const perm_health =
+        (((ghostBytes[offset + 4] ?? 0) | ((ghostBytes[offset + 5] ?? 0) << 8)) << 16) >> 16;
+      opponentBoard.push({ card_id, perm_attack, perm_health });
+      offset += 6;
+    }
+  }
+
+  const resultMap: Record<number, 'Victory' | 'Defeat' | 'Draw'> = {
+    0: 'Victory',
+    1: 'Defeat',
+    2: 'Draw',
+  };
+  return {
+    battleSeed,
+    opponentBoard,
+    result: resultMap[resultByte ?? 0] ?? 'Draw',
+    wins: wins ?? 0,
+    lives: lives ?? 0,
+    round: round ?? 0,
+  };
 }
