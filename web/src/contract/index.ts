@@ -60,6 +60,14 @@ export interface ContractBackend {
 // keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
 const BATTLE_REPORTED_TOPIC = '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694ddef23dd55af68e089bd';
 
+// Explicit limits skip sdk-ink's pre-flight ReviveApi.trace_call dry-run, which
+// is incompatible with the local PPN Asset Hub runtime. Values match
+// @dotdm/utils' GAS_LIMIT and STORAGE_DEPOSIT_LIMIT defaults.
+const TX_OPTS = {
+  gasLimit: { refTime: 500_000_000_000n, proofSize: 2_000_000n },
+  storageDepositLimit: 100_000_000_000_000n,
+};
+
 export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
   // revive's Mapping getter currently materializes a zeroed ArenaSession for
   // missing keys instead of returning an empty byte payload. Treat that sentinel
@@ -157,7 +165,7 @@ export function createContractBackend(deps: {
         throw new Error(`Contract rejected startGame for set ${setId}`);
       }
       _activeSetId = setId;
-      const tx = await arena().startGame.tx(setId, seedNonce);
+      const tx = await arena().startGame.tx(setId, seedNonce, TX_OPTS);
       if (!tx.ok) throw new Error('startGame tx failed');
       return { seed: dryRun.value };
     },
@@ -168,7 +176,7 @@ export function createContractBackend(deps: {
       if (!dryRun.success || dryRun.value === 0n) {
         throw new Error('Contract rejected submitTurn');
       }
-      const tx = await arena().submitTurn.tx(action);
+      const tx = await arena().submitTurn.tx(action, TX_OPTS);
       if (!tx.ok) throw new Error('submitTurn tx failed');
 
       const eventBytes = findBattleReportedEventData(tx.events);
@@ -212,14 +220,14 @@ export function createContractBackend(deps: {
     async endGame(): Promise<void> {
       const dryRun = await arena().endGame.query();
       if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected endGame');
-      const tx = await arena().endGame.tx();
+      const tx = await arena().endGame.tx(TX_OPTS);
       if (!tx.ok) throw new Error('endGame tx failed');
     },
 
     async abandonGame(): Promise<void> {
       const dryRun = await arena().abandonGame.query();
       if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected abandonGame');
-      const tx = await arena().abandonGame.tx();
+      const tx = await arena().abandonGame.tx(TX_OPTS);
       if (!tx.ok) throw new Error('abandonGame tx failed');
     },
   };

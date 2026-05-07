@@ -1,10 +1,15 @@
 //! Register all cards and sets with the OAB arena contract.
 //!
-//! Usage:
+//! Usage (eth-rpc, legacy):
 //!   cargo run -- <RPC_URL> <CONTRACT_ADDRESS> [FROM_ADDRESS]
 //!
-//! Example:
-//!   cargo run -- http://localhost:8545 0x1234...abcd
+//! Usage (dump SCALE-encoded card+set bytes to JSON for cdm-based path):
+//!   cargo run -- --dump <PATH>
+//!
+//! The dump file is consumed by web/scripts/register-cards.ts which
+//! registers cards on-chain via @dotdm/cdm. Use this path when targeting
+//! the Asset Hub / cdm workflow; the eth-rpc path is kept for revive-dev-node
+//! compatibility (e.g., oab-bot until that is migrated).
 
 use oab_assets::{cards, sets};
 use oab_battle::state::CardSet;
@@ -12,6 +17,7 @@ use oab_battle::types::UnitCard;
 use parity_scale_codec::Encode;
 use serde_json::json;
 use std::env;
+use std::fs;
 use std::thread::sleep;
 use std::time::Duration;
 use tiny_keccak::{Hasher, Keccak};
@@ -190,13 +196,57 @@ fn decode_bool_result(data: &str) -> Result<bool, Box<dyn std::error::Error>> {
     Ok(clean.ends_with('1'))
 }
 
+fn dump_to_json(path: &str) {
+    let cards_hex: Vec<String> = cards::get_all()
+        .iter()
+        .map(|c| format!("0x{}", hex_encode(&c.encode())))
+        .collect();
+
+    let set_metas = sets::get_all_metas();
+    let sets_json: Vec<_> = sets::get_all()
+        .iter()
+        .enumerate()
+        .map(|(i, set)| {
+            json!({
+                "id": set_metas[i].id,
+                "name": set_metas[i].name,
+                "data": format!("0x{}", hex_encode(&set.encode())),
+            })
+        })
+        .collect();
+
+    let out = json!({
+        "cards": cards_hex,
+        "sets": sets_json,
+    });
+
+    fs::write(path, serde_json::to_string_pretty(&out).expect("serialize")).expect("write dump");
+    println!(
+        "Dumped {} cards and {} sets to {}",
+        cards::get_all().len(),
+        sets::get_all().len(),
+        path
+    );
+}
+
+fn hex_encode(data: &[u8]) -> String {
+    data.iter().map(|b| format!("{:02x}", b)).collect()
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
+
+    if args.len() == 3 && args[1] == "--dump" {
+        dump_to_json(&args[2]);
+        return;
+    }
+
     if args.len() < 3 {
         eprintln!(
             "Usage: {} <RPC_URL> <CONTRACT_ADDRESS> [FROM_ADDRESS]",
             args[0]
         );
+        eprintln!("       {} --dump <PATH>", args[0]);
         eprintln!("Example: {} http://localhost:8545 0x1234...abcd", args[0]);
         std::process::exit(1);
     }
