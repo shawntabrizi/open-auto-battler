@@ -1,4 +1,5 @@
 [workspace]
+members = ["."]
 
 [package]
 name = "oab-contract"
@@ -8,7 +9,7 @@ publish = false
 build = "build.rs"
 
 [[bin]]
-name = "contract"
+name = "oab-contract"
 path = "src/main.rs"
 
 [profile.release]

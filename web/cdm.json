@@ -1,0 +1,175 @@
+{
+  "targets": {
+    "1029bb2e5a8f86f9": {
+      "asset-hub": "ws://127.0.0.1:10020",
+      "bulletin": "http://127.0.0.1:8080/ipfs"
+    }
+  },
+  "dependencies": {
+    "1029bb2e5a8f86f9": {
+      "@oab/arena": "latest"
+    }
+  },
+  "contracts": {
+    "1029bb2e5a8f86f9": {
+      "@oab/arena": {
+        "version": 0,
+        "address": "0xDCa5a8F74682ea27D192b22E03821bB4A464D3e6",
+        "abi": [
+          {
+            "type": "constructor",
+            "inputs": [],
+            "stateMutability": "nonpayable"
+          },
+          {
+            "type": "function",
+            "name": "registerCard",
+            "inputs": [
+              {
+                "name": "data",
+                "type": "bytes"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "bool"
+              }
+            ],
+            "stateMutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "registerSet",
+            "inputs": [
+              {
+                "name": "set_id",
+                "type": "uint16"
+              },
+              {
+                "name": "data",
+                "type": "bytes"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "bool"
+              }
+            ],
+            "stateMutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "startGame",
+            "inputs": [
+              {
+                "name": "set_id",
+                "type": "uint16"
+              },
+              {
+                "name": "seed_nonce",
+                "type": "uint64"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint64"
+              }
+            ],
+            "stateMutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "submitTurn",
+            "inputs": [
+              {
+                "name": "action",
+                "type": "bytes"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint64"
+              }
+            ],
+            "stateMutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "getGameState",
+            "inputs": [],
+            "outputs": [
+              {
+                "name": "",
+                "type": "bytes"
+              }
+            ],
+            "stateMutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "abandonGame",
+            "inputs": [],
+            "outputs": [
+              {
+                "name": "",
+                "type": "bool"
+              }
+            ],
+            "stateMutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "endGame",
+            "inputs": [],
+            "outputs": [
+              {
+                "name": "",
+                "type": "bool"
+              }
+            ],
+            "stateMutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "getCard",
+            "inputs": [
+              {
+                "name": "card_id",
+                "type": "uint16"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "bytes"
+              }
+            ],
+            "stateMutability": "view"
+          },
+          {
+            "type": "function",
+            "name": "getSet",
+            "inputs": [
+              {
+                "name": "set_id",
+                "type": "uint16"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "",
+                "type": "bytes"
+              }
+            ],
+            "stateMutability": "view"
+          }
+        ],
+        "metadataCid": "bafk2bzacedpxmiu6jehklml3gzy2ymqgo63uqf3rx4tuidra7ch3twjzfbb56"
+      }
+    }
+  }
+}
