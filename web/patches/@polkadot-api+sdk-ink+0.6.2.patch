@@ -1,0 +1,88 @@
+diff --git a/node_modules/@polkadot-api/sdk-ink/dist/esm/src/provider.mjs b/node_modules/@polkadot-api/sdk-ink/dist/esm/src/provider.mjs
+index 3963023..384ef14 100644
+--- a/node_modules/@polkadot-api/sdk-ink/dist/esm/src/provider.mjs
++++ b/node_modules/@polkadot-api/sdk-ink/dist/esm/src/provider.mjs
+@@ -109,43 +109,47 @@ const reviveProvider = (allApis, atBest) => {
+     input,
+     value
+   }) => {
+-    const isPasset = await allApis.passet.apis.ReviveApi.trace_call.isCompatible(
+-      CompatibilityLevel.BackwardsCompatible
+-    );
+-    const api = isPasset ? allApis.passet : allApis.pasAh;
+-    return api.apis.ReviveApi.trace_call(
+-      {
+-        authorization_list: [],
+-        blob_versioned_hashes: [],
+-        blobs: [],
+-        from,
+-        input: {
+-          data: input.data,
+-          input: input.input
++    // PATCHED for OAB: wrap with try/catch so descriptor incompatibility
++    // (sync throw from PAPI's compatibilityError) degrades to {success:false}
++    // instead of breaking the parent Promise.all in dryRunCall.
++    // See contract/README.md "Upstream patches" or the sdk-ink issue we filed.
++    try {
++      const isPasset = await allApis.passet.apis.ReviveApi.trace_call.isCompatible(
++        CompatibilityLevel.BackwardsCompatible
++      );
++      const api = isPasset ? allApis.passet : allApis.pasAh;
++      return await api.apis.ReviveApi.trace_call(
++        {
++          authorization_list: [],
++          blob_versioned_hashes: [],
++          blobs: [],
++          from,
++          input: {
++            data: input.data,
++            input: input.input
++          },
++          to,
++          value,
++          access_list: void 0,
++          chain_id: void 0,
++          "r#type": void 0,
++          gas: void 0,
++          gas_price: void 0,
++          max_fee_per_blob_gas: void 0,
++          max_fee_per_gas: void 0,
++          max_priority_fee_per_gas: void 0,
++          nonce: void 0
+         },
+-        to,
+-        value,
+-        access_list: void 0,
+-        chain_id: void 0,
+-        "r#type": void 0,
+-        gas: void 0,
+-        gas_price: void 0,
+-        max_fee_per_blob_gas: void 0,
+-        max_fee_per_gas: void 0,
+-        max_priority_fee_per_gas: void 0,
+-        nonce: void 0
+-      },
+-      Enum("CallTracer", {
+-        only_top_call: false,
+-        with_logs: true
+-      }),
+-      callOptions
+-    ).catch((ex) => {
+-      console.error(ex);
+-      return {
+-        success: false
+-      };
+-    });
++        Enum("CallTracer", {
++          only_top_call: false,
++          with_logs: true
++        }),
++        callOptions
++      );
++    } catch (ex) {
++      console.error("[sdk-ink trace_call patched fallback]", ex);
++      return { success: false };
++    }
+   };
+   return {
+     async getBalance(addr) {

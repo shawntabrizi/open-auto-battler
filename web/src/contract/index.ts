@@ -62,9 +62,12 @@ const BATTLE_REPORTED_TOPIC = '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694dde
 
 // Explicit limits skip sdk-ink's pre-flight ReviveApi.trace_call dry-run, which
 // is incompatible with the local PPN Asset Hub runtime. Values match
-// @dotdm/utils' GAS_LIMIT and STORAGE_DEPOSIT_LIMIT defaults.
-const TX_OPTS = {
-  gasLimit: { refTime: 500_000_000_000n, proofSize: 2_000_000n },
+// @dotdm/utils' GAS_LIMIT and STORAGE_DEPOSIT_LIMIT defaults. Note snake_case
+// ref_time / proof_size — sdk-ink passes gasLimit straight to PAPI's Revive.call
+// where Weight is a snake_case ScaleStruct (cdm's TxOpts type signature is wrong).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TX_OPTS: any = {
+  gasLimit: { ref_time: 500_000_000_000n, proof_size: 2_000_000n },
   storageDepositLimit: 100_000_000_000_000n,
 };
 

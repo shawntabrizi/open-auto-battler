@@ -19,11 +19,7 @@ import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
 import { createCdm } from '@dotdm/cdm';
 import { getPolkadotSigner } from 'polkadot-api/signer';
 import { sr25519CreateDerive } from '@polkadot-labs/hdkd';
-import {
-  DEV_PHRASE,
-  entropyToMiniSecret,
-  mnemonicToEntropy,
-} from '@polkadot-labs/hdkd-helpers';
+import { DEV_PHRASE, entropyToMiniSecret, mnemonicToEntropy } from '@polkadot-labs/hdkd-helpers';
 
 import cdmJson from '../cdm.json' with { type: 'json' };
 import '../.cdm/cdm.d.ts';
@@ -85,37 +81,64 @@ async function main() {
   // Explicit gas + storage limits sidestep sdk-ink's pre-flight dryRunCall,
   // which calls ReviveApi.trace_call — incompatible with the local PPN runtime.
   // Values match @dotdm/utils' GAS_LIMIT and STORAGE_DEPOSIT_LIMIT.
+  // Note snake_case ref_time / proof_size — cdm's TxOpts type claims camelCase
+  // but sdk-ink passes the value straight through to PAPI's typed Revive.call,
+  // which decodes against runtime metadata where Weight uses snake_case fields.
   const txOpts = {
-    gasLimit: { refTime: 500_000_000_000n, proofSize: 2_000_000n },
+    gasLimit: { ref_time: 500_000_000_000n, proof_size: 2_000_000n },
     storageDepositLimit: 100_000_000_000_000n,
-  };
+  } as unknown as Parameters<typeof arena.registerCard.tx>[1];
 
-  console.log(`\nRegistering ${dump.cards.length} cards...`);
-  for (let i = 0; i < dump.cards.length; i++) {
-    const data = Binary.fromBytes(hexToBytes(dump.cards[i]));
-    try {
-      const r = await arena.registerCard.tx(data, txOpts);
-      if (!r.ok) console.error(`  card ${i}: tx failed`);
-      else if ((i + 1) % 20 === 0 || i + 1 === dump.cards.length) {
-        console.log(`  [${i + 1}/${dump.cards.length}]`);
+  // Parallel submission: Alice's nonce auto-increments per signAndSubmit, so
+  // fire all txs at once and wait for all to finalize. Sequential takes ~45s
+  // per tx (one block per finalization); parallel collapses 111 txs to ~1 min.
+  console.log(`\nRegistering ${dump.cards.length} cards (parallel)...`);
+  const cardStart = Date.now();
+  const cardResults = await Promise.all(
+    dump.cards.map(async (hex, i) => {
+      try {
+        const r = await arena.registerCard.tx(Binary.fromBytes(hexToBytes(hex)), txOpts);
+        return { i, ok: r.ok, err: null as null | string };
+      } catch (e) {
+        return { i, ok: false, err: e instanceof Error ? e.message : String(e) };
       }
-    } catch (e) {
-      console.error(`  card ${i}: ${e instanceof Error ? e.message : String(e)}`);
+    })
+  );
+  const cardOk = cardResults.filter((r) => r.ok).length;
+  const cardFail = cardResults.length - cardOk;
+  console.log(
+    `  ${cardOk}/${dump.cards.length} cards registered in ${(Date.now() - cardStart) / 1000}s`
+  );
+  if (cardFail > 0) {
+    console.error(`  ${cardFail} failed:`);
+    for (const r of cardResults.filter((r) => !r.ok)) {
+      console.error(`    card ${r.i}: ${r.err ?? 'tx returned ok=false'}`);
     }
   }
 
-  console.log(`\nRegistering ${dump.sets.length} sets...`);
-  for (const set of dump.sets) {
-    const data = Binary.fromBytes(hexToBytes(set.data));
-    try {
-      const r = await arena.registerSet.tx(set.id, data, txOpts);
-      if (!r.ok) console.error(`  set ${set.id} '${set.name}': tx failed`);
-      else console.log(`  Set ${set.id} '${set.name}' registered`);
-    } catch (e) {
-      console.error(
-        `  set ${set.id} '${set.name}': ${e instanceof Error ? e.message : String(e)}`,
-      );
-    }
+  console.log(`\nRegistering ${dump.sets.length} sets (parallel)...`);
+  const setResults = await Promise.all(
+    dump.sets.map(async (set) => {
+      try {
+        const r = await arena.registerSet.tx(
+          set.id,
+          Binary.fromBytes(hexToBytes(set.data)),
+          txOpts
+        );
+        return { id: set.id, name: set.name, ok: r.ok, err: null as null | string };
+      } catch (e) {
+        return {
+          id: set.id,
+          name: set.name,
+          ok: false,
+          err: e instanceof Error ? e.message : String(e),
+        };
+      }
+    })
+  );
+  for (const r of setResults) {
+    if (r.ok) console.log(`  Set ${r.id} '${r.name}' registered`);
+    else console.error(`  Set ${r.id} '${r.name}' failed: ${r.err ?? 'tx returned ok=false'}`);
   }
 
   cdm.destroy();
