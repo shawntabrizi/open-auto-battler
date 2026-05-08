@@ -62,15 +62,31 @@ IPFS_GATEWAY="http://127.0.0.1:8080/ipfs"
 
 PPN_PID=""
 WEB_PID=""
+
+# Comprehensive process sweep — zombienet spawns many descendants and Ctrl-C
+# doesn't always reach them, leaving ports 10000-10030 + 8080 bound. Killing
+# by full path catches everything spawned from $PPN_DIR/bin/.
+sweep_chain_procs() {
+  pkill -9 -f "zombie-cli" 2>/dev/null || true
+  pkill -9 -f "polkadot-omni-node" 2>/dev/null || true
+  pkill -9 -f "polkadot-execute-worker" 2>/dev/null || true
+  pkill -9 -f "polkadot-prepare-worker" 2>/dev/null || true
+  pkill -9 -f "polkadot-parachain" 2>/dev/null || true
+  pkill -9 -f "$PPN_DIR/bin/polkadot" 2>/dev/null || true
+  pkill -9 -f "$PPN_DIR/bin/ipfs" 2>/dev/null || true
+}
+
 cleanup() {
   echo "--- Stopping processes ---"
   [ -n "$WEB_PID" ] && kill "$WEB_PID" 2>/dev/null || true
   [ -n "$PPN_PID" ] && kill "$PPN_PID" 2>/dev/null || true
-  pkill -f "zombie-cli" 2>/dev/null || true
-  pkill -f "polkadot-omni-node" 2>/dev/null || true
-  pkill -f "$PPN_DIR/bin/polkadot" 2>/dev/null || true
+  sweep_chain_procs
 }
 trap cleanup EXIT INT TERM
+
+echo "--- Cleaning up any stale chain processes ---"
+sweep_chain_procs
+sleep 1
 
 echo "--- Building WASM ---"
 "$SCRIPT_DIR/build-wasm.sh"
