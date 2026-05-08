@@ -4,12 +4,13 @@
  * local zombienet, HostProvider when running inside a Polkadot Triangle host).
  */
 
-import { Binary, createClient, type SS58String } from 'polkadot-api';
+import { Binary, createClient, FixedSizeBinary, type SS58String } from 'polkadot-api';
 import { getWsProvider } from 'polkadot-api/ws-provider/web';
 import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
 import type { PolkadotClient } from 'polkadot-api';
 import { createCdm, type Cdm } from '@dotdm/cdm';
 import { SignerManager } from '@parity/product-sdk-signer';
+import { submitAndWatch } from '@parity/product-sdk-tx';
 import cdmJson from '../../cdm.json';
 // Augments @dotdm/cdm's CdmContracts with @oab/arena method types:
 import '../../.cdm/cdm.d.ts';
@@ -60,16 +61,15 @@ export interface ContractBackend {
 // keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
 const BATTLE_REPORTED_TOPIC = '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694ddef23dd55af68e089bd';
 
-// Explicit limits skip sdk-ink's pre-flight ReviveApi.trace_call dry-run, which
-// is incompatible with the local PPN Asset Hub runtime. Values match
-// @dotdm/utils' GAS_LIMIT and STORAGE_DEPOSIT_LIMIT defaults. Note snake_case
-// ref_time / proof_size — sdk-ink passes gasLimit straight to PAPI's Revive.call
-// where Weight is a snake_case ScaleStruct (cdm's TxOpts type signature is wrong).
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const TX_OPTS: any = {
-  gasLimit: { ref_time: 500_000_000_000n, proof_size: 2_000_000n },
-  storageDepositLimit: 100_000_000_000_000n,
-};
+// Solidity ABI selectors (keccak256(signature)[..4]) — see contract/README.md.
+const SEL_START_GAME = '0xe576ed69'; // startGame(uint16, uint64)
+const SEL_SUBMIT_TURN = '0xe737f74d'; // submitTurn(bytes)
+const SEL_END_GAME = '0x6cbc2ded'; // endGame()
+const SEL_ABANDON_GAME = '0xc398723a'; // abandonGame()
+
+// Per-call gas/storage budget for Revive.call. snake_case to match runtime metadata.
+const PER_CALL_GAS = { ref_time: 500_000_000_000n, proof_size: 2_000_000n };
+const PER_CALL_STORAGE = 100_000_000_000_000n;
 
 export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
   // revive's Mapping getter currently materializes a zeroed ArenaSession for
@@ -92,10 +92,39 @@ export function createContractBackend(deps: {
   let _selectedAccount: Account | null = null;
   let _isConnected = false;
   let _activeSetId = 0;
+  let _contractAddress: `0x${string}` | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let _unsafeApi: any = null;
 
   function arena() {
     if (!cdm) throw new Error('Not connected');
     return cdm.getContract('@oab/arena');
+  }
+
+  /**
+   * Submit a Revive.call extrinsic with `waitFor: 'best-block'` instead of
+   * waiting for finalization. Local zombienet doesn't need finality
+   * guarantees, and finalization adds 10-20s per tx; best-block resolves in
+   * ~one block (~2s). Bypasses cdm's wrap which only exposes the
+   * .signAndSubmit-waits-for-finalization path.
+   */
+  async function submitContractTx(
+    calldata: Uint8Array
+  ): Promise<{ ok: boolean; events: unknown[] }> {
+    if (!_unsafeApi || !_contractAddress || !signerManager) throw new Error('Not connected');
+    const signer = signerManager.getSigner();
+    if (!signer) throw new Error('No signer for selected account');
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const tx = _unsafeApi.tx.Revive.call({
+      dest: FixedSizeBinary.fromHex(_contractAddress.toLowerCase()),
+      value: 0n,
+      weight_limit: PER_CALL_GAS,
+      storage_deposit_limit: PER_CALL_STORAGE,
+      data: Binary.fromBytes(calldata),
+    });
+    const result = await submitAndWatch(tx, signer, { waitFor: 'best-block' });
+    return { ok: result.ok, events: result.events };
   }
 
   const backend: ContractBackend = {
@@ -128,6 +157,14 @@ export function createContractBackend(deps: {
         defaultSigner: signer,
         defaultOrigin: _selectedAccount.address,
       });
+
+      // For best-block-fast tx submission via @parity/product-sdk-tx.
+      _unsafeApi = await client.getUnsafeApi();
+      const target = Object.keys(cdmJson.contracts ?? {})[0];
+      _contractAddress = (cdmJson.contracts as Record<string, Record<string, { address: string }>>)[
+        target
+      ]['@oab/arena'].address as `0x${string}`;
+
       _isConnected = true;
     },
 
@@ -138,6 +175,8 @@ export function createContractBackend(deps: {
       cdm = null;
       client = null;
       signerManager = null;
+      _unsafeApi = null;
+      _contractAddress = null;
       _accounts = [];
       _selectedAccount = null;
       _isConnected = false;
@@ -168,7 +207,7 @@ export function createContractBackend(deps: {
         throw new Error(`Contract rejected startGame for set ${setId}`);
       }
       _activeSetId = setId;
-      const tx = await arena().startGame.tx(setId, seedNonce, TX_OPTS);
+      const tx = await submitContractTx(encodeStartGame(setId, seedNonce));
       if (!tx.ok) throw new Error('startGame tx failed');
       return { seed: dryRun.value };
     },
@@ -179,7 +218,7 @@ export function createContractBackend(deps: {
       if (!dryRun.success || dryRun.value === 0n) {
         throw new Error('Contract rejected submitTurn');
       }
-      const tx = await arena().submitTurn.tx(action, TX_OPTS);
+      const tx = await submitContractTx(encodeSubmitTurn(actionScale));
       if (!tx.ok) throw new Error('submitTurn tx failed');
 
       const eventBytes = findBattleReportedEventData(tx.events);
@@ -223,19 +262,69 @@ export function createContractBackend(deps: {
     async endGame(): Promise<void> {
       const dryRun = await arena().endGame.query();
       if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected endGame');
-      const tx = await arena().endGame.tx(TX_OPTS);
+      const tx = await submitContractTx(hexToBytes(SEL_END_GAME));
       if (!tx.ok) throw new Error('endGame tx failed');
     },
 
     async abandonGame(): Promise<void> {
       const dryRun = await arena().abandonGame.query();
       if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected abandonGame');
-      const tx = await arena().abandonGame.tx(TX_OPTS);
+      const tx = await submitContractTx(hexToBytes(SEL_ABANDON_GAME));
       if (!tx.ok) throw new Error('abandonGame tx failed');
     },
   };
 
   return backend;
+}
+
+// ── Solidity ABI calldata encoders ───────────────────────────────────────────
+
+function encodeStartGame(setId: number, seedNonce: bigint): Uint8Array {
+  return concat(hexToBytes(SEL_START_GAME), uint256(BigInt(setId)), uint256(seedNonce));
+}
+
+function encodeSubmitTurn(actionScale: Uint8Array): Uint8Array {
+  return concat(
+    hexToBytes(SEL_SUBMIT_TURN),
+    uint256(0x20n),
+    uint256(BigInt(actionScale.length)),
+    pad32(actionScale)
+  );
+}
+
+function uint256(value: bigint): Uint8Array {
+  const out = new Uint8Array(32);
+  let v = value;
+  for (let i = 31; i >= 0 && v > 0n; i--) {
+    out[i] = Number(v & 0xffn);
+    v >>= 8n;
+  }
+  return out;
+}
+
+function pad32(bytes: Uint8Array): Uint8Array {
+  const target = Math.ceil(bytes.length / 32) * 32;
+  const out = new Uint8Array(target);
+  out.set(bytes);
+  return out;
+}
+
+function concat(...parts: Uint8Array[]): Uint8Array {
+  const total = parts.reduce((n, p) => n + p.length, 0);
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const p of parts) {
+    out.set(p, off);
+    off += p.length;
+  }
+  return out;
+}
+
+function hexToBytes(hex: string): Uint8Array {
+  const h = hex.startsWith('0x') ? hex.slice(2) : hex;
+  const out = new Uint8Array(h.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(h.slice(i * 2, i * 2 + 2), 16);
+  return out;
 }
 
 function decodeArenaSessionSetId(data: Uint8Array): number {
