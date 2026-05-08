@@ -223,7 +223,10 @@ export function createContractBackend(deps: {
 
       const eventBytes = findBattleReportedEventData(tx.events);
       if (!eventBytes) {
-        console.warn('No BattleReported event in tx');
+        console.warn(
+          'No BattleReported event in tx; full events array follows for debug:',
+          tx.events
+        );
         return {
           battleSeed: 0n,
           opponentBoard: [],
@@ -367,15 +370,25 @@ interface ContractEmittedPayload {
 function unwrapContractEmitted(evt: unknown): ContractEmittedPayload | null {
   if (typeof evt !== 'object' || evt === null) return null;
   const e = evt as Record<string, unknown>;
-  // PAPI tagged-union: { type: 'Revive', value: { type: 'ContractEmitted', value: {...} } }
+
+  // PAPI's signSubmitAndWatch wrapper: { phase, event: {type, value}, topics }
+  // — descend into event.
+  if (typeof e.event === 'object' && e.event !== null) {
+    const inner = unwrapContractEmitted(e.event);
+    if (inner) return inner;
+  }
+
+  // Tagged-union: { type: 'Revive', value: { type: 'ContractEmitted', value: {...} } }
   if (e.type === 'Revive' && typeof e.value === 'object' && e.value !== null) {
     const v = e.value as Record<string, unknown>;
     if (v.type === 'ContractEmitted' && typeof v.value === 'object' && v.value !== null) {
       return v.value as unknown as ContractEmittedPayload;
     }
   }
-  // Already-flattened: { contract, data, topics } directly on the event
+
+  // Already-flattened: { contract, data, topics } directly.
   if ('topics' in e && 'data' in e) return e as unknown as ContractEmittedPayload;
+
   return null;
 }
 
