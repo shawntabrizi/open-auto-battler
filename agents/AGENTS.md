@@ -34,5 +34,15 @@ Read the following documents when relevant:
 ## Workflow Expectations
 - Maintain the visual style established in `web/src/index.css`.
 - Prefer minimal, targeted edits over broad refactors.
-- Use `./start.sh` to bring up the dev node, deploy the contract, and start
-  the web app for local testing.
+- Use `./start.sh` to boot PPN zombienet, deploy the contract via the cdm
+  CLI, register cards, and start the web app. See `contract/README.md` for
+  prerequisites (bun ≥ 1.2, ppn checkout, sibling `contract-dependency-manager`
+  clone with patched `REGISTRY_ADDRESS`, `cargo-pvm-contract` from
+  `charles/cdm-integration`).
+- The contract path uses `@dotdm/cdm` over PAPI (Asset Hub WS, not eth-rpc).
+  Sign-flow uses `@parity/product-sdk-signer`'s `SignerManager` with
+  `DevProvider` for local dev.
+- A pinned local patch to `@polkadot-api/sdk-ink` lives in `web/patches/` and
+  is applied automatically via `npm install` (postinstall: `patch-package`).
+  Don't edit `node_modules` directly — update the patch via `npx patch-package
+  @polkadot-api/sdk-ink`.

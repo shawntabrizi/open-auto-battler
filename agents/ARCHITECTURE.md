@@ -29,7 +29,8 @@ This document is derived from the source code structure and entry points.
 - The WASM API is defined in `client/src/engine.rs` and consumed by
   `web/src/store/gameStore.ts`.
 - The contract API is defined in `contract/src/main.rs` and consumed by
-  `web/src/contract/index.ts` (viem-based JSON-RPC client).
+  `web/src/contract/index.ts` via `@dotdm/cdm` (`createCdm()` over PAPI),
+  with signing through `@parity/product-sdk-signer`'s `SignerManager`.
 
 ## Key Entry Points
 - Engine exports and modules: `battle/src/lib.rs`, `game/src/lib.rs`.
