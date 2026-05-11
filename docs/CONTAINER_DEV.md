@@ -12,23 +12,55 @@ across your host, here are two container recipes that work on Linux.
 > for a working recipe. Windows is not covered here, but WSL2 + the Linux
 > distrobox or podman recipe should work.
 
-## Recommended: distrobox (Fedora 43+ host)
+## Recommended: distrobox (any Linux host)
 
 `distrobox` runs a container that mounts your `$HOME`, shares your X/Wayland
 session, and uses host networking — so PPN's ports (`10000–10030`, `8080`)
 and Vite's `5173` just work, and the bind-mounted repo means edits from your
 host editor are visible inside.
 
+### Install distrobox on the host
+
+`distrobox` is a thin wrapper around podman/docker — install one of those
+plus `distrobox` itself using your distro's package manager:
+
 ```bash
-# 1. Create the container (Fedora base; Debian/Ubuntu also fine)
+# Fedora / RHEL / CentOS Stream / Rocky / Alma
+sudo dnf install -y distrobox podman
+
+# Debian / Ubuntu (distrobox is in the universe / contrib repos)
+sudo apt-get install -y distrobox podman
+
+# Arch / Manjaro
+sudo pacman -S --needed distrobox podman
+
+# openSUSE
+sudo zypper install -y distrobox podman
+
+# Nix / NixOS
+nix-shell -p distrobox podman      # or add to your config
+```
+
+If your distro ships an older `distrobox` (< 1.7), grab the upstream installer
+instead: `curl -s https://raw.githubusercontent.com/89luca89/distrobox/main/install | sh`.
+
+### Bring up the container
+
+The container image is independent of your host — pick whichever feels
+familiar. We use Fedora below; swap `--image fedora:43` for
+`ubuntu:24.04`, `debian:trixie`, etc., and adjust the `dnf install` step to
+the matching package manager (see the variant block beneath).
+
+```bash
+# 1. Create the container (any base works; pick the one you know best)
 distrobox create --name oab --image fedora:43
 
 # 2. Enter it
 distrobox enter oab
 
-# 3. Install the toolchain (inside the container)
+# 3. Install the toolchain (inside the container — Fedora variant)
 sudo dnf install -y git make gcc gcc-c++ cmake pkg-config openssl-devel \
-  protobuf-compiler clang nodejs npm curl unzip
+  protobuf-compiler clang nodejs npm curl unzip gh
 
 # Rust + nightly
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -48,10 +80,30 @@ curl -fsSL https://bun.sh/install | bash
 echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
 export PATH="$HOME/.bun/bin:$PATH"
 
-# gh, for cloning the private PPN repo
-sudo dnf install -y gh
+# gh login (PPN repo is private)
 gh auth login
 ```
+
+**Debian/Ubuntu variant** — replace step 3's `dnf` line with:
+
+```bash
+sudo apt-get update && sudo apt-get install -y \
+  git make gcc g++ cmake pkg-config libssl-dev protobuf-compiler \
+  clang curl unzip ca-certificates gh
+# Node 20 LTS via NodeSource (or your preferred method)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+**Arch variant**:
+
+```bash
+sudo pacman -S --needed git make gcc cmake pkgconf openssl protobuf clang \
+  nodejs npm curl unzip github-cli
+```
+
+Everything after step 3 (rustup, wasm-pack, `cargo-pvm-contract`, bun, gh
+login) is identical across distros.
 
 Then follow `docs/QUICKSTART.md` Path 2 from inside the container. Because
 the repo lives on your host filesystem (bind-mounted into the container),
@@ -71,8 +123,12 @@ without any `-p` flags.
 If you want stricter isolation (no host-home mount), a `Containerfile`-based
 flow works too. Sketch:
 
+The `Containerfile` below uses a Fedora base — substitute `ubuntu:24.04` /
+`debian:trixie` and switch `dnf` to `apt-get` if you prefer (the container
+image is independent of your host distro):
+
 ```Dockerfile
-# Containerfile
+# Containerfile (Fedora base)
 FROM fedora:43
 
 RUN dnf install -y git make gcc gcc-c++ cmake pkg-config openssl-devel \
@@ -97,6 +153,38 @@ RUN git clone -b charles/cdm-integration \
 WORKDIR /workspace
 ```
 
+<details>
+<summary>Debian-base equivalent (click to expand)</summary>
+
+```Dockerfile
+FROM debian:trixie-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git make gcc g++ cmake pkg-config libssl-dev protobuf-compiler \
+      clang curl unzip ca-certificates gh \
+ && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+ && apt-get install -y nodejs \
+ && rm -rf /var/lib/apt/lists/* \
+ && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+ && . "$HOME/.cargo/env" \
+ && rustup toolchain install nightly --component rust-src --profile minimal \
+ && cargo install wasm-pack
+
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:/root/.cargo/bin:${PATH}"
+
+RUN git clone -b charles/cdm-integration \
+      https://github.com/paritytech/cargo-pvm-contract.git /tmp/cpvm \
+ && HOST_TARGET=$(rustc -vV | grep '^host:' | cut -d' ' -f2) \
+ && cargo install --force --locked --target "$HOST_TARGET" \
+      --path /tmp/cpvm/crates/cargo-pvm-contract \
+ && rm -rf /tmp/cpvm
+
+WORKDIR /workspace
+```
+
+</details>
+
 Build and run:
 
 ```bash
@@ -116,8 +204,11 @@ cd ..
 # ...then the rest of QUICKSTART Path 2.
 ```
 
-The `:Z` SELinux relabel on the bind mount is required on Fedora; drop it on
-distros without SELinux.
+The `:Z` SELinux relabel on the bind mount is required on SELinux-enforcing
+hosts (Fedora, RHEL, CentOS Stream, Rocky, Alma — and Debian/Ubuntu if you've
+enabled SELinux explicitly). Drop the suffix on distros running AppArmor or
+no MAC layer (default Debian/Ubuntu, Arch, openSUSE Tumbleweed, NixOS). If
+you're unsure: `sestatus` — if it says `SELinux status: enabled` you need `:Z`.
 
 ### Caveats
 
