@@ -1,175 +1,197 @@
 # Quick Start Guide
 
-Get up and running with Open Auto Battler development in 5 minutes.
+Get running with Open Auto Battler development. The on-chain path is heavier
+than a single dev node — it boots a local Polkadot Preview Network (PPN). If
+you only want to look at the game, the WASM-only path is much lighter.
 
-## Prerequisites
+> **Authoritative deep-dive:** [`contract/README.md`](../contract/README.md)
+> covers the full PolkaVM contract / PPN / `@dotdm/cdm` setup. This document
+> is a shorter on-ramp.
 
-- Rust (latest stable)
-- Node.js 18+ & pnpm
-- wasm-pack (`cargo install wasm-pack`)
+## Two paths
 
-## Quick Start (All-in-One)
+| Path                   | What runs                                | Setup effort  |
+|---                     |---                                       |---            |
+| **WASM-only**          | Engine + React UI (no chain)             | ~5 minutes    |
+| **Full on-chain loop** | PPN zombienet + PolkaVM contract + UI    | ~30–60 min*   |
 
-```bash
-# From project root - builds WASM, starts chain, starts web UI
-./start.sh
-```
+\* mostly toolchain installs and a ~250 MB binary download for PPN.
 
-Open http://localhost:5173 when ready.
+If you prefer to keep all of this isolated from your host, see
+[CONTAINER_DEV.md](./CONTAINER_DEV.md) for a distrobox/podman recipe.
 
-## Manual Setup
+---
 
-### 1. Build WASM Client
+## Path 1 — WASM-only (engine + UI, no chain)
+
+This builds the deterministic battle engine to WASM and serves the React UI.
+On-chain routes won't work, but you can verify the toolchain and explore the
+codebase quickly.
+
+### Prerequisites
+
+- Rust stable (engine + WASM bridge do not need nightly)
+- `wasm-pack`: `cargo install wasm-pack`
+- Node.js 20+ and npm (the `web/` workspace uses npm — `package-lock.json` is
+  the source of truth)
+
+### Run
 
 ```bash
 # From project root
-./build-wasm.sh
+./build-wasm.sh                       # compiles client/ to WASM, copies to web/src/wasm
+cd web && npm install && npm run dev  # Vite dev server on :5173
 ```
 
-This compiles `client/` to WASM and copies artifacts to `web/src/wasm/`.
+Open <http://localhost:5173>. The `/#/contract` route requires the on-chain
+stack (Path 2); other routes render against the local WASM engine.
 
-### 2. Run the Web UI
+---
+
+## Path 2 — Full on-chain loop (PPN + contract + UI)
+
+This is what `./start.sh` automates. Setup is non-trivial because the contract
+runs on PolkaVM (`pallet-revive` on Asset Hub), the frontend talks to it via
+`@dotdm/cdm` over PAPI, and a local Polkadot Preview Network supplies the
+relay + Asset Hub + IPFS infrastructure.
+
+### Prerequisites
+
+Beyond Path 1's tools:
+
+- **Rust nightly + `rust-src`** (only the contract crate needs it — the engine
+  compiles on stable):
+  ```bash
+  rustup toolchain install nightly --component rust-src --profile minimal
+  ```
+- **`cargo-pvm-contract`** from the `charles/cdm-integration` branch:
+  ```bash
+  HOST_TARGET=$(rustc -vV | grep '^host:' | cut -d' ' -f2)
+  git clone -b charles/cdm-integration \
+    https://github.com/paritytech/cargo-pvm-contract.git /tmp/cpvm
+  cargo install --force --locked --target "$HOST_TARGET" \
+    --path /tmp/cpvm/crates/cargo-pvm-contract
+  ```
+- **`bun` ≥ 1.2** (the cdm CLI is bun-compiled; bun 1.1 hits a PAPI rxjs bug):
+  ```bash
+  curl -fsSL https://bun.sh/install | bash
+  export PATH="$HOME/.bun/bin:$PATH"   # add to your shell rc
+  ```
+- **`gh auth login`** — PPN's upstream repo is private (`paritytech/product-preview-net`).
+
+### Two extra clones
+
+The dev loop expects two extra repos alongside `open-auto-battler/`:
+
+1. **PPN zombienet** (cloned *inside* this repo at `./ppn/`):
+   ```bash
+   cd open-auto-battler
+   git clone --depth 1 --branch main \
+     https://github.com/paritytech/product-preview-net.git ppn
+   cd ppn && make ensure-deps    # ~250 MB of chain binaries + specs
+   ```
+
+2. **Sibling `contract-dependency-manager` clone** with a patched
+   `REGISTRY_ADDRESS` (cdm hardcodes the registry address for a specific
+   bytecode hash that locally-built registries don't reproduce — see
+   [`contract/README.md`](../contract/README.md) for the why):
+   ```bash
+   cd ..   # alongside open-auto-battler/
+   git clone https://github.com/paritytech/contract-dependency-manager.git
+   cd contract-dependency-manager
+   pnpm install
+   make build-registry
+   make deploy-registry CHAIN=local      # one-time on a fresh chain
+   # Patch REGISTRY_ADDRESS to the deployed address from the previous step:
+   sed -i.bak \
+     's|"0xae344f7f0f91d3a2176032af2990abcc7606c7d4"|"<DEPLOYED_ADDR>"|' \
+     src/lib/utils/src/constants.ts
+   ```
+
+If your cdm clone lives elsewhere, set `CDM_SRC=/path/to/clone` before running
+`start.sh`.
+
+### Boot it
 
 ```bash
-cd web
-pnpm install
-pnpm dev
+./start.sh                  # full bootstrap (registry + contract + cards + web)
+./start.sh --no-bootstrap   # subsequent runs against the same chain
 ```
 
-Open http://localhost:5173. You will see the **Login Page**. To play, you need a running blockchain (see step 3).
+`start.sh` will:
 
-### 3. Run with Blockchain
+1. Build the WASM engine (`./build-wasm.sh`).
+2. Boot PPN zombienet (`cd ppn && make start EPHEMERAL=1`).
+3. Wait for Asset Hub at `ws://127.0.0.1:10020`.
+4. (Bootstrap only) Build and deploy the cdm `ContractRegistry`, then deploy
+   the OAB contract; otherwise just redeploy OAB.
+5. Refresh `web/cdm.json` + typed bindings via `cdm install`.
+6. Generate card/set bytes (`oab-register-cards --dump`) and register them
+   via `Utility.batch_all` (~25 s for 114 calls).
+7. Start the Vite dev server on `:5173`.
 
-#### Terminal 1: Start the chain
+Open <http://localhost:5173/#/contract>, click **DEV ACCOUNTS** → pick Alice
+→ **Contract Arena** → **Start Game**.
 
-```bash
-cd blockchain
-./start_chain.sh
-```
+### Endpoints PPN exposes
 
-Wait for block production to start (you'll see block numbers incrementing).
+| Chain          | URL                          |
+|---             |---                           |
+| Paseo Relay    | `ws://127.0.0.1:10000`       |
+| People Chain   | `ws://127.0.0.1:10010`       |
+| **Asset Hub**  | `ws://127.0.0.1:10020`       |
+| Bulletin Chain | `ws://127.0.0.1:10030`       |
+| IPFS gateway   | `http://127.0.0.1:8080/ipfs` |
 
-#### Terminal 2: Start the web UI
-
-```bash
-cd web
-pnpm dev
-```
-
-Open http://localhost:5173. On the Login Page, connect to the chain, select an account, and log in. From the Main Menu, navigate to **Play > Online Arena** (on-chain) or **Play > Offline** (local WASM). For card testing without a game, go to **Cards > Sandbox**.
-
-## Project Structure at a Glance
-
-```
-auto-battle/
-├── core/          # The heart: battle engine, shared by browser & chain
-├── client/        # WASM wrapper around core for browser
-├── blockchain/    # Substrate runtime + auto-battle pallet
-├── web/           # React frontend
-└── docs/          # You are here
-```
+---
 
 ## Development Workflow
 
-### Making Game Logic Changes
+### Engine changes (`battle/`, `game/`, `assets/`)
 
-1. Edit files in `core/src/`
-2. Run tests: `cd core && cargo test`
-3. Rebuild WASM: `./build-wasm.sh`
-4. Refresh browser
+1. Edit the relevant crate.
+2. `cargo test -p oab-battle` (or the crate you touched).
+3. `./build-wasm.sh` to rebuild the browser bundle.
+4. Reload the browser tab.
 
-### Making UI Changes
+### UI changes (`web/`)
 
-1. Edit files in `web/src/`
-2. Changes hot-reload automatically
+Vite hot-reloads — just edit and save.
 
-### Making Blockchain Changes
+### Contract changes (`contract/src/main.rs`)
 
-1. Edit files in `blockchain/pallets/auto-battle/src/`
-2. Restart the chain: `cd blockchain && ./start_chain.sh`
-3. Refresh browser and reconnect
+Re-running `./start.sh` (without `--no-bootstrap`) cleanly redeploys. Or build
+manually:
 
-## Common Tasks
+```bash
+cd contract
+env -u CARGO -u RUSTUP_TOOLCHAIN \
+  cargo pvm-contract build --manifest-path "$(pwd)/Cargo.toml" -p oab-contract
+```
 
-### Add a new card
+The absolute `--manifest-path` is required — `cargo-pvm-contract` v0.3.0 has a
+relative-path bug. See `contract/README.md` for the full contract API and
+selector table.
 
-Edit `core/src/units.rs`:
-- Add to the card set definition in `get_card_set()`
-- Define abilities in the `UnitCard` struct
-
-### Add a new ability
-
-Edit `core/src/battle.rs`:
-- Add variant to ability enums
-- Implement in `execute_ability()` or relevant trigger handler
-
-### Modify turn validation
-
-Edit `core/src/commit.rs`:
-- `verify_and_apply_turn()` validates all player actions
+---
 
 ## Running Tests
 
 ```bash
-# Core engine tests (from project root)
-cargo test -p oab-core
-
-# Pallet tests (from project root)
-cargo test -p pallet-auto-battle
+cargo test --workspace          # full Rust workspace
+cargo test -p oab-battle        # just the battle engine
 ```
 
-## Core Coverage
+The web tests (if any) live under `web/` and use Vite's runner — `cd web && npm test`.
 
-```bash
-# One-time install
-cargo install cargo-llvm-cov
-rustup component add llvm-tools-preview
+---
 
-# Generate core coverage summary + reports
-./core/coverage.sh
-```
+## Where to read next
 
-Coverage outputs:
-- Summary printed to stdout
-- `target/coverage/oab-core/lcov.info`
-- `target/coverage/oab-core/html/index.html`
-
-Optional minimum line coverage gate:
-
-```bash
-FAIL_UNDER_LINES=80 ./core/coverage.sh
-```
-
-Optional engine-critical gate (focuses on `battle/commit/state/limits` by ignoring
-`log/opponents/units/view/rng/types`):
-
-```bash
-FAIL_UNDER_LINES=80 ENGINE_FAIL_UNDER_LINES=80 ./core/coverage.sh
-```
-
-CI currently enforces `80%` total line coverage and `80%` engine-critical line coverage.
-
-## Debugging
-
-### Browser Console
-
-The WASM engine logs to console. Look for:
-- `[INFO]` - Normal operations
-- `[DEBUG]` - Detailed state (enable in `core/src/log.rs`)
-
-### Chain Logs
-
-Omni Node outputs block info and extrinsic results.
-
-### State Inspection
-
-In Online Arena mode, the UI shows:
-- Current chain state (decoded from SCALE)
-- Action log (what will be submitted)
-- Battle events (combat resolution)
-
-## Next Steps
-
-- Read [CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md) for deep dive
-- Check `core/src/tests/` for examples of game mechanics
-- Look at existing cards in `core/src/units.rs` for patterns
+- [`agents/AGENTS.md`](../agents/AGENTS.md) — canonical agent + architecture
+  index. Start here if you're contributing.
+- [`agents/ARCHITECTURE.md`](../agents/ARCHITECTURE.md) — current system map.
+- [`contract/README.md`](../contract/README.md) — full PolkaVM / PPN / cdm
+  setup, contract API, and the upstream patches the dev loop depends on.
+- [CONTAINER_DEV.md](./CONTAINER_DEV.md) — running the whole toolchain inside
+  a container.
