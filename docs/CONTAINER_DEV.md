@@ -6,9 +6,11 @@ private-repo PPN checkout, a patched sibling clone of
 `contract-dependency-manager`). If you'd rather not splatter all of that
 across your host, here are two container recipes that work on Linux.
 
-> **Not tested on macOS/Windows.** Docker Desktop's filesystem and networking
-> layers will work but with overhead. The Linux-native distrobox path below
-> is the smoothest.
+> On Linux, the distrobox path below is the smoothest. On macOS there's no
+> host network and no native containers — you need a Linux VM underneath
+> Docker/Podman. See [macOS](#macos-orbstack--colima--docker-desktop) below
+> for a working recipe. Windows is not covered here, but WSL2 + the Linux
+> distrobox or podman recipe should work.
 
 ## Recommended: distrobox (Fedora 43+ host)
 
@@ -131,16 +133,92 @@ distros without SELinux.
 - **`pkill -9 -f …`** in `start.sh` is process-namespace-scoped inside a
   container, so it can't reach host processes — which is what you want.
 
+## macOS (OrbStack / Colima / Docker Desktop)
+
+There is no native Linux container on macOS — every option puts a small
+Linux VM under the hood, then runs containers inside it. That means:
+
+- **No host networking** for the container; you must forward each port.
+- **Bind-mount performance** depends on the VM's filesystem driver
+  (VirtioFS-class drivers are fast enough; older 9P/NFS paths are noticeably
+  slower for Rust builds).
+- **PPN binaries are Linux ELFs**, fetched by `make ensure-deps` for whatever
+  arch the *container* reports. They run inside the Linux VM regardless of
+  whether your Mac is Apple Silicon or Intel. Don't try to launch them on
+  the host shell.
+
+### Option A: OrbStack (recommended on Apple Silicon)
+
+[OrbStack](https://orbstack.dev) is the smoothest dev experience on macOS
+today — fast VirtioFS bind mounts, low memory footprint, native arm64.
+It speaks the docker CLI, so the [podman recipe above](#alternative-rootless-podman)
+works almost verbatim — substitute `docker` for `podman` and drop the SELinux
+`:Z` suffix:
+
+```bash
+brew install orbstack            # then launch OrbStack.app once
+
+docker build -t oab-dev -f Containerfile .
+docker run --rm -it \
+  -v "$PWD":/workspace \
+  -p 5173:5173 -p 10000:10000 -p 10010:10010 \
+  -p 10020:10020 -p 10030:10030 -p 8080:8080 \
+  oab-dev bash
+```
+
+Then inside the container, follow QUICKSTART Path 2 (clone PPN, clone the
+sibling cdm repo, `./start.sh`). Browse to <http://localhost:5173> from your
+Mac browser — OrbStack forwards the published ports to host `localhost`.
+
+OrbStack can also create lightweight Linux machines directly
+(`orb create ubuntu oab && orb -m oab bash`) if you'd rather skip Docker and
+treat the VM like a distrobox shell. That works too, but the container
+approach is more reproducible.
+
+### Option B: Colima (open-source CLI)
+
+[Colima](https://github.com/abiosoft/colima) gives you a Lima-backed Docker
+runtime without Docker Desktop's licensing or UI overhead. Allocate enough
+resources up front — PPN + the Rust toolchain are not light:
+
+```bash
+brew install colima docker
+colima start --cpu 4 --memory 8 --disk 60 --vm-type vz --mount-type virtiofs
+```
+
+`vz` + `virtiofs` (macOS 13+) is the fast path; on older macOS, Colima falls
+back to QEMU + sshfs which is workable but slower for Cargo. Then use the same
+`docker build` / `docker run` invocation as the OrbStack section.
+
+### Option C: Docker Desktop
+
+Docker Desktop works but is the heaviest of the three. If your org already
+pays for it, the same commands apply. Make sure to bump the VM resources
+(Settings → Resources → CPUs ≥ 4, Memory ≥ 8 GB, Disk ≥ 60 GB) before the
+first `cargo build`, otherwise the contract build will OOM.
+
+### macOS caveats specific to this project
+
+- **`gh auth login`** still required (PPN repo is private). Easiest: do the
+  auth on your Mac host, then bind-mount `~/.config/gh` read-only into the
+  container — `gh` inside the VM will pick up the same token.
+- **`./start.sh`'s `pkill -9 -f …`** only affects the container's PID
+  namespace, so it can't kill anything on your Mac. Fine.
+- **macOS firewall / Little Snitch**: first browser hit to
+  <http://localhost:5173> may prompt; allow once.
+- **Resource ceiling**: PPN spawns several `polkadot-omni-node` workers plus
+  IPFS. On an 8 GB Mac you'll be tight; 16 GB+ is the comfortable floor.
+
 ## Trade-offs
 
-| Concern                       | distrobox       | podman rootless   |
-|---                            |---              |---                |
-| Setup ceremony                | minimal         | Containerfile     |
-| Host isolation                | low (home mount)| high              |
-| Browser-from-host on `:5173`  | works (host net)| needs `-p 5173`   |
-| Reuse host editor / git creds | yes             | requires bind/share |
-| Reproducibility               | medium          | high              |
+| Concern                       | distrobox (Linux) | podman rootless (Linux) | macOS (OrbStack/Colima/Docker Desktop) |
+|---                            |---                |---                       |---                                     |
+| Setup ceremony                | minimal           | Containerfile            | Containerfile + a VM runtime           |
+| Host isolation                | low (home mount)  | high                     | high (separate VM)                     |
+| Browser-from-host on `:5173`  | works (host net)  | needs `-p 5173`          | needs `-p 5173` (forwarded by VM)      |
+| Reuse host editor / git creds | yes               | requires bind/share      | works via bind mount                   |
+| Bind-mount perf for Rust      | native            | native                   | VirtioFS-class on recent macOS         |
+| Reproducibility               | medium            | high                     | high                                   |
 
-If in doubt, start with distrobox — you can always rebuild from a clean
-container if anything goes sideways, and the workflow is closest to running
-the tooling directly on your host.
+If in doubt: distrobox on Linux, OrbStack on macOS. Both let you rebuild from
+a clean container if anything goes sideways.
