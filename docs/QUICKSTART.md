@@ -77,18 +77,23 @@ Beyond Path 1's tools:
   curl -fsSL https://bun.sh/install | bash
   export PATH="$HOME/.bun/bin:$PATH"   # add to your shell rc
   ```
-- **`gh auth login`** — PPN's upstream repo is private (`paritytech/product-preview-net`).
+- **`gh auth login`** — the PPN installer lives in the public
+  `paritytech/ppn-proxy` repo, but it clones `paritytech/product-preview-net`
+  underneath, which **is private**. Without GitHub auth the install step
+  fails partway through.
 
 ### Two extra clones
 
 The dev loop expects two extra repos alongside `open-auto-battler/`:
 
-1. **PPN zombienet** (cloned *inside* this repo at `./ppn/`):
+1. **PPN zombienet** (cloned *inside* this repo at `./ppn/`). Use the
+   installer from `paritytech/ppn-proxy` — it clones the network repo and
+   runs `make ensure-deps` for you (~250 MB of chain binaries + specs).
+   `gh auth login` must already be done because the installer's internal
+   clone targets a private repo:
    ```bash
    cd open-auto-battler
-   git clone --depth 1 --branch main \
-     https://github.com/paritytech/product-preview-net.git ppn
-   cd ppn && make ensure-deps    # ~250 MB of chain binaries + specs
+   curl -sL https://raw.githubusercontent.com/paritytech/ppn-proxy/main/install.sh | bash
    ```
 
 2. **Sibling `contract-dependency-manager` clone** with a patched

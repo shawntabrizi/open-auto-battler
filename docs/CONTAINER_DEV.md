@@ -80,7 +80,8 @@ curl -fsSL https://bun.sh/install | bash
 echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
 export PATH="$HOME/.bun/bin:$PATH"
 
-# gh login (PPN repo is private)
+# gh login — the PPN installer is public, but it clones a private repo
+# (paritytech/product-preview-net) underneath, so this is required.
 gh auth login
 ```
 
@@ -196,11 +197,10 @@ podman run --rm -it \
   oab-dev bash
 
 # Inside the container:
-gh auth login                       # PPN repo is private
-git clone --depth 1 --branch main \
-  https://github.com/paritytech/product-preview-net.git ppn
-cd ppn && make ensure-deps
-cd ..
+gh auth login                       # PPN's network repo is private
+curl -sL https://raw.githubusercontent.com/paritytech/ppn-proxy/main/install.sh | bash
+# → clones ./ppn from the private paritytech/product-preview-net and
+#   runs `make ensure-deps` (~250 MB).
 # ...then the rest of QUICKSTART Path 2.
 ```
 
@@ -290,9 +290,11 @@ first `cargo build`, otherwise the contract build will OOM.
 
 ### macOS caveats specific to this project
 
-- **`gh auth login`** still required (PPN repo is private). Easiest: do the
-  auth on your Mac host, then bind-mount `~/.config/gh` read-only into the
-  container — `gh` inside the VM will pick up the same token.
+- **`gh auth login`** still required — the PPN installer is public, but it
+  clones `paritytech/product-preview-net` underneath which is private.
+  Easiest: do the auth on your Mac host, then bind-mount `~/.config/gh`
+  read-only into the container — `gh` inside the VM will pick up the same
+  token.
 - **`./start.sh`'s `pkill -9 -f …`** only affects the container's PID
   namespace, so it can't kill anything on your Mac. Fine.
 - **macOS firewall / Little Snitch**: first browser hit to
