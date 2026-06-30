@@ -1,19 +1,33 @@
 /**
- * Contract Backend — talks to the OAB arena PolkaVM contract on Polkadot Asset Hub
- * via PAPI + @dotdm/cdm. Signs with @parity/product-sdk-signer (DevProvider for
- * local zombienet, HostProvider when running inside a Polkadot Triangle host).
+ * Contract Backend — talks to the OAB arena PolkaVM contract on Asset Hub via
+ * the Polkadot Product SDK: `@parity/product-sdk-chain-client` (host-routed
+ * chain client), `@parity/product-sdk-contracts` (typed pallet-revive calls),
+ * and `@parity/product-sdk-signer` (HostProvider inside a Polkadot host,
+ * DevProvider for local dev).
+ *
+ * Reads use `.query()` (dry-run); state changes use `.tx()`, which resolves at
+ * best-block by default — so no hand-rolled `Revive.call` / Solidity ABI
+ * encoding is needed (the SDK uses the contract ABI + viem codec internally).
  */
 
-import { Binary, createClient, FixedSizeBinary, type SS58String } from 'polkadot-api';
-import { getWsProvider } from 'polkadot-api/ws-provider/web';
-import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat';
-import type { PolkadotClient } from 'polkadot-api';
-import { createCdm, type Cdm } from '@dotdm/cdm';
+import type { SS58String } from 'polkadot-api';
+import { createChainClient } from '@parity/product-sdk-chain-client';
+import { paseo_asset_hub } from '@parity/product-sdk-descriptors/paseo-asset-hub';
+import {
+  createContract,
+  createContractRuntimeFromClient,
+  ensureContractAccountMapped,
+  type AbiEntry,
+} from '@parity/product-sdk-contracts';
+import type { TxResult } from '@parity/product-sdk-tx';
 import { SignerManager } from '@parity/product-sdk-signer';
-import { submitAndWatch } from '@parity/product-sdk-tx';
+import { isInHost } from '../services/hostEnvironment';
 import cdmJson from '../../cdm.json';
-// Augments @dotdm/cdm's CdmContracts with @oab/arena method types:
-import '../../.cdm/cdm.d.ts';
+
+/** Host-routed Asset Hub chain client (the resolved type of createChainClient). */
+type AssetHubClient = Awaited<
+  ReturnType<typeof createChainClient<{ assetHub: typeof paseo_asset_hub }>>
+>;
 
 // ── Shared types ─────────────────────────────────────────────────────────────
 
@@ -61,15 +75,43 @@ export interface ContractBackend {
 // keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
 const BATTLE_REPORTED_TOPIC = '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694ddef23dd55af68e089bd';
 
-// Solidity ABI selectors (keccak256(signature)[..4]) — see contract/README.md.
-const SEL_START_GAME = '0xe576ed69'; // startGame(uint16, uint64)
-const SEL_SUBMIT_TURN = '0xe737f74d'; // submitTurn(bytes)
-const SEL_END_GAME = '0x6cbc2ded'; // endGame()
-const SEL_ABANDON_GAME = '0xc398723a'; // abandonGame()
+/**
+ * Structural shape of a `@parity/product-sdk-contracts` `query()` result.
+ * (The package surfaces this internally; declared locally to avoid depending on
+ * a non-exported type name.)
+ */
+type QueryResult<T> =
+  | { success: true; value: T; gasRequired: unknown }
+  | { success: false; value: unknown; gasRequired?: unknown };
 
-// Per-call gas/storage budget for Revive.call. snake_case to match runtime metadata.
-const PER_CALL_GAS = { ref_time: 500_000_000_000n, proof_size: 2_000_000n };
-const PER_CALL_STORAGE = 100_000_000_000_000n;
+/**
+ * Minimal typed view of the `@oab/arena` contract. `createContract` returns a
+ * generic handle; we cast to this so call sites stay type-checked. The SDK's
+ * viem ABI codec maps `bytes` ⇄ `0x`-hex strings, `uint64` → `bigint`, and
+ * `bool` → `boolean`.
+ */
+interface ArenaContract {
+  startGame: {
+    query(setId: number, seedNonce: bigint): Promise<QueryResult<bigint>>;
+    tx(setId: number, seedNonce: bigint): Promise<TxResult>;
+  };
+  submitTurn: {
+    query(action: string): Promise<QueryResult<bigint>>;
+    tx(action: string): Promise<TxResult>;
+  };
+  getGameState: { query(): Promise<QueryResult<string>> };
+  getSet: { query(setId: number): Promise<QueryResult<string>> };
+  endGame: { query(): Promise<QueryResult<boolean>>; tx(): Promise<TxResult> };
+  abandonGame: { query(): Promise<QueryResult<boolean>>; tx(): Promise<TxResult> };
+}
+
+function arenaContractInfo(): { address: `0x${string}`; abi: AbiEntry[] } {
+  const target = Object.keys(cdmJson.contracts ?? {})[0];
+  const entry = (
+    cdmJson.contracts as Record<string, Record<string, { address: string; abi: unknown }>>
+  )[target]['@oab/arena'];
+  return { address: entry.address as `0x${string}`, abi: entry.abi as AbiEntry[] };
+}
 
 export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
   // revive's Mapping getter currently materializes a zeroed ArenaSession for
@@ -79,52 +121,25 @@ export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
 }
 
 export function createContractBackend(deps: {
+  /** @deprecated host-routed client ignores this; kept for caller compatibility. */
   wsUrl?: string;
   useDevAccounts?: boolean;
 }): ContractBackend {
-  const wsUrl = deps.wsUrl ?? 'ws://127.0.0.1:10020';
-  const providerType: 'dev' | 'host' = deps.useDevAccounts ? 'dev' : 'host';
+  // Host-first: derive the signer provider from the host environment, with an
+  // explicit override for local-dev (`useDevAccounts`).
+  const providerType: 'dev' | 'host' = (deps.useDevAccounts ?? !isInHost()) ? 'dev' : 'host';
 
-  let client: PolkadotClient | null = null;
-  let cdm: Cdm | null = null;
+  let client: AssetHubClient | null = null;
+  let contract: ArenaContract | null = null;
   let signerManager: SignerManager | null = null;
   let _accounts: Account[] = [];
   let _selectedAccount: Account | null = null;
   let _isConnected = false;
   let _activeSetId = 0;
-  let _contractAddress: `0x${string}` | null = null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let _unsafeApi: any = null;
 
-  function arena() {
-    if (!cdm) throw new Error('Not connected');
-    return cdm.getContract('@oab/arena');
-  }
-
-  /**
-   * Submit a Revive.call extrinsic with `waitFor: 'best-block'` instead of
-   * waiting for finalization. Local zombienet doesn't need finality
-   * guarantees, and finalization adds 10-20s per tx; best-block resolves in
-   * ~one block (~2s). Bypasses cdm's wrap which only exposes the
-   * .signAndSubmit-waits-for-finalization path.
-   */
-  async function submitContractTx(
-    calldata: Uint8Array
-  ): Promise<{ ok: boolean; events: unknown[] }> {
-    if (!_unsafeApi || !_contractAddress || !signerManager) throw new Error('Not connected');
-    const signer = signerManager.getSigner();
-    if (!signer) throw new Error('No signer for selected account');
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    const tx = _unsafeApi.tx.Revive.call({
-      dest: FixedSizeBinary.fromHex(_contractAddress.toLowerCase()),
-      value: 0n,
-      weight_limit: PER_CALL_GAS,
-      storage_deposit_limit: PER_CALL_STORAGE,
-      data: Binary.fromBytes(calldata),
-    });
-    const result = await submitAndWatch(tx, signer, { waitFor: 'best-block' });
-    return { ok: result.ok, events: result.events };
+  function arena(): ArenaContract {
+    if (!contract) throw new Error('Not connected');
+    return contract;
   }
 
   const backend: ContractBackend = {
@@ -151,32 +166,31 @@ export function createContractBackend(deps: {
       const signer = signerManager.getSigner();
       if (!signer) throw new Error('No signer for selected account');
 
-      client = createClient(withPolkadotSdkCompat(getWsProvider(wsUrl)));
-      cdm = createCdm(cdmJson, {
-        client,
+      // Host-routed Asset Hub client (no direct WebSocket).
+      const chainClient = await createChainClient({ chains: { assetHub: paseo_asset_hub } });
+      client = chainClient;
+
+      const { address, abi } = arenaContractInfo();
+      const runtime = createContractRuntimeFromClient(chainClient.raw.assetHub, paseo_asset_hub);
+
+      // Every SS58 origin must be mapped to its H160 once before pallet-revive
+      // calls, or they fail `AccountUnmapped`. Idempotent (no-op if mapped).
+      await ensureContractAccountMapped(runtime, _selectedAccount.address, signer);
+
+      contract = createContract(runtime, address, abi, {
         defaultSigner: signer,
         defaultOrigin: _selectedAccount.address,
-      });
-
-      // For best-block-fast tx submission via @parity/product-sdk-tx.
-      _unsafeApi = await client.getUnsafeApi();
-      const target = Object.keys(cdmJson.contracts ?? {})[0];
-      _contractAddress = (cdmJson.contracts as Record<string, Record<string, { address: string }>>)[
-        target
-      ]['@oab/arena'].address as `0x${string}`;
+      }) as unknown as ArenaContract;
 
       _isConnected = true;
     },
 
     disconnect() {
-      cdm?.destroy();
       client?.destroy();
       signerManager?.disconnect();
-      cdm = null;
+      contract = null;
       client = null;
       signerManager = null;
-      _unsafeApi = null;
-      _contractAddress = null;
       _accounts = [];
       _selectedAccount = null;
       _isConnected = false;
@@ -192,12 +206,20 @@ export function createContractBackend(deps: {
       return _selectedAccount;
     },
     selectAccount(account: Account) {
-      if (!signerManager || !cdm) return;
+      if (!signerManager) return;
       const r = signerManager.selectAccount(account.address);
       if (!r.ok) return;
       _selectedAccount = account;
+      // Re-bind the contract defaults to the newly selected signer/origin.
       const signer = signerManager.getSigner();
-      if (signer) cdm.setDefaults({ signer, origin: account.address });
+      if (signer && client) {
+        const { address, abi } = arenaContractInfo();
+        const runtime = createContractRuntimeFromClient(client.raw.assetHub, paseo_asset_hub);
+        contract = createContract(runtime, address, abi, {
+          defaultSigner: signer,
+          defaultOrigin: account.address,
+        }) as unknown as ArenaContract;
+      }
     },
 
     async startGame(setId: number): Promise<{ seed: bigint }> {
@@ -207,18 +229,18 @@ export function createContractBackend(deps: {
         throw new Error(`Contract rejected startGame for set ${setId}`);
       }
       _activeSetId = setId;
-      const tx = await submitContractTx(encodeStartGame(setId, seedNonce));
+      const tx = await arena().startGame.tx(setId, seedNonce);
       if (!tx.ok) throw new Error('startGame tx failed');
       return { seed: dryRun.value };
     },
 
     async submitTurn(actionScale: Uint8Array): Promise<TurnResult> {
-      const action = Binary.fromBytes(actionScale);
+      const action = '0x' + bytesToHex(actionScale);
       const dryRun = await arena().submitTurn.query(action);
       if (!dryRun.success || dryRun.value === 0n) {
         throw new Error('Contract rejected submitTurn');
       }
-      const tx = await submitContractTx(encodeSubmitTurn(actionScale));
+      const tx = await arena().submitTurn.tx(action);
       if (!tx.ok) throw new Error('submitTurn tx failed');
 
       const eventBytes = findBattleReportedEventData(tx.events);
@@ -242,7 +264,7 @@ export function createContractBackend(deps: {
     async getGameState(): Promise<GameStateRaw | null> {
       const r = await arena().getGameState.query();
       if (!r.success) return null;
-      const arenaSessionBytes = r.value.asBytes();
+      const arenaSessionBytes = hexToBytes(r.value);
       if (arenaSessionBytes.length === 0) return null;
       if (isMissingArenaSessionPayload(arenaSessionBytes)) return null;
 
@@ -257,7 +279,7 @@ export function createContractBackend(deps: {
       stateBytes.set(DEFAULT_CONFIG_SCALE, arenaSessionBytes.length);
 
       const setRes = await arena().getSet.query(_activeSetId);
-      const cardSetBytes = setRes.success ? setRes.value.asBytes() : new Uint8Array();
+      const cardSetBytes = setRes.success ? hexToBytes(setRes.value) : new Uint8Array();
 
       return { stateBytes, cardSetBytes, setId: _activeSetId };
     },
@@ -265,14 +287,14 @@ export function createContractBackend(deps: {
     async endGame(): Promise<void> {
       const dryRun = await arena().endGame.query();
       if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected endGame');
-      const tx = await submitContractTx(hexToBytes(SEL_END_GAME));
+      const tx = await arena().endGame.tx();
       if (!tx.ok) throw new Error('endGame tx failed');
     },
 
     async abandonGame(): Promise<void> {
       const dryRun = await arena().abandonGame.query();
       if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected abandonGame');
-      const tx = await submitContractTx(hexToBytes(SEL_ABANDON_GAME));
+      const tx = await arena().abandonGame.tx();
       if (!tx.ok) throw new Error('abandonGame tx failed');
     },
   };
@@ -280,54 +302,19 @@ export function createContractBackend(deps: {
   return backend;
 }
 
-// ── Solidity ABI calldata encoders ───────────────────────────────────────────
-
-function encodeStartGame(setId: number, seedNonce: bigint): Uint8Array {
-  return concat(hexToBytes(SEL_START_GAME), uint256(BigInt(setId)), uint256(seedNonce));
-}
-
-function encodeSubmitTurn(actionScale: Uint8Array): Uint8Array {
-  return concat(
-    hexToBytes(SEL_SUBMIT_TURN),
-    uint256(0x20n),
-    uint256(BigInt(actionScale.length)),
-    pad32(actionScale)
-  );
-}
-
-function uint256(value: bigint): Uint8Array {
-  const out = new Uint8Array(32);
-  let v = value;
-  for (let i = 31; i >= 0 && v > 0n; i--) {
-    out[i] = Number(v & 0xffn);
-    v >>= 8n;
-  }
-  return out;
-}
-
-function pad32(bytes: Uint8Array): Uint8Array {
-  const target = Math.ceil(bytes.length / 32) * 32;
-  const out = new Uint8Array(target);
-  out.set(bytes);
-  return out;
-}
-
-function concat(...parts: Uint8Array[]): Uint8Array {
-  const total = parts.reduce((n, p) => n + p.length, 0);
-  const out = new Uint8Array(total);
-  let off = 0;
-  for (const p of parts) {
-    out.set(p, off);
-    off += p.length;
-  }
-  return out;
-}
+// ── Byte/hex helpers ─────────────────────────────────────────────────────────
 
 function hexToBytes(hex: string): Uint8Array {
   const h = hex.startsWith('0x') ? hex.slice(2) : hex;
   const out = new Uint8Array(h.length / 2);
   for (let i = 0; i < out.length; i++) out[i] = parseInt(h.slice(i * 2, i * 2 + 2), 16);
   return out;
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  let hex = '';
+  for (const b of bytes) hex += b.toString(16).padStart(2, '0');
+  return hex;
 }
 
 function decodeArenaSessionSetId(data: Uint8Array): number {
@@ -337,15 +324,16 @@ function decodeArenaSessionSetId(data: Uint8Array): number {
   return lo | (hi << 8);
 }
 
+// ── BattleReported event decoding ────────────────────────────────────────────
+//
+// The contract emits a packed (NOT standard Solidity ABI) byte layout to keep
+// the on-chain encoder small, so we decode the raw `Revive.ContractEmitted`
+// event data ourselves rather than relying on the ABI codec.
+
 /**
- * Walk PAPI's tagged-union events looking for Revive.ContractEmitted whose
- * first topic matches our BattleReported signature, and return its raw `data`
- * bytes. Returns null if the event isn't present.
- *
- * The shape we expect (PAPI v1.x):
- *   { type: "Revive", value: { type: "ContractEmitted",
- *     value: { contract, data: Binary, topics: Binary[] } } }
- * but we walk defensively in case sdk-ink wraps or flattens it differently.
+ * Walk the tx's events looking for `Revive.ContractEmitted` whose first topic
+ * matches our BattleReported signature, and return its raw `data` bytes.
+ * Returns null if the event isn't present.
  */
 function findBattleReportedEventData(events: unknown[]): Uint8Array | null {
   const target = BATTLE_REPORTED_TOPIC.toLowerCase();
@@ -410,23 +398,14 @@ function binaryToBytes(data: unknown): Uint8Array {
     return (data as { asBytes: () => Uint8Array }).asBytes();
   }
   if (typeof data === 'string') {
-    const hex = data.startsWith('0x') ? data.slice(2) : data;
-    const out = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-    return out;
+    return hexToBytes(data);
   }
   return new Uint8Array();
 }
 
-function bytesToHex(bytes: Uint8Array): string {
-  let hex = '';
-  for (const b of bytes) hex += b.toString(16).padStart(2, '0');
-  return hex;
-}
-
 /**
  * Decode the OAB BattleReported event payload. The contract emits a packed
- * (NOT standard Solidity ABI) byte layout to keep the on-chain encoder small:
+ * byte layout:
  *   byte 0:    result (0=Victory, 1=Defeat, 2=Draw)
  *   byte 1:    wins
  *   byte 2:    lives
