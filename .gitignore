@@ -5,3 +5,5 @@
 scripts/card_art_output/
 scripts/*.server.log
 scripts/*.results.txt
+ppn/
+web/.cdm/
