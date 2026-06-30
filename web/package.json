@@ -19,11 +19,14 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@dotdm/cdm": "^0.5.8",
-    "@novasamatech/product-sdk": "^0.6.6-1",
-    "@parity/product-sdk-host": "^0.1.0",
-    "@parity/product-sdk-signer": "^0.1.0",
-    "@parity/product-sdk-tx": "^0.2.0",
+    "@parity/product-sdk": "^0.15.1",
+    "@parity/product-sdk-address": "^0.1.1",
+    "@parity/product-sdk-chain-client": "^0.7.5",
+    "@parity/product-sdk-contracts": "^0.8.1",
+    "@parity/product-sdk-descriptors": "^0.6.2",
+    "@parity/product-sdk-host": "^0.11.0",
+    "@parity/product-sdk-signer": "^0.8.2",
+    "@parity/product-sdk-tx": "^0.2.15",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
     "@polkadot-api/metadata-builders": "^0.13.9",
     "@polkadot-api/pjs-signer": "^0.6.19",
@@ -32,7 +35,7 @@
     "@polkadot-labs/hdkd-helpers": "^0.0.27",
     "emoji-picker-react": "^4.17.4",
     "peerjs": "^1.5.5",
-    "polkadot-api": "^1.23.3",
+    "polkadot-api": "^2.1.6",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -40,6 +43,9 @@
     "react-router-dom": "^7.12.0",
     "vite-plugin-top-level-await": "^1.6.0",
     "zustand": "^5.0.0"
+  },
+  "overrides": {
+    "@polkadot-api/json-rpc-provider": "0.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
