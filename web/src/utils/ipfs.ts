@@ -36,6 +36,13 @@ export function ipfsUrl(uri: string, gateway = DEFAULT_GATEWAY): string {
  *  Some gateways (w3s.link, dweb.link) redirect to subdomain-style URLs
  *  which break fetch() due to CORS. This helper falls back through the list. */
 export async function fetchIpfsJson(uri: string): Promise<unknown> {
+  // Raw fetch to public IPFS gateways is forbidden inside the Triangle host
+  // sandbox. These CIDs live on external public IPFS (not the Bulletin chain),
+  // so the SDK cloud-storage client can't serve them either — the feature
+  // (loading external-IPFS customization packs) is standalone-only.
+  if (isInHost()) {
+    throw new Error('Loading external IPFS content is not available in the host environment.');
+  }
   const cid = extractCid(uri);
   if (!cid) throw new Error(`Invalid IPFS URI: ${uri}`);
 
