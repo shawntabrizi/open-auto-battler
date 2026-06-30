@@ -8,6 +8,9 @@ edition = "2021"
 publish = false
 build = "build.rs"
 
+[package.metadata.cdm]
+package = "@oab/arena"
+
 [[bin]]
 name = "oab-contract"
 path = "src/main.rs"
@@ -20,16 +23,20 @@ panic = "abort"
 overflow-checks = false
 
 [dependencies]
-pvm_contract = { git = "https://github.com/paritytech/cargo-pvm-contract.git", rev = "d886ab2aa80ffdd0e66133320bcbb4921ff2fc8c", package = "pvm_contract" }
+pvm-contract-sdk = { git = "https://github.com/paritytech/cargo-pvm-contract", rev = "df613d48", default-features = false, features = ["alloc"] }
+polkavm-derive = "0.34.0"
 picoalloc = { version = "5", default-features = false }
-pallet-revive-uapi = { version = "0.9", default-features = false }
-polkavm-derive = "0.31.0"
 parity-scale-codec = { version = "3.7", default-features = false, features = ["derive"] }
 oab-battle = { path = "../battle", default-features = false }
 oab-game = { path = "../game", default-features = false }
 
 [features]
-abi-gen = []
+abi-gen = ["pvm-contract-sdk/abi-gen"]
+std = ["pvm-contract-sdk/std", "parity-scale-codec/std", "oab-battle/std", "oab-game/std"]
+
+[dev-dependencies]
+oab-assets = { path = "../assets", default-features = true }
+tiny-keccak = { version = "2", features = ["keccak"] }
 
 [build-dependencies]
-cargo-pvm-contract-builder = { git = "https://github.com/paritytech/cargo-pvm-contract.git", rev = "d886ab2aa80ffdd0e66133320bcbb4921ff2fc8c", package = "cargo-pvm-contract-builder" }
+cargo-pvm-contract-builder = { git = "https://github.com/paritytech/cargo-pvm-contract", rev = "df613d48" }
