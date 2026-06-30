@@ -7,3 +7,4 @@ scripts/*.server.log
 scripts/*.results.txt
 ppn/
 web/.cdm/
+.claude/
