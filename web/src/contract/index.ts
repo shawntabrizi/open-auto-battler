@@ -14,6 +14,7 @@ import type { SS58String } from 'polkadot-api';
 import { createChainClient } from '@parity/product-sdk-chain-client';
 import { paseo_asset_hub } from '@parity/product-sdk-descriptors/paseo-asset-hub';
 import {
+  ContractManager,
   createContract,
   createContractRuntimeFromClient,
   ensureContractAccountMapped,
@@ -105,11 +106,23 @@ interface ArenaContract {
   abandonGame: { query(): Promise<QueryResult<boolean>>; tx(): Promise<TxResult> };
 }
 
+const ARENA_LIBRARY = '@oab/arena';
+
+/**
+ * The new `cdm` CLI manifest carries a top-level `registry` address and resolves
+ * each contract's address + ABI from the on-chain CDM registry at runtime (a
+ * redeploy is picked up without shipping a new cdm.json). Legacy `@dotdm/cdm`
+ * manifests instead inline `contracts[target]['@oab/arena'].address`+`.abi`.
+ */
+function hasLiveRegistry(cdm: unknown): boolean {
+  return typeof (cdm as { registry?: unknown }).registry === 'string';
+}
+
 function arenaContractInfo(): { address: `0x${string}`; abi: AbiEntry[] } {
   const target = Object.keys(cdmJson.contracts ?? {})[0];
   const entry = (
     cdmJson.contracts as Record<string, Record<string, { address: string; abi: unknown }>>
-  )[target]['@oab/arena'];
+  )[target][ARENA_LIBRARY];
   return { address: entry.address as `0x${string}`, abi: entry.abi as AbiEntry[] };
 }
 
@@ -130,6 +143,9 @@ export function createContractBackend(deps: {
 
   let client: AssetHubClient | null = null;
   let contract: ArenaContract | null = null;
+  // Set only on the live-registry (new cdm) path; lets selectAccount rebind
+  // defaults without another registry round-trip.
+  let manager: ContractManager | null = null;
   let signerManager: SignerManager | null = null;
   let _accounts: Account[] = [];
   let _selectedAccount: Account | null = null;
@@ -168,18 +184,33 @@ export function createContractBackend(deps: {
       // Host-routed Asset Hub client (no direct WebSocket).
       const chainClient = await createChainClient({ chains: { assetHub: paseo_asset_hub } });
       client = chainClient;
-
-      const { address, abi } = arenaContractInfo();
-      const runtime = createContractRuntimeFromClient(chainClient.raw.assetHub, paseo_asset_hub);
+      const rawClient = chainClient.raw.assetHub;
+      const runtime = createContractRuntimeFromClient(rawClient, paseo_asset_hub);
 
       // Every SS58 origin must be mapped to its H160 once before pallet-revive
-      // calls, or they fail `AccountUnmapped`. Idempotent (no-op if mapped).
+      // calls — including the registry lookup below — or they fail
+      // `AccountUnmapped`. Idempotent (no-op if already mapped).
       await ensureContractAccountMapped(runtime, _selectedAccount.address, signer);
 
-      contract = createContract(runtime, address, abi, {
-        defaultSigner: signer,
-        defaultOrigin: _selectedAccount.address,
-      }) as unknown as ArenaContract;
+      if (hasLiveRegistry(cdmJson)) {
+        // New `cdm` CLI manifest: resolve the arena address + ABI from the live
+        // on-chain CDM registry.
+        manager = await ContractManager.fromLiveClient(cdmJson as never, rawClient, paseo_asset_hub, {
+          defaultOrigin: _selectedAccount.address,
+          defaultSigner: signer,
+          registryOrigin: _selectedAccount.address,
+          libraries: [ARENA_LIBRARY],
+        } as never);
+        contract = manager.getContract(ARENA_LIBRARY) as unknown as ArenaContract;
+      } else {
+        // Legacy @dotdm/cdm snapshot: inline address + ABI.
+        manager = null;
+        const { address, abi } = arenaContractInfo();
+        contract = createContract(runtime, address, abi, {
+          defaultSigner: signer,
+          defaultOrigin: _selectedAccount.address,
+        }) as unknown as ArenaContract;
+      }
 
       _isConnected = true;
     },
@@ -188,6 +219,7 @@ export function createContractBackend(deps: {
       client?.destroy();
       signerManager?.disconnect();
       contract = null;
+      manager = null;
       client = null;
       signerManager = null;
       _accounts = [];
@@ -211,7 +243,12 @@ export function createContractBackend(deps: {
       _selectedAccount = account;
       // Re-bind the contract defaults to the newly selected signer/origin.
       const signer = signerManager.getSigner();
-      if (signer && client) {
+      if (!signer || !client) return;
+      if (manager) {
+        // Live-registry path: rebind defaults without another registry lookup.
+        manager.setDefaults({ defaultOrigin: account.address, defaultSigner: signer } as never);
+        contract = manager.getContract(ARENA_LIBRARY) as unknown as ArenaContract;
+      } else {
         const { address, abi } = arenaContractInfo();
         const runtime = createContractRuntimeFromClient(client.raw.assetHub, paseo_asset_hub);
         contract = createContract(runtime, address, abi, {
