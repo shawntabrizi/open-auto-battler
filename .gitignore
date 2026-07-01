@@ -9,3 +9,5 @@ ppn/
 web/.cdm/
 .claude/
 contract/.cdm/
+web/dist.car
+web/dist/
