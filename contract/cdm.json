@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@oab/arena": "latest"
+  },
+  "contracts": {
+    "@oab/arena": {
+      "version": 0
+    }
+  },
+  "registry": "0xf62c2ece29cd8df2e10040ecfa5a894a5c5d9cb0"
+}

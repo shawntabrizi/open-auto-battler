@@ -1,175 +1,191 @@
 {
-  "targets": {
-    "1029bb2e5a8f86f9": {
-      "asset-hub": "ws://127.0.0.1:10020",
-      "bulletin": "http://127.0.0.1:8080/ipfs"
-    }
-  },
   "dependencies": {
-    "1029bb2e5a8f86f9": {
-      "@oab/arena": "latest"
-    }
+    "@oab/arena": "latest"
   },
   "contracts": {
-    "1029bb2e5a8f86f9": {
-      "@oab/arena": {
-        "version": 0,
-        "address": "0xDCa5a8F74682ea27D192b22E03821bB4A464D3e6",
-        "abi": [
-          {
-            "type": "constructor",
-            "inputs": [],
-            "stateMutability": "nonpayable"
-          },
-          {
-            "type": "function",
-            "name": "registerCard",
-            "inputs": [
-              {
-                "name": "data",
-                "type": "bytes"
-              }
-            ],
-            "outputs": [
-              {
-                "name": "",
-                "type": "bool"
-              }
-            ],
-            "stateMutability": "view"
-          },
-          {
-            "type": "function",
-            "name": "registerSet",
-            "inputs": [
-              {
-                "name": "set_id",
-                "type": "uint16"
-              },
-              {
-                "name": "data",
-                "type": "bytes"
-              }
-            ],
-            "outputs": [
-              {
-                "name": "",
-                "type": "bool"
-              }
-            ],
-            "stateMutability": "view"
-          },
-          {
-            "type": "function",
-            "name": "startGame",
-            "inputs": [
-              {
-                "name": "set_id",
-                "type": "uint16"
-              },
-              {
-                "name": "seed_nonce",
-                "type": "uint64"
-              }
-            ],
-            "outputs": [
-              {
-                "name": "",
-                "type": "uint64"
-              }
-            ],
-            "stateMutability": "view"
-          },
-          {
-            "type": "function",
-            "name": "submitTurn",
-            "inputs": [
-              {
-                "name": "action",
-                "type": "bytes"
-              }
-            ],
-            "outputs": [
-              {
-                "name": "",
-                "type": "uint64"
-              }
-            ],
-            "stateMutability": "view"
-          },
-          {
-            "type": "function",
-            "name": "getGameState",
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "",
-                "type": "bytes"
-              }
-            ],
-            "stateMutability": "view"
-          },
-          {
-            "type": "function",
-            "name": "abandonGame",
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "",
-                "type": "bool"
-              }
-            ],
-            "stateMutability": "view"
-          },
-          {
-            "type": "function",
-            "name": "endGame",
-            "inputs": [],
-            "outputs": [
-              {
-                "name": "",
-                "type": "bool"
-              }
-            ],
-            "stateMutability": "view"
-          },
-          {
-            "type": "function",
-            "name": "getCard",
-            "inputs": [
-              {
-                "name": "card_id",
-                "type": "uint16"
-              }
-            ],
-            "outputs": [
-              {
-                "name": "",
-                "type": "bytes"
-              }
-            ],
-            "stateMutability": "view"
-          },
-          {
-            "type": "function",
-            "name": "getSet",
-            "inputs": [
-              {
-                "name": "set_id",
-                "type": "uint16"
-              }
-            ],
-            "outputs": [
-              {
-                "name": "",
-                "type": "bytes"
-              }
-            ],
-            "stateMutability": "view"
-          }
-        ],
-        "metadataCid": "bafk2bzacecovsv6xhy7s56hclie6p3sa6kurslihhtlno4zhxhslw2bio2gey"
-      }
+    "@oab/arena": {
+      "version": 1,
+      "address": "0xCc97CD2BBF330B6C0e1C98f12bA5230b6E5Ee61F",
+      "abi": [
+        {
+          "type": "constructor",
+          "inputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "registerCard",
+          "inputs": [
+            {
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "registerSet",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            },
+            {
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "startGame",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            },
+            {
+              "name": "seed_nonce",
+              "type": "uint64"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "uint64"
+            }
+          ],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "submitTurn",
+          "inputs": [
+            {
+              "name": "action",
+              "type": "bytes"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "uint64"
+            }
+          ],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "getGameState",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "abandonGame",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "endGame",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "getCard",
+          "inputs": [
+            {
+              "name": "card_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "getSet",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "error",
+          "name": "InvalidCalldata",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "CalldataTooLarge",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NoSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "UnknownSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NonPayableValueReceived",
+          "inputs": []
+        }
+      ],
+      "metadataCid": "bafk2bzacedbycccjqxbepx5qtqd4iippsjewfc6ofzjqnqu75cnidv2prfuk6"
     }
-  }
+  },
+  "registry": "0xf62c2ece29cd8df2e10040ecfa5a894a5c5d9cb0"
 }

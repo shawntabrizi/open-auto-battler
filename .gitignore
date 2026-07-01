@@ -8,3 +8,4 @@ scripts/*.results.txt
 ppn/
 web/.cdm/
 .claude/
+contract/.cdm/

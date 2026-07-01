@@ -119,10 +119,10 @@ function hasLiveRegistry(cdm: unknown): boolean {
 }
 
 function arenaContractInfo(): { address: `0x${string}`; abi: AbiEntry[] } {
-  const target = Object.keys(cdmJson.contracts ?? {})[0];
+  // The cdm CLI manifest keys contracts directly by package name.
   const entry = (
-    cdmJson.contracts as Record<string, Record<string, { address: string; abi: unknown }>>
-  )[target][ARENA_LIBRARY];
+    cdmJson.contracts as unknown as Record<string, { address: string; abi: unknown }>
+  )[ARENA_LIBRARY];
   return { address: entry.address as `0x${string}`, abi: entry.abi as AbiEntry[] };
 }
 
