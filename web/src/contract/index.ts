@@ -290,10 +290,12 @@ export function createContractBackend(deps: {
     async submitTurn(actionScale: Uint8Array): Promise<TurnResult> {
       await ensureMapped();
       const action = '0x' + bytesToHex(actionScale);
-      const dryRun = await arena().submitTurn.query(action);
-      if (!dryRun.success || dryRun.value === 0n) {
-        throw new Error('Contract rejected submitTurn');
-      }
+      // No explicit pre-query here: submitTurn resolves the whole battle
+      // on-chain, so a dry-run executes that full simulation. `.tx()` already
+      // runs its own dry-run to size gas and fails fast on revert/OOG, so an
+      // extra `.query()` would just double that heavy simulation (and the
+      // host round-trip) before the signing prompt appears. We read battleSeed
+      // + the full report from the BattleReported event below, not the query.
       const tx = await arena().submitTurn.tx(action);
       if (!tx.ok) throw new Error('submitTurn tx failed');
 
