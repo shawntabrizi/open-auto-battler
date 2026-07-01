@@ -21,7 +21,7 @@ import {
   type AbiEntry,
 } from '@parity/product-sdk-contracts';
 import type { TxResult } from '@parity/product-sdk-tx';
-import { SignerManager } from '@parity/product-sdk-signer';
+import { SignerManager, HostProvider, DevProvider } from '@parity/product-sdk-signer';
 import { isInHost } from '../services/hostEnvironment';
 import cdmJson from '../../cdm.json';
 
@@ -160,9 +160,25 @@ export function createContractBackend(deps: {
   const backend: ContractBackend = {
     async connect() {
       signerManager = new SignerManager({
-        ss58Prefix: 0,
         dappName: 'oab',
         persistence: null,
+        // Build the host provider from an explicit product account with
+        // `requestName: false` so connect() does NOT request the host's
+        // "primary username" / identity permission (the default dappName path
+        // hardcodes requestName: true). A game needs a signing account, not the
+        // user's identity. The product-account signer also routes through
+        // host_create_transaction, which the Asset Hub Next runtime requires.
+        createProvider: (type: 'host' | 'dev') =>
+          type === 'host'
+            ? new HostProvider({
+                ss58Prefix: 0,
+                productAccount: {
+                  dotNsIdentifier: 'oab.dot',
+                  derivationIndex: 0,
+                  requestName: false,
+                },
+              })
+            : new DevProvider(),
       });
       const result = await signerManager.connect(providerType);
       if (!result.ok) {
