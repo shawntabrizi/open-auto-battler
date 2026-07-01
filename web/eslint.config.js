@@ -80,5 +80,13 @@ export default tseslint.config(
     languageOptions: {
       globals: globals.node,
     },
+  },
+  {
+    // Standalone Node scripts (on-chain E2E, balance checks) — run under Node,
+    // not the browser, so they use console/process/URL etc.
+    files: ['scripts/**/*.{js,mjs}'],
+    languageOptions: {
+      globals: globals.node,
+    },
   }
 );
