@@ -1,7 +1,6 @@
 import { useContractStore } from '../store/contractStore';
 import { TopBar } from './TopBar';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
 
 /** Contract mode main menu — connect signer, select account, and choose game mode. */
 export function ContractMenuPage() {
@@ -11,13 +10,10 @@ export function ContractMenuPage() {
     connect,
     disconnect,
     connectionError,
-    wsUrl,
-    setConfig,
     accounts,
     selectedAccount,
     selectAccount,
   } = useContractStore();
-  const [editWs, setEditWs] = useState(wsUrl);
 
   return (
     <div className="app-shell min-h-screen min-h-svh flex flex-col text-white">
@@ -33,37 +29,13 @@ export function ContractMenuPage() {
 
         {!isConnected ? (
           <div className="flex flex-col items-center gap-4 w-full max-w-md">
-            <div className="w-full">
-              <label className="block text-xs text-base-500 mb-1">Asset Hub WS Endpoint</label>
-              <input
-                type="text"
-                value={editWs}
-                onChange={(e) => setEditWs(e.target.value)}
-                className="w-full bg-base-900 border border-base-700 rounded-lg px-3 py-2 text-sm text-white"
-              />
-            </div>
-            <div className="flex gap-3 w-full">
-              <button
-                onClick={() => {
-                  setConfig(editWs);
-                  void connect(true);
-                }}
-                disabled={isConnecting}
-                className="theme-button btn-primary flex-1 font-bold py-3 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
-              >
-                {isConnecting ? 'CONNECTING...' : 'DEV ACCOUNTS'}
-              </button>
-              <button
-                onClick={() => {
-                  setConfig(editWs);
-                  void connect(false);
-                }}
-                disabled={isConnecting}
-                className="theme-button btn-secondary flex-1 font-bold py-3 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
-              >
-                HOST
-              </button>
-            </div>
+            <button
+              onClick={() => void connect()}
+              disabled={isConnecting}
+              className="theme-button btn-primary w-full font-bold py-3 rounded-xl text-sm transition-all transform hover:scale-105 disabled:opacity-50"
+            >
+              {isConnecting ? 'CONNECTING...' : 'CONNECT'}
+            </button>
             {connectionError && (
               <p className="max-w-md rounded-xl theme-error-panel border px-3 py-2 text-center text-xs text-negative">
                 {connectionError}

@@ -13,7 +13,6 @@ interface ContractStore {
   isConnected: boolean;
   isConnecting: boolean;
   connectionError: string | null;
-  wsUrl: string;
 
   // Account
   selectedAccount: Account | null;
@@ -28,7 +27,6 @@ interface ContractStore {
   connect: (useDevAccounts?: boolean) => Promise<boolean>;
   disconnect: () => void;
   selectAccount: (account: Account) => void;
-  setConfig: (wsUrl: string) => void;
   startGame: (setId: number) => Promise<void>;
   submitTurnOnChain: () => Promise<void>;
   endGame: () => Promise<void>;
@@ -36,34 +34,23 @@ interface ContractStore {
   refreshGameState: () => Promise<void>;
 }
 
-const DEFAULT_WS = 'ws://127.0.0.1:10020';
-
 export const useContractStore = create<ContractStore>((set, get) => ({
   backend: null,
   isConnected: false,
   isConnecting: false,
   connectionError: null,
-  wsUrl: DEFAULT_WS,
   selectedAccount: null,
   accounts: [],
   hasActiveGame: false,
   isRefreshing: false,
   isSubmitting: false,
 
-  setConfig: (wsUrl: string) => {
-    set({ wsUrl });
-  },
-
   connect: async (useDevAccounts?: boolean) => {
-    const { wsUrl } = get();
     get().disconnect();
     set({ isConnecting: true, connectionError: null });
 
     try {
-      const backend = createContractBackend({
-        wsUrl,
-        useDevAccounts,
-      });
+      const backend = createContractBackend({ useDevAccounts });
 
       await backend.connect();
 

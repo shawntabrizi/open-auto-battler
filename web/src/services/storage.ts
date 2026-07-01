@@ -110,7 +110,6 @@ export async function initHostStorage(): Promise<void> {
   const { useThemeStore } = await import('../store/themeStore');
 
   const [
-    endpoint,
     selectedSet,
     showRawJson,
     showCardNames,
@@ -122,7 +121,6 @@ export async function initHostStorage(): Promise<void> {
     reducedAnimations,
     themeData,
   ] = await Promise.all([
-    storageService.readString('oab-ws-endpoint'),
     storageService.readString('oab-selected-set'),
     storageService.readJSON<boolean>('showRawJson'),
     storageService.readJSON<boolean>('showCardNames'),
@@ -135,7 +133,6 @@ export async function initHostStorage(): Promise<void> {
     storageService.readJSON<StoredThemeData>('oab-selected-theme'),
   ]);
 
-  if (endpoint) useSettingsStore.setState({ endpoint });
   if (selectedSet !== null) useSettingsStore.setState({ selectedSetId: Number(selectedSet) });
 
   const gameUpdates: Record<string, unknown> = {};

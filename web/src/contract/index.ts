@@ -121,8 +121,7 @@ export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
 }
 
 export function createContractBackend(deps: {
-  /** @deprecated host-routed client ignores this; kept for caller compatibility. */
-  wsUrl?: string;
+  /** Force the dev signer provider (Alice/Bob) instead of auto-detecting the host. */
   useDevAccounts?: boolean;
 }): ContractBackend {
   // Host-first: derive the signer provider from the host environment, with an
