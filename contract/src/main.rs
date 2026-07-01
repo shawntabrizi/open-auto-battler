@@ -957,4 +957,58 @@ mod tests {
         assert!(c.end_game(), "end_game on the completed game => true");
         assert!(decode_session(&c.get_game_state()).is_none());
     }
+
+    /// End-to-end lifecycle through the real contract methods: register all
+    /// genesis cards + set 0, start a game, lose three battles against seeded
+    /// ghosts (an empty board always loses to a non-empty opponent) so the game
+    /// reaches its natural lives==0 game-over, then finalize with end_game.
+    #[test]
+    fn e2e_full_game_lifecycle_to_defeat() {
+        use oab_battle::types::GhostBoardUnit;
+        let (mut c, mock) = setup();
+        let cid = oab_assets::sets::get_all()[0].clone().cards[0].card_id;
+
+        // Seed a strong ghost in the (set 0, round, wins=0, lives) bracket the
+        // contract will match when resolving this turn's battle.
+        let seed_strong_ghost = |round: u8, lives: u8| {
+            let pool: Vec<Vec<GhostBoardUnit>> = vec![vec![GhostBoardUnit {
+                card_id: cid,
+                perm_attack: 50,
+                perm_health: 50,
+            }]];
+            mock.set_raw_storage(
+                skey(super::DOM_GHOST, &super::bracket_bytes(0, round, 0, lives)).to_vec(),
+                pool.encode(),
+            );
+        };
+
+        assert_ne!(c.start_game(0, 123), 0, "game starts");
+        let s = decode_session(&c.get_game_state()).unwrap();
+        assert_eq!((s.round, s.lives, s.wins), (1, 3, 0), "fresh game state");
+
+        // Round 1 (lives 3) -> lose -> lives 2, round 2
+        // Round 2 (lives 2) -> lose -> lives 1, round 3
+        // Round 3 (lives 1) -> lose -> lives 0 -> game over
+        let mut expected_lives = 3u8;
+        let mut round = 1u8;
+        while expected_lives > 0 {
+            seed_strong_ghost(round, expected_lives);
+            assert_ne!(c.submit_turn(empty_turn()), 0, "turn resolves at round {round}");
+            let s = decode_session(&c.get_game_state()).expect("session persists through game over");
+            expected_lives -= 1;
+            assert_eq!(s.lives, expected_lives, "a defeat costs exactly one life");
+            if expected_lives > 0 {
+                round += 1;
+                assert_eq!(s.round, round, "round advances while the game continues");
+                assert_eq!(s.phase, GamePhase::Shop, "back to Shop for the next round");
+            }
+        }
+
+        let s = decode_session(&c.get_game_state()).unwrap();
+        assert_eq!(s.lives, 0);
+        assert_eq!(s.phase, GamePhase::Completed, "lives==0 ends the game");
+
+        assert!(c.end_game(), "end_game finalizes the completed game");
+        assert!(decode_session(&c.get_game_state()).is_none(), "game removed after end_game");
+    }
 }
