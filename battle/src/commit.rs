@@ -842,6 +842,11 @@ fn shop_matcher_pass(
             })
         }
         ShopMatcher::IsPosition { scope, index } => {
+            // Mirrors the battle matcher: the SOURCE unit must sit at `index`
+            // within the scoped list (not "any unit occupies that slot").
+            let (Some(src), true) = (source_slot, source_on_board) else {
+                return false;
+            };
             let targets = resolve_scope_slots(
                 state,
                 *scope,
@@ -853,15 +858,15 @@ fn shop_matcher_pass(
                 return false;
             }
 
-            let desired = if *index == -1 {
-                targets.last().copied()
+            let actual_idx = if *index == -1 {
+                targets.len().saturating_sub(1)
             } else if *index >= 0 {
-                Some(*index as usize)
+                *index as usize
             } else {
-                None
+                return false;
             };
 
-            desired.map(|idx| targets.contains(&idx)).unwrap_or(false)
+            targets.get(actual_idx) == Some(&src)
         }
     }
 }

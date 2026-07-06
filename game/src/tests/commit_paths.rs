@@ -396,6 +396,48 @@ fn test_shop_condition_gate_can_prevent_effects() {
 }
 
 #[test]
+fn test_shop_is_position_checks_source_not_any_occupant() {
+    // IsPosition must ask "is the SOURCE at this position", matching the
+    // battle matcher — not "is any unit at this position". A front-slot
+    // ability on a back-row unit must not fire just because the front slot
+    // happens to be occupied by someone else.
+    let mut state = GameState::new(12, crate::sealed::default_config());
+    state.mana_limit = 10;
+    state.shop_mana = 0;
+
+    let blocker_id = add_card(&mut state, "Blocker", 1, 1, 0, 0);
+    let source_id = state.generate_card_id();
+    let source = UnitCard::new(source_id, "Source", 1, 2, 0, 0).with_shop_ability(ShopAbility {
+        trigger: ShopTrigger::OnShopStart,
+        effect: ShopEffect::GainMana { amount: 3 },
+        conditions: vec![ShopCondition::Is(ShopMatcher::IsPosition {
+            scope: ShopScope::Allies,
+            index: 0,
+        })],
+        max_triggers: None,
+    });
+    state.card_pool.insert(source_id, source);
+
+    // Blocker at the front, source behind it: condition must fail.
+    state.board[0] = Some(BoardUnit::new(blocker_id));
+    state.board[1] = Some(BoardUnit::new(source_id));
+    apply_shop_start_triggers(&mut state);
+    assert_eq!(
+        state.shop_mana, 0,
+        "front-position ability must not fire for a back-row source"
+    );
+
+    // Source at the front: condition must pass.
+    state.board[0] = Some(BoardUnit::new(source_id));
+    state.board[1] = Some(BoardUnit::new(blocker_id));
+    apply_shop_start_triggers(&mut state);
+    assert_eq!(
+        state.shop_mana, 3,
+        "front-position ability must fire when the source is at the front"
+    );
+}
+
+#[test]
 fn test_shop_condition_anyof_path_applies_with_valid_targets() {
     let mut state = GameState::new(11, crate::sealed::default_config());
     state.mana_limit = 10;
