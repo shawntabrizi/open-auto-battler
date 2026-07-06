@@ -118,9 +118,9 @@ const PRODUCT_ID = 'oab-arena.dot';
 
 function arenaContractInfo(): { address: `0x${string}`; abi: AbiEntry[] } {
   // The cdm CLI manifest keys contracts directly by package name.
-  const entry = (
-    cdmJson.contracts as unknown as Record<string, { address: string; abi: unknown }>
-  )[ARENA_LIBRARY];
+  const entry = (cdmJson.contracts as unknown as Record<string, { address: string; abi: unknown }>)[
+    ARENA_LIBRARY
+  ];
   return { address: entry.address as `0x${string}`, abi: entry.abi as AbiEntry[] };
 }
 
@@ -305,14 +305,12 @@ export function createContractBackend(deps: {
           'No BattleReported event in tx; full events array follows for debug:',
           tx.events
         );
-        return {
-          battleSeed: 0n,
-          opponentBoard: [],
-          result: 'Draw',
-          wins: 0,
-          lives: 0,
-          round: 0,
-        };
+        // The turn IS committed on-chain at this point; fabricating a result
+        // here would show the player a battle that never happened. Surface the
+        // decode failure so the caller resyncs from chain state instead.
+        throw new Error(
+          'Turn submitted, but the battle report could not be read — resyncing from chain'
+        );
       }
       return decodeBattleReported(eventBytes);
     },

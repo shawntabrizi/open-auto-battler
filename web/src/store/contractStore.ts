@@ -173,6 +173,11 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     } catch (err) {
       console.error('Contract submit turn failed:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to submit contract turn');
+      // The failure may have happened after broadcast (e.g. the tx landed but
+      // the battle report couldn't be decoded), in which case the chain has
+      // already advanced past our local shop state. Resync so the player
+      // isn't stuck replaying a stale turn.
+      await get().refreshGameState();
     } finally {
       set({ isSubmitting: false });
     }
