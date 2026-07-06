@@ -33,6 +33,8 @@ interface ContractStore {
   hasActiveGame: boolean;
   isRefreshing: boolean;
   isSubmitting: boolean;
+  /** Set when the last refreshGameState failed to load/decode chain state. */
+  refreshError: string | null;
 
   // Actions
   connect: (useDevAccounts?: boolean) => Promise<boolean>;
@@ -55,6 +57,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
   hasActiveGame: false,
   isRefreshing: false,
   isSubmitting: false,
+  refreshError: null,
 
   connect: async (useDevAccounts?: boolean) => {
     get().disconnect();
@@ -235,10 +238,12 @@ export const useContractStore = create<ContractStore>((set, get) => ({
   },
 
   refreshGameState: async () => {
-    const { backend } = get();
-    if (!backend) return;
+    const { backend, isRefreshing } = get();
+    // Reentrancy guard: StrictMode double-fires the page effects, and a
+    // concurrent init_from_scale on the shared WASM engine is not safe.
+    if (!backend || isRefreshing) return;
 
-    set({ isRefreshing: true });
+    set({ isRefreshing: true, refreshError: null });
 
     try {
       const gameState = await backend.getGameState();
@@ -273,6 +278,9 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       }
     } catch (err) {
       console.error('Contract refresh game state failed:', err);
+      set({
+        refreshError: err instanceof Error ? err.message : 'Failed to load game state from chain',
+      });
     } finally {
       set({ isRefreshing: false });
     }

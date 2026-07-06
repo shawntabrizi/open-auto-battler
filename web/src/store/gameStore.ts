@@ -237,6 +237,20 @@ function getCommitWarning(view: GameView | null): string | null {
   return null;
 }
 
+/**
+ * Parse a persisted settings value, falling back on missing or corrupted
+ * data — a single bad localStorage entry must not throw during module load
+ * and white-screen the standalone app.
+ */
+function readSetting<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw === null ? fallback : (JSON.parse(raw) as T);
+  } catch {
+    return fallback;
+  }
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   engine: null,
   view: null,
@@ -253,24 +267,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showBattleOverlay: false,
   // In host mode, these defaults are hydrated by initHostStorage() before first render.
   // In standalone mode, read sync from localStorage.
-  showRawJson: isInHost() ? false : JSON.parse(localStorage.getItem('showRawJson') || 'false'),
-  showCardNames: isInHost() ? true : JSON.parse(localStorage.getItem('showCardNames') ?? 'true'),
+  showRawJson: isInHost() ? false : readSetting('showRawJson', false),
+  showCardNames: isInHost() ? true : readSetting('showCardNames', true),
   showGameCardDetailsPanel: isInHost()
-    ? ('auto' as CardDetailsPanelMode)
-    : (JSON.parse(
-        localStorage.getItem('showGameCardDetailsPanel') ?? '"auto"'
-      ) as CardDetailsPanelMode),
-  showBoardHelper: isInHost()
-    ? true
-    : JSON.parse(localStorage.getItem('showBoardHelper') ?? 'true'),
-  showAddress: isInHost() ? true : JSON.parse(localStorage.getItem('showAddress') ?? 'true'),
-  showBalance: isInHost() ? true : JSON.parse(localStorage.getItem('showBalance') ?? 'true'),
-  defaultBattleSpeed: isInHost()
-    ? 1
-    : JSON.parse(localStorage.getItem('defaultBattleSpeed') ?? '1'),
-  reducedAnimations: isInHost()
-    ? false
-    : JSON.parse(localStorage.getItem('reducedAnimations') ?? 'false'),
+    ? 'auto'
+    : readSetting<CardDetailsPanelMode>('showGameCardDetailsPanel', 'auto'),
+  showBoardHelper: isInHost() ? true : readSetting('showBoardHelper', true),
+  showAddress: isInHost() ? true : readSetting('showAddress', true),
+  showBalance: isInHost() ? true : readSetting('showBalance', true),
+  defaultBattleSpeed: isInHost() ? 1 : readSetting('defaultBattleSpeed', 1),
+  reducedAnimations: isInHost() ? false : readSetting('reducedAnimations', false),
   showBag: false,
   dragShift: null,
   startingLives: 3,
