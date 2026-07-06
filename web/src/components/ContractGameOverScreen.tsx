@@ -14,7 +14,7 @@ export function ContractGameOverScreen() {
     try {
       await endGame();
       resetActiveSessionView();
-      navigate('/contract/arena');
+      void navigate('/contract/arena');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to finalize contract run');
     }
