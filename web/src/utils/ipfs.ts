@@ -57,29 +57,3 @@ export async function fetchIpfsJson(uri: string): Promise<unknown> {
   }
   throw new Error(`All IPFS gateways failed for ${cid}`);
 }
-
-/** Upload a file to Pinata and return the IPFS CID.
- *  Not available in Triangle host mode (fetch is sandboxed). */
-export async function uploadToPinata(file: File, apiKey: string): Promise<string> {
-  if (isInHost()) {
-    throw new Error('File uploads are not available in the Triangle host environment.');
-  }
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Pinata upload failed: ${res.status} ${text}`);
-  }
-
-  const data = await res.json();
-  return data.IpfsHash as string;
-}

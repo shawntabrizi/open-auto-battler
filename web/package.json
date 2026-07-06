@@ -4,7 +4,6 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "postinstall": "patch-package",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build-wasm": "../build-wasm.sh",
@@ -56,7 +55,6 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.12.0",
-    "patch-package": "^8.0.1",
     "postcss": "^8.4.49",
     "prettier": "^3.8.1",
     "tailwindcss": "^3.4.15",
