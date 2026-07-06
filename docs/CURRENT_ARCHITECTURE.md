@@ -1,6 +1,33 @@
-# Open Auto Battler: Current Architecture (January 30, 2026)
+# Open Auto Battler: Architecture (legacy snapshot)
 
-This document describes the current architecture of Open Auto Battler, an auto-battler game where the battle engine runs identically in the browser (via WASM) and on a blockchain (via Substrate pallet).
+> **⚠️ OUTDATED — kept for historical reference only.**
+>
+> This document describes the **pre-migration Substrate-pallet** architecture
+> (a `pallet-auto-battle` pallet, an `oab-core` crate under `core/`, and a
+> `blockchain/` directory). None of that exists in the tree any more.
+>
+> The current chain backend is a **PolkaVM smart contract** under
+> [`contract/`](../contract/) running on Polkadot Asset Hub (`pallet-revive`).
+> The engine has been split into the `battle/`, `game/`, and `assets/` crates.
+> Storage/IO is no longer a pallet — it's contract entry points
+> (`startGame`, `submitTurn`, etc., see `contract/README.md`).
+>
+> For the **current** architecture, read:
+> - [`agents/ARCHITECTURE.md`](../agents/ARCHITECTURE.md) — system map
+> - [`agents/CORE_ENGINE.md`](../agents/CORE_ENGINE.md) — engine internals
+> - [`agents/WASM_BRIDGE.md`](../agents/WASM_BRIDGE.md) — Rust ↔ JS boundary
+> - [`contract/README.md`](../contract/README.md) — contract + PPN dev loop
+>
+> The conceptual pieces below (SCALE encoding for chain transport, the
+> shared-Rust-engine principle, the ability system, battle execution limits)
+> are still accurate in spirit, but every code path, crate name, and file
+> reference has changed. Trust the agent docs first.
+
+---
+
+This document describes the **historical** architecture of Open Auto Battler,
+an auto-battler game where the battle engine ran identically in the browser
+(via WASM) and on a blockchain (via Substrate pallet).
 
 ## High-Level Overview
 
