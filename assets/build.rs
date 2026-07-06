@@ -347,7 +347,7 @@ fn normalize_battle_ability(
     match ability.trigger.as_str() {
         "OnStart" | "OnFaint" | "OnAllyFaint" | "OnHurt" | "OnSpawn" | "OnAllySpawn"
         | "OnEnemySpawn" | "BeforeUnitAttack" | "AfterUnitAttack" | "BeforeAnyAttack"
-        | "AfterAnyAttack" => {}
+        | "AfterAnyAttack" | "AfterAllyAttack" | "AfterEnemyAttack" => {}
         "OnBuy" | "OnSell" | "OnShopStart" | "AfterLoss" | "AfterWin" | "AfterDraw" => panic!(
             "Card {card_id} ability '{}' uses battle lane with shop trigger '{}'",
             ability_label, ability.trigger
