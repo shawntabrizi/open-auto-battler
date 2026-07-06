@@ -678,10 +678,13 @@ fn resolve_trigger_queue<R: BattleRng>(
             ability_index: trigger.ability_index as IndexValue,
         });
 
-        // D. Increment trigger count for this ability (if unit is still alive)
+        // D. Increment trigger count for this ability (if unit is still alive).
+        // Saturating: an unlimited ability can legitimately fire >255 times
+        // within the round limits, and the count is only compared against
+        // max_triggers (<= u8::MAX), so pinning at MAX is exact.
         if let Some(unit) = find_unit_mut(trigger.source_id, player_units, enemy_units) {
             if let Some(count) = unit.ability_trigger_counts.get_mut(trigger.ability_index) {
-                *count += 1;
+                *count = count.saturating_add(1);
             }
         }
 

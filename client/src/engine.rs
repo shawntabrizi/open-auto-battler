@@ -402,8 +402,9 @@ impl GameEngine {
         };
         self.save_snapshot();
         if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
-            let snapshot = self.undo_history.pop().unwrap();
-            self.restore_snapshot(snapshot);
+            if let Some(snapshot) = self.undo_history.pop() {
+                self.restore_snapshot(snapshot);
+            }
             return Err(format!("{:?}", e));
         }
         self.action_log.push(action);
@@ -430,8 +431,9 @@ impl GameEngine {
         self.save_snapshot();
         if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
             // Rollback on failure: restore snapshot since save_snapshot was already called
-            let snapshot = self.undo_history.pop().unwrap();
-            self.restore_snapshot(snapshot);
+            if let Some(snapshot) = self.undo_history.pop() {
+                self.restore_snapshot(snapshot);
+            }
             return Err(format!("{:?}", e));
         }
         self.action_log.push(action);
@@ -457,8 +459,9 @@ impl GameEngine {
         };
         self.save_snapshot();
         if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
-            let snapshot = self.undo_history.pop().unwrap();
-            self.restore_snapshot(snapshot);
+            if let Some(snapshot) = self.undo_history.pop() {
+                self.restore_snapshot(snapshot);
+            }
             return Err(format!("{:?}", e));
         }
         self.action_log.push(action);
@@ -479,8 +482,9 @@ impl GameEngine {
         };
         self.save_snapshot();
         if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
-            let snapshot = self.undo_history.pop().unwrap();
-            self.restore_snapshot(snapshot);
+            if let Some(snapshot) = self.undo_history.pop() {
+                self.restore_snapshot(snapshot);
+            }
             return Err(format!("{:?}", e));
         }
         self.action_log.push(action);
@@ -500,8 +504,9 @@ impl GameEngine {
         };
         self.save_snapshot();
         if let Err(e) = apply_single_action(&mut self.state, &mut self.shop_ctx, &action) {
-            let snapshot = self.undo_history.pop().unwrap();
-            self.restore_snapshot(snapshot);
+            if let Some(snapshot) = self.undo_history.pop() {
+                self.restore_snapshot(snapshot);
+            }
             return Err(format!("{:?}", e));
         }
         self.action_log.push(action);
@@ -879,7 +884,8 @@ impl GameEngine {
             }
             log::info(&format!("P2P Battle Result: {:?}", result));
         }
-        self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0) as u8;
+        self.state.shop_mana =
+            player_shop_mana_delta_from_events(&events).clamp(0, u8::MAX as i16) as u8;
         let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
         self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);
 
@@ -1155,7 +1161,8 @@ impl GameEngine {
             &self.state.card_pool,
             self.state.config.board_size as usize,
         );
-        self.state.shop_mana = player_shop_mana_delta_from_events(&events).max(0) as u8;
+        self.state.shop_mana =
+            player_shop_mana_delta_from_events(&events).clamp(0, u8::MAX as i16) as u8;
         let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
         self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);
 

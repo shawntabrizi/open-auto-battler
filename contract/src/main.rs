@@ -569,7 +569,10 @@ mod oab_arena {
             if !game_over {
                 let new_seed = self.derive_seed(&caller, b"shop", session.game_seed);
                 session.game_seed = new_seed;
-                session.round += 1;
+                // Saturating: endless empty-board draws never lose a life, so
+                // the round counter can otherwise wrap past u8::MAX (silently,
+                // since the release profile builds with overflow-checks off).
+                session.round = session.round.saturating_add(1);
                 session.mana_limit = config.mana_limit_for_round(session.round);
                 session.shop_mana = if config.full_mana_each_round {
                     session.mana_limit
