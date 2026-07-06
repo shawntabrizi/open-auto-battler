@@ -92,8 +92,8 @@ type QueryResult<T> =
  */
 interface ArenaContract {
   startGame: {
-    query(setId: number, seedNonce: bigint): Promise<QueryResult<bigint>>;
-    tx(setId: number, seedNonce: bigint): Promise<TxResult>;
+    query(setId: number): Promise<QueryResult<bigint>>;
+    tx(setId: number): Promise<TxResult>;
   };
   submitTurn: {
     query(action: string): Promise<QueryResult<bigint>>;
@@ -276,13 +276,16 @@ export function createContractBackend(deps: {
       // First write of the session: ensure the player origin is mapped. The
       // signing prompt for the mapping tx happens here, on an explicit action.
       await ensureMapped();
-      const seedNonce = BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
-      const dryRun = await arena().startGame.query(setId, seedNonce);
+      // The contract derives the game seed from block entropy — the client
+      // supplies nothing seed-related. The dry-run only validates the call;
+      // its seed is advisory (the tx may land in a different block), so the
+      // real session state comes from the post-start refresh.
+      const dryRun = await arena().startGame.query(setId);
       if (!dryRun.success || dryRun.value === 0n) {
         throw new Error(`Contract rejected startGame for set ${setId}`);
       }
       _activeSetId = setId;
-      const tx = await arena().startGame.tx(setId, seedNonce);
+      const tx = await arena().startGame.tx(setId);
       if (!tx.ok) throw new Error('startGame tx failed');
       return { seed: dryRun.value };
     },

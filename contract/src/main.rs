@@ -353,6 +353,36 @@ mod oab_arena {
             u64::from_le_bytes(hash[0..8].try_into().unwrap())
         }
 
+        /// Entropy the caller cannot choose: keccak(block_number ++ parent
+        /// block hash). A caller-supplied nonce let players grind millions of
+        /// seeds offline for a favorable game; with block entropy the best
+        /// they can do is delay `start_game` a block for one fresh roll.
+        /// (Collators retain marginal influence over block hashes — acceptable
+        /// while nothing of value rides on the outcome.)
+        fn block_entropy(&self) -> u64 {
+            let mut number = [0u8; 32];
+            self.host().block_number(&mut number);
+            // Parent block: a block's own hash is unknowable mid-execution.
+            // uapi U256 buffers are little-endian; decrement with borrow.
+            let mut parent = number;
+            for byte in parent.iter_mut() {
+                if *byte > 0 {
+                    *byte -= 1;
+                    break;
+                }
+                *byte = u8::MAX;
+            }
+            let mut parent_hash = [0u8; 32];
+            self.host().block_hash(&parent, &mut parent_hash);
+
+            let mut input = Vec::with_capacity(64);
+            input.extend_from_slice(&number);
+            input.extend_from_slice(&parent_hash);
+            let mut hash = [0u8; 32];
+            self.host().hash_keccak_256(&input, &mut hash);
+            u64::from_le_bytes(hash[0..8].try_into().unwrap())
+        }
+
         // ── entry points ──
 
         #[pvm_contract_sdk::constructor]
@@ -395,9 +425,10 @@ mod oab_arena {
             true
         }
 
-        /// Start a new arena game with the given card set and seed nonce.
+        /// Start a new arena game with the given card set. The game seed is
+        /// derived from block entropy, never from caller input.
         #[pvm_contract_sdk::method]
-        pub fn start_game(&mut self, set_id: u16, seed_nonce: u64) -> u64 {
+        pub fn start_game(&mut self, set_id: u16) -> u64 {
             let caller = self.caller_bytes();
             if self.session_is_active(&caller) {
                 return 0;
@@ -412,7 +443,7 @@ mod oab_arena {
             }
 
             let config = default_config();
-            let seed = self.derive_seed(&caller, b"start", seed_nonce);
+            let seed = self.derive_seed(&caller, b"start", self.block_entropy());
             let bag = create_starting_bag(&card_set, seed, config.bag_size as usize);
 
             let mut session = ArenaSession {
@@ -736,7 +767,7 @@ mod tests {
     #[test]
     fn start_game_initializes_session() {
         let (mut c, _m) = setup();
-        let seed = c.start_game(0, 42);
+        let seed = c.start_game(0);
         assert_ne!(seed, 0, "start_game should return a non-zero seed");
 
         let session = decode_session(&c.get_game_state()).expect("active session");
@@ -752,14 +783,14 @@ mod tests {
     #[test]
     fn start_game_twice_is_rejected() {
         let (mut c, _m) = setup();
-        assert_ne!(c.start_game(0, 1), 0);
-        assert_eq!(c.start_game(0, 2), 0, "GameAlreadyActive => 0");
+        assert_ne!(c.start_game(0), 0);
+        assert_eq!(c.start_game(0), 0, "GameAlreadyActive => 0");
     }
 
     #[test]
     fn start_game_unknown_set_returns_zero() {
         let (mut c, _m) = setup();
-        assert_eq!(c.start_game(999, 1), 0, "CardSetNotFound => 0");
+        assert_eq!(c.start_game(999), 0, "CardSetNotFound => 0");
     }
 
     // ── submit_turn ──
@@ -767,7 +798,7 @@ mod tests {
     #[test]
     fn submit_turn_empty_advances_round_and_mana() {
         let (mut c, _m) = setup();
-        c.start_game(0, 7);
+        c.start_game(0);
         // Empty board vs empty ghost pool => Draw => no life lost => round advances.
         let battle_seed = c.submit_turn(empty_turn());
         assert_ne!(battle_seed, 0, "submit_turn returns the battle seed");
@@ -797,7 +828,7 @@ mod tests {
     #[test]
     fn abandon_game_clears_session() {
         let (mut c, _m) = setup();
-        c.start_game(0, 1);
+        c.start_game(0);
         assert!(decode_session(&c.get_game_state()).is_some());
         assert!(c.abandon_game(), "abandon active game => true");
         assert!(decode_session(&c.get_game_state()).is_none(), "session cleared");
@@ -812,7 +843,7 @@ mod tests {
     #[test]
     fn end_game_requires_completed_phase() {
         let (mut c, _m) = setup();
-        c.start_game(0, 1); // phase = Shop
+        c.start_game(0); // phase = Shop
         assert!(!c.end_game(), "WrongPhase (Shop) => false");
     }
 
@@ -900,7 +931,7 @@ mod tests {
     #[test]
     fn submit_turn_multi_round_progression() {
         let (mut c, _m) = setup();
-        c.start_game(0, 99);
+        c.start_game(0);
         // Three empty turns; empty-vs-empty draws never lose a life nor end the game.
         for _ in 0..3 {
             assert_ne!(c.submit_turn(empty_turn()), 0);
@@ -914,7 +945,7 @@ mod tests {
     #[test]
     fn forced_victory_completes_and_end_game_archives() {
         let (mut c, mock) = setup();
-        c.start_game(0, 1);
+        c.start_game(0);
         // Simulate the wins>=10 game-over outcome and the Completed phase.
         let mut s = decode_session(&c.get_game_state()).unwrap();
         s.wins = 10;
@@ -932,7 +963,7 @@ mod tests {
     fn forced_loss_to_zero_lives_ends_game() {
         use oab_battle::types::GhostBoardUnit;
         let (mut c, mock) = setup();
-        c.start_game(0, 1);
+        c.start_game(0);
 
         let mut s = decode_session(&c.get_game_state()).unwrap();
         s.lives = 1; // one loss from elimination
@@ -985,7 +1016,7 @@ mod tests {
             );
         };
 
-        assert_ne!(c.start_game(0, 123), 0, "game starts");
+        assert_ne!(c.start_game(0), 0, "game starts");
         let s = decode_session(&c.get_game_state()).unwrap();
         assert_eq!((s.round, s.lives, s.wins), (1, 3, 0), "fresh game state");
 

@@ -57,10 +57,6 @@
             {
               "name": "set_id",
               "type": "uint16"
-            },
-            {
-              "name": "seed_nonce",
-              "type": "uint64"
             }
           ],
           "outputs": [
