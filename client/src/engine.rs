@@ -274,12 +274,16 @@ impl GameEngine {
         Ok(())
     }
 
-    /// Helper to get a card from the pool
-    fn get_card(&self, id: CardId) -> &UnitCard {
-        self.state
-            .card_pool
-            .get(&id)
-            .expect("Card not found in pool")
+    /// Helper to get a card from the pool. Returns `None` (with a warning) for
+    /// ids missing from the pool — e.g. a blockchain card never injected via
+    /// `add_card` — so callers fizzle the unit instead of panicking the WASM
+    /// instance on untrusted board data.
+    fn get_card(&self, id: CardId) -> Option<&UnitCard> {
+        let card = self.state.card_pool.get(&id);
+        if card.is_none() {
+            log::warn(&format!("Card {} not found in pool; skipping unit", id.0));
+        }
+        card
     }
 
     /// Submit a turn action from JavaScript (JSON format)
@@ -785,13 +789,13 @@ impl GameEngine {
         let player_units: Vec<CombatUnit> = player_board
             .iter()
             .flatten()
-            .map(|u| {
-                let card = self.get_card(u.card_id);
+            .filter_map(|u| {
+                let card = self.get_card(u.card_id)?;
                 let mut cu = CombatUnit::from_card(card.clone());
                 cu.attack_buff = u.perm_attack;
                 cu.health_buff = u.perm_health;
                 cu.health = cu.health.saturating_add(u.perm_health).max(0);
-                cu
+                Some(cu)
             })
             .collect();
 
@@ -799,13 +803,13 @@ impl GameEngine {
         let enemy_units: Vec<CombatUnit> = enemy_board
             .iter()
             .flatten()
-            .map(|u| {
-                let card = self.get_card(u.card_id);
+            .filter_map(|u| {
+                let card = self.get_card(u.card_id)?;
                 let mut cu = CombatUnit::from_card(card.clone());
                 cu.attack_buff = u.perm_attack;
                 cu.health_buff = u.perm_health;
                 cu.health = cu.health.saturating_add(u.perm_health).max(0);
-                cu
+                Some(cu)
             })
             .collect();
 
@@ -824,16 +828,16 @@ impl GameEngine {
         let initial_player_units: Vec<UnitView> = player_board
             .iter()
             .flatten()
-            .map(|u| {
-                let card = self.get_card(u.card_id);
-                UnitView {
+            .filter_map(|u| {
+                let card = self.get_card(u.card_id)?;
+                Some(UnitView {
                     instance_id: limits.generate_instance_id(oab_battle::limits::Team::Player),
                     card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),
                     health: card.stats.health.saturating_add(u.perm_health),
                     battle_abilities: card.battle_abilities.clone(),
-                }
+                })
             })
             .collect();
 
@@ -841,16 +845,16 @@ impl GameEngine {
         let initial_enemy_units: Vec<UnitView> = enemy_board
             .iter()
             .flatten()
-            .map(|u| {
-                let card = self.get_card(u.card_id);
-                UnitView {
+            .filter_map(|u| {
+                let card = self.get_card(u.card_id)?;
+                Some(UnitView {
                     instance_id: limits.generate_instance_id(oab_battle::limits::Team::Enemy),
                     card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),
                     health: card.stats.health.saturating_add(u.perm_health),
                     battle_abilities: card.battle_abilities.clone(),
-                }
+                })
             })
             .collect();
 
@@ -1122,8 +1126,8 @@ impl GameEngine {
             .enumerate()
             .filter_map(|(slot, unit)| {
                 let u = unit.as_ref()?;
+                let card = self.get_card(u.card_id)?;
                 player_slots.push(slot);
-                let card = self.get_card(u.card_id);
                 let mut cu = CombatUnit::from_card(card.clone());
                 cu.attack_buff = u.perm_attack;
                 cu.health_buff = u.perm_health;
@@ -1165,16 +1169,16 @@ impl GameEngine {
         let initial_player_units: Vec<UnitView> = board_before_battle
             .iter()
             .flatten()
-            .map(|u| {
-                let card = self.get_card(u.card_id);
-                UnitView {
+            .filter_map(|u| {
+                let card = self.get_card(u.card_id)?;
+                Some(UnitView {
                     instance_id: limits.generate_instance_id(oab_battle::limits::Team::Player),
                     card_id: card.id,
                     name: card.name.clone(),
                     attack: card.stats.attack.saturating_add(u.perm_attack),
                     health: card.stats.health.saturating_add(u.perm_health),
                     battle_abilities: card.battle_abilities.clone(),
-                }
+                })
             })
             .collect();
 
