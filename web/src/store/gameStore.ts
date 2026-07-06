@@ -109,8 +109,6 @@ interface GameStore {
   getCommitAction: () => any;
   getCommitWarning: () => string | null;
 
-  startVersusGame: (seed: number, lives?: number) => void;
-  resolveVersusBattle: (opponentBoard: any, seed: number) => void;
   // Blockchain mode: optional callback override for "Continue" after battle
   afterBattleCallback: (() => void | Promise<void>) | null;
   setAfterBattleCallback: (cb: (() => void | Promise<void>) | null) => void;
@@ -583,51 +581,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try {
       clearPersistedLocalSession();
       resetActiveSessionView();
-    } catch (err) {
-      console.error(err);
-    }
-  },
-
-  startVersusGame: (playerSeed: number, lives?: number) => {
-    const { engine } = get();
-    if (!engine) return;
-    try {
-      if (lives !== undefined) {
-        engine.new_run_p2p(BigInt(playerSeed), lives);
-      } else {
-        engine.new_run(BigInt(playerSeed));
-      }
-      set({
-        view: engine.get_view(),
-        cardSet: engine.get_card_set(),
-        battleOutput: null,
-        selection: null,
-        showBattleOverlay: false,
-        gameStarted: true,
-        startingLives: engine.get_starting_lives(),
-        winsToVictory: engine.get_wins_to_victory(),
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  },
-
-  resolveVersusBattle: (opponentBoard: any, seed: number) => {
-    const { engine } = get();
-    if (!engine) return;
-    try {
-      // resolve_battle_p2p is self-contained: sets phase, runs battle, applies result
-      const battleOutput = engine.resolve_battle_p2p(
-        engine.get_board(),
-        opponentBoard,
-        BigInt(seed)
-      );
-      set({
-        view: engine.get_view(),
-        battleOutput: battleOutput,
-        selection: null,
-        showBattleOverlay: true,
-      });
     } catch (err) {
       console.error(err);
     }

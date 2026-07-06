@@ -748,6 +748,14 @@ impl GameEngine {
     /// 3. Applies wins/lives result
     /// 4. Returns battle output for animation
     /// After animation, call continue_after_battle() to advance to next round.
+    ///
+    /// NOTE: battle resolution is NOT symmetric under swapping the Player/Enemy
+    /// labels — trigger tiebreakers mix the team bit of each unit id, so
+    /// `resolve(a, b, seed)` and `resolve(b, a, seed)` can disagree when unit
+    /// priorities tie. Two live peers must therefore agree on a canonical
+    /// orientation (one simulates, or both simulate the SAME assignment and one
+    /// inverts the result) rather than each simulating themselves as Player.
+    /// The contract replay flow is safe: orientation is fixed to the submitter.
     #[wasm_bindgen]
     pub fn resolve_battle_p2p(
         &mut self,

@@ -34,7 +34,6 @@
     "@polkadot-labs/hdkd": "^0.0.26",
     "@polkadot-labs/hdkd-helpers": "^0.0.27",
     "emoji-picker-react": "^4.17.4",
-    "peerjs": "^1.5.5",
     "polkadot-api": "^2.1.6",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
@@ -49,7 +48,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
-    "@types/peerjs": "^0.0.30",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
