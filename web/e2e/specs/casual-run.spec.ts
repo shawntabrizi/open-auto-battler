@@ -28,13 +28,15 @@ test('casual run: shop, commit, replay each battle until game over; chain agrees
   await chain.topUp(address, 5n * PAS, 20n * PAS);
   expect(await chain.pgas(address), 'product account must hold no PGAS').toBe(0n);
 
+  // A run left by an aborted attempt resumes on the game page. Decide from
+  // chain state: the arena shows an enabled Start Game before its own
+  // active-game check finishes (see e2e/README.md, app findings).
+  const leftover = !isNoGame(await chain.gameState(address));
   await frame.getByRole('link', { name: 'Contract Arena' }).click();
   const start = frame.getByRole('button', { name: 'Start Game' });
   const commit = frame.locator('[data-game-custom-action="true"]');
-  // A run left over from an aborted earlier attempt resumes on the game page.
-  await expect(start.or(commit)).toBeVisible({ timeout: 60_000 });
-  if (await start.isVisible()) {
-    await expect(start).toBeEnabled();
+  if (!leftover) {
+    await expect(start).toBeEnabled({ timeout: 60_000 });
     await page.screenshot({ path: 'e2e/results/screens/arena.png' });
     await start.click();
   }
