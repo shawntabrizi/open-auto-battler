@@ -1,4 +1,5 @@
-//! Build the M1 deploy plan as JSON for `scripts/m1/*.mjs`.
+//! Build the deploy plan as JSON for `scripts/publish-content.mjs` and
+//! `scripts/check-engine.mjs`.
 //!
 //!   cargo run -p oab-plan -- content <OUT.json>   # Content publish calls + expected reads
 //!   cargo run -p oab-plan -- engine  <OUT.json>   # engine contract calls + expected returns

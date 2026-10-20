@@ -93,11 +93,9 @@ gives the engine's, and so arena v2's, seeds, states, and results).
 
 ```bash
 cd arena && cdm deploy -n paseo && cdm i -n paseo @oab/arena   # signer: the cdm paseo account (owns @oab/arena)
-cd ../scripts/m2 && npm install                                 # the M3 scripts reuse scripts/m2/chain.mjs
-cd ../..
-OAB_SIGNER_MNEMONIC="<deployer phrase>" node scripts/m3/wire-arena.mjs <arena> --out /tmp/wire.json
-node scripts/m1/check-code.mjs <arena> arena/target/release/oab-arena.polkavm
-node scripts/m3/play-arena.mjs <arena> --out /tmp/play.json --state /tmp/key.json
+cd ../scripts && npm install && cd ..
+OAB_SIGNER_MNEMONIC="<deployer phrase>" node scripts/wire-arena.mjs <arena> --out /tmp/wire.json
+node scripts/check-code.mjs <arena> arena/target/release/oab-arena.polkavm
 ```
 
 `wire-arena.mjs` reads the Identity, Content, and engine addresses from the
@@ -106,7 +104,6 @@ CDM registry at exact versions (`@oab/identity` 2, `@oab/content` 0,
 `setDeps`, `cacheSet`, and `setAllowedSet` for sets 0, 1, 2. It skips steps
 that are done.
 
-`play-arena.mjs` plays one full game as //Alice (classic V0 transactions,
-native fee), lets a fresh session key play a second game for Alice (one turn
-on V1 with the fee in PGAS), revokes the key, replays every battle through
-`@oab/engine.replayBattle`, and dry-runs arena v2 for comparison.
+The live checks of play are the web E2E specs `casual-run` and `sponsored`
+(`web/e2e/README.md`). After a redeploy, refresh the web test fixtures with
+`node scripts/capture-fixtures.mjs <arena> web/src/contract/fixtures/arena.txt`.

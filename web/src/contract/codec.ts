@@ -113,7 +113,7 @@ function word(data: Uint8Array, i: number): bigint {
 // SCALE `BattleReport` (crate `oab-protocol`). The WASM engine decodes both in
 // full for play and replay; these decoders read the fields the app and the
 // tests need. Fixtures: `./fixtures/arena.txt`, captured from the live arena by
-// `scripts/m5/capture-fixtures.mjs`.
+// `scripts/capture-fixtures.mjs`.
 
 /** `GamePhase` variant index. */
 export type GamePhaseName = 'shop' | 'battle' | 'completed';

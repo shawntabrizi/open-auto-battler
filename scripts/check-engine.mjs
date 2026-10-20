@@ -4,7 +4,7 @@
 // measurement turns.
 //
 //   cargo run -p oab-plan -- engine /tmp/engine-plan.json
-//   node check-engine.mjs /tmp/engine-plan.json <engine address> [origin ss58]
+//   node scripts/check-engine.mjs /tmp/engine-plan.json <engine address> [origin ss58]
 //
 // No signer is needed: every call is a dry-run.
 import { readFileSync } from 'fs';

@@ -94,22 +94,17 @@ cd identity && cargo build --release   # target/release/oab-identity.polkavm (~7
 # native tests, from the repo root:
 CARGO_PVM_CONTRACT_INTERNAL=1 cargo test --manifest-path identity/Cargo.toml --features std
 cd identity && cdm deploy -n paseo && cdm i -n paseo @oab/identity
-# live check (uses //Alice's PGAS; see scripts/m2/check-identity.mjs):
-cd identity/probe && cargo build --release
-cd scripts/m2 && npm install
-OAB_SIGNER_MNEMONIC="<deployer phrase>" node deploy-probe.mjs <identity>
-node check-identity.mjs <identity> <probe> --state /tmp/s.json --out /tmp/e.json
-node ../m1/check-code.mjs <identity> ../../identity/target/release/oab-identity.polkavm
+# from the repo root: compare the deployed code with the local blob
+(cd scripts && npm install)
+node scripts/check-code.mjs <identity> identity/target/release/oab-identity.polkavm
 ```
 
-`identity/probe` is a test contract shaped like a mode's hot path (`play()`
-resolves and writes one item; `whoami()` resolves only). It is not a product
-contract and is not in CDM.
+The live check of a registry session is the web E2E spec `sponsored`
+(`web/e2e/README.md`).
 
 | | |
 | --- | --- |
 | Address | `0x7b41368859B67BB5c88500612eDe21AA6b837FBA` (block 2056840) |
 | CDM | `@oab/identity` version 2, registry `0xc1a73a4f93fde65b1cb1680baead248073566cb0` |
 | Admin | `0x704ead03a0a7c8b06c6ebbde97934adc24f9f5f7` (cdm `paseo` account) |
-| Probe (test only) | `0x60ce23e6c109ef34b961c52af3bc4e15ac573479` |
 | Do not use | versions 0 (`0x9546…7b46`, no metadata on Bulletin) and 1 (`0x13Aa…Cc03`, revoke left the owner record) |
