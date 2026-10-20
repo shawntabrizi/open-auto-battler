@@ -36,10 +36,12 @@ import {
   createProxySession,
   createSponsor,
   SessionExpiredError,
-  type ProxySession,
+  type PreparedCall,
   type Sponsor,
+  type SponsorDeps,
   type SponsorStatus,
 } from './session';
+import { createRegistrySession, type IdentityContract } from './registrySession';
 import { collectionAddress, COLLECTIBLES_COLLECTION } from '../services/nftOwnership';
 import {
   decodeBattleReport,
@@ -164,6 +166,22 @@ export function isHostTimeout(err: unknown): boolean {
 }
 
 const ARENA_LIBRARY = '@oab/arena';
+const IDENTITY_LIBRARY = '@oab/identity';
+
+/**
+ * Sponsored-play pattern. `registry`: an `@oab/identity` session key on
+ * extension pipeline V1, fee in PGAS (`./registrySession.ts`, the M5 design).
+ * `proxy`: the arena v2 proxy session (`./session.ts`), which buys its deposit
+ * through the DOT<->PGAS pool. The proxy path stays until a registry session
+ * is proven in a real host (M5 report).
+ */
+const SESSION_KIND: 'registry' | 'proxy' = 'registry';
+
+/** A session key that signs game calls for the player. */
+interface GameSession {
+  deps: SponsorDeps;
+  submit(call: PreparedCall, options?: { onStatus?: (s: TxStatus) => void }): Promise<TxResult>;
+}
 
 /** The one Scarcity collection view the app reads (individuality `IScarcityCollection.sol`). */
 const ITEM_METADATA_ABI: AbiEntry[] = [
@@ -234,7 +252,7 @@ export function createContractBackend(deps: {
   let _mapped = false;
   // Sponsored play. Host only: the session key lives in host storage and the
   // PGAS allowance is a host resource. Rebuilt per selected account.
-  let _session: ProxySession | null = null;
+  let _session: GameSession | null = null;
   let _sponsor: Sponsor = createSponsor(noSponsorDeps, 'unavailable');
 
   function resetSponsor(account: Account): void {
@@ -244,13 +262,21 @@ export function createContractBackend(deps: {
       _sponsor = createSponsor(noSponsorDeps, 'unavailable');
       return;
     }
-    _session = createProxySession({
+    const common = {
       api: client.assetHub,
       player: account.address,
       playerSigner: signer,
       derivationIndex: DERIVATION_INDEX,
       storePrefix: PRODUCT_ID,
-    });
+    };
+    if (SESSION_KIND === 'registry') {
+      if (!_runtime) throw new Error('Not connected');
+      const { address, abi } = cdmContract(IDENTITY_LIBRARY);
+      const identity = createContract(_runtime, address, abi) as unknown as IdentityContract;
+      _session = createRegistrySession({ ...common, identity });
+    } else {
+      _session = createProxySession(common);
+    }
     _sponsor = createSponsor(_session.deps);
   }
 
