@@ -76,6 +76,79 @@ struct ArenaSession {
 type GhostPool = Vec<Vec<GhostBoardUnit>>;
 const MAX_GHOSTS_PER_BRACKET: usize = 10;
 
+// ── Personhood + ranked leaderboard ───────────────────────────────────────────
+
+/// Personhood precompile (individuality `precompiles/personhood`), fixed at
+/// `AddressMatcher::Fixed(0x0A01)` = `0x…0a010000` on Paseo Asset Hub Next.
+const PERSONHOOD_PRECOMPILE: [u8; 20] = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x0a, 0x01, 0x00, 0x00,
+];
+/// `IPersonhood.PersonhoodInfo.status` tiers. Ranked play accepts Lite and
+/// Full (Shawn's decision); None and any unknown future tier are rejected.
+const PERSONHOOD_LITE: u8 = 1;
+const PERSONHOOD_FULL: u8 = 2;
+
+/// Top-N ranked runs kept per set. Bounds storage and the size of the
+/// `getLeaderboard` blob (~46 bytes/entry => ~4.6 KB, under the 16 KB read
+/// buffer).
+const LEADERBOARD_SIZE: usize = 100;
+
+pvm_contract_sdk::abi_import! {
+    #![abi_import(alloc = true)]
+    // Subset of individuality `precompiles/personhood/sol/IPersonhood.sol`.
+    pragma solidity ^0.8.30;
+
+    struct PersonhoodInfo {
+        uint8 status;
+        bytes32 contextAlias;
+    }
+
+    interface IPersonhood {
+        function personhoodStatus(address account, bytes32 context) external view returns (PersonhoodInfo memory info);
+    }
+}
+
+/// One ranked run on the leaderboard. `alias` is the personhood context alias,
+/// so every account of one person shares a single entry.
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
+pub struct LeaderboardEntry {
+    pub alias: [u8; 32],
+    pub set_id: SetIdValue,
+    pub wins: RoundValue,
+    pub lives: RoundValue,
+    pub rounds: RoundValue,
+    pub block: u64,
+}
+
+/// Ranking order: more wins, then more lives left, then the earlier block (the
+/// first to reach a result keeps the place on a tie).
+fn ranks_above(a: &LeaderboardEntry, b: &LeaderboardEntry) -> bool {
+    (a.wins, a.lives, core::cmp::Reverse(a.block)) > (b.wins, b.lives, core::cmp::Reverse(b.block))
+}
+
+/// Insert `entry` into the sorted, bounded `board`, keeping one entry per
+/// alias. Returns true if the board changed. A run that is not better than the
+/// alias's current entry, or that falls below the last place of a full board,
+/// changes nothing.
+fn insert_ranked(board: &mut Vec<LeaderboardEntry>, entry: LeaderboardEntry, cap: usize) -> bool {
+    if let Some(i) = board.iter().position(|e| e.alias == entry.alias) {
+        if !ranks_above(&entry, &board[i]) {
+            return false;
+        }
+        board.remove(i);
+    }
+    let pos = board
+        .iter()
+        .position(|e| ranks_above(&entry, e))
+        .unwrap_or(board.len());
+    if pos >= cap {
+        return false;
+    }
+    board.insert(pos, entry);
+    board.truncate(cap);
+    true
+}
+
 // ── Storage domain prefixes (keccak namespace separation) ─────────────────────
 
 const DOM_ADMIN: u8 = 0;
@@ -84,6 +157,14 @@ const DOM_SET: u8 = 2;
 const DOM_SESSION: u8 = 3;
 const DOM_SESSION_ACTIVE: u8 = 4;
 const DOM_GHOST: u8 = 5;
+/// caller -> personhood alias of the caller's active ranked game (absent = casual).
+const DOM_RANKED: u8 = 6;
+/// () -> personhood context (bytes32) the contract queries aliases in.
+const DOM_PERSONHOOD_CTX: u8 = 7;
+/// set_id ++ alias -> best ranked run of that person on that set.
+const DOM_BEST_RUN: u8 = 8;
+/// set_id -> top-N `Vec<LeaderboardEntry>`, best first.
+const DOM_LEADERBOARD: u8 = 9;
 
 // keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
 const BATTLE_REPORTED_TOPIC: [u8; 32] = [
@@ -91,7 +172,12 @@ const BATTLE_REPORTED_TOPIC: [u8; 32] = [
     0xc7, 0xee, 0x31, 0xf3, 0x26, 0x94, 0xdd, 0xef, 0x23, 0xdd, 0x55, 0xaf, 0x68, 0xe0, 0x89, 0xbd,
 ];
 
-fn bracket_bytes(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue) -> [u8; 5] {
+fn bracket_bytes(
+    set_id: SetIdValue,
+    round: RoundValue,
+    wins: RoundValue,
+    lives: RoundValue,
+) -> [u8; 5] {
     let s = set_id.to_le_bytes();
     [s[0], s[1], round, wins, lives]
 }
@@ -212,7 +298,10 @@ mod oab_arena {
         fn read_raw(&self, key: &[u8; 32]) -> Option<Vec<u8>> {
             let mut buf = vec![0u8; 16384];
             let mut out = buf.as_mut_slice();
-            match self.host().get_storage(StorageFlags::empty(), key, &mut out) {
+            match self
+                .host()
+                .get_storage(StorageFlags::empty(), key, &mut out)
+            {
                 Ok(_) => Some(out.to_vec()),
                 Err(_) => None,
             }
@@ -275,6 +364,88 @@ mod oab_arena {
         fn clear_session(&self, caller: &[u8; 20]) {
             self.write_scale(DOM_SESSION_ACTIVE, caller, &false);
             self.clear_scale(DOM_SESSION, caller);
+            self.clear_scale(DOM_RANKED, caller);
+        }
+
+        // ── personhood / ranked ──
+
+        fn personhood_context(&self) -> Option<[u8; 32]> {
+            self.read_scale(DOM_PERSONHOOD_CTX, &[])
+        }
+
+        fn ranked_alias(&self, caller: &[u8; 20]) -> Option<[u8; 32]> {
+            self.read_scale(DOM_RANKED, caller)
+        }
+
+        /// Ask the personhood precompile for `account`'s tier and context
+        /// alias. A failed call (e.g. no precompile on this chain) reads as
+        /// `(0, zero alias)`: ranked play fails closed.
+        fn personhood_status(&self, account: &[u8; 20], context: [u8; 32]) -> (u8, [u8; 32]) {
+            use i_personhood::IPersonhood;
+            use pvm_contract_sdk::Address;
+            match IPersonhood::from_address(Address(PERSONHOOD_PRECOMPILE))
+                .personhood_status(Address(*account), context)
+                .call(self)
+            {
+                Ok(info) => (info.status, info.context_alias),
+                Err(_) => (0, [0u8; 32]),
+            }
+        }
+
+        /// The caller's alias if they hold Lite or Full personhood in the
+        /// configured context; `None` otherwise (or if no context is set).
+        fn ranked_identity(&self, caller: &[u8; 20]) -> Option<[u8; 32]> {
+            let context = self.personhood_context()?;
+            let (status, alias) = self.personhood_status(caller, context);
+            let eligible = status == PERSONHOOD_LITE || status == PERSONHOOD_FULL;
+            if !eligible || alias == [0u8; 32] {
+                return None;
+            }
+            Some(alias)
+        }
+
+        fn block_number_u64(&self) -> u64 {
+            let mut number = [0u8; 32];
+            self.host().block_number(&mut number);
+            u64::from_le_bytes(number[0..8].try_into().unwrap())
+        }
+
+        fn best_run_key(set_id: SetIdValue, alias: &[u8; 32]) -> [u8; 34] {
+            let mut k = [0u8; 34];
+            k[..2].copy_from_slice(&set_id.to_le_bytes());
+            k[2..].copy_from_slice(alias);
+            k
+        }
+
+        fn load_leaderboard(&self, set_id: SetIdValue) -> Vec<LeaderboardEntry> {
+            self.read_scale(DOM_LEADERBOARD, &set_id.to_le_bytes())
+                .unwrap_or_default()
+        }
+
+        /// Record a finished ranked run: keep it as the alias's best run if it
+        /// beats the stored one, and place it on the set's bounded board.
+        fn record_ranked_result(&self, alias: [u8; 32], session: &ArenaSession) {
+            let entry = LeaderboardEntry {
+                alias,
+                set_id: session.set_id,
+                wins: session.wins,
+                lives: session.lives,
+                rounds: session.round,
+                block: self.block_number_u64(),
+            };
+            let key = Self::best_run_key(session.set_id, &alias);
+            let better = match self.read_scale::<LeaderboardEntry>(DOM_BEST_RUN, &key) {
+                Some(best) => ranks_above(&entry, &best),
+                None => true,
+            };
+            if !better {
+                return;
+            }
+            self.write_scale(DOM_BEST_RUN, &key, &entry);
+            let mut board = self.load_leaderboard(session.set_id);
+            if insert_ranked(&mut board, entry, LEADERBOARD_SIZE) {
+                self.write_scale(DOM_LEADERBOARD, &session.set_id.to_le_bytes(), &board);
+            }
         }
 
         // ── ghost pools ──
@@ -428,6 +599,32 @@ mod oab_arena {
         #[pvm_contract_sdk::method]
         pub fn start_game(&mut self, set_id: u16) -> u64 {
             let caller = self.caller_bytes();
+            self.start_session(&caller, set_id)
+        }
+
+        /// Start a ranked game: same as `start_game`, but the caller must hold
+        /// Lite or Full personhood. The result goes on the leaderboard under
+        /// the caller's personhood alias when `end_game` finalizes it. Returns
+        /// 0 if the caller is not eligible or the game cannot start.
+        #[pvm_contract_sdk::method]
+        pub fn start_ranked_game(&mut self, set_id: u16) -> u64 {
+            let caller = self.caller_bytes();
+            if self.session_is_active(&caller) {
+                return 0;
+            }
+            let alias = match self.ranked_identity(&caller) {
+                Some(a) => a,
+                None => return 0,
+            };
+            let seed = self.start_session(&caller, set_id);
+            if seed != 0 {
+                self.write_scale(DOM_RANKED, &caller, &alias);
+            }
+            seed
+        }
+
+        fn start_session(&mut self, caller: &[u8; 20], set_id: u16) -> u64 {
+            let caller = *caller;
             if self.session_is_active(&caller) {
                 return 0;
             }
@@ -690,8 +887,71 @@ mod oab_arena {
                     ghost,
                 );
             }
+            if let Some(alias) = self.ranked_alias(&caller) {
+                self.record_ranked_result(alias, &session);
+            }
             self.clear_session(&caller);
             true
+        }
+
+        /// The personhood alias of the caller's active ranked game, or zero
+        /// bytes if the caller has no game or a casual one.
+        #[pvm_contract_sdk::method]
+        pub fn get_ranked_alias(&self) -> [u8; 32] {
+            let caller = self.caller_bytes();
+            if !self.session_is_active(&caller) {
+                return [0u8; 32];
+            }
+            self.ranked_alias(&caller).unwrap_or([0u8; 32])
+        }
+
+        /// Admin: set the personhood context (bytes32) the contract reads
+        /// aliases in. Ranked play is closed until this is set. Players must
+        /// bind their account to an alias in this same context.
+        #[pvm_contract_sdk::method]
+        pub fn set_personhood_context(&mut self, context: [u8; 32]) -> bool {
+            if self.admin() != Some(self.caller_bytes()) {
+                return false;
+            }
+            self.write_scale(DOM_PERSONHOOD_CTX, &[], &context);
+            true
+        }
+
+        /// The configured personhood context (zero bytes if unset).
+        #[pvm_contract_sdk::method]
+        pub fn get_personhood_context(&self) -> [u8; 32] {
+            self.personhood_context().unwrap_or([0u8; 32])
+        }
+
+        /// SCALE-encoded `Vec<LeaderboardEntry>` for `set_id`, best first,
+        /// sliced to `[offset, offset + limit)`.
+        #[pvm_contract_sdk::method]
+        pub fn get_leaderboard(&self, set_id: u16, offset: u32, limit: u32) -> Bytes {
+            let board = self.load_leaderboard(set_id);
+            let start = (offset as usize).min(board.len());
+            let end = start.saturating_add(limit as usize).min(board.len());
+            Bytes::from(board[start..end].to_vec().encode())
+        }
+
+        /// 1-based place of `alias` on the `set_id` board; 0 if not on it.
+        #[pvm_contract_sdk::method]
+        pub fn get_player_rank(&self, set_id: u16, alias: [u8; 32]) -> u32 {
+            self.load_leaderboard(set_id)
+                .iter()
+                .position(|e| e.alias == alias)
+                .map(|i| i as u32 + 1)
+                .unwrap_or(0)
+        }
+
+        /// SCALE-encoded best `LeaderboardEntry` of `alias` on `set_id`, or
+        /// empty bytes if that person has no finished ranked run on the set.
+        #[pvm_contract_sdk::method]
+        pub fn get_best_run(&self, set_id: u16, alias: [u8; 32]) -> Bytes {
+            let key = Self::best_run_key(set_id, &alias);
+            match self.read_scale::<LeaderboardEntry>(DOM_BEST_RUN, &key) {
+                Some(entry) => Bytes::from(entry.encode()),
+                None => Bytes::from(Vec::new()),
+            }
         }
 
         /// Read a SCALE-encoded card definition.
@@ -742,7 +1002,12 @@ mod tests {
     }
 
     fn empty_turn() -> Bytes {
-        Bytes(CommitTurnAction { actions: Vec::new() }.encode())
+        Bytes(
+            CommitTurnAction {
+                actions: Vec::new(),
+            }
+            .encode(),
+        )
     }
 
     /// Contract with ADMIN as caller, constructor run, and all genesis cards +
@@ -752,10 +1017,16 @@ mod tests {
         let mut c = OabArena::with_host(mock.clone());
         c.new();
         for card in oab_assets::cards::get_all() {
-            assert!(c.register_card(Bytes(card.encode())), "register_card failed");
+            assert!(
+                c.register_card(Bytes(card.encode())),
+                "register_card failed"
+            );
         }
         for (i, set) in oab_assets::sets::get_all().iter().enumerate() {
-            assert!(c.register_set(i as u16, Bytes(set.encode())), "register_set failed");
+            assert!(
+                c.register_set(i as u16, Bytes(set.encode())),
+                "register_set failed"
+            );
         }
         (c, mock)
     }
@@ -803,8 +1074,14 @@ mod tests {
 
         let session = decode_session(&c.get_game_state()).expect("session still active after draw");
         assert_eq!(session.phase, GamePhase::Shop);
-        assert_eq!(session.round, 2, "round advances after a non-game-over turn");
-        assert_eq!(session.mana_limit, 4, "mana_limit = min(3 + (round-1), 10) = 4");
+        assert_eq!(
+            session.round, 2,
+            "round advances after a non-game-over turn"
+        );
+        assert_eq!(
+            session.mana_limit, 4,
+            "mana_limit = min(3 + (round-1), 10) = 4"
+        );
         assert_eq!(session.lives, 3, "draw costs no life");
         assert_eq!(session.wins, 0);
     }
@@ -829,7 +1106,10 @@ mod tests {
         c.start_game(0);
         assert!(decode_session(&c.get_game_state()).is_some());
         assert!(c.abandon_game(), "abandon active game => true");
-        assert!(decode_session(&c.get_game_state()).is_none(), "session cleared");
+        assert!(
+            decode_session(&c.get_game_state()).is_none(),
+            "session cleared"
+        );
     }
 
     #[test]
@@ -859,8 +1139,14 @@ mod tests {
         let mut c = OabArena::with_host(mock);
         c.new();
         let card = oab_assets::cards::get_all()[0].clone();
-        assert!(c.register_card(Bytes(card.encode())), "first registration ok");
-        assert!(!c.register_card(Bytes(card.encode())), "CardAlreadyExists => false");
+        assert!(
+            c.register_card(Bytes(card.encode())),
+            "first registration ok"
+        );
+        assert!(
+            !c.register_card(Bytes(card.encode())),
+            "CardAlreadyExists => false"
+        );
     }
 
     #[test]
@@ -873,7 +1159,10 @@ mod tests {
         }
         let set = oab_assets::sets::get_all()[0].clone();
         assert!(c.register_set(0, Bytes(set.encode())), "first set ok");
-        assert!(!c.register_set(0, Bytes(set.encode())), "SetAlreadyExists => false");
+        assert!(
+            !c.register_set(0, Bytes(set.encode())),
+            "SetAlreadyExists => false"
+        );
     }
 
     #[test]
@@ -920,10 +1209,7 @@ mod tests {
     }
 
     fn force_session(mock: &MockHost, caller: &[u8; 20], session: &ArenaSession) {
-        mock.set_raw_storage(
-            skey(super::DOM_SESSION, caller).to_vec(),
-            session.encode(),
-        );
+        mock.set_raw_storage(skey(super::DOM_SESSION, caller).to_vec(), session.encode());
     }
 
     #[test]
@@ -1025,8 +1311,13 @@ mod tests {
         let mut round = 1u8;
         while expected_lives > 0 {
             seed_strong_ghost(round, expected_lives);
-            assert_ne!(c.submit_turn(empty_turn()), 0, "turn resolves at round {round}");
-            let s = decode_session(&c.get_game_state()).expect("session persists through game over");
+            assert_ne!(
+                c.submit_turn(empty_turn()),
+                0,
+                "turn resolves at round {round}"
+            );
+            let s =
+                decode_session(&c.get_game_state()).expect("session persists through game over");
             expected_lives -= 1;
             assert_eq!(s.lives, expected_lives, "a defeat costs exactly one life");
             if expected_lives > 0 {
@@ -1041,6 +1332,343 @@ mod tests {
         assert_eq!(s.phase, GamePhase::Completed, "lives==0 ends the game");
 
         assert!(c.end_game(), "end_game finalizes the completed game");
-        assert!(decode_session(&c.get_game_state()).is_none(), "game removed after end_game");
+        assert!(
+            decode_session(&c.get_game_state()).is_none(),
+            "game removed after end_game"
+        );
+    }
+
+    // ── personhood gate + ranked leaderboard ──
+    //
+    // Product rule (Shawn): casual play is open to anyone; ranked play and the
+    // leaderboard need personhood Lite or Full. Ranked identity is the
+    // personhood context alias, so one person has one leaderboard identity no
+    // matter how many accounts they use.
+
+    use super::{insert_ranked, LeaderboardEntry, PERSONHOOD_PRECOMPILE};
+
+    const CTX: [u8; 32] = [0xC7; 32];
+    const ALIAS_A: [u8; 32] = [0xA1; 32];
+    const ALIAS_B: [u8; 32] = [0xB2; 32];
+    const PLAYER_1: [u8; 20] = [0x31; 20];
+    const PLAYER_2: [u8; 20] = [0x32; 20];
+
+    /// ABI return of `personhoodStatus`: `(uint8 status, bytes32 alias)` as two
+    /// 32-byte words — the exact shape the live precompile returned on Paseo
+    /// Asset Hub Next (2026-10-20).
+    fn personhood_reply(status: u8, alias: [u8; 32]) -> Vec<u8> {
+        let mut out = vec![0u8; 64];
+        out[31] = status;
+        out[32..].copy_from_slice(&alias);
+        out
+    }
+
+    fn mock_personhood(mock: &MockHost, status: u8, alias: [u8; 32]) {
+        mock.mock_call(PERSONHOOD_PRECOMPILE, Ok(personhood_reply(status, alias)));
+    }
+
+    /// Cards + sets registered and the personhood context configured.
+    fn setup_ranked() -> (OabArena, MockHost) {
+        let (mut c, m) = setup();
+        assert!(c.set_personhood_context(CTX));
+        (c, m)
+    }
+
+    /// The same contract storage seen from another caller at another block.
+    /// MockHost fixes the caller at build time, so copy the storage across.
+    fn as_caller(from: &MockHost, caller: [u8; 20], block: u64) -> (OabArena, MockHost) {
+        let mock = MockHostBuilder::new()
+            .caller(caller)
+            .block_number(block)
+            .build();
+        for (k, v) in from.storage_dump() {
+            mock.set_raw_storage(k, v);
+        }
+        (OabArena::with_host(mock.clone()), mock)
+    }
+
+    /// Force the caller's active game to a finished state and finalize it.
+    fn finish_game(c: &mut OabArena, mock: &MockHost, caller: [u8; 20], wins: u8, lives: u8) {
+        let mut s = decode_session(&c.get_game_state()).expect("active game");
+        s.wins = wins;
+        s.lives = lives;
+        s.phase = GamePhase::Completed;
+        force_session(mock, &caller, &s);
+        assert!(c.end_game());
+    }
+
+    fn board(c: &OabArena, set_id: u16) -> Vec<LeaderboardEntry> {
+        Vec::<LeaderboardEntry>::decode(&mut &c.get_leaderboard(set_id, 0, u32::MAX).0[..]).unwrap()
+    }
+
+    #[test]
+    fn ranked_rejects_no_personhood_but_casual_stays_open() {
+        let (mut c, m) = setup_ranked();
+        mock_personhood(&m, 0, [0u8; 32]);
+        assert_eq!(
+            c.start_ranked_game(0),
+            0,
+            "status None must not enter ranked play"
+        );
+        assert!(
+            decode_session(&c.get_game_state()).is_none(),
+            "rejected ranked start leaves no game"
+        );
+        assert_ne!(c.start_game(0), 0, "casual play needs no personhood");
+        assert_eq!(
+            c.get_ranked_alias(),
+            [0u8; 32],
+            "a casual game is not ranked"
+        );
+    }
+
+    #[test]
+    fn ranked_accepts_lite_and_full() {
+        for status in [1u8, 2u8] {
+            let (mut c, m) = setup_ranked();
+            mock_personhood(&m, status, ALIAS_A);
+            assert_ne!(
+                c.start_ranked_game(0),
+                0,
+                "status {status} is eligible for ranked"
+            );
+            assert_eq!(
+                c.get_ranked_alias(),
+                ALIAS_A,
+                "the game is bound to the person's alias"
+            );
+        }
+    }
+
+    #[test]
+    fn ranked_rejects_unknown_tier() {
+        // Only Lite and Full were approved; a future tier needs a decision.
+        let (mut c, m) = setup_ranked();
+        mock_personhood(&m, 3, ALIAS_A);
+        assert_eq!(c.start_ranked_game(0), 0);
+    }
+
+    #[test]
+    fn ranked_fails_closed_without_context_or_precompile() {
+        // No context configured: an alias from an arbitrary context would let
+        // one person appear under several identities.
+        let (mut c, m) = setup();
+        mock_personhood(&m, 2, ALIAS_A);
+        assert_eq!(c.start_ranked_game(0), 0, "no context => ranked closed");
+
+        // Context set but no precompile answer (a chain without it).
+        let (mut c, m) = setup_ranked();
+        m.mock_call(PERSONHOOD_PRECOMPILE, Err(()));
+        assert_eq!(
+            c.start_ranked_game(0),
+            0,
+            "reverting precompile => ranked closed"
+        );
+        let (mut c, _m) = setup_ranked();
+        assert_eq!(
+            c.start_ranked_game(0),
+            0,
+            "empty precompile reply => ranked closed"
+        );
+    }
+
+    #[test]
+    fn precompile_is_queried_for_the_caller_in_the_configured_context() {
+        // The alias is only meaningful for this account in this context; a
+        // wrong selector, account or context would gate on someone else.
+        let (mut c, m) = setup_ranked();
+        mock_personhood(&m, 1, ALIAS_A);
+        m.take_recorded_calls();
+        assert_ne!(c.start_ranked_game(0), 0);
+        let calls = m.take_recorded_calls();
+        assert_eq!(calls.len(), 1, "one personhood lookup per ranked start");
+        let (callee, input) = &calls[0];
+        assert_eq!(*callee, PERSONHOOD_PRECOMPILE);
+        // keccak256("personhoodStatus(address,bytes32)")[..4]
+        assert_eq!(input[..4], [0x88, 0x6a, 0xf1, 0x33]);
+        assert_eq!(input[4..16], [0u8; 12]);
+        assert_eq!(input[16..36], ADMIN, "queries the caller's address");
+        assert_eq!(input[36..68], CTX, "queries the configured context");
+    }
+
+    #[test]
+    fn set_personhood_context_is_admin_only() {
+        let (c, m) = setup();
+        let (mut other, _) = as_caller(&m, PLAYER_1, 1);
+        assert!(
+            !other.set_personhood_context(CTX),
+            "non-admin cannot redirect the gate"
+        );
+        assert_eq!(c.get_personhood_context(), [0u8; 32]);
+    }
+
+    #[test]
+    fn ranked_end_game_records_the_run_under_the_alias() {
+        let (c0, m0) = setup_ranked();
+        drop(c0);
+        let (mut c, m) = as_caller(&m0, PLAYER_1, 77);
+        mock_personhood(&m, 2, ALIAS_A);
+        assert_ne!(c.start_ranked_game(0), 0);
+        finish_game(&mut c, &m, PLAYER_1, 7, 2);
+
+        let b = board(&c, 0);
+        assert_eq!(b.len(), 1);
+        assert_eq!(
+            (b[0].alias, b[0].set_id, b[0].wins, b[0].lives, b[0].block),
+            (ALIAS_A, 0, 7, 2, 77)
+        );
+        assert_eq!(c.get_player_rank(0, ALIAS_A), 1);
+        let best = LeaderboardEntry::decode(&mut &c.get_best_run(0, ALIAS_A).0[..]).unwrap();
+        assert_eq!(best, b[0]);
+        assert_eq!(
+            c.get_ranked_alias(),
+            [0u8; 32],
+            "ranked marker cleared with the game"
+        );
+        assert!(board(&c, 1).is_empty(), "boards are per set");
+    }
+
+    #[test]
+    fn casual_and_abandoned_games_never_reach_the_leaderboard() {
+        let (mut c, m) = setup_ranked();
+        mock_personhood(&m, 2, ALIAS_A);
+        // Casual game by an eligible person: still casual, no entry.
+        assert_ne!(c.start_game(0), 0);
+        finish_game(&mut c, &m, ADMIN, 10, 3);
+        assert!(
+            board(&c, 0).is_empty(),
+            "casual results are unverified and stay off the board"
+        );
+
+        // Abandoned ranked game: no entry, and the ranked flag does not leak
+        // into the next (casual) game.
+        assert_ne!(c.start_ranked_game(0), 0);
+        assert!(c.abandon_game());
+        assert!(board(&c, 0).is_empty());
+        assert_ne!(c.start_game(0), 0);
+        assert_eq!(c.get_ranked_alias(), [0u8; 32]);
+        finish_game(&mut c, &m, ADMIN, 10, 3);
+        assert!(board(&c, 0).is_empty());
+        assert!(c.get_best_run(0, ALIAS_A).0.is_empty());
+    }
+
+    #[test]
+    fn two_accounts_of_one_person_share_one_entry() {
+        let (_c, m0) = setup_ranked();
+
+        let (mut c1, m1) = as_caller(&m0, PLAYER_1, 10);
+        mock_personhood(&m1, 1, ALIAS_A);
+        assert_ne!(c1.start_ranked_game(0), 0);
+        finish_game(&mut c1, &m1, PLAYER_1, 5, 1);
+
+        // Same person, second account, better run: replaces, not adds.
+        let (mut c2, m2) = as_caller(&m1, PLAYER_2, 20);
+        mock_personhood(&m2, 2, ALIAS_A);
+        assert_ne!(c2.start_ranked_game(0), 0);
+        finish_game(&mut c2, &m2, PLAYER_2, 8, 2);
+        let b = board(&c2, 0);
+        assert_eq!(b.len(), 1, "one person => one leaderboard entry");
+        assert_eq!((b[0].wins, b[0].lives, b[0].block), (8, 2, 20));
+
+        // Worse run from the first account does not lower the person's best.
+        let (mut c3, m3) = as_caller(&m2, PLAYER_1, 30);
+        mock_personhood(&m3, 1, ALIAS_A);
+        assert_ne!(c3.start_ranked_game(0), 0);
+        finish_game(&mut c3, &m3, PLAYER_1, 2, 0);
+        let b = board(&c3, 0);
+        assert_eq!(b.len(), 1);
+        assert_eq!((b[0].wins, b[0].lives), (8, 2), "best run kept");
+        let best = LeaderboardEntry::decode(&mut &c3.get_best_run(0, ALIAS_A).0[..]).unwrap();
+        assert_eq!(best.wins, 8);
+
+        // A different person gets their own entry.
+        let (mut c4, m4) = as_caller(&m3, PLAYER_2, 40);
+        mock_personhood(&m4, 1, ALIAS_B);
+        assert_ne!(c4.start_ranked_game(0), 0);
+        finish_game(&mut c4, &m4, PLAYER_2, 9, 0);
+        let b = board(&c4, 0);
+        assert_eq!(
+            b.iter().map(|e| e.alias).collect::<Vec<_>>(),
+            vec![ALIAS_B, ALIAS_A]
+        );
+        assert_eq!(c4.get_player_rank(0, ALIAS_A), 2);
+        assert_eq!(c4.get_player_rank(0, [0xEE; 32]), 0, "unranked alias => 0");
+    }
+
+    fn entry(tag: u8, wins: u8, lives: u8, block: u64) -> LeaderboardEntry {
+        LeaderboardEntry {
+            alias: [tag; 32],
+            set_id: 0,
+            wins,
+            lives,
+            rounds: 0,
+            block,
+        }
+    }
+
+    #[test]
+    fn leaderboard_orders_by_wins_then_lives_then_earliest() {
+        let mut b = Vec::new();
+        insert_ranked(&mut b, entry(1, 5, 3, 10), 10);
+        insert_ranked(&mut b, entry(2, 6, 0, 11), 10); // more wins beats more lives
+        insert_ranked(&mut b, entry(3, 5, 2, 9), 10); // same wins, fewer lives
+        insert_ranked(&mut b, entry(4, 5, 3, 12), 10); // exact tie, later block
+        let order: Vec<u8> = b.iter().map(|e| e.alias[0]).collect();
+        assert_eq!(order, vec![2, 1, 4, 3]);
+    }
+
+    #[test]
+    fn leaderboard_is_bounded_and_keeps_the_best() {
+        let mut b = Vec::new();
+        for i in 0..5u8 {
+            insert_ranked(&mut b, entry(i, i, 0, 1), 3);
+        }
+        let wins: Vec<u8> = b.iter().map(|e| e.wins).collect();
+        assert_eq!(
+            wins,
+            vec![4, 3, 2],
+            "storage stays bounded at the cap, weakest dropped"
+        );
+        assert!(
+            !insert_ranked(&mut b, entry(9, 1, 0, 1), 3),
+            "below last place on a full board => no change"
+        );
+        assert!(
+            !insert_ranked(&mut b, entry(4, 1, 0, 1), 3),
+            "worse run of a listed alias => no change"
+        );
+        assert!(
+            insert_ranked(&mut b, entry(2, 9, 0, 1), 3),
+            "better run moves the alias up, no duplicate"
+        );
+        assert_eq!(
+            b.iter().map(|e| e.alias[0]).collect::<Vec<_>>(),
+            vec![2, 4, 3]
+        );
+    }
+
+    #[test]
+    fn get_leaderboard_pages() {
+        let (_c, m0) = setup_ranked();
+        let mut m = m0;
+        for (i, wins) in [3u8, 9, 6].iter().enumerate() {
+            let (mut c, mi) = as_caller(&m, PLAYER_1, i as u64 + 1);
+            mock_personhood(&mi, 1, [i as u8 + 1; 32]);
+            assert_ne!(c.start_ranked_game(0), 0);
+            finish_game(&mut c, &mi, PLAYER_1, *wins, 1);
+            m = mi;
+        }
+        let (c, _) = as_caller(&m, PLAYER_1, 9);
+        let page =
+            |o, l| Vec::<LeaderboardEntry>::decode(&mut &c.get_leaderboard(0, o, l).0[..]).unwrap();
+        assert_eq!(
+            page(0, 2).iter().map(|e| e.wins).collect::<Vec<_>>(),
+            vec![9, 6]
+        );
+        assert_eq!(
+            page(2, 2).iter().map(|e| e.wins).collect::<Vec<_>>(),
+            vec![3]
+        );
+        assert!(page(5, 2).is_empty(), "offset past the end => empty list");
     }
 }
