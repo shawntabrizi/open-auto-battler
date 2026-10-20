@@ -11,6 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
+    "deploy": "npm run build-wasm && npm run build && MNEMONIC=\"${DOTNS_MNEMONIC:?set DOTNS_MNEMONIC to the oab-arena.paseo owner phrase}\" npx -y bulletin-deploy@0.22.0 ./dist oab-arena.paseo --env paseo-next-v2 --js-merkle",
     "test": "vitest run",
     "test:watch": "vitest"
   },
