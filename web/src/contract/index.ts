@@ -23,24 +23,60 @@ import {
   createContract,
   createContractRuntimeFromClient,
   ensureContractAccountMapped,
+  QUERY_FALLBACK_ORIGIN,
   type AbiEntry,
 } from '@parity/product-sdk-contracts';
 import type { TxResult, TxStatus } from '@parity/product-sdk-tx';
-import type { Result } from '@parity/product-sdk-host';
 import { SignerManager, HostProvider, DevProvider } from '@parity/product-sdk-signer';
+import { ss58ToH160 } from '@parity/product-sdk-address';
 import { isInHost } from '../services/hostEnvironment';
 import cdmJson from '../../cdm.json';
 import {
   createProxySession,
   createSponsor,
   SessionExpiredError,
-  type PreparedCall,
   type ProxySession,
   type Sponsor,
   type SponsorStatus,
 } from './session';
+import {
+  decodeBadgeEvent,
+  decodeBadges,
+  decodeBestRun,
+  decodeLeaderboard,
+  isZeroAlias,
+  type BadgeEvent,
+  type BadgeRecord,
+  type Hex,
+  type LeaderboardEntry,
+} from './codec';
+import {
+  bindPersonhood,
+  classifyBinding,
+  DERIVATION_INDEX,
+  PRODUCT_ID,
+  readAliasBinding,
+  type RankedEligibility,
+} from './personhood';
+import {
+  claimBadges,
+  RANKED_REFUSED_MESSAGE,
+  RankedIneligibleError,
+  startRanked,
+  startWithHeadroom,
+  type ClaimMethod,
+  type PrepareOptions,
+  type Prepared,
+  type QueryResult,
+  type StartMethod,
+  type TxOptions,
+  type TxOutcome,
+} from './arenaFlows';
 
 export type { SponsorStatus } from './session';
+export type { BadgeEvent, BadgeRecord, LeaderboardEntry } from './codec';
+export type { RankedEligibility } from './personhood';
+export { RankedIneligibleError } from './arenaFlows';
 
 /** Host-routed Asset Hub chain client (the resolved type of createChainClient). */
 type AssetHubClient = Awaited<
@@ -86,30 +122,34 @@ export interface ContractBackend {
   readonly sponsorStatus: SponsorStatus;
   selectAccount(account: Account): void;
   startGame(setId: number): Promise<{ seed: bigint }>;
+  /**
+   * Start a ranked game. Throws `RankedIneligibleError` (no signing prompt)
+   * when the account has no personhood alias in OAB's context.
+   */
+  startRankedGame(setId: number): Promise<{ seed: bigint }>;
   submitTurn(actionScale: Uint8Array): Promise<TurnResult>;
   getGameState(): Promise<GameStateRaw | null>;
-  endGame(): Promise<void>;
+  /** Finalize the game; returns the badge events the run emitted (ranked only). */
+  endGame(): Promise<BadgeEvent[]>;
   abandonGame(): Promise<void>;
+  /** The selected account's ranked eligibility (alias binding vs the arena context). */
+  rankedEligibility(): Promise<RankedEligibility>;
+  /** Bind the product account to the player's personhood alias (host only). */
+  bindPersonhood(): Promise<void>;
+  /** Alias of the active ranked game, or null for a casual game or none. */
+  getRankedAlias(): Promise<Hex | null>;
+  getLeaderboard(setId: number, offset: number, limit: number): Promise<LeaderboardEntry[]>;
+  /** 1-based place of `alias` on the set's board; 0 if absent. */
+  getPlayerRank(setId: number, alias: Hex): Promise<number>;
+  getBestRun(setId: number, alias: Hex): Promise<LeaderboardEntry | null>;
+  /** The selected account's badges, in the order earned. */
+  getBadges(): Promise<BadgeRecord[]>;
+  /** Retry pending badge mints; returns the badges minted now. */
+  claimPendingBadges(): Promise<BadgeEvent[]>;
 }
 
 // keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
 const BATTLE_REPORTED_TOPIC = '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694ddef23dd55af68e089bd';
-
-/**
- * Structural shape of a `@parity/product-sdk-contracts` `query()` result.
- * (The package surfaces this internally; declared locally to avoid depending on
- * a non-exported type name.)
- */
-type Weight = { ref_time: bigint; proof_size: bigint };
-
-type QueryResult<T> =
-  | { success: true; value: T; gasRequired: Weight }
-  | { success: false; value: unknown; gasRequired?: Weight };
-
-type TxOutcome = Result<TxResult, Error>;
-type TxOptions = { gasLimit?: Weight; onStatus?: (status: TxStatus) => void };
-type PrepareOptions = { gasLimit?: Weight };
-type Prepared = Result<PreparedCall, Error>;
 
 /**
  * Minimal typed view of the `@oab/arena` contract. `createContract` returns a
@@ -118,11 +158,8 @@ type Prepared = Result<PreparedCall, Error>;
  * `bool` → `boolean`.
  */
 interface ArenaContract {
-  startGame: {
-    query(setId: number): Promise<QueryResult<bigint>>;
-    tx(setId: number, opts?: TxOptions): Promise<TxOutcome>;
-    prepare(setId: number, opts?: PrepareOptions): Promise<Prepared>;
-  };
+  startGame: StartMethod;
+  startRankedGame: StartMethod;
   submitTurn: {
     query(action: string): Promise<QueryResult<bigint>>;
     tx(action: string, opts?: TxOptions): Promise<TxOutcome>;
@@ -140,6 +177,37 @@ interface ArenaContract {
     tx(opts?: TxOptions): Promise<TxOutcome>;
     prepare(opts?: PrepareOptions): Promise<Prepared>;
   };
+  claimPendingBadges: ClaimMethod;
+  getRankedAlias: { query(): Promise<QueryResult<string>> };
+  getPersonhoodContext: { query(opts?: ReadOptions): Promise<QueryResult<string>> };
+  getLeaderboard: {
+    query(
+      setId: number,
+      offset: number,
+      limit: number,
+      opts?: ReadOptions
+    ): Promise<QueryResult<string>>;
+  };
+  getPlayerRank: {
+    query(setId: number, alias: string, opts?: ReadOptions): Promise<QueryResult<number>>;
+  };
+  getBestRun: {
+    query(setId: number, alias: string, opts?: ReadOptions): Promise<QueryResult<string>>;
+  };
+  getBadges: { query(player: string, opts?: ReadOptions): Promise<QueryResult<string>> };
+}
+
+type ReadOptions = { origin?: SS58String };
+/**
+ * Origin for views that do not depend on the caller. The player's own origin
+ * fails while it is unmapped, and these reads must work before the first game.
+ */
+const PUBLIC_READ: ReadOptions = { origin: QUERY_FALLBACK_ORIGIN };
+
+/** Unwrap a view's dry-run, throwing with the method name on failure. */
+function viewOrThrow<T>(label: string, r: QueryResult<T>): T {
+  if (!r.success) throw new Error(`${label} read failed`);
+  return r.value;
 }
 
 /** Wrap an SDK error with a call label, keeping the original as `cause`. */
@@ -169,17 +237,16 @@ export function isHostTimeout(err: unknown): boolean {
 
 const ARENA_LIBRARY = '@oab/arena';
 
-// The host derives (and authorizes) the app's product-account signer from this
-// dotNS identifier. It MUST match the app's deployed domain name — the app is
-// deployed at `oab-arena.paseo` on Paseo Next (served as `oab-arena.paseo.li`
-// in the browser host) — or the host rejects signing for a product account it
-// doesn't scope to this origin ("Transaction signing was rejected"). Fixed
-// constant, NOT read from the host: reading would give `oab-arena.paseo.li` on
-// the gateway and break resolution. See Rock-Paper-Scissors' PRODUCT_ID for the
-// same convention.
-const PRODUCT_ID = 'oab-arena.paseo';
-/** Product-account derivation index the app signs with (and sponsors). */
-const DERIVATION_INDEX = 0;
+// PRODUCT_ID (`./personhood`): the host derives (and authorizes) the app's
+// product-account signer from this dotNS identifier. It MUST match the app's
+// deployed domain name — the app is deployed at `oab-arena.paseo` on Paseo
+// Next (served as `oab-arena.paseo.li` in the browser host) — or the host
+// rejects signing for a product account it doesn't scope to this origin
+// ("Transaction signing was rejected"). Fixed constant, NOT read from the
+// host: reading would give `oab-arena.paseo.li` on the gateway and break
+// resolution. See Rock-Paper-Scissors' PRODUCT_ID for the same convention.
+// DERIVATION_INDEX is the product-account index the app signs with (and
+// sponsors); the personhood context is scoped to it.
 
 function arenaContractInfo(): { address: `0x${string}`; abi: AbiEntry[] } {
   // The cdm CLI manifest keys contracts directly by package name.
@@ -321,7 +388,7 @@ export function createContractBackend(deps: {
                 ss58Prefix: 0,
                 productAccount: {
                   dotNsIdentifier: PRODUCT_ID,
-                  derivationIndex: 0,
+                  derivationIndex: DERIVATION_INDEX,
                   requestName: false,
                 },
               })
@@ -417,23 +484,41 @@ export function createContractBackend(deps: {
       // The contract derives the game seed from block entropy — the client
       // supplies nothing seed-related. The dry-run only validates the call;
       // its seed is advisory (the tx may land in a different block), so the
-      // real session state comes from the post-start refresh.
-      const dryRun = await arena().startGame.query(setId);
-      if (!dryRun.success || dryRun.value === 0n) {
-        throw new Error(`Contract rejected startGame for set ${setId}`);
-      }
+      // real session state comes from the post-start refresh. The SDK would
+      // size gas to the exact dry-run weight, but the real run uses the
+      // inclusion block's entropy and can cost more: startWithHeadroom
+      // doubles the limit.
+      const seed = await startWithHeadroom({
+        label: 'startGame',
+        method: arena().startGame,
+        setId,
+        send: sendGameCall,
+        onStatus,
+        rejected: () => new Error(`Contract rejected startGame for set ${setId}`),
+      });
       _activeSetId = setId;
-      // The SDK sizes gas to the exact dry-run weight, but the real run uses
-      // the inclusion block's entropy and can cost more (Revive.OutOfGas).
-      // Unused weight is refunded, so double the limit.
-      const { ref_time, proof_size } = dryRun.gasRequired;
-      const gasLimit = { ref_time: ref_time * 2n, proof_size: proof_size * 2n };
-      await sendGameCall(
-        'startGame',
-        () => arena().startGame.prepare(setId, { gasLimit }),
-        () => arena().startGame.tx(setId, { gasLimit, onStatus })
-      );
-      return { seed: dryRun.value };
+      return { seed };
+    },
+
+    async startRankedGame(setId: number): Promise<{ seed: bigint }> {
+      // Same block-entropy seed as startGame, plus a personhood precompile
+      // call, so it gets the same gas headroom. The binding check runs
+      // first, so an ineligible player sees why with no prompt.
+      const seed = await startRanked({
+        eligibility: () => backend.rankedEligibility(),
+        prepareWrite,
+        start: () =>
+          startWithHeadroom({
+            label: 'startRankedGame',
+            method: arena().startRankedGame,
+            setId,
+            send: sendGameCall,
+            onStatus,
+            rejected: () => new RankedIneligibleError(null, RANKED_REFUSED_MESSAGE),
+          }),
+      });
+      _activeSetId = setId;
+      return { seed };
     },
 
     async submitTurn(actionScale: Uint8Array): Promise<TurnResult> {
@@ -490,15 +575,16 @@ export function createContractBackend(deps: {
       return { stateBytes, cardSetBytes, setId: _activeSetId };
     },
 
-    async endGame(): Promise<void> {
+    async endGame(): Promise<BadgeEvent[]> {
       await prepareWrite();
       const dryRun = await arena().endGame.query();
       if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected endGame');
-      await sendGameCall(
+      const tx = await sendGameCall(
         'endGame',
         () => arena().endGame.prepare(),
         () => arena().endGame.tx({ onStatus })
       );
+      return playerBadgeEvents(tx.events);
     },
 
     async abandonGame(): Promise<void> {
@@ -511,9 +597,101 @@ export function createContractBackend(deps: {
         () => arena().abandonGame.tx({ onStatus })
       );
     },
+
+    async rankedEligibility(): Promise<RankedEligibility> {
+      try {
+        if (!client || !_selectedAccount) throw new Error('Not connected');
+        const ctx = viewOrThrow(
+          'getPersonhoodContext',
+          await arena().getPersonhoodContext.query(PUBLIC_READ)
+        );
+        const binding = await readAliasBinding(client.assetHub, _selectedAccount.address);
+        return classifyBinding(ctx as Hex, binding);
+      } catch (err) {
+        return { kind: 'unknown', reason: err instanceof Error ? err.message : String(err) };
+      }
+    },
+
+    async bindPersonhood(): Promise<void> {
+      const signer = signerManager?.getSigner();
+      if (!client || !_selectedAccount || !signer) throw new Error('Not connected');
+      const account = _selectedAccount.address;
+      const session = _session;
+      await bindPersonhood({
+        api: client.assetHub,
+        account,
+        signer,
+        // The fee and the AliasFee are paid in PGAS: claim the sponsored-play
+        // allowance first if the account has none.
+        ensurePgas: async () => {
+          if (!session || (await session.deps.playerPgas()) > 0n) return;
+          await session.deps.requestAllowance();
+        },
+      });
+    },
+
+    async getRankedAlias(): Promise<Hex | null> {
+      const r = await arena().getRankedAlias.query();
+      if (!r.success || isZeroAlias(r.value)) return null;
+      return r.value as Hex;
+    },
+
+    async getLeaderboard(setId, offset, limit) {
+      const r = await arena().getLeaderboard.query(setId, offset, limit, PUBLIC_READ);
+      return decodeLeaderboard(viewOrThrow('getLeaderboard', r));
+    },
+
+    async getPlayerRank(setId, alias) {
+      return viewOrThrow(
+        'getPlayerRank',
+        await arena().getPlayerRank.query(setId, alias, PUBLIC_READ)
+      );
+    },
+
+    async getBestRun(setId, alias) {
+      const r = await arena().getBestRun.query(setId, alias, PUBLIC_READ);
+      return decodeBestRun(viewOrThrow('getBestRun', r));
+    },
+
+    async getBadges() {
+      if (!_selectedAccount) throw new Error('Not connected');
+      const player = ss58ToH160(_selectedAccount.address);
+      return decodeBadges(
+        viewOrThrow('getBadges', await arena().getBadges.query(player, PUBLIC_READ))
+      );
+    },
+
+    async claimPendingBadges() {
+      await prepareWrite();
+      return claimBadges({
+        method: arena().claimPendingBadges,
+        send: sendGameCall,
+        onStatus,
+        parseEvents: playerBadgeEvents,
+      });
+    },
   };
 
+  /** Badge events in a tx's events that belong to the selected account. */
+  function playerBadgeEvents(events: unknown[]): BadgeEvent[] {
+    if (!_selectedAccount) return [];
+    return findBadgeEvents(events, ss58ToH160(_selectedAccount.address));
+  }
+
   return backend;
+}
+
+/** Decode every BadgeMinted / BadgePending event for `player` (H160) in `events`. */
+export function findBadgeEvents(events: unknown[], player: string): BadgeEvent[] {
+  const out: BadgeEvent[] = [];
+  for (const evt of events) {
+    const inner = unwrapContractEmitted(evt);
+    if (!inner) continue;
+    const topics = (inner.topics ?? []).map(topicToHex).filter((t): t is string => t !== null);
+    const badge = decodeBadgeEvent(topics, binaryToBytes(inner.data));
+    if (badge && badge.player === player.toLowerCase()) out.push(badge);
+  }
+  return out;
 }
 
 // ── Byte/hex helpers ─────────────────────────────────────────────────────────
