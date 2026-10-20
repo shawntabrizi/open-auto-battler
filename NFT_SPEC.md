@@ -1,3 +1,5 @@
+> **Superseded** by [docs/NFT_DESIGN.md](docs/NFT_DESIGN.md) (Scarcity collections + NftClaims minter); the per-slot asset rules below still apply.
+
 # NFT Customization Specification
 
 ## Overview
