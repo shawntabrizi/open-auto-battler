@@ -13,9 +13,10 @@ crate-type = ["rlib"]
 
 [features]
 default = ["std"]
-std = ["oab-battle/std", "oab-engine/std", "parity-scale-codec/std"]
+std = ["oab-battle/std", "oab-engine/std", "oab-game/std", "parity-scale-codec/std"]
 
 [dependencies]
 oab-battle = { workspace = true }
 oab-engine = { workspace = true }
+oab-game = { workspace = true }
 parity-scale-codec = { workspace = true, features = ["derive"] }
