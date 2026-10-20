@@ -7,19 +7,32 @@
  * stale value means the app's chain client never connects. Read it from the
  * node instead of hardcoding it; workers inherit `process.env`.
  */
+import { createClient } from 'polkadot-api';
+import { getWsProvider } from 'polkadot-api/ws';
 import { PASEO_ASSET_HUB } from '@parity/host-api-test-sdk';
+
+async function readGenesis(): Promise<string> {
+  const client = createClient(getWsProvider(PASEO_ASSET_HUB.rpcUrl));
+  try {
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('genesis read timed out')), 30_000)
+    );
+    return (await Promise.race([client.getChainSpecData(), timeout])).genesisHash;
+  } finally {
+    client.destroy();
+  }
+}
 
 export default async function globalSetup(): Promise<void> {
   if (process.env.OAB_E2E_GENESIS) return;
-  const httpUrl = PASEO_ASSET_HUB.rpcUrl.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:');
-  const res = await fetch(httpUrl, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ id: 1, jsonrpc: '2.0', method: 'chain_getBlockHash', params: [0] }),
-  });
-  const body = (await res.json()) as { result?: string };
-  if (!body.result?.startsWith('0x')) {
-    throw new Error(`Could not read genesis from ${httpUrl}: ${JSON.stringify(body)}`);
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      process.env.OAB_E2E_GENESIS = await readGenesis();
+      return;
+    } catch (err) {
+      lastError = err;
+    }
   }
-  process.env.OAB_E2E_GENESIS = body.result;
+  throw new Error(`Could not read genesis from ${PASEO_ASSET_HUB.rpcUrl}: ${String(lastError)}`);
 }

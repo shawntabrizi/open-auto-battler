@@ -144,6 +144,9 @@ export function Shop() {
               card ? (
                 <div
                   key={`hand-${card.id}-${i}`}
+                  data-testid="hand-card"
+                  data-hand-index={i}
+                  data-affordable={view.can_afford[i] ? 'true' : 'false'}
                   className={`flex-1 min-w-0 h-full flex items-center justify-center overflow-visible ${isNewRound ? 'animate-card-entrance' : ''}`}
                   style={{
                     containerType: 'size',

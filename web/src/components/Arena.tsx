@@ -341,6 +341,8 @@ export function Arena() {
                 return (
                   <div
                     key={slotId}
+                    data-testid="board-slot"
+                    data-occupied={unit ? 'true' : 'false'}
                     className="flex-1 min-w-0 h-full flex items-center justify-center overflow-visible"
                     style={{ containerType: 'size' }}
                   >
