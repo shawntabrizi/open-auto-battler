@@ -1,5 +1,10 @@
 # Migrate open-auto-battler to @parity/product-sdk
 
+> **Historical (2026-06-30).** This migration is done. The current stack
+> (polkadot-api 3, product-sdk 0.38, `npm run deploy` with bulletin-deploy) is
+> described in `agents/ARCHITECTURE.md` and `BETA_RELEASE_PLAN.md`. Do not
+> follow the steps below.
+
 > Produced via the `migrating-to-product-sdk` discovery + spec process.
 > Sources analyzed: the target stack (`@parity/product-sdk`), the reference
 > app (`Rock-Paper-Scissors`), and this repo's current `web/` + `contract/`.
