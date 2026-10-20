@@ -63,10 +63,20 @@ Open question: bring tournaments back in the contract, or keep leaderboard plus 
 
 ## Next Steps
 
-1. Get `oab-arena.paseo` allowlisted by `peopl.paseo`, then test ranked play, the bind, and badges end to end in a host.
-2. Deploy the current frontend to `oab-arena.paseo`.
-3. Bump to product-sdk 0.39 (after 2026-10-22).
-4. Wire cosmetics ownership to NftPurse when it reaches host-rust-core main.
-5. Decide the render layer; run the PixiJS vs Godot web spike first.
-6. Design registry sessions (contract change) if sponsored play outgrows the pool.
-7. Content: review the pallet-era content goals (balance pass on set 0, more style sets; see this file's git history). Their current status was not checked in this rewrite.
+**Priority (2026-10-20): casual play works end to end for everyone.** Ranked
+play, personhood binding, and the leaderboard are on hold. The code stays, but
+we do not build on it until casual play is solid.
+
+1. Verify casual play in a real host: connect, sign, a full run, battle replay
+   (the Playwright + host test harness), then on a real phone.
+2. Fix what that finds. Measure battle FPS on a mid-range phone.
+3. Make play free and prompt-light for everyone: registry sessions (Identity,
+   milestones M1 to M3 of `docs/CONTRACT_ARCHITECTURE.md`, casual mode only).
+4. Cosmetics ownership from the player's own purses (top-trumps pattern).
+5. Bump to product-sdk 0.39 (after 2026-10-22).
+6. Decide the render layer; run the PixiJS vs Godot web spike first.
+7. Content: review the pallet-era content goals (balance pass on set 0, more
+   style sets; see this file's git history).
+
+On hold: `peopl.paseo` allowlist, ranked mode, personhood bind, leaderboard,
+Records (M4), per-person badges.

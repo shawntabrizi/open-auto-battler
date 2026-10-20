@@ -1205,6 +1205,11 @@ so 0, 1, 2 stay the same if published in order).
 Order agreed: content + engine → identity → modes → records → frontend →
 retire arena v2. Each milestone ends with its success criteria met.
 
+**Priority change (2026-10-20):** casual play for everyone comes first.
+Build M1, M2 (sessions; the personhood part of Identity can wait), and M3 with
+the Arena mode only. The Ranked mode, M4 Records, and the personhood bind are
+on hold.
+
 ### M1. Engine crate, engine contract, Content
 
 Work:
