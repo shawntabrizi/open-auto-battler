@@ -7,7 +7,7 @@
 import type { TxResult, TxStatus } from '@parity/product-sdk-tx';
 import type { Result } from '@parity/product-sdk-host';
 import type { PreparedCall } from './session';
-import type { BadgeEvent } from './codec';
+import type { BadgeEvent, BadgeRecord } from './codec';
 import { eligibilityMessage, type RankedEligibility } from './personhood';
 
 export type Weight = { ref_time: bigint; proof_size: bigint };
@@ -125,4 +125,19 @@ export async function claimBadges(opts: {
     () => method.tx({ onStatus })
   );
   return opts.parseEvents(tx.events);
+}
+
+/** Badges in `after` that `before` did not have, as events (fallback path). */
+export function newBadges(before: BadgeRecord[], after: BadgeRecord[]): BadgeEvent[] {
+  const key = (b: BadgeRecord) => `${b.badge}/${b.setId}`;
+  const had = new Set(before.map(key));
+  return after
+    .filter((b) => !had.has(key(b)))
+    .map((b) => ({
+      kind: b.token === null ? 'pending' : 'minted',
+      player: '0x',
+      badge: b.badge,
+      setId: b.setId,
+      token: b.token,
+    }));
 }

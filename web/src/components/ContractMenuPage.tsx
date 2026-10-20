@@ -93,6 +93,21 @@ export function ContractMenuPage() {
               Contract Arena
             </Link>
 
+            <div className="flex w-full gap-3">
+              <Link
+                to="/contract/leaderboard"
+                className="theme-button theme-surface-button flex-1 font-bold py-3 rounded-xl border text-sm text-center uppercase tracking-wider"
+              >
+                Leaderboard
+              </Link>
+              <Link
+                to="/contract/badges"
+                className="theme-button theme-surface-button flex-1 font-bold py-3 rounded-xl border text-sm text-center uppercase tracking-wider"
+              >
+                Badges
+              </Link>
+            </div>
+
             <button
               onClick={disconnect}
               className="text-base-500 hover:text-base-300 text-sm transition-colors"

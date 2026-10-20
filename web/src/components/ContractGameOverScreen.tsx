@@ -7,6 +7,7 @@ import { GameOverScreen } from './GameOverScreen';
 /** Game over screen wired to the contract backend. */
 export function ContractGameOverScreen() {
   const endGame = useContractStore((s) => s.endGame);
+  const ranked = useContractStore((s) => s.rankedAlias !== null);
   const resetActiveSessionView = useGameStore((s) => s.resetActiveSessionView);
   const navigate = useNavigate();
 
@@ -20,5 +21,16 @@ export function ContractGameOverScreen() {
     }
   };
 
-  return <GameOverScreen backTo="/contract" backLabel="Contract" onNewRun={handleNewRun} />;
+  return (
+    <GameOverScreen
+      backTo="/contract"
+      backLabel="Contract"
+      onNewRun={handleNewRun}
+      note={
+        ranked
+          ? 'Ranked run: press New Run to record it on the leaderboard and collect any badges.'
+          : undefined
+      }
+    />
+  );
 }

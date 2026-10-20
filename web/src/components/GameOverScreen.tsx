@@ -8,12 +8,15 @@ interface GameOverScreenProps {
   backTo?: string;
   backLabel?: string;
   onNewRun?: () => Promise<void> | void;
+  /** Extra line under the subtitle (e.g. the ranked-run note). */
+  note?: string;
 }
 
 export function GameOverScreen({
   backTo = '/contract',
   backLabel = 'Menu',
   onNewRun,
+  note,
 }: GameOverScreenProps = {}) {
   const { view, newRun, winsToVictory } = useGameStore();
   const isSubmitting = useIsSubmitting();
@@ -139,6 +142,16 @@ export function GameOverScreen({
           >
             {isVictory ? 'Your army is undefeated!' : 'Your forces have fallen...'}
           </p>
+          {note && (
+            <p
+              className={`text-xs lg:text-sm text-accent text-center ${
+                showSubtitle ? 'animate-stagger-fade-in' : 'opacity-0'
+              }`}
+              style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+            >
+              {note}
+            </p>
+          )}
 
           {/* Stats panel */}
           <div

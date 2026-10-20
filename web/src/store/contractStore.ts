@@ -7,9 +7,16 @@ import { toast } from 'react-hot-toast';
 import {
   createContractBackend,
   isHostTimeout,
+  RankedIneligibleError,
   type Account,
+  type BadgeEvent,
+  type BadgeRecord,
   type ContractBackend,
+  type RankedEligibility,
 } from '../contract';
+import type { Hex } from '../contract/codec';
+import { eligibilityMessage } from '../contract/personhood';
+import { newBadges } from '../contract/arenaFlows';
 import { useGameStore } from './gameStore';
 import { useTxStore } from './txStore';
 
@@ -58,16 +65,50 @@ interface ContractStore {
   /** Set when the last refreshGameState failed to load/decode chain state. */
   refreshError: string | null;
 
+  // Ranked play
+  /** Personhood alias of the active ranked game; null for casual or none. */
+  rankedAlias: Hex | null;
+  /** Last ranked-eligibility check of the selected account. */
+  eligibility: RankedEligibility | null;
+  /** Why the last ranked start was refused, for the arena page. */
+  rankedBlock: string | null;
+  isBinding: boolean;
+  bindError: string | null;
+
+  // Badges
+  badges: BadgeRecord[] | null;
+  badgesError: string | null;
+  isClaiming: boolean;
+  /** Badge events of the last finished ranked run, shown once on the arena page. */
+  lastRunBadges: BadgeEvent[] | null;
+
   // Actions
   connect: (useDevAccounts?: boolean) => Promise<boolean>;
   disconnect: () => void;
   selectAccount: (account: Account) => void;
   startGame: (setId: number) => Promise<void>;
+  startRankedGame: (setId: number) => Promise<void>;
+  checkEligibility: () => Promise<RankedEligibility | null>;
+  bindPersonhood: () => Promise<void>;
+  loadBadges: () => Promise<void>;
+  claimBadges: () => Promise<void>;
+  clearLastRunBadges: () => void;
   submitTurnOnChain: () => Promise<void>;
   endGame: () => Promise<void>;
   abandonGame: () => Promise<void>;
   refreshGameState: () => Promise<void>;
 }
+
+/** Ranked/badge state that belongs to one account; cleared on a switch. */
+const perAccountReset = {
+  rankedAlias: null,
+  eligibility: null,
+  rankedBlock: null,
+  bindError: null,
+  badges: null,
+  badgesError: null,
+  lastRunBadges: null,
+};
 
 export const useContractStore = create<ContractStore>((set, get) => ({
   backend: null,
@@ -80,6 +121,15 @@ export const useContractStore = create<ContractStore>((set, get) => ({
   isRefreshing: false,
   isSubmitting: false,
   refreshError: null,
+  rankedAlias: null,
+  eligibility: null,
+  rankedBlock: null,
+  isBinding: false,
+  bindError: null,
+  badges: null,
+  badgesError: null,
+  isClaiming: false,
+  lastRunBadges: null,
 
   connect: async (useDevAccounts?: boolean) => {
     get().disconnect();
@@ -143,13 +193,14 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       selectedAccount: null,
       accounts: [],
       hasActiveGame: false,
+      ...perAccountReset,
     });
   },
 
   selectAccount: (account) => {
     const { backend } = get();
     if (backend) backend.selectAccount(account);
-    set({ selectedAccount: account });
+    set({ selectedAccount: account, ...perAccountReset });
   },
 
   startGame: async (setId: number) => {
@@ -172,6 +223,95 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       toast.error(txErrorMessage(err, 'Failed to start contract game'));
     }
   },
+
+  startRankedGame: async (setId: number) => {
+    const { backend } = get();
+    if (!backend) return;
+    set({ rankedBlock: null });
+    try {
+      // No overlay until the eligibility check passes: an ineligible player
+      // gets the reason, not a signing screen.
+      const eligibility = await backend.rankedEligibility();
+      set({ eligibility });
+      if (eligibility.kind !== 'bound') {
+        set({ rankedBlock: eligibilityMessage(eligibility) });
+        return;
+      }
+      await withTxOverlay('Starting Ranked Game...', expectsHostPrompt(get()), () =>
+        backend.startRankedGame(setId)
+      );
+      await get().refreshGameState();
+    } catch (err) {
+      if (err instanceof RankedIneligibleError) {
+        set({ rankedBlock: err.message, eligibility: err.eligibility ?? get().eligibility });
+        return;
+      }
+      console.error('Contract start ranked game failed:', err);
+      toast.error(txErrorMessage(err, 'Failed to start ranked game'));
+    }
+  },
+
+  checkEligibility: async () => {
+    const { backend } = get();
+    if (!backend) return null;
+    const eligibility = await backend.rankedEligibility();
+    set({ eligibility });
+    return eligibility;
+  },
+
+  bindPersonhood: async () => {
+    const { backend } = get();
+    if (!backend || get().isBinding) return;
+    set({ isBinding: true, bindError: null });
+    try {
+      await withTxOverlay('Binding Personhood...', get().selectedAccount?.source === 'host', () =>
+        backend.bindPersonhood()
+      );
+      const eligibility = await backend.rankedEligibility();
+      set({ eligibility, rankedBlock: null });
+      if (eligibility.kind === 'bound') toast.success('Personhood bound. Ranked play is open.');
+    } catch (err) {
+      console.error('Personhood binding failed:', err);
+      set({ bindError: txErrorMessage(err, 'Binding failed') });
+    } finally {
+      set({ isBinding: false });
+    }
+  },
+
+  loadBadges: async () => {
+    const { backend } = get();
+    if (!backend) return;
+    try {
+      set({ badges: await backend.getBadges(), badgesError: null });
+    } catch (err) {
+      console.error('Loading badges failed:', err);
+      set({ badgesError: err instanceof Error ? err.message : 'Failed to load badges' });
+    }
+  },
+
+  claimBadges: async () => {
+    const { backend } = get();
+    if (!backend || get().isClaiming) return;
+    set({ isClaiming: true });
+    try {
+      const minted = await withTxOverlay('Claiming Badges...', expectsHostPrompt(get()), () =>
+        backend.claimPendingBadges()
+      );
+      if (minted.length > 0) {
+        toast.success(`Claimed ${minted.length} badge${minted.length === 1 ? '' : 's'}`);
+      } else {
+        toast('No badge could be minted yet. The arena may need funds; try again later.');
+      }
+      await get().loadBadges();
+    } catch (err) {
+      console.error('Claiming badges failed:', err);
+      toast.error(txErrorMessage(err, 'Failed to claim badges'));
+    } finally {
+      set({ isClaiming: false });
+    }
+  },
+
+  clearLastRunBadges: () => set({ lastRunBadges: null }),
 
   submitTurnOnChain: async () => {
     const { backend, isSubmitting } = get();
@@ -239,9 +379,25 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     const { backend } = get();
     if (!backend) return;
 
+    const ranked = get().rankedAlias !== null;
     try {
-      await withTxOverlay('Ending Run...', expectsHostPrompt(get()), () => backend.endGame());
-      set({ hasActiveGame: false });
+      // Snapshot first: if the events cannot be read, the new badges are the
+      // records that were not there before.
+      const before = ranked ? await backend.getBadges().catch(() => null) : null;
+      const events = await withTxOverlay('Ending Run...', expectsHostPrompt(get()), () =>
+        backend.endGame()
+      );
+      let earned = events;
+      if (ranked && earned.length === 0 && before) {
+        const after = await backend.getBadges().catch(() => before);
+        earned = newBadges(before, after);
+      }
+      set({
+        hasActiveGame: false,
+        rankedAlias: null,
+        lastRunBadges: earned.length > 0 ? earned : null,
+        badges: null,
+      });
       useGameStore.getState().resetActiveSessionView();
     } catch (err) {
       console.error('Contract end game failed:', err);
@@ -276,6 +432,9 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     try {
       const gameState = await backend.getGameState();
       set({ hasActiveGame: !!gameState });
+      // Ranked or casual: needed for the HUD label and the game-over badges.
+      const rankedAlias = gameState ? await backend.getRankedAlias().catch(() => null) : null;
+      set({ rankedAlias });
 
       if (!gameState || gameState.stateBytes.length === 0) {
         useGameStore.getState().resetActiveSessionView();

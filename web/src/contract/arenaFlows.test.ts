@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { TxResult } from '@parity/product-sdk-tx';
 import {
   claimBadges,
+  newBadges,
   RankedIneligibleError,
   startRanked,
   startWithHeadroom,
@@ -196,5 +197,16 @@ describe('badge events in a transaction', () => {
       { kind: 'minted', player: me, badge: 1, setId: 2, token: 9n },
       { kind: 'pending', player: me, badge: 0, setId: 2, token: null },
     ]);
+  });
+});
+
+describe('new badges by diff (fallback when events are unreadable)', () => {
+  it('reports only records that were not held before the run', () => {
+    const old = { badge: 0, setId: 0, block: 1n, token: 3n };
+    const fresh = { badge: 1, setId: 0, block: 9n, token: null };
+    expect(newBadges([old], [old, fresh])).toEqual([
+      { kind: 'pending', player: '0x', badge: 1, setId: 0, token: null },
+    ]);
+    expect(newBadges([old], [old])).toEqual([]);
   });
 });
