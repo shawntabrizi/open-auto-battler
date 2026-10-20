@@ -17,12 +17,12 @@ function getCardArtCid(): string | null {
 export function getCardArtSm(cardId: number): string | null {
   const cid = getCardArtCid();
   if (!cid) return null;
-  return ipfsUrl(`ipfs://${cid}/sm/${cardId}.webp`);
+  return ipfsUrl(`ipfs://${cid}/sm/${cardId}.webp`) || null;
 }
 
 /** Returns the medium (512x768) card art URL, or null if no card art selected. */
 export function getCardArtMd(cardId: number): string | null {
   const cid = getCardArtCid();
   if (!cid) return null;
-  return ipfsUrl(`ipfs://${cid}/md/${cardId}.webp`);
+  return ipfsUrl(`ipfs://${cid}/md/${cardId}.webp`) || null;
 }

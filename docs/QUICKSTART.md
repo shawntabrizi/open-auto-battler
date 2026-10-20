@@ -168,6 +168,23 @@ In Online Arena mode, the UI shows:
 - Action log (what will be submitted)
 - Battle events (combat resolution)
 
+## Deploying the Frontend
+
+The app is served from Bulletin + DotNS as `oab-arena.paseo` on Paseo Next
+(`https://oab-arena.paseo.li`). One command builds the WASM engine and the web
+app, uploads `web/dist`, and writes the product manifest from
+`web/bulletin-deploy.config.ts` (name, icon):
+
+```bash
+cd web
+DOTNS_MNEMONIC="<owner phrase of oab-arena.paseo>" npm run deploy
+```
+
+`DOTNS_MNEMONIC` is required; there is no dev-account fallback. The name is
+owned by the cdm `paseo` deploy account (`5CUbpNYAePqCdFkS6BWqVF4RDaAcsueW923DrJTnDUXHst7v`).
+CI deploys the same way from `.github/workflows/deploy-frontend.yml` with the
+`DOTNS_MNEMONIC` repository secret.
+
 ## Next Steps
 
 - Read [CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md) for deep dive

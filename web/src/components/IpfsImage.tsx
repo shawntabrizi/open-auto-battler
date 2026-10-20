@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { IPFS_GATEWAYS, extractCid } from '../utils/ipfs';
+import { isInHost } from '../services/hostEnvironment';
 
 const RETRIES_PER_GATEWAY = 2;
 const RETRY_DELAY_MS = 2000;
@@ -46,7 +47,8 @@ export function IpfsImage({ src, alt, className = '', fallback }: IpfsImageProps
     }
   }, [src]);
 
-  if (!src) {
+  // The host sandbox CSP blocks public IPFS gateways: show the fallback.
+  if (!src || isInHost()) {
     return fallback ? <>{fallback}</> : null;
   }
 

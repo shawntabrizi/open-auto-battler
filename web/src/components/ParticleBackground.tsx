@@ -90,13 +90,14 @@ export function ParticleBackground() {
     // Pre-load image if url is set
     let img: HTMLImageElement | null = null;
     let imageReady = false;
-    if (icon.url) {
+    const iconUrl = icon.url ? ipfsUrl(icon.url) : '';
+    if (iconUrl) {
       img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         imageReady = true;
       };
-      img.src = ipfsUrl(icon.url);
+      img.src = iconUrl;
     }
 
     let animId: number;
