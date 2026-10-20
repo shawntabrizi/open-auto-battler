@@ -23,11 +23,10 @@ the behaviour changes. Then append a new entry; never edit a released one.
 
 ## Proof that version 1 is arena v2
 
-`engine/arena-oracle` compiles `contract/src/main.rs` unchanged (see its
-`build.rs`) and drives the real arena methods through the same corpus. Start
-seeds, start states, battle seeds, every post-turn state, and every
-`BattleReported` payload must be equal. It also runs the arena's own 40
-tests.
+During M1, an oracle crate compiled the arena v2 source unchanged and drove
+it through the same corpus. Start seeds, start states, battle seeds, every
+post-turn state, and every `BattleReported` payload were equal. The oracle
+was removed with arena v2 (M6); git history keeps it.
 
 Two deliberate differences, outside the corpus: the engine uses saturating
 arithmetic for `mana_limit_for_round`, `wins`, and `lives`. Arena v2 builds
@@ -37,5 +36,4 @@ with `overflow-checks = false` and wraps its mana limit at round 254 and up.
 
 ```bash
 cargo test -p oab-engine
-CARGO_PVM_CONTRACT_INTERNAL=1 cargo test --manifest-path engine/arena-oracle/Cargo.toml
 ```

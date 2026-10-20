@@ -15,7 +15,7 @@ crate-type = ["rlib"]
 default = ["std"]
 std = ["oab-battle/std", "oab-game/std", "parity-scale-codec/std"]
 # Golden-vector corpus (`vectors` module). Needs std; used by the version
-# guard test here and by the arena equivalence test in `engine/arena-oracle`.
+# guard test here and by `scripts/oab-plan`.
 vectors = ["std", "dep:oab-assets", "oab-assets/std"]
 
 [dependencies]

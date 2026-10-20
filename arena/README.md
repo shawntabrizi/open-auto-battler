@@ -1,6 +1,6 @@
 # `@oab/arena` version 3 — casual mode (PolkaVM)
 
-The casual game of arena v2 (`contract/`) on the layered contracts
+The casual game of arena v2 (retired) on the layered contracts
 (`docs/CONTRACT_ARCHITECTURE.md` sections 4.4, 4.4.1, 7.1; as-built notes in
 section 14, "M3 status"). The rules and the flow do not change: start a game
 on a set, play shop turns, fight a ghost of your bracket, keep lives and wins,

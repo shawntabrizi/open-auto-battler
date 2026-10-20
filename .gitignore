@@ -8,10 +8,8 @@ scripts/*.results.txt
 ppn/
 web/.cdm/
 .claude/
-contract/.cdm/
 web/dist.car
 web/dist/
 content/.cdm/
-engine-contract/.cdm/
-identity/.cdm/
+engine-identity/.cdm/
 arena/.cdm/

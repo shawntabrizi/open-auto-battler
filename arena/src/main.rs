@@ -1,7 +1,7 @@
 //! Open Auto Battler Arena (`@oab/arena` version 3, casual mode) — PolkaVM
 //! contract.
 //!
-//! The casual game of arena v2 (`contract/src/main.rs`) on the layered
+//! The casual game of arena v2 (now retired) on the layered
 //! contracts (`docs/CONTRACT_ARCHITECTURE.md` sections 4.4 and 4.4.1):
 //!
 //! - **The engine is linked.** `oab-engine` runs the start and every turn in

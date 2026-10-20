@@ -8,16 +8,12 @@ members = [
     "engine",
     "protocol",
     "scripts/oab-plan",
-    "contract/tests-native",
 ]
 exclude = [
-    "contract",
-    "engine/arena-oracle",
     "engine-contract",
     "content",
     "identity",
     "nft-minter",
-    "register-cards",
 ]
 
 [workspace.package]

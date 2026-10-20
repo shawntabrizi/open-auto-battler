@@ -360,16 +360,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "oab-contract-tests"
-version = "0.1.0"
-dependencies = [
- "oab-assets",
- "oab-battle",
- "oab-game",
- "parity-scale-codec",
-]
-
-[[package]]
 name = "oab-engine"
 version = "0.1.0"
 dependencies = [

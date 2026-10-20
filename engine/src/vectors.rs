@@ -2,13 +2,12 @@
 //!
 //! The corpus plays each case the way arena v2 (`@oab/arena` version 2)
 //! would: the same seed rules (`keccak(caller ++ context ++ nonce)`), the
-//! same bracket order, and a fixed opponent per turn. Two tests use it:
+//! same bracket order, and a fixed opponent per turn.
 //!
-//! - `golden_vectors_match_engine_version` (this crate) hashes every output
-//!   and compares the hash with [`crate::ENGINE_VECTORS_HASH`].
-//! - `engine/arena-oracle` drives the real arena v2 source through the same
-//!   cases and checks that every state, result, seed, and opponent is equal.
-//!   That test is the proof that the hash describes arena v2 behaviour.
+//! `golden_vectors_match_engine_version` (this crate) hashes every output and
+//! compares the hash with [`crate::ENGINE_VECTORS_HASH`]. An oracle test that
+//! drove the arena v2 source through the same cases proved that the hash
+//! describes arena v2 behaviour (removed with arena v2; see git history).
 //!
 //! Change this corpus only together with a new engine version: the hash
 //! covers the inputs too.
