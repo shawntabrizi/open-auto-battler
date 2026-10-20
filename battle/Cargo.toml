@@ -17,9 +17,7 @@ std = [
     "serde/std",
     "parity-scale-codec/std",
     "scale-info/std",
-    "bounded-collections?/std",
 ]
-bounded = ["dep:bounded-collections"]
 browser_log = []
 
 [dependencies]
@@ -27,7 +25,6 @@ browser_log = []
 parity-scale-codec = { workspace = true, features = ["derive", "max-encoded-len"] }
 scale-info = { workspace = true, features = ["derive"] }
 serde = { workspace = true, features = ["derive", "alloc"] }
-bounded-collections = { workspace = true, optional = true }
 log = { workspace = true }
 
 [dev-dependencies]

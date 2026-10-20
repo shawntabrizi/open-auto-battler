@@ -63,8 +63,5 @@ impl GameConfig {
     }
 }
 
-#[cfg(feature = "bounded")]
-pub mod bounded;
-
 #[cfg(test)]
 mod tests;

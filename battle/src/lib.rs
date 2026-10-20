@@ -19,9 +19,6 @@ pub mod types;
 #[cfg(test)]
 mod tests;
 
-#[cfg(feature = "bounded")]
-pub mod bounded;
-
 // Core exports
 pub use battle::{
     resolve_battle, BattlePhase, BattleResult, CombatEvent, CombatUnit, UnitId, UnitView,

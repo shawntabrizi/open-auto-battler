@@ -626,8 +626,6 @@ pub struct CommitTurnAction {
 }
 
 // ── Ghost opponent types ─────────────────────────────────────────────────────
-// These are always available (no feature gate). The `bounded` module
-// wraps them in BoundedVec for pallet storage; contracts use plain Vec.
 
 /// A unit on a ghost board (CardId + permanent stat deltas).
 /// Stores minimal data needed to reconstruct buffed combat units.

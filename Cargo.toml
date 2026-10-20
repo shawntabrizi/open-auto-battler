@@ -35,7 +35,6 @@ codec = { version = "3.7.4", default-features = false, package = "parity-scale-c
 parity-scale-codec = { version = "3.7.4", default-features = false }
 scale-info = { version = "2.11.6", default-features = false }
 serde_json = { version = "1.0.132", default-features = false }
-bounded-collections = { version = "0.2.4", default-features = false }
 wasm-bindgen = "0.2"
 serde-wasm-bindgen = "0.6"
 console_error_panic_hook = "0.1"
