@@ -1216,3 +1216,153 @@ impl Default for GameEngine {
         Self::new(Some(42))
     }
 }
+
+// ============================================================================
+// Mode contracts (`@oab/arena` v3+): chain game state and battle replay
+// ============================================================================
+
+/// The engine version this WASM build runs (`oab_engine::ENGINE_VERSION`).
+/// A game or battle report with another version cannot be replayed here.
+#[wasm_bindgen]
+pub fn engine_version() -> u32 {
+    oab_engine::ENGINE_VERSION
+}
+
+fn decode_exact<T: parity_scale_codec::DecodeAll>(label: &str, bytes: &[u8]) -> Result<T, String> {
+    T::decode_all(&mut &bytes[..]).map_err(|e| format!("Failed to decode {label}: {e:?}"))
+}
+
+fn check_engine_version(found: u32) -> Result<(), String> {
+    if found != oab_engine::ENGINE_VERSION {
+        return Err(format!(
+            "The chain uses engine version {found}, this app has engine version {}. Reload the app to get the matching version.",
+            oab_engine::ENGINE_VERSION
+        ));
+    }
+    Ok(())
+}
+
+fn ghost_views(
+    board: &[oab_battle::types::GhostBoardUnit],
+    pool: &std::collections::BTreeMap<CardId, UnitCard>,
+    limits: &mut oab_battle::limits::BattleLimits,
+    team: oab_battle::limits::Team,
+) -> Vec<UnitView> {
+    board
+        .iter()
+        .filter_map(|u| {
+            let card = pool.get(&u.card_id)?;
+            Some(UnitView {
+                instance_id: limits.generate_instance_id(team),
+                card_id: card.id,
+                name: card.name.clone(),
+                attack: card.stats.attack.saturating_add(u.perm_attack),
+                health: card.stats.health.saturating_add(u.perm_health),
+                battle_abilities: card.battle_abilities.clone(),
+            })
+        })
+        .collect()
+}
+
+#[wasm_bindgen]
+impl GameEngine {
+    /// Load a game from a mode contract: SCALE `ModeGame` (`getGame`) and the
+    /// SCALE `SetBundle` of its set (`getSetBundle`). The card pool and the
+    /// set come from the bundle, so the shop runs on the chain's cards. The
+    /// bundle must hash to the game's `set_hash`.
+    #[wasm_bindgen]
+    pub fn init_from_mode_game(
+        &mut self,
+        game_scale: Vec<u8>,
+        bundle_scale: Vec<u8>,
+    ) -> Result<(), String> {
+        let game: oab_protocol::ModeGame = decode_exact("ModeGame", &game_scale)?;
+        check_engine_version(game.engine_version)?;
+        let bundle: oab_engine::SetBundle = decode_exact("SetBundle", &bundle_scale)?;
+        if bundle.set_id != game.set_id || bundle.hash() != game.set_hash {
+            return Err(format!(
+                "The set data for set {} does not match the game's set hash",
+                game.set_id
+            ));
+        }
+
+        self.card_set = Some(bundle.set.clone());
+        self.set_id = game.set_id;
+        self.last_battle_output = None;
+        self.state =
+            GameState::reconstruct(bundle.card_pool(), game.set_id, game.config, game.state);
+        if self.state.phase == GamePhase::Shop {
+            self.start_planning_phase();
+        } else {
+            self.reset_turn_context();
+        }
+        Ok(())
+    }
+
+    /// Replay a battle from a SCALE `BattleReport` (the `BattleReported`
+    /// event) and the SCALE `SetBundle` of its set, with the same engine call
+    /// the contract made. Errors if the replay does not end in the reported
+    /// result. Sets wins and lives to the reported values for the HUD; the
+    /// next chain refresh loads the real state.
+    #[wasm_bindgen]
+    pub fn replay_report(
+        &mut self,
+        report_scale: Vec<u8>,
+        bundle_scale: Vec<u8>,
+        board_size: u8,
+    ) -> Result<JsValue, String> {
+        let report: oab_protocol::BattleReport = decode_exact("BattleReport", &report_scale)?;
+        check_engine_version(report.engine_version)?;
+        let bundle: oab_engine::SetBundle = decode_exact("SetBundle", &bundle_scale)?;
+        if bundle.set_id != report.set_id {
+            return Err(format!(
+                "Set bundle {} does not match the report's set {}",
+                bundle.set_id, report.set_id
+            ));
+        }
+        let pool = bundle.card_pool();
+        let events = oab_engine::replay_battle(
+            &report.player_board,
+            &report.opponent,
+            report.battle_seed,
+            &pool,
+            board_size as usize,
+        );
+        let replayed = oab_engine::battle_result(&events);
+        if replayed != report.result {
+            return Err(format!(
+                "Replay mismatch: the chain reported {:?}, the replay gives {:?}",
+                report.result, replayed
+            ));
+        }
+
+        let mut limits = oab_battle::limits::BattleLimits::new();
+        let initial_player_units = ghost_views(
+            &report.player_board,
+            &pool,
+            &mut limits,
+            oab_battle::limits::Team::Player,
+        );
+        limits.reset_phase_counters();
+        let initial_enemy_units = ghost_views(
+            &report.opponent,
+            &pool,
+            &mut limits,
+            oab_battle::limits::Team::Enemy,
+        );
+
+        self.state.phase = GamePhase::Battle;
+        self.state.wins = report.wins;
+        self.state.lives = report.lives;
+        let output = BattleOutput {
+            events,
+            initial_player_units,
+            initial_enemy_units,
+            round: report.round,
+        };
+        self.last_battle_output = Some(output.clone());
+        // Same JS shape as `resolve_battle_p2p` (the overlay reads it).
+        serde_wasm_bindgen::to_value(&output)
+            .map_err(|e| format!("Battle output serialization failed: {e:?}"))
+    }
+}

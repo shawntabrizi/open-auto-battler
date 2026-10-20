@@ -1,14 +1,12 @@
 /**
  * Chain-free steps of the arena calls, split out of `./index.ts` so their
- * rules are unit-tested: gas headroom on game starts, the ranked eligibility
- * gate, and the badge claim.
+ * rules are unit-tested: the dry-run gate and gas headroom on game starts.
  */
 
 import type { TxResult, TxStatus } from '@parity/product-sdk-tx';
 import type { Result } from '@parity/product-sdk-host';
 import type { PreparedCall } from './session';
-import type { BadgeEvent, BadgeRecord } from './codec';
-import { eligibilityMessage, type RankedEligibility } from './personhood';
+import { ArenaRevertError, queryRevert } from './errors';
 
 export type Weight = { ref_time: bigint; proof_size: bigint };
 
@@ -30,12 +28,21 @@ export type SendGameCall = (
 ) => Promise<TxResult>;
 
 /**
- * Double a dry-run weight. A game start seeds from the inclusion block's
- * entropy, so the real run can cost more than the dry-run (`Revive.OutOfGas`).
- * Unused weight is refunded.
+ * Double a dry-run weight. A game start seeds from the inclusion block, so
+ * the real run can cost more than the dry-run (`Revive.OutOfGas`). Unused
+ * weight is refunded.
  */
 export function withGasHeadroom(w: Weight): Weight {
   return { ref_time: w.ref_time * 2n, proof_size: w.proof_size * 2n };
+}
+
+/**
+ * A failed dry-run as an error: the typed revert when the contract gave one
+ * (`GameActive`, `SetNotAllowed`, ...), else `fallback()`.
+ */
+export function dryRunError(value: unknown, fallback: () => Error): Error {
+  const revert = queryRevert(value);
+  return revert ? new ArenaRevertError(revert) : fallback();
 }
 
 export interface StartMethod {
@@ -45,8 +52,9 @@ export interface StartMethod {
 }
 
 /**
- * Dry-run a game start, then send it with gas headroom. A dry-run that fails
- * or returns seed 0 sends nothing and throws `rejected()`.
+ * Dry-run a game start, then send it with gas headroom. A failed dry-run
+ * sends nothing and throws the typed revert (else `rejected()`). Returns the
+ * dry-run's run id (advisory: the real call can get a later one).
  */
 export async function startWithHeadroom(opts: {
   label: string;
@@ -58,7 +66,8 @@ export async function startWithHeadroom(opts: {
 }): Promise<bigint> {
   const { label, method, setId, send, onStatus } = opts;
   const dryRun = await method.query(setId);
-  if (!dryRun.success || dryRun.value === 0n) throw opts.rejected();
+  if (!dryRun.success) throw dryRunError(dryRun.value, opts.rejected);
+  if (dryRun.value === 0n) throw opts.rejected();
   const gasLimit = withGasHeadroom(dryRun.gasRequired);
   await send(
     label,
@@ -66,78 +75,4 @@ export async function startWithHeadroom(opts: {
     () => method.tx(setId, { gasLimit, onStatus })
   );
   return dryRun.value;
-}
-
-/** The player cannot start a ranked game; `message` says why. */
-export class RankedIneligibleError extends Error {
-  readonly eligibility: RankedEligibility | null;
-  constructor(eligibility: RankedEligibility | null, message?: string) {
-    super(message ?? (eligibility ? eligibilityMessage(eligibility) : 'Ranked play refused'));
-    this.name = 'RankedIneligibleError';
-    this.eligibility = eligibility;
-  }
-}
-
-/**
- * Ranked start: check the alias binding first (a read, no prompt), and only
- * then set up signing and send. A player without a binding gets the reason
- * and no signing or sponsorship prompt.
- */
-export async function startRanked(deps: {
-  eligibility: () => Promise<RankedEligibility>;
-  prepareWrite: () => Promise<void>;
-  start: () => Promise<bigint>;
-}): Promise<bigint> {
-  const e = await deps.eligibility();
-  if (e.kind !== 'bound') throw new RankedIneligibleError(e);
-  await deps.prepareWrite();
-  return deps.start();
-}
-
-/** Player-facing text when a bound account's ranked start is still refused. */
-export const RANKED_REFUSED_MESSAGE =
-  'The arena refused the ranked start. Your personhood proof may be out of date (the ring changed), or a game is still active. Refresh your personhood in the personhood app and try again.';
-
-export interface ClaimMethod {
-  query(): Promise<QueryResult<number>>;
-  tx(opts?: TxOptions): Promise<TxOutcome>;
-  prepare(opts?: PrepareOptions): Promise<Prepared>;
-}
-
-/**
- * Retry the player's pending badge mints. The dry-run says how many would
- * mint now; at 0 (arena still out of funds, or nothing pending) no
- * transaction is sent, so the player pays no fee for a no-op.
- */
-export async function claimBadges(opts: {
-  method: ClaimMethod;
-  send: SendGameCall;
-  onStatus?: (status: TxStatus) => void;
-  parseEvents: (events: unknown[]) => BadgeEvent[];
-}): Promise<BadgeEvent[]> {
-  const { method, send, onStatus } = opts;
-  const dryRun = await method.query();
-  if (!dryRun.success) throw new Error('Contract rejected claimPendingBadges');
-  if (dryRun.value === 0) return [];
-  const tx = await send(
-    'claimPendingBadges',
-    () => method.prepare(),
-    () => method.tx({ onStatus })
-  );
-  return opts.parseEvents(tx.events);
-}
-
-/** Badges in `after` that `before` did not have, as events (fallback path). */
-export function newBadges(before: BadgeRecord[], after: BadgeRecord[]): BadgeEvent[] {
-  const key = (b: BadgeRecord) => `${b.badge}/${b.setId}`;
-  const had = new Set(before.map(key));
-  return after
-    .filter((b) => !had.has(key(b)))
-    .map((b) => ({
-      kind: b.token === null ? 'pending' : 'minted',
-      player: '0x',
-      badge: b.badge,
-      setId: b.setId,
-      token: b.token,
-    }));
 }
