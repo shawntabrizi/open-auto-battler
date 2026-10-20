@@ -24,7 +24,7 @@ import {
   createContractRuntimeFromClient,
   ensureContractAccountMapped,
 } from '@parity/product-sdk-contracts';
-import { batchSubmitAndWatch } from '@parity/product-sdk-tx';
+import { batchSubmitAndWatch, type BatchApi, type BatchableCall } from '@parity/product-sdk-tx';
 import { paseo_asset_hub } from '@parity/product-sdk-descriptors/paseo-asset-hub';
 import cdmJson from '../cdm.json' with { type: 'json' };
 
@@ -69,7 +69,8 @@ async function main() {
 
   const client = createClient(getWsProvider(wsUrl));
   try {
-    const api = client.getUnsafeApi();
+    // PAPI 3 types the unsafe API without pallets; it has Utility at runtime.
+    const api = client.getUnsafeApi() as unknown as BatchApi;
     const mapped = await ensureContractAccountMapped(
       createContractRuntimeFromClient(client, paseo_asset_hub),
       origin,
@@ -86,11 +87,11 @@ async function main() {
     );
 
     // `.prepare()` returns a Result; stop on the first call that fails to build.
-    const prepared = (r: { ok: boolean; value?: unknown; error?: Error }) => {
+    const prepared = (r: { ok: boolean; value?: BatchableCall; error?: Error }) => {
       if (!r.ok) throw new Error(`prepare failed: ${r.error?.message}`);
-      return r.value;
+      return r.value as BatchableCall;
     };
-    const calls = [];
+    const calls: BatchableCall[] = [];
     for (const hex of dump.cards) calls.push(prepared(await arena.registerCard.prepare(hex)));
     for (const set of dump.sets) {
       calls.push(prepared(await arena.registerSet.prepare(set.id, set.data)));
