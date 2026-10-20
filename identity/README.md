@@ -69,7 +69,9 @@ let player = IIdentity::from_address(identity).resolve(caller).call(self).map_er
 
 ## Client flow (Paseo Next, runtime 3004000)
 
-Every transaction must be a **v5 general transaction on extension pipeline
+The web client also has a PAS fallback (classic V0, native fee) for a
+player without enough PGAS (`docs/CONTRACT_ARCHITECTURE.md`, PAS sessions
+status). On the PGAS path, every transaction must be a **v5 general transaction on extension pipeline
 V1** (polkadot-api 3 `getVerifyMultiSignatureTxCreator`, option
 `extensionVersion: 1`; host signers: `txExtVersion: 1`). Only V1 pays the fee
 in PGAS. A classic v4 signed transaction (V0) pays native, and a PGAS-only

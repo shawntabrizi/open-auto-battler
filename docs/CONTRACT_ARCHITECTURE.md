@@ -1786,6 +1786,101 @@ Blocked or open:
   2058209 and 2058217) each took 18.7 M PGAS, with no Assets event. This
   explains the M3 "observed, not explained" note.
 
+### PAS sessions status (2026-10-20)
+
+Done on branch `update/pas-sessions` (from `update/oct-2026` at `40fce2f`;
+not merged, not deployed).
+
+PGAS is the default fee token of a registry session. PAS is the fallback.
+The setup picks the token at run time (`chooseFunding` in
+`web/src/contract/registrySession.ts`):
+
+1. The player can pay the PGAS budget (1.5 G) and the overhead: PGAS, all
+   transactions on pipeline V1.
+2. Else the player holds enough PAS (1 PAS budget and 0.1 PAS overhead):
+   PAS, all transactions classic V0 with a native fee.
+3. Else: no session. Play uses normal signing.
+
+The flow is the same for both tokens (one setup prompt, `registerSession`,
+`acceptSession` in the key's first call, silent turns, revoke). Only the
+funding transfer (`Assets.transfer_keep_alive` or
+`Balances.transfer_keep_alive`) and the transaction version are different.
+The key signs with the token it holds. A host that answers `NotAvailable`
+to the allowance request now goes on to the setup, so a PAS session is
+possible there. A "no" (`Rejected`) still stops the setup.
+
+New: **End session** (logout) on the contract menu. The player revokes the
+key (one prompt, only when the key is live). Then the key sends what it has
+left back to the player, with no prompt.
+
+**Deposit rule, checked live.** A storage deposit comes from the origin's
+PGAS only when its PGAS covers that deposit. Else it comes from the native
+balance. //Alice held 54.9 M PGAS and offered a session on V0 (block
+2059488, `0x72fdedcd13b8ef131eb4abd7acab85c34f82988b4011a3980d5190fd352e7aaa`): the 206.4 M owner record was held in PAS
+(`Balances.TransferAndHold`), and her PGAS did not change. Her revoke (block
+2059497, `0x2acd19c0ddd1c50ceaa109eef38bd6b3855a8d03abda30d7194da3bf5299e10c`) gave all 206.4 M PAS back. A PGAS deposit
+gives back only 10 % (M2). So a player with some PGAS, too little for the
+budget, can use the PAS path safely: a small deposit can come from its
+PGAS, a large one from PAS, and none fails. The key gets only PAS, so all
+its deposits are PAS.
+
+**Live run, PAS path, test host** (`web/e2e/specs/sponsored.e2e.ts`, a
+fresh product account with PAS only, blocks 2061991–2062034). Fees and
+deposits in PAS planck (1 PAS = 10^10):
+
+| Step | Tx (block) | Signer, prompts | Fee | Deposit |
+| --- | --- | --- | --- | --- |
+| Setup `batch_all[transfer_keep_alive(key, 1 PAS), registerSession]` | `0x6b91c47ee7168358f83af20e3601c78ec8885e5194665349e88a56769ea2c831` (2061991) | player, 1 | 20.4 M | 206.4 M owner record |
+| Key: `batch_all[acceptSession, startGame]` | `0x98288ae7f614bf5ffc75240c1124000c1dbd5f36ac2b2befc6a1d99ecaaf99ee` (2061992) | key, 0 | 43.7 M | 206.4 M key record + 223.6 M new game item |
+| Turns 1–5 | `0xfbf548d2e0d4f9c20443db7f8e526ae00c15ba011ddcfb85d5a0d6f7cfa25aa3` (2061994) to `0x654fd5dc431b36cd2c39cd503a63e2f1121dbdb91915c1f9867dc2dcb877db9d` (2062010) | key, 0 | 37.3–38.2 M each | 0.5–2.9 M on a known bracket; 208.0 M for a new bracket |
+| `endGame` | `0x899fa4bda4d292bd62b8c6e3b9b9f26d942828a4470466879b307ad45b5a9644` (2062013) | key, 0 | 26.8 M | 189.3 M |
+| Logout: `revokeSession` | `0x0545e62feb0945ab7e63c4d9a1bd9effc38d8648a46ae93854e7afc3ab8743d3` (2062015) | player, 1 | 13.7 M | 206.4 M given back |
+| Logout: key `transfer_all` to the player | `0xb67c52d0e7995424c9a73433599f1b57bb649eac33d1b8bc0cb11ab24d73831e` (2062016) | key, 0 | 8.9 M | key account reaped |
+| Revoked key's call (revoked from Node, block 2062027) | `0x633e9417a4ffd37adbaa29ac64900f3f7b57e657bddb81b454b9b7c7681ef3a5` (2062029) | key, 0 | 23.0 M | `ExtrinsicFailed`; the app then sent `abandonGame` with normal signing (1 prompt, `0xa6bc8bba6ee7fdf00f3e6b78414ab6210f2037ebb0438ea353180bc0dcbc39ff`) |
+
+A full game cost the key 0.13 PAS (5 rounds) and 0.21 PAS (10 rounds, an
+earlier run). New brackets (208 M each) are most of it. The 1 PAS budget
+covers about five games. The player paid nothing during play.
+
+Checks: `npm test` 163 passed, 0 skipped (selection: enough PGAS, low PGAS and PAS,
+PAS only, nothing; the PAS setup is one V0 batch; the key signs V0;
+logout). E2E (`sponsored`): too little PAS gives no setup transaction and
+normal signing; PAS only gives one setup prompt, a full game to game over
+with no prompt (the chain agrees and the replay matches each round),
+logout with one prompt, normal signing after logout, and one normal prompt
+when a key revoked outside the app fails. Full suite: `npm run test:e2e`
+6 passed, 1 skipped (the gated PGAS spec); `npm run build` passes.
+
+Fixed on the way:
+
+1. **A second prompt after setup.** `ensureContractAccountMapped` reads
+   the finalized block. Just after the setup batch (at best) the mapping
+   looked missing, and the app sent `map_account` again. `ensureMapped`
+   now reads at the best block first.
+2. **`Revive.OutOfGas` on a session turn.** The key sent a turn with the
+   exact gas of the dry-run as the player (deviation 2), and the turn ran
+   out of gas. Session calls (`submitTurn`, `endGame`, `abandonGame`) now
+   get the `startGame` headroom (2x).
+
+Found, not fixed:
+
+- **A refund can burn a PGAS hold.** In block 2062030 the player
+  (no PGAS) abandoned a game whose item deposit it had paid in PAS. The
+  arena gave no PAS back. It burned 18.7 M PGAS held on the arena account
+  (`AssetsHolder.Burned`) instead. The contract's deposits mix PGAS and PAS
+  holds, and a refund does not follow the token of the payer.
+- **`endGame` cost changes from run to run.** It took a 189.3 M deposit in
+  the run above (and in two earlier runs), but cost the key only 10.5 M in
+  the full-suite run (9 rounds). It writes `None` to the game item. Not
+  explained.
+- A fresh account funded with PAS is mapped at once (pallet-revive
+  `AutoMap`), so the PAS setup needs no `map_account`.
+
+Still not proven: **the PGAS / V1 path live.** The test host signs only
+V0, and no dev account holds the 1.8 G PGAS the gated spec needs. PGAS is
+the production default, so a real host with a personhood claim is still
+the next check.
+
 ### M6. Retire arena v2
 
 Success:
