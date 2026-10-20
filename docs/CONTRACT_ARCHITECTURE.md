@@ -1,8 +1,10 @@
 # OAB Contract Architecture (layered contracts)
 
-Status: **design; M1 and M2 implemented** (engine crate, `@oab/engine`,
-`@oab/content`, `@oab/identity`, deployed on Paseo Next 2026-10-20; see
-[M1 status](#m1-status-2026-10-20) and [M2 status](#m2-status-2026-10-20)).
+Status: **design; M1, M2, and M3 (casual Arena) implemented** (engine
+crate, `@oab/engine`, `@oab/content`, `@oab/identity`, `@oab/arena` version
+4, deployed on Paseo Next 2026-10-20; see
+[M1 status](#m1-status-2026-10-20), [M2 status](#m2-status-2026-10-20), and
+[M3 status](#m3-status-2026-10-20)).
 Written 2026-10-20 against branch `update/oct-2026` at `6569b91`. Shawn
 approved the direction (five contracts). This document makes it concrete.
 
@@ -638,6 +640,11 @@ anyone replay any battle (flow 7.7).
 
 #### 4.4.1 Arena (`@oab/arena`, casual)
 
+> **As built in M3** (`arena/README.md`, [M3 status](#m3-status-2026-10-20)).
+> No Records, runs, or `retryReport` yet; the set cache is filled by the admin
+> in 416-byte pages; thin brackets add the set's house ghosts (Q1); the game
+> item is never deleted.
+
 - Open to every account. A `Direct` or `Session` caller plays as the resolved
   player. An `Invalid` session reverts.
 - `endGame` reports a `RunFact` with `alias: None` when `records` is set.
@@ -1134,6 +1141,12 @@ What the M2 numbers say:
   100 000 per byte of key and value (a 32-byte word: 206.4 M). A release
   refunds only 10 %. New items, not fees, dominate a session's PGAS use.
 
+**Measured in M3** (casual Arena, see [M3 status](#m3-status-2026-10-20)):
+`submitTurn` 18.6–27.5 G ref time and 268 KB proof (arena v2: 37.7 G,
+679 KB); `startGame` 13.7 G and 261 KB (arena v2: 32.6 G, 661 KB); fee
+38.1 M per turn. A turn that creates a new ghost bracket item also pays about
+206 M deposit.
+
 **Measure after implementation (milestone 3 and 4 success criteria):**
 dry-run `gasRequired` (ref time and proof size) for `startGame`,
 `startRankedGame`, `submitTurn` (round 1 and round 10, with a full ghost
@@ -1573,6 +1586,140 @@ Success:
   OAB (external dependency, 4.3). If that is still blocked, record it and
   test with MockHost only.
 
+### M3 status (2026-10-20)
+
+Done on branch `update/m3-arena` (from `update/oct-2026` at `5524574`; not
+merged). Casual Arena only: Ranked, personhood, Records, leaderboards, and
+badges are on hold (priority note above). Deployed on Paseo Next by the cdm
+`paseo` account (H160 `0x704ead03a0a7c8b06c6ebbde97934adc24f9f5f7`). That
+account owns the `@oab/arena` name in the CDM registry, so //Alice cannot
+publish a new version of it. //Alice played the live games.
+
+| Item | Value |
+| --- | --- |
+| `@oab/arena` version 3 casual (`arena/`) | `0x2937aC2a421BecA60370994BAdf503529bF47650`, **CDM version 4**, 120 250-byte blob, metadata `bafk2bzacebvkyis3ne73t44pwgui5xbfler3yglitx32lhtb4k6beshkks5jw` |
+| Wired to (exact CDM versions) | `@oab/identity` 2 `0x7b41…7FBA`, `@oab/content` 0 `0xd9Cb…F642`, `@oab/engine` 0 `0xb63d…CCb0` (`setDeps`, block 2057798) |
+| Cached sets | 0, 1, 2 (blocks 2057799–2057805): 5, 6, 6 pages; 10 house rounds each; hashes equal Content `setHash` |
+| Do not use | CDM version 3 `0xf65d6819811d71415f78348302a02261322296ef` (same code; its Bulletin metadata upload timed out, so `cdm i` cannot fetch it; never wired) |
+| `oab-protocol` | new `ModeGame`, `BattleReport` |
+| Scripts | `scripts/m3/wire-arena.mjs`, `scripts/m3/play-arena.mjs`, `scripts/m3/mutate-arena.py`; evidence in `scripts/m3/evidence/` |
+
+Checks that passed:
+
+- 15 native tests (`arena/src/tests.rs`, `TestHost` answers Identity and
+  Content by selector as the deployed M1 and M2 contracts do): a full game to
+  game over, end, and a new game in the same item; every reported battle
+  replays to the reported result from the event and the cached bundle; a
+  session key plays for its owner and the seeds are the owner's; an expired
+  or revoked key reverts `InvalidSession(key)` and writes nothing; no Identity
+  means no game; an empty bracket fights a house ghost; a set without house
+  ghosts gives an empty board (arena v2); thin brackets mix in house ghosts,
+  full ones do not; a bracket keeps the 10 newest boards; an invalid turn
+  reverts with the engine's `GameError` and writes nothing; `cacheSet`
+  accepts only the pinned bundle; every item type fits 416 bytes at its
+  maximum, and no item written by real play is larger; the golden-vector
+  corpus gives the engine's (so arena v2's) seeds, states, opponents, and
+  results turn by turn.
+- Mutations (each makes tests fail): no house ghosts in thin brackets; no
+  drop of the oldest board; player = `msg.sender`; start seed from
+  `msg.sender`; no hash check at cache; house round not clamped; ghost
+  written before the turn is checked; battle seed from the wrong context
+  (`scripts/m3/evidence/mutations-2026-10-20.txt`).
+- `cargo test --workspace` passes (243 tests). `eth_getCode` of both arena
+  addresses equals the local blob.
+- Live (`play-arena.mjs`, blocks 2057824–2057890, all checks ok):
+  - //Alice, V0: `startGame(0)` → 6 turns → game over (2 wins, 0 lives) →
+    `endGame`. The game pins Content's set hash.
+  - Every battle of that game replays through `@oab/engine.replayBattle`
+    (dry-run) from the `BattleReported` data and `getSetBundle` alone, and
+    ends in the reported result.
+  - A fresh key: Alice funds it (`Assets.transfer_keep_alive` PGAS + native)
+    and offers it; the key accepts, starts **Alice's** game, plays 9 turns to
+    game over (turn 1 as a v5 general transaction on pipeline V1), and ends
+    it. Every report names Alice. Alice revokes the key; its next
+    `startGame` dry-run reverts `InvalidSession(key)`. The key was drained
+    back to Alice.
+
+Measured (Paseo Next runtime 3004000, dry-run at the best block,
+`weight_required`, same caller //Alice, set 0):
+
+| Call | ref_time | proof_size | Fee (planck) | Deposit (planck) |
+| --- | --- | --- | --- | --- |
+| arena v2 `startGame` | 32 600 652 201 | 661 372 | 69.5 M (tx) | |
+| **v3 `startGame`** | 13 730 475 803 | **260 897** | 34.2 M | 18.7 M (game item rewrite) |
+| arena v2 `submitTurn` (empty action, round 1) | 37 680 917 221 | 678 693 | | |
+| **v3 `submitTurn`**, rounds 1–9 | 18.6 G – 27.5 G | **267 874 – 267 954** | 38.1 M each | 0.3–2.7 M on an existing bracket; 204.6–208.2 M when the turn creates a bracket item |
+| v3 `submitTurn`, V1 (session key) | 19 046 725 777 | 267 922 | **38 100 790 PGAS** (`PGASFeePaid`; key native unchanged) | 1.5 M |
+| v3 `endGame` | 2 163 536 213 | 194 288 | 26.7 M | |
+| v3 `cacheSet` (sets 0, 1, 2; admin, once) | 37.9 G / 45.4 G / 46.6 G | 1.30 M / 1.51 M / 1.53 M | | 3.5–3.8 G |
+| `@oab/engine.replayBattle` (6 battles) | 10.6 G – 21.9 G | 98 014 | | |
+
+What the M3 numbers say:
+
+- `submitTurn` proof size is **2.5 times lower** than arena v2 (268 KB vs
+  679 KB), and ref time about half. The proof is the 120 KB arena code, the
+  7 KB Identity code, and about 14 storage items; it does not grow with the
+  round. The 6-page set cache works as section 8 predicted.
+- One turn's fee is 38.1 M, the same on V0 (native) and V1 (PGAS). It is in
+  the 37–81 M range Q12 estimated.
+- **New ghost brackets dominate the cost of a fresh deployment.** A turn
+  that is the first in its bracket `(set, round, wins, lives)` creates an
+  item: about 206 M deposit, paid by the signer (in PGAS for a V1 session
+  key). Part A paid it on every turn; part B, which followed the same path,
+  paid it only from round 3. This cost falls as brackets fill. Q12 below is
+  updated.
+- Observed, not explained: before its V1 turn, the key's PGAS fell by 18.7 M
+  (120 M funded, 101.3 M left), equal to the `startGame` deposit, although
+  that call was a V0 transaction. The accept deposit came from native.
+
+Deviations from the design:
+
+1. **Folder and package.** The new contract is `arena/` (crate `oab-arena`,
+   CDM `@oab/arena`). `contract/` stays arena v2 source (the M1 oracle
+   compiles it). Both crates name `@oab/arena` in `package.metadata.cdm`.
+2. **No `oab-mode-kit`.** With one mode, the helpers live in the arena. Build
+   the kit when Ranked starts. The `abi_import!` blocks are in the arena too
+   (`oab-protocol` has no SDK dependency).
+3. **Set cache is admin-filled and paged.** `cacheSet` must run before
+   `setAllowedSet`; `startGame` never calls Content (no cold-cache path). The
+   allow flag lives in the set's meta item, and the draining flag in the
+   config item, to save reads.
+4. **House ghosts are read, not copied into brackets (Q1).** A thin bracket
+   (fewer than 3 boards) draws from its boards plus the round's house boards.
+   The cache keeps at most 10 house boards per round, rounds 1–32; a round
+   without boards takes the nearest lower (else higher) round; later rounds
+   use the last round. A set with no house ghosts behaves as arena v2.
+5. **`setDeps` takes the engine contract address too** (stored, never called;
+   for clients and auditors). No `records` address yet.
+6. **Not built (on hold with Records):** `RUN`, `RUN_REPORTED`, `getRun`,
+   `retryReport`, `modeId`. `endGame` returns `reported = false`. Run ids
+   start at 1.
+7. **Errors.** `InvalidSession(address)` when Identity reverts,
+   `IdentityUnavailable` for any other Identity failure, plus `NotAdmin`,
+   `NotConfigured`, `AlreadyCached`, `BadContent`, `ContentUnavailable`,
+   `BadInput`, `InvalidTurn(bytes)`, `ItemTooLarge`.
+8. **The game item is never deleted.** `endGame` and `abandonGame` write
+   `None`, so a returning player pays no new item deposit.
+9. **CDM version 4**, not 3 (version 3's metadata upload timed out).
+
+Open problems found in M3:
+
+- **Bracket deposits on fresh pools** (above). Options: the admin seeds the
+  common early brackets at deploy; coarser brackets; or the contract keeps
+  the pools in fewer, larger-key items. Decide with Q12.
+- **"Zero fee" does not hold** (as M2 found): a session turn burns 38.1 M
+  PGAS plus deposits. A full casual run signed only by a session key on V1
+  was not done: //Alice has too little PGAS (0.17 G at the start, 0.09 G
+  now). One V1 turn was done; the other session-key calls used V0 with a
+  native fee.
+- **Host signing on V1 and the web client** are still M5 work (M2 open
+  problems).
+- `web/cdm.json` pins `@oab/arena` version 2 with dependency `latest`; a
+  `cdm i` in `web/` now installs version 4 and breaks the current frontend.
+  Do not run it before M5.
+- Arena v2 dry-run used an empty action and Alice's v2 game; the M3 turns
+  played cards. Proof size does not depend much on the action, ref time does.
+
 ### M4. Records
 
 Success:
@@ -1725,6 +1872,17 @@ proposal from the M2 measurement (below); Shawn decides.
   no deposit), and the setup batch can include a product-account
   `mode.initPlayer()` call so that the product account, not the session,
   pays the one-time item deposits.
+
+  **Update from M3 (measured, [M3 status](#m3-status-2026-10-20)).** A turn
+  costs 38.1 M fee (not 37–81 M: the proof is 268 KB). The Arena keeps one
+  game item per player and overwrites it, so a returning player pays no new
+  game deposit (18.7 M byte change at most). The new cost is the **ghost
+  bracket**: the first turn in a bracket creates an item, about 206 M, paid
+  by the signer. On a fresh deployment most early turns do this, so a 10-turn
+  run can cost about 2.4 G (10 × (38 M + 206 M)); on a warm deployment it
+  costs about 0.4 G. 1.5 G holds only when brackets exist. Choose one: a
+  larger budget (3 G) until pools fill; admin-seeded early brackets; or let
+  the mode pay bracket deposits (needs a funded contract). Shawn decides.
 - **Q13. Mainnet governance body.** Multisig, OpenGov origin, or a PCF-run
   key?
 - **Q14. Derived fallback for badges.** Keep it off (badges wait for a purse)
