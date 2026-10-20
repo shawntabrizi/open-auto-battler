@@ -399,18 +399,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bounded-collections"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64ad8a0bed7827f0b07a5d23cec2e58cc02038a99e4ca81616cb2bb2025f804d"
-dependencies = [
- "log",
- "parity-scale-codec",
- "scale-info",
- "serde",
-]
-
-[[package]]
 name = "byte-slice-cast"
 version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1206,7 +1194,6 @@ dependencies = [
 name = "oab-battle"
 version = "0.1.0"
 dependencies = [
- "bounded-collections",
  "log",
  "parity-scale-codec",
  "scale-info",
@@ -1228,7 +1215,6 @@ dependencies = [
 name = "oab-game"
 version = "0.1.0"
 dependencies = [
- "bounded-collections",
  "oab-battle",
  "parity-scale-codec",
  "scale-info",
