@@ -40,7 +40,11 @@ export interface Chain {
   game(address: SS58String): Promise<ModeGameInfo | null>;
   /** Transfer from //Alice until `address` holds at least `min` (to `target`). */
   topUp(address: SS58String, min: bigint, target: bigint): Promise<void>;
-  /** Transfer PGAS from //Alice until `address` holds at least `amount`. */
+  /**
+   * Transfer PGAS from //Alice until `address` (SS58) holds at least `amount`.
+   * Always `Assets.transfer_keep_alive` to the SS58 account: PGAS sent to an
+   * unmapped H160 through the ERC-20 precompile is lost.
+   */
   topUpPgas(address: SS58String, amount: bigint): Promise<void>;
   destroy(): void;
 }
@@ -49,13 +53,6 @@ function alice() {
   const derive = sr25519CreateDerive(entropyToMiniSecret(mnemonicToEntropy(DEV_PHRASE)));
   const kp = derive('//Alice');
   return getTxCreator(kp.publicKey, 'Sr25519', kp.sign);
-}
-
-/** True when `getGame` returned no active game (empty bytes). */
-export function isNoGame(hex: string | null): boolean {
-  if (hex === null) return true;
-  const body = hex.startsWith('0x') ? hex.slice(2) : hex;
-  return body.length === 0 || /^0*$/.test(body);
 }
 
 /** Sign and submit as //Alice; resolves at best block (product-sdk-tx default). */
@@ -112,7 +109,7 @@ export function connectChain(): Chain {
       if (have >= amount) return;
       await atBestBlock(
         `PGAS top-up of ${address}`,
-        api.tx.Assets.transfer({
+        api.tx.Assets.transfer_keep_alive({
           id: PGAS_ASSET_ID,
           target: Enum('Id', address),
           amount: amount - have,
