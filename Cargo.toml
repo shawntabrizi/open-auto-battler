@@ -9,6 +9,7 @@ members = [
 ]
 exclude = [
     "contract",
+    "nft-minter",
     "register-cards",
 ]
 
