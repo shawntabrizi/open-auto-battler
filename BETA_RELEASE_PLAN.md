@@ -23,7 +23,7 @@ The pallet-era plan that this file held before (holographic `VictoryAchievements
 | **Engine** | Done for beta | `battle/`, `game/`, `assets/`: battle and shop triggers, permanent stat modifiers, targeting, conditions, deterministic RNG. The status system was removed. |
 | **Contract** | Live (arena v2) | `@oab/arena` `0xA61f803AeEBFfF2c7568157756932D3944EDCa28` on Paseo Asset Hub Next: casual and ranked games, ghost opponents, top-100 leaderboard per set, achievement badges (collection 30). |
 | **NFT minter** | Live | `@oab/nft-minter` picks the item for Scarcity credit claims into collection 29 (9 cosmetics). See `docs/NFT_DESIGN.md`. |
-| **Frontend** | Integrated, not yet deployed | React 18.3, polkadot-api 3.2.2, product-sdk 0.38. Ranked entry, personhood bind, leaderboard, badges. The live build at https://oab-arena.paseo.li still points at arena v1 until the next frontend deploy. |
+| **Frontend** | Deployed | React 18.3, polkadot-api 3.2.2, product-sdk 0.38. Ranked entry, personhood bind, leaderboard, badges. Live at https://oab-arena.paseo.li against arena v2 (root CID `bafybeiai6gdctaogaxj5av6lpzlcgw35aroaep6jdac5xmmnxw7rriisc4`). |
 | **Content** | 111 cards, 3 sets | Foundations of War (set 0, the only set the arena page offers), The Hollow Swarm, Fortune's Reckoning. |
 
 ## Done (October 2026 update)
@@ -47,7 +47,6 @@ Integration branch `update/oct-2026`:
 - **Sponsored-play scale.** Proxy sessions pay each call through a thin DOT↔PGAS pool. Registry sessions are the scalable path but need a contract change.
 - **Badge recipients.** Scarcity holds one NFT per key, so each badge goes to its own derived keyless key. Badges do not show in the player's host purse.
 - **Badges per account, not per person.** A person with more than one bound account can earn each badge once per account. See `docs/NFT_DESIGN.md` section 8.
-- **Frontend deploy.** The live build still targets arena v1. Deploy the current frontend.
 - **Render layer (decision pending).** The board is React DOM today. Research advised against a full Unity or Godot migration: hosts allow no Web Workers, only own-origin network, and WebGL2; Bulletin limits bundle size; signing is JS-only; and the Rust engine is shared with the contract. The direction under discussion: move the board (shop and battle) to a WebGL renderer (PixiJS or Phaser) behind an event-driven presentation "director", and keep React for menus. A spike comparing PixiJS and Godot web is proposed. Nothing is decided.
 - **Known-broken script.** `web/scripts/test-query.ts` imports the removed `@dotdm/cdm`. Delete or port it.
 
