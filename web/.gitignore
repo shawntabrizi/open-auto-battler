@@ -1,3 +1,4 @@
 node_modules
 dist
 tsconfig.tsbuildinfo
+e2e/results/
