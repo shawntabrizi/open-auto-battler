@@ -29,6 +29,17 @@ async function withTxOverlay<T>(label: string, isHostSigner: boolean, fn: () => 
   }
 }
 
+/**
+ * True when the next transaction will show a host signing prompt: a host
+ * account, unless sponsored play is live (the session key signs silently).
+ */
+function expectsHostPrompt(state: {
+  backend: ContractBackend | null;
+  selectedAccount: Account | null;
+}): boolean {
+  return state.selectedAccount?.source === 'host' && state.backend?.sponsorStatus !== 'active';
+}
+
 interface ContractStore {
   // Connection
   backend: ContractBackend | null;
@@ -150,10 +161,8 @@ export const useContractStore = create<ContractStore>((set, get) => ({
 
     try {
       console.log(`Contract: starting game with set ${setId}...`);
-      const result = await withTxOverlay(
-        'Starting Game...',
-        get().selectedAccount?.source === 'host',
-        () => backend.startGame(setId)
+      const result = await withTxOverlay('Starting Game...', expectsHostPrompt(get()), () =>
+        backend.startGame(setId)
       );
       console.log('Contract: game started, seed:', result.seed);
       await get().refreshGameState();
@@ -176,10 +185,8 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       const actionScale = engine.get_commit_action_scale();
 
       // Submit turn — contract selects opponent and emits BattleReported event
-      const turnResult = await withTxOverlay(
-        'Committing Turn...',
-        get().selectedAccount?.source === 'host',
-        () => backend.submitTurn(actionScale)
+      const turnResult = await withTxOverlay('Committing Turn...', expectsHostPrompt(get()), () =>
+        backend.submitTurn(actionScale)
       );
 
       // Replay locally whenever the contract gave us a deterministic battle seed,
@@ -233,9 +240,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     if (!backend) return;
 
     try {
-      await withTxOverlay('Ending Run...', get().selectedAccount?.source === 'host', () =>
-        backend.endGame()
-      );
+      await withTxOverlay('Ending Run...', expectsHostPrompt(get()), () => backend.endGame());
       set({ hasActiveGame: false });
       useGameStore.getState().resetActiveSessionView();
     } catch (err) {
@@ -249,7 +254,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     if (!backend) return;
 
     try {
-      await withTxOverlay('Abandoning Run...', get().selectedAccount?.source === 'host', () =>
+      await withTxOverlay('Abandoning Run...', expectsHostPrompt(get()), () =>
         backend.abandonGame()
       );
       set({ hasActiveGame: false });

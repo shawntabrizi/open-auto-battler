@@ -10,6 +10,10 @@
  * encoding is needed (the SDK uses the contract ABI + viem codec internally).
  * `.tx()` and `ensureContractAccountMapped` return a `Result`: a failed
  * dispatch, a rejected signature, or a host timeout arrives on the `err` arm.
+ *
+ * Inside a host, game calls go through sponsored play when the player allows
+ * it (`./session.ts`): one approval, then a local session key signs every call
+ * and fees are paid in PGAS. Otherwise they are signed by the product account.
  */
 
 import type { SS58String } from 'polkadot-api';
@@ -26,6 +30,17 @@ import type { Result } from '@parity/product-sdk-host';
 import { SignerManager, HostProvider, DevProvider } from '@parity/product-sdk-signer';
 import { isInHost } from '../services/hostEnvironment';
 import cdmJson from '../../cdm.json';
+import {
+  createProxySession,
+  createSponsor,
+  SessionExpiredError,
+  type PreparedCall,
+  type ProxySession,
+  type Sponsor,
+  type SponsorStatus,
+} from './session';
+
+export type { SponsorStatus } from './session';
 
 /** Host-routed Asset Hub chain client (the resolved type of createChainClient). */
 type AssetHubClient = Awaited<
@@ -67,6 +82,8 @@ export interface ContractBackend {
   readonly isConnected: boolean;
   getAccounts(): Promise<Account[]>;
   readonly selectedAccount: Account | null;
+  /** Sponsored play (PGAS + session key) state; `active` means no prompts. */
+  readonly sponsorStatus: SponsorStatus;
   selectAccount(account: Account): void;
   startGame(setId: number): Promise<{ seed: bigint }>;
   submitTurn(actionScale: Uint8Array): Promise<TurnResult>;
@@ -91,6 +108,8 @@ type QueryResult<T> =
 
 type TxOutcome = Result<TxResult, Error>;
 type TxOptions = { gasLimit?: Weight; onStatus?: (status: TxStatus) => void };
+type PrepareOptions = { gasLimit?: Weight };
+type Prepared = Result<PreparedCall, Error>;
 
 /**
  * Minimal typed view of the `@oab/arena` contract. `createContract` returns a
@@ -102,17 +121,24 @@ interface ArenaContract {
   startGame: {
     query(setId: number): Promise<QueryResult<bigint>>;
     tx(setId: number, opts?: TxOptions): Promise<TxOutcome>;
+    prepare(setId: number, opts?: PrepareOptions): Promise<Prepared>;
   };
   submitTurn: {
     query(action: string): Promise<QueryResult<bigint>>;
     tx(action: string, opts?: TxOptions): Promise<TxOutcome>;
+    prepare(action: string, opts?: PrepareOptions): Promise<Prepared>;
   };
   getGameState: { query(): Promise<QueryResult<string>> };
   getSet: { query(setId: number): Promise<QueryResult<string>> };
-  endGame: { query(): Promise<QueryResult<boolean>>; tx(opts?: TxOptions): Promise<TxOutcome> };
+  endGame: {
+    query(): Promise<QueryResult<boolean>>;
+    tx(opts?: TxOptions): Promise<TxOutcome>;
+    prepare(opts?: PrepareOptions): Promise<Prepared>;
+  };
   abandonGame: {
     query(): Promise<QueryResult<boolean>>;
     tx(opts?: TxOptions): Promise<TxOutcome>;
+    prepare(opts?: PrepareOptions): Promise<Prepared>;
   };
 }
 
@@ -152,6 +178,8 @@ const ARENA_LIBRARY = '@oab/arena';
 // the gateway and break resolution. See Rock-Paper-Scissors' PRODUCT_ID for the
 // same convention.
 const PRODUCT_ID = 'oab-arena.paseo';
+/** Product-account derivation index the app signs with (and sponsors). */
+const DERIVATION_INDEX = 0;
 
 function arenaContractInfo(): { address: `0x${string}`; abi: AbiEntry[] } {
   // The cdm CLI manifest keys contracts directly by package name.
@@ -160,6 +188,14 @@ function arenaContractInfo(): { address: `0x${string}`; abi: AbiEntry[] } {
   ];
   return { address: entry.address as `0x${string}`, abi: entry.abi as AbiEntry[] };
 }
+
+/** Sponsor deps for environments without host sponsorship (never called). */
+const noSponsorDeps = {
+  playerPgas: () => Promise.resolve(0n),
+  requestAllowance: () => Promise.resolve('NotAvailable' as const),
+  sessionReady: () => Promise.resolve(false),
+  setUp: () => Promise.reject(new Error('Sponsored play is not available')),
+};
 
 export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
   // revive's Mapping getter currently materializes a zeroed ArenaSession for
@@ -190,6 +226,58 @@ export function createContractBackend(deps: {
   // lazily (see ensureMapped). Reset whenever the selected account changes.
   let _runtime: ReturnType<typeof createContractRuntimeFromClient> | null = null;
   let _mapped = false;
+  // Sponsored play. Host only: the session key lives in host storage and the
+  // PGAS allowance is a host resource. Rebuilt per selected account.
+  let _session: ProxySession | null = null;
+  let _sponsor: Sponsor = createSponsor(noSponsorDeps, 'unavailable');
+
+  function resetSponsor(account: Account): void {
+    const signer = signerManager?.getSigner();
+    if (providerType !== 'host' || !client || !signer) {
+      _session = null;
+      _sponsor = createSponsor(noSponsorDeps, 'unavailable');
+      return;
+    }
+    _session = createProxySession({
+      api: client.assetHub,
+      player: account.address,
+      playerSigner: signer,
+      derivationIndex: DERIVATION_INDEX,
+      storePrefix: PRODUCT_ID,
+    });
+    _sponsor = createSponsor(_session.deps);
+  }
+
+  // Before a write: set up sponsored play if the player allows it (its setup
+  // batch also maps the account), then make sure the origin is mapped.
+  async function prepareWrite(): Promise<void> {
+    await _sponsor.ensure();
+    await ensureMapped();
+  }
+
+  // Send one game call: through the session key when sponsored play is live
+  // (no prompt), else (or if the session expires) with the product account.
+  async function sendGameCall(
+    label: string,
+    prepare: () => Promise<Prepared>,
+    direct: () => Promise<TxOutcome>
+  ): Promise<TxResult> {
+    return _sponsor.send(
+      async () => {
+        const session = _session;
+        if (!session) throw new SessionExpiredError('No session');
+        const call = await prepare();
+        if (!call.ok) throw labelled(label, call.error);
+        try {
+          return await session.submit(call.value, { onStatus });
+        } catch (err) {
+          if (err instanceof SessionExpiredError || !(err instanceof Error)) throw err;
+          throw labelled(label, err);
+        }
+      },
+      async () => txOrThrow(label, await direct())
+    );
+  }
 
   function arena(): ArenaContract {
     if (!contract) throw new Error('Not connected');
@@ -273,6 +361,7 @@ export function createContractBackend(deps: {
         defaultSigner: signer,
         defaultOrigin: _selectedAccount.address,
       }) as unknown as ArenaContract;
+      resetSponsor(_selectedAccount);
 
       _isConnected = true;
     },
@@ -283,6 +372,8 @@ export function createContractBackend(deps: {
       contract = null;
       client = null;
       signerManager = null;
+      _session = null;
+      _sponsor = createSponsor(noSponsorDeps, 'unavailable');
       _accounts = [];
       _selectedAccount = null;
       _isConnected = false;
@@ -296,6 +387,9 @@ export function createContractBackend(deps: {
     },
     get selectedAccount() {
       return _selectedAccount;
+    },
+    get sponsorStatus() {
+      return _sponsor.status;
     },
     selectAccount(account: Account) {
       if (!signerManager) return;
@@ -313,12 +407,13 @@ export function createContractBackend(deps: {
         defaultSigner: signer,
         defaultOrigin: account.address,
       }) as unknown as ArenaContract;
+      resetSponsor(account);
     },
 
     async startGame(setId: number): Promise<{ seed: bigint }> {
-      // First write of the session: ensure the player origin is mapped. The
-      // signing prompt for the mapping tx happens here, on an explicit action.
-      await ensureMapped();
+      // First write of the session: set up sponsored play (one prompt) and
+      // make sure the player origin is mapped, on an explicit action.
+      await prepareWrite();
       // The contract derives the game seed from block entropy — the client
       // supplies nothing seed-related. The dry-run only validates the call;
       // its seed is advisory (the tx may land in a different block), so the
@@ -332,18 +427,17 @@ export function createContractBackend(deps: {
       // the inclusion block's entropy and can cost more (Revive.OutOfGas).
       // Unused weight is refunded, so double the limit.
       const { ref_time, proof_size } = dryRun.gasRequired;
-      txOrThrow(
+      const gasLimit = { ref_time: ref_time * 2n, proof_size: proof_size * 2n };
+      await sendGameCall(
         'startGame',
-        await arena().startGame.tx(setId, {
-          gasLimit: { ref_time: ref_time * 2n, proof_size: proof_size * 2n },
-          onStatus,
-        })
+        () => arena().startGame.prepare(setId, { gasLimit }),
+        () => arena().startGame.tx(setId, { gasLimit, onStatus })
       );
       return { seed: dryRun.value };
     },
 
     async submitTurn(actionScale: Uint8Array): Promise<TurnResult> {
-      await ensureMapped();
+      await prepareWrite();
       const action = '0x' + bytesToHex(actionScale);
       // No explicit pre-query here: submitTurn resolves the whole battle
       // on-chain, so a dry-run executes that full simulation. `.tx()` already
@@ -351,7 +445,11 @@ export function createContractBackend(deps: {
       // extra `.query()` would just double that heavy simulation (and the
       // host round-trip) before the signing prompt appears. We read battleSeed
       // + the full report from the BattleReported event below, not the query.
-      const tx = txOrThrow('submitTurn', await arena().submitTurn.tx(action, { onStatus }));
+      const tx = await sendGameCall(
+        'submitTurn',
+        () => arena().submitTurn.prepare(action),
+        () => arena().submitTurn.tx(action, { onStatus })
+      );
 
       const eventBytes = findBattleReportedEventData(tx.events);
       if (!eventBytes) {
@@ -393,17 +491,25 @@ export function createContractBackend(deps: {
     },
 
     async endGame(): Promise<void> {
-      await ensureMapped();
+      await prepareWrite();
       const dryRun = await arena().endGame.query();
       if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected endGame');
-      txOrThrow('endGame', await arena().endGame.tx({ onStatus }));
+      await sendGameCall(
+        'endGame',
+        () => arena().endGame.prepare(),
+        () => arena().endGame.tx({ onStatus })
+      );
     },
 
     async abandonGame(): Promise<void> {
-      await ensureMapped();
+      await prepareWrite();
       const dryRun = await arena().abandonGame.query();
       if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected abandonGame');
-      txOrThrow('abandonGame', await arena().abandonGame.tx({ onStatus }));
+      await sendGameCall(
+        'abandonGame',
+        () => arena().abandonGame.prepare(),
+        () => arena().abandonGame.tx({ onStatus })
+      );
     },
   };
 
