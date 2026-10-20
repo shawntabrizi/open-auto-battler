@@ -1,8 +1,9 @@
 # OAB Contract Architecture (layered contracts)
 
-Status: **design, not implemented.** Written 2026-10-20 against branch
-`update/oct-2026` at `6569b91`. Shawn approved the direction (five contracts).
-This document makes it concrete. It does not change any code.
+Status: **design; M1 implemented** (engine crate, `@oab/engine`, `@oab/content`,
+deployed on Paseo Next 2026-10-20; see [M1 status](#m1-status-2026-10-20)).
+Written 2026-10-20 against branch `update/oct-2026` at `6569b91`. Shawn
+approved the direction (five contracts). This document makes it concrete.
 
 All statements about current code cite a file. The code is the truth. If this
 document and the code disagree, the code wins and this document is stale.
@@ -380,6 +381,14 @@ function setCount() external view returns (uint16);
 
 `getSetBundle` is at most about 2.4 KB for today's sets (section 3.2), well
 under the 16 KB read buffer the arena uses (`contract/src/main.rs:419`).
+
+> **M1 correction.** pallet-revive stores at most **416 bytes per storage
+> item** (`pallet_revive::limits::STORAGE_BYTES`, checked in pallet-revive
+> 0.19.1 and polkadot-sdk master of 2026-09-30). A 2.4 KB bundle cannot be one
+> item. Content stores each card, each house ghost, and the `CardSet` as
+> separate items, and `getSetBundle` assembles the bundle. The `SET` row above
+> became `SET` (`SetRecord` without the set) plus `SET_CARDS`, `GHOST`, and
+> `GHOST_COUNT`. See the M1 status in section 14.
 
 **Pinning.** A game stores `(engine_version, set_id, set_hash)`. Because a set
 never changes, a mode may copy the bundle once and trust the copy. The hash
@@ -1043,6 +1052,33 @@ more (Records code), but it runs once per run.
   Modes store dependency addresses in `DEPS` instead (section 11).
 - Calling the engine contract. It would load a second ~100 KB blob per turn.
 
+**Measured in M1 (Paseo Next, 2026-10-20, dry-run at the best block,
+`ReviveApi.call` `weight_required`):**
+
+| Call | ref_time | proof_size | Notes |
+| --- | --- | --- | --- |
+| `@oab/engine.resolveTurn`, busiest corpus turn (158 combat events, 7 units, set 0 round 3) | 25 253 713 083 | 98 014 | input 1.9 KB |
+| `@oab/engine.resolveTurn`, 5v5 round 10, set 0 (47 events) | 19 609 035 395 | 98 014 | |
+| `@oab/engine.resolveTurn`, 5v5 round 10, set 1 (62 events) | 26 847 291 527 | 98 014 | |
+| `@oab/engine.resolveTurn`, 5v5 round 10, set 2 (93 events) | 27 162 366 727 | 98 014 | input 2.6 KB, output 1.1 KB |
+| `@oab/content.getSetBundle(0)` (49 cards) | 15 833 659 959 | 557 298 | 1 682 bytes returned |
+| `@oab/content.getSetBundle(1)` (68 cards) | 21 545 725 843 | 752 665 | 2 177 bytes |
+| `@oab/content.getSetBundle(2)` (70 cards) | 22 446 093 457 | 773 397 | 2 385 bytes |
+| `@oab/content.getHouseGhosts(i)` (30 ghosts) | 7 416 415 389 | 361 505 | |
+| `@oab/content.setHash(i)` | ~298 000 000 | 53 045 | one storage read |
+| `@oab/content.publishSet` (sets 0, 1, 2) | 35.9 G / 44.5 G / 45.8 G | 1.42 M / 1.81 M / 1.85 M | deposit about 0.69–0.71 PAS each |
+
+What the numbers say:
+
+- The engine contract's proof size is its code (98 014 bytes); it reads no
+  storage. A linked engine in a mode adds the same code once per call.
+- **Each storage read is charged about 10 KB of proof** (getSetBundle: (773 397
+  − 53 045) / 71 reads). The proof weight is per item, not per byte. Arena v2's
+  `submitTurn` reads one item per card (49–70) every turn, so its proof weight
+  is in the 0.5–0.75 MB range from card reads alone. M3's `SET_CACHE` must be
+  few items: a 2.4 KB bundle in 416-byte pages is 6 items (about 60 KB of
+  proof). It cannot be one item, as section 4.4 assumed.
+
 **Measure after implementation (milestone 3 and 4 success criteria):**
 dry-run `gasRequired` (ref time and proof size) for `startGame`,
 `startRankedGame`, `submitTurn` (round 1 and round 10, with a full ghost
@@ -1231,6 +1267,82 @@ Success:
 - On Paseo Next: 111 cards and 3 sets published; `setHash(i)` equals the hash
   computed off chain; `@oab/engine.resolveTurn` dry-run output equals the
   native output for the corpus; `engineVersion()` = 1.
+
+### M1 status (2026-10-20)
+
+Done on branch `update/m1-engine-content` (not merged). Deployed on Paseo
+Next by the cdm `paseo` account (`5CUbpNYAePqCdFkS6BWqVF4RDaAcsueW923DrJTnDUXHst7v`,
+H160 `0x704ead03a0a7c8b06c6ebbde97934adc24f9f5f7`), CDM registry
+`0xc1a73a4f93fde65b1cb1680baead248073566cb0`.
+
+| Item | Value |
+| --- | --- |
+| `oab-engine` (`engine/`) | `ENGINE_VERSION` 1, `ENGINE_VECTORS_HASH` `0xd8d7c21e3b7ef1f67befb155370cfe55a7840de2259c4d4ec8b98517aee68b5c` |
+| `@oab/engine` (`engine-contract/`) | `0xb63d4a8DdAcB30a3E181C98a6008a2Be4fC6CCb0`, CDM version 0, 98 014-byte blob |
+| `@oab/content` (`content/`) | `0xd9Cb4F28a6164485D800144E202353D612bAf642`, CDM version 0, 42 372-byte blob |
+| `oab-protocol` (`protocol/`) | Content types: `HouseGhost`, `SetRecord`, `CardMeta`, `CardOrigin` |
+| Content data | 111 cards (6 `batch_all` txs, blocks 2054945–2054959); sets 0, 1, 2 (blocks 2054978–2054980), 30 house ghosts each |
+| Set hashes | 0 `0xf45b623640787699…`, 1 `0x7902188848594e10…`, 2 `0x476120fbb2c2e926…` (equal to `SetBundle::hash` off chain) |
+
+Checks that passed:
+
+- `engine/arena-oracle` compiles `contract/src/main.rs` unchanged and runs
+  the arena methods on the golden-vector corpus (12 games, 71 turns, one
+  invalid turn): equal start seeds, start states, battle seeds, post-turn
+  states, and `BattleReported` payloads. This is the proof that version 1 is
+  arena v2. The arena's own 40 tests pass, in its crate and in the oracle.
+- On chain: `eth_getCode` of both addresses equals the local blobs;
+  `engineVersion()` = 1 and `vectorsHash()` equal the crate; all 157 corpus
+  calls (`newGame`, `resolveTurn` including the revert, `replayBattle`) return
+  the crate's bytes; every card, `getSet`, `getSetBundle`, `getHouseGhosts`,
+  and `setHash` equals the plan from `oab-plan`.
+- `cargo test --workspace` passes.
+
+Deviations from the design:
+
+1. **Arena v2 source was not moved onto the facade** (work items 1 and 2).
+   The integrator asked to leave `contract/src/main.rs` alone in M1. Its
+   copies of `GameConfig`, `create_starting_bag`, and `draw_hand` stay. The
+   oracle proves equal behaviour instead. The WASM client (`client/`) is not
+   pointed at `replay_battle` yet.
+2. **Storage layout of Content** follows the 416-byte item limit (section 4.2
+   note). Extra views: `getSetRecord`, `getHouseGhosts`, `getCardMeta`,
+   `isCurator`, `adminAddress`.
+3. **`publishSet` takes the house ghosts** (Q1) as a third argument:
+   `publishSet(string, bytes cardSet, bytes houseGhosts)`. `SetPublished`
+   also carries `ghostsHash`. `HouseGhost { round, board }` has no bracket:
+   a mode puts a round-r ghost in every round-r bracket.
+4. **The deployer is the first curator**, so publishing works right after
+   deploy.
+5. **`ENGINE_HISTORY`** (append-only list of `(version, hash)`) is the source
+   of `ENGINE_VERSION` and `ENGINE_VECTORS_HASH`. A test refuses a list where
+   two versions share a hash or versions skip.
+6. **Engine contract errors**: `BadInput()`, `InvalidTurn(bytes)` (SCALE
+   `GameError`).
+7. **Saturating arithmetic** for the mana limit, wins, and lives. Arena v2
+   wraps its mana limit at round 254 and up (`overflow-checks = false`). The
+   corpus does not reach that round.
+8. **CDM versions start at 0.** `@oab/engine` CDM version 0 runs engine
+   version 1. The two numbers are independent.
+
+Open problems found in M1:
+
+- **Arena v2 leaderboard limit (from source, not tested live).**
+  `LeaderboardEntry` is 45 bytes SCALE; a board of 10 entries is 451 bytes,
+  above the 416-byte item limit. So the write for the 10th distinct ranked
+  finisher on a set should fail, and with it that `endGame`. Ranked play is
+  blocked today, so nobody has hit it. Records (M4) must page boards.
+- **Mode `SET_CACHE` and Records `BOARD`** cannot be single items (sections
+  4.4, 4.5). Use 416-byte pages.
+- **Client replay differs from the chain** for a ghost unit with negative
+  health after buffs: `client/src/engine.rs` (`resolve_battle_p2p`) clamps
+  enemy health at 0, the arena and the engine do not. Moving the client to
+  `oab_engine::replay_battle` fixes it.
+- **A `CardSet` above 416 bytes** (about 138 cards) cannot be published.
+  Larger sets need paging in Content.
+- **House ghosts are rule-made**, not hand-designed
+  (`scripts/oab-plan/src/house_ghosts.rs`). A designer list can ship with a
+  new set.
 
 ### M2. Identity
 
