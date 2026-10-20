@@ -1,0 +1,21 @@
+[package]
+name = "oab-protocol"
+version = "0.1.0"
+description = "SCALE types that cross an Open Auto Battler contract boundary"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["rlib"]
+
+[features]
+default = ["std"]
+std = ["oab-battle/std", "oab-engine/std", "parity-scale-codec/std"]
+
+[dependencies]
+oab-battle = { workspace = true }
+oab-engine = { workspace = true }
+parity-scale-codec = { workspace = true, features = ["derive"] }
