@@ -14,8 +14,7 @@
  * stays empty, and the customize pages show the default cosmetics.
  *
  * What already works is the second half: `readCosmeticItem` turns an item
- * index into a cosmetic from the item's on-chain `oab.*` metadata
- * (`scripts/check-ranked-reads.mjs` checks it against the live collection).
+ * index into a cosmetic from the item's on-chain `oab.*` metadata.
  */
 
 import type { CustomizationType, NftItem } from '../store/customizationStore';

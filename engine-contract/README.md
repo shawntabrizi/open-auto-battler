@@ -48,6 +48,7 @@ Check a deployment against the crate (dry-runs only, no signer):
 
 ```bash
 cargo run -p oab-plan -- engine /tmp/engine-plan.json
-(cd scripts/m1 && npm install && node check-engine.mjs /tmp/engine-plan.json 0xb63d4a8DdAcB30a3E181C98a6008a2Be4fC6CCb0)
-node scripts/m1/check-code.mjs 0xb63d4a8DdAcB30a3E181C98a6008a2Be4fC6CCb0 engine-contract/target/release/oab-engine-contract.polkavm
+(cd scripts && npm install)
+node scripts/check-engine.mjs /tmp/engine-plan.json 0xb63d4a8DdAcB30a3E181C98a6008a2Be4fC6CCb0
+node scripts/check-code.mjs 0xb63d4a8DdAcB30a3E181C98a6008a2Be4fC6CCb0 engine-contract/target/release/oab-engine-contract.polkavm
 ```

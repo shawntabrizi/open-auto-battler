@@ -946,7 +946,7 @@ fn main() {
                 .iter()
                 .map(|item| {
                     let item_id = item.id;
-                    // Build metadata JSON per NFT_SPEC.md format
+                    // Item metadata JSON: type, name, image
                     let metadata = serde_json::json!({
                         "type": item.item_type,
                         "name": item.name,

@@ -4,7 +4,7 @@ import { hexToBytes } from './codec';
 import { loadFixtures } from './fixtures';
 
 // A real submitTurn's BattleReported (arena v4, Paseo Next block 2058218),
-// captured by scripts/m5/capture-fixtures.mjs.
+// captured by scripts/capture-fixtures.mjs.
 const fx = loadFixtures('arena.txt');
 const topics = fx('battle_reported_topics').split(',');
 const player = '0x' + topics[1].slice(-40);

@@ -62,8 +62,8 @@ pub const ENGINE_VERSION: u32 = ENGINE_HISTORY[ENGINE_HISTORY.len() - 1].0;
 /// behaviour changes; then add a new [`ENGINE_HISTORY`] entry.
 pub const ENGINE_VECTORS_HASH: [u8; 32] = ENGINE_HISTORY[ENGINE_HISTORY.len() - 1].1;
 
-/// The `next_card_id` of a new game. Arena v2 starts at 1000
-/// (`contract/src/main.rs` `start_session`); kept for identical state bytes.
+/// The `next_card_id` of a new game. Arena v2 started at 1000; kept for
+/// identical state bytes.
 pub const FIRST_CARD_ID: u16 = 1000;
 
 /// keccak256 (the hash the chain uses for storage keys and set hashes).

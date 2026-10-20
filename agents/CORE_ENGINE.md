@@ -13,7 +13,7 @@ This document summarizes the engine model from `battle/src/*` and `game/src/*`.
 
 ## State Model
 - `GameState` contains `card_pool` and `LocalGameState` in `game/src/state.rs`.
-- Sizes and limits like `board_size`, `hand_size`, and `starting_mana_limit` are `GameConfig` fields in `game/src/lib.rs`. The defaults are in `game/src/sealed.rs` and `game/src/constructed.rs`; the contract has its own `default_config()` in `contract/src/main.rs`.
+- Sizes and limits like `board_size`, `hand_size`, and `starting_mana_limit` are `GameConfig` fields in `game/src/lib.rs`. The defaults are in `game/src/sealed.rs` and `game/src/constructed.rs`; the arena uses `arena_config()` in `arena/src/main.rs`.
 - Phase progression is modeled with `GamePhase`.
 
 ## Battle Resolution
@@ -77,9 +77,8 @@ All trigger collection uses `capture_triggers_for_unit()`, a single helper that 
 ## Determinism and RNG
 - Deterministic hand derivation uses seeded RNG in `game/src/state.rs` and `battle/src/rng.rs`.
 - RNG is threaded through all battle functions including condition evaluation (for Random target resolution).
-- Opponent selection is on chain: the contract picks a ghost board from a pool per bracket (`select_ghost` in `contract/src/main.rs`).
+- Opponent selection is on chain: the arena picks a ghost board from a pool per bracket, with house ghosts for thin brackets (`pick_opponent` in `arena/src/main.rs`).
 
 ## Invariants to Respect
 - Board size and hand size come from `GameConfig` (`game/src/lib.rs`).
-- Bounded types exist for on-chain integration in `battle/src/bounded.rs` and `game/src/bounded.rs` (feature `bounded`).
 - Battle limits (`MAX_TRIGGERS_PER_PHASE`, `MAX_SPAWNS_PER_BATTLE`, `MAX_BATTLE_ROUNDS`, etc.) are in `battle/src/limits.rs`.

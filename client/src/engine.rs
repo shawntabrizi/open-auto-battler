@@ -6,12 +6,10 @@ use std::format;
 use std::string::{String, ToString};
 use std::vec::Vec;
 
-use bounded_collections::ConstU32;
 use oab_battle::battle::{
     player_permanent_stat_deltas_from_events, player_shop_mana_delta_from_events, resolve_battle,
     CombatEvent, CombatUnit, UnitId, UnitView,
 };
-use oab_battle::bounded::BoundedCardSet;
 use oab_battle::commit::{
     apply_shop_start_triggers, apply_shop_start_triggers_with_result, apply_single_action,
     verify_and_apply_turn, ShopTurnContext,
@@ -20,19 +18,11 @@ use oab_battle::log;
 use oab_battle::rng::XorShiftRng;
 use oab_battle::state::*;
 use oab_battle::types::{BoardUnit, CardId, CommitTurnAction, TurnAction, UnitCard};
-use oab_game::bounded::BoundedGameSession;
 use oab_game::view::{CardView, GameView};
 use oab_game::{GamePhase, GameSession, GameState};
-use parity_scale_codec::Decode;
 use parity_scale_codec::Encode;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
-
-// These must match the blockchain runtime constants
-type WasmMaxBagSize = ConstU32<50>;
-type WasmMaxBoardSize = ConstU32<5>;
-type WasmMaxHandActions = ConstU32<10>;
-type WasmMaxSetSize = ConstU32<100>;
 
 /// Result of starting a battle (events for playback)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -98,7 +88,7 @@ impl GameEngine {
         };
 
         // Only initialize fully if a seed was actually provided (manual local start)
-        // Otherwise, we wait for init_from_scale
+        // Otherwise, we wait for init_from_mode_game
         if let Some(seed_val) = seed {
             log::debug("new", "Seed provided, performing full initialization");
             engine.state.game_seed = seed_val;
@@ -114,7 +104,7 @@ impl GameEngine {
     }
 
     /// Load cards and sets from statically compiled card data.
-    /// Must be called before new_run() or init_from_scale().
+    /// Must be called before new_run() or init_from_mode_game().
     #[wasm_bindgen]
     pub fn load_card_set(&mut self, set_id: u16) -> Result<(), String> {
         log::action(
@@ -746,265 +736,6 @@ impl GameEngine {
         }
     }
 
-    /// Resolve a P2P battle between two player boards.
-    /// This is a self-contained method that:
-    /// 1. Sets phase to Battle
-    /// 2. Runs the battle simulation
-    /// 3. Applies wins/lives result
-    /// 4. Returns battle output for animation
-    /// After animation, call continue_after_battle() to advance to next round.
-    ///
-    /// NOTE: battle resolution is NOT symmetric under swapping the Player/Enemy
-    /// labels — trigger tiebreakers mix the team bit of each unit id, so
-    /// `resolve(a, b, seed)` and `resolve(b, a, seed)` can disagree when unit
-    /// priorities tie. Two live peers must therefore agree on a canonical
-    /// orientation (one simulates, or both simulate the SAME assignment and one
-    /// inverts the result) rather than each simulating themselves as Player.
-    /// The contract replay flow is safe: orientation is fixed to the submitter.
-    #[wasm_bindgen]
-    pub fn resolve_battle_p2p(
-        &mut self,
-        player_board_js: JsValue,
-        enemy_board_js: JsValue,
-        seed: u64,
-    ) -> JsValue {
-        log::info("=== P2P BATTLE START ===");
-
-        // Finalize the shop turn: rollback to start_board, replay actions,
-        // and remove used hand cards so the bag stays accurate.
-        if self.state.phase == GamePhase::Shop {
-            let action = CommitTurnAction {
-                actions: self.action_log.clone(),
-            };
-            self.state.board = self.start_board.clone();
-            self.state.shop_mana = self.start_shop_mana;
-            if let Err(e) = verify_and_apply_turn(&mut self.state, &action) {
-                log::error(&format!("P2P turn finalization failed: {:?}", e));
-            }
-        }
-
-        // Set phase to Battle
-        self.state.shop_mana = 0;
-        self.state.phase = GamePhase::Battle;
-
-        // Parse boards from JS
-        let player_board: Vec<Option<BoardUnit>> =
-            serde_wasm_bindgen::from_value(player_board_js).unwrap_or_default();
-        let enemy_board: Vec<Option<BoardUnit>> =
-            serde_wasm_bindgen::from_value(enemy_board_js).unwrap_or_default();
-        let player_slots: Vec<usize> = player_board
-            .iter()
-            .enumerate()
-            .filter_map(|(slot, unit)| unit.as_ref().map(|_| slot))
-            .collect();
-
-        // Convert player board to CombatUnits
-        let player_units: Vec<CombatUnit> = player_board
-            .iter()
-            .flatten()
-            .filter_map(|u| {
-                let card = self.get_card(u.card_id)?;
-                let mut cu = CombatUnit::from_card(card.clone());
-                cu.attack_buff = u.perm_attack;
-                cu.health_buff = u.perm_health;
-                cu.health = cu.health.saturating_add(u.perm_health).max(0);
-                Some(cu)
-            })
-            .collect();
-
-        // Convert enemy board to CombatUnits
-        let enemy_units: Vec<CombatUnit> = enemy_board
-            .iter()
-            .flatten()
-            .filter_map(|u| {
-                let card = self.get_card(u.card_id)?;
-                let mut cu = CombatUnit::from_card(card.clone());
-                cu.attack_buff = u.perm_attack;
-                cu.health_buff = u.perm_health;
-                cu.health = cu.health.saturating_add(u.perm_health).max(0);
-                Some(cu)
-            })
-            .collect();
-
-        // Run the battle with deterministic RNG
-        let mut rng = XorShiftRng::seed_from_u64(seed);
-        let events = resolve_battle(
-            player_units.clone(),
-            enemy_units.clone(),
-            &mut rng,
-            &self.state.card_pool,
-            self.state.config.board_size as usize,
-        );
-
-        // Generate initial views for UI animation
-        let mut limits = oab_battle::limits::BattleLimits::new();
-        let initial_player_units: Vec<UnitView> = player_board
-            .iter()
-            .flatten()
-            .filter_map(|u| {
-                let card = self.get_card(u.card_id)?;
-                Some(UnitView {
-                    instance_id: limits.generate_instance_id(oab_battle::limits::Team::Player),
-                    card_id: card.id,
-                    name: card.name.clone(),
-                    attack: card.stats.attack.saturating_add(u.perm_attack),
-                    health: card.stats.health.saturating_add(u.perm_health),
-                    battle_abilities: card.battle_abilities.clone(),
-                })
-            })
-            .collect();
-
-        limits.reset_phase_counters();
-        let initial_enemy_units: Vec<UnitView> = enemy_board
-            .iter()
-            .flatten()
-            .filter_map(|u| {
-                let card = self.get_card(u.card_id)?;
-                Some(UnitView {
-                    instance_id: limits.generate_instance_id(oab_battle::limits::Team::Enemy),
-                    card_id: card.id,
-                    name: card.name.clone(),
-                    attack: card.stats.attack.saturating_add(u.perm_attack),
-                    health: card.stats.health.saturating_add(u.perm_health),
-                    battle_abilities: card.battle_abilities.clone(),
-                })
-            })
-            .collect();
-
-        // Apply the battle result (wins/lives)
-        if let Some(CombatEvent::BattleEnd { result }) = events.last() {
-            match result {
-                oab_battle::battle::BattleResult::Victory => {
-                    self.state.wins = self.state.wins.saturating_add(1)
-                }
-                oab_battle::battle::BattleResult::Defeat => {
-                    self.state.lives = self.state.lives.saturating_sub(1)
-                }
-                _ => {} // Draw
-            }
-            log::info(&format!("P2P Battle Result: {:?}", result));
-        }
-        self.state.shop_mana =
-            player_shop_mana_delta_from_events(&events).clamp(0, u8::MAX as i16) as u8;
-        let permanent_deltas = player_permanent_stat_deltas_from_events(&events);
-        self.apply_player_permanent_stat_deltas(&player_slots, &permanent_deltas);
-
-        // Note: Round advancement happens when continue_after_battle() is called
-        // This keeps P2P flow consistent with single-player flow
-
-        let output = BattleOutput {
-            events,
-            initial_player_units,
-            initial_enemy_units,
-            round: self.state.round,
-        };
-
-        self.last_battle_output = Some(output.clone());
-
-        log::info("=== P2P BATTLE END ===");
-
-        match serde_wasm_bindgen::to_value(&output) {
-            Ok(val) => val,
-            Err(e) => {
-                log::error(&format!("resolve_battle_p2p serialization failed: {:?}", e));
-                JsValue::NULL
-            }
-        }
-    }
-
-    // ========================================================================
-    // Universal Bridge Methods
-    // ========================================================================
-
-    /// Initialize the game engine from SCALE bytes (Universal SCALE Bridge)
-    #[wasm_bindgen]
-    pub fn init_from_scale(
-        &mut self,
-        session_scale: Vec<u8>,
-        card_set_scale: Vec<u8>,
-    ) -> Result<(), String> {
-        log::action(
-            "init_from_scale",
-            &format!(
-                "Initializing engine from SCALE bytes (session_len={}, card_set_len={})",
-                session_scale.len(),
-                card_set_scale.len()
-            ),
-        );
-
-        // Defensive checks for empty input
-        if session_scale.is_empty() {
-            return Err("Empty session data".to_string());
-        }
-        if card_set_scale.is_empty() {
-            return Err("Empty card set data".to_string());
-        }
-
-        // Step-by-step decoding for debugging
-        let mut session_slice = &session_scale[..];
-
-        log::debug("init_from_scale", "Decoding BoundedGameSession...");
-        let session_bounded =
-            BoundedGameSession::<WasmMaxBagSize, WasmMaxBoardSize, WasmMaxHandActions>::decode(
-                &mut session_slice,
-            )
-            .map_err(|e| format!("Failed to decode BoundedGameSession: {:?}", e))?;
-
-        // Check for trailing bytes
-        if !session_slice.is_empty() {
-            log::debug(
-                "init_from_scale",
-                &format!(
-                    "Warning: {} bytes remaining in session_scale after decode",
-                    session_slice.len()
-                ),
-            );
-        }
-
-        log::debug("init_from_scale", "Decoding BoundedCardSet...");
-        let card_set_bounded = BoundedCardSet::<WasmMaxSetSize>::decode(&mut &card_set_scale[..])
-            .map_err(|e| format!("Failed to decode BoundedCardSet: {:?}", e))?;
-
-        log::debug(
-            "init_from_scale",
-            "Converting bounded types to core types...",
-        );
-        let _card_set: oab_battle::state::CardSet = card_set_bounded.into();
-        let session: GameSession = session_bounded.into();
-
-        log::debug("init_from_scale", "Reconstructing GameState...");
-        // Use the card pool already loaded via load_card_set()
-        let card_pool = std::mem::take(&mut self.state.card_pool);
-
-        let state =
-            GameState::reconstruct(card_pool, session.set_id, session.config, session.state);
-
-        log::debug("init_from_scale", "Reconstructing done...");
-
-        // Safety: Replace state and let old one drop.
-        // If drop crashes, it means the old state (placeholder) was corrupted
-        // or the allocator is in a bad state.
-        self.state = state;
-        log::debug("init_from_scale", "state assigned...");
-
-        self.set_id = self.state.set_id;
-        log::debug("init_from_scale", "set_id assigned...");
-
-        if self.state.phase == GamePhase::Shop {
-            log::debug("init_from_scale", "starting planning phase...");
-            self.start_planning_phase();
-        } else {
-            log::debug(
-                "init_from_scale",
-                "restoring non-shop phase without planning init...",
-            );
-            self.reset_turn_context();
-        }
-
-        log::info("init_from_scale completed successfully");
-        Ok(())
-    }
-
     /// Restore a local resumable session at the start of a player turn.
     #[wasm_bindgen]
     pub fn restore_local_session(&mut self, session_js: JsValue) -> Result<(), String> {
@@ -1361,7 +1092,7 @@ impl GameEngine {
             round: report.round,
         };
         self.last_battle_output = Some(output.clone());
-        // Same JS shape as `resolve_battle_p2p` (the overlay reads it).
+        // The battle overlay reads this shape.
         serde_wasm_bindgen::to_value(&output)
             .map_err(|e| format!("Battle output serialization failed: {e:?}"))
     }

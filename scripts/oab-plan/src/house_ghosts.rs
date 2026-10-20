@@ -33,7 +33,7 @@ pub fn starter(bundle: &SetBundle) -> Vec<HouseGhost> {
     out
 }
 
-fn card<'a>(bundle: &'a SetBundle, id: CardId) -> &'a UnitCard {
+fn card(bundle: &SetBundle, id: CardId) -> &UnitCard {
     bundle
         .cards
         .iter()

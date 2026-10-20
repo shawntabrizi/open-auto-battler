@@ -63,10 +63,11 @@ new set.
 
 ```bash
 cd content && cdm deploy -n paseo && cdm i -n paseo @oab/content
+cd ..   # repo root
 cargo run -p oab-plan -- content /tmp/content-plan.json
-cd scripts/m1 && npm install
-OAB_SIGNER_MNEMONIC="<curator phrase>" node publish-content.mjs /tmp/content-plan.json <content address>
-OAB_SIGNER_MNEMONIC="<curator phrase>" node publish-content.mjs /tmp/content-plan.json <content address> --verify-only
+(cd scripts && npm install)
+OAB_SIGNER_MNEMONIC="<curator phrase>" node scripts/publish-content.mjs /tmp/content-plan.json <content address>
+OAB_SIGNER_MNEMONIC="<curator phrase>" node scripts/publish-content.mjs /tmp/content-plan.json <content address> --verify-only
 ```
 
 `publish-content.mjs` is idempotent. It dry-runs at the best block, checks

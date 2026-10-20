@@ -1,6 +1,6 @@
-// Wire a freshly deployed @oab/arena (M3) and cache sets 0..2.
+// Wire a freshly deployed @oab/arena and cache sets 0..2.
 //
-// Section 11: dependency addresses come from the CDM registry at exact
+// Design section 11: dependency addresses come from the CDM registry at exact
 // versions (getAddressAtVersion), never "latest", and go into the arena with
 // the admin call setDeps. Then the admin caches each set (cacheSet copies the
 // bundle and house ghosts from Content and checks the bundle hash) and allows
@@ -9,8 +9,8 @@
 //
 // Signer: the arena admin (the cdm deploy account), classic V0 transactions.
 //
-//   cd scripts/m2 && npm install          # the M3 scripts reuse scripts/m2/chain.mjs
-//   OAB_SIGNER_MNEMONIC="<deployer phrase>" node scripts/m3/wire-arena.mjs <arena> [--out file]
+//   cd scripts && npm install
+//   OAB_SIGNER_MNEMONIC="<deployer phrase>" node scripts/wire-arena.mjs <arena> [--out file]
 import { writeFileSync } from 'fs';
 import {
   Binary,
@@ -25,8 +25,16 @@ import {
   word,
   wordAddr,
   wordInt,
-} from '../m2/chain.mjs';
-import { DEPS, SETS, registryAddress } from './lib.mjs';
+  registryAddress,
+} from './chain.mjs';
+
+/** The exact CDM versions this arena runs against. */
+const DEPS = {
+  identity: ['@oab/identity', 2],
+  content: ['@oab/content', 0],
+  engine: ['@oab/engine', 0],
+};
+const SETS = [0, 1, 2];
 
 setTimeout(() => {
   console.log('TIMEOUT');

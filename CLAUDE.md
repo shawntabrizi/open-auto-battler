@@ -1,4 +1,3 @@
-# Agent Instructions (Pointer Only)
+# Claude Instructions
 
-Authoritative agent guidance lives in the `agents/` folder.
-Start with `agents/AGENTS.md`, then follow any linked documents there.
+Read `AGENTS.md`. It holds the rules for this repository.

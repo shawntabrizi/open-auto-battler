@@ -7,7 +7,7 @@ talks to the arena contract through the Polkadot Product SDK.
 ## State Management
 - **Zustand**: Primary state management.
   - `gameStore.ts`: Local game state, WASM engine instance, and UI states (modals, selections).
-  - `contractStore.ts`: Contract connection, account selection, arena turns, ranked play, personhood bind, leaderboard, badges, and sponsored-play status.
+  - `contractStore.ts`: Contract connection, account selection, arena turns, and sponsored-play status.
 - **WASM Bridge**: The `gameStore` initializes the `GameEngine`. All heavy game logic is delegated to the WASM module.
 
 ## UI/UX
@@ -77,10 +77,10 @@ function MyComponent() {
 
 ## Naming Conventions
 
-- **`*Page`**: Route-level entry points (e.g., `ContractMenuPage`, `ContractArenaPage`, `LeaderboardPage`)
+- **`*Page`**: Route-level entry points (e.g., `ContractMenuPage`, `ContractArenaPage`)
 - **`*Shell`**: The actual UI shell/container (e.g., `GameShell`)
 - **`*Overlay`**: Modal/overlay components (e.g., `BattleOverlay`, `BagOverlay`)
-- **`*Panel`**: Sections inside a page (e.g., `RankedPanel`, `CardDetailPanel`)
+- **`*Panel`**: Sections inside a page (e.g., `CardDetailPanel`)
 - **No prefix**: Generic reusable UI components (e.g., `Arena`, `Shop`, `UnitCard`)
 
 ## Component Architecture
@@ -99,11 +99,10 @@ GameShell (generic)
 
 ContractMenuPage (/contract)
 ├── Connect / account selection
-└── Links: Contract Arena, Leaderboard, Badges
+└── Link: Contract Arena
 
 ContractArenaPage (/contract/arena)
-├── Start Game (casual)
-└── RankedPanel (ranked start, personhood bind, new badges)
+└── Start Game (casual)
 
 ContractArenaGamePage (/contract/arena/game)
 ├── GameShell (while the game is active)
@@ -129,7 +128,7 @@ React's StrictMode (enabled in development) intentionally double-invokes effects
 
 **Current guards:**
 - `gameStore.initEngine()` keeps one shared init promise and returns early when the engine exists. Pages call it from an effect only when `engine` is null (`ContractArenaPage.tsx`, `ContractArenaGamePage.tsx`).
-- `contractStore.refreshGameState()` has a reentrancy guard, because a concurrent `init_from_scale` on the shared engine is not safe.
+- `contractStore.refreshGameState()` has a reentrancy guard, because a concurrent `init_from_mode_game` on the shared engine is not safe.
 
 **Rule:** Any new initialization that calls into the WASM engine MUST be idempotent: go through `initEngine()`, or wrap it in `useInitGuard`.
 

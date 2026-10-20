@@ -1,8 +1,8 @@
 {
-  "name": "oab-m2-scripts",
+  "name": "oab-scripts",
   "private": true,
   "type": "module",
-  "description": "M2 deploy and check scripts for @oab/identity on Paseo Next",
+  "description": "Deploy and check scripts for the OAB contracts on Paseo Next",
   "dependencies": {
     "@noble/hashes": "2.4.0",
     "@polkadot-labs/hdkd": "0.0.28",

@@ -3,7 +3,7 @@
 // the game after that turn. //Alice plays on V0 (native fee) and abandons the
 // game at the end. No PGAS is used.
 //
-//   node scripts/m5/capture-fixtures.mjs <arena> <out.txt>
+//   node scripts/capture-fixtures.mjs <arena> web/src/contract/fixtures/arena.txt
 import { writeFileSync } from 'fs';
 import {
   Binary,
@@ -18,7 +18,7 @@ import {
   topic,
   word,
   wordInt,
-} from '../m2/chain.mjs';
+} from './chain.mjs';
 
 const [arena, outPath] = process.argv.slice(2);
 if (!arena || !outPath) {

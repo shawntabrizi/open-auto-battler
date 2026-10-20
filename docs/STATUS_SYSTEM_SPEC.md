@@ -96,7 +96,7 @@ New battle events:
 
 Permanent status changes produced in battle are extracted from events and applied back to board units.
 
-Engine and pallet both apply:
+The engine applies (in the browser and in the arena contract):
 - permanent stat deltas
 - permanent status deltas
 

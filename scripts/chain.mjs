@@ -1,10 +1,9 @@
-// Shared helpers for the M2 scripts: Paseo Next client, dry-run, submit, ABI
-// words. Based on scripts/m1/chain.mjs, moved to polkadot-api 3 because the
-// PGAS fee path needs a v5 general transaction (see `account` below).
+// Shared helpers for the deploy and check scripts: Paseo Next client,
+// dry-run, submit, ABI words, and the CDM registry.
 // The signer phrase comes only from env OAB_SIGNER_MNEMONIC. It is never printed.
 import { createClient, Binary } from 'polkadot-api';
 import { getWsProvider } from 'polkadot-api/ws';
-import { getTxCreator, getVerifyMultiSignatureTxCreator } from 'polkadot-api/tx-creator';
+import { getTxCreator } from 'polkadot-api/tx-creator';
 import { sr25519CreateDerive } from '@polkadot-labs/hdkd';
 import {
   DEV_PHRASE,
@@ -16,9 +15,8 @@ import { keccak_256 } from '@noble/hashes/sha3.js';
 
 export { Binary };
 export const ASSET_HUB = process.env.OAB_WS ?? 'wss://paseo-asset-hub-next-rpc.polkadot.io';
-export const PGAS_ID = 2_000_000_000;
-/** PGAS ERC-20 precompile (asset id BE ++ 12 zero bytes ++ 0x0120 ++ 2 zero bytes). */
-export const PGAS_ERC20 = '0x7735940000000000000000000000000001200000';
+/** CDM registry on Paseo Next. */
+export const REGISTRY = '0xc1a73a4f93fde65b1cb1680baead248073566cb0';
 
 export const hex = (u8) => '0x' + Buffer.from(u8).toString('hex');
 export const j = (v) =>
@@ -38,33 +36,16 @@ export function connect() {
 }
 
 /**
- * An sr25519 account with two transaction creators:
- *
- * - `v0`: a classic signed (v4) extrinsic. Runtime 3004000 runs it through
- *   extension pipeline V0, which has no `ChargePGAS`: the fee is native.
- * - `v1`: a general (v5) extrinsic on extension pipeline V1, signed through
- *   `VerifyMultiSignature`. V1 holds `ChargePGAS`, so the fee is paid in PGAS
- *   when the signer holds enough (individuality `f0d5e690c2`, 2026-10-08).
- *   Use `submit(tx, acc.v1, V1_OPTIONS)`.
+ * An sr25519 account. `v0` signs a classic (v4) extrinsic: extension pipeline
+ * V0, native fee. (A PGAS fee needs a v5 general extrinsic on pipeline V1;
+ * see `web/src/contract/v1.ts`.)
  */
 function account(kp) {
   return {
     address: ss58Encode(kp.publicKey),
     v0: getTxCreator(kp.publicKey, 'Sr25519', kp.sign),
-    v1: getVerifyMultiSignatureTxCreator(kp.publicKey, 'Sr25519', kp.sign),
   };
 }
-
-/** Options for a V1 transaction: the Individuality extensions all unused. */
-export const V1_OPTIONS = {
-  extensionVersion: 1,
-  customSignedExtensions: {
-    AsScarcity: { value: undefined },
-    AsPgas: { value: undefined },
-    AsDotnsGateway: { value: undefined },
-    RestrictOrigins: { value: false },
-  },
-};
 
 export function signerFromEnv() {
   const phrase = process.env.OAB_SIGNER_MNEMONIC;
@@ -75,11 +56,6 @@ export function signerFromEnv() {
 /** A dev account (//Alice ...). The dev phrase is public. */
 export function devSigner(path) {
   return account(sr25519CreateDerive(entropyToMiniSecret(mnemonicToEntropy(DEV_PHRASE)))(path));
-}
-
-/** An account from a phrase (a throwaway session key). */
-export function phraseSigner(phrase) {
-  return account(sr25519CreateDerive(entropyToMiniSecret(mnemonicToEntropy(phrase)))(''));
 }
 
 /** Dry-run a contract call. Returns { ok, revert, data (hex), weight, deposit }. */
@@ -129,33 +105,22 @@ export function submit(tx, creator, options) {
   });
 }
 
-/** The fee events of an extrinsic: which path paid, who, and how much. */
-export function feeEvents(events) {
-  const out = [];
-  for (const e of events) {
-    const t = `${e.type}.${e.value?.type}`;
-    if (
-      t === 'PgasAllowance.PGASFeePaid' ||
-      t === 'TransactionPayment.TransactionFeePaid' ||
-      t === 'AssetTxPayment.AssetTxFeePaid' ||
-      t === 'AssetConversion.SwapExecuted' ||
-      t === 'AssetConversion.SwapCreditExecuted'
-    )
-      out.push({ event: t, ...JSON.parse(j(e.value.value)) });
-  }
-  return out;
+/** Build a Revive.call from a dry-run, with 50% weight headroom. */
+export function reviveCall(api, dest, calldataHex, dry) {
+  const w = dry.weight;
+  const dep = dry.deposit?.value ?? 0n;
+  return api.tx.Revive.call({
+    dest,
+    value: 0n,
+    weight_limit: { ref_time: (w.ref_time * 3n) / 2n, proof_size: (w.proof_size * 3n) / 2n },
+    storage_deposit_limit: dep * 2n + 10_000_000_000n,
+    data: Binary.fromHex(calldataHex),
+  });
 }
 
-/**
- * An extrinsic (bytes from `tx.create`) as the unsafe API wants it for runtime
- * calls that take one: without the outer compact length prefix (the codec
- * adds its own). `len` is the full encoded length.
- */
-export function extrinsicForApi(bytes) {
-  const b = Buffer.from(bytes);
-  const mode = b[0] & 3;
-  const prefix = mode === 0 ? 1 : mode === 1 ? 2 : 4;
-  return { body: Binary.fromHex('0x' + b.subarray(prefix).toString('hex')), len: b.length };
+/** Submit Utility.batch_all(calls) as `acc` (V0) and resolve at the best block. */
+export function submitBatch(api, acc, calls) {
+  return submit(api.tx.Utility.batch_all({ calls: calls.map((c) => c.decodedCall) }), acc.v0);
 }
 
 // ── ABI encoding (static types only) ──
@@ -178,12 +143,19 @@ export async function h160Of(api, ss58) {
   return (typeof a === 'string' ? a : hex(a)).toLowerCase();
 }
 
-export async function nativeOf(api, ss58) {
-  const a = await api.query.System.Account.getValue(ss58, { at: 'best' });
-  return { free: a.data.free, reserved: a.data.reserved, frozen: a.data.frozen };
-}
+// ── CDM registry ──
+const strTail = (s) => {
+  const b = Buffer.from(s);
+  return word(b.length) + b.toString('hex').padEnd(Math.ceil(b.length / 32) * 64, '0');
+};
 
-export async function pgasOf(api, ss58) {
-  const a = await api.query.Assets.Account.getValue(PGAS_ID, ss58, { at: 'best' });
-  return a?.balance ?? 0n;
+/** Registry getAddressAtVersion(name, version) -> address (throws if absent). */
+export async function registryAddress(api, origin, name, version) {
+  const data =
+    '0x' + selector('getAddressAtVersion(string,uint32)') + word(64) + word(version) + strTail(name);
+  const r = await dryRun(api, origin, REGISTRY, data);
+  if (!r.ok || r.revert || wordInt(r.data, 0) !== 1n) {
+    throw new Error(`${name}@${version} not in registry: ${j(r)}`);
+  }
+  return wordAddr(r.data, 1);
 }

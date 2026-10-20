@@ -2,7 +2,7 @@
 // then read everything back and compare it byte for byte with the plan.
 //
 //   cargo run -p oab-plan -- content /tmp/content-plan.json
-//   OAB_SIGNER_MNEMONIC=... node publish-content.mjs /tmp/content-plan.json <content address> [--verify-only]
+//   OAB_SIGNER_MNEMONIC=... node scripts/publish-content.mjs /tmp/content-plan.json <content address> [--verify-only]
 //
 // The signer must be a curator (the deployer is the first one). The script is
 // idempotent: cards already on chain are checked, not re-sent; a set whose id
@@ -27,7 +27,8 @@ const EMPTY_BYTES = '0x' + '0'.repeat(62) + '20' + '0'.repeat(64);
 const word = (n) => BigInt(n).toString(16).padStart(64, '0');
 
 const { client, api } = connect();
-const { signer, address: origin } = signerFromEnv();
+const signer = signerFromEnv();
+const origin = signer.address;
 let failures = 0;
 const fail = (msg) => {
   failures += 1;

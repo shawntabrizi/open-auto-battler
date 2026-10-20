@@ -1,5 +1,5 @@
 // eth_getCode for a deployed contract, compared with a local .polkavm blob.
-//   node check-code.mjs <address> <blob.polkavm> [eth rpc url]
+//   node scripts/check-code.mjs <address> <blob.polkavm> [eth rpc url]
 import { readFileSync } from 'fs';
 
 const [address, blobPath, url = 'https://eth-rpc-paseo-next.polkadot.io'] = process.argv.slice(2);

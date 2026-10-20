@@ -90,12 +90,11 @@ Cards must declare:
 
 This architecture is propagated to:
 - `battle/src/types.rs`
-- `battle/src/bounded.rs`
-- the arena contract's card registration (`registerCard`, SCALE `UnitCard`)
+- `@oab/content` card publishing (`publishCard`, SCALE `UnitCard`)
 - `web/src/types.ts`
 - frontend ability authoring/rendering paths
 
 ## 7. Compatibility
 
 This is a schema-level change across SCALE/serde boundaries.
-The engine, the WASM client, and the contract should be updated together.
+The engine, the WASM client, and the contracts should be updated together.
