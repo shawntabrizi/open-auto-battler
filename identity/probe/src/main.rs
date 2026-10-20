@@ -5,7 +5,8 @@
 //! `play()` does what every mode call will do: resolve `msg.sender` through
 //! Identity (revert if Identity reverts, decision Q3), then write one small
 //! item for the player. The first `play()` of a player creates the item, so
-//! it shows the storage deposit a session key pays in PGAS.
+//! it shows the storage deposit a session key pays in PGAS. `whoami()` only
+//! resolves and emits `Resolved` (no storage write, so no deposit).
 
 #![cfg_attr(not(any(test, feature = "std", feature = "abi-gen")), no_main, no_std)]
 
@@ -45,6 +46,14 @@ mod oab_identity_probe {
         pub count: u32,
     }
 
+    #[derive(pvm_contract_sdk::SolEvent)]
+    pub struct Resolved {
+        #[indexed]
+        pub caller: Address,
+        #[indexed]
+        pub player: Address,
+    }
+
     pub struct OabIdentityProbe;
 
     impl OabIdentityProbe {
@@ -67,9 +76,7 @@ mod oab_identity_probe {
                 .set_storage(StorageFlags::empty(), &[0u8; 32], &identity.0);
         }
 
-        /// Resolve the caller, then count one play for the player.
-        #[pvm_contract_sdk::method]
-        pub fn play(&mut self) -> Result<Address, ProbeError> {
+        fn resolve_caller(&self) -> Result<(Address, Address), ProbeError> {
             use i_identity::IIdentity;
             let mut caller = [0u8; 20];
             self.host().caller(&mut caller);
@@ -77,6 +84,21 @@ mod oab_identity_probe {
                 .resolve(Address(caller))
                 .call(self)
                 .map_err(|_| IdentityFailed)?;
+            Ok((Address(caller), player))
+        }
+
+        /// Resolve the caller and emit `Resolved`. Writes nothing.
+        #[pvm_contract_sdk::method]
+        pub fn whoami(&mut self) -> Result<Address, ProbeError> {
+            let (caller, player) = self.resolve_caller()?;
+            Resolved { caller, player }.emit(self.host());
+            Ok(player)
+        }
+
+        /// Resolve the caller, then count one play for the player.
+        #[pvm_contract_sdk::method]
+        pub fn play(&mut self) -> Result<Address, ProbeError> {
+            let (caller, player) = self.resolve_caller()?;
             let mut key = [1u8; 32];
             key[12..].copy_from_slice(&player.0);
             let mut buf = [0u8; 32];
@@ -91,7 +113,7 @@ mod oab_identity_probe {
             self.host()
                 .set_storage(StorageFlags::empty(), &key, &count.to_le_bytes());
             Played {
-                caller: Address(caller),
+                caller,
                 player,
                 count,
             }
