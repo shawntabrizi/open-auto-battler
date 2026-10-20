@@ -12,7 +12,7 @@
  * on the `err` arm. A revert arrives as a typed error (`./errors.ts`).
  *
  * The arena resolves every game call through `@oab/identity`, so a session
- * key plays for its owner (`./session.ts`). Views take the player address,
+ * key plays for its owner (`./registrySession.ts`). Views take the player address,
  * so reads need no mapped origin. The card data for play and replay is the
  * arena's cached `SetBundle` (pinned by the set hash in each game).
  */
@@ -33,7 +33,6 @@ import { ss58ToH160 } from '@parity/product-sdk-address';
 import { isInHost } from '../services/hostEnvironment';
 import cdmJson from '../../cdm.json';
 import {
-  createProxySession,
   createSponsor,
   SessionExpiredError,
   type PreparedCall,
@@ -181,21 +180,15 @@ const ARENA_LIBRARY = '@oab/arena';
 const IDENTITY_LIBRARY = '@oab/identity';
 
 /**
- * Sponsored-play pattern. `registry`: an `@oab/identity` session key, fee in
- * PGAS on extension pipeline V1, or in PAS on V0 when the player cannot fund
- * PGAS (`./registrySession.ts`, the M5 design).
- * `proxy`: the arena v2 proxy session (`./session.ts`), which buys its deposit
- * through the DOT<->PGAS pool. The proxy path stays until a registry session
- * is proven in a real host (M5 report).
+ * A session key that signs game calls for the player: an `@oab/identity`
+ * registry session, fee in PGAS on extension pipeline V1, or in PAS on V0
+ * when the player cannot fund PGAS (`./registrySession.ts`).
  */
-const SESSION_KIND: 'registry' | 'proxy' = 'registry';
-
-/** A session key that signs game calls for the player. */
 interface GameSession {
   deps: SponsorDeps;
   submit(call: PreparedCall, options?: { onStatus?: (s: TxStatus) => void }): Promise<TxResult>;
-  /** Revoke and drain the key (registry sessions only). */
-  end?(): Promise<void>;
+  /** Revoke the key and return its funds to the player. */
+  end(): Promise<void>;
 }
 
 /** The one Scarcity collection view the app reads (individuality `IScarcityCollection.sol`). */
@@ -279,21 +272,17 @@ export function createContractBackend(deps: {
       _sponsor = createSponsor(noSponsorDeps, 'unavailable');
       return;
     }
-    const common = {
+    if (!_runtime) throw new Error('Not connected');
+    const { address, abi } = cdmContract(IDENTITY_LIBRARY);
+    const identity = createContract(_runtime, address, abi) as unknown as IdentityContract;
+    _session = createRegistrySession({
       api: client.assetHub,
       player: account.address,
       playerSigner: signer,
       derivationIndex: DERIVATION_INDEX,
       storePrefix: PRODUCT_ID,
-    };
-    if (SESSION_KIND === 'registry') {
-      if (!_runtime) throw new Error('Not connected');
-      const { address, abi } = cdmContract(IDENTITY_LIBRARY);
-      const identity = createContract(_runtime, address, abi) as unknown as IdentityContract;
-      _session = createRegistrySession({ ...common, identity });
-    } else {
-      _session = createProxySession(common);
-    }
+      identity,
+    });
     _sponsor = createSponsor(_session.deps);
   }
 
@@ -483,7 +472,7 @@ export function createContractBackend(deps: {
     },
     async endSession() {
       const session = _session;
-      if (!session?.end) throw new Error('No session to end');
+      if (!session) throw new Error('No session to end');
       await session.end();
       _sponsor = createSponsor(session.deps, 'declined');
     },
