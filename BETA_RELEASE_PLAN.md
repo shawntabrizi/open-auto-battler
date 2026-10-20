@@ -78,5 +78,10 @@ we do not build on it until casual play is solid.
 7. Content: review the pallet-era content goals (balance pass on set 0, more
    style sets; see this file's git history).
 
+Known limit: pallet-revive stores at most 416 bytes per storage item. Arena
+v2's casual ghost pools fit (a full pool of 10 boards is at most 311 bytes),
+but its ranked leaderboard (45 bytes per entry) breaks at the 10th entry.
+This must be paged before ranked play reopens.
+
 On hold: `peopl.paseo` allowlist, ranked mode, personhood bind, leaderboard,
 Records (M4), per-person badges.
