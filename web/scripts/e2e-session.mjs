@@ -321,6 +321,13 @@ async function main() {
       )
     );
     gameActive = true;
+    // Which fee path paid: PGASFeePaid = free ChargePGAS path, AssetTxFeePaid =
+    // normal fee bought with PGAS through the pool. Proxy.proxy is expected to
+    // take the second path.
+    const feeEvent = r.events.find(
+      (e) => e.value?.type === 'AssetTxFeePaid' || e.value?.type === 'PGASFeePaid'
+    );
+    log(`game-call fee event: ${feeEvent ? `${feeEvent.type}.${feeEvent.value.type}` : 'none'}`);
     log(`startGame ok via session (block ${r.block.number}) | fee PGAS ${pgasFee(r)}`);
     const state = await arena.getGameState.query();
     if (!(state.success && state.value.length > 2))
