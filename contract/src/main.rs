@@ -2326,4 +2326,80 @@ mod tests {
         assert_eq!(p.claim_pending_badges(), 1);
         assert_eq!(badges_of(&p, PLAYER_1)[0].token, Some(TOKEN));
     }
+    /// The frontend decodes `getLeaderboard` / `getBestRun` / `getBadges` /
+    /// `getBadgeConfig` from these bytes (`web/src/contract/codec.test.ts`).
+    /// This test pins them to the Rust types, so a layout change here fails
+    /// until the fixtures (and the TS decoders) follow. Regenerate with
+    /// `OAB_WRITE_FIXTURES=1`.
+    #[test]
+    fn frontend_scale_fixtures() {
+        use super::{BadgeConfig, BadgeRecord, LeaderboardEntry};
+        let first = LeaderboardEntry {
+            alias: [0x11; 32],
+            set_id: 2,
+            wins: 10,
+            lives: 3,
+            rounds: 10,
+            block: 2_050_400,
+        };
+        let second = LeaderboardEntry {
+            alias: [0xab; 32],
+            set_id: 0x0102,
+            wins: 7,
+            lives: 0,
+            rounds: 9,
+            block: 0x0102_0304_0506_0708,
+        };
+        // A full board: 100 entries needs the two-byte compact length prefix.
+        let full: Vec<LeaderboardEntry> = (0..100u8)
+            .map(|i| LeaderboardEntry {
+                alias: [i; 32],
+                set_id: 1,
+                wins: 10 - i / 10,
+                lives: 3 - i % 4,
+                rounds: 10 + i % 3,
+                block: 1_000 + i as u64,
+            })
+            .collect();
+        let badges = vec![
+            BadgeRecord {
+                badge: 0,
+                set_id: 2,
+                block: 2_050_400,
+                token: Some(42),
+            },
+            BadgeRecord {
+                badge: 1,
+                set_id: 2,
+                block: 2_050_400,
+                token: None,
+            },
+        ];
+        let config = BadgeConfig {
+            collection: 30,
+            items: vec![0, 1],
+        };
+        let hex = |b: Vec<u8>| b.iter().map(|x| format!("{x:02x}")).collect::<String>();
+        let lines = [
+            (
+                "leaderboard_empty",
+                hex(Vec::<LeaderboardEntry>::new().encode()),
+            ),
+            ("leaderboard_two", hex(vec![first.clone(), second].encode())),
+            ("leaderboard_full", hex(full.encode())),
+            ("best_run", hex(first.encode())),
+            ("badges", hex(badges.encode())),
+            ("badges_empty", hex(Vec::<BadgeRecord>::new().encode())),
+            ("badge_config", hex(config.encode())),
+        ];
+        let text: String = lines.iter().map(|(k, v)| format!("{k}=0x{v}\n")).collect();
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../web/src/contract/fixtures/scale.txt"
+        );
+        if std::env::var("OAB_WRITE_FIXTURES").is_ok() {
+            std::fs::write(path, &text).unwrap();
+        }
+        assert_eq!(std::fs::read_to_string(path).unwrap(), text);
+    }
 }
