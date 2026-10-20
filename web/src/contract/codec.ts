@@ -245,3 +245,148 @@ export function decodeBadgeEvent(topics: string[], data: Uint8Array): BadgeEvent
 export function shortAlias(alias: string): string {
   return `${alias.slice(0, 8)}…${alias.slice(-6)}`;
 }
+
+// ── Casual arena (`@oab/arena` v3+, CDM version 4) ──────────────────────────
+//
+// `getGame(player)` returns SCALE `ModeGame` and `BattleReported` carries
+// SCALE `BattleReport` (crate `oab-protocol`). The WASM engine decodes both in
+// full for play and replay; these decoders read the fields the app and the
+// tests need. Fixtures: `./fixtures/arena.txt`, captured from the live arena by
+// `scripts/m5/capture-fixtures.mjs`.
+
+/** `GamePhase` variant index. */
+export type GamePhaseName = 'shop' | 'battle' | 'completed';
+const PHASES: GamePhaseName[] = ['shop', 'battle', 'completed'];
+
+/** `BattleResult` variant index (`oab_battle::battle::BattleResult`). */
+export type BattleResultName = 'Victory' | 'Defeat' | 'Draw';
+const RESULTS: BattleResultName[] = ['Victory', 'Defeat', 'Draw'];
+
+export interface GhostUnit {
+  cardId: number;
+  permAttack: number;
+  permHealth: number;
+}
+
+/** The parts of SCALE `ModeGame` the app reads outside the engine. */
+export interface ModeGameInfo {
+  runId: bigint;
+  engineVersion: number;
+  setId: number;
+  setHash: Hex;
+  boardSize: number;
+  round: number;
+  lives: number;
+  wins: number;
+  phase: GamePhaseName;
+}
+
+function i16(r: Reader): number {
+  const v = r.u16();
+  return v >= 0x8000 ? v - 0x10000 : v;
+}
+
+/** SCALE `ModeGame` (oab-protocol). Empty bytes mean no game: returns null. */
+export function decodeModeGame(input: Uint8Array | string): ModeGameInfo | null {
+  const bytes = toBytes(input);
+  if (bytes.length === 0) return null;
+  const r = new Reader(bytes);
+  const runId = r.u64();
+  const engineVersion = r.u32();
+  const setId = r.u16();
+  const setHash = bytesToHex(r.fixed(32));
+  // GameConfig: starting_lives, wins_to_victory, starting_mana_limit,
+  // max_mana_limit, full_mana_each_round, board_size, hand_size, bag_size.
+  const config = r.fixed(8);
+  r.vec(() => r.u16()); // bag
+  r.vec(() => r.u16()); // hand
+  r.vec(() => r.option(() => [r.u16(), i16(r), i16(r)])); // board
+  r.u8(); // mana_limit
+  r.u8(); // shop_mana
+  const round = r.u8();
+  const lives = r.u8();
+  const wins = r.u8();
+  const phaseIndex = r.u8();
+  const phase = PHASES[phaseIndex];
+  if (!phase) throw new Error(`SCALE: bad GamePhase ${phaseIndex}`);
+  r.u16(); // next_card_id
+  r.u64(); // game_seed
+  r.option(() => r.fixed(32)); // alias
+  r.u64(); // started_block
+  r.end();
+  return {
+    runId,
+    engineVersion,
+    setId,
+    setHash,
+    boardSize: config[5] ?? 0,
+    round,
+    lives,
+    wins,
+    phase,
+  };
+}
+
+/** SCALE `BattleReport` (oab-protocol), the payload of `BattleReported`. */
+export interface BattleReportInfo {
+  engineVersion: number;
+  setId: number;
+  round: number;
+  result: BattleResultName;
+  /** Wins and lives after the battle. */
+  wins: number;
+  lives: number;
+  battleSeed: bigint;
+  playerBoard: GhostUnit[];
+  opponent: GhostUnit[];
+}
+
+export function decodeBattleReport(input: Uint8Array | string): BattleReportInfo {
+  const r = new Reader(toBytes(input));
+  const ghost = () => r.vec(() => ({ cardId: r.u16(), permAttack: i16(r), permHealth: i16(r) }));
+  const engineVersion = r.u32();
+  const setId = r.u16();
+  const round = r.u8();
+  const resultIndex = r.u8();
+  const result = RESULTS[resultIndex];
+  if (!result) throw new Error(`SCALE: bad BattleResult ${resultIndex}`);
+  const out = {
+    engineVersion,
+    setId,
+    round,
+    result,
+    wins: r.u8(),
+    lives: r.u8(),
+    battleSeed: r.u64(),
+    playerBoard: ghost(),
+    opponent: ghost(),
+  };
+  r.end();
+  return out;
+}
+
+/** keccak256("BattleReported(address,uint64,bytes)") */
+export const BATTLE_REPORTED_TOPIC =
+  '0x9f7cba67d0eab61749c52e5ed5100fc5f20adb06deabcab72493fcdd99e80b29';
+
+/**
+ * `BattleReported(address indexed player, uint64 indexed runId, bytes report)`:
+ * the SCALE report inside the ABI `bytes` data, or null if this is another
+ * event or another player's.
+ */
+export function decodeBattleReportedEvent(
+  topics: string[],
+  data: Uint8Array,
+  player: string
+): Uint8Array | null {
+  if (topics[0]?.toLowerCase() !== BATTLE_REPORTED_TOPIC) return null;
+  if (!topics[1] || topics[1].toLowerCase().slice(-40) !== player.toLowerCase().slice(-40)) {
+    return null;
+  }
+  const offset = Number(word(data, 0));
+  if (offset % 32 !== 0 || data.length < offset + 32) throw new Error('BattleReported: bad offset');
+  const len = Number(word(data, offset / 32));
+  const start = offset + 32;
+  if (data.length < start + len) throw new Error('BattleReported: short data');
+  return data.slice(start, start + len);
+}

@@ -1744,6 +1744,48 @@ Success:
 - Leaderboard and badges read Records. Badges show from own purses.
 - `npm test` and the codec fixture tests pass.
 
+### M5 status (2026-10-20)
+
+Done on branch `update/m5-frontend` (from `update/oct-2026` at `02be74e`;
+not merged, not deployed). Casual play only: ranked, personhood,
+leaderboard, badges, and Records are on hold.
+
+| Item | State |
+| --- | --- |
+| `web/cdm.json` | `@oab/arena` 4, `@oab/identity` 2, `@oab/content` 0, pinned (`cdm i -n paseo @oab/arena:4 ...`) |
+| Casual game, normal signing (V0, native fee) | Works in the `@parity/host-api-test-sdk` host against Paseo Next: start, turns to game over, `endGame`, `abandonGame` |
+| Replay | From the `BattleReported` SCALE report with `oab_engine::replay_battle` in the WASM build (`replay_report`). It refuses another engine version and a result the replay does not reach. The card data is the arena's `getSetBundle`, checked against the game's set hash |
+| Registry sessions | Built (`web/src/contract/registrySession.ts`), unit-tested, V1 transactions validated free (`web/scripts/check-v1-session.mjs`). Not run live: see below |
+| Ranked, leaderboard, badges UI | Removed (pages, panel, routes, links). `personhood.ts` and the badge decoders stay for M4 |
+
+Checks: `npm test` 153 passed; e2e 5 passed, 1 skipped (the gated session
+run); `npm run build`; replay perf at 1x CPU: 60 FPS, 7 % busy, 13.8 MB
+peak (before M5: 60 FPS, 7.6 %, 13.9 MB).
+
+Deviations:
+
+1. `ENGINE_BUNDLES[engine_version]` is one WASM build that knows its
+   `engine_version()`. It refuses other versions with a reload message. A
+   second engine version needs a second build.
+2. Dry-runs of game calls use the player as origin, not the session key.
+   Before the key accepts, `resolve(key)` gives the key itself, so a dry-run
+   as the key would read the wrong game.
+3. The proxy session code stays (`SESSION_KIND` in `web/src/contract/index.ts`)
+   until a registry session runs in a real host.
+
+Blocked or open:
+
+- **No live registry-session run.** The test host signs every host
+  transaction as a classic v4 (V0) and ignores `txExtVersion`
+  (`@parity/host-api-test-sdk` 0.17). A full run needs about 1.8 G PGAS
+  (1.5 G budget, 206.4 M owner record, fees); //Alice holds 0.055 G. A real
+  host with a personhood claim is the next check.
+- **Storage deposits are taken in PGAS on V0 too.** When the origin holds
+  PGAS, the deposit is taken in PGAS even on a classic V0 transaction with a
+  native fee. Two `startGame` calls by //Alice (fixture capture, blocks
+  2058209 and 2058217) each took 18.7 M PGAS, with no Assets event. This
+  explains the M3 "observed, not explained" note.
+
 ### M6. Retire arena v2
 
 Success:

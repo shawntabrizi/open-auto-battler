@@ -3,8 +3,9 @@
 Two Playwright suites live here:
 
 - **`npm run test:e2e`** drives the real app inside a TrUAPI test host
-  (`@parity/host-api-test-sdk`) against the live arena contract on Paseo
-  Asset Hub Next. Dev accounts sign every request automatically.
+  (`@parity/host-api-test-sdk`) against the live casual arena
+  (`@oab/arena` CDM version 4, pinned in `cdm.json`) on Paseo Asset Hub
+  Next. Dev accounts sign every request automatically.
 - **`npm run test:perf`** measures the battle replay at a phone viewport
   under CPU throttling. It uses no chain and no host.
 
@@ -22,6 +23,11 @@ npx playwright install chromium
 The E2E suite needs network access to
 `wss://paseo-asset-hub-next-rpc.polkadot.io`. It tops up the test product
 accounts from `//Alice` (testnet dev key). Each casual run costs a few PAS.
+
+Do not give PGAS to an account that plays with native fees: on runtime
+3004000 the contract storage deposits (18.7 M for a game start, about 206 M
+for a new ghost bracket) are taken in PGAS when the account holds PGAS, even
+on a classic V0 transaction (M5 finding, 2026-10-20).
 
 ## Run
 
@@ -48,14 +54,13 @@ Results go to `e2e/results/` (gitignored):
 
 ## E2E specs
 
-| Spec         | What it proves                                                                                                                                                                                           |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `connect`    | CONNECT gets a host account, every permission request is approved, and nothing is signed.                                                                                                                |
-| `casual-run` | A full casual run through the UI: buy and place units, commit each turn on chain, see each replay and the game-over screen. `getGameState` is active during the run and empty after New Run (`endGame`). |
-| `ranked`     | Ranked for an account without a personhood binding shows the reason and the bind action. No signature, no resource request, no transaction overlay.                                                      |
-| `pages`      | Leaderboard and badges load from chain and show entries or the empty state, with no error panel.                                                                                                         |
-| `sponsored`  | Default: the host grants `SmartContractAllowance` but no PGAS arrives, so setup fails and play falls back to normal signing. Gated (`OAB_E2E_SPONSORED=1`): the full sponsored path.                     |
-| `guard`      | Self-test: an error and a cross-origin load inside the product iframe are caught.                                                                                                                        |
+| Spec         | What it proves                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `connect`    | CONNECT gets a host account, every permission request is approved, and nothing is signed.                                                                                                                                                                                                                                                                                                    |
+| `casual-run` | A full casual run through the UI: buy and place units, commit each turn on chain, see each replay and the game-over screen, New Run (`endGame`). After each turn the spec reads `getGame` from the chain: the turn stayed in the same run, the round moved on, and the replay the player saw ends in the result the chain applied (wins or lives changed). `getGame` is empty after New Run. |
+| `on-hold`    | Ranked, personhood, leaderboard, and badges are on hold (no Records yet): the app shows no entry point for them, and their old links go to the menu.                                                                                                                                                                                                                                         |
+| `sponsored`  | Default: the host grants `SmartContractAllowance` but no PGAS arrives, so the registry-session setup refuses before it builds a transaction, and play falls back to normal signing. Gated (`OAB_E2E_SESSION=1`): the full registry session (one setup prompt, then the key plays with no prompt).                                                                                            |
+| `guard`      | Self-test: an error and a cross-origin load inside the product iframe are caught.                                                                                                                                                                                                                                                                                                            |
 
 Every spec runs under a guard fixture (`fixtures.ts`). The guard fails the
 test on an uncaught page error or a CSP violation. The product document gets
@@ -68,25 +73,33 @@ The core derives the product account from the subtree
 `//<Dev>//oab-arena.paseo`, so each dev account gives a different OAB
 account:
 
-| Dev account | Used by                               | Notes                                        |
-| ----------- | ------------------------------------- | -------------------------------------------- |
-| Alice       | `casual-run`                          | Topped up with PAS. Must hold no PGAS.       |
-| Bob         | `connect`, `ranked`, `pages`, `guard` | Never signs. Must stay unbound for `ranked`. |
-| Charlie     | `sponsored` (fallback)                | Topped up with PAS. Must hold no PGAS.       |
-| Dave        | `sponsored` (gated)                   | Gets PAS and PGAS from Alice.                |
+| Dev account | Used by                       | Notes                                     |
+| ----------- | ----------------------------- | ----------------------------------------- |
+| Alice       | `casual-run`                  | Topped up with PAS. Must hold no PGAS.    |
+| Bob         | `connect`, `on-hold`, `guard` | Never signs.                              |
+| Charlie     | `sponsored` (fallback)        | Topped up with PAS. Must hold no PGAS.    |
+| Dave        | `sponsored` (gated)           | Gets PAS and about 1.8 G PGAS from Alice. |
 
 A spec that dies in the middle of a run leaves a game on chain. The next run
 resumes it from the game page.
 
-### Sponsored play and the shared pool
+### Registry sessions and PGAS
 
-The full sponsored spec uses the shared DOT<->PGAS pool. Every game call
-pays its fee in PGAS, and the setup sends 3 PGAS (3e9) to a new session
-key. Run it once, only when you need it:
+The full session spec needs about 1.8 G PGAS: 1.5 G session budget
+(decision Q12), the 206.4 M owner record, and fees. On 2026-10-20 //Alice
+holds about 0.05 G and no dev account holds more, so the spec is skipped.
+Run it when an account with PGAS can fund it:
 
 ```bash
-OAB_E2E_SPONSORED=1 npm run test:e2e -- sponsored
+OAB_E2E_SESSION=1 npm run test:e2e -- sponsored
 ```
+
+It never uses the DOT<->PGAS pool. PGAS goes to SS58 accounts with
+`Assets.transfer_keep_alive` only.
+
+`scripts/check-v1-session.mjs` checks, for free, that the setup batch and
+the session key's first call are valid V1 transactions (fee in PGAS), built
+with the app's own code path. Nothing is submitted.
 
 ## Perf harness
 
@@ -130,9 +143,12 @@ Read the numbers with these facts:
 ## Limits
 
 - The test host cannot claim PGAS. That needs a real personhood proof, so
-  the sponsored path needs PGAS from Alice to run.
-- The test host has no personhood ring keys, so the bind flow and a ranked
-  run are not covered.
+  the session path needs PGAS from Alice to run.
+- The test host signs every host transaction as a classic v4 (pipeline V0,
+  native fee) and ignores `txExtVersion`
+  (`@parity/host-api-test-sdk` 0.17 CHANGELOG). The setup batch of a
+  registry session is V1 in a real host and V0 here. The session key's V1
+  transactions are built in the app, so the test host does not change them.
 - `@parity/host-api-test-sdk@0.17.0` speaks truapi 0.24. The app uses
   truapi 0.25 through `@parity/product-sdk-host@0.27`. Everything used here
   works, but a newer test SDK is the safe match.

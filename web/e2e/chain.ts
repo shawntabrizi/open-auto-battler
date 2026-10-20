@@ -10,9 +10,15 @@ import { getWsProvider } from 'polkadot-api/ws';
 import { getTxCreator } from 'polkadot-api/tx-creator';
 import { sr25519CreateDerive } from '@polkadot-labs/hdkd';
 import { DEV_PHRASE, entropyToMiniSecret, mnemonicToEntropy } from '@polkadot-labs/hdkd-helpers';
-import { createContractFromClient, type AbiEntry } from '@parity/product-sdk-contracts';
+import {
+  createContractFromClient,
+  QUERY_FALLBACK_ORIGIN,
+  type AbiEntry,
+} from '@parity/product-sdk-contracts';
+import { ss58ToH160 } from '@parity/product-sdk-address';
 import { paseo_asset_hub } from '@parity/product-sdk-descriptors/paseo-asset-hub';
 import { PASEO_ASSET_HUB } from '@parity/host-api-test-sdk';
+import { decodeModeGame, type ModeGameInfo } from '../src/contract/codec';
 
 const cdm = JSON.parse(readFileSync(new URL('../cdm.json', import.meta.url), 'utf8')) as {
   contracts: Record<string, { address: `0x${string}`; abi: AbiEntry[] }>;
@@ -28,11 +34,17 @@ export interface Chain {
   client: PolkadotClient;
   free(address: SS58String): Promise<bigint>;
   pgas(address: SS58String): Promise<bigint>;
-  /** Raw `getGameState()` bytes for `origin`; null when the read fails (e.g. unmapped). */
-  gameState(origin: SS58String): Promise<string | null>;
+  /** Raw `getGame(player)` bytes (SCALE `ModeGame`, `0x` for none); null when the read fails. */
+  gameState(address: SS58String): Promise<string | null>;
+  /** The decoded game of `address`, or null for none. Throws when the read fails. */
+  game(address: SS58String): Promise<ModeGameInfo | null>;
   /** Transfer from //Alice until `address` holds at least `min` (to `target`). */
   topUp(address: SS58String, min: bigint, target: bigint): Promise<void>;
-  /** Transfer PGAS from //Alice until `address` holds at least `amount`. */
+  /**
+   * Transfer PGAS from //Alice until `address` (SS58) holds at least `amount`.
+   * Always `Assets.transfer_keep_alive` to the SS58 account: PGAS sent to an
+   * unmapped H160 through the ERC-20 precompile is lost.
+   */
   topUpPgas(address: SS58String, amount: bigint): Promise<void>;
   destroy(): void;
 }
@@ -41,13 +53,6 @@ function alice() {
   const derive = sr25519CreateDerive(entropyToMiniSecret(mnemonicToEntropy(DEV_PHRASE)));
   const kp = derive('//Alice');
   return getTxCreator(kp.publicKey, 'Sr25519', kp.sign);
-}
-
-/** True when `getGameState` returned no active game (empty or the zeroed sentinel). */
-export function isNoGame(hex: string | null): boolean {
-  if (hex === null) return true;
-  const body = hex.startsWith('0x') ? hex.slice(2) : hex;
-  return body.length === 0 || /^0*$/.test(body);
 }
 
 /** Sign and submit as //Alice; resolves at best block (product-sdk-tx default). */
@@ -74,14 +79,21 @@ export function connectChain(): Chain {
       const a = await api.query.Assets.Account.getValue(PGAS_ASSET_ID, address, { at: 'best' });
       return a?.balance ?? 0n;
     },
-    async gameState(origin) {
+    async gameState(address) {
+      // The view takes the player, so any origin works; the pallet account is
+      // always mapped.
       const arena = createContractFromClient(client, paseo_asset_hub, ARENA.address, ARENA.abi, {
-        defaultOrigin: origin,
+        defaultOrigin: QUERY_FALLBACK_ORIGIN,
       }) as unknown as {
-        getGameState: { query(): Promise<{ success: boolean; value: unknown }> };
+        getGame: { query(player: string): Promise<{ success: boolean; value: unknown }> };
       };
-      const r = await arena.getGameState.query();
+      const r = await arena.getGame.query(ss58ToH160(address));
       return r.success && typeof r.value === 'string' ? r.value : null;
+    },
+    async game(address) {
+      const hex = await this.gameState(address);
+      if (hex === null) throw new Error(`getGame read failed for ${address}`);
+      return decodeModeGame(hex);
     },
     async topUp(address, min, target) {
       const have = await this.free(address);
@@ -97,7 +109,7 @@ export function connectChain(): Chain {
       if (have >= amount) return;
       await atBestBlock(
         `PGAS top-up of ${address}`,
-        api.tx.Assets.transfer({
+        api.tx.Assets.transfer_keep_alive({
           id: PGAS_ASSET_ID,
           target: Enum('Id', address),
           amount: amount - have,

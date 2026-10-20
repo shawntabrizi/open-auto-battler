@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react';
 import { useContractStore } from '../store/contractStore';
 import { useGameStore } from '../store/gameStore';
 import { TopBar } from './TopBar';
-import { RankedPanel } from './RankedPanel';
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 const CONTRACT_SET_ID = 0;
 
-/** Contract arena pre-game: start a casual or ranked game with set 0, or redirect to active game. */
+/** Contract arena pre-game: start a casual game with set 0, or redirect to the active game. */
 export function ContractArenaPage() {
   const { isConnected, hasActiveGame, isRefreshing, startGame, refreshGameState } =
     useContractStore();
@@ -55,19 +54,6 @@ export function ContractArenaPage() {
           >
             {!engine ? 'Loading Engine...' : canStart ? 'Start Game' : 'Checking for a game...'}
           </button>
-
-          <div className="mt-4">
-            <RankedPanel setId={CONTRACT_SET_ID} disabled={!canStart} />
-          </div>
-
-          <div className="flex justify-center gap-6 mt-6 text-sm">
-            <Link to="/contract/leaderboard" className="text-base-400 hover:text-white">
-              Leaderboard
-            </Link>
-            <Link to="/contract/badges" className="text-base-400 hover:text-white">
-              Badges
-            </Link>
-          </div>
         </div>
       </div>
     </div>

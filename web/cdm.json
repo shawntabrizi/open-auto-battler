@@ -1,11 +1,13 @@
 {
   "dependencies": {
-    "@oab/arena": "latest"
+    "@oab/arena": 4,
+    "@oab/identity": 2,
+    "@oab/content": 0
   },
   "contracts": {
     "@oab/arena": {
-      "version": 2,
-      "address": "0xA61f803AeEBFfF2c7568157756932D3944EDCa28",
+      "version": 4,
+      "address": "0x2937aC2a421BecA60370994BAdf503529bF47650",
       "abi": [
         {
           "type": "constructor",
@@ -14,62 +16,67 @@
         },
         {
           "type": "function",
-          "name": "registerCard",
+          "name": "setDeps",
           "inputs": [
             {
-              "name": "data",
-              "type": "bytes"
-            }
-          ],
-          "outputs": [
+              "name": "identity",
+              "type": "address"
+            },
             {
-              "name": "",
-              "type": "bool"
+              "name": "content",
+              "type": "address"
+            },
+            {
+              "name": "engine",
+              "type": "address"
             }
           ],
+          "outputs": [],
           "stateMutability": "nonpayable"
         },
         {
           "type": "function",
-          "name": "registerSet",
+          "name": "cacheSet",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "setAllowedSet",
           "inputs": [
             {
               "name": "set_id",
               "type": "uint16"
             },
             {
-              "name": "data",
-              "type": "bytes"
-            }
-          ],
-          "outputs": [
-            {
-              "name": "",
+              "name": "allowed",
               "type": "bool"
             }
           ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "setDraining",
+          "inputs": [
+            {
+              "name": "draining",
+              "type": "bool"
+            }
+          ],
+          "outputs": [],
           "stateMutability": "nonpayable"
         },
         {
           "type": "function",
           "name": "startGame",
-          "inputs": [
-            {
-              "name": "set_id",
-              "type": "uint16"
-            }
-          ],
-          "outputs": [
-            {
-              "name": "",
-              "type": "uint64"
-            }
-          ],
-          "stateMutability": "nonpayable"
-        },
-        {
-          "type": "function",
-          "name": "startRankedGame",
           "inputs": [
             {
               "name": "set_id",
@@ -103,30 +110,6 @@
         },
         {
           "type": "function",
-          "name": "getGameState",
-          "inputs": [],
-          "outputs": [
-            {
-              "name": "",
-              "type": "bytes"
-            }
-          ],
-          "stateMutability": "view"
-        },
-        {
-          "type": "function",
-          "name": "abandonGame",
-          "inputs": [],
-          "outputs": [
-            {
-              "name": "",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "nonpayable"
-        },
-        {
-          "type": "function",
           "name": "endGame",
           "inputs": [],
           "outputs": [
@@ -139,7 +122,14 @@
         },
         {
           "type": "function",
-          "name": "initAchievements",
+          "name": "abandonGame",
+          "inputs": [],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "engineVersion",
           "inputs": [],
           "outputs": [
             {
@@ -147,23 +137,11 @@
               "type": "uint32"
             }
           ],
-          "stateMutability": "nonpayable"
+          "stateMutability": "pure"
         },
         {
           "type": "function",
-          "name": "getBadgeConfig",
-          "inputs": [],
-          "outputs": [
-            {
-              "name": "",
-              "type": "bytes"
-            }
-          ],
-          "stateMutability": "view"
-        },
-        {
-          "type": "function",
-          "name": "getBadges",
+          "name": "getGame",
           "inputs": [
             {
               "name": "player",
@@ -180,127 +158,892 @@
         },
         {
           "type": "function",
-          "name": "claimPendingBadges",
-          "inputs": [],
-          "outputs": [
+          "name": "getSetBundle",
+          "inputs": [
             {
-              "name": "",
-              "type": "uint32"
+              "name": "set_id",
+              "type": "uint16"
             }
           ],
-          "stateMutability": "nonpayable"
-        },
-        {
-          "type": "function",
-          "name": "getRankedAlias",
-          "inputs": [],
           "outputs": [
             {
               "name": "",
-              "type": "bytes32"
+              "type": "bytes"
             }
           ],
           "stateMutability": "view"
         },
         {
           "type": "function",
-          "name": "setPersonhoodContext",
+          "name": "setInfo",
           "inputs": [
             {
-              "name": "context",
-              "type": "bytes32"
+              "name": "set_id",
+              "type": "uint16"
             }
           ],
           "outputs": [
+            {
+              "name": "",
+              "type": "bytes32"
+            },
+            {
+              "name": "",
+              "type": "uint32"
+            },
+            {
+              "name": "",
+              "type": "uint8"
+            },
+            {
+              "name": "",
+              "type": "uint8"
+            },
             {
               "name": "",
               "type": "bool"
             }
           ],
-          "stateMutability": "nonpayable"
+          "stateMutability": "view"
         },
         {
           "type": "function",
-          "name": "getPersonhoodContext",
+          "name": "getGhosts",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            },
+            {
+              "name": "round",
+              "type": "uint8"
+            },
+            {
+              "name": "wins",
+              "type": "uint8"
+            },
+            {
+              "name": "lives",
+              "type": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "getHouseGhosts",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            },
+            {
+              "name": "round",
+              "type": "uint8"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "deps",
           "inputs": [],
           "outputs": [
             {
               "name": "",
-              "type": "bytes32"
+              "type": "address"
+            },
+            {
+              "name": "",
+              "type": "address"
+            },
+            {
+              "name": "",
+              "type": "address"
+            },
+            {
+              "name": "",
+              "type": "bool"
             }
           ],
           "stateMutability": "view"
         },
         {
           "type": "function",
-          "name": "getLeaderboard",
-          "inputs": [
+          "name": "nextRunId",
+          "inputs": [],
+          "outputs": [
             {
-              "name": "set_id",
-              "type": "uint16"
-            },
-            {
-              "name": "offset",
-              "type": "uint32"
-            },
-            {
-              "name": "limit",
-              "type": "uint32"
+              "name": "",
+              "type": "uint64"
             }
           ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "adminAddress",
+          "inputs": [],
           "outputs": [
+            {
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "error",
+          "name": "NotAdmin",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NotConfigured",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "InvalidSession",
+          "inputs": [
+            {
+              "name": "",
+              "type": "address"
+            }
+          ]
+        },
+        {
+          "type": "error",
+          "name": "IdentityUnavailable",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NoGame",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "GameActive",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "WrongPhase",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "SetNotAllowed",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "SetUnavailable",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "AlreadyCached",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "BadContent",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "ContentUnavailable",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "Draining",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "BadInput",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "InvalidTurn",
+          "inputs": [
             {
               "name": "",
               "type": "bytes"
             }
-          ],
-          "stateMutability": "view"
+          ]
         },
         {
-          "type": "function",
-          "name": "getPlayerRank",
+          "type": "error",
+          "name": "ItemTooLarge",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "GameStarted",
+          "inputs": [
+            {
+              "name": "player",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "run_id",
+              "type": "uint64",
+              "indexed": false
+            },
+            {
+              "name": "set_id",
+              "type": "uint16",
+              "indexed": false
+            },
+            {
+              "name": "engine_version",
+              "type": "uint32",
+              "indexed": false
+            },
+            {
+              "name": "set_hash",
+              "type": "bytes32",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "BattleReported",
+          "inputs": [
+            {
+              "name": "player",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "run_id",
+              "type": "uint64",
+              "indexed": true
+            },
+            {
+              "name": "report",
+              "type": "bytes",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "GameEnded",
+          "inputs": [
+            {
+              "name": "player",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "run_id",
+              "type": "uint64",
+              "indexed": true
+            },
+            {
+              "name": "wins",
+              "type": "uint8",
+              "indexed": false
+            },
+            {
+              "name": "lives",
+              "type": "uint8",
+              "indexed": false
+            },
+            {
+              "name": "rounds",
+              "type": "uint8",
+              "indexed": false
+            },
+            {
+              "name": "reported",
+              "type": "bool",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "GameAbandoned",
+          "inputs": [
+            {
+              "name": "player",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "run_id",
+              "type": "uint64",
+              "indexed": true
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "DepsSet",
+          "inputs": [
+            {
+              "name": "identity",
+              "type": "address",
+              "indexed": false
+            },
+            {
+              "name": "content",
+              "type": "address",
+              "indexed": false
+            },
+            {
+              "name": "engine",
+              "type": "address",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "SetCached",
           "inputs": [
             {
               "name": "set_id",
-              "type": "uint16"
+              "type": "uint16",
+              "indexed": true
             },
             {
-              "name": "alias",
-              "type": "bytes32"
+              "name": "set_hash",
+              "type": "bytes32",
+              "indexed": false
+            },
+            {
+              "name": "pages",
+              "type": "uint8",
+              "indexed": false
+            },
+            {
+              "name": "house_rounds",
+              "type": "uint8",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "SetAllowed",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16",
+              "indexed": true
+            },
+            {
+              "name": "allowed",
+              "type": "bool",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "DrainingSet",
+          "inputs": [
+            {
+              "name": "draining",
+              "type": "bool",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "error",
+          "name": "InvalidCalldata",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "CalldataTooLarge",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NoSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "UnknownSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NonPayableValueReceived",
+          "inputs": []
+        }
+      ],
+      "metadataCid": "bafk2bzacebvkyis3ne73t44pwgui5xbfler3yglitx32lhtb4k6beshkks5jw"
+    },
+    "@oab/identity": {
+      "version": 2,
+      "address": "0x7b41368859B67BB5c88500612eDe21AA6b837FBA",
+      "abi": [
+        {
+          "type": "constructor",
+          "inputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "registerSession",
+          "inputs": [
+            {
+              "name": "session",
+              "type": "address"
+            },
+            {
+              "name": "expires_at",
+              "type": "uint64"
+            }
+          ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "acceptSession",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "revokeSession",
+          "inputs": [],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "resolve",
+          "inputs": [
+            {
+              "name": "account",
+              "type": "address"
             }
           ],
           "outputs": [
             {
               "name": "",
-              "type": "uint32"
+              "type": "address"
             }
           ],
           "stateMutability": "view"
         },
         {
           "type": "function",
-          "name": "getBestRun",
+          "name": "rankedIdentity",
           "inputs": [
             {
-              "name": "set_id",
-              "type": "uint16"
-            },
-            {
-              "name": "alias",
-              "type": "bytes32"
+              "name": "account",
+              "type": "address"
             }
           ],
           "outputs": [
             {
               "name": "",
+              "type": "tuple",
+              "components": [
+                {
+                  "name": "",
+                  "type": "address"
+                },
+                {
+                  "name": "",
+                  "type": "uint8"
+                },
+                {
+                  "name": "",
+                  "type": "bytes32"
+                }
+              ]
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "sessionOf",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "address"
+            },
+            {
+              "name": "",
+              "type": "uint64"
+            },
+            {
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "keyOf",
+          "inputs": [
+            {
+              "name": "session",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "address"
+            },
+            {
+              "name": "",
+              "type": "uint64"
+            },
+            {
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "maxTtl",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "uint64"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "setMaxTtl",
+          "inputs": [
+            {
+              "name": "max_ttl",
+              "type": "uint64"
+            }
+          ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "adminAddress",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "error",
+          "name": "InvalidSessionKey",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "SessionKeyInUse",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "SessionKeyBurned",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "SessionKeyCannotOwn",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "OwnerCannotBeSessionKey",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "InvalidExpiry",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "TtlTooLong",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NoOffer",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "OfferExpired",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NoActiveSession",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "InvalidSession",
+          "inputs": [
+            {
+              "name": "",
+              "type": "address"
+            }
+          ]
+        },
+        {
+          "type": "error",
+          "name": "NotAdmin",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "SessionOffered",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "session",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "expires_at",
+              "type": "uint64",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "SessionRegistered",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "session",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "expires_at",
+              "type": "uint64",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "SessionRevoked",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "session",
+              "type": "address",
+              "indexed": true
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "MaxTtlSet",
+          "inputs": [
+            {
+              "name": "max_ttl",
+              "type": "uint64",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "error",
+          "name": "InvalidCalldata",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "CalldataTooLarge",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NoSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "UnknownSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NonPayableValueReceived",
+          "inputs": []
+        }
+      ],
+      "metadataCid": "bafk2bzacebnfrdmbb5bm3ce3e7ujprsnch45uj5jtjbgt2s4x4hmots3s4tse"
+    },
+    "@oab/content": {
+      "version": 0,
+      "address": "0xd9Cb4F28a6164485D800144E202353D612bAf642",
+      "abi": [
+        {
+          "type": "constructor",
+          "inputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "publishCard",
+          "inputs": [
+            {
+              "name": "card",
               "type": "bytes"
             }
           ],
-          "stateMutability": "view"
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "publishSet",
+          "inputs": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "card_set",
+              "type": "bytes"
+            },
+            {
+              "name": "house_ghosts",
+              "type": "bytes"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "tuple",
+              "components": [
+                {
+                  "name": "",
+                  "type": "uint16"
+                },
+                {
+                  "name": "",
+                  "type": "bytes32"
+                }
+              ]
+            }
+          ],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "setCurator",
+          "inputs": [
+            {
+              "name": "who",
+              "type": "address"
+            },
+            {
+              "name": "allowed",
+              "type": "bool"
+            }
+          ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
         },
         {
           "type": "function",
           "name": "getCard",
+          "inputs": [
+            {
+              "name": "card_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "getCardMeta",
           "inputs": [
             {
               "name": "card_id",
@@ -333,9 +1076,234 @@
           "stateMutability": "view"
         },
         {
+          "type": "function",
+          "name": "getSetBundle",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "getSetRecord",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "setHash",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "getHouseGhosts",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "setCount",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "uint16"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "isCurator",
+          "inputs": [
+            {
+              "name": "who",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "adminAddress",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
           "type": "error",
-          "name": "BadgeSetupFailed",
+          "name": "NotAdmin",
           "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NotCurator",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "BadPayload",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "CardExists",
+          "inputs": [
+            {
+              "name": "",
+              "type": "uint16"
+            }
+          ]
+        },
+        {
+          "type": "error",
+          "name": "ReservedCardId",
+          "inputs": [
+            {
+              "name": "",
+              "type": "uint16"
+            }
+          ]
+        },
+        {
+          "type": "error",
+          "name": "UnknownCard",
+          "inputs": [
+            {
+              "name": "",
+              "type": "uint16"
+            }
+          ]
+        },
+        {
+          "type": "error",
+          "name": "BadSet",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "BadHouseGhosts",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "SetIdsExhausted",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "CardPublished",
+          "inputs": [
+            {
+              "name": "card_id",
+              "type": "uint16",
+              "indexed": true
+            },
+            {
+              "name": "publisher",
+              "type": "address",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "SetPublished",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16",
+              "indexed": true
+            },
+            {
+              "name": "set_hash",
+              "type": "bytes32",
+              "indexed": false
+            },
+            {
+              "name": "ghosts_hash",
+              "type": "bytes32",
+              "indexed": false
+            },
+            {
+              "name": "publisher",
+              "type": "address",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "CuratorSet",
+          "inputs": [
+            {
+              "name": "who",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "allowed",
+              "type": "bool",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
         },
         {
           "type": "error",
@@ -363,7 +1331,7 @@
           "inputs": []
         }
       ],
-      "metadataCid": "bafk2bzacea5mqpk6bvih4uovhuapu55texttgcjbm5bmpklltbflflrnjgwmi"
+      "metadataCid": "bafk2bzaceciizua7i5fazes6xtepn3dlu4htar57yqf2nucvinsh4pxflfxhu"
     }
   },
   "registry": "0xc1a73a4f93fde65b1cb1680baead248073566cb0"

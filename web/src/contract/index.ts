@@ -1,19 +1,20 @@
 /**
- * Contract Backend — talks to the OAB arena PolkaVM contract on Asset Hub via
- * the Polkadot Product SDK: `@parity/product-sdk-chain-client` (host-routed
- * chain client), `@parity/product-sdk-contracts` (typed pallet-revive calls),
- * and `@parity/product-sdk-signer` (HostProvider inside a Polkadot host,
+ * Contract Backend — talks to the casual arena (`@oab/arena`, CDM version 4)
+ * on Paseo Asset Hub Next via the Polkadot Product SDK:
+ * `@parity/product-sdk-chain-client` (host-routed chain client),
+ * `@parity/product-sdk-contracts` (typed pallet-revive calls), and
+ * `@parity/product-sdk-signer` (HostProvider inside a Polkadot host,
  * DevProvider for local dev).
  *
  * Reads use `.query()` (dry-run); state changes use `.tx()`, which resolves at
- * best-block by default — so no hand-rolled `Revive.call` / Solidity ABI
- * encoding is needed (the SDK uses the contract ABI + viem codec internally).
- * `.tx()` and `ensureContractAccountMapped` return a `Result`: a failed
- * dispatch, a rejected signature, or a host timeout arrives on the `err` arm.
+ * best-block by default. `.tx()` and `ensureContractAccountMapped` return a
+ * `Result`: a failed dispatch, a rejected signature, or a host timeout arrives
+ * on the `err` arm. A revert arrives as a typed error (`./errors.ts`).
  *
- * Inside a host, game calls go through sponsored play when the player allows
- * it (`./session.ts`): one approval, then a local session key signs every call
- * and fees are paid in PGAS. Otherwise they are signed by the product account.
+ * The arena resolves every game call through `@oab/identity`, so a session
+ * key plays for its owner (`./session.ts`). Views take the player address,
+ * so reads need no mapped origin. The card data for play and replay is the
+ * arena's cached `SetBundle` (pinned by the set hash in each game).
  */
 
 import type { SS58String } from 'polkadot-api';
@@ -35,49 +36,27 @@ import {
   createProxySession,
   createSponsor,
   SessionExpiredError,
-  type ProxySession,
+  type PreparedCall,
   type Sponsor,
+  type SponsorDeps,
   type SponsorStatus,
 } from './session';
+import { createRegistrySession, type IdentityContract } from './registrySession';
 import { collectionAddress, COLLECTIBLES_COLLECTION } from '../services/nftOwnership';
 import {
-  decodeBadgeEvent,
-  decodeBadges,
-  decodeBestRun,
-  decodeLeaderboard,
-  isZeroAlias,
-  type BadgeEvent,
-  type BadgeRecord,
-  type Hex,
-  type LeaderboardEntry,
+  decodeBattleReport,
+  decodeBattleReportedEvent,
+  decodeModeGame,
+  hexToBytes,
+  type BattleReportInfo,
+  type ModeGameInfo,
 } from './codec';
-import {
-  bindPersonhood,
-  classifyBinding,
-  DERIVATION_INDEX,
-  PRODUCT_ID,
-  readAliasBinding,
-  type RankedEligibility,
-} from './personhood';
-import {
-  claimBadges,
-  RANKED_REFUSED_MESSAGE,
-  RankedIneligibleError,
-  startRanked,
-  startWithHeadroom,
-  type ClaimMethod,
-  type PrepareOptions,
-  type Prepared,
-  type QueryResult,
-  type StartMethod,
-  type TxOptions,
-  type TxOutcome,
-} from './arenaFlows';
+import { dryRunError, startWithHeadroom, type QueryResult, type TxOutcome } from './arenaFlows';
+import type { PrepareOptions, Prepared, StartMethod, TxOptions } from './arenaFlows';
+import { DERIVATION_INDEX, PRODUCT_ID } from './personhood';
 
 export type { SponsorStatus } from './session';
-export type { BadgeEvent, BadgeRecord, LeaderboardEntry } from './codec';
-export type { RankedEligibility } from './personhood';
-export { RankedIneligibleError } from './arenaFlows';
+export { chainErrorMessage } from './errors';
 
 /** Host-routed Asset Hub chain client (the resolved type of createChainClient). */
 type AssetHubClient = Awaited<
@@ -86,25 +65,23 @@ type AssetHubClient = Awaited<
 
 // ── Shared types ─────────────────────────────────────────────────────────────
 
-export interface TurnResult {
-  battleSeed: bigint;
-  opponentBoard: GhostBoardUnit[];
-  result: 'Victory' | 'Defeat' | 'Draw';
-  wins: number;
-  lives: number;
-  round: number;
+/** The player's game on chain, with the set bundle it runs on. */
+export interface ChainGame {
+  info: ModeGameInfo;
+  /** SCALE `ModeGame` (`getGame`). */
+  gameBytes: Uint8Array;
+  /** SCALE `SetBundle` of the game's set (`getSetBundle`). */
+  bundleBytes: Uint8Array;
 }
 
-export interface GhostBoardUnit {
-  card_id: number;
-  perm_attack: number;
-  perm_health: number;
-}
-
-export interface GameStateRaw {
-  stateBytes: Uint8Array;
-  cardSetBytes: Uint8Array;
-  setId?: number;
+/** One committed turn: the chain's battle report and what a replay needs. */
+export interface TurnReport {
+  report: BattleReportInfo;
+  /** SCALE `BattleReport` from the `BattleReported` event. */
+  reportBytes: Uint8Array;
+  bundleBytes: Uint8Array;
+  /** Board size of the game's config (the replay's `board_size`). */
+  boardSize: number;
 }
 
 export interface Account {
@@ -122,95 +99,45 @@ export interface ContractBackend {
   /** Sponsored play (PGAS + session key) state; `active` means no prompts. */
   readonly sponsorStatus: SponsorStatus;
   selectAccount(account: Account): void;
-  startGame(setId: number): Promise<{ seed: bigint }>;
-  /**
-   * Start a ranked game. Throws `RankedIneligibleError` (no signing prompt)
-   * when the account has no personhood alias in OAB's context.
-   */
-  startRankedGame(setId: number): Promise<{ seed: bigint }>;
-  submitTurn(actionScale: Uint8Array): Promise<TurnResult>;
-  getGameState(): Promise<GameStateRaw | null>;
-  /** Finalize the game; returns the badge events the run emitted (ranked only). */
-  endGame(): Promise<BadgeEvent[]>;
+  /** Start a casual game. Returns the run id of the dry-run (advisory). */
+  startGame(setId: number): Promise<{ runId: bigint }>;
+  submitTurn(actionScale: Uint8Array): Promise<TurnReport>;
+  /** The selected account's game, or null when it has none. */
+  getGameState(): Promise<ChainGame | null>;
+  /** End a completed game. */
+  endGame(): Promise<void>;
   abandonGame(): Promise<void>;
-  /** The selected account's ranked eligibility (alias binding vs the arena context). */
-  rankedEligibility(): Promise<RankedEligibility>;
-  /** Bind the product account to the player's personhood alias (host only). */
-  bindPersonhood(): Promise<void>;
-  /** Alias of the active ranked game, or null for a casual game or none. */
-  getRankedAlias(): Promise<Hex | null>;
-  getLeaderboard(setId: number, offset: number, limit: number): Promise<LeaderboardEntry[]>;
-  /** 1-based place of `alias` on the set's board; 0 if absent. */
-  getPlayerRank(setId: number, alias: Hex): Promise<number>;
-  getBestRun(setId: number, alias: Hex): Promise<LeaderboardEntry | null>;
-  /** The selected account's badges, in the order earned. */
-  getBadges(): Promise<BadgeRecord[]>;
-  /** Retry pending badge mints; returns the badges minted now. */
-  claimPendingBadges(): Promise<BadgeEvent[]>;
   /** Item-scope metadata of an OAB Collectibles item, as UTF-8 (empty if unset). */
   readItemMetadata(item: number, key: string): Promise<string>;
 }
 
-// keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
-const BATTLE_REPORTED_TOPIC = '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694ddef23dd55af68e089bd';
-
-/**
- * Minimal typed view of the `@oab/arena` contract. `createContract` returns a
- * generic handle; we cast to this so call sites stay type-checked. The SDK's
- * viem ABI codec maps `bytes` ⇄ `0x`-hex strings, `uint64` → `bigint`, and
- * `bool` → `boolean`.
- */
-interface ArenaContract {
-  startGame: StartMethod;
-  startRankedGame: StartMethod;
-  submitTurn: {
-    query(action: string): Promise<QueryResult<bigint>>;
-    tx(action: string, opts?: TxOptions): Promise<TxOutcome>;
-    prepare(action: string, opts?: PrepareOptions): Promise<Prepared>;
-  };
-  getGameState: { query(): Promise<QueryResult<string>> };
-  getSet: { query(setId: number): Promise<QueryResult<string>> };
-  endGame: {
-    query(): Promise<QueryResult<boolean>>;
-    tx(opts?: TxOptions): Promise<TxOutcome>;
-    prepare(opts?: PrepareOptions): Promise<Prepared>;
-  };
-  abandonGame: {
-    query(): Promise<QueryResult<boolean>>;
-    tx(opts?: TxOptions): Promise<TxOutcome>;
-    prepare(opts?: PrepareOptions): Promise<Prepared>;
-  };
-  claimPendingBadges: ClaimMethod;
-  getRankedAlias: { query(): Promise<QueryResult<string>> };
-  getPersonhoodContext: { query(opts?: ReadOptions): Promise<QueryResult<string>> };
-  getLeaderboard: {
-    query(
-      setId: number,
-      offset: number,
-      limit: number,
-      opts?: ReadOptions
-    ): Promise<QueryResult<string>>;
-  };
-  getPlayerRank: {
-    query(setId: number, alias: string, opts?: ReadOptions): Promise<QueryResult<number>>;
-  };
-  getBestRun: {
-    query(setId: number, alias: string, opts?: ReadOptions): Promise<QueryResult<string>>;
-  };
-  getBadges: { query(player: string, opts?: ReadOptions): Promise<QueryResult<string>> };
-}
-
 type ReadOptions = { origin?: SS58String };
 /**
- * Origin for views that do not depend on the caller. The player's own origin
- * fails while it is unmapped, and these reads must work before the first game.
+ * Origin for views. They take the player as an argument, so they do not
+ * depend on the caller, and the player's own origin fails while unmapped.
  */
 const PUBLIC_READ: ReadOptions = { origin: QUERY_FALLBACK_ORIGIN };
 
-/** Unwrap a view's dry-run, throwing with the method name on failure. */
-function viewOrThrow<T>(label: string, r: QueryResult<T>): T {
-  if (!r.success) throw new Error(`${label} read failed`);
-  return r.value;
+type NoArgWrite = {
+  query(): Promise<QueryResult<unknown>>;
+  tx(opts?: TxOptions): Promise<TxOutcome>;
+  prepare(opts?: PrepareOptions): Promise<Prepared>;
+};
+
+/**
+ * Typed view of `@oab/arena` (casual). The SDK's viem ABI codec maps `bytes`
+ * ⇄ `0x`-hex strings, `uint64` → `bigint`, and `bool` → `boolean`.
+ */
+interface ArenaContract {
+  startGame: StartMethod;
+  submitTurn: {
+    tx(action: string, opts?: TxOptions): Promise<TxOutcome>;
+    prepare(action: string, opts?: PrepareOptions): Promise<Prepared>;
+  };
+  endGame: NoArgWrite;
+  abandonGame: NoArgWrite;
+  getGame: { query(player: string, opts?: ReadOptions): Promise<QueryResult<string>> };
+  getSetBundle: { query(setId: number, opts?: ReadOptions): Promise<QueryResult<string>> };
 }
 
 /** Wrap an SDK error with a call label, keeping the original as `cause`. */
@@ -239,6 +166,22 @@ export function isHostTimeout(err: unknown): boolean {
 }
 
 const ARENA_LIBRARY = '@oab/arena';
+const IDENTITY_LIBRARY = '@oab/identity';
+
+/**
+ * Sponsored-play pattern. `registry`: an `@oab/identity` session key on
+ * extension pipeline V1, fee in PGAS (`./registrySession.ts`, the M5 design).
+ * `proxy`: the arena v2 proxy session (`./session.ts`), which buys its deposit
+ * through the DOT<->PGAS pool. The proxy path stays until a registry session
+ * is proven in a real host (M5 report).
+ */
+const SESSION_KIND: 'registry' | 'proxy' = 'registry';
+
+/** A session key that signs game calls for the player. */
+interface GameSession {
+  deps: SponsorDeps;
+  submit(call: PreparedCall, options?: { onStatus?: (s: TxStatus) => void }): Promise<TxResult>;
+}
 
 /** The one Scarcity collection view the app reads (individuality `IScarcityCollection.sol`). */
 const ITEM_METADATA_ABI: AbiEntry[] = [
@@ -261,15 +204,16 @@ const ITEM_METADATA_ABI: AbiEntry[] = [
 // rejects signing for a product account it doesn't scope to this origin
 // ("Transaction signing was rejected"). Fixed constant, NOT read from the
 // host: reading would give `oab-arena.paseo.li` on the gateway and break
-// resolution. See Rock-Paper-Scissors' PRODUCT_ID for the same convention.
-// DERIVATION_INDEX is the product-account index the app signs with (and
-// sponsors); the personhood context is scoped to it.
+// resolution. DERIVATION_INDEX is the product-account index the app signs
+// with (and sponsors).
 
-function arenaContractInfo(): { address: `0x${string}`; abi: AbiEntry[] } {
+/** A package's address and ABI from `cdm.json` (versions are pinned there). */
+export function cdmContract(name: string): { address: `0x${string}`; abi: AbiEntry[] } {
   // The cdm CLI manifest keys contracts directly by package name.
   const entry = (cdmJson.contracts as unknown as Record<string, { address: string; abi: unknown }>)[
-    ARENA_LIBRARY
+    name
   ];
+  if (!entry) throw new Error(`${name} is missing from cdm.json`);
   return { address: entry.address as `0x${string}`, abi: entry.abi as AbiEntry[] };
 }
 
@@ -280,13 +224,6 @@ const noSponsorDeps = {
   sessionReady: () => Promise.resolve(false),
   setUp: () => Promise.reject(new Error('Sponsored play is not available')),
 };
-
-export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
-  // revive's Mapping getter currently materializes a zeroed ArenaSession for
-  // missing keys instead of returning an empty byte payload. Treat that sentinel
-  // as "no active game" so the frontend doesn't restore an empty shop.
-  return data.every((byte) => byte === 0);
-}
 
 export function createContractBackend(deps: {
   /** Force the dev signer provider (Alice/Bob) instead of auto-detecting the host. */
@@ -305,14 +242,17 @@ export function createContractBackend(deps: {
   let _accounts: Account[] = [];
   let _selectedAccount: Account | null = null;
   let _isConnected = false;
-  let _activeSetId = 0;
+  // The last game read from chain, for the replay's set and board size.
+  let _activeGame: ModeGameInfo | null = null;
+  // SCALE SetBundle per set id. A cached set never changes (its hash is pinned).
+  const _bundles = new Map<number, Uint8Array>();
   // Runtime for the currently-selected account, kept so mapping can be done
   // lazily (see ensureMapped). Reset whenever the selected account changes.
   let _runtime: ReturnType<typeof createContractRuntimeFromClient> | null = null;
   let _mapped = false;
   // Sponsored play. Host only: the session key lives in host storage and the
   // PGAS allowance is a host resource. Rebuilt per selected account.
-  let _session: ProxySession | null = null;
+  let _session: GameSession | null = null;
   let _sponsor: Sponsor = createSponsor(noSponsorDeps, 'unavailable');
 
   function resetSponsor(account: Account): void {
@@ -322,13 +262,21 @@ export function createContractBackend(deps: {
       _sponsor = createSponsor(noSponsorDeps, 'unavailable');
       return;
     }
-    _session = createProxySession({
+    const common = {
       api: client.assetHub,
       player: account.address,
       playerSigner: signer,
       derivationIndex: DERIVATION_INDEX,
       storePrefix: PRODUCT_ID,
-    });
+    };
+    if (SESSION_KIND === 'registry') {
+      if (!_runtime) throw new Error('Not connected');
+      const { address, abi } = cdmContract(IDENTITY_LIBRARY);
+      const identity = createContract(_runtime, address, abi) as unknown as IdentityContract;
+      _session = createRegistrySession({ ...common, identity });
+    } else {
+      _session = createProxySession(common);
+    }
     _sponsor = createSponsor(_session.deps);
   }
 
@@ -368,12 +316,27 @@ export function createContractBackend(deps: {
     return contract;
   }
 
+  function playerH160(): string {
+    if (!_selectedAccount) throw new Error('Not connected');
+    return ss58ToH160(_selectedAccount.address);
+  }
+
+  async function setBundle(setId: number): Promise<Uint8Array> {
+    const cached = _bundles.get(setId);
+    if (cached) return cached;
+    const r = await arena().getSetBundle.query(setId, PUBLIC_READ);
+    if (!r.success) throw dryRunError(r.value, () => new Error('getSetBundle read failed'));
+    const bytes = hexToBytes(r.value);
+    if (bytes.length === 0) throw new Error(`Card set ${setId} is not available on chain`);
+    _bundles.set(setId, bytes);
+    return bytes;
+  }
+
   // Map the selected SS58 origin to its H160 once. pallet-revive rejects calls
-  // (reads AND writes) from an unmapped origin with `AccountUnmapped`, so this
-  // must run before the first contract call that acts as the player. We defer
-  // it out of connect() — connect must never submit a transaction — and run it
-  // here, right before the first write action, where a signing prompt is
-  // expected. Idempotent: a no-op once mapped.
+  // from an unmapped origin with `AccountUnmapped`, so this must run before the
+  // first contract call that acts as the player. Deferred out of connect() —
+  // connect must never submit a transaction — to the first write action, where
+  // a signing prompt is expected. Idempotent: a no-op once mapped.
   async function ensureMapped(): Promise<void> {
     if (_mapped) return;
     if (!_runtime || !_selectedAccount || !signerManager) {
@@ -386,6 +349,20 @@ export function createContractBackend(deps: {
     });
     if (!r.ok) throw labelled('Account mapping', r.error);
     _mapped = true;
+  }
+
+  /** Dry-run a no-argument write, then send it; a revert throws its typed error. */
+  async function sendChecked(label: string, method: NoArgWrite): Promise<TxResult> {
+    await prepareWrite();
+    const dryRun = await method.query();
+    if (!dryRun.success) {
+      throw dryRunError(dryRun.value, () => new Error(`Contract rejected ${label}`));
+    }
+    return sendGameCall(
+      label,
+      () => method.prepare(),
+      () => method.tx({ onStatus })
+    );
   }
 
   const backend: ContractBackend = {
@@ -435,12 +412,11 @@ export function createContractBackend(deps: {
       _runtime = createContractRuntimeFromClient(rawClient, paseo_asset_hub);
       _mapped = false;
 
-      // connect() must be transaction-free: no signing prompt on connect. We
-      // bind the contract from the inline address + ABI in cdm.json, which
-      // needs no registry lookup (the live-registry query would dry-run-fail
-      // with AccountUnmapped and force an eager account-mapping tx here).
-      // Account mapping is deferred to the first write action via ensureMapped.
-      const { address, abi } = arenaContractInfo();
+      // connect() must be transaction-free: no signing prompt on connect. The
+      // contract is bound from the inline address + ABI in cdm.json, which
+      // needs no registry lookup. Account mapping is deferred to the first
+      // write action via ensureMapped.
+      const { address, abi } = cdmContract(ARENA_LIBRARY);
       contract = createContract(_runtime, address, abi, {
         defaultSigner: signer,
         defaultOrigin: _selectedAccount.address,
@@ -460,6 +436,7 @@ export function createContractBackend(deps: {
       _sponsor = createSponsor(noSponsorDeps, 'unavailable');
       _accounts = [];
       _selectedAccount = null;
+      _activeGame = null;
       _isConnected = false;
     },
 
@@ -480,12 +457,13 @@ export function createContractBackend(deps: {
       const r = signerManager.selectAccount(account.address);
       if (!r.ok) return;
       _selectedAccount = account;
+      _activeGame = null;
       // Re-bind the contract defaults to the newly selected signer/origin.
       const signer = signerManager.getSigner();
       if (!signer || !client) return;
       // A different account needs its own mapping before the next write.
       _mapped = false;
-      const { address, abi } = arenaContractInfo();
+      const { address, abi } = cdmContract(ARENA_LIBRARY);
       _runtime = createContractRuntimeFromClient(client.raw.assetHub, paseo_asset_hub);
       contract = createContract(_runtime, address, abi, {
         defaultSigner: signer,
@@ -494,18 +472,13 @@ export function createContractBackend(deps: {
       resetSponsor(account);
     },
 
-    async startGame(setId: number): Promise<{ seed: bigint }> {
+    async startGame(setId: number): Promise<{ runId: bigint }> {
       // First write of the session: set up sponsored play (one prompt) and
-      // make sure the player origin is mapped, on an explicit action.
+      // make sure the player origin is mapped, on an explicit action. The
+      // contract seeds the game from the block; the client supplies nothing
+      // seed-related. The real game state comes from the post-start refresh.
       await prepareWrite();
-      // The contract derives the game seed from block entropy — the client
-      // supplies nothing seed-related. The dry-run only validates the call;
-      // its seed is advisory (the tx may land in a different block), so the
-      // real session state comes from the post-start refresh. The SDK would
-      // size gas to the exact dry-run weight, but the real run uses the
-      // inclusion block's entropy and can cost more: startWithHeadroom
-      // doubles the limit.
-      const seed = await startWithHeadroom({
+      const runId = await startWithHeadroom({
         label: 'startGame',
         method: arena().startGame,
         setId,
@@ -513,179 +486,59 @@ export function createContractBackend(deps: {
         onStatus,
         rejected: () => new Error(`Contract rejected startGame for set ${setId}`),
       });
-      _activeSetId = setId;
-      return { seed };
+      return { runId };
     },
 
-    async startRankedGame(setId: number): Promise<{ seed: bigint }> {
-      // Same block-entropy seed as startGame, plus a personhood precompile
-      // call, so it gets the same gas headroom. The binding check runs
-      // first, so an ineligible player sees why with no prompt.
-      const seed = await startRanked({
-        eligibility: () => backend.rankedEligibility(),
-        prepareWrite,
-        start: () =>
-          startWithHeadroom({
-            label: 'startRankedGame',
-            method: arena().startRankedGame,
-            setId,
-            send: sendGameCall,
-            onStatus,
-            rejected: () => new RankedIneligibleError(null, RANKED_REFUSED_MESSAGE),
-          }),
-      });
-      _activeSetId = setId;
-      return { seed };
-    },
-
-    async submitTurn(actionScale: Uint8Array): Promise<TurnResult> {
+    async submitTurn(actionScale: Uint8Array): Promise<TurnReport> {
       await prepareWrite();
+      const game = _activeGame;
+      if (!game) throw new Error('No game loaded');
       const action = '0x' + bytesToHex(actionScale);
-      // No explicit pre-query here: submitTurn resolves the whole battle
-      // on-chain, so a dry-run executes that full simulation. `.tx()` already
-      // runs its own dry-run to size gas and fails fast on revert/OOG, so an
-      // extra `.query()` would just double that heavy simulation (and the
-      // host round-trip) before the signing prompt appears. We read battleSeed
-      // + the full report from the BattleReported event below, not the query.
+      // No explicit pre-query: `.tx()` / `.prepare()` already dry-run to size
+      // gas and fail fast with the typed revert, and a turn's dry-run runs the
+      // whole battle. The result comes from the BattleReported event.
       const tx = await sendGameCall(
         'submitTurn',
         () => arena().submitTurn.prepare(action),
         () => arena().submitTurn.tx(action, { onStatus })
       );
-
-      const eventBytes = findBattleReportedEventData(tx.events);
-      if (!eventBytes) {
-        console.warn(
-          'No BattleReported event in tx; full events array follows for debug:',
-          tx.events
-        );
+      const reportBytes = findBattleReport(tx.events, playerH160());
+      if (!reportBytes) {
+        console.warn('No BattleReported event in tx; events follow for debug:', tx.events);
         // The turn IS committed on-chain at this point; fabricating a result
         // here would show the player a battle that never happened. Surface the
-        // decode failure so the caller resyncs from chain state instead.
+        // failure so the caller resyncs from chain state instead.
         throw new Error(
-          'Turn submitted, but the battle report could not be read — resyncing from chain'
+          'Turn submitted, but the battle report could not be read. Resyncing from chain.'
         );
       }
-      return decodeBattleReported(eventBytes);
+      const report = decodeBattleReport(reportBytes);
+      return {
+        report,
+        reportBytes,
+        bundleBytes: await setBundle(report.setId),
+        boardSize: game.boardSize,
+      };
     },
 
-    async getGameState(): Promise<GameStateRaw | null> {
-      const r = await arena().getGameState.query();
-      if (!r.success) return null;
-      const arenaSessionBytes = hexToBytes(r.value);
-      if (arenaSessionBytes.length === 0) return null;
-      if (isMissingArenaSessionPayload(arenaSessionBytes)) return null;
-
-      _activeSetId = decodeArenaSessionSetId(arenaSessionBytes);
-
-      // The WASM engine expects BoundedGameSession = { state, set_id, config }.
-      // The contract returns ArenaSession = { state_fields..., set_id }, so we
-      // append the default config bytes to make it a full BoundedGameSession.
-      const DEFAULT_CONFIG_SCALE = new Uint8Array([3, 10, 3, 10, 0, 5, 5, 50]);
-      const stateBytes = new Uint8Array(arenaSessionBytes.length + DEFAULT_CONFIG_SCALE.length);
-      stateBytes.set(arenaSessionBytes);
-      stateBytes.set(DEFAULT_CONFIG_SCALE, arenaSessionBytes.length);
-
-      const setRes = await arena().getSet.query(_activeSetId);
-      const cardSetBytes = setRes.success ? hexToBytes(setRes.value) : new Uint8Array();
-
-      return { stateBytes, cardSetBytes, setId: _activeSetId };
+    async getGameState(): Promise<ChainGame | null> {
+      const r = await arena().getGame.query(playerH160(), PUBLIC_READ);
+      if (!r.success) throw dryRunError(r.value, () => new Error('getGame read failed'));
+      const gameBytes = hexToBytes(r.value);
+      const info = decodeModeGame(gameBytes);
+      _activeGame = info;
+      if (!info) return null;
+      return { info, gameBytes, bundleBytes: await setBundle(info.setId) };
     },
 
-    async endGame(): Promise<BadgeEvent[]> {
-      await prepareWrite();
-      const dryRun = await arena().endGame.query();
-      if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected endGame');
-      const tx = await sendGameCall(
-        'endGame',
-        () => arena().endGame.prepare(),
-        () => arena().endGame.tx({ onStatus })
-      );
-      return playerBadgeEvents(tx.events);
+    async endGame(): Promise<void> {
+      await sendChecked('endGame', arena().endGame);
+      _activeGame = null;
     },
 
     async abandonGame(): Promise<void> {
-      await prepareWrite();
-      const dryRun = await arena().abandonGame.query();
-      if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected abandonGame');
-      await sendGameCall(
-        'abandonGame',
-        () => arena().abandonGame.prepare(),
-        () => arena().abandonGame.tx({ onStatus })
-      );
-    },
-
-    async rankedEligibility(): Promise<RankedEligibility> {
-      try {
-        if (!client || !_selectedAccount) throw new Error('Not connected');
-        const ctx = viewOrThrow(
-          'getPersonhoodContext',
-          await arena().getPersonhoodContext.query(PUBLIC_READ)
-        );
-        const binding = await readAliasBinding(client.assetHub, _selectedAccount.address);
-        return classifyBinding(ctx as Hex, binding);
-      } catch (err) {
-        return { kind: 'unknown', reason: err instanceof Error ? err.message : String(err) };
-      }
-    },
-
-    async bindPersonhood(): Promise<void> {
-      const signer = signerManager?.getSigner();
-      if (!client || !_selectedAccount || !signer) throw new Error('Not connected');
-      const account = _selectedAccount.address;
-      const session = _session;
-      await bindPersonhood({
-        api: client.assetHub,
-        account,
-        signer,
-        // The fee and the AliasFee are paid in PGAS: claim the sponsored-play
-        // allowance first if the account has none.
-        ensurePgas: async () => {
-          if (!session || (await session.deps.playerPgas()) > 0n) return;
-          await session.deps.requestAllowance();
-        },
-      });
-    },
-
-    async getRankedAlias(): Promise<Hex | null> {
-      const r = await arena().getRankedAlias.query();
-      if (!r.success || isZeroAlias(r.value)) return null;
-      return r.value as Hex;
-    },
-
-    async getLeaderboard(setId, offset, limit) {
-      const r = await arena().getLeaderboard.query(setId, offset, limit, PUBLIC_READ);
-      return decodeLeaderboard(viewOrThrow('getLeaderboard', r));
-    },
-
-    async getPlayerRank(setId, alias) {
-      return viewOrThrow(
-        'getPlayerRank',
-        await arena().getPlayerRank.query(setId, alias, PUBLIC_READ)
-      );
-    },
-
-    async getBestRun(setId, alias) {
-      const r = await arena().getBestRun.query(setId, alias, PUBLIC_READ);
-      return decodeBestRun(viewOrThrow('getBestRun', r));
-    },
-
-    async getBadges() {
-      if (!_selectedAccount) throw new Error('Not connected');
-      const player = ss58ToH160(_selectedAccount.address);
-      return decodeBadges(
-        viewOrThrow('getBadges', await arena().getBadges.query(player, PUBLIC_READ))
-      );
-    },
-
-    async claimPendingBadges() {
-      await prepareWrite();
-      return claimBadges({
-        method: arena().claimPendingBadges,
-        send: sendGameCall,
-        onStatus,
-        parseEvents: playerBadgeEvents,
-      });
+      await sendChecked('abandonGame', arena().abandonGame);
+      _activeGame = null;
     },
 
     async readItemMetadata(item, key) {
@@ -701,40 +554,27 @@ export function createContractBackend(deps: {
       };
       const keyHex = '0x' + bytesToHex(new TextEncoder().encode(key));
       const r = await collection.itemMetadata.query(item, keyHex, PUBLIC_READ);
-      return new TextDecoder().decode(hexToBytes(viewOrThrow('itemMetadata', r)));
+      if (!r.success) throw new Error('itemMetadata read failed');
+      return new TextDecoder().decode(hexToBytes(r.value));
     },
   };
-
-  /** Badge events in a tx's events that belong to the selected account. */
-  function playerBadgeEvents(events: unknown[]): BadgeEvent[] {
-    if (!_selectedAccount) return [];
-    return findBadgeEvents(events, ss58ToH160(_selectedAccount.address));
-  }
 
   return backend;
 }
 
-/** Decode every BadgeMinted / BadgePending event for `player` (H160) in `events`. */
-export function findBadgeEvents(events: unknown[], player: string): BadgeEvent[] {
-  const out: BadgeEvent[] = [];
+/** The SCALE report of the first `BattleReported` for `player` (H160) in `events`. */
+export function findBattleReport(events: unknown[], player: string): Uint8Array | null {
   for (const evt of events) {
     const inner = unwrapContractEmitted(evt);
     if (!inner) continue;
     const topics = (inner.topics ?? []).map(topicToHex).filter((t): t is string => t !== null);
-    const badge = decodeBadgeEvent(topics, binaryToBytes(inner.data));
-    if (badge && badge.player === player.toLowerCase()) out.push(badge);
+    const report = decodeBattleReportedEvent(topics, binaryToBytes(inner.data), player);
+    if (report) return report;
   }
-  return out;
+  return null;
 }
 
 // ── Byte/hex helpers ─────────────────────────────────────────────────────────
-
-function hexToBytes(hex: string): Uint8Array {
-  const h = hex.startsWith('0x') ? hex.slice(2) : hex;
-  const out = new Uint8Array(h.length / 2);
-  for (let i = 0; i < out.length; i++) out[i] = parseInt(h.slice(i * 2, i * 2 + 2), 16);
-  return out;
-}
 
 function bytesToHex(bytes: Uint8Array): string {
   let hex = '';
@@ -742,37 +582,7 @@ function bytesToHex(bytes: Uint8Array): string {
   return hex;
 }
 
-function decodeArenaSessionSetId(data: Uint8Array): number {
-  if (data.length < 2) return 0;
-  const lo = data[data.length - 2] ?? 0;
-  const hi = data[data.length - 1] ?? 0;
-  return lo | (hi << 8);
-}
-
-// ── BattleReported event decoding ────────────────────────────────────────────
-//
-// The contract emits a packed (NOT standard Solidity ABI) byte layout to keep
-// the on-chain encoder small, so we decode the raw `Revive.ContractEmitted`
-// event data ourselves rather than relying on the ABI codec.
-
-/**
- * Walk the tx's events looking for `Revive.ContractEmitted` whose first topic
- * matches our BattleReported signature, and return its raw `data` bytes.
- * Returns null if the event isn't present.
- */
-function findBattleReportedEventData(events: unknown[]): Uint8Array | null {
-  const target = BATTLE_REPORTED_TOPIC.toLowerCase();
-  for (const evt of events) {
-    const inner = unwrapContractEmitted(evt);
-    if (!inner) continue;
-    const topics = inner.topics ?? [];
-    const topic0 = topicToHex(topics[0]);
-    if (topic0?.toLowerCase() === target) {
-      return binaryToBytes(inner.data);
-    }
-  }
-  return null;
-}
+// ── Contract event plumbing ──────────────────────────────────────────────────
 
 interface ContractEmittedPayload {
   contract: unknown;
@@ -822,64 +632,6 @@ function binaryToBytes(data: unknown): Uint8Array {
   if (data && typeof (data as { asBytes?: () => Uint8Array }).asBytes === 'function') {
     return (data as { asBytes: () => Uint8Array }).asBytes();
   }
-  if (typeof data === 'string') {
-    return hexToBytes(data);
-  }
+  if (typeof data === 'string') return hexToBytes(data);
   return new Uint8Array();
-}
-
-/**
- * Decode the OAB BattleReported event payload. The contract emits a packed
- * byte layout:
- *   byte 0:    result (0=Victory, 1=Defeat, 2=Draw)
- *   byte 1:    wins
- *   byte 2:    lives
- *   byte 3:    round
- *   bytes 4-11: battleSeed (uint64, big-endian)
- *   bytes 12+:  SCALE-encoded Vec<GhostBoardUnit> (1-byte compact prefix, then
- *               6 bytes per unit: u16 card_id LE, i16 attack LE, i16 health LE)
- */
-function decodeBattleReported(bytes: Uint8Array): TurnResult {
-  if (bytes.length < 12) {
-    return { battleSeed: 0n, opponentBoard: [], result: 'Draw', wins: 0, lives: 0, round: 0 };
-  }
-  const resultByte = bytes[0];
-  const wins = bytes[1];
-  const lives = bytes[2];
-  const round = bytes[3];
-
-  let battleSeed = 0n;
-  for (let i = 4; i < 12; i++) {
-    battleSeed = (battleSeed << 8n) | BigInt(bytes[i] ?? 0);
-  }
-
-  const ghostBytes = bytes.slice(12);
-  const opponentBoard: GhostBoardUnit[] = [];
-  if (ghostBytes.length > 0) {
-    const count = (ghostBytes[0] ?? 0) / 4;
-    let offset = 1;
-    for (let i = 0; i < count && offset + 6 <= ghostBytes.length; i++) {
-      const card_id = (ghostBytes[offset] ?? 0) | ((ghostBytes[offset + 1] ?? 0) << 8);
-      const perm_attack =
-        (((ghostBytes[offset + 2] ?? 0) | ((ghostBytes[offset + 3] ?? 0) << 8)) << 16) >> 16;
-      const perm_health =
-        (((ghostBytes[offset + 4] ?? 0) | ((ghostBytes[offset + 5] ?? 0) << 8)) << 16) >> 16;
-      opponentBoard.push({ card_id, perm_attack, perm_health });
-      offset += 6;
-    }
-  }
-
-  const resultMap: Record<number, 'Victory' | 'Defeat' | 'Draw'> = {
-    0: 'Victory',
-    1: 'Defeat',
-    2: 'Draw',
-  };
-  return {
-    battleSeed,
-    opponentBoard,
-    result: resultMap[resultByte ?? 0] ?? 'Draw',
-    wins: wins ?? 0,
-    lives: lives ?? 0,
-    round: round ?? 0,
-  };
 }
