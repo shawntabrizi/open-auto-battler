@@ -39,6 +39,7 @@ import {
   type Sponsor,
   type SponsorStatus,
 } from './session';
+import { collectionAddress, COLLECTIBLES_COLLECTION } from '../services/nftOwnership';
 import {
   decodeBadgeEvent,
   decodeBadges,
@@ -146,6 +147,8 @@ export interface ContractBackend {
   getBadges(): Promise<BadgeRecord[]>;
   /** Retry pending badge mints; returns the badges minted now. */
   claimPendingBadges(): Promise<BadgeEvent[]>;
+  /** Item-scope metadata of an OAB Collectibles item, as UTF-8 (empty if unset). */
+  readItemMetadata(item: number, key: string): Promise<string>;
 }
 
 // keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
@@ -236,6 +239,20 @@ export function isHostTimeout(err: unknown): boolean {
 }
 
 const ARENA_LIBRARY = '@oab/arena';
+
+/** The one Scarcity collection view the app reads (individuality `IScarcityCollection.sol`). */
+const ITEM_METADATA_ABI: AbiEntry[] = [
+  {
+    type: 'function',
+    name: 'itemMetadata',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'item', type: 'uint32' },
+      { name: 'key', type: 'bytes' },
+    ],
+    outputs: [{ name: 'value', type: 'bytes' }],
+  },
+];
 
 // PRODUCT_ID (`./personhood`): the host derives (and authorizes) the app's
 // product-account signer from this dotNS identifier. It MUST match the app's
@@ -669,6 +686,22 @@ export function createContractBackend(deps: {
         onStatus,
         parseEvents: playerBadgeEvents,
       });
+    },
+
+    async readItemMetadata(item, key) {
+      if (!_runtime) throw new Error('Not connected');
+      const collection = createContract(
+        _runtime,
+        collectionAddress(COLLECTIBLES_COLLECTION),
+        ITEM_METADATA_ABI
+      ) as unknown as {
+        itemMetadata: {
+          query(item: number, key: string, opts?: ReadOptions): Promise<QueryResult<string>>;
+        };
+      };
+      const keyHex = '0x' + bytesToHex(new TextEncoder().encode(key));
+      const r = await collection.itemMetadata.query(item, keyHex, PUBLIC_READ);
+      return new TextDecoder().decode(hexToBytes(viewOrThrow('itemMetadata', r)));
     },
   };
 
