@@ -1,7 +1,7 @@
 //! Open Auto Battler Core - Auto-battler game engine
 //!
 //! This crate provides the core game logic for the Open Auto Battler.
-//! It is designed to be no_std compatible for Substrate SDK pallet integration.
+//! It is designed to be no_std compatible so the PolkaVM contract can run it.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 

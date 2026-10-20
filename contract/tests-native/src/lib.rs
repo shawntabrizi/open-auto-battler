@@ -1,7 +1,7 @@
 //! Tests for the OAB Arena smart contract game logic.
 //!
 //! Exercises the same game logic used in the contract, running natively.
-//! Verifies parity with pallet implementations.
+//! Verifies parity with the former pallet implementation.
 
 #[cfg(test)]
 mod tests {

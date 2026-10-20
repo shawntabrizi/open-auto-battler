@@ -1,7 +1,7 @@
 //! Open Auto Battler Game Modes
 //!
 //! Game-mode rules, session management, and validation built on top of
-//! the oab-battle engine. This crate is no_std compatible for use in blockchain pallets.
+//! the oab-battle engine. This crate is no_std compatible for use in the PolkaVM contract.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
