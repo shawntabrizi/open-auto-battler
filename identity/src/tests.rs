@@ -401,7 +401,8 @@ fn every_storage_item_fits_the_416_byte_limit() {
     assert_eq!(dump.len(), 5);
     for (_, v) in &dump {
         assert!(v.len() <= STORAGE_BYTES, "item of {} bytes", v.len());
-        assert!(v.len() <= 32, "the read buffer is 32 bytes");
+        // One fixed-key word per item: set_storage_or_clear writes exactly 32.
+        assert_eq!(v.len(), 32);
     }
 }
 
@@ -414,13 +415,14 @@ fn records_round_trip() {
         expires_at: u64::MAX - 1,
         revoked: true,
     };
-    assert_eq!(KeyRecord::from_bytes(&k.to_bytes()), Some(k));
+    assert_eq!(KeyRecord::from_word(&k.to_word()), Some(k));
     let o = OwnerRecord {
         session: KEY_1,
         expires_at: 7,
         state: STATE_OFFERED,
     };
-    assert_eq!(OwnerRecord::from_bytes(&o.to_bytes()), Some(o));
-    assert_eq!(KeyRecord::from_bytes(&[0u8; 28]), None);
-    assert_eq!(KeyRecord::from_bytes(&[]), None);
+    assert_eq!(OwnerRecord::from_word(&o.to_word()), Some(o));
+    // The zero word is "no record" (set_storage_or_clear deletes it).
+    assert_eq!(KeyRecord::from_word(&[0u8; 32]), None);
+    assert_eq!(OwnerRecord::from_word(&[0u8; 32]), None);
 }

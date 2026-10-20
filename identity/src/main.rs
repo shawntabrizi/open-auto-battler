@@ -20,10 +20,14 @@
 //! resolves the player and answers "not eligible", so a ranked mode fails
 //! closed until a later Identity version adds the precompile check.
 //!
-//! Storage is raw fixed-size records at `keccak256(domain ++ key)`. Every
-//! record is far below pallet-revive's 416-byte item limit
-//! (`pallet_revive::limits::STORAGE_BYTES`). The contract has no allocator,
-//! to keep the code blob that every game call loads small.
+//! Storage: every record is one 32-byte word at the fixed key
+//! `keccak256(domain ++ key)`, read with `get_storage_or_zero` and written
+//! with `set_storage_or_clear` (a zero word deletes the item and frees its
+//! deposit). Every item is far below pallet-revive's 416-byte limit
+//! (`pallet_revive::limits::STORAGE_BYTES`). Do not mix in `set_storage` with
+//! a 32-byte slice: pallet-revive treats that as a different (variable) key.
+//! The contract has no allocator, to keep the code blob that every game call
+//! loads small.
 
 #![cfg_attr(not(any(test, feature = "std", feature = "abi-gen")), no_main, no_std)]
 
@@ -35,9 +39,9 @@ pub const DEFAULT_MAX_TTL: u64 = 7 * 24 * 60 * 60;
 
 // ── Storage domains ───────────────────────────────────────────────────────────
 
-/// () -> admin address (20 bytes).
+/// () -> admin address (first 20 bytes of the word).
 const DOM_ADMIN: u8 = 0;
-/// () -> longest allowed session in seconds (u64 LE).
+/// () -> longest allowed session in seconds (u64 LE, first 8 bytes).
 const DOM_MAX_TTL: u8 = 1;
 /// session key -> `KeyRecord`. Written when a key is bound; never deleted.
 const DOM_KEY: u8 = 2;
@@ -55,18 +59,21 @@ pub struct KeyRecord {
 }
 
 impl KeyRecord {
+    /// Bytes used in the 32-byte storage word (the rest is zero).
     pub const SIZE: usize = 20 + 8 + 1;
 
-    pub fn to_bytes(&self) -> [u8; Self::SIZE] {
-        let mut b = [0u8; Self::SIZE];
+    pub fn to_word(&self) -> [u8; 32] {
+        let mut b = [0u8; 32];
         b[..20].copy_from_slice(&self.owner);
         b[20..28].copy_from_slice(&self.expires_at.to_le_bytes());
         b[28] = self.revoked as u8;
         b
     }
 
-    pub fn from_bytes(b: &[u8]) -> Option<Self> {
-        if b.len() != Self::SIZE {
+    /// `None` for the zero word (no record). A bound key's owner is never
+    /// zero, so a record is never the zero word.
+    pub fn from_word(b: &[u8; 32]) -> Option<Self> {
+        if *b == [0u8; 32] {
             return None;
         }
         let mut owner = [0u8; 20];
@@ -99,18 +106,20 @@ pub struct OwnerRecord {
 }
 
 impl OwnerRecord {
+    /// Bytes used in the 32-byte storage word (the rest is zero).
     pub const SIZE: usize = 20 + 8 + 1;
 
-    pub fn to_bytes(&self) -> [u8; Self::SIZE] {
-        let mut b = [0u8; Self::SIZE];
+    pub fn to_word(&self) -> [u8; 32] {
+        let mut b = [0u8; 32];
         b[..20].copy_from_slice(&self.session);
         b[20..28].copy_from_slice(&self.expires_at.to_le_bytes());
         b[28] = self.state;
         b
     }
 
-    pub fn from_bytes(b: &[u8]) -> Option<Self> {
-        if b.len() != Self::SIZE {
+    /// `None` for the zero word (no record). The session key is never zero.
+    pub fn from_word(b: &[u8; 32]) -> Option<Self> {
+        if *b == [0u8; 32] {
             return None;
         }
         let mut session = [0u8; 20];
@@ -261,83 +270,59 @@ mod oab_identity {
             key
         }
 
-        /// Reads one item into `buf`; returns its length, or `None` if absent.
-        fn read(&self, key: &[u8; 32], buf: &mut [u8; 32]) -> Option<usize> {
-            let mut out = &mut buf[..];
+        /// The word at a fixed key; the zero word if absent.
+        fn load(&self, key: &[u8; 32]) -> [u8; 32] {
+            let mut w = [0u8; 32];
             self.host()
-                .get_storage(StorageFlags::empty(), key, &mut out)
-                .ok()?;
-            Some(out.len())
+                .get_storage_or_zero(StorageFlags::empty(), key, &mut w);
+            w
+        }
+
+        /// Writes a word at a fixed key; the zero word deletes the item.
+        fn store(&self, key: &[u8; 32], w: &[u8; 32]) {
+            self.host()
+                .set_storage_or_clear(StorageFlags::empty(), key, w);
         }
 
         fn load_key(&self, session: &[u8; 20]) -> Option<KeyRecord> {
-            let mut buf = [0u8; 32];
-            let n = self.read(&self.skey(DOM_KEY, session), &mut buf)?;
-            KeyRecord::from_bytes(&buf[..n])
+            KeyRecord::from_word(&self.load(&self.skey(DOM_KEY, session)))
         }
 
         fn store_key(&self, session: &[u8; 20], r: &KeyRecord) {
-            self.host().set_storage(
-                StorageFlags::empty(),
-                &self.skey(DOM_KEY, session),
-                &r.to_bytes(),
-            );
+            self.store(&self.skey(DOM_KEY, session), &r.to_word());
         }
 
         fn load_owner(&self, owner: &[u8; 20]) -> Option<OwnerRecord> {
-            let mut buf = [0u8; 32];
-            let n = self.read(&self.skey(DOM_OWNER, owner), &mut buf)?;
-            OwnerRecord::from_bytes(&buf[..n])
+            OwnerRecord::from_word(&self.load(&self.skey(DOM_OWNER, owner)))
         }
 
         fn store_owner(&self, owner: &[u8; 20], r: &OwnerRecord) {
-            self.host().set_storage(
-                StorageFlags::empty(),
-                &self.skey(DOM_OWNER, owner),
-                &r.to_bytes(),
-            );
+            self.store(&self.skey(DOM_OWNER, owner), &r.to_word());
         }
 
-        /// Deletes the owner's record. An empty `set_storage` value would keep
-        /// the item (and its item deposit) on chain; a zero word deletes it.
+        /// Deletes the owner's record and frees its deposit.
         fn clear_owner(&self, owner: &[u8; 20]) {
-            self.host().set_storage_or_clear(
-                StorageFlags::empty(),
-                &self.skey(DOM_OWNER, owner),
-                &[0u8; 32],
-            );
+            self.store(&self.skey(DOM_OWNER, owner), &[0u8; 32]);
         }
 
         fn admin(&self) -> [u8; 20] {
-            let mut buf = [0u8; 32];
-            match self.read(&self.skey(DOM_ADMIN, &[0u8; 20]), &mut buf) {
-                Some(20) => {
-                    let mut a = [0u8; 20];
-                    a.copy_from_slice(&buf[..20]);
-                    a
-                }
-                _ => [0u8; 20],
-            }
+            let w = self.load(&self.skey(DOM_ADMIN, &[0u8; 20]));
+            let mut a = [0u8; 20];
+            a.copy_from_slice(&w[..20]);
+            a
         }
 
         fn load_max_ttl(&self) -> u64 {
-            let mut buf = [0u8; 32];
-            match self.read(&self.skey(DOM_MAX_TTL, &[0u8; 20]), &mut buf) {
-                Some(8) => {
-                    let mut b = [0u8; 8];
-                    b.copy_from_slice(&buf[..8]);
-                    u64::from_le_bytes(b)
-                }
-                _ => 0,
-            }
+            let w = self.load(&self.skey(DOM_MAX_TTL, &[0u8; 20]));
+            let mut b = [0u8; 8];
+            b.copy_from_slice(&w[..8]);
+            u64::from_le_bytes(b)
         }
 
         fn store_max_ttl(&self, ttl: u64) {
-            self.host().set_storage(
-                StorageFlags::empty(),
-                &self.skey(DOM_MAX_TTL, &[0u8; 20]),
-                &ttl.to_le_bytes(),
-            );
+            let mut w = [0u8; 32];
+            w[..8].copy_from_slice(&ttl.to_le_bytes());
+            self.store(&self.skey(DOM_MAX_TTL, &[0u8; 20]), &w);
         }
 
         /// Marks a bound key revoked (burned) if it is not already.
@@ -361,11 +346,9 @@ mod oab_identity {
         #[pvm_contract_sdk::constructor]
         pub fn new(&mut self) {
             let caller = self.caller_bytes();
-            self.host().set_storage(
-                StorageFlags::empty(),
-                &self.skey(DOM_ADMIN, &[0u8; 20]),
-                &caller,
-            );
+            let mut w = [0u8; 32];
+            w[..20].copy_from_slice(&caller);
+            self.store(&self.skey(DOM_ADMIN, &[0u8; 20]), &w);
             self.store_max_ttl(DEFAULT_MAX_TTL);
             MaxTtlSet {
                 max_ttl: DEFAULT_MAX_TTL,
