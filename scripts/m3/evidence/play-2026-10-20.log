@@ -1,0 +1,59 @@
+tx   abandonGame (leftover) block 2057824 0xeb5a9e2327c2319ffe124fd093b88e4cccaed71dac53e4f968198371b45956e7 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"24923519","tip":"0"}]
+tx   startGame (Alice) block 2057825 0xc566b25547a9d71fba9cc7ffeb02935e8821543fc09625b7944a0ba391571fc6 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"34237161","tip":"0"}]
+ok   Alice has a game on set 0, engine 1 {"run":"2","hand":[13,28,100,12,85]}
+ok   game pins Content setHash 0xf45b6236407876999873ee86247ff83b7a0ef52d3be2986eb05b4080d4d72ba9
+tx   submitTurn round 1 block 2057828 0x539c43cabac108b60f354d1b180b9a93870291ee70095ae4b0ca272c3c37b984 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"38119023","tip":"0"}]
+ok   turn 1 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 2 block 2057831 0xfe16016d0859146aa467021f3bfa8cf211a0ec984fbbf3d3594cfca8b7ea7b4e fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"38118494","tip":"0"}]
+ok   turn 2 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 3 block 2057834 0x7075bed02b1afc429a63d702787afa46cadbd6481a6ab6fc22005ca27361cafd fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"38118318","tip":"0"}]
+ok   turn 3 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 4 block 2057837 0xe93276aa1799ccf18ba8dfee6973365100d9f6adb19d319fe402950e0b97316e fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"38119199","tip":"0"}]
+ok   turn 4 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 5 block 2057840 0x8c38fb7997d103f105d43460c77d61ecaba4997bc020d485bf45136e6361bb1a fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"38120081","tip":"0"}]
+ok   turn 5 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 6 block 2057842 0x52c8f0b42a0e4efc249a550fc9adef7c05f3a55a639a344c52b48502b45012bd fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"38120434","tip":"0"}]
+ok   turn 6 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+ok   game over {"wins":2,"lives":0,"round":6}
+tx   endGame (Alice) block 2057844 0x3278927171999f6dc4665f3693cbef3cbc6270d0a6f0cf6de235decbb0bcd9df fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"26777756","tip":"0"}]
+ok   game cleared after endGame
+ok   replay round 1 ends in result 0 35 event bytes
+ok   replay round 2 ends in result 2 117 event bytes
+ok   replay round 3 ends in result 0 159 event bytes
+ok   replay round 4 ends in result 1 330 event bytes
+ok   replay round 5 ends in result 1 1244 event bytes
+ok   replay round 6 ends in result 1 530 event bytes
+tx   fund key (PGAS to SS58 + native) block 2057847 0x5c717ae169b549749f30e2aaa9917e8811c4b4f70cf28d4cf9dfb78239144ca3 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"12155211","tip":"0"}]
+ok   key account is mapped (auto-map on creation) 0x98b3a49e47ee5f4032dacd4d4087fc0265c974dd
+tx   Identity.registerSession(key) block 2057849 0x24589bedd9b7d08139e817f1e12a29125ef688e121ca9ead741cee395659a50b fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"18026782","tip":"0"}]
+tx   Identity.acceptSession(alice) (key) block 2057851 0xcd7fd76c5e6068f7d7a947e4b1f91b0b33d9fd198ed899ea0af76b793a2aeaa6 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"16329603","tip":"0"}]
+tx   startGame (key, for Alice) block 2057853 0x69ca84dc6d01aca8a8b53e9b3bc4330d05fa52d31e17e74d0ed17052da706d19 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"34189983","tip":"0"}]
+ok   the key started ALICE's game
+tx   submitTurn round 1 (V1) block 2057856 0x5dd0f560021b29198910d0902eb1bb181cf0edf106e07515c9a34b6766807ae5 fees [{"event":"PgasAllowance.PGASFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"38100790"}]
+ok   turn 1 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 2 block 2057859 0x9dddc146ffac974812fddfe79e9cc482830274b154e93fb87dff631511d520b0 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"38073785","tip":"0"}]
+ok   turn 2 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 3 block 2057862 0x97de11cf646efb87cf011f65360725fd026f63d4324787b30ee3e70ee1974e22 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"38074314","tip":"0"}]
+ok   turn 3 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 4 block 2057865 0xfec6b1248630dc142f840fe2249b64b7f1b38afe6bafc0feefe3423a8e74a11f fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"38075195","tip":"0"}]
+ok   turn 4 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 5 block 2057868 0xa9a405f5a6132adee24080e9467b9b1d89716682ff5684937edf4255e3daa5ca fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"38075019","tip":"0"}]
+ok   turn 5 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 6 block 2057871 0x772ed9b8adc97f33d9c368cc62c4f43102b0c07e4c8c6fc3551fe399db06ef7f fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"38073255","tip":"0"}]
+ok   turn 6 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 7 block 2057874 0x7e1b24f9b3962b61cf6b7a71f87ded53dd271579ac6980f37390c2817ca3ca16 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"38071492","tip":"0"}]
+ok   turn 7 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 8 block 2057877 0x15ffa368820a132a6907030549b4d78de95601d73eb7928496875eb31bd3f231 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"38069728","tip":"0"}]
+ok   turn 8 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   submitTurn round 9 block 2057880 0x6861d6df2052e437a629482224942f88afa408c5e05943403bd1d43f948b63d9 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"38067965","tip":"0"}]
+ok   turn 9 reports for 0x9621dde636de098b43efb0fa9b61facfe328f99d
+tx   endGame (key) block 2057882 0x40edb5b03eded3a1bf0d1a9b6a5f2279bd534fd21b7de1914e19a7901fdcb951 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"26675287","tip":"0"}]
+ok   key game over and ended
+ok   V1 turn paid its fee in PGAS, no native {"event":"PgasAllowance.PGASFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"38100790"}
+tx   Identity.revokeSession (Alice) block 2057884 0xa3e43061b20edb862ebf81efdf408d1cc1f5f6df87e2629372d3e0ac3e798d76 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"13880835","tip":"0"}]
+ok   revoked key reverts InvalidSession(key) 0x271028cc00000000000000000000000098b3a49e47ee5f4032dacd4d4087fc0265c974dd
+tx   drain key to Alice block 2057886 0x3f892fd36d000ccc6fe0df4bfe114afd732994e34a1bb07018562197c5239f9e fees [{"event":"TransactionPayment.TransactionFeePaid","who":"13DwRNV5qqWG4xitNzPpjZVWF6kQBXqjR1Qnr4hQJj2BmwxC","actual_fee":"11655211","tip":"0"}]
+tx   arena v2 startGame (Alice) block 2057888 0x6e32d32db43e33daf1d637b2b367f70506051e150e772f3c73bca00b93f84386 fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"69548955","tip":"0"}]
+ok   arena v2 dry-runs ran {"startDry":{"ref_time":"32600652201","proof_size":"661372","revert":false,"seed":"0x0000000000000000000000000000000000000000000000007c54898e3193873d"},"start":{"label":"arena v2 startGame (Alice)","ok":true,"block":2057888,"txHash":"0x6e32d32db43e33daf1d637b2b367f70506051e150e772f3c73bca00b93f84386","error":null,"fees":[{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"69548955","tip":"0"}],"before":{"alice":{"native":"41714284117403","pgas":"92343246"}},"after":{"alice":{"native":"41713792268448","pgas":"92343246"}}},"turnDry":{"ref_time":"37680917221","proof_size":"678693","seed":"0x000000000000000000000000000000000000000000000000935011b8ded5c9b1"}}
+tx   arena v2 abandonGame (Alice) block 2057890 0x9e2724fbcae80afecec3fdffe3b26a964f77e67500368e1326a1af112ca653fb fees [{"event":"TransactionPayment.TransactionFeePaid","who":"15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5","actual_fee":"23138593","tip":"0"}]
+ALL OK

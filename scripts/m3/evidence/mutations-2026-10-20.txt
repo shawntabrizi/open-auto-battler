@@ -1,0 +1,8 @@
+M1 thin pool never mixes house ghosts -> 3 failing: thin_brackets_mix_in_house_ghosts_and_full_ones_do_not, an_empty_bracket_fights_a_house_ghost, every_reported_battle_replays_to_the_reported_result
+M2 bracket keeps oldest (no drop) -> 1 failing: a_ghost_bracket_keeps_the_ten_newest_boards
+M3 player = msg.sender (ignore Identity answer) -> 2 failing: a_session_key_plays_for_its_owner, an_expired_or_revoked_key_reverts_and_changes_nothing
+M4 start seed from msg.sender -> 1 failing: a_session_key_plays_for_its_owner
+M5 no hash check at cache time -> 1 failing: cache_set_takes_only_the_pinned_bundle_and_only_from_the_admin
+M6 house round not clamped to cached rounds -> 1 failing: an_empty_bracket_fights_a_house_ghost
+M7 ghost written before the turn is checked -> 1 failing: a_turn_with_invalid_actions_reverts_and_changes_nothing
+M8 battle seed from the shop context -> 1 failing: the_arena_matches_the_golden_vectors_turn_by_turn
