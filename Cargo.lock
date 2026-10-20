@@ -390,6 +390,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "oab-plan"
+version = "0.1.0"
+dependencies = [
+ "oab-assets",
+ "oab-battle",
+ "oab-engine",
+ "oab-protocol",
+ "parity-scale-codec",
+ "serde_json",
+]
+
+[[package]]
 name = "oab-protocol"
 version = "0.1.0"
 dependencies = [

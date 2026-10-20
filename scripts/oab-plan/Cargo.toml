@@ -1,0 +1,15 @@
+[package]
+name = "oab-plan"
+version = "0.1.0"
+description = "Builds the M1 deploy plan: Content publish calldata and engine check vectors"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+oab-battle = { workspace = true, features = ["std"] }
+oab-engine = { workspace = true, features = ["std", "vectors"] }
+oab-protocol = { workspace = true, features = ["std"] }
+oab-assets = { workspace = true, features = ["std"] }
+parity-scale-codec = { workspace = true, features = ["std"] }
+serde_json = { workspace = true, features = ["std"] }

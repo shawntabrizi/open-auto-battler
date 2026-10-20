@@ -1,0 +1,135 @@
+{
+  "dependencies": {
+    "@oab/engine": "latest"
+  },
+  "contracts": {
+    "@oab/engine": {
+      "version": 0,
+      "address": "0xb63d4a8DdAcB30a3E181C98a6008a2Be4fC6CCb0",
+      "abi": [
+        {
+          "type": "constructor",
+          "inputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "engineVersion",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "uint32"
+            }
+          ],
+          "stateMutability": "pure"
+        },
+        {
+          "type": "function",
+          "name": "vectorsHash",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "pure"
+        },
+        {
+          "type": "function",
+          "name": "newGame",
+          "inputs": [
+            {
+              "name": "input",
+              "type": "bytes"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "pure"
+        },
+        {
+          "type": "function",
+          "name": "resolveTurn",
+          "inputs": [
+            {
+              "name": "input",
+              "type": "bytes"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "pure"
+        },
+        {
+          "type": "function",
+          "name": "replayBattle",
+          "inputs": [
+            {
+              "name": "input",
+              "type": "bytes"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "pure"
+        },
+        {
+          "type": "error",
+          "name": "BadInput",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "InvalidTurn",
+          "inputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ]
+        },
+        {
+          "type": "error",
+          "name": "InvalidCalldata",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "CalldataTooLarge",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NoSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "UnknownSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NonPayableValueReceived",
+          "inputs": []
+        }
+      ],
+      "metadataCid": "bafk2bzaceawg64zxjyo6jrljckv2cttm4llh5xc2o7ntjh3v7oiv2hav7t3l6"
+    }
+  },
+  "registry": "0xc1a73a4f93fde65b1cb1680baead248073566cb0"
+}
