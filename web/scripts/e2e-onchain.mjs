@@ -22,6 +22,10 @@ const DUMP = process.env.DUMP || '/tmp/cards-dump.json';
 
 function log(...a) { console.log('[e2e]', ...a); }
 
+// The contract seeds games from the entropy of the block that includes the tx,
+// so the real run can cost more than the dry-run. Add headroom to the weight.
+const withHeadroom = (w) => ({ ref_time: w.ref_time * 2n, proof_size: w.proof_size * 2n });
+
 const cdm = JSON.parse(readFileSync(new URL('../cdm.json', import.meta.url)));
 const ADDRESS = cdm.contracts['@oab/arena'].address;
 const ABI = cdm.contracts['@oab/arena'].abi;
@@ -76,11 +80,13 @@ async function main() {
   log('getSet OK, bytes:', (setRead.value.length - 2) / 2);
 
   // ── startGame ──
-  const seedNonce = 20260630n;
-  const startDry = await arena.startGame.query(set0.id, seedNonce);
+  const startDry = await arena.startGame.query(set0.id);
   log('startGame.query seed:', startDry.value?.toString());
   if (!startDry.success || startDry.value === 0n) throw new Error('startGame rejected in dry-run');
-  const startTx = await arena.startGame.tx(set0.id, seedNonce, { waitFor: 'best-block' });
+  const startTx = await arena.startGame.tx(set0.id, {
+    gasLimit: withHeadroom(startDry.gasRequired),
+    waitFor: 'best-block',
+  });
   if (!startTx.ok) throw new Error('startGame tx failed');
   log('startGame tx ok, block:', startTx.block?.number);
 

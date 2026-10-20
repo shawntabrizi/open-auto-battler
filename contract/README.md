@@ -74,10 +74,14 @@ reference app). It requires a funded paseo Asset Hub account (faucet) and a
 one-time account mapping:
 
 ```bash
-cdm build
-cdm deploy -n paseo                 # deploys via pallet-revive + registers @oab/arena
-cdm install -n paseo @<handle>/arena  # refresh web/cdm.json (registry + address)
+cdm account map -n paseo              # once per deploy account
+cdm deploy -n paseo                   # from contract/: deploys + registers @oab/arena
+(cd ../web && cdm i -n paseo @oab/arena)  # refresh web/cdm.json (registry + address + ABI)
+cdm i -n paseo @oab/arena             # refresh contract/cdm.json
 ```
+
+Deploys need PAS on Asset Hub and a Bulletin allowance (for the metadata);
+`cdm account bal -n paseo` shows both.
 
 `cdm install` writes the registry-pointer manifest the frontend consumes at
 runtime; `web/src/contract/index.ts` resolves the live address/ABI from the
@@ -85,9 +89,18 @@ on-chain CDM registry via `ContractManager.fromLiveClient` (a redeploy is
 picked up without shipping a new `cdm.json`). It also still accepts the legacy
 inline `@dotdm/cdm` manifest for backward compatibility.
 
-After the contract is deployed, register the genesis cards/sets and deploy the
-frontend to a host (`playground deploy`) so it can reach Asset Hub through the
-Polkadot host.
+After the contract is deployed, register the cards and sets as the deployer
+(the contract admin), then check the deployment end to end:
+
+```bash
+(cd ../register-cards && cargo run -- --dump /tmp/cards-dump.json)
+cd ../web
+OAB_MNEMONIC="<deployer phrase>" bun run scripts/register-cards.ts /tmp/cards-dump.json
+DUMP=/tmp/cards-dump.json node scripts/e2e-onchain.mjs
+```
+
+Then deploy the frontend to a host (`playground deploy`) so it can reach Asset
+Hub through the Polkadot host.
 
 ## Contract API
 

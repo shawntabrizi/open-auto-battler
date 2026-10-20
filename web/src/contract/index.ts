@@ -80,9 +80,11 @@ const BATTLE_REPORTED_TOPIC = '0x96fd1736ea4fbef32e328d7005021b05c7ee31f32694dde
  * (The package surfaces this internally; declared locally to avoid depending on
  * a non-exported type name.)
  */
+type Weight = { ref_time: bigint; proof_size: bigint };
+
 type QueryResult<T> =
-  | { success: true; value: T; gasRequired: unknown }
-  | { success: false; value: unknown; gasRequired?: unknown };
+  | { success: true; value: T; gasRequired: Weight }
+  | { success: false; value: unknown; gasRequired?: Weight };
 
 /**
  * Minimal typed view of the `@oab/arena` contract. `createContract` returns a
@@ -93,7 +95,7 @@ type QueryResult<T> =
 interface ArenaContract {
   startGame: {
     query(setId: number): Promise<QueryResult<bigint>>;
-    tx(setId: number): Promise<TxResult>;
+    tx(setId: number, overrides?: { gasLimit: Weight }): Promise<TxResult>;
   };
   submitTurn: {
     query(action: string): Promise<QueryResult<bigint>>;
@@ -285,7 +287,13 @@ export function createContractBackend(deps: {
         throw new Error(`Contract rejected startGame for set ${setId}`);
       }
       _activeSetId = setId;
-      const tx = await arena().startGame.tx(setId);
+      // The SDK sizes gas to the exact dry-run weight, but the real run uses
+      // the inclusion block's entropy and can cost more (Revive.OutOfGas).
+      // Unused weight is refunded, so double the limit.
+      const { ref_time, proof_size } = dryRun.gasRequired;
+      const tx = await arena().startGame.tx(setId, {
+        gasLimit: { ref_time: ref_time * 2n, proof_size: proof_size * 2n },
+      });
       if (!tx.ok) throw new Error('startGame tx failed');
       return { seed: dryRun.value };
     },

@@ -4,8 +4,8 @@
   },
   "contracts": {
     "@oab/arena": {
-      "version": 1,
-      "address": "0xCc97CD2BBF330B6C0e1C98f12bA5230b6E5Ee61F",
+      "version": 0,
+      "address": "0x76E6703e91F9B202a5b3f5d34ea3478DD6A5c484",
       "abi": [
         {
           "type": "constructor",
@@ -180,8 +180,8 @@
           "inputs": []
         }
       ],
-      "metadataCid": "bafk2bzacedbycccjqxbepx5qtqd4iippsjewfc6ofzjqnqu75cnidv2prfuk6"
+      "metadataCid": "bafk2bzaceascmnvkdyfyonaddoipw2lx6qmclk2dvt32epol7gg5enrr4k3um"
     }
   },
-  "registry": "0xf62c2ece29cd8df2e10040ecfa5a894a5c5d9cb0"
+  "registry": "0xc1a73a4f93fde65b1cb1680baead248073566cb0"
 }
