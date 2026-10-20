@@ -16,7 +16,7 @@
 import { readFileSync } from 'fs';
 import { createClient } from 'polkadot-api';
 import { getWsProvider } from 'polkadot-api/ws';
-import { getPolkadotSigner } from 'polkadot-api/signer';
+import { getTxCreator } from 'polkadot-api/tx-creator';
 import { sr25519CreateDerive } from '@polkadot-labs/hdkd';
 import { entropyToMiniSecret, mnemonicToEntropy, ss58Encode } from '@polkadot-labs/hdkd-helpers';
 import {
@@ -63,18 +63,19 @@ async function main() {
   console.log(`contract: ${entry.address}`);
 
   const kp = sr25519CreateDerive(entropyToMiniSecret(mnemonicToEntropy(mnemonic)))('');
-  const signer = getPolkadotSigner(kp.publicKey, 'Sr25519', kp.sign);
+  const signer = getTxCreator(kp.publicKey, 'Sr25519', kp.sign);
   const origin = ss58Encode(kp.publicKey);
   console.log(`signer: ${origin}`);
 
   const client = createClient(getWsProvider(wsUrl));
   try {
     const api = client.getUnsafeApi();
-    await ensureContractAccountMapped(
+    const mapped = await ensureContractAccountMapped(
       createContractRuntimeFromClient(client, paseo_asset_hub),
       origin,
       signer
     );
+    if (!mapped.ok) throw new Error(`Account mapping failed: ${mapped.error.message}`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const arena: any = createContractFromClient(
       client,
@@ -84,9 +85,16 @@ async function main() {
       { defaultSigner: signer, defaultOrigin: origin }
     );
 
+    // `.prepare()` returns a Result; stop on the first call that fails to build.
+    const prepared = (r: { ok: boolean; value?: unknown; error?: Error }) => {
+      if (!r.ok) throw new Error(`prepare failed: ${r.error?.message}`);
+      return r.value;
+    };
     const calls = [];
-    for (const hex of dump.cards) calls.push(await arena.registerCard.prepare(hex));
-    for (const set of dump.sets) calls.push(await arena.registerSet.prepare(set.id, set.data));
+    for (const hex of dump.cards) calls.push(prepared(await arena.registerCard.prepare(hex)));
+    for (const set of dump.sets) {
+      calls.push(prepared(await arena.registerSet.prepare(set.id, set.data)));
+    }
 
     let allOk = true;
     for (let i = 0; i < calls.length; i += CHUNK_SIZE) {
@@ -95,7 +103,10 @@ async function main() {
         mode: 'batch_all',
         waitFor: 'best-block',
       });
-      console.log(`  batch ${i / CHUNK_SIZE + 1}: ${chunk.length} calls ok=${r.ok}`);
+      console.log(
+        `  batch ${i / CHUNK_SIZE + 1}: ${chunk.length} calls ok=${r.ok}` +
+          (r.ok ? '' : ` (${r.error.message})`)
+      );
       if (!r.ok) allOk = false;
     }
 

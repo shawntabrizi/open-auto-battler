@@ -8,6 +8,8 @@
  * Reads use `.query()` (dry-run); state changes use `.tx()`, which resolves at
  * best-block by default — so no hand-rolled `Revive.call` / Solidity ABI
  * encoding is needed (the SDK uses the contract ABI + viem codec internally).
+ * `.tx()` and `ensureContractAccountMapped` return a `Result`: a failed
+ * dispatch, a rejected signature, or a host timeout arrives on the `err` arm.
  */
 
 import type { SS58String } from 'polkadot-api';
@@ -19,7 +21,8 @@ import {
   ensureContractAccountMapped,
   type AbiEntry,
 } from '@parity/product-sdk-contracts';
-import type { TxResult } from '@parity/product-sdk-tx';
+import type { TxResult, TxStatus } from '@parity/product-sdk-tx';
+import type { Result } from '@parity/product-sdk-host';
 import { SignerManager, HostProvider, DevProvider } from '@parity/product-sdk-signer';
 import { isInHost } from '../services/hostEnvironment';
 import cdmJson from '../../cdm.json';
@@ -86,6 +89,9 @@ type QueryResult<T> =
   | { success: true; value: T; gasRequired: Weight }
   | { success: false; value: unknown; gasRequired?: Weight };
 
+type TxOutcome = Result<TxResult, Error>;
+type TxOptions = { gasLimit?: Weight; onStatus?: (status: TxStatus) => void };
+
 /**
  * Minimal typed view of the `@oab/arena` contract. `createContract` returns a
  * generic handle; we cast to this so call sites stay type-checked. The SDK's
@@ -95,16 +101,44 @@ type QueryResult<T> =
 interface ArenaContract {
   startGame: {
     query(setId: number): Promise<QueryResult<bigint>>;
-    tx(setId: number, overrides?: { gasLimit: Weight }): Promise<TxResult>;
+    tx(setId: number, opts?: TxOptions): Promise<TxOutcome>;
   };
   submitTurn: {
     query(action: string): Promise<QueryResult<bigint>>;
-    tx(action: string): Promise<TxResult>;
+    tx(action: string, opts?: TxOptions): Promise<TxOutcome>;
   };
   getGameState: { query(): Promise<QueryResult<string>> };
   getSet: { query(setId: number): Promise<QueryResult<string>> };
-  endGame: { query(): Promise<QueryResult<boolean>>; tx(): Promise<TxResult> };
-  abandonGame: { query(): Promise<QueryResult<boolean>>; tx(): Promise<TxResult> };
+  endGame: { query(): Promise<QueryResult<boolean>>; tx(opts?: TxOptions): Promise<TxOutcome> };
+  abandonGame: {
+    query(): Promise<QueryResult<boolean>>;
+    tx(opts?: TxOptions): Promise<TxOutcome>;
+  };
+}
+
+/** Wrap an SDK error with a call label, keeping the original as `cause`. */
+function labelled(label: string, error: Error): Error {
+  return Object.assign(new Error(`${label} failed: ${error.message}`), { cause: error });
+}
+
+/** Unwrap a `.tx()` Result, throwing the labelled SDK error on failure. */
+function txOrThrow(label: string, r: TxOutcome): TxResult {
+  if (!r.ok) throw labelled(label, r.error);
+  return r.value;
+}
+
+/**
+ * True when the failure (or an error on its cause chain) is a host call that
+ * got no answer in time. Checked by name: `HostTimeoutError` ships in
+ * `@parity/product-sdk-host` 0.28, and older hosts report a plain decode error.
+ */
+export function isHostTimeout(err: unknown): boolean {
+  let e: unknown = err;
+  for (let depth = 0; e instanceof Error && depth < 5; depth++) {
+    if (e.name === 'HostTimeoutError') return true;
+    e = (e as { cause?: unknown }).cause;
+  }
+  return false;
 }
 
 const ARENA_LIBRARY = '@oab/arena';
@@ -136,7 +170,10 @@ export function isMissingArenaSessionPayload(data: Uint8Array): boolean {
 export function createContractBackend(deps: {
   /** Force the dev signer provider (Alice/Bob) instead of auto-detecting the host. */
   useDevAccounts?: boolean;
+  /** Lifecycle of each submitted transaction, for progress UI. */
+  onTxStatus?: (status: TxStatus) => void;
 }): ContractBackend {
+  const onStatus = deps.onTxStatus;
   // Host-first: derive the signer provider from the host environment, with an
   // explicit override for local-dev (`useDevAccounts`).
   const providerType: 'dev' | 'host' = (deps.useDevAccounts ?? !isInHost()) ? 'dev' : 'host';
@@ -171,7 +208,10 @@ export function createContractBackend(deps: {
     }
     const signer = signerManager.getSigner();
     if (!signer) throw new Error('No signer for selected account');
-    await ensureContractAccountMapped(_runtime, _selectedAccount.address, signer);
+    const r = await ensureContractAccountMapped(_runtime, _selectedAccount.address, signer, {
+      onStatus: (s) => onStatus?.(s as TxStatus),
+    });
+    if (!r.ok) throw labelled('Account mapping', r.error);
     _mapped = true;
   }
 
@@ -291,10 +331,13 @@ export function createContractBackend(deps: {
       // the inclusion block's entropy and can cost more (Revive.OutOfGas).
       // Unused weight is refunded, so double the limit.
       const { ref_time, proof_size } = dryRun.gasRequired;
-      const tx = await arena().startGame.tx(setId, {
-        gasLimit: { ref_time: ref_time * 2n, proof_size: proof_size * 2n },
-      });
-      if (!tx.ok) throw new Error('startGame tx failed');
+      txOrThrow(
+        'startGame',
+        await arena().startGame.tx(setId, {
+          gasLimit: { ref_time: ref_time * 2n, proof_size: proof_size * 2n },
+          onStatus,
+        })
+      );
       return { seed: dryRun.value };
     },
 
@@ -307,8 +350,7 @@ export function createContractBackend(deps: {
       // extra `.query()` would just double that heavy simulation (and the
       // host round-trip) before the signing prompt appears. We read battleSeed
       // + the full report from the BattleReported event below, not the query.
-      const tx = await arena().submitTurn.tx(action);
-      if (!tx.ok) throw new Error('submitTurn tx failed');
+      const tx = txOrThrow('submitTurn', await arena().submitTurn.tx(action, { onStatus }));
 
       const eventBytes = findBattleReportedEventData(tx.events);
       if (!eventBytes) {
@@ -353,16 +395,14 @@ export function createContractBackend(deps: {
       await ensureMapped();
       const dryRun = await arena().endGame.query();
       if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected endGame');
-      const tx = await arena().endGame.tx();
-      if (!tx.ok) throw new Error('endGame tx failed');
+      txOrThrow('endGame', await arena().endGame.tx({ onStatus }));
     },
 
     async abandonGame(): Promise<void> {
       await ensureMapped();
       const dryRun = await arena().abandonGame.query();
       if (!dryRun.success || !dryRun.value) throw new Error('Contract rejected abandonGame');
-      const tx = await arena().abandonGame.tx();
-      if (!tx.ok) throw new Error('abandonGame tx failed');
+      txOrThrow('abandonGame', await arena().abandonGame.tx({ onStatus }));
     },
   };
 
@@ -426,7 +466,7 @@ function unwrapContractEmitted(evt: unknown): ContractEmittedPayload | null {
   if (typeof evt !== 'object' || evt === null) return null;
   const e = evt as Record<string, unknown>;
 
-  // PAPI's signSubmitAndWatch wrapper: { phase, event: {type, value}, topics }
+  // PAPI's tx event record: { phase, event: {type, value}, topics }
   // — descend into event.
   if (typeof e.event === 'object' && e.event !== null) {
     const inner = unwrapContractEmitted(e.event);

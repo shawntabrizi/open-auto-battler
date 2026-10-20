@@ -4,9 +4,20 @@
 
 import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
-import { createContractBackend, type Account, type ContractBackend } from '../contract';
+import {
+  createContractBackend,
+  isHostTimeout,
+  type Account,
+  type ContractBackend,
+} from '../contract';
 import { useGameStore } from './gameStore';
 import { useTxStore } from './txStore';
+
+/** Toast text for a failed contract action; a host timeout gets a clear hint. */
+function txErrorMessage(err: unknown, fallback: string): string {
+  if (isHostTimeout(err)) return 'The host did not answer in time. Please try again.';
+  return err instanceof Error ? err.message : fallback;
+}
 
 /** Show the TransactionOverlay while `fn` (a signing + submitting flow) runs. */
 async function withTxOverlay<T>(label: string, isHostSigner: boolean, fn: () => Promise<T>) {
@@ -64,7 +75,16 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     set({ isConnecting: true, connectionError: null });
 
     try {
-      const backend = createContractBackend({ useDevAccounts });
+      const backend = createContractBackend({
+        useDevAccounts,
+        // Advance the overlay as the tx moves on. Actions resolve at best
+        // block, so 'finalized' never reaches an open overlay.
+        onTxStatus: (status) => {
+          if (status === 'signing' || status === 'broadcasting' || status === 'in-block') {
+            useTxStore.setState({ status });
+          }
+        },
+      });
 
       await backend.connect();
 
@@ -137,7 +157,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       console.log('Contract: game state refreshed, hasActiveGame:', get().hasActiveGame);
     } catch (err) {
       console.error('Contract start game failed:', err);
-      toast.error(err instanceof Error ? err.message : 'Failed to start contract game');
+      toast.error(txErrorMessage(err, 'Failed to start contract game'));
     }
   },
 
@@ -194,7 +214,7 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       }
     } catch (err) {
       console.error('Contract submit turn failed:', err);
-      toast.error(err instanceof Error ? err.message : 'Failed to submit contract turn');
+      toast.error(txErrorMessage(err, 'Failed to submit contract turn'));
       // The failure may have happened after broadcast (e.g. the tx landed but
       // the battle report couldn't be decoded), in which case the chain has
       // already advanced past our local shop state. Resync so the player
