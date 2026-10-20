@@ -149,6 +149,117 @@ fn insert_ranked(board: &mut Vec<LeaderboardEntry>, entry: LeaderboardEntry, cap
     true
 }
 
+// ── Achievement badges (Scarcity soulbound NFTs) ──────────────────────────────
+//
+// See `docs/NFT_DESIGN.md` §8. The arena owns an "OAB Achievements" Scarcity
+// collection and mints a soulbound badge when a ranked run qualifies.
+
+/// `ScarcityFactory` precompile, `AddressMatcher::Fixed(0x0521)`.
+const SCARCITY_FACTORY: [u8; 20] = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x05, 0x21, 0x00, 0x00,
+];
+
+/// ERC-721 address of Scarcity collection `id`: the id big-endian in the first
+/// four bytes, the collection precompile prefix `0x0520` in bytes 16..18.
+fn collection_address(id: u32) -> [u8; 20] {
+    let mut a = [0u8; 20];
+    a[..4].copy_from_slice(&id.to_be_bytes());
+    a[16] = 0x05;
+    a[17] = 0x20;
+    a
+}
+
+/// Badge types. The value is the index into [`BADGES`] and into
+/// `BadgeConfig::items`. Never reorder: stored records refer to these values.
+pub const BADGE_VICTORY: u8 = 0;
+pub const BADGE_FLAWLESS: u8 = 1;
+
+/// Season 0 badges as `(oab.badge, oab.name)` item metadata. Mirrors the
+/// pallet-era silver (`wins >= wins_to_victory`) and gold (also no life lost)
+/// achievements, but per set instead of per card.
+const BADGES: [(&[u8], &[u8]); 2] = [(b"victory", b"Victory"), (b"flawless", b"Flawless")];
+
+/// Collection metadata the arena writes in `init_achievements`.
+const BADGE_COLLECTION_NAME: &[u8] = b"Open Auto Battler Achievements";
+const BADGE_COLLECTION_SYMBOL: &[u8] = b"OABA";
+
+/// ASCII decimal digits of `n` (badge instance metadata `oab.set`).
+fn decimal(mut n: u64) -> Vec<u8> {
+    let mut out = Vec::new();
+    loop {
+        out.push(b'0' + (n % 10) as u8);
+        n /= 10;
+        if n == 0 {
+            break;
+        }
+    }
+    out.reverse();
+    out
+}
+
+/// The badges a finished run earns, in badge order.
+fn qualifying_badges(session: &ArenaSession, config: &GameConfig) -> Vec<u8> {
+    let mut out = Vec::new();
+    if session.wins >= config.wins_to_victory {
+        out.push(BADGE_VICTORY);
+        if session.lives >= config.starting_lives {
+            out.push(BADGE_FLAWLESS);
+        }
+    }
+    out
+}
+
+/// Where the arena's badge collection lives. Written once by `init_achievements`.
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
+pub struct BadgeConfig {
+    pub collection: u32,
+    /// Scarcity item index per badge type (`items[BADGE_VICTORY]`, ...).
+    pub items: Vec<u32>,
+}
+
+/// One earned badge of one account. `token` is `None` while the mint is
+/// pending (the mint failed; `claim_pending_badges` retries it).
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
+pub struct BadgeRecord {
+    pub badge: u8,
+    pub set_id: SetIdValue,
+    pub block: u64,
+    pub token: Option<u64>,
+}
+
+pvm_contract_sdk::abi_import! {
+    #![abi_import(alloc = true)]
+    // Subset of individuality `precompiles/scarcity/sol/IScarcityFactory.sol`.
+    pragma solidity ^0.8.30;
+
+    interface IScarcityFactory {
+        function createCollection() external returns (uint32 collection);
+    }
+}
+
+pvm_contract_sdk::abi_import! {
+    #![abi_import(alloc = true)]
+    // Subset of individuality `precompiles/scarcity/sol/IScarcityCollection.sol`.
+    pragma solidity ^0.8.30;
+
+    interface IScarcityCollection {
+        function setCollectionMetadata(bytes calldata key, bytes calldata value) external;
+        function defineItem(bool soulbound, bytes[] calldata keys, bytes[] calldata values) external returns (uint32 item);
+        function mint(uint32 item, address to, bytes[] calldata keys, bytes[] calldata values) external returns (uint256 tokenId);
+    }
+}
+
+// keccak256("BadgeMinted(address,uint8,uint16,uint256)"); player indexed.
+const BADGE_MINTED_TOPIC: [u8; 32] = [
+    0xbd, 0x13, 0x56, 0xc5, 0xae, 0xb0, 0x23, 0x33, 0x82, 0x6f, 0x94, 0x68, 0x2d, 0x66, 0xbd, 0x82,
+    0xdc, 0x7e, 0xbf, 0xc1, 0x40, 0x42, 0x28, 0xd1, 0x19, 0xf6, 0xeb, 0xdf, 0x61, 0x6b, 0x7d, 0xb7,
+];
+// keccak256("BadgePending(address,uint8,uint16)"); player indexed.
+const BADGE_PENDING_TOPIC: [u8; 32] = [
+    0xd3, 0x94, 0x03, 0x25, 0x2e, 0x3d, 0x7e, 0xb9, 0x9a, 0xf7, 0x4a, 0xcb, 0x5b, 0x83, 0xb0, 0x12,
+    0xf0, 0xbe, 0x64, 0xb8, 0x7d, 0x35, 0x9f, 0xdd, 0xdd, 0x26, 0x79, 0x7e, 0xa8, 0x35, 0x32, 0x56,
+];
+
 // ── Storage domain prefixes (keccak namespace separation) ─────────────────────
 
 const DOM_ADMIN: u8 = 0;
@@ -165,6 +276,10 @@ const DOM_PERSONHOOD_CTX: u8 = 7;
 const DOM_BEST_RUN: u8 = 8;
 /// set_id -> top-N `Vec<LeaderboardEntry>`, best first.
 const DOM_LEADERBOARD: u8 = 9;
+/// () -> `BadgeConfig` of the arena-owned achievements collection.
+const DOM_BADGE_CONFIG: u8 = 10;
+/// player -> `Vec<BadgeRecord>`; at most one record per (badge, set).
+const DOM_BADGES: u8 = 11;
 
 // keccak256("BattleReported(uint8,uint8,uint8,uint8,uint64,bytes)")
 const BATTLE_REPORTED_TOPIC: [u8; 32] = [
@@ -274,6 +389,11 @@ fn create_ghost_from_board(board: &[Option<BoardUnit>]) -> Vec<GhostBoardUnit> {
 mod oab_arena {
     use super::*;
     use pvm_contract_sdk::{Bytes, StorageFlags};
+
+    /// An admin badge-setup call failed (not admin, already set up, or a
+    /// Scarcity precompile call reverted). The whole call is undone.
+    #[derive(Debug, pvm_contract_sdk::SolError)]
+    pub struct BadgeSetupFailed;
 
     pub struct OabArena;
 
@@ -446,6 +566,119 @@ mod oab_arena {
             if insert_ranked(&mut board, entry, LEADERBOARD_SIZE) {
                 self.write_scale(DOM_LEADERBOARD, &session.set_id.to_le_bytes(), &board);
             }
+        }
+
+        // ── achievement badges ──
+
+        fn badge_config(&self) -> Option<BadgeConfig> {
+            self.read_scale(DOM_BADGE_CONFIG, &[])
+        }
+
+        fn load_badges(&self, player: &[u8; 20]) -> Vec<BadgeRecord> {
+            self.read_scale(DOM_BADGES, player).unwrap_or_default()
+        }
+
+        /// The purse key a badge is minted to. Scarcity holds one NFT per key
+        /// (globally, across all collections), so every badge needs its own
+        /// empty key; the player's own account could hold only one. The key
+        /// is a pure function of this arena, the player, the badge and the
+        /// set, so anyone can check `ownerOf(token) == badge_purse(...)`.
+        /// Nobody holds its private key: the badge is soulbound anyway.
+        fn badge_purse(&self, player: &[u8; 20], badge: u8, set_id: SetIdValue) -> [u8; 20] {
+            let mut arena = [0u8; 20];
+            self.host().address(&mut arena);
+            let mut input = Vec::with_capacity(16 + 20 + 20 + 3);
+            input.extend_from_slice(b"oab/badge-purse/");
+            input.extend_from_slice(&arena);
+            input.extend_from_slice(player);
+            input.push(badge);
+            input.extend_from_slice(&set_id.to_le_bytes());
+            let mut hash = [0u8; 32];
+            self.host().hash_keccak_256(&input, &mut hash);
+            let mut out = [0u8; 20];
+            out.copy_from_slice(&hash[12..]);
+            out
+        }
+
+        /// Mint one badge. Returns the token id, or `None` if the collection
+        /// is not set up or the precompile call fails (e.g. the arena cannot
+        /// pay the deposit). Never reverts the caller.
+        fn mint_badge(&mut self, player: &[u8; 20], badge: u8, set_id: SetIdValue) -> Option<u64> {
+            use i_scarcity_collection::IScarcityCollection;
+            use pvm_contract_sdk::Address;
+            let config = self.badge_config()?;
+            let item = *config.items.get(badge as usize)?;
+            let to = self.badge_purse(player, badge, set_id);
+            let set_label = Bytes::from(decimal(set_id as u64));
+            let token =
+                IScarcityCollection::from_address(Address(collection_address(config.collection)))
+                    .mint(
+                        item,
+                        Address(to),
+                        vec![Bytes::from(b"oab.set".to_vec())],
+                        vec![set_label],
+                    )
+                    .call(self)
+                    .ok()?;
+            // Scarcity instance ids are u64; a larger token id cannot occur.
+            u64::try_from(token).ok()
+        }
+
+        fn emit_badge_event(&self, player: &[u8; 20], record: &BadgeRecord) {
+            let mut topic1 = [0u8; 32];
+            topic1[12..].copy_from_slice(player);
+            let mut data = vec![0u8; 64];
+            data[31] = record.badge;
+            data[62..64].copy_from_slice(&record.set_id.to_be_bytes());
+            match record.token {
+                Some(token) => {
+                    data.extend_from_slice(&[0u8; 24]);
+                    data.extend_from_slice(&token.to_be_bytes());
+                    self.host()
+                        .deposit_event(&[BADGE_MINTED_TOPIC, topic1], &data);
+                }
+                None => self
+                    .host()
+                    .deposit_event(&[BADGE_PENDING_TOPIC, topic1], &data),
+            }
+        }
+
+        /// Give `player` every badge this finished run earns that they do not
+        /// hold yet. A failed mint is stored as pending; the game result is
+        /// never at risk.
+        fn award_badges(&mut self, player: &[u8; 20], session: &ArenaSession) {
+            let earned = qualifying_badges(session, &default_config());
+            if earned.is_empty() {
+                return;
+            }
+            let mut records = self.load_badges(player);
+            let before = records.len();
+            for badge in earned {
+                if records
+                    .iter()
+                    .any(|r| r.badge == badge && r.set_id == session.set_id)
+                {
+                    continue;
+                }
+                let record = BadgeRecord {
+                    badge,
+                    set_id: session.set_id,
+                    block: self.block_number_u64(),
+                    token: self.mint_badge(player, badge, session.set_id),
+                };
+                self.emit_badge_event(player, &record);
+                records.push(record);
+            }
+            if records.len() != before {
+                self.write_scale(DOM_BADGES, player, &records);
+            }
+        }
+
+        fn ensure_admin(&self) -> Result<(), BadgeSetupFailed> {
+            if self.admin() != Some(self.caller_bytes()) {
+                return Err(BadgeSetupFailed);
+            }
+            Ok(())
         }
 
         // ── ghost pools ──
@@ -887,11 +1120,104 @@ mod oab_arena {
                     ghost,
                 );
             }
-            if let Some(alias) = self.ranked_alias(&caller) {
+            let ranked = self.ranked_alias(&caller);
+            if let Some(alias) = ranked {
                 self.record_ranked_result(alias, &session);
             }
             self.clear_session(&caller);
+            // Badges are ranked-only: the arena pays a deposit per badge, and
+            // casual play is open to unlimited throwaway accounts.
+            if ranked.is_some() {
+                self.award_badges(&caller, &session);
+            }
             true
+        }
+
+        /// Admin, once: create the arena-owned "OAB Achievements" Scarcity
+        /// collection, name it, and define one soulbound item per badge type.
+        /// The arena account pays every deposit, so fund it first. Reverts
+        /// (and so undoes every step) on any failure. Returns the collection id.
+        #[pvm_contract_sdk::method]
+        pub fn init_achievements(&mut self) -> Result<u32, BadgeSetupFailed> {
+            use i_scarcity_collection::IScarcityCollection;
+            use i_scarcity_factory::IScarcityFactory;
+            use pvm_contract_sdk::Address;
+            self.ensure_admin()?;
+            if self.badge_config().is_some() {
+                return Err(BadgeSetupFailed);
+            }
+            let collection = IScarcityFactory::from_address(Address(SCARCITY_FACTORY))
+                .create_collection()
+                .call(self)
+                .map_err(|_| BadgeSetupFailed)?;
+            let at = Address(collection_address(collection));
+            for (key, value) in [
+                (&b"name"[..], BADGE_COLLECTION_NAME),
+                (&b"symbol"[..], BADGE_COLLECTION_SYMBOL),
+            ] {
+                IScarcityCollection::from_address(at)
+                    .set_collection_metadata(Bytes::from(key.to_vec()), Bytes::from(value.to_vec()))
+                    .call(self)
+                    .map_err(|_| BadgeSetupFailed)?;
+            }
+            let mut items = Vec::with_capacity(BADGES.len());
+            for (key, name) in BADGES {
+                let item = IScarcityCollection::from_address(at)
+                    .define_item(
+                        true,
+                        vec![
+                            Bytes::from(b"oab.badge".to_vec()),
+                            Bytes::from(b"oab.name".to_vec()),
+                        ],
+                        vec![Bytes::from(key.to_vec()), Bytes::from(name.to_vec())],
+                    )
+                    .call(self)
+                    .map_err(|_| BadgeSetupFailed)?;
+                items.push(item);
+            }
+            self.write_scale(DOM_BADGE_CONFIG, &[], &BadgeConfig { collection, items });
+            Ok(collection)
+        }
+
+        /// SCALE `BadgeConfig { collection: u32, items: Vec<u32> }`, or empty
+        /// bytes before `init_achievements`.
+        #[pvm_contract_sdk::method]
+        pub fn get_badge_config(&self) -> Bytes {
+            match self.badge_config() {
+                Some(config) => Bytes::from(config.encode()),
+                None => Bytes::from(Vec::new()),
+            }
+        }
+
+        /// SCALE `Vec<BadgeRecord>` of `player`'s badges, in the order earned.
+        /// `token: None` means earned but not minted yet.
+        #[pvm_contract_sdk::method]
+        pub fn get_badges(&self, player: pvm_contract_sdk::Address) -> Bytes {
+            Bytes::from(self.load_badges(&player.0).encode())
+        }
+
+        /// Retry the mint of every pending badge of the caller (badges earned
+        /// while the collection was not set up or the arena could not pay the
+        /// deposit). Returns how many were minted now.
+        #[pvm_contract_sdk::method]
+        pub fn claim_pending_badges(&mut self) -> u32 {
+            let caller = self.caller_bytes();
+            let mut records = self.load_badges(&caller);
+            let mut minted = 0u32;
+            for i in 0..records.len() {
+                if records[i].token.is_some() {
+                    continue;
+                }
+                if let Some(token) = self.mint_badge(&caller, records[i].badge, records[i].set_id) {
+                    records[i].token = Some(token);
+                    self.emit_badge_event(&caller, &records[i]);
+                    minted += 1;
+                }
+            }
+            if minted > 0 {
+                self.write_scale(DOM_BADGES, &caller, &records);
+            }
+            minted
         }
 
         /// The personhood alias of the caller's active ranked game, or zero
@@ -1670,5 +1996,334 @@ mod tests {
             vec![3]
         );
         assert!(page(5, 2).is_empty(), "offset past the end => empty list");
+    }
+
+    // ── achievement badges ──
+    //
+    // Product rules: a qualifying ranked run earns a soulbound badge NFT,
+    // at most once per (account, badge, set) because the arena pays a deposit
+    // for each; a failed mint must never cost the player the game result.
+
+    use super::{
+        collection_address, BadgeConfig, BadgeRecord, BADGE_FLAWLESS, BADGE_MINTED_TOPIC,
+        BADGE_PENDING_TOPIC, BADGE_VICTORY, SCARCITY_FACTORY,
+    };
+
+    const COLL: u32 = 29;
+    const ITEM: u32 = 4;
+    const TOKEN: u64 = 1234;
+
+    fn word(n: u64) -> Vec<u8> {
+        let mut w = vec![0u8; 32];
+        w[24..].copy_from_slice(&n.to_be_bytes());
+        w
+    }
+
+    fn selector(sig: &str) -> [u8; 4] {
+        keccak256(sig.as_bytes())[..4].try_into().unwrap()
+    }
+
+    /// Scarcity precompiles that accept every setup call. MockHost gives one
+    /// reply per address, so every collection call (metadata, defineItem)
+    /// gets the word ITEM.
+    fn mock_scarcity_ok(mock: &MockHost) {
+        mock.mock_call(SCARCITY_FACTORY, Ok(word(COLL as u64)));
+        mock.mock_call(collection_address(COLL), Ok(word(ITEM as u64)));
+    }
+
+    /// Ranked setup plus an initialized badge collection.
+    fn setup_badges() -> (OabArena, MockHost) {
+        let (mut c, m) = setup_ranked();
+        mock_scarcity_ok(&m);
+        assert_eq!(c.init_achievements().ok(), Some(COLL));
+        (c, m)
+    }
+
+    /// `caller` plays one ranked game on `set_id` and finishes it with
+    /// `wins`/`lives`. The collection answers `mint` with `mint_reply`.
+    fn ranked_run(
+        from: &MockHost,
+        caller: [u8; 20],
+        set_id: u16,
+        wins: u8,
+        lives: u8,
+        mint_reply: Result<Vec<u8>, ()>,
+    ) -> (OabArena, MockHost) {
+        let (mut c, m) = as_caller(from, caller, 50);
+        mock_personhood(&m, 2, ALIAS_A);
+        m.mock_call(collection_address(COLL), mint_reply);
+        assert_ne!(c.start_ranked_game(set_id), 0);
+        m.take_recorded_calls();
+        finish_game(&mut c, &m, caller, wins, lives);
+        (c, m)
+    }
+
+    fn badges_of(c: &OabArena, player: [u8; 20]) -> Vec<BadgeRecord> {
+        Vec::<BadgeRecord>::decode(&mut &c.get_badges(pvm_contract_sdk::Address(player)).0[..])
+            .unwrap()
+    }
+
+    /// The `mint` calls the arena made, as (item, to, oab.set value).
+    fn mint_calls(mock: &MockHost) -> Vec<(u32, [u8; 20], Vec<u8>)> {
+        let mint = selector("mint(uint32,address,bytes[],bytes[])");
+        mock.take_recorded_calls()
+            .into_iter()
+            .filter(|(callee, input)| *callee == collection_address(COLL) && input[..4] == mint)
+            .map(|(_, input)| {
+                let args = &input[4..];
+                let item = u32::from_be_bytes(args[28..32].try_into().unwrap());
+                let to: [u8; 20] = args[44..64].try_into().unwrap();
+                // values: bytes[] with one element; follow the ABI offsets.
+                let off = |at: usize| {
+                    u64::from_be_bytes(args[at + 24..at + 32].try_into().unwrap()) as usize
+                };
+                let values = off(96);
+                let first = values + 32 + off(values + 32);
+                let len = off(first);
+                (item, to, args[first + 32..first + 32 + len].to_vec())
+            })
+            .collect()
+    }
+
+    #[test]
+    fn scarcity_addresses_match_the_live_chain() {
+        // Collection 29 is live at this address on Paseo Asset Hub Next.
+        assert_eq!(
+            collection_address(29).to_vec(),
+            [0, 0, 0, 0x1d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x05, 0x20, 0, 0].to_vec()
+        );
+        assert_eq!(
+            BADGE_MINTED_TOPIC,
+            keccak256(b"BadgeMinted(address,uint8,uint16,uint256)")
+        );
+        assert_eq!(
+            BADGE_PENDING_TOPIC,
+            keccak256(b"BadgePending(address,uint8,uint16)")
+        );
+    }
+
+    #[test]
+    fn init_achievements_is_admin_only_and_runs_once() {
+        let (c, m) = setup();
+        let (mut other, om) = as_caller(&m, PLAYER_1, 1);
+        mock_scarcity_ok(&om);
+        assert!(
+            other.init_achievements().is_err(),
+            "a non-admin must not create a collection paid by the arena"
+        );
+        assert!(
+            om.take_recorded_calls().is_empty(),
+            "no precompile call for a non-admin"
+        );
+        assert!(c.get_badge_config().0.is_empty());
+
+        let (mut c, m) = setup();
+        m.mock_call(SCARCITY_FACTORY, Ok(word(COLL as u64)));
+        m.mock_call(collection_address(COLL), Ok(word(ITEM as u64)));
+        assert_eq!(c.init_achievements().ok(), Some(COLL));
+        let config = BadgeConfig::decode(&mut &c.get_badge_config().0[..]).unwrap();
+        assert_eq!(
+            config,
+            BadgeConfig {
+                collection: COLL,
+                items: vec![ITEM, ITEM]
+            }
+        );
+
+        // Badges must be soulbound: a tradable badge would be a bought badge.
+        let define = selector("defineItem(bool,bytes[],bytes[])");
+        let defines: Vec<_> = m
+            .take_recorded_calls()
+            .into_iter()
+            .filter(|(callee, input)| *callee == collection_address(COLL) && input[..4] == define)
+            .collect();
+        assert_eq!(defines.len(), 2, "one item per badge type");
+        assert!(
+            defines.iter().all(|(_, input)| input[4 + 31] == 1),
+            "soulbound = true"
+        );
+
+        assert!(
+            c.init_achievements().is_err(),
+            "a second collection would strand the first"
+        );
+        assert!(m.take_recorded_calls().is_empty());
+    }
+
+    #[test]
+    fn init_achievements_fails_if_the_factory_reverts() {
+        // E.g. the arena cannot pay the collection deposit: nothing is stored,
+        // so the admin can fund the arena and retry.
+        let (mut c, m) = setup();
+        m.mock_call(SCARCITY_FACTORY, Err(()));
+        assert!(c.init_achievements().is_err());
+        assert!(c.get_badge_config().0.is_empty());
+    }
+
+    #[test]
+    fn qualifying_run_mints_exactly_one_badge_to_a_derived_purse() {
+        let (_c, m0) = setup_badges();
+        let (c, m) = ranked_run(&m0, PLAYER_1, 1, 10, 2, Ok(word(TOKEN)));
+        let mints = mint_calls(&m);
+        assert_eq!(mints.len(), 1, "10 wins with a life lost => Victory only");
+        let (item, to, set_label) = &mints[0];
+        assert_eq!(*item, ITEM);
+        assert_eq!(set_label, b"1", "the NFT records its set");
+        // Scarcity keeps one NFT per key, across all collections. Minting to
+        // the player's own account would block every later badge.
+        assert_ne!(*to, PLAYER_1);
+        assert_ne!(*to, [0u8; 20]);
+        assert_eq!(
+            badges_of(&c, PLAYER_1),
+            vec![BadgeRecord {
+                badge: BADGE_VICTORY,
+                set_id: 1,
+                block: 50,
+                token: Some(TOKEN)
+            }]
+        );
+        let minted: Vec<_> = m
+            .events()
+            .into_iter()
+            .filter(|(topics, _)| topics[0] == BADGE_MINTED_TOPIC)
+            .collect();
+        assert_eq!(minted.len(), 1);
+        assert_eq!(
+            minted[0].0[1][12..],
+            PLAYER_1,
+            "player is the indexed topic"
+        );
+    }
+
+    #[test]
+    fn flawless_run_earns_both_badges_with_distinct_purses() {
+        let (_c, m0) = setup_badges();
+        let (c, m) = ranked_run(&m0, PLAYER_1, 0, 10, 3, Ok(word(TOKEN)));
+        let mints = mint_calls(&m);
+        assert_eq!(mints.len(), 2);
+        assert_ne!(
+            mints[0].1, mints[1].1,
+            "each badge needs its own empty purse key"
+        );
+        let kinds: Vec<u8> = badges_of(&c, PLAYER_1).iter().map(|r| r.badge).collect();
+        assert_eq!(kinds, vec![BADGE_VICTORY, BADGE_FLAWLESS]);
+    }
+
+    #[test]
+    fn repeat_qualifying_run_does_not_mint_again() {
+        // The arena pays a deposit per badge: farming the same badge must not
+        // drain it.
+        let (_c, m0) = setup_badges();
+        let (_c1, m1) = ranked_run(&m0, PLAYER_1, 0, 10, 2, Ok(word(TOKEN)));
+        assert_eq!(mint_calls(&m1).len(), 1);
+        let (c2, m2) = ranked_run(&m1, PLAYER_1, 0, 10, 2, Ok(word(TOKEN)));
+        assert!(
+            mint_calls(&m2).is_empty(),
+            "second Victory on set 0 => no mint"
+        );
+        assert_eq!(badges_of(&c2, PLAYER_1).len(), 1);
+
+        // Badges are per set, and per account.
+        let (c3, m3) = ranked_run(&m2, PLAYER_1, 1, 10, 2, Ok(word(TOKEN)));
+        assert_eq!(
+            mint_calls(&m3).len(),
+            1,
+            "Victory on another set is a new badge"
+        );
+        assert_eq!(badges_of(&c3, PLAYER_1).len(), 2);
+        let (c4, m4) = ranked_run(&m3, PLAYER_2, 0, 10, 2, Ok(word(TOKEN)));
+        assert_eq!(
+            mint_calls(&m4).len(),
+            1,
+            "another account earns its own badge"
+        );
+        assert_eq!(badges_of(&c4, PLAYER_2).len(), 1);
+    }
+
+    #[test]
+    fn non_qualifying_and_casual_runs_mint_nothing() {
+        let (_c, m0) = setup_badges();
+        let (c, m) = ranked_run(&m0, PLAYER_1, 0, 9, 3, Ok(word(TOKEN)));
+        assert!(mint_calls(&m).is_empty(), "9 wins is not a victory");
+        assert!(badges_of(&c, PLAYER_1).is_empty());
+
+        // Casual: open to throwaway accounts, so it must not spend arena funds.
+        let (mut c, m) = as_caller(&m, PLAYER_1, 60);
+        m.mock_call(collection_address(COLL), Ok(word(TOKEN)));
+        assert_ne!(c.start_game(0), 0);
+        finish_game(&mut c, &m, PLAYER_1, 10, 3);
+        assert!(mint_calls(&m).is_empty(), "casual flawless run => no badge");
+        assert!(badges_of(&c, PLAYER_1).is_empty());
+    }
+
+    #[test]
+    fn mint_failure_keeps_the_game_result_and_leaves_a_claimable_badge() {
+        let (_c, m0) = setup_badges();
+        // e.g. the arena ran out of PAS for the instance deposit.
+        let (c, m) = ranked_run(&m0, PLAYER_1, 0, 10, 2, Err(()));
+        assert_eq!(
+            board(&c, 0).len(),
+            1,
+            "the leaderboard record survives the failed mint"
+        );
+        assert!(
+            decode_session(&c.get_game_state()).is_none(),
+            "the game is finalized"
+        );
+        assert_eq!(
+            badges_of(&c, PLAYER_1),
+            vec![BadgeRecord {
+                badge: BADGE_VICTORY,
+                set_id: 0,
+                block: 50,
+                token: None
+            }],
+            "the badge is earned, its mint pending"
+        );
+        assert!(m.events().iter().any(|(t, _)| t[0] == BADGE_PENDING_TOPIC));
+
+        // Still failing: nothing changes.
+        let (mut c, m) = as_caller(&m, PLAYER_1, 70);
+        m.mock_call(collection_address(COLL), Err(()));
+        assert_eq!(c.claim_pending_badges(), 0);
+        assert_eq!(badges_of(&c, PLAYER_1)[0].token, None);
+        m.take_recorded_calls();
+
+        // Arena funded again: the player claims the earned badge.
+        m.mock_call(collection_address(COLL), Ok(word(TOKEN)));
+        assert_eq!(c.claim_pending_badges(), 1);
+        assert_eq!(badges_of(&c, PLAYER_1)[0].token, Some(TOKEN));
+        assert_eq!(mint_calls(&m).len(), 1);
+        assert_eq!(
+            c.claim_pending_badges(),
+            0,
+            "a minted badge is never minted twice"
+        );
+        assert!(mint_calls(&m).is_empty());
+
+        // A repeat qualifying run does not create a second record either.
+        let (c, _m) = ranked_run(&m, PLAYER_1, 0, 10, 2, Ok(word(TOKEN)));
+        assert_eq!(badges_of(&c, PLAYER_1).len(), 1);
+    }
+
+    #[test]
+    fn badges_earned_before_setup_are_claimable_after_it() {
+        let (_c, m0) = setup_ranked();
+        let (c, m) = ranked_run(&m0, PLAYER_1, 0, 10, 2, Ok(word(TOKEN)));
+        assert!(
+            mint_calls(&m).is_empty(),
+            "no collection yet => no mint call"
+        );
+        assert_eq!(badges_of(&c, PLAYER_1)[0].token, None);
+
+        let (mut admin, am) = as_caller(&m, ADMIN, 80);
+        am.mock_call(SCARCITY_FACTORY, Ok(word(COLL as u64)));
+        am.mock_call(collection_address(COLL), Ok(word(ITEM as u64)));
+        assert_eq!(admin.init_achievements().ok(), Some(COLL));
+
+        let (mut p, pm) = as_caller(&am, PLAYER_1, 90);
+        pm.mock_call(collection_address(COLL), Ok(word(TOKEN)));
+        assert_eq!(p.claim_pending_badges(), 1);
+        assert_eq!(badges_of(&p, PLAYER_1)[0].token, Some(TOKEN));
     }
 }

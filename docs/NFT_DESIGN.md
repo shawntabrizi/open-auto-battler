@@ -1,8 +1,9 @@
 # OAB NFT Design (Scarcity era)
 
-Status: Phase 6, part 1. Collection, items and claim minter are live on
-Paseo Asset Hub Next. Frontend integration and arena badge minting are later
-steps. This document replaces `NFT_SPEC.md` (the `pallet-nfts` design). The
+Status: Phase 6, part 2. Collection, items and claim minter are live on
+Paseo Asset Hub Next (part 1). The arena contract owns the "OAB Achievements"
+collection and mints soulbound badges (part 2, section 9). Frontend
+integration is a later step. This document replaces `NFT_SPEC.md` (the `pallet-nfts` design). The
 per-slot asset rules (sizes, formats, `card_art` directory layout, theme JSON)
 in `NFT_SPEC.md` still apply to the asset files themselves.
 
@@ -85,8 +86,8 @@ cards for a future custom "constructed" mode. Ranked arena keeps its fixed card
 sets.** Owning a card never changes ranked balance. A player cannot buy power
 in the mode that counts.
 
-Achievements are **soulbound badges** (ERC-5192). The arena contract mints them
-(later step).
+Achievements are **soulbound badges** (ERC-5192). The arena contract mints them.
+Section 9 records the badge decisions.
 
 ## 4. Collections
 
@@ -95,7 +96,7 @@ Two collections. The split follows authority, not content type.
 | Collection | Content | Owner | Transferable | Claimable with credits |
 | --- | --- | --- | --- | --- |
 | **OAB Collectibles** (id 29, live) | cosmetics now, card unlocks later | deploy account (EOA) | yes | yes, via `@oab/nft-minter` |
-| **OAB Achievements** (not created) | badges | the arena contract | no (soulbound items) | no |
+| **OAB Achievements** (id 30, live) | badges | the arena contract | no (soulbound items) | no |
 
 Why two:
 
@@ -111,12 +112,11 @@ Why two:
   both come from credits, and the minter table decides which items a credit
   can draw.
 
-The arena gets its collection in one of two ways (decide in the badge step):
-(a) the arena contract calls `ScarcityFactory.createCollection()` itself and
-becomes the owner, or (b) an EOA creates it, calls
-`nominateCollectionOwner(arena)`, and the arena calls
-`claimCollectionOwnership()`. Both need a one-time admin method on the arena,
-and the arena must hold PAS for the deposits.
+The arena creates its collection itself: the admin method `initAchievements()`
+calls `ScarcityFactory.createCollection()` from the contract, so the arena is
+the owner from the start. A contract caller works: the precompile resolves the
+contract's account and holds the deposit from its balance (checked on chain,
+section 9). The nominate/claim handover was not needed.
 
 ### Items in OAB Collectibles (season 0)
 
@@ -247,8 +247,8 @@ and gives the product:
 - `list({ collections: [29] })` / `listSubscribe(...)`: instances held in
   OAB's purse (collection + instance ids, chain facts only).
 - `requestReceiveAddress({ idempotencyKey })`: a fresh empty key. Use it as
-  `mint_to` for a claim, or as the badge destination the player gives to the
-  arena.
+  `mint_to` for a claim. (Season 0 badges do not use it: the arena mints them
+  to derived keys, section 9.)
 - `transfer({ instance, to })`: host-signed, feeless move.
 
 For each instance the frontend reads the collection precompile:
@@ -282,8 +282,142 @@ current localStorage cosmetics selection keeps working for non-chain modes.
    For production, a multisig or a dedicated key should own it (handover:
    `nominateCollectionOwner` + `claimCollectionOwnership`, then register the
    minter again, because a handover clears the registration).
-4. **Badge minting cost.** Arena mints are not claims, so each badge holds an
-   instance deposit from the arena's balance. Fund the arena, or limit badges
-   per player.
+4. **Badge minting cost.** Resolved for season 0 (section 9): ranked-only,
+   one badge per (account, badge, set), about 0.21 PAS per badge from the
+   arena's balance. The arena has no withdraw method, so PAS sent to it stays
+   there.
 5. **Bulletin renewal** for `tokenURI` and assets (section 4).
 6. **Weights.** 72 % common / 21 % rare / 7 % epic is a first guess.
+7. **Badges per person, not per account?** A person can bind more than one
+   account in OAB's personhood context, and each account can earn each badge.
+   Keying badges by the personhood alias (like the leaderboard) would make it
+   one badge per person. Not done, because the integrator asked for per-account
+   badges with the account as the owner.
+8. **Badges in the host purse.** Badges sit at arena-derived purse keys, not
+   in the player's NftPurse, so the host collectibles app does not list them.
+   The game lists them with `getBadges`. If players want badges in their purse,
+   the player must give the arena a fresh purse key per badge (a new
+   `endGame` argument or a claim method), which needs NftPurse first.
+
+## 9. Achievement badges (arena-minted)
+
+Live since 2026-10-20 on Paseo Asset Hub Next.
+
+| What | Value |
+| --- | --- |
+| Arena (`@oab/arena` v2, CDM registry `0xc1a73a4f93fde65b1cb1680baead248073566cb0`) | `0xA61f803AeEBFfF2c7568157756932D3944EDCa28` |
+| Arena substrate account (holds the deposits) | `5FpXAT5tXb84qrLujsYgtxp6WTC8VrboJMFGFjPcx9GZmn6x` |
+| OAB Achievements collection id | **30** |
+| Collection ERC-721 address | `0x0000001e00000000000000000000000005200000` |
+| Collection owner | the arena (`CollectionCreated` event, `owner()` checked) |
+| Collection metadata | `name` = `Open Auto Battler Achievements`, `symbol` = `OABA` |
+| Items | 0 = Victory, 1 = Flawless; both `Soulbound` (`ItemDefs` checked) |
+| Collection deposit held by the arena | 18 038 700 000 planck (1.80 PAS) |
+| Instance deposit per badge | about 2 060 000 000 planck (0.21 PAS), from other live instances |
+
+Transactions:
+
+| Step | Block | Tx hash |
+| --- | --- | --- |
+| `cdm deploy` arena v2 (metadata `bafk2bzacea5mqpk6bvih4uovhuapu55texttgcjbm5bmpklltbflflrnjgwmi`) | block hash `0x978b58f003f2918da253fc67c4d5b1d70527d9468c5db53a1b71445bb3fc69cc` | |
+| `setPersonhoodContext` | 2050284 | `0x06595fa4856600d89221ea0c3880dd451248fad761a4230348e6bbabff4b7908` |
+| fund arena 15 PAS (`Balances.transfer_keep_alive` from the deployer) | 2050307 | `0xe81548d5559e5660dd79d02f956e572eb5022fa012ca0aa209962c18d3be3668` |
+| `initAchievements()` → 30 | 2050329 | `0xb3693d04b7bf3109badf5ba8608c30fc389374934e24ccca135a1ebc615b45b4` |
+
+A first `cdm deploy` attempt instantiated an arena at `0xdc33…5d78`, but its
+Bulletin metadata upload timed out. That instance is unused.
+
+### Decisions
+
+- **Badge types (season 0).** These mirror the pallet-era `VictoryAchievements`
+  bits. The pallet gave silver (`wins >= wins_to_victory`) and gold (silver
+  and `lives >= starting_lives`) to every card on the final board. Per card
+  would mean up to 5 deposits per run, so OAB keeps the two conditions and
+  scopes them per set:
+
+  | Badge | Value | Condition at `endGame` | Item |
+  | --- | --- | --- | --- |
+  | Victory | 0 | ranked run, `wins >= 10` | 0 |
+  | Flawless | 1 | ranked run, `wins >= 10` and `lives == 3` (no life lost) | 1 |
+
+  A flawless first victory earns both. The pallet's bronze bit (any won
+  battle) is dropped: it is too cheap to earn for a paid NFT.
+- **Ranked runs only.** The arena pays a deposit for every badge. Casual play
+  is open to unlimited new accounts, and a bot can plant weak ghosts to win
+  cheaply. Casual badges would let anyone drain the arena's balance. Ranked
+  play needs personhood, so the number of earning accounts is bounded.
+- **At most one badge per (account, badge, set).** The arena keeps
+  `Vec<BadgeRecord>` per account. With 2 badges and 3 sets, an account holds at
+  most 6 badges, so the arena pays at most 6 instance deposits per account.
+- **Each badge has its own derived purse key.** Scarcity keeps one NFT per key,
+  across **all** collections (`NftsByOwner` in the pallet). Minting to the
+  player's own account would work once and then fail for every later badge,
+  and it would also fail if the account held any other NFT. So the arena mints
+  to
+
+  ```
+  purse = keccak256("oab/badge-purse/" ++ arena (20) ++ player (20) ++ badge (u8) ++ set_id (u16 LE))[12..32]
+  ```
+
+  Nobody holds that key's private key. That is acceptable for a soulbound
+  badge, which never moves. The arena address is in the hash, so a redeployed
+  arena never collides with old purses. Anyone can check a badge:
+  `ownerOf(token) == purse(player, badge, set)`.
+  **Deviation:** the integrator asked for the player's H160 as the recipient.
+  The one-NFT-per-key rule makes that unusable after the first badge.
+- **The game result comes first.** `endGame` records the leaderboard entry and
+  clears the session before it mints. A failed mint (collection not set up, no
+  deposit funds, a revert) does not fail `endGame`. The badge is stored with
+  `token: None` and a `BadgePending` event. `claimPendingBadges()` retries every
+  pending badge of the caller. A badge earned before `initAchievements` is
+  claimable after it.
+- **Instance metadata.** Each badge has `oab.set` = the set id in decimal, so
+  the NFT shows its set without the arena. Items have `oab.badge`
+  (`victory` / `flawless`) and `oab.name`.
+
+### Contract surface
+
+| Function | Who | What |
+| --- | --- | --- |
+| `initAchievements() returns (uint32)` | admin, once | create the collection, set name and symbol, define the badge items. Reverts with `BadgeSetupFailed()` on any failure, so nothing is half set up |
+| `getBadgeConfig() returns (bytes)` | anyone | SCALE `BadgeConfig { collection: u32, items: Vec<u32> }`; empty before init |
+| `getBadges(address) returns (bytes)` | anyone | SCALE `Vec<BadgeRecord { badge: u8, set_id: u16, block: u64, token: Option<u64> }>` in the order earned |
+| `claimPendingBadges() returns (uint32)` | player | retry the caller's pending mints; returns how many minted |
+
+Events (topic 1 = the player address, left-padded):
+
+- `BadgeMinted(address indexed player, uint8 badge, uint16 setId, uint256 tokenId)`
+- `BadgePending(address indexed player, uint8 badge, uint16 setId)`
+
+The collection precompile has no owner enumeration for one account
+(`tokenOfOwnerByIndex` is per purse key), so `getBadges` is the list.
+
+### Operations
+
+- Fund the arena before `initAchievements` and keep it funded: send PAS to the
+  arena's substrate account (the H160 followed by twelve `0xEE` bytes). The
+  collection, metadata and two items cost 1.80 PAS. Each badge costs about
+  0.21 PAS. 13.2 PAS were free after setup (enough for about 60 badges).
+- When the balance runs out, badges go pending. Fund the arena, and players
+  call `claimPendingBadges()`.
+
+### Verification
+
+- Native tests (`contract/src/main.rs`, MockHost): a qualifying run mints
+  exactly one badge to a derived purse that is not the player's account; a
+  flawless run mints two badges to two purses; a repeat run mints nothing; a
+  new set or another account earns its own badge; a 9-win run and a casual
+  flawless run mint nothing; a failed mint keeps the leaderboard entry and
+  finalizes the game, then `claimPendingBadges` mints it once; badges earned
+  before setup are claimable after it; `initAchievements` is admin-only,
+  runs once, defines soulbound items, and stores nothing if the factory
+  reverts.
+- On chain (dry-runs against the live arena): the context, config, collection
+  owner, name, item metadata and soulbound flags read back as above; a second
+  `initAchievements` reverts; `startRankedGame` returns 0 for an account
+  without personhood; the exact badge `mint` call, run as the arena account
+  against collection 30, succeeds for a fresh derived purse.
+- **Not verified on chain:** a full ranked run that mints a badge. A ranked
+  run needs an account with personhood bound in OAB's context, and no test
+  account has one. The mint path is covered by the native tests and the
+  dry-run above.
