@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useContractStore } from '../store/contractStore';
 import { useGameStore } from '../store/gameStore';
 import { TopBar } from './TopBar';
@@ -9,15 +9,22 @@ const CONTRACT_SET_ID = 0;
 
 /** Contract arena pre-game: start a casual or ranked game with set 0, or redirect to active game. */
 export function ContractArenaPage() {
-  const { isConnected, hasActiveGame, startGame, refreshGameState } = useContractStore();
+  const { isConnected, hasActiveGame, isRefreshing, startGame, refreshGameState } =
+    useContractStore();
   const { initEngine, engine } = useGameStore();
+  // Start stays disabled until the first active-game check finishes, so a
+  // player with a game on chain is redirected instead of hitting a rejected
+  // startGame (and, in sponsored mode, a needless session setup).
+  const [checkedActiveGame, setCheckedActiveGame] = useState(false);
+  const canStart = !!engine && checkedActiveGame && !isRefreshing;
 
   useEffect(() => {
     if (!engine) void initEngine();
   }, [engine, initEngine]);
 
   useEffect(() => {
-    if (isConnected) void refreshGameState();
+    if (!isConnected) return;
+    void refreshGameState().finally(() => setCheckedActiveGame(true));
   }, [isConnected, refreshGameState]);
 
   if (!isConnected) {
@@ -43,14 +50,14 @@ export function ContractArenaPage() {
               console.log('Starting contract game with set', CONTRACT_SET_ID);
               void startGame(CONTRACT_SET_ID);
             }}
-            disabled={!engine}
+            disabled={!canStart}
             className="theme-button btn-primary w-full font-black py-3 lg:py-4 rounded-xl text-sm lg:text-base transition-all transform hover:scale-105 disabled:opacity-50 uppercase tracking-wider"
           >
-            {engine ? 'Start Game' : 'Loading Engine...'}
+            {!engine ? 'Loading Engine...' : canStart ? 'Start Game' : 'Checking for a game...'}
           </button>
 
           <div className="mt-4">
-            <RankedPanel setId={CONTRACT_SET_ID} disabled={!engine} />
+            <RankedPanel setId={CONTRACT_SET_ID} disabled={!canStart} />
           </div>
 
           <div className="flex justify-center gap-6 mt-6 text-sm">

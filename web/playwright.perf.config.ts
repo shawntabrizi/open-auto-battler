@@ -26,14 +26,11 @@ export default defineConfig({
     launchOptions: { args: ['--enable-precise-memory-info'] },
   },
   webServer: {
-    // Two bench builds (see e2e/perf/vite.bench.config.ts), served side by side.
+    // The bench build (see e2e/perf/vite.bench.config.ts).
     command: [
       ...(process.env.OAB_E2E_SKIP_BUILD
         ? []
-        : [
-            'OAB_BENCH_VARIANT=shipped npx vite build --config e2e/perf/vite.bench.config.ts',
-            'OAB_BENCH_VARIANT=depsfix npx vite build --config e2e/perf/vite.bench.config.ts',
-          ]),
+        : ['OAB_BENCH_VARIANT=shipped npx vite build --config e2e/perf/vite.bench.config.ts']),
       `npx vite preview --config e2e/perf/vite.bench.config.ts --outDir ../../results/bench-dist --port ${PORT} --strictPort`,
     ].join(' && '),
     url: `${BENCH_URL}/shipped/`,

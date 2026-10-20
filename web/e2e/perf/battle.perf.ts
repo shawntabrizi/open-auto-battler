@@ -1,7 +1,7 @@
 /**
  * Battle replay performance at a phone viewport under CPU throttling.
  *
- * For each bench variant (`shipped`, `depsfix`: see vite.bench.config.ts) and
+ * For each bench variant (`shipped`: see vite.bench.config.ts) and
  * throttle rate: load the bench, sample every requestAnimationFrame timestamp,
  * long task, JS heap value and replay progress, play the busiest synthetic
  * battle at the default 1x speed, and summarise. A separate, short pass records
@@ -11,7 +11,7 @@
  * Output in e2e/results/perf/: summary.json, one JSON per run, trace-*.json,
  * and a video/GIF of the replay. A table is printed at the end.
  *
- * Env: OAB_PERF_RATES ("1,4,6"), OAB_PERF_VARIANTS ("shipped,depsfix"),
+ * Env: OAB_PERF_RATES ("1,4,6"), OAB_PERF_VARIANTS ("shipped"),
  * OAB_PERF_CANDIDATES (600), OAB_PERF_MAX_S (120, measured window cap),
  * OAB_PERF_TRACE_S (15, 0 = no traces), OAB_PERF_VIDEO (1).
  */
@@ -23,7 +23,7 @@ import type { BenchInfo } from './bench/main';
 const OUT = 'e2e/results/perf';
 const list = (v: string | undefined, d: string) => (v ?? d).split(',').filter(Boolean);
 const RATES = list(process.env.OAB_PERF_RATES, '1,4,6').map(Number);
-const VARIANTS = list(process.env.OAB_PERF_VARIANTS, 'shipped,depsfix');
+const VARIANTS = list(process.env.OAB_PERF_VARIANTS, 'shipped');
 const CANDIDATES = Number(process.env.OAB_PERF_CANDIDATES ?? 600);
 const MAX_MS = Number(process.env.OAB_PERF_MAX_S ?? 120) * 1000;
 const TRACE_MS = Number(process.env.OAB_PERF_TRACE_S ?? 15) * 1000;
@@ -292,8 +292,7 @@ test('record battle replay video', async ({ browser }) => {
     recordVideo: { dir: `${OUT}/video-tmp`, size: PHONE },
   });
   const page = await context.newPage();
-  // The depsfix build: the shipped one stalls on the first stat change at 1x.
-  await openBench(page, VARIANTS.includes('depsfix') ? 'depsfix' : VARIANTS[0]);
+  await openBench(page, VARIANTS[0]);
   await page.evaluate(() => window.__BENCH__.play());
   await page.waitForTimeout(8_000);
   await page.screenshot({ path: `${OUT}/battle-mid.png` });

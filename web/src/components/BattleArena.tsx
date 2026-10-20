@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { UnitCard, EmptySlot } from './UnitCard';
 import { IconRenderer } from './Icons';
@@ -293,9 +293,13 @@ export function BattleArena({
   // Playback mode: 'auto' plays continuously, 'step' pauses for manual control
   const [playMode, setPlayMode] = useState<'auto' | 'step'>('auto');
 
+  // The event effect reads the boards through this ref. Listing the boards as
+  // effect dependencies re-ran the effect for the same event every time a
+  // handler set a new board, which stalled the replay and leaked memory.
+  const boardsRef = useRef({ player: playerBoard, enemy: enemyBoard });
   useEffect(() => {
-    console.log({ battleOutput });
-  }, [battleOutput]);
+    boardsRef.current = { player: playerBoard, enemy: enemyBoard };
+  }, [playerBoard, enemyBoard]);
 
   // Process event visual effects when eventIndex changes
   useEffect(() => {
@@ -420,7 +424,7 @@ export function BattleArena({
         const isPlayerTeam = String(team).toUpperCase() === 'PLAYER';
         const newIds = new Set((new_board_state || []).map((u) => u.instance_id));
         // Find the dying unit by diffing current board vs new board
-        const currentBoard = isPlayerTeam ? playerBoard : enemyBoard;
+        const currentBoard = isPlayerTeam ? boardsRef.current.player : boardsRef.current.enemy;
         const dyingId = currentBoard.find((u) => !newIds.has(u.instance_id))?.instance_id;
 
         if (dyingId !== undefined) {
@@ -693,11 +697,9 @@ export function BattleArena({
     }
   }, [
     battleOutput,
-    enemyBoard,
     eventIndex,
     onEventProcessed,
     paused,
-    playerBoard,
     reducedAnimations,
     resolveCardName,
     unitMap,

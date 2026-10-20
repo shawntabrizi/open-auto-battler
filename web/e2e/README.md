@@ -97,12 +97,8 @@ not from the chain. On load, the page tries 600 random 5v5 boards with a
 fixed seed and keeps the battle with the most combat events. Battles that hit
 the battle limit (a stalemate, about 1100 events) are left out.
 
-The bench is built twice:
-
-| Variant   | What it is                                                                                                                                                                                                                                                                                                                                                                                                          |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shipped` | `src/` as it is.                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `depsfix` | The same, but `BattleArena`'s event effect does not list `playerBoard` and `enemyBoard` as dependencies (the list before commit `d38bad2`). With them, every event that maps a board starts its own effect again, without end. The replay stops on the first stat change, and the main thread stays busy. This variant shows the DOM renderer's cost after that fix. Only the bench build changes; `src/` does not. |
+The bench build is `src/` as it is (variant `shipped`). An earlier `depsfix`
+variant measured the fix for the replay effect loop; that fix is now in `src/`.
 
 For each variant and rate, the test sets a 390x844 viewport at DPR 3 and
 `Emulation.setCPUThrottlingRate`. It records every `requestAnimationFrame`
@@ -112,14 +108,14 @@ the measured window stops at `OAB_PERF_MAX_S` (default 120 s). A separate,
 short pass records one Chrome trace per variant and rate, so that tracing
 does not change the measured numbers.
 
-| Env                   | Default           | Meaning                                             |
-| --------------------- | ----------------- | --------------------------------------------------- |
-| `OAB_PERF_RATES`      | `1,4,6`           | CPU throttle rates                                  |
-| `OAB_PERF_VARIANTS`   | `shipped,depsfix` | Bench builds to measure                             |
-| `OAB_PERF_CANDIDATES` | `600`             | Boards to try when searching for the busiest battle |
-| `OAB_PERF_MAX_S`      | `120`             | Cap on the measured window                          |
-| `OAB_PERF_TRACE_S`    | `15`              | Length of each trace; `0` skips traces              |
-| `OAB_PERF_VIDEO`      | `1`               | `0` skips the video test                            |
+| Env                   | Default   | Meaning                                             |
+| --------------------- | --------- | --------------------------------------------------- |
+| `OAB_PERF_RATES`      | `1,4,6`   | CPU throttle rates                                  |
+| `OAB_PERF_VARIANTS`   | `shipped` | Bench builds to measure                             |
+| `OAB_PERF_CANDIDATES` | `600`     | Boards to try when searching for the busiest battle |
+| `OAB_PERF_MAX_S`      | `120`     | Cap on the measured window                          |
+| `OAB_PERF_TRACE_S`    | `15`      | Length of each trace; `0` skips traces              |
+| `OAB_PERF_VIDEO`      | `1`       | `0` skips the video test                            |
 
 Read the numbers with these facts:
 
