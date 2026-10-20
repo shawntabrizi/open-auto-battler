@@ -1,7 +1,8 @@
 # OAB Contract Architecture (layered contracts)
 
-Status: **design; M1 implemented** (engine crate, `@oab/engine`, `@oab/content`,
-deployed on Paseo Next 2026-10-20; see [M1 status](#m1-status-2026-10-20)).
+Status: **design; M1 and M2 implemented** (engine crate, `@oab/engine`,
+`@oab/content`, `@oab/identity`, deployed on Paseo Next 2026-10-20; see
+[M1 status](#m1-status-2026-10-20) and [M2 status](#m2-status-2026-10-20)).
 Written 2026-10-20 against branch `update/oct-2026` at `6569b91`. Shawn
 approved the direction (five contracts). This document makes it concrete.
 
@@ -94,8 +95,10 @@ The key rules:
    the engine it started with.
 4. A client can replay any battle from chain data and the matching engine
    build.
-5. Sign once, then play with no prompt and no fee (registry sessions on the
-   `ChargePGAS` path). This replaces the proxy-session pool cost.
+5. Sign once, then play with no prompt and no native fee (registry sessions
+   on the `ChargePGAS` path). This replaces the proxy-session pool cost.
+   M2 measured it: the fee is not zero, it is burned in PGAS, and only a v5
+   general transaction on extension pipeline V1 can pay it (M2 status).
 6. Ranked identity is the personhood alias. One person has one ranked
    identity.
 7. New modes (Pai Gow, Constructed, Tournament) plug in without a change to
@@ -407,6 +410,14 @@ never deletes.
 Identity embeds the session registry. It is the reference registry
 (`reference-contract.md`) plus expiry, burned keys, and personhood.
 
+> **As built in M2** (`identity/README.md`, [M2 status](#m2-status-2026-10-20)).
+> The storage, ABI, and lifecycle below are the design. The deployed contract
+> differs: the session key must **accept** (`acceptSession(owner)`) before it
+> binds; `resolve(account)` returns only the player and **reverts**
+> `InvalidSession(account)` for an expired or revoked key; expiry is unix
+> seconds; storage is two 32-byte records (`KEY[session]`, `OWNER[player]`);
+> personhood is a stub (`rankedIdentity` answers "not eligible").
+
 **Storage:**
 
 | Field | Type |
@@ -457,21 +468,25 @@ uint64 maxTtl)`.
 
 **Session lifecycle:**
 
-| Step | Who signs | Call | Fee |
-| --- | --- | --- | --- |
-| PGAS allowance | host prompt | `requestResourceAllocation(SmartContractAllowance)` | free (host claims PGAS with a personhood proof) |
-| Create | product account, **one prompt** | `Utility.batch_all[ Revive.call(PGAS ERC-20 `transfer(session, budget)`), Revive.call(Identity.registerSession(session, expiresAt)) ]` | free: all-Revive batch passes `ChargePGAS` |
-| Play | session key, no prompt | `Revive.call(mode.*)` | free; storage deposits still draw the session key's PGAS |
-| Expire | nobody | `resolve` returns `Invalid` after `expiresAt` | — |
-| Rotate | product account, one prompt | `registerSession(new, ...)`; old key is revoked and burned | free |
-| Revoke | product account, one prompt | `revokeSession()` | free |
-| Drain | session key | PGAS ERC-20 `transfer(owner, rest)` | free |
+As built and checked live in M2 (Paseo Next runtime 3004000). Every
+transaction is a **v5 general transaction on extension pipeline V1**; fees are
+PGAS planck, burned, measured from `PGASFeePaid` events:
 
-Source for the fee rules and the setup batch: `registry-sessions.md` §3–§5
-and the skill's constant table (PGAS ERC-20 precompile
-`0x7735940000000000000000000000000001200000`). That table says it was
-checked live on 2026-07-14. **We did not check it again.** Milestone 2
-checks it.
+| Step | Who signs | Call | Fee (PGAS planck) |
+| --- | --- | --- | --- |
+| PGAS allowance | host prompt | `requestResourceAllocation(SmartContractAllowance)` | none (host claims PGAS with a personhood proof) |
+| Create | product account, **one prompt** | `Utility.batch_all[ Assets.transfer_keep_alive(PGAS, session SS58, budget), Revive.call(Identity.registerSession(session, expiresAt)) ]` | 20.9 M fee + 206.4 M deposit (owner record) |
+| Accept + first call | session key, no prompt | `Utility.batch_all[ Revive.call(acceptSession(owner)), Revive.call(mode.*) ]` | 23.5 M fee + 206.4 M deposit (key record, never refunded) |
+| Play | session key, no prompt | `Revive.call(mode.*)` | 13.9 M (probe `whoami`); a mode turn is more (section 8); new storage items add 206.4 M each |
+| Expire | nobody | `resolve` reverts after `expiresAt` | — |
+| Rotate | product account, one prompt | the Create batch with a new key; the old key is burned | as Create, without a new owner-record deposit |
+| Revoke | product account, one prompt | `revokeSession()` | 13.9 M fee; owner record deleted, 10 % of its deposit refunded |
+| Drain | session key | `Assets.transfer_all` or PGAS ERC-20 `transfer(owner, rest)` | 13.2 M |
+
+The design's version of the Create row (an all-Revive batch with a PGAS ERC-20
+precompile `transfer(session, budget)`) came from `registry-sessions.md`
+§3–§5, checked by its authors on 2026-07-14. M2 found that it fails on
+today's runtime in two ways; see [M2 status](#m2-status-2026-10-20).
 
 Two changes from the reference contract, on purpose:
 
@@ -953,23 +968,31 @@ sequenceDiagram
 
 ### 7.4 Session setup
 
+As built in M2. Every extrinsic is a v5 general transaction on extension
+pipeline V1, so its fee is burned in PGAS (no native token, no pool).
+
 ```mermaid
 sequenceDiagram
-    participant U as Product account (host signs)
+    participant U as Product account (host signs, txExtVersion 1)
     participant H as Host
-    participant K as Client (session key)
-    participant G as PGAS ERC-20 precompile
+    participant K as Client (session key, V1)
+    participant A as Assets pallet
     participant I as Identity
-    participant RC as Records
+    participant M as Mode
     K->>H: requestResourceAllocation(SmartContractAllowance) [only if no PGAS]
     H-->>U: PGAS claimed (personhood proof)
     K->>K: SessionKeyManager.getOrCreate()
-    U->>G: batch_all[ Revive.call transfer(session, budget),
-    U->>I:            Revive.call registerSession(session, expiresAt) ]  ONE prompt, free
-    I-->>U: SessionRegistered(owner, session, expiresAt)
-    K->>RC: addBadgePurses([p0..p3])  (session key, free)
-    Note over K: Restore: read Identity.sessionOf(owner) and compare bytes before trusting the stored key.
+    U->>A: batch_all[ Assets.transfer_keep_alive(PGAS, session SS58, budget),
+    U->>I:            Revive.call registerSession(session, expiresAt) ]  ONE prompt
+    A-->>K: session account created and auto-mapped
+    I-->>U: SessionOffered(owner, session, expiresAt)
+    K->>I: batch_all[ Revive.call acceptSession(owner),
+    K->>M:            Revive.call first game call ]  silent
+    I-->>K: SessionRegistered(owner, session, expiresAt)
+    Note over K: Restore: read Identity.sessionOf(owner); trust the stored key only if it matches, state = 2, and expiresAt is in the future.
 ```
+
+Badge purses (`addBadgePurses`, Records) wait for M4.
 
 ### 7.5 Content publish
 
@@ -1079,6 +1102,38 @@ What the numbers say:
   few items: a 2.4 KB bundle in 416-byte pages is 6 items (about 60 KB of
   proof). It cannot be one item, as section 4.4 assumed.
 
+**Measured in M2 (Paseo Next runtime 3004000, 2026-10-20, dry-run at the best
+block, `@oab/identity` CDM version 2, 7 176-byte blob):**
+
+| Call | ref_time | proof_size | Deposit (PGAS planck) |
+| --- | --- | --- | --- |
+| `resolve(live session key)` (hot path) | 130 555 519 | 17 849 | 0 |
+| `resolve(plain account)` | 135 184 993 | 17 849 | 0 |
+| `resolve(expired key)` (reverts) | 135 417 999 | 17 849 | 0 |
+| probe `whoami()`: session-signed call that sub-calls `resolve` | 673 353 172 | 49 402 | 0 |
+| probe `play()`: `resolve` + one item write (version 1 run) | 897 905 862 | 68 635 | 205.2 M for a new item |
+| `registerSession` (first offer) | 670 376 553 | 58 909 | 206.4 M |
+| `registerSession` (rotation; burns the bound key) | 998 149 407 | 79 519 | 0 |
+| `acceptSession` | 771 270 095 | 58 909 | 206.4 M |
+| `revokeSession` (bound key) | 647 824 624 | 48 716 | refund 206.4 M (10 % paid back, 90 % burned) |
+
+What the M2 numbers say:
+
+- `resolve` is one storage read: 17 849 proof bytes = the 7 176-byte code +
+  one item (about 10 KB). The same for a live key, a plain account, and a
+  dead key. This is the whole Identity cost a mode adds per call (plus the
+  sub-call overhead), well inside the 5–15 KB code estimate above.
+- **The fee follows proof size and call length, not ref time.** Fee
+  estimates (`TransactionPaymentApi.query_fee_details`) on this runtime: base
+  0.58 M; length 50 000 per byte; weight fee 6.2 M at 0.67 G / 49 KB, 10.7 M at
+  1 G / 100 KB, 12.2 M at 25.3 G / 98 KB (an engine turn), 23.9 M at 27 G /
+  250 KB, 68.0 M at 27 G / 750 KB. So M3's proof-size target is also its fee
+  target, and turn calldata should stay small (a 2 KB input costs 107.7 M in
+  length fee alone).
+- Each new storage item costs 200 M PGAS (`DepositPerChildTrieItem`) plus
+  100 000 per byte of key and value (a 32-byte word: 206.4 M). A release
+  refunds only 10 %. New items, not fees, dominate a session's PGAS use.
+
 **Measure after implementation (milestone 3 and 4 success criteria):**
 dry-run `gasRequired` (ref time and proof size) for `startGame`,
 `startRankedGame`, `submitTurn` (round 1 and round 10, with a full ghost
@@ -1111,8 +1166,8 @@ were not checked.
 | Badge mint fails (no funds, no collection, purse not empty) | Board entry kept, badge `token: None`, `BadgePending`. | `retryBadges(alias)` after funding or after new purses. Same rule as today (`contract/src/main.rs` 646–675). |
 | No queued purse | Badge pending. | Client adds purses; or admin enables derived fallback. |
 | Identity call fails, ranked | `startRankedGame` reverts. | Fail closed (as today, `contract/src/main.rs` 500–513). |
-| Identity call fails, casual | See Q3. Proposal: fail closed for a caller that looks like a session (no way to know), so **revert**. | A contract cannot go "down"; a failure here means a bad address or a bug. Revert is the safe answer. |
-| Session expired or burned | Mode reverts `InvalidSession`. Client sets up a new session (one prompt). | |
+| Identity call fails, casual | **Revert** (Q3, decided). | A contract cannot go "down"; a failure here means a bad address or a bug. Revert is the safe answer. |
+| Session expired or burned | `Identity.resolve` itself reverts `InvalidSession(account)` (M2); the mode propagates the revert. Client sets up a new session (one prompt). | A burned or expired key never falls back to playing as itself. |
 | Content missing a set | `startGame` reverts `SetUnavailable`. Running games are not affected (they use the cache). | |
 | Personhood precompile missing on a chain | Ranked closed. Casual open. | As today. |
 | Records full of stale modes | `modeOf` returns zero for removed modes; their reports revert. | |
@@ -1356,6 +1411,153 @@ Success:
   a session-signed `Revive.call` into a test contract that calls `resolve`
   costs no fee and resolves to the owner.
 
+### M2 status (2026-10-20)
+
+Done on branch `update/m2-identity` (from `update/oct-2026` at `bf13ebc`; not
+merged). Personhood is on hold (section 14 priority note), so M2 built the
+session registry and a personhood stub only. Deployed on Paseo Next by the
+cdm `paseo` account (H160 `0x704ead03a0a7c8b06c6ebbde97934adc24f9f5f7`).
+
+| Item | Value |
+| --- | --- |
+| `@oab/identity` (`identity/`) | `0x7b41368859B67BB5c88500612eDe21AA6b837FBA`, CDM version 2, block 2056840, 7 176-byte blob, metadata `bafk2bzacebnfrdmbb5bm3ce3e7ujprsnch45uj5jtjbgt2s4x4hmots3s4tse` |
+| Probe (`identity/probe`, test only, not in CDM) | `0x60ce23e6c109ef34b961c52af3bc4e15ac573479`, block 2056854 |
+| Do not use | CDM version 0 `0x954697369c81f5bfbf2a7c78d10a329671007b46` (block 2055508; its Bulletin metadata upload timed out, so `cdm i` cannot fetch it) and version 1 `0x13Aa48532372031ab58047B1a0cA8c956c5fCc03` (block 2056585; revoke left the owner record, see deviation 4) |
+| Scripts | `scripts/m2/deploy-probe.mjs`, `scripts/m2/check-identity.mjs` (polkadot-api 3.2.1) |
+
+Checks that passed:
+
+- 14 native tests (`identity/src/tests.rs`): a key resolves to its player only
+  after it accepts; a plain account resolves to itself; an expired key and a
+  revoked key revert and never play as themselves; a burned key cannot be
+  registered again by anyone; one session per player (rotation burns the old
+  key at once); a player cannot bind another player's account (the offer
+  binds nothing, and withdrawing it burns nothing); a bound key cannot be
+  taken by another player; a key with two offers binds once; a key cannot own
+  and an owner cannot be a key; stale offers fail; TTL limit and admin-only
+  `setMaxTtl`; the ranked stub fails closed; every storage item is one 32-byte
+  word (≤ 416 bytes); revoke deletes the owner record. Mutating the accept
+  check, the rotation burn, the revoked flag, or the delete makes tests fail.
+- `cargo test --workspace` passes (243 tests). `eth_getCode` of the address
+  equals the local blob.
+- Live (`check-identity.mjs`, //Alice as the player, a fresh session key,
+  blocks 2056861–2056933): register → accept → a session-signed contract call
+  that resolves to Alice inside the probe → `resolve` reverts
+  `InvalidSession(session)` after expiry → revoke deletes the owner record
+  (206.4 M deposit released, 10 % back to Alice) and burns the key →
+  `registerSession(burned key)` reverts `SessionKeyBurned()`. The same flow,
+  with a write per call (`play`) and a final drain, passed on version 1
+  (blocks 2056603–2056726).
+
+**Fee model, verified live.** The design's claim ("free; an all-Revive batch
+passes `ChargePGAS`") does not hold on runtime 3004000:
+
+1. Since individuality `f0d5e690c2` (2026-10-08, "version Paseo transaction
+   extensions"), the runtime has two extension pipelines. **V0** (every classic
+   v4 signed extrinsic, the polkadot-api 2 default) has plain
+   `ChargeAssetTxPayment` and no `ChargePGAS`: the fee is native. **V1** (only
+   v5 general extrinsics, signed through `VerifyMultiSignature`) has
+   `ChargePGAS` with `CallFilter = Everything`: any call, any batch, pays its
+   fee in PGAS when the signer holds enough.
+2. A PGAS ERC-20 precompile `transfer(h160, x)` to an unmapped account credits
+   the H160's *fallback* account (`h160 ++ 0xEE × 12`), not the key's own
+   account. The key is not auto-mapped and cannot spend it. Auto-mapping
+   happens when the key's own SS58 account is created, for example by
+   `Assets.transfer_keep_alive` of the sufficient PGAS asset.
+
+Evidence (fees in planck; `TransactionFeePaid` = native, `PGASFeePaid` = PGAS):
+
+| Tx (block) | Signer, pipeline | Call | Fee event | Balances |
+| --- | --- | --- | --- | --- |
+| `0x8beb782a…86a6` (2055839) | Alice, V0 | `batch_all[precompile transfer(session H160, 1 G), registerSession]` | `TransactionFeePaid` 24 548 799 native | Alice native −24.5 M; PGAS −1 207.7 M; session SS58 PGAS 0 → 0 (1 G went to the fallback account; lost) |
+| `0xcf3f5cba…c629` (2056199) | Alice, V0 | `Assets.transfer_keep_alive(PGAS, session SS58, 300 M)` | `TransactionFeePaid` 9 588 398 native | session created and auto-mapped |
+| validate only | PGAS-only key, V0 | `System.remark`, `Revive.call`, all-Revive batch | — | all `Invalid(Payment)` |
+| validate only | PGAS-only key, V1 | `System.remark`, `Revive.call`, all-Revive and mixed batches | — | all valid |
+| `0x4309cb65…5d7a` (2056313) | PGAS-only key, V1 | `Revive.call(resolve)` | `PGASFeePaid` 12 482 616 | key PGAS 300 M → 287.5 M; native 0 → 0 |
+| `0x37238b12…1033` (2056861) | Alice, V1 | `batch_all[Assets.transfer_keep_alive(PGAS, session, 260 M), registerSession]` | `PGASFeePaid` 20 901 883 | Alice native unchanged; PGAS −487.3 M (260 M budget + 206.4 M deposit + fee) |
+| `0x44f9a441…359b` (2056865) | session, V1 | `batch_all[acceptSession, probe.whoami]` | `PGASFeePaid` 23 507 630 | session native 0 → 0; PGAS −229.9 M (206.4 M deposit + fee) |
+| `0xa5176d0b…e1c0` (2056867) | session, V1 | `probe.whoami` | `PGASFeePaid` 13 869 034 | session PGAS −13.9 M |
+| `0xc96f2856…9195` (2056933) | Alice, V1 | `revokeSession` | `PGASFeePaid` 13 858 546 | Alice PGAS +6.8 M (20.6 M refund − fee); `AssetsHolder.Burned` the other 90 % |
+| `0x30fe321f…de8d` (2056726, version 1 run) | session, V1 | precompile `transfer(Alice H160, 117.7 M)` | `PGASFeePaid` 13 244 263 | Alice PGAS +117.7 M: she is mapped, so the precompile credits her own account |
+
+The first two rows and the fifth come from one-off probes run while finding
+the cause (an earlier version of the check script, and a short script against
+a key funded by `Assets.transfer_keep_alive`). The committed
+`check-identity.mjs` repeats the validate rows on every run. No transaction in
+M2 touched the DOT↔PGAS pool (no `asset` option, no swap event).
+
+**Conclusion.** "Sign once, play with no prompt and no native token" holds,
+and needs no pool: one product-account prompt, then silent session calls.
+"No fee" does not hold: every call burns 13–25 M PGAS (more for heavy turns,
+section 8), and every new storage item takes 206.4 M. The cheapest design that
+avoids the pool is the as-built flow in section 7.4: all transactions on V1
+(product account through the host with `txExtVersion: 1`, session key with
+polkadot-api 3 `getVerifyMultiSignatureTxCreator`), the session funded by
+`Assets.transfer_keep_alive` to its SS58 account in the setup batch, and the
+accept batched with the first game call.
+
+Deviations from the design:
+
+1. **Two-step binding.** `registerSession` only offers; the key must call
+   `acceptSession(owner)`. With one step, a player could register someone
+   else's account (any plain casual player) as their key: that account would
+   play for the attacker and, after a revoke, be burned for good. The accept
+   costs no extra prompt (it is batched with the first game call).
+2. **`resolve` reverts** `InvalidSession(account)` and returns only the
+   player. The design returned `(player, kind)`. A reverting `resolve` makes
+   fail-closed (Q3) the default: a mode cannot forget to check `kind`.
+   Clients use `sessionOf` and `keyOf`. An unknown account resolves to itself
+   (the design's `Direct`), as the brief asked.
+3. **Expiry in unix seconds** (`block.timestamp`), not blocks. Paseo Next
+   makes a block every 2.0 s (measured over 1 000 blocks); block times change.
+4. **Storage.** Two records, each one 32-byte word at a fixed key:
+   `KEY[session] = (owner, expiresAt, revoked)` (never deleted; this is the
+   burned set) and `OWNER[player] = (session, expiresAt, state)`. `resolve`
+   reads one item. pallet-revive keys `set_storage(32-byte slice)` as a
+   *variable* key and `set_storage_or_clear` as a *fixed* key, which are
+   different items; version 1 mixed them, so revoke did not delete. MockHost
+   cannot see this. Version 0 cleared with an empty value, which keeps the
+   item and its deposit.
+5. **Personhood is a stub.** `rankedIdentity` returns `(resolve(account), 0,
+   0)`. There is no context, tier mask, `personhoodOf`, `setContext`, or
+   `setAcceptedTiers`. Storage domains 4 and up are kept. Adding personhood
+   means a new Identity version (players re-register; sessions last at most
+   7 days anyway) or a separate contract that calls `resolve` and then the
+   precompile. The ranked M2 success items (tier mask, precompile failure
+   tests) are not built.
+6. **Events.** `SessionOffered` is new. `SessionRegistered` is emitted at
+   accept. `MaxTtlSet(uint64)` replaces `ConfigChanged`.
+7. **Setup batch.** Not all-Revive: on V1 it does not need to be, and the
+   precompile path loses funds (fee model point 2).
+8. **CDM version 2.** Versions 0 and 1 are dead (table above).
+
+Open problems found in M2:
+
+- **Host signing on V1 is not tested.** product-sdk's host transaction creator
+  takes `txExtVersion` (`packages/host/src/tx-creator.ts`; default 0 in
+  `accounts.ts` `getProductAccountSigner`). A product account that holds only
+  PGAS cannot pay a V0 transaction at all. M5 must sign the setup batch with
+  `txExtVersion: 1` and test it in a real host.
+- **The web client** (polkadot-api 2, v4 transactions) must move to
+  polkadot-api 3 general V1 transactions for the session key (M5).
+- **Upstream docs are stale.** `gaming-retreat-2026`
+  `.claude/skills/session-autosigning` (pgas.md, registry-sessions.md) still
+  says ChargePGAS covers v4 Revive calls only, that the setup batch must be
+  all-Revive, and that a precompile transfer auto-maps the session key. All
+  three are wrong on runtime 3004000.
+- **Key records are permanent.** Each session ever bound locks 206.4 M PGAS
+  for good. Deleting a record after expiry would let a burned key bind again;
+  not done.
+- **No silent logout.** Only the player can revoke (one prompt). A
+  self-revoke by the session key is a possible addition.
+- **Test PGAS is scarce.** //Alice held 3.12 G PGAS at the start (not the
+  ~10 G expected), and 0.17 G after M2: 1 G went to the fallback account in
+  the V0 run, the rest to deposits in the three Identity versions and probes,
+  and fees. No dev account has more. M3's live checks need a PGAS source
+  that is not the pool (a personhood claim).
+- Leftover state: versions 0 and 1 keep Alice's old owner record and two
+  burned keys. They are unreferenced.
+
 ### M3. Arena and Ranked modes
 
 Success:
@@ -1436,7 +1638,9 @@ The design above picks one answer for each. Shawn should confirm.
    keys are our extension (4.3).
 6. **The free-call claim is from July.** `ChargePGAS` covering Revive calls
    and all-Revive batches was checked live on 2026-07-14 by the skill authors.
-   This document did not check it again. M2 does.
+   M2 checked it again: since 2026-10-08 only v5 general transactions on
+   extension pipeline V1 pay in PGAS (any call), and the fee is burned PGAS,
+   not zero (M2 status).
 7. **Records keyed by alias.** Casual players without personhood have no
    alias, so Records cannot rank them. The design ignores alias-less facts.
 8. **Badges per person.** Keying by alias makes badges one per person. The
@@ -1456,8 +1660,8 @@ The design above picks one answer for each. Shawn should confirm.
   guesses the player.
 - **Q11:** set ids are auto-assigned by Content.
 
-Q4–Q10 and Q13–Q14 are on hold with ranked play and Records. Q12 is decided
-after the M2 measurement.
+Q4–Q10 and Q13–Q14 are on hold with ranked play and Records. Q12 has a
+proposal from the M2 measurement (below); Shawn decides.
 
 - **Q1. Ghost pools after an engine upgrade.** A new mode deployment starts
   with empty pools. Options: (a) accept it; (b) on a bracket miss, read the
@@ -1498,6 +1702,29 @@ after the M2 measurement.
 - **Q12. Session storage deposits.** With registry sessions, the session key
   is the origin and pays storage deposits in PGAS (`registry-sessions.md`
   §4). The budget per session must cover them. What budget?
+
+  **Proposal from M2 (measured, section 8 and M2 status):** fund each
+  session with **1.5 G PGAS** (3 % of one 50 G personhood claim) in the setup
+  batch, and top it up in a later setup-style batch when it falls below
+  0.4 G. The parts:
+
+  | Cost | Paid by | PGAS planck |
+  | --- | --- | --- |
+  | Owner record (first session only; 10 % back on revoke) | product account | 206.4 M |
+  | Setup batch fee | product account | 21 M |
+  | Key record (at accept; never refunded) | session | 206.4 M |
+  | Accept + first call fee | session | 24 M |
+  | Each new storage item a mode creates for the player | session | 206.4 M |
+  | Each call fee, small call (measured) | session | 14–16 M |
+  | Each turn fee, mode turn at 250–750 KB proof (estimated from fee details, not measured) | session | 37–81 M |
+
+  1.5 G covers the key record and accept (0.23 G), two new game items
+  (0.41 G), and about 20 turns at 40 M (0.8 G). Recheck after M3 measures a
+  real `submitTurn`. Two levers keep the budget small: M3 keeps per-player
+  items few and overwrites them in place (an overwrite of the same size adds
+  no deposit), and the setup batch can include a product-account
+  `mode.initPlayer()` call so that the product account, not the session,
+  pays the one-time item deposits.
 - **Q13. Mainnet governance body.** Multisig, OpenGov origin, or a PCF-run
   key?
 - **Q14. Derived fallback for badges.** Keep it off (badges wait for a purse)
