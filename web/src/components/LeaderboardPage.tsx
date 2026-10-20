@@ -14,6 +14,8 @@ interface BoardState {
   myBest: LeaderboardEntry | null;
 }
 
+const livesLeft = (n: number) => `${n} ${n === 1 ? 'life' : 'lives'} left`;
+
 /** Ranked leaderboard per card set, with the player's own place when known. */
 export function LeaderboardPage() {
   const { isConnected, backend, eligibility, rankedAlias, checkEligibility } = useContractStore();
@@ -89,11 +91,11 @@ export function LeaderboardPage() {
               <span>
                 Your place: <span className="text-white font-bold">#{board.myRank}</span>
                 {board.myBest &&
-                  ` · best run ${board.myBest.wins} wins, ${board.myBest.lives} lives left`}
+                  ` · best run ${board.myBest.wins} wins, ${livesLeft(board.myBest.lives)}`}
               </span>
             ) : board?.myBest ? (
               <span>
-                Your best run: {board.myBest.wins} wins, {board.myBest.lives} lives left (not in the
+                Your best run: {board.myBest.wins} wins, {livesLeft(board.myBest.lives)} (not in the
                 top {PAGE})
               </span>
             ) : (
