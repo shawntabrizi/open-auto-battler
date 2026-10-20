@@ -40,7 +40,7 @@ cargo build --release          # build.rs (PvmBuilder) links the PolkaVM blob + 
 ```
 
 Outputs (under `contract/target/release/`):
-- `oab-contract.polkavm` — PolkaVM bytecode (~93 KB)
+- `oab-contract.polkavm` — PolkaVM bytecode (~99 KB)
 - `oab-contract.abi.json` — Solidity-style ABI (camelCase selectors)
 
 The `build.rs` recursion guard means an outer host build re-enters the PVM
@@ -111,17 +111,46 @@ game data is SCALE-encoded inside ABI `bytes` parameters.
 | ---------------------------- | ----------------------------------------------- |
 | `registerCard(bytes)`        | Admin: store a card definition                  |
 | `registerSet(uint16, bytes)` | Admin: store a card set                         |
-| `startGame(uint16, uint64)`  | Start a new arena game (set ID, seed nonce)     |
+| `startGame(uint16)`          | Start a casual arena game (set ID); open to anyone |
+| `startRankedGame(uint16)`    | Start a ranked game; caller needs personhood Lite or Full |
 | `submitTurn(bytes)`          | Submit shop actions and resolve battle on-chain |
 | `getGameState()`             | Read current game state (view call)             |
 | `abandonGame()`              | Forfeit the current game                        |
 | `endGame()`                  | Finalize a completed game                       |
 | `getCard(uint16)`            | Read a card definition                          |
 | `getSet(uint16)`             | Read a card set                                 |
+| `getRankedAlias()`           | Personhood alias of the caller's ranked game (zero if casual/none) |
+| `setPersonhoodContext(bytes32)` | Admin: set the personhood context for aliases |
+| `getPersonhoodContext()`     | Read the configured context (zero if unset)     |
+| `getLeaderboard(uint16, uint32, uint32)` | SCALE `Vec<LeaderboardEntry>` for a set, best first (set ID, offset, limit) |
+| `getPlayerRank(uint16, bytes32)` | 1-based place of an alias on a set's board; 0 if absent |
+| `getBestRun(uint16, bytes32)` | SCALE `LeaderboardEntry` of an alias's best run on a set; empty if none |
 
 The contract emits a `BattleReported` event after each `submitTurn` with the
 battle result and opponent board for client-side replay. The frontend reads it
 from the `Revive.ContractEmitted` substrate event in the tx's events list.
+
+## Ranked play and personhood
+
+Casual games (`startGame`) are open to every account. Ranked games
+(`startRankedGame`) need personhood **Lite (1) or Full (2)**. The contract
+reads it from the individuality personhood precompile at
+`0x000000000000000000000000000000000a010000`
+(`personhoodStatus(address account, bytes32 context) returns (uint8 status, bytes32 contextAlias)`).
+
+- The ranked identity is the `contextAlias`, not the account. All accounts of
+  one person that are bound in the same context share one leaderboard entry.
+- The precompile only returns an alias for an account that is bound (pallet
+  `AliasAccounts`) in the **same** context the contract queries. One account
+  holds one binding at a time. The admin must call `setPersonhoodContext`
+  after deploy; until then ranked play is closed.
+- Ranked play fails closed: no context, a missing precompile, status None, or
+  an unknown tier all make `startRankedGame` return `0`.
+- `endGame` of a ranked game records `LeaderboardEntry { alias: [u8; 32],
+  set_id: u16, wins: u8, lives: u8, rounds: u8, block: u64 }` (SCALE). The
+  contract keeps the best run per (set, alias) and a top-100 board per set,
+  ordered by wins, then lives left, then the earlier block. Abandoned and
+  casual games never reach the board.
 
 ## Project structure
 
