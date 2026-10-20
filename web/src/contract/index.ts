@@ -145,12 +145,13 @@ const ARENA_LIBRARY = '@oab/arena';
 
 // The host derives (and authorizes) the app's product-account signer from this
 // dotNS identifier. It MUST match the app's deployed domain name — the app is
-// deployed at `oab-arena.dot` (served as `oab-arena.dot.li` in the browser
-// host) — or the host rejects signing for a product account it doesn't scope to
-// this origin ("Transaction signing was rejected"). Fixed constant, NOT read
-// from the host: reading would give `oab-arena.dot.li` on the gateway and break
-// resolution. See Rock-Paper-Scissors' PRODUCT_ID for the same convention.
-const PRODUCT_ID = 'oab-arena.dot';
+// deployed at `oab-arena.paseo` on Paseo Next (served as `oab-arena.paseo.li`
+// in the browser host) — or the host rejects signing for a product account it
+// doesn't scope to this origin ("Transaction signing was rejected"). Fixed
+// constant, NOT read from the host: reading would give `oab-arena.paseo.li` on
+// the gateway and break resolution. See Rock-Paper-Scissors' PRODUCT_ID for the
+// same convention.
+const PRODUCT_ID = 'oab-arena.paseo';
 
 function arenaContractInfo(): { address: `0x${string}`; abi: AbiEntry[] } {
   // The cdm CLI manifest keys contracts directly by package name.
