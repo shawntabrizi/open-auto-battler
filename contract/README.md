@@ -3,7 +3,8 @@
 The OAB arena game runs as a PolkaVM smart contract on Polkadot Asset Hub
 (`pallet-revive`). It is built with the
 [`cargo-pvm-contract` / `pvm-contract-sdk`](https://github.com/paritytech/cargo-pvm-contract)
-framework (git `main`) for automatic dispatch, ABI generation, and CDM metadata.
+framework (git rev `d5991131`, polkavm 0.35) for automatic dispatch, ABI
+generation, and CDM metadata.
 
 The frontend talks to it through the **Polkadot Product SDK**
 (`@parity/product-sdk-contracts` + `@parity/product-sdk-chain-client`), which
@@ -23,12 +24,15 @@ components = ["rust-src"]
 
 - **Rust** — installed automatically from the pin above.
 - **`cdm` CLI** — the contract build/deploy/install tool. Install per its
-  upstream `install.sh`; `cdm --version` should report ≥ 0.1.0.
-- **`playground` CLI** — for deploying the frontend to Bulletin + DotNS.
+  upstream `install.sh`. These docs were checked with `cdm` 0.13.0.
+- **Node.js** — the scripts in `web/scripts/` and the frontend deploy
+  (`npm run deploy` in `web/`, which runs a pinned `bulletin-deploy` through
+  `npx`; see `docs/QUICKSTART.md`).
+- **`bun`** — only for `web/scripts/register-cards.ts`.
 
-No sibling `contract-dependency-manager` clone, no `bun`, and no local
-Preview-Network zombienet are required any more — those were part of the
-pre-SDK prototype loop and have been retired.
+No sibling `contract-dependency-manager` clone and no local Preview-Network
+zombienet are required any more — those were part of the pre-SDK prototype
+loop and have been retired.
 
 ## Build the contract
 
@@ -53,19 +57,19 @@ The contract compiles as a normal std crate off the PolkaVM target, so its
 logic is unit-tested natively against a `MockHost` — no deployment, no node:
 
 ```bash
-cd contract
-CARGO_PVM_CONTRACT_INTERNAL=1 cargo test --features std
+# from the repo root
+CARGO_PVM_CONTRACT_INTERNAL=1 cargo test --manifest-path contract/Cargo.toml --features std
 ```
 
 This drives the real contract methods (`startGame`/`submitTurn`/`endGame`/…)
-through the arena flow. The `contract/tests-native/` crate additionally
-mirrors the game-engine logic for parity with the original pallet behaviour.
+through the arena flow. The `contract/tests-native/` crate (workspace member
+`oab-contract-tests`, `cargo test -p oab-contract-tests`) additionally tests
+the engine calls the contract makes. It began as a parity check against the
+old pallet, which was removed on 2026-05-05.
 
 > Note: `contract/.cargo/config.toml` pins the riscv target for the on-chain
-> build, so run native tests with a host target — the `CARGO_PVM_CONTRACT_INTERNAL=1
-> cargo test --features std` invocation above builds for the host by default
-> when that config is not forcing riscv. If a `cargo test` picks up the riscv
-> target, temporarily move `.cargo/config.toml` aside.
+> build. Cargo reads that config only when you run inside `contract/`, so run
+> the native tests from the repo root with `--manifest-path` as above.
 
 ## Deploy (paseo)
 
@@ -83,11 +87,11 @@ cdm i -n paseo @oab/arena             # refresh contract/cdm.json
 Deploys need PAS on Asset Hub and a Bulletin allowance (for the metadata);
 `cdm account bal -n paseo` shows both.
 
-`cdm install` writes the registry-pointer manifest the frontend consumes at
-runtime; `web/src/contract/index.ts` resolves the live address/ABI from the
-on-chain CDM registry via `ContractManager.fromLiveClient` (a redeploy is
-picked up without shipping a new `cdm.json`). It also still accepts the legacy
-inline `@dotdm/cdm` manifest for backward compatibility.
+`cdm install` writes the manifest with the registry, the address, and the
+ABI. `web/src/contract/index.ts` binds the arena from that inline address and
+ABI (`createContract` from `@parity/product-sdk-contracts`). It does not look
+up the registry at runtime, so `connect()` stays transaction-free. After a
+redeploy, run `cdm i` in `web/` and ship a new frontend.
 
 After the contract is deployed, register the cards and sets as the deployer
 (the contract admin), then check the deployment end to end:
@@ -102,8 +106,8 @@ DUMP=/tmp/cards-dump.json node scripts/e2e-onchain.mjs
 Then, as the admin: `setPersonhoodContext(<context>)` (value below), fund the
 arena, and `initAchievements()` (see Achievement badges).
 
-Then deploy the frontend to a host (`playground deploy`) so it can reach Asset
-Hub through the Polkadot host.
+Then deploy the frontend (`npm run deploy` in `web/`, see
+`docs/QUICKSTART.md`) so it can reach Asset Hub through the Polkadot host.
 
 ## Contract API
 
@@ -215,7 +219,7 @@ contract/
   rust-toolchain.toml
   .cargo/config.toml # riscv target + build-std for the on-chain build
   tests-native/      # game-logic parity tests (std)
-  Cargo.toml         # deps pinned to cargo-pvm-contract @ df613d48
+  Cargo.toml         # deps pinned to cargo-pvm-contract @ d5991131
 ```
 
 ## Storage model
