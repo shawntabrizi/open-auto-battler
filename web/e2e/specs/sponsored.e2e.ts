@@ -332,41 +332,46 @@ const sponsored = hostTest({
   behaviors: { resourceAllocation: { AutoSigning: false } },
 });
 
-sponsored(
-  'PGAS registry session: setup prompts once, then the key plays with no prompts',
-  async ({ testHost }) => {
-    sponsored.skip(
-      process.env.OAB_E2E_SESSION !== '1',
-      'Needs about 1.75 G PGAS from //Alice; set OAB_E2E_SESSION=1 to run.'
-    );
-    const { frame, address } = await connect(testHost);
-    await chain.topUp(address, 5n * PAS, 20n * PAS);
-    // Stand-in for the host's allowance claim.
-    await chain.topUpPgas(address, 1_800_000_000n);
-    const pgasBefore = await chain.pgas(address);
-    expect((await chain.game(address)) === null, 'no leftover game').toBe(true);
-    await testHost.clearSigningLog();
+// Skip in a describe block, before the fixtures load the page: a skip inside
+// the test body ends the test while the guard fixture still serves the page.
+sponsored.describe('gated', () => {
+  sponsored.skip(
+    process.env.OAB_E2E_SESSION !== '1',
+    'Needs about 1.75 G PGAS from //Alice; set OAB_E2E_SESSION=1 to run.'
+  );
 
-    // First write of the connection: the setup batch (one prompt), then the
-    // session key's first call: batch_all[acceptSession, startGame], silent.
-    await startGame(frame);
-    expect(await chain.game(address), 'the key started the PLAYER game').not.toBeNull();
-    expect(await signatures(testHost), 'setup is one host prompt').toBe(1);
+  sponsored(
+    'PGAS registry session: setup prompts once, then the key plays with no prompts',
+    async ({ testHost }) => {
+      const { frame, address } = await connect(testHost);
+      await chain.topUp(address, 5n * PAS, 20n * PAS);
+      // Stand-in for the host's allowance claim.
+      await chain.topUpPgas(address, 1_800_000_000n);
+      const pgasBefore = await chain.pgas(address);
+      expect((await chain.game(address)) === null, 'no leftover game').toBe(true);
+      await testHost.clearSigningLog();
 
-    await testHost.clearSigningLog();
-    for (let turn = 0; turn < 2; turn++) {
-      await playShopTurn(frame);
-      await commitTurn(frame);
-      await watchBattle(frame, testHost.page);
-      await expect(frame.locator('[data-game-custom-action="true"]')).toBeVisible({
-        timeout: 60_000,
-      });
+      // First write of the connection: the setup batch (one prompt), then the
+      // session key's first call: batch_all[acceptSession, startGame], silent.
+      await startGame(frame);
+      expect(await chain.game(address), 'the key started the PLAYER game').not.toBeNull();
+      expect(await signatures(testHost), 'setup is one host prompt').toBe(1);
+
+      await testHost.clearSigningLog();
+      for (let turn = 0; turn < 2; turn++) {
+        await playShopTurn(frame);
+        await commitTurn(frame);
+        await watchBattle(frame, testHost.page);
+        await expect(frame.locator('[data-game-custom-action="true"]')).toBeVisible({
+          timeout: 60_000,
+        });
+      }
+      await abandon(frame);
+
+      // Turns and the abandon were signed by the session key: no host prompt.
+      expect(await testHost.getSigningLog()).toEqual([]);
+      expect(await chain.game(address), 'no game after abandon').toBeNull();
+      expect(await chain.pgas(address)).toBeLessThan(pgasBefore);
     }
-    await abandon(frame);
-
-    // Turns and the abandon were signed by the session key: no host prompt.
-    expect(await testHost.getSigningLog()).toEqual([]);
-    expect(await chain.game(address), 'no game after abandon').toBeNull();
-    expect(await chain.pgas(address)).toBeLessThan(pgasBefore);
-  }
-);
+  );
+});
