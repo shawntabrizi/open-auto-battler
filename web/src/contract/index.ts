@@ -59,7 +59,6 @@ import {
   type TxOutcome,
 } from './arenaFlows';
 import type { PrepareOptions, Prepared, StartMethod, TxOptions } from './arenaFlows';
-import { DERIVATION_INDEX, PRODUCT_ID } from './personhood';
 
 export type { SponsorStatus } from './session';
 export { chainErrorMessage } from './errors';
@@ -213,7 +212,7 @@ const ITEM_METADATA_ABI: AbiEntry[] = [
   },
 ];
 
-// PRODUCT_ID (`./personhood`): the host derives (and authorizes) the app's
+// PRODUCT_ID: the host derives (and authorizes) the app's
 // product-account signer from this dotNS identifier. It MUST match the app's
 // deployed domain name — the app is deployed at `oab-arena.paseo` on Paseo
 // Next (served as `oab-arena.paseo.li` in the browser host) — or the host
@@ -222,6 +221,8 @@ const ITEM_METADATA_ABI: AbiEntry[] = [
 // host: reading would give `oab-arena.paseo.li` on the gateway and break
 // resolution. DERIVATION_INDEX is the product-account index the app signs
 // with (and sponsors).
+const PRODUCT_ID = 'oab-arena.paseo';
+const DERIVATION_INDEX = 0;
 
 /** A package's address and ABI from `cdm.json` (versions are pinned there). */
 export function cdmContract(name: string): { address: `0x${string}`; abi: AbiEntry[] } {

@@ -1,56 +1,10 @@
 /**
- * SCALE decoders for the arena's ranked-play and badge views.
+ * SCALE decoders for the casual arena's game and battle report.
  *
- * The contract returns these as SCALE inside ABI `bytes` (see
- * `contract/src/main.rs`: `LeaderboardEntry`, `BadgeRecord`, `BadgeConfig`).
- * The fixtures in `./fixtures/scale.txt` are checked against the Rust types by
- * a contract test (`frontend_scale_fixtures`) and against these decoders by
- * `codec.test.ts`, so a change on one side fails a test on the other.
- *
- * Plain TypeScript with no imports: `scripts/check-ranked-reads.mjs` imports
- * this file directly (Node type stripping) to decode live contract output.
+ * Plain TypeScript with no imports.
  */
 
 export type Hex = `0x${string}`;
-
-/** `LeaderboardEntry { alias: [u8; 32], set_id: u16, wins: u8, lives: u8, rounds: u8, block: u64 }` */
-export interface LeaderboardEntry {
-  alias: Hex;
-  setId: number;
-  wins: number;
-  lives: number;
-  rounds: number;
-  block: bigint;
-}
-
-/** `BadgeRecord { badge: u8, set_id: u16, block: u64, token: Option<u64> }`; `token: null` = pending. */
-export interface BadgeRecord {
-  badge: number;
-  setId: number;
-  block: bigint;
-  token: bigint | null;
-}
-
-/** `BadgeConfig { collection: u32, items: Vec<u32> }` */
-export interface BadgeConfig {
-  collection: number;
-  items: number[];
-}
-
-export const BADGE_VICTORY = 0;
-export const BADGE_FLAWLESS = 1;
-
-export function badgeName(badge: number): string {
-  if (badge === BADGE_VICTORY) return 'Victory';
-  if (badge === BADGE_FLAWLESS) return 'Flawless';
-  return `Badge #${badge}`;
-}
-
-export const ZERO_ALIAS: Hex = `0x${'00'.repeat(32)}`;
-
-export function isZeroAlias(alias: string): boolean {
-  return /^0x0*$/i.test(alias);
-}
 
 export function hexToBytes(hex: string): Uint8Array {
   const h = hex.startsWith('0x') ? hex.slice(2) : hex;
@@ -142,108 +96,15 @@ class Reader {
   }
 }
 
-function readEntry(r: Reader): LeaderboardEntry {
-  return {
-    alias: bytesToHex(r.fixed(32)),
-    setId: r.u16(),
-    wins: r.u8(),
-    lives: r.u8(),
-    rounds: r.u8(),
-    block: r.u64(),
-  };
-}
-
 function toBytes(input: Uint8Array | string): Uint8Array {
   return typeof input === 'string' ? hexToBytes(input) : input;
 }
 
-/** `getLeaderboard` output: SCALE `Vec<LeaderboardEntry>`, best first. */
-export function decodeLeaderboard(input: Uint8Array | string): LeaderboardEntry[] {
-  const r = new Reader(toBytes(input));
-  const out = r.vec(() => readEntry(r));
-  r.end();
-  return out;
-}
-
-/** `getBestRun` output: one SCALE `LeaderboardEntry`, or empty bytes for none. */
-export function decodeBestRun(input: Uint8Array | string): LeaderboardEntry | null {
-  const bytes = toBytes(input);
-  if (bytes.length === 0) return null;
-  const r = new Reader(bytes);
-  const out = readEntry(r);
-  r.end();
-  return out;
-}
-
-/** `getBadges` output: SCALE `Vec<BadgeRecord>` in the order earned. */
-export function decodeBadges(input: Uint8Array | string): BadgeRecord[] {
-  const r = new Reader(toBytes(input));
-  const out = r.vec(() => ({
-    badge: r.u8(),
-    setId: r.u16(),
-    block: r.u64(),
-    token: r.option(() => r.u64()),
-  }));
-  r.end();
-  return out;
-}
-
-/** `getBadgeConfig` output: SCALE `BadgeConfig`, or empty bytes before `initAchievements`. */
-export function decodeBadgeConfig(input: Uint8Array | string): BadgeConfig | null {
-  const bytes = toBytes(input);
-  if (bytes.length === 0) return null;
-  const r = new Reader(bytes);
-  const out = { collection: r.u32(), items: r.vec(() => r.u32()) };
-  r.end();
-  return out;
-}
-
-// ── Badge events ─────────────────────────────────────────────────────────────
-//
-// `BadgeMinted(address indexed player, uint8 badge, uint16 setId, uint256 tokenId)`
-// `BadgePending(address indexed player, uint8 badge, uint16 setId)`
-// Standard Solidity ABI data words (contract `emit_badge_event`).
-
-export const BADGE_MINTED_TOPIC =
-  '0xbd1356c5aeb02333826f94682d66bd82dc7ebfc1404228d119f6ebdf616b7db7';
-export const BADGE_PENDING_TOPIC =
-  '0xd39403252e3d7eb99af74acb5b83b012f0be64b87d359fdddd26797ea8353256';
-
-export interface BadgeEvent {
-  kind: 'minted' | 'pending';
-  /** Lower-case H160 of the player (topic 1). */
-  player: Hex;
-  badge: number;
-  setId: number;
-  token: bigint | null;
-}
-
+/** The `i`-th 32-byte ABI word of `data`, big-endian. */
 function word(data: Uint8Array, i: number): bigint {
   let v = 0n;
   for (let k = i * 32; k < i * 32 + 32; k++) v = (v << 8n) | BigInt(data[k] ?? 0);
   return v;
-}
-
-/** Decode one contract event as a badge event; null if it is another event. */
-export function decodeBadgeEvent(topics: string[], data: Uint8Array): BadgeEvent | null {
-  const topic0 = topics[0]?.toLowerCase();
-  const kind =
-    topic0 === BADGE_MINTED_TOPIC ? 'minted' : topic0 === BADGE_PENDING_TOPIC ? 'pending' : null;
-  if (!kind || !topics[1]) return null;
-  const words = kind === 'minted' ? 3 : 2;
-  if (data.length < words * 32) return null;
-  return {
-    kind,
-    player: `0x${topics[1].toLowerCase().slice(-40)}`,
-    badge: Number(word(data, 0)),
-    setId: Number(word(data, 1)),
-    token: kind === 'minted' ? word(data, 2) : null,
-  };
-}
-
-/** Short display form of a 32-byte personhood alias. */
-export function shortAlias(alias: string): string {
-  return `${alias.slice(0, 8)}…${alias.slice(-6)}`;
 }
 
 // ── Casual arena (`@oab/arena` v3+, CDM version 4) ──────────────────────────

@@ -11,7 +11,7 @@ import {
 } from '@parity/host-api-test-sdk/playwright';
 import type { Account, HexString, InitialBehaviors } from '@parity/host-api-test-sdk';
 
-/** Must equal `PRODUCT_ID` in src/contract/personhood.ts: the core refuses signing for another id. */
+/** Must equal `PRODUCT_ID` in src/contract/index.ts: the core refuses signing for another id. */
 export const PRODUCT_ID = 'oab-arena.paseo';
 export const PRODUCT_URL = `http://localhost:${process.env.OAB_E2E_PORT ?? 4317}`;
 
