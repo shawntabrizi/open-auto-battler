@@ -6,12 +6,7 @@ import { useContractStore } from './contractStore';
 import { loadOwnedCosmetics, ownershipSource } from '../services/nftOwnership';
 
 export type CustomizationType =
-  | 'board_bg'
-  | 'hand_bg'
-  | 'card_style'
-  | 'avatar'
-  | 'card_art'
-  | 'theme';
+  'board_bg' | 'hand_bg' | 'card_style' | 'avatar' | 'card_art' | 'theme';
 
 export interface ThemePreviewData {
   colors: string[];

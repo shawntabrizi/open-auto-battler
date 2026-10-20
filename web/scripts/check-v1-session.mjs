@@ -81,7 +81,9 @@ async function validate(label, tx, creator, options) {
     { at: best }
   );
   const version = Buffer.from(bytes)[Buffer.from(bytes)[0] & 3 ? 2 : 1] ?? 0;
-  const out = r.success ? 'valid' : `invalid ${JSON.stringify(r.value, (_, v) => (typeof v === 'bigint' ? `${v}` : v))}`;
+  const out = r.success
+    ? 'valid'
+    : `invalid ${JSON.stringify(r.value, (_, v) => (typeof v === 'bigint' ? `${v}` : v))}`;
   console.log(`${label.padEnd(34)} extrinsic version byte 0x${version.toString(16)}  ${out}`);
   return r.success;
 }

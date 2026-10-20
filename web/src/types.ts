@@ -1,21 +1,11 @@
 // Composable ability building blocks
 export type BattleScope =
-  | 'SelfUnit'
-  | 'Allies'
-  | 'Enemies'
-  | 'All'
-  | 'AlliesOther'
-  | 'TriggerSource'
-  | 'Aggressor';
+  'SelfUnit' | 'Allies' | 'Enemies' | 'All' | 'AlliesOther' | 'TriggerSource' | 'Aggressor';
 export type ShopScope = 'SelfUnit' | 'Allies' | 'All' | 'AlliesOther' | 'TriggerSource';
 export type StatType = 'Health' | 'Attack' | 'Mana';
 export type SortOrder = 'Ascending' | 'Descending';
 export type CompareOp =
-  | 'GreaterThan'
-  | 'LessThan'
-  | 'Equal'
-  | 'GreaterThanOrEqual'
-  | 'LessThanOrEqual';
+  'GreaterThan' | 'LessThan' | 'Equal' | 'GreaterThanOrEqual' | 'LessThanOrEqual';
 
 // Battle condition types
 export type BattleMatcher =
@@ -40,8 +30,7 @@ export type BattleMatcher =
   | { type: 'IsPosition'; data: { scope: BattleScope; index: number } };
 
 export type BattleCondition =
-  | { type: 'Is'; data: BattleMatcher }
-  | { type: 'AnyOf'; data: BattleMatcher[] };
+  { type: 'Is'; data: BattleMatcher } | { type: 'AnyOf'; data: BattleMatcher[] };
 
 // Shop condition types
 export type ShopMatcher =
@@ -53,8 +42,7 @@ export type ShopMatcher =
   | { type: 'IsPosition'; data: { scope: ShopScope; index: number } };
 
 export type ShopCondition =
-  | { type: 'Is'; data: ShopMatcher }
-  | { type: 'AnyOf'; data: ShopMatcher[] };
+  { type: 'Is'; data: ShopMatcher } | { type: 'AnyOf'; data: ShopMatcher[] };
 
 export type BattleTrigger =
   | 'OnStart'
@@ -70,12 +58,7 @@ export type BattleTrigger =
   | 'AfterAnyAttack';
 
 export type ShopTrigger =
-  | 'OnBuy'
-  | 'OnSell'
-  | 'OnShopStart'
-  | 'AfterLoss'
-  | 'AfterWin'
-  | 'AfterDraw';
+  'OnBuy' | 'OnSell' | 'OnShopStart' | 'AfterLoss' | 'AfterWin' | 'AfterDraw';
 
 export type BattleTarget =
   | { type: 'Position'; data: { scope: BattleScope; index: number } }

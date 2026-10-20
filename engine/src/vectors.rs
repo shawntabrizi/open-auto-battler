@@ -154,7 +154,8 @@ pub fn policy_action(
             actions = try_burn;
         }
     }
-    if state.round % 3 == 0 && board.len() >= 2 && board[0].is_some() && board[1].is_some() {
+    if state.round.is_multiple_of(3) && board.len() >= 2 && board[0].is_some() && board[1].is_some()
+    {
         let mut try_swap = actions.clone();
         try_swap.push(TurnAction::SwapBoard {
             slot_a: 0,
@@ -239,7 +240,7 @@ pub fn run_case(case_index: usize, case: Case, bundle: &SetBundle) -> Trace {
         let opponent = opponent(case_index, turn, state.round, bundle);
         let battle_seed = arena_v2_seed(&case.caller, b"battle", state.game_seed);
         let next_shop_seed = arena_v2_seed(&case.caller, b"shop", state.game_seed);
-        if turn == 1 && case_index % 4 == 0 {
+        if turn == 1 && case_index.is_multiple_of(4) {
             let action = CommitTurnAction {
                 actions: alloc::vec![TurnAction::BurnFromHand { hand_index: 99 }],
             };
