@@ -91,7 +91,12 @@ const BATTLE_REPORTED_TOPIC: [u8; 32] = [
     0xc7, 0xee, 0x31, 0xf3, 0x26, 0x94, 0xdd, 0xef, 0x23, 0xdd, 0x55, 0xaf, 0x68, 0xe0, 0x89, 0xbd,
 ];
 
-fn bracket_bytes(set_id: SetIdValue, round: RoundValue, wins: RoundValue, lives: RoundValue) -> [u8; 5] {
+fn bracket_bytes(
+    set_id: SetIdValue,
+    round: RoundValue,
+    wins: RoundValue,
+    lives: RoundValue,
+) -> [u8; 5] {
     let s = set_id.to_le_bytes();
     [s[0], s[1], round, wins, lives]
 }
@@ -212,7 +217,10 @@ mod oab_arena {
         fn read_raw(&self, key: &[u8; 32]) -> Option<Vec<u8>> {
             let mut buf = vec![0u8; 16384];
             let mut out = buf.as_mut_slice();
-            match self.host().get_storage(StorageFlags::empty(), key, &mut out) {
+            match self
+                .host()
+                .get_storage(StorageFlags::empty(), key, &mut out)
+            {
                 Ok(_) => Some(out.to_vec()),
                 Err(_) => None,
             }
@@ -742,7 +750,12 @@ mod tests {
     }
 
     fn empty_turn() -> Bytes {
-        Bytes(CommitTurnAction { actions: Vec::new() }.encode())
+        Bytes(
+            CommitTurnAction {
+                actions: Vec::new(),
+            }
+            .encode(),
+        )
     }
 
     /// Contract with ADMIN as caller, constructor run, and all genesis cards +
@@ -752,10 +765,16 @@ mod tests {
         let mut c = OabArena::with_host(mock.clone());
         c.new();
         for card in oab_assets::cards::get_all() {
-            assert!(c.register_card(Bytes(card.encode())), "register_card failed");
+            assert!(
+                c.register_card(Bytes(card.encode())),
+                "register_card failed"
+            );
         }
         for (i, set) in oab_assets::sets::get_all().iter().enumerate() {
-            assert!(c.register_set(i as u16, Bytes(set.encode())), "register_set failed");
+            assert!(
+                c.register_set(i as u16, Bytes(set.encode())),
+                "register_set failed"
+            );
         }
         (c, mock)
     }
@@ -803,8 +822,14 @@ mod tests {
 
         let session = decode_session(&c.get_game_state()).expect("session still active after draw");
         assert_eq!(session.phase, GamePhase::Shop);
-        assert_eq!(session.round, 2, "round advances after a non-game-over turn");
-        assert_eq!(session.mana_limit, 4, "mana_limit = min(3 + (round-1), 10) = 4");
+        assert_eq!(
+            session.round, 2,
+            "round advances after a non-game-over turn"
+        );
+        assert_eq!(
+            session.mana_limit, 4,
+            "mana_limit = min(3 + (round-1), 10) = 4"
+        );
         assert_eq!(session.lives, 3, "draw costs no life");
         assert_eq!(session.wins, 0);
     }
@@ -829,7 +854,10 @@ mod tests {
         c.start_game(0);
         assert!(decode_session(&c.get_game_state()).is_some());
         assert!(c.abandon_game(), "abandon active game => true");
-        assert!(decode_session(&c.get_game_state()).is_none(), "session cleared");
+        assert!(
+            decode_session(&c.get_game_state()).is_none(),
+            "session cleared"
+        );
     }
 
     #[test]
@@ -859,8 +887,14 @@ mod tests {
         let mut c = OabArena::with_host(mock);
         c.new();
         let card = oab_assets::cards::get_all()[0].clone();
-        assert!(c.register_card(Bytes(card.encode())), "first registration ok");
-        assert!(!c.register_card(Bytes(card.encode())), "CardAlreadyExists => false");
+        assert!(
+            c.register_card(Bytes(card.encode())),
+            "first registration ok"
+        );
+        assert!(
+            !c.register_card(Bytes(card.encode())),
+            "CardAlreadyExists => false"
+        );
     }
 
     #[test]
@@ -873,7 +907,10 @@ mod tests {
         }
         let set = oab_assets::sets::get_all()[0].clone();
         assert!(c.register_set(0, Bytes(set.encode())), "first set ok");
-        assert!(!c.register_set(0, Bytes(set.encode())), "SetAlreadyExists => false");
+        assert!(
+            !c.register_set(0, Bytes(set.encode())),
+            "SetAlreadyExists => false"
+        );
     }
 
     #[test]
@@ -920,10 +957,7 @@ mod tests {
     }
 
     fn force_session(mock: &MockHost, caller: &[u8; 20], session: &ArenaSession) {
-        mock.set_raw_storage(
-            skey(super::DOM_SESSION, caller).to_vec(),
-            session.encode(),
-        );
+        mock.set_raw_storage(skey(super::DOM_SESSION, caller).to_vec(), session.encode());
     }
 
     #[test]
@@ -1025,8 +1059,13 @@ mod tests {
         let mut round = 1u8;
         while expected_lives > 0 {
             seed_strong_ghost(round, expected_lives);
-            assert_ne!(c.submit_turn(empty_turn()), 0, "turn resolves at round {round}");
-            let s = decode_session(&c.get_game_state()).expect("session persists through game over");
+            assert_ne!(
+                c.submit_turn(empty_turn()),
+                0,
+                "turn resolves at round {round}"
+            );
+            let s =
+                decode_session(&c.get_game_state()).expect("session persists through game over");
             expected_lives -= 1;
             assert_eq!(s.lives, expected_lives, "a defeat costs exactly one life");
             if expected_lives > 0 {
@@ -1041,6 +1080,9 @@ mod tests {
         assert_eq!(s.phase, GamePhase::Completed, "lives==0 ends the game");
 
         assert!(c.end_game(), "end_game finalizes the completed game");
-        assert!(decode_session(&c.get_game_state()).is_none(), "game removed after end_game");
+        assert!(
+            decode_session(&c.get_game_state()).is_none(),
+            "game removed after end_game"
+        );
     }
 }
