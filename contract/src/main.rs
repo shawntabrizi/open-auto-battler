@@ -8,14 +8,12 @@
 
 #![cfg_attr(not(any(test, feature = "std", feature = "abi-gen")), no_main, no_std)]
 
-// `alloc`, `vec!` and `Vec` come from the contract macro's crate-root injection
-// on the no_std (on-chain) build and from the std prelude on host/test/abi-gen
-// builds. `BTreeMap` is not in any prelude, so import it from the right crate
-// per build mode: `alloc` for the no_std on-chain build, `std` otherwise.
-#[cfg(not(any(test, feature = "std", feature = "abi-gen")))]
-use alloc::collections::BTreeMap;
-#[cfg(any(test, feature = "std", feature = "abi-gen"))]
-use std::collections::BTreeMap;
+// The contract macro declares `extern crate alloc` at the crate root (except on
+// the abi-gen build) but no longer injects `use` imports, so import them here.
+#[cfg(all(feature = "abi-gen", not(test)))]
+extern crate alloc;
+#[allow(unused_imports)]
+use alloc::{collections::BTreeMap, vec, vec::Vec};
 
 use parity_scale_codec::{Decode, Encode};
 
