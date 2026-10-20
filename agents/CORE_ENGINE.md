@@ -1,18 +1,19 @@
 # Core Engine Guide
 
-This document summarizes the engine model from `core/src/*`.
+This document summarizes the engine model from `battle/src/*` and `game/src/*`.
 
 ## Modules
-- `core/src/state.rs` defines `GameState`, `LocalGameState`, and phase tracking.
-- `core/src/types.rs` defines abilities, targets, matchers, and fundamental types.
-- `core/src/battle.rs` resolves combat flow.
-- `core/src/limits.rs` defines battle limit reasons and constraints.
-- `core/src/commit.rs` validates and applies turn actions.
-- `core/src/view.rs` produces UI-facing views.
+- `game/src/state.rs` defines `GameState`, `LocalGameState`, and phase tracking (`GamePhase`).
+- `game/src/lib.rs` defines `GameConfig` (lives, wins to victory, mana, board, hand, and bag sizes).
+- `battle/src/types.rs` defines abilities, targets, matchers, and fundamental types.
+- `battle/src/battle.rs` resolves combat flow.
+- `battle/src/limits.rs` defines battle limit reasons and constraints.
+- `battle/src/commit.rs` validates and applies turn actions (`verify_and_apply_turn`).
+- `game/src/view.rs` produces UI-facing views.
 
 ## State Model
-- `GameState` contains `card_pool` and `LocalGameState` in `core/src/state.rs`.
-- Key constants like `HAND_SIZE`, `BOARD_SIZE`, and `STARTING_MANA_LIMIT` live in `core/src/state.rs`.
+- `GameState` contains `card_pool` and `LocalGameState` in `game/src/state.rs`.
+- Sizes and limits like `board_size`, `hand_size`, and `starting_mana_limit` are `GameConfig` fields in `game/src/lib.rs`. The defaults are in `game/src/sealed.rs` and `game/src/constructed.rs`; the contract has its own `default_config()` in `contract/src/main.rs`.
 - Phase progression is modeled with `GamePhase`.
 
 ## Battle Resolution
@@ -45,7 +46,7 @@ Dead units are moved (not cloned) to a graveyard `Vec<CombatUnit>`. Condition ev
 All trigger collection uses `capture_triggers_for_unit()`, a single helper that builds `PendingTrigger` entries from a unit's abilities filtered by trigger type. No manual `PendingTrigger` construction anywhere in the codebase.
 
 ## Abilities and Effects
-- Abilities are defined in `core/src/types.rs` with `AbilityTrigger`, `AbilityEffect`, and `AbilityTarget`.
+- Abilities are defined in `battle/src/types.rs` with `AbilityTrigger`, `AbilityEffect`, and `AbilityTarget`.
 - `AbilityTrigger` is `Copy` (simple fieldless enum).
 - Conditions use `Matcher` and `Condition` for targeting and comparisons.
 
@@ -74,11 +75,11 @@ All trigger collection uses `capture_triggers_for_unit()`, a single helper that 
 `CombatUnit` carries only engine-relevant data: `instance_id`, `team`, `attack`, `health`, `abilities`, `card_id`, `attack_buff`, `health_buff`, `play_cost`, `ability_trigger_counts`. Display metadata like `name` is resolved from the card pool via `card_id` when building `UnitView`.
 
 ## Determinism and RNG
-- Deterministic hand derivation uses seeded RNG in `core/src/state.rs` and `core/src/rng.rs`.
+- Deterministic hand derivation uses seeded RNG in `game/src/state.rs` and `battle/src/rng.rs`.
 - RNG is threaded through all battle functions including condition evaluation (for Random target resolution).
-- Opponent selection is in `core/src/opponents.rs`.
+- Opponent selection is on chain: the contract picks a ghost board from a pool per bracket (`select_ghost` in `contract/src/main.rs`).
 
 ## Invariants to Respect
-- Board size and hand size limits are fixed in `core/src/state.rs`.
-- Bounded types exist for on-chain integration in `core/src/bounded.rs`.
-- Battle limits (`MAX_TRIGGERS_PER_PHASE`, `MAX_SPAWNS_PER_BATTLE`, `MAX_BATTLE_ROUNDS`, etc.) are in `core/src/limits.rs`.
+- Board size and hand size come from `GameConfig` (`game/src/lib.rs`).
+- Bounded types exist for on-chain integration in `battle/src/bounded.rs` and `game/src/bounded.rs` (feature `bounded`).
+- Battle limits (`MAX_TRIGGERS_PER_PHASE`, `MAX_SPAWNS_PER_BATTLE`, `MAX_BATTLE_ROUNDS`, etc.) are in `battle/src/limits.rs`.
