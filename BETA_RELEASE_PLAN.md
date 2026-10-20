@@ -1,18 +1,16 @@
 # Open Auto Battler — Beta Release Plan
 
+Current roadmap. Checked 2026-10-20 against branch `update/oct-2026`.
+
+The pallet-era plan that this file held before (holographic `VictoryAchievements`, tournaments, creator hub) is in git history. The pallet runtime was removed on 2026-05-05; see "Pallet-era features not carried over" below.
+
 ## What is the Beta?
 
-The beta is the first version of Open Auto Battler that feels like a complete game you'd actually want to play and share with others. Here's what that means:
+**A polished, playable game.** You pick a set, draft cards from a random bag, build a board in the shop phase, then watch your team auto-battle against ghost opponents. Win 10 rounds before you lose 3 lives to achieve victory. The whole loop works end-to-end on mobile and desktop inside a Polkadot host (Polkadot Desktop, Polkadot Mobile, dot.li).
 
-**A polished, playable game.** One well-balanced card set with ~40 cards that supports multiple strategies — rush aggro, defensive tanks, buff scaling, swarm spawning, and more. You pick a set, draft cards from a random bag, build a board in the shop phase, then watch your team auto-battle against ghost opponents. Win 10 rounds before you lose 3 lives to achieve victory. The whole loop — drafting, building, battling — works end-to-end on both mobile and desktop through a web browser.
+**A reason to keep playing.** Ranked runs need proof of personhood and go on a per-set leaderboard. A 10-win ranked run earns a soulbound Victory badge; a run with no life lost also earns Flawless.
 
-**A reason to keep playing.** The holographic card achievement system gives every card a purpose. To unlock the holographic version of a card, you need to reach 10 wins in a run with that card on your board at some point during the run. Strong cards are easy to master. Weak cards become puzzle challenges — can you build a winning team around the worst card in the set? Completionists will want to master every card, which means experimenting with every possible strategy.
-
-**A showcase for blockchain and NFTs.** Your game runs on-chain — your progress, achievements, and holographic unlocks are permanent and verifiable. NFTs are used for cosmetic customization: swap your board background, card borders, hand area, avatar, and card art. Three complete style sets (Cosmic, Medieval, Neon Cyber) ship as example NFT collections that players can acquire and equip. This demonstrates how NFTs add real value — personalized visual identity — without being pay-to-win.
-
-**A platform for creators.** Anyone can design their own cards with custom stats and abilities, publish them on-chain, then bundle cards into new sets. You can build entirely new game experiences on top of the same engine — a horror-themed set, a meme set, a hyper-competitive tournament set. The creator hub in the UI walks you through the whole process. Card and set creators even earn a share of tournament prize pools when their content is played.
-
-**Works everywhere.** The game runs as a web app via a WASM-compiled Rust engine. The UI is specifically designed and optimized for both mobile and desktop — not just a responsive layout, but tailored interactions, touch-friendly controls, and layouts that feel native on each platform. Wallet connection lets you play with your blockchain account, and funded accounts lower the onboarding barrier for new users.
+**A showcase for Polkadot.** The game runs in a PolkaVM smart contract on Asset Hub. Players sign once and then play without prompts, with fees paid in PGAS. NFTs are cosmetic (board background, hand, card border, avatar, card art, theme) and never pay-to-win.
 
 ---
 
@@ -22,161 +20,54 @@ The beta is the first version of Open Auto Battler that feels like a complete ga
 
 | Layer | Status | Details |
 |-------|--------|---------|
-| **Core Engine** | ~90% | Battle system, ability system (11 battle triggers, 6 effects, 6 shop triggers, 4 effects), permanent stat modifiers, targeting, conditions, deterministic RNG |
-| **Pallet** | ~85% | start_game, submit_turn, submit_card, create_card_set, ghost matchmaking, tournament system, victory achievements |
-| **Frontend** | ~75% | Shop/battle UI, card rendering, customization (5 NFT slots), WASM bridge, creator hub, versus, sandbox |
-| **Content** | ~40% | 110 cards, 2 sets (Starter Pack 40 cards, SAP Turtle Pack 60 cards), 1 style set (Cosmic) |
+| **Engine** | Done for beta | `battle/`, `game/`, `assets/`: battle and shop triggers, permanent stat modifiers, targeting, conditions, deterministic RNG. The status system was removed. |
+| **Contract** | Live (arena v2) | `@oab/arena` `0xA61f803AeEBFfF2c7568157756932D3944EDCa28` on Paseo Asset Hub Next: casual and ranked games, ghost opponents, top-100 leaderboard per set, achievement badges (collection 30). |
+| **NFT minter** | Live | `@oab/nft-minter` picks the item for Scarcity credit claims into collection 29 (9 cosmetics). See `docs/NFT_DESIGN.md`. |
+| **Frontend** | Integrated, not yet deployed | React 18.3, polkadot-api 3.2.2, product-sdk 0.38. Ranked entry, personhood bind, leaderboard, badges. The live build at https://oab-arena.paseo.li still points at arena v1 until the next frontend deploy. |
+| **Content** | 111 cards, 3 sets | Foundations of War (set 0, the only set the arena page offers), The Hollow Swarm, Fortune's Reckoning. |
 
-## What Needs to Be Built
+## Done (October 2026 update)
 
-### Phase 1: Achievement System + Holographic Rewards ✅ DONE
+Integration branch `update/oct-2026`:
 
-**What was built:**
+1. **Contract port and redeploy.** Ported to `cargo-pvm-contract` rev `d5991131` (polkavm 0.35). Game seeds come from block entropy, not a caller nonce. Redeployed `@oab/arena` to Paseo Asset Hub Next with `cdm`.
+2. **PAPI 3, product-sdk, `.paseo`.** Frontend on polkadot-api 3.2.2 and the product-sdk 0.38 family. The contract client uses `@parity/product-sdk-contracts` `createContract` with `web/cdm.json` (the old `@dotdm/cdm` client is gone). Product ID `oab-arena.paseo`. No public IPFS gateway URLs inside a host.
+3. **Bulletin deploy.** `npm run deploy` (bulletin-deploy 0.22.0) and `.github/workflows/deploy-frontend.yml` with the `DOTNS_MNEMONIC` secret. The GitHub Pages deploy is gone.
+4. **Sponsored play.** `web/src/contract/session.ts`: a PGAS allowance and a proxy session key; one approval, then no prompts. Falls back to product-account signing. Checked end to end by `web/scripts/e2e-session.mjs`.
+5. **Ranked mode and leaderboard.** `startRankedGame` accepts personhood Lite or Full, keyed by the personhood alias in OAB's context. Top-100 board per set. The frontend binds the product account to the alias (`web/src/contract/personhood.ts`).
+6. **NFT minter and badges.** Collection 29 (cosmetics) with the deterministic claim minter. Arena v2 mints soulbound Victory and Flawless badges into collection 30 on ranked `endGame`, with `claimPendingBadges` for failed mints.
+7. **Frontend integration.** Ranked panel, personhood bind, leaderboard and badges pages, SCALE decoders with shared fixtures, a cosmetics ownership adapter, and the read-only live check `web/scripts/check-ranked-reads.mjs`.
+8. **Docs.** This rewrite (Phase 7).
 
-The achievement system uses a simpler, gas-efficient design based on the existing ghost archive infrastructure rather than tracking cards throughout a run.
+## Open Items
 
-**How it works:** Achievements use a bitmap per (player, card_id) stored in `VictoryAchievements`. Bronze is granted automatically when a card enters battle. Silver and gold are granted when the player calls `end_game` / `end_tournament_game` after completing a run with 10+ wins (gold requires no losses).
+- **Ranked play is blocked.** The personhood app `peopl.paseo` must allowlist `oab-arena.paseo` in its manifest. Until then the host answers `NotAllowlisted` to the bind, so players cannot bind an account and ranked play is closed in practice.
+- **Cosmetics ownership.** Listing owned collectibles needs the host NftPurse API, which exists only on `host-rust-core` branch `cbh/nft-purses`. `web/src/services/nftOwnership.ts` is a disabled stub; the customize pages show the defaults.
+- **product-sdk 0.39.** Bump after 2026-10-22 (the npm release-age guard blocks it before then).
+- **Sponsored-play scale.** Proxy sessions pay each call through a thin DOT↔PGAS pool. Registry sessions are the scalable path but need a contract change.
+- **Badge recipients.** Scarcity holds one NFT per key, so each badge goes to its own derived keyless key. Badges do not show in the player's host purse.
+- **Badges per account, not per person.** A person with more than one bound account can earn each badge once per account. See `docs/NFT_DESIGN.md` section 8.
+- **Frontend deploy.** The live build still targets arena v1. Deploy the current frontend.
+- **Render layer (decision pending).** The board is React DOM today. Research advised against a full Unity or Godot migration: hosts allow no Web Workers, only own-origin network, and WebGL2; Bulletin limits bundle size; signing is JS-only; and the Rust engine is shared with the contract. The direction under discussion: move the board (shop and battle) to a WebGL renderer (PixiJS or Phaser) behind an event-driven presentation "director", and keep React for menus. A spike comparing PixiJS and Godot web is proposed. Nothing is decided.
+- **Known-broken script.** `web/scripts/test-query.ts` imports the removed `@dotdm/cdm`. Delete or port it.
 
-**Implementation (already merged):**
-- Storage: `VictoryAchievements<T>` — `StorageDoubleMap<(AccountId, CardId), u8>` — bitmap per card (bit 0 = bronze/played, bit 1 = silver/10 wins, bit 2 = gold/perfect run)
-- `submit_turn` / `submit_tournament_turn` grant bronze for all cards on board entering battle, then set `phase = Completed` when game ends
-- `end_game` / `end_tournament_game` extrinsics finalize: archive ghost board, grant silver/gold achievements, update tournament stats, remove session
-- `GamePhase` enum: `{Shop, Battle, Completed}` — consistent across pallet and client engine
-- Status system (Shield/Poison/Guard) was removed to simplify the engine for beta — 5 cards became stat-sticks (balance pass in Phase 3 will address)
+## Pallet-era Features Not Carried Over
 
-**Design Rationale:**
-The achievement is: "reach 10 wins with this card on your final board." This is simpler than tracking every card across all rounds, costs zero extra gas during gameplay (no `RunCardLog` writes per turn), and leverages the ghost archive that already exists. The tradeoff is that only the final board cards count, not cards used mid-run — but this still creates the intended puzzle challenge of building winning boards around specific cards.
+These existed in the old pallet and frontend. The contract and the current frontend do not have them:
 
-### Phase 2: Holographic Card Rendering ✅ DONE
+- Tournaments with entry fees and prize pools (the leaderboard and badges replace them for now)
+- Holographic card unlocks from `VictoryAchievements`
+- Creator hub (user-made cards and sets; `registerCard` / `registerSet` are admin-only)
+- P2P versus, offline practice, card sandbox, ghost browser, history pages
 
-**What was built:**
-- `achievementStore.ts` — Zustand store that queries `VictoryAchievements` on-chain storage for the connected account and exposes `hasBronze`, `hasSilver`, `hasGold`, and `isHolographic` (silver or gold)
-- Achievements are fetched automatically on account selection
-- `UnitCard` internally checks the achievement store — every card in the app (hand, board, battle, sandbox, bag, ghost browser, set preview, etc.) automatically renders holographic if unlocked
-- CSS holographic effect: animated rotating `conic-gradient` rainbow border (via `.holo-border` wrapper), rainbow shimmer overlay (`.holo-shimmer` div), and pulsing prismatic outer glow
-- Works alongside existing card effects (rarity glow, tilt, wobble) without conflicts
-- Genesis style NFTs (Cosmic set) are now minted to new accounts on "New User" / "Add Funds" via a batched `Utility.batch_all` transaction
+Open question: bring tournaments back in the contract, or keep leaderboard plus badges?
 
-**Remaining:**
-- [ ] Achievement progress panel: per-set grid showing which cards are mastered vs remaining, with overall % completion
-- [x] `end_game` / `end_tournament_game` called automatically after game completion (grants achievements)
-- [ ] Holographic badge/indicator in collection views
+## Next Steps
 
-**No NFT minting required** — holographic is an on-chain unlock flag, not an NFT. It's a permanent cosmetic tied to the player's account and displayed automatically.
-
-### Phase 3: Main Competitive Card Set (Balance Pass)
-
-**Goal:** 1 flagship set of ~40 cards balanced for competitive play.
-
-The existing "Starter Pack" (set 0, cards 0-39) is the base. Needs a balance pass:
-
-- **Mana curve:** Ensure a healthy distribution across costs 1-7+ so early, mid, and late game are all viable
-- **Archetype diversity:** At least 4-5 distinct archetypes (aggro rush, buff/scaling, spawn swarm, sniper/removal, tank wall) that are competitively viable
-- **Ability coverage:** Every battle trigger and shop trigger should appear on at least 1-2 cards in the set
-- **Rarity tuning:** Replace the current flat rarity-10 with a tiered curve (common 10, uncommon 8, rare 6, epic 4, legendary 2) so drafts have meaningful variance
-- **Token cards:** Review spawn-token cards (rarity 0) for balance — spawned units shouldn't be strictly better than draftable ones
-- **Stat budget formula:** Each card should follow a rough budget of `attack + health ≈ play_cost * 1.5 + ability_tax` where ability_tax scales with effect power
-- **Status removal cleanup:** 5 cards lost their abilities when the status system was removed (Elephant, Ox, Turtle, Scorpion, Gorilla) — these need new non-status abilities or rebalanced stats
-
-Deliverable: Updated `cards/cards.json` and `cards/sets.json` with rebalanced Starter Pack.
-
-### Phase 4: 3 Style Sets
-
-Currently have 1 (Cosmic). Need 2 more for a total of 3.
-
-Each style set contains 5 items:
-1. **Avatar** (1:1, 256x256)
-2. **Hand Background** (5:1, 1920x384)
-3. **Card Border/Style** (3:4, 256x352, PNG with alpha)
-4. **Board Background** (16:9, 1920x1080)
-5. **Card Art Set** (IPFS directory with sm/ and md/ WebP per card)
-
-**Proposed themes:**
-
-| Set | Theme | Vibe |
-|-----|-------|------|
-| Cosmic (exists) | Space/nebula | Purple/blue cosmic energy |
-| Medieval | Castle/kingdom | Stone, torches, heraldry, warm golds |
-| Neon Cyber | Cyberpunk | Neon pink/cyan, circuit boards, dark city |
-
-**Deliverable:** Update `cards/styles.json` with 2 new entries. Art assets uploaded to IPFS. Each set should be pre-minted as an NFT collection so players can acquire them.
-
-### Phase 5: Frontend Beta Features
-
-**Achievement UI:**
-- New `AchievementsPage` component: grid view of all cards in a set, each showing mastered/unmastered state
-- Progress bar per set: "23/40 cards mastered"
-- Card detail modal shows mastery status + holographic preview
-- Toast notification on achievement unlock after a perfect run
-
-**Styling System (already mostly built):**
-- Verify all 5 customization slots work end-to-end with NFTs: board_bg, hand_bg, card_style, avatar, card_art
-- Add a "Style Set" bundle view in the Customize page — show complete themed sets as purchasable bundles
-- Ensure holographic effect composes correctly with card_style overlays
-
-**Blockchain Account Flow:**
-- Wallet connection already exists via polkadot-api
-- Ensure smooth onboarding: connect → pick set → play → achievement progress persists
-- Funded account support (already implemented per git history)
-
-## Beta Milestone Checklist
-
-```
-ENGINE
-  [x] Basic card stats (mana/burn/health/attack)
-  [x] Ability system (battle + shop triggers/effects)
-  [x] Permanent stat modifiers (perm_attack, perm_health)
-  [x] Status system removed (Shield/Poison/Guard stripped for beta simplicity)
-
-PALLET
-  [x] Create cards on-chain
-  [x] Create card sets on-chain
-  [x] Ghost opponent storage + matchmaking
-  [x] Game progression (start → shop → battle → repeat)
-  [x] Tournament system
-  [x] VictoryAchievements (AccountId × CardId → u8 bitmap)
-  [x] end_game / end_tournament_game extrinsics (finalize game, grant achievements)
-  [x] Victory boards archived with wins=10 on game completion
-
-CONTENT
-  [ ] 1 balanced competitive card set (~40 cards, tiered rarity)
-  [ ] Rebalance 5 cards that lost status abilities (Elephant, Ox, Turtle, Scorpion, Gorilla)
-  [x] 1 style set (Cosmic)
-  [ ] 1 style set (Medieval)
-  [ ] 1 style set (Neon Cyber)
-
-FRONTEND
-  [x] Card, board, hand, shop UI
-  [x] Blockchain account connection
-  [x] NFT customization (5 slots: card, board, hand, avatar, border)
-  [x] IPFS upload + minting
-  [x] Creator hub (cards + sets)
-  [x] Sandbox mode (free testing of card builds and strategies)
-  [x] Holographic card CSS effect (rainbow border + shimmer, driven by on-chain achievements)
-  [x] Achievement store (fetches VictoryAchievements on account select)
-  [x] Genesis style NFT minting on new user / add funds
-  [ ] Achievement progress page (per-set mastery grid)
-  [ ] Call end_game after victory runs
-  [ ] Style set bundle view
-```
-
-## Extras (Not Required for Beta)
-
-These features already exist in the codebase but are not part of the beta scope. They can be polished and promoted in future releases:
-
-- **Tournament system** — On-chain tournaments with entry fees, prize pools split between players/set creators/card creators. Pallet and frontend support already built.
-- **P2P Versus** — Live player-vs-player battles. Frontend components and engine support exist.
-- **Local/offline game mode** — Play without a blockchain connection using the pure WASM engine. No wallet needed.
-- **Ghost browser** — Browse and inspect stored ghost opponent boards from other players.
-- **Presentations system** — Interactive slide deck engine with embedded live battles, shop demos, and card breakdowns. Useful for demos and onboarding.
-- **Drag and drop board management** — Rearrange board positions by dragging cards between slots.
-- **Card tilt effect** — 3D hover/tilt animation on cards.
-
-## Suggested Build Order
-
-1. ~~**Achievement system** (pallet storage + submit_turn modifications)~~ ✅ DONE
-2. ~~**Holographic rendering** (frontend CSS + achievement store)~~ ✅ DONE
-3. **Balance pass** on Starter Pack — makes the game actually fun to play competitively; also fix the 5 cards that lost status abilities
-4. **2 new style sets** (art production + IPFS upload + styles.json) — can be parallelized with above
-5. **Frontend pages** (achievement progress grid, style bundles) + wire `end_game` call after victory runs
-6. **Integration testing**
+1. Get `oab-arena.paseo` allowlisted by `peopl.paseo`, then test ranked play, the bind, and badges end to end in a host.
+2. Deploy the current frontend to `oab-arena.paseo`.
+3. Bump to product-sdk 0.39 (after 2026-10-22).
+4. Wire cosmetics ownership to NftPurse when it reaches host-rust-core main.
+5. Decide the render layer; run the PixiJS vs Godot web spike first.
+6. Design registry sessions (contract change) if sponsored play outgrows the pool.
+7. Content: review the pallet-era content goals (balance pass on set 0, more style sets; see this file's git history). Their current status was not checked in this rewrite.
