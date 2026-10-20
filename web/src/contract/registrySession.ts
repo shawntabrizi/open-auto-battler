@@ -3,31 +3,42 @@
  * `docs/CONTRACT_ARCHITECTURE.md` section 7.4).
  *
  * The player approves once, then a local session key signs every game call
- * with no prompt, and pays its fee in PGAS. The arena resolves the key to its
- * owner through `@oab/identity`, so the key plays the player's game.
+ * with no prompt. The arena resolves the key to its owner through
+ * `@oab/identity`, so the key plays the player's game.
+ *
+ * Two fee tokens, one flow (`chooseFunding`). Only the funding transfer and
+ * the transaction version differ:
+ *   - PGAS (the default): every transaction is a v5 general transaction on
+ *     extension pipeline V1, fee in PGAS.
+ *   - PAS (the fallback, when the player cannot fund the PGAS budget but
+ *     holds enough PAS): classic v4 transactions on pipeline V0, native fee.
  *
  * Flow (host only):
  *   1. No PGAS on the product account: request `SmartContractAllowance` (host
  *      prompt; the host claims PGAS with a personhood proof).
- *   2. ONE product-account prompt, on extension pipeline V1 (fee in PGAS):
- *      `Utility.batch_all[ Assets.transfer_keep_alive(PGAS, session SS58,
- *      budget), Revive.call(Identity.registerSession(session, expiresAt)) ]`.
- *      The transfer creates and auto-maps the key's account. (Never send PGAS
- *      to the key's H160 through the ERC-20 precompile: an unmapped H160 is
- *      credited to a fallback account and the funds are lost.)
- *   3. The key's first call, silent, V1: `Utility.batch_all[
+ *   2. ONE product-account prompt: `Utility.batch_all[ fund(session SS58,
+ *      budget), (Revive.map_account), Revive.call(Identity.registerSession(
+ *      session, expiresAt)) ]`. `fund` is `Assets.transfer_keep_alive(PGAS)`
+ *      or `Balances.transfer_keep_alive`. Either transfer creates and
+ *      auto-maps the key's account. (Never send PGAS to the key's H160
+ *      through the ERC-20 precompile: an unmapped H160 is credited to a
+ *      fallback account and the funds are lost.)
+ *   3. The key's first call, silent: `Utility.batch_all[
  *      Revive.call(acceptSession(owner)), <game call> ]`. Later calls are the
  *      game call alone.
+ *   4. End (logout): the player signs `revokeSession` (one prompt), and the
+ *      key sends what it has left back to the player (silent).
  *
- * Storage deposits on V1 are charged in PGAS to the origin: the owner record
- * (206.4 M) to the player at setup, the key record (206.4 M) and new game
- * items to the session key. The budget covers them (decision Q12).
+ * Storage deposits (206.4 M for a new item: the owner record, the key record,
+ * a new ghost bracket) are taken from the origin's PGAS when its PGAS covers
+ * the deposit, else from its native balance (checked live 2026-10-20, see the
+ * M5 status). A PAS-funded key holds no PGAS, so it pays them in PAS.
  *
  * Any failure falls back to normal signing (`createSponsor` in `./session`).
  */
 
 import { Enum, type SS58String, type TypedApi } from 'polkadot-api';
-import { getVerifyMultiSignatureTxCreator } from 'polkadot-api/tx-creator';
+import { getTxCreator, getVerifyMultiSignatureTxCreator } from 'polkadot-api/tx-creator';
 import type { CommonSignerTxCreator } from '@polkadot-api/signers-common';
 import type { paseo_asset_hub } from '@parity/product-sdk-descriptors/paseo-asset-hub';
 import { requestResourceAllocation } from '@parity/product-sdk-host';
@@ -37,6 +48,7 @@ import {
   submitAndWatch,
   TxValidityError,
   type SubmitOptions,
+  type SubmittableTransaction,
   type TxResult,
 } from '@parity/product-sdk-tx';
 import { ss58ToH160 } from '@parity/product-sdk-address';
@@ -57,6 +69,20 @@ export const SESSION_BUDGET = 1_500_000_000n;
 export const SESSION_MIN_PGAS = 400_000_000n;
 /** PGAS the player needs on top of the budget: owner record (206.4 M) and the setup fee. */
 export const SETUP_OVERHEAD = 250_000_000n;
+/**
+ * PAS (planck, 10 decimals) the setup gives a PAS-funded key: 1 PAS. A full
+ * casual game cost the key 0.13–0.21 PAS live (5 and 10 rounds, with the key
+ * record, a new game item and new brackets; M5 status), so this covers
+ * about five games.
+ */
+export const PAS_SESSION_BUDGET = 10_000_000_000n;
+/** Below this a PAS-funded key gets a top-up: 0.1 PAS, several turns with new brackets. */
+export const PAS_SESSION_MIN = 1_000_000_000n;
+/**
+ * PAS the player keeps on top of the budget: owner record (0.02 PAS),
+ * mapping, the setup fee, and the existential deposit (0.01 PAS).
+ */
+export const PAS_SETUP_OVERHEAD = 1_000_000_000n;
 /** A session is renewed when it has less than this left (seconds). */
 const EXPIRY_MARGIN_S = 3_600n;
 /** Session lifetime asked for, capped by Identity's `maxTtl` (7 days at deploy). */
@@ -69,6 +95,46 @@ const SESSION_TTL_S = 7n * 24n * 3_600n;
  */
 const REGISTER_GAS = { ref_time: 2_000_000_000n, proof_size: 180_000n };
 const REGISTER_DEPOSIT_LIMIT = 300_000_000n;
+
+/** The token a session's key pays fees in: PGAS on pipeline V1, PAS (native) on V0. */
+export type SessionToken = 'PGAS' | 'PAS';
+
+export interface Balances {
+  playerPgas: bigint;
+  /** Free native balance (planck). */
+  playerPas: bigint;
+  keyPgas: bigint;
+  keyPas: bigint;
+}
+
+/**
+ * Pick the fee token of a session setup, or null when the player can fund
+ * neither (then play uses normal signing).
+ *
+ * PGAS first: when the player can pay the PGAS top-up and the setup overhead.
+ * Else PAS: when the player can pay the PAS top-up and the overhead. A player
+ * with some PGAS (not enough for the budget) can take the PAS path: a deposit
+ * comes from PGAS only when the PGAS covers it, else from PAS, so it never
+ * fails for lack of PGAS. The key gets only PAS, so it pays in PAS.
+ */
+export function chooseFunding(b: Balances): { token: SessionToken; topUp: bigint } | null {
+  const pgasTopUp = b.keyPgas < SESSION_MIN_PGAS ? SESSION_BUDGET - b.keyPgas : 0n;
+  if (b.playerPgas >= pgasTopUp + SETUP_OVERHEAD) return { token: 'PGAS', topUp: pgasTopUp };
+  const pasTopUp = b.keyPas < PAS_SESSION_MIN ? PAS_SESSION_BUDGET - b.keyPas : 0n;
+  if (b.playerPas >= pasTopUp + PAS_SETUP_OVERHEAD) return { token: 'PAS', topUp: pasTopUp };
+  return null;
+}
+
+/** The token a funded key signs with: PGAS when it holds enough, else PAS, else none. */
+export function keyToken(b: Pick<Balances, 'keyPgas' | 'keyPas'>): SessionToken | null {
+  if (b.keyPgas >= SESSION_MIN_PGAS) return 'PGAS';
+  if (b.keyPas >= PAS_SESSION_MIN) return 'PAS';
+  return null;
+}
+
+/** Sign `tx` on the token's pipeline: V1 for PGAS; V0 (the default) for PAS. */
+const onPipeline = (token: SessionToken, tx: SubmittableTransaction): SubmittableTransaction =>
+  token === 'PGAS' ? onPipelineV1(tx) : tx;
 
 type Ok<T> = { success: true; value: T };
 type Fail = { success: false; value: unknown };
@@ -97,6 +163,7 @@ export interface IdentityContract {
     ): Promise<Prepared>;
   };
   acceptSession: { prepare(owner: string, opts?: { origin?: SS58String }): Promise<Prepared> };
+  revokeSession: { prepare(opts?: { origin?: SS58String }): Promise<Prepared> };
 }
 
 /** A view's tuple output as an array (the SDK returns an object keyed by output name). */
@@ -134,8 +201,13 @@ export function classifySession(
 
 export interface RegistrySession {
   deps: SponsorDeps;
-  /** Sign `call` with the session key on V1 (fee in PGAS); the first call carries the accept. */
+  /** Sign `call` with the session key on its token's pipeline; the first call carries the accept. */
   submit(call: PreparedCall, options?: SubmitOptions): Promise<TxResult>;
+  /**
+   * Logout. If the stored key is the player's session, the player revokes it
+   * (one prompt). Then the key sends its leftover back to the player (silent).
+   */
+  end(): Promise<void>;
 }
 
 export function createRegistrySession(opts: {
@@ -152,6 +224,8 @@ export function createRegistrySession(opts: {
   const playerH160 = ss58ToH160(player);
   let keys: SessionKeyManager | null = null;
   let session: ReturnType<typeof loadKey> | null = null;
+  // The token the loaded key signs with (set with `session`).
+  let token: SessionToken = 'PGAS';
   let accepted = false;
 
   async function keyManager(): Promise<SessionKeyManager> {
@@ -162,19 +236,23 @@ export function createRegistrySession(opts: {
     return keys;
   }
 
-  /** The key's V1 signer. `SessionKeyManager` derives `//0` from the stored mnemonic. */
+  /** The key's signers. `SessionKeyManager` derives `//0` from the stored mnemonic. */
   function loadKey(mnemonic: string, ss58: SS58String) {
     const kp = sr25519CreateDerive(entropyToMiniSecret(mnemonicToEntropy(mnemonic)))('//0');
-    return {
-      ss58,
-      h160: ss58ToH160(ss58),
-      signer: getVerifyMultiSignatureTxCreator(kp.publicKey, 'Sr25519', kp.sign),
+    // A V1 creator (VerifyMultiSignature); submitAndWatch types the V0 one.
+    const v1 = getVerifyMultiSignatureTxCreator(kp.publicKey, 'Sr25519', kp.sign);
+    const signers: Record<SessionToken, CommonSignerTxCreator> = {
+      PGAS: v1 as unknown as CommonSignerTxCreator,
+      PAS: getTxCreator(kp.publicKey, 'Sr25519', kp.sign),
     };
+    return { ss58, h160: ss58ToH160(ss58), signers };
   }
 
   const pgasOf = async (address: SS58String): Promise<bigint> =>
     (await api.query.Assets.Account.getValue(PGAS_ASSET_ID, address, { at: 'best' }))?.balance ??
     0n;
+  const pasOf = async (address: SS58String): Promise<bigint> =>
+    (await api.query.System.Account.getValue(address, { at: 'best' })).data.free;
 
   const nowS = async (): Promise<bigint> =>
     (await api.query.Timestamp.Now.getValue({ at: 'best' })) / 1000n;
@@ -210,8 +288,11 @@ export function createRegistrySession(opts: {
       if (!stored) return false;
       const key = loadKey(stored.mnemonic, stored.account.ss58Address);
       const c = classifySession(await record(), key.h160, await nowS());
-      if (!c.usable || (await pgasOf(key.ss58)) < SESSION_MIN_PGAS) return false;
+      if (!c.usable) return false;
+      const t = keyToken({ keyPgas: await pgasOf(key.ss58), keyPas: await pasOf(key.ss58) });
+      if (!t) return false;
       session = key;
+      token = t;
       accepted = c.accepted;
       return true;
     },
@@ -230,22 +311,33 @@ export function createRegistrySession(opts: {
         c = { usable: false, accepted: false };
       }
 
-      const keyPgas = await pgasOf(key.ss58);
-      const topUp = keyPgas < SESSION_MIN_PGAS ? SESSION_BUDGET - keyPgas : 0n;
-      const need = topUp + (c.usable ? 0n : SETUP_OVERHEAD);
-      const have = await pgasOf(player);
-      if (have < need) {
-        throw new Error(`Not enough PGAS for a session: need ${need}, have ${have}`);
+      const balances: Balances = {
+        playerPgas: await pgasOf(player),
+        playerPas: await pasOf(player),
+        keyPgas: await pgasOf(key.ss58),
+        keyPas: await pasOf(key.ss58),
+      };
+      const funding = chooseFunding(balances);
+      if (!funding) {
+        throw new Error(
+          `Not enough PGAS or PAS for a session: have ${balances.playerPgas} PGAS, ` +
+            `${balances.playerPas} PAS planck`
+        );
       }
 
       const calls: unknown[] = [];
-      if (topUp > 0n) {
+      if (funding.topUp > 0n) {
         calls.push(
-          api.tx.Assets.transfer_keep_alive({
-            id: PGAS_ASSET_ID,
-            target: Enum('Id', key.ss58),
-            amount: topUp,
-          }).decodedCall
+          funding.token === 'PGAS'
+            ? api.tx.Assets.transfer_keep_alive({
+                id: PGAS_ASSET_ID,
+                target: Enum('Id', key.ss58),
+                amount: funding.topUp,
+              }).decodedCall
+            : api.tx.Balances.transfer_keep_alive({
+                dest: Enum('Id', key.ss58),
+                value: funding.topUp,
+              }).decodedCall
         );
       }
       // The player's own calls (normal signing, and the game dry-runs) need
@@ -269,12 +361,13 @@ export function createRegistrySession(opts: {
       }
       if (calls.length > 0) {
         const r = await submitAndWatch(
-          onPipelineV1(api.tx.Utility.batch_all({ calls: calls as never })),
+          onPipeline(funding.token, api.tx.Utility.batch_all({ calls: calls as never })),
           playerSigner
         );
         if (!r.ok) throw r.error;
       }
       session = key;
+      token = funding.token;
       accepted = c.accepted;
     },
   };
@@ -294,14 +387,13 @@ export function createRegistrySession(opts: {
       }
       calls.push(call.decodedCall);
       const r = await submitAndWatch(
-        onPipelineV1(api.tx.Utility.batch_all({ calls: calls as never })),
-        // A V1 creator (VerifyMultiSignature); submitAndWatch types the V0 one.
-        key.signer as unknown as CommonSignerTxCreator,
+        onPipeline(token, api.tx.Utility.batch_all({ calls: calls as never })),
+        key.signers[token],
         options
       );
       if (!r.ok) {
         // Not valid before inclusion (e.g. `Payment`: the key cannot pay the
-        // fee on V1): nothing ran, so the caller can resend with normal signing.
+        // fee): nothing ran, so the caller can resend with normal signing.
         if (r.error instanceof TxValidityError) {
           throw new SessionExpiredError(r.error.message, r.error);
         }
@@ -314,6 +406,39 @@ export function createRegistrySession(opts: {
       }
       accepted = true;
       return r.value;
+    },
+
+    async end() {
+      const stored = await (await keyManager()).get();
+      if (!stored) return;
+      const key = loadKey(stored.mnemonic, stored.account.ss58Address);
+      const keyPgas = await pgasOf(key.ss58);
+      const keyPas = await pasOf(key.ss58);
+      // The player funded the key in this token, so the player can pay the revoke in it.
+      const t = keyToken({ keyPgas, keyPas }) ?? (keyPgas > 0n ? 'PGAS' : 'PAS');
+      const r = await record();
+      if (sameAddress(r.key, key.h160) && (r.state === 1 || r.state === 2)) {
+        const revoke = await identity.revokeSession.prepare({ origin: player });
+        if (!revoke.ok) throw revoke.error;
+        const res = await submitAndWatch(
+          onPipeline(t, api.tx.Utility.batch_all({ calls: [revoke.value.decodedCall] as never })),
+          playerSigner
+        );
+        if (!res.ok) throw res.error;
+      }
+      session = null;
+      accepted = false;
+      // Best effort: a key with nothing left has nothing to return.
+      const sweep =
+        t === 'PGAS'
+          ? api.tx.Assets.transfer_all({
+              id: PGAS_ASSET_ID,
+              dest: Enum('Id', player),
+              keep_alive: false,
+            })
+          : api.tx.Balances.transfer_all({ dest: Enum('Id', player), keep_alive: false });
+      const res = await submitAndWatch(onPipeline(t, sweep), key.signers[t]);
+      if (!res.ok) console.warn('Session key leftover was not returned:', res.error);
     },
   };
 }

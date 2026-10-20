@@ -71,9 +71,9 @@ export const SESSION_MIN_PGAS = 400_000_000n;
  * - `off`: not tried yet on this connection.
  * - `active`: game calls go through the session key, no prompts.
  * - `expired`: the session stopped working; the next action sets it up again.
- * - `declined`: the player said no; normal signing for this connection.
- * - `unavailable`: no host sponsorship here (standalone, or host said
- *   `NotAvailable`); normal signing.
+ * - `declined`: the player said no, the setup failed, or the player ended
+ *   the session; normal signing for this connection.
+ * - `unavailable`: no host sponsorship here (standalone); normal signing.
  */
 export type SponsorStatus = 'off' | 'active' | 'expired' | 'declined' | 'unavailable';
 
@@ -119,9 +119,11 @@ export function createSponsor(deps: SponsorDeps, initial: SponsorStatus = 'off')
     try {
       if (await deps.sessionReady()) return 'active';
       if ((await deps.playerPgas()) === 0n) {
+        // A "no" stops here. A host without sponsorship (`NotAvailable`) does
+        // not: the setup may still fund a session from the player's own
+        // balance (a registry session falls back to PAS), or refuse.
         const outcome = await deps.requestAllowance();
         if (outcome === 'Rejected') return 'declined';
-        if (outcome === 'NotAvailable') return 'unavailable';
       }
       await deps.setUp();
       return 'active';

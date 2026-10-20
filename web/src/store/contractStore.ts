@@ -67,6 +67,8 @@ interface ContractStore {
   submitTurnOnChain: () => Promise<void>;
   endGame: () => Promise<void>;
   abandonGame: () => Promise<void>;
+  /** Logout of sponsored play (revoke the session key). */
+  endSession: () => Promise<void>;
   refreshGameState: () => Promise<void>;
 }
 
@@ -247,6 +249,20 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       throw Object.assign(new Error(txErrorMessage(err, 'Failed to abandon the run')), {
         cause: err,
       });
+    }
+  },
+
+  endSession: async () => {
+    const { backend } = get();
+    if (!backend) return;
+    try {
+      await withTxOverlay('Ending Session...', get().selectedAccount?.source === 'host', () =>
+        backend.endSession()
+      );
+      toast.success('Session ended');
+    } catch (err) {
+      console.error('Contract end session failed:', err);
+      toast.error(txErrorMessage(err, 'Failed to end the session'));
     }
   },
 
