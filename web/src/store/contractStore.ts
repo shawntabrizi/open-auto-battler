@@ -74,8 +74,9 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     get().disconnect();
     set({ isConnecting: true, connectionError: null });
 
+    let backend: ContractBackend | null = null;
     try {
-      const backend = createContractBackend({
+      backend = createContractBackend({
         useDevAccounts,
         // Advance the overlay as the tx moves on. Actions resolve at best
         // block, so 'finalized' never reaches an open overlay.
@@ -108,6 +109,8 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       return true;
     } catch (err) {
       console.error('Contract connection failed:', err);
+      // Release the half-connected signer, or it keeps reconnecting.
+      backend?.disconnect();
       set({
         backend: null,
         isConnected: false,
