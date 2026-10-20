@@ -11,6 +11,8 @@ import { TransactionOverlay } from './components/TransactionOverlay.tsx';
 import { ContractMenuPage } from './components/ContractMenuPage.tsx';
 import { ContractArenaPage } from './components/ContractArenaPage.tsx';
 import { ContractArenaGamePage } from './components/ContractArenaGamePage.tsx';
+import { LeaderboardPage } from './components/LeaderboardPage.tsx';
+import { BadgesPage } from './components/BadgesPage.tsx';
 import { ThemeController } from './theme/ThemeController.tsx';
 import { ParticleBackground } from './components/ParticleBackground.tsx';
 import { applyResolvedThemeToDocument } from './theme/themes.ts';
@@ -43,6 +45,8 @@ async function boot() {
           <Route path="/contract" element={<ContractMenuPage />} />
           <Route path="/contract/arena" element={<ContractArenaPage />} />
           <Route path="/contract/arena/game" element={<ContractArenaGamePage />} />
+          <Route path="/contract/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/contract/badges" element={<BadgesPage />} />
           <Route path="/customize" element={<CustomizePage />} />
           <Route path="/customize/:category" element={<CustomizeCategoryPage />} />
           <Route path="/settings" element={<SettingsPage />} />

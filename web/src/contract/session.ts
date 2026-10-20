@@ -164,6 +164,15 @@ export function createSponsor(deps: SponsorDeps, initial: SponsorStatus = 'off')
 
 // ── Chain plumbing (verified on chain by scripts/e2e-session.mjs) ───────────
 
+/**
+ * Wrap a tx so the signer pays its fee in PGAS (submitAndWatch has no
+ * fee-asset option of its own).
+ */
+export const payInPgas = (tx: SubmittableTransaction): SubmittableTransaction => ({
+  createSubmitAndWatch: (signer, o) =>
+    tx.createSubmitAndWatch(signer, { ...o, asset: PGAS_FEE_ASSET } as typeof o),
+});
+
 /** Find `Proxy.ProxyExecuted` and report whether the wrapped call succeeded. */
 export function proxyExecutedResult(
   events: unknown[]
@@ -225,13 +234,6 @@ export function createProxySession(opts: {
         publicKeysEqual(accountIdBytes(p.delegate), key.publicKey)
     );
   }
-
-  // Wrap a tx so the signer pays its fee in PGAS (submitAndWatch has no
-  // fee-asset option of its own).
-  const payInPgas = (tx: SubmittableTransaction): SubmittableTransaction => ({
-    createSubmitAndWatch: (signer, o) =>
-      tx.createSubmitAndWatch(signer, { ...o, asset: PGAS_FEE_ASSET } as typeof o),
-  });
 
   const deps: SponsorDeps = {
     playerPgas: () => pgasOf(player),

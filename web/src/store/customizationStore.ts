@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { fetchIpfsJson } from '../utils/ipfs';
 import { sanitizeTheme, resolveTheme, type ThemeDefinition } from '../theme/themes';
 import { useThemeStore } from './themeStore';
+import { useContractStore } from './contractStore';
+import { loadOwnedCosmetics, ownershipSource } from '../services/nftOwnership';
 
 export type CustomizationType =
   | 'board_bg'
@@ -45,6 +47,8 @@ interface CustomizationStore {
   isLoading: boolean;
   selectCustomization: (type: CustomizationType, nft: NftItem | null) => void;
   clearSelections: () => void;
+  /** Fill `ownedNfts` from the ownership source (a no-op while it is disabled). */
+  loadOwnedNfts: () => Promise<void>;
 }
 
 const emptySelections: CustomizationSelections = {
@@ -100,5 +104,19 @@ export const useCustomizationStore = create<CustomizationStore>((set, get) => ({
 
   clearSelections: () => {
     set({ selections: { ...emptySelections } });
+  },
+
+  loadOwnedNfts: async () => {
+    const backend = useContractStore.getState().backend;
+    if (!backend || !ownershipSource.enabled || get().isLoading) return;
+    set({ isLoading: true });
+    try {
+      const read = (item: number, key: string) => backend.readItemMetadata(item, key);
+      set({ ownedNfts: await loadOwnedCosmetics(ownershipSource, read) });
+    } catch (err) {
+      console.error('Loading owned cosmetics failed:', err);
+    } finally {
+      set({ isLoading: false });
+    }
   },
 }));

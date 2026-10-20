@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCustomizationStore, type CustomizationType } from '../store/customizationStore';
 import { CustomizationPreview } from './CustomizationPreview';
@@ -26,7 +26,11 @@ const SLOT_MAP: Record<
 };
 
 export const CustomizePage: React.FC = () => {
-  const { selections } = useCustomizationStore();
+  const { selections, loadOwnedNfts } = useCustomizationStore();
+
+  useEffect(() => {
+    void loadOwnedNfts();
+  }, [loadOwnedNfts]);
 
   return (
     <div className="app-shell h-screen h-svh text-base-200 flex flex-col">
