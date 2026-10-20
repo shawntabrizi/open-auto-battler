@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'node_modules', '.papi', '.cdm', 'src/pkg', 'src/wasm'],
+    ignores: ['dist', 'node_modules', '.papi', '.cdm', 'src/pkg', 'src/wasm', 'e2e/results'],
   },
   js.configs.recommended,
   {
@@ -79,6 +79,19 @@ export default tseslint.config(
     files: ['eslint.config.js'],
     languageOptions: {
       globals: globals.node,
+    },
+  },
+  {
+    // Playwright E2E + perf harness: Node test code, plus the bench page
+    // (browser). Type-checked through e2e/tsconfig.json.
+    files: ['e2e/**/*.{ts,tsx}', 'playwright*.config.ts'],
+    extends: [...tseslint.configs.recommendedTypeChecked],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+      parserOptions: {
+        project: ['./e2e/tsconfig.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
   },
   {
