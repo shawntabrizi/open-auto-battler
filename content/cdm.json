@@ -1,0 +1,389 @@
+{
+  "dependencies": {
+    "@oab/content": "latest"
+  },
+  "contracts": {
+    "@oab/content": {
+      "version": 0,
+      "address": "0xd9Cb4F28a6164485D800144E202353D612bAf642",
+      "abi": [
+        {
+          "type": "constructor",
+          "inputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "publishCard",
+          "inputs": [
+            {
+              "name": "card",
+              "type": "bytes"
+            }
+          ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "publishSet",
+          "inputs": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "card_set",
+              "type": "bytes"
+            },
+            {
+              "name": "house_ghosts",
+              "type": "bytes"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "tuple",
+              "components": [
+                {
+                  "name": "",
+                  "type": "uint16"
+                },
+                {
+                  "name": "",
+                  "type": "bytes32"
+                }
+              ]
+            }
+          ],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "setCurator",
+          "inputs": [
+            {
+              "name": "who",
+              "type": "address"
+            },
+            {
+              "name": "allowed",
+              "type": "bool"
+            }
+          ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "getCard",
+          "inputs": [
+            {
+              "name": "card_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "getCardMeta",
+          "inputs": [
+            {
+              "name": "card_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "getSet",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "getSetBundle",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "getSetRecord",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "setHash",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "getHouseGhosts",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "setCount",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "uint16"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "isCurator",
+          "inputs": [
+            {
+              "name": "who",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "adminAddress",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "error",
+          "name": "NotAdmin",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NotCurator",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "BadPayload",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "CardExists",
+          "inputs": [
+            {
+              "name": "",
+              "type": "uint16"
+            }
+          ]
+        },
+        {
+          "type": "error",
+          "name": "ReservedCardId",
+          "inputs": [
+            {
+              "name": "",
+              "type": "uint16"
+            }
+          ]
+        },
+        {
+          "type": "error",
+          "name": "UnknownCard",
+          "inputs": [
+            {
+              "name": "",
+              "type": "uint16"
+            }
+          ]
+        },
+        {
+          "type": "error",
+          "name": "BadSet",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "BadHouseGhosts",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "SetIdsExhausted",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "CardPublished",
+          "inputs": [
+            {
+              "name": "card_id",
+              "type": "uint16",
+              "indexed": true
+            },
+            {
+              "name": "publisher",
+              "type": "address",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "SetPublished",
+          "inputs": [
+            {
+              "name": "set_id",
+              "type": "uint16",
+              "indexed": true
+            },
+            {
+              "name": "set_hash",
+              "type": "bytes32",
+              "indexed": false
+            },
+            {
+              "name": "ghosts_hash",
+              "type": "bytes32",
+              "indexed": false
+            },
+            {
+              "name": "publisher",
+              "type": "address",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "CuratorSet",
+          "inputs": [
+            {
+              "name": "who",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "allowed",
+              "type": "bool",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "error",
+          "name": "InvalidCalldata",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "CalldataTooLarge",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NoSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "UnknownSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NonPayableValueReceived",
+          "inputs": []
+        }
+      ],
+      "metadataCid": "bafk2bzaceciizua7i5fazes6xtepn3dlu4htar57yqf2nucvinsh4pxflfxhu"
+    }
+  },
+  "registry": "0xc1a73a4f93fde65b1cb1680baead248073566cb0"
+}

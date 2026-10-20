@@ -1,0 +1,29 @@
+[package]
+name = "oab-engine"
+version = "0.1.0"
+description = "Engine facade for Open Auto Battler: new game, resolve turn, replay battle"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["rlib"]
+
+[features]
+default = ["std"]
+std = ["oab-battle/std", "oab-game/std", "parity-scale-codec/std"]
+# Golden-vector corpus (`vectors` module). Needs std; used by the version
+# guard test here and by the arena equivalence test in `engine/arena-oracle`.
+vectors = ["std", "dep:oab-assets", "oab-assets/std"]
+
+[dependencies]
+oab-battle = { workspace = true }
+oab-game = { workspace = true }
+parity-scale-codec = { workspace = true, features = ["derive"] }
+tiny-keccak = { version = "2", features = ["keccak"] }
+oab-assets = { workspace = true, optional = true }
+
+[dev-dependencies]
+oab-assets = { workspace = true, features = ["std"] }
