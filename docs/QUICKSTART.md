@@ -4,18 +4,20 @@ Get up and running with Open Auto Battler development in 5 minutes.
 
 ## Prerequisites
 
-- Rust (latest stable)
-- Node.js 18+ & pnpm
+- Rust (stable, with the `wasm32-unknown-unknown` target)
+- Node.js 22 & npm
 - wasm-pack (`cargo install wasm-pack`)
+- For contract work: the `cdm` CLI (see `contract/README.md`)
 
 ## Quick Start (All-in-One)
 
 ```bash
-# From project root - builds WASM, starts chain, starts web UI
+# From project root - builds WASM, starts the web dev server
 ./start.sh
 ```
 
-Open http://localhost:5173 when ready.
+Open http://localhost:5173 when ready. `./start.sh --build-contract` also
+builds the PolkaVM contract to check that it compiles.
 
 ## Manual Setup
 
@@ -32,39 +34,35 @@ This compiles `client/` to WASM and copies artifacts to `web/src/wasm/`.
 
 ```bash
 cd web
-pnpm install
-pnpm dev
+npm install
+npm run dev
 ```
 
-Open http://localhost:5173. You will see the **Login Page**. To play, you need a running blockchain (see step 3).
+Open http://localhost:5173. Standalone, the app renders the UI and loads the
+local WASM engine. Contract calls need a host (step 3).
 
-### 3. Run with Blockchain
+### 3. Play On Chain
 
-#### Terminal 1: Start the chain
+There is no local chain. Chain access is routed through a Polkadot host, so
+contract play needs the app inside a host (Polkadot Desktop, Polkadot Mobile,
+or dot.li). The live app is https://oab-arena.paseo.li, which talks to the
+arena contract on Paseo Asset Hub Next.
 
-```bash
-cd blockchain
-./start_chain.sh
-```
-
-Wait for block production to start (you'll see block numbers incrementing).
-
-#### Terminal 2: Start the web UI
-
-```bash
-cd web
-pnpm dev
-```
-
-Open http://localhost:5173. On the Login Page, connect to the chain, select an account, and log in. From the Main Menu, navigate to **Play > Online Arena** (on-chain) or **Play > Offline** (local WASM). For card testing without a game, go to **Cards > Sandbox**.
+In the app: **Connect** on `/contract`, then **Contract Arena** →
+**Start Game** (casual) or **Ranked** (needs personhood). **Leaderboard** and
+**Badges** are on the same menu.
 
 ## Project Structure at a Glance
 
 ```
-auto-battle/
-├── core/          # The heart: battle engine, shared by browser & chain
-├── client/        # WASM wrapper around core for browser
-├── blockchain/    # Substrate runtime + auto-battle pallet
+open-auto-battler/
+├── battle/        # Battle engine: types, combat, turn validation
+├── game/          # Game state, config, UI views
+├── assets/        # Card, set, style and theme data (assets/data/)
+├── client/        # WASM wrapper around the engine for the browser
+├── contract/      # PolkaVM arena contract (@oab/arena)
+├── nft-minter/    # PolkaVM claim minter (@oab/nft-minter)
+├── register-cards/# Dumps cards and sets for on-chain registration
 ├── web/           # React frontend
 └── docs/          # You are here
 ```
@@ -73,49 +71,56 @@ auto-battle/
 
 ### Making Game Logic Changes
 
-1. Edit files in `core/src/`
-2. Run tests: `cd core && cargo test`
+1. Edit files in `battle/src/` or `game/src/`
+2. Run tests: `cargo test -p oab-battle -p oab-game`
 3. Rebuild WASM: `./build-wasm.sh`
 4. Refresh browser
+
+The contract links the same engine. A rule change needs a contract redeploy
+before it applies on chain (see `contract/README.md`).
 
 ### Making UI Changes
 
 1. Edit files in `web/src/`
 2. Changes hot-reload automatically
 
-### Making Blockchain Changes
+### Making Contract Changes
 
-1. Edit files in `blockchain/pallets/auto-battle/src/`
-2. Restart the chain: `cd blockchain && ./start_chain.sh`
-3. Refresh browser and reconnect
+1. Edit `contract/src/main.rs`
+2. Run the native tests (see `agents/TESTING_GUIDE.md`)
+3. Deploy with `cdm` and refresh `web/cdm.json` (see `contract/README.md`)
 
 ## Common Tasks
 
 ### Add a new card
 
-Edit `core/src/units.rs`:
-- Add to the card set definition in `get_card_set()`
-- Define abilities in the `UnitCard` struct
+Edit `assets/data/cards.json` (and `assets/data/sets.json` to put it in a
+set). `assets/build.rs` validates the JSON at build time. Follow the rules in
+`docs/CARD_DESIGN.md`.
 
 ### Add a new ability
 
-Edit `core/src/battle.rs`:
+Edit `battle/src/types.rs` and `battle/src/battle.rs`:
 - Add variant to ability enums
-- Implement in `execute_ability()` or relevant trigger handler
+- Implement it in the battle (or shop, `battle/src/commit.rs`) trigger handler
 
 ### Modify turn validation
 
-Edit `core/src/commit.rs`:
+Edit `battle/src/commit.rs`:
 - `verify_and_apply_turn()` validates all player actions
 
 ## Running Tests
 
 ```bash
-# Core engine tests (from project root)
-cargo test -p oab-core
+# Engine tests (from project root)
+cargo test -p oab-battle
+cargo test -p oab-game
 
-# Pallet tests (from project root)
-cargo test -p pallet-auto-battle
+# Contract native tests (from project root)
+CARGO_PVM_CONTRACT_INTERNAL=1 cargo test --manifest-path contract/Cargo.toml --features std
+
+# Web tests
+cd web && npm test
 ```
 
 ## Core Coverage
@@ -126,7 +131,7 @@ cargo install cargo-llvm-cov
 rustup component add llvm-tools-preview
 
 # Generate core coverage summary + reports
-./core/coverage.sh
+./battle/coverage.sh
 ```
 
 Coverage outputs:
@@ -137,36 +142,31 @@ Coverage outputs:
 Optional minimum line coverage gate:
 
 ```bash
-FAIL_UNDER_LINES=80 ./core/coverage.sh
+FAIL_UNDER_LINES=80 ./battle/coverage.sh
 ```
 
-Optional engine-critical gate (focuses on `battle/commit/state/limits` by ignoring
-`log/opponents/units/view/rng/types`):
+Optional engine-critical gate (ignores `log/opponents/units/view/rng/types`
+under `battle/src/`):
 
 ```bash
-FAIL_UNDER_LINES=80 ENGINE_FAIL_UNDER_LINES=80 ./core/coverage.sh
+FAIL_UNDER_LINES=80 ENGINE_FAIL_UNDER_LINES=80 ./battle/coverage.sh
 ```
 
-CI currently enforces `80%` total line coverage and `80%` engine-critical line coverage.
+CI (`.github/workflows/core-coverage.yml`) enforces `80%` total line coverage
+and `80%` engine-critical line coverage.
 
 ## Debugging
 
 ### Browser Console
 
-The WASM engine logs to console. Look for:
-- `[INFO]` - Normal operations
-- `[DEBUG]` - Detailed state (enable in `core/src/log.rs`)
+The WASM engine logs to console when `client/` is built with the
+`browser_log` feature (see the comment in `build-wasm.sh`).
 
-### Chain Logs
+### Chain Checks
 
-Omni Node outputs block info and extrinsic results.
-
-### State Inspection
-
-In Online Arena mode, the UI shows:
-- Current chain state (decoded from SCALE)
-- Action log (what will be submitted)
-- Battle events (combat resolution)
+`web/scripts/check-ranked-reads.mjs` reads the live arena views without
+sending transactions. See `agents/TESTING_GUIDE.md` for the on-chain E2E
+scripts.
 
 ## Deploying the Frontend
 
@@ -188,5 +188,5 @@ CI deploys the same way from `.github/workflows/deploy-frontend.yml` with the
 ## Next Steps
 
 - Read [CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md) for deep dive
-- Check `core/src/tests/` for examples of game mechanics
-- Look at existing cards in `core/src/units.rs` for patterns
+- Check `battle/src/tests/` and `game/src/tests/` for examples of game mechanics
+- Look at existing cards in `assets/data/cards.json` for patterns
