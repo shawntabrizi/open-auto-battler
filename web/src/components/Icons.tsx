@@ -29,8 +29,8 @@ export function IconRenderer({
   const [imgFailed, setImgFailed] = useState(false);
 
   // If there's a URL and it hasn't failed, try to render as image
-  if (icon.url && !imgFailed) {
-    const resolvedUrl = ipfsUrl(icon.url);
+  const resolvedUrl = icon.url ? ipfsUrl(icon.url) : '';
+  if (resolvedUrl && !imgFailed) {
     return (
       <img src={resolvedUrl} alt="" className={className} onError={() => setImgFailed(true)} />
     );

@@ -22,9 +22,11 @@ export function extractCid(uri: string): string | null {
   return null;
 }
 
-/** Resolve an ipfs:// URI to a gateway URL */
+/** Resolve an ipfs:// URI to a gateway URL.
+ *  Inside a Polkadot host the sandbox CSP blocks every public gateway, so this
+ *  returns '' there and callers fall back to their built-in visuals. */
 export function ipfsUrl(uri: string, gateway = DEFAULT_GATEWAY): string {
-  if (!uri) return '';
+  if (!uri || isInHost()) return '';
   const cid = extractCid(uri);
   if (cid) return `${gateway}${cid}`;
   // Already a full non-IPFS URL
