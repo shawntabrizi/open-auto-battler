@@ -13,6 +13,7 @@ export function ContractMenuPage() {
     accounts,
     selectedAccount,
     selectAccount,
+    endSession,
   } = useContractStore();
 
   return (
@@ -94,6 +95,15 @@ export function ContractMenuPage() {
             >
               Contract Arena
             </Link>
+
+            {selectedAccount?.source === 'host' && (
+              <button
+                onClick={() => void endSession()}
+                className="text-base-500 hover:text-base-300 text-sm transition-colors"
+              >
+                End session
+              </button>
+            )}
 
             <button
               onClick={disconnect}

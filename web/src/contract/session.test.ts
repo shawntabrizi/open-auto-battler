@@ -83,12 +83,22 @@ describe('createSponsor', () => {
     expect(deps.requestAllowance).toHaveBeenCalledTimes(1);
   });
 
-  it('treats a host without sponsorship as unavailable and plays normally', async () => {
+  it('a host without sponsorship still runs the setup (it may fund the session with PAS)', async () => {
     const deps = fakeDeps({
       requestAllowance: vi.fn(() => Promise.resolve('NotAvailable' as const)),
     });
+    expect(await createSponsor(deps).ensure()).toBe('active');
+    expect(deps.setUp).toHaveBeenCalledTimes(1);
+  });
+
+  it('a host without sponsorship and a setup that cannot fund a session: normal signing', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const deps = fakeDeps({
+      requestAllowance: vi.fn(() => Promise.resolve('NotAvailable' as const)),
+      setUp: vi.fn(() => Promise.reject(new Error('Not enough PGAS or PAS for a session'))),
+    });
     const sponsor = createSponsor(deps);
-    expect(await sponsor.ensure()).toBe('unavailable');
+    expect(await sponsor.ensure()).toBe('declined');
     const { viaSession, direct } = paths();
     expect(await sponsor.send(viaSession, direct)).toBe('direct');
   });

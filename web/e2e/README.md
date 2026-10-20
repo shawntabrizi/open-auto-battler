@@ -54,13 +54,13 @@ Results go to `e2e/results/` (gitignored):
 
 ## E2E specs
 
-| Spec         | What it proves                                                                                                                                                                                                                                                                                                                                                                               |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `connect`    | CONNECT gets a host account, every permission request is approved, and nothing is signed.                                                                                                                                                                                                                                                                                                    |
-| `casual-run` | A full casual run through the UI: buy and place units, commit each turn on chain, see each replay and the game-over screen, New Run (`endGame`). After each turn the spec reads `getGame` from the chain: the turn stayed in the same run, the round moved on, and the replay the player saw ends in the result the chain applied (wins or lives changed). `getGame` is empty after New Run. |
-| `on-hold`    | Ranked, personhood, leaderboard, and badges are on hold (no Records yet): the app shows no entry point for them, and their old links go to the menu.                                                                                                                                                                                                                                         |
-| `sponsored`  | Default: the host grants `SmartContractAllowance` but no PGAS arrives, so the registry-session setup refuses before it builds a transaction, and play falls back to normal signing. Gated (`OAB_E2E_SESSION=1`): the full registry session (one setup prompt, then the key plays with no prompt).                                                                                            |
-| `guard`      | Self-test: an error and a cross-origin load inside the product iframe are caught.                                                                                                                                                                                                                                                                                                            |
+| Spec         | What it proves                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `connect`    | CONNECT gets a host account, every permission request is approved, and nothing is signed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `casual-run` | A full casual run through the UI: buy and place units, commit each turn on chain, see each replay and the game-over screen, New Run (`endGame`). After each turn the spec reads `getGame` from the chain: the turn stayed in the same run, the round moved on, and the replay the player saw ends in the result the chain applied (wins or lives changed). `getGame` is empty after New Run.                                                                                                                                                                |
+| `on-hold`    | Ranked, personhood, leaderboard, and badges are on hold (no Records yet): the app shows no entry point for them, and their old links go to the menu.                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `sponsored`  | Registry sessions on the PAS path (V0, native fee), with fresh product accounts funded with PAS only. (1) Too little PAS: the setup refuses before it builds a transaction, and play falls back to normal signing. (2) PAS only: one setup prompt; a full casual game to game over with no prompt, the chain agreeing and the replay matching each round; logout (one revoke prompt, the key returns its PAS); normal signing after logout; a key revoked outside the app falls back to one normal prompt. Gated (`OAB_E2E_SESSION=1`): the PGAS path (V1). |
+| `guard`      | Self-test: an error and a cross-origin load inside the product iframe are caught.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 Every spec runs under a guard fixture (`fixtures.ts`). The guard fails the
 test on an uncaught page error or a CSP violation. The product document gets
@@ -73,22 +73,27 @@ The core derives the product account from the subtree
 `//<Dev>//oab-arena.paseo`, so each dev account gives a different OAB
 account:
 
-| Dev account | Used by                       | Notes                                     |
-| ----------- | ----------------------------- | ----------------------------------------- |
-| Alice       | `casual-run`                  | Topped up with PAS. Must hold no PGAS.    |
-| Bob         | `connect`, `on-hold`, `guard` | Never signs.                              |
-| Charlie     | `sponsored` (fallback)        | Topped up with PAS. Must hold no PGAS.    |
-| Dave        | `sponsored` (gated)           | Gets PAS and about 1.8 G PGAS from Alice. |
+| Dev account | Used by                       | Notes                                                                                                                                                                                                                 |
+| ----------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Alice       | `casual-run`                  | Topped up with PAS. Must hold no PGAS.                                                                                                                                                                                |
+| Bob         | `connect`, `on-hold`, `guard` | Never signs.                                                                                                                                                                                                          |
+| Dave        | `sponsored`                   | The PAS specs replace the OAB subtree with a fresh `//Alice//oabpas<run>` (or `oabpoor<run>`): PAS only, returned to Alice at the end. The gated PGAS spec uses Dave's own OAB account and gives it about 1.8 G PGAS. |
 
 A spec that dies in the middle of a run leaves a game on chain. The next run
 resumes it from the game page.
 
-### Registry sessions and PGAS
+### Registry sessions: PGAS and PAS
 
-The full session spec needs about 1.8 G PGAS: 1.5 G session budget
-(decision Q12), the 206.4 M owner record, and fees. On 2026-10-20 //Alice
-holds about 0.05 G and no dev account holds more, so the spec is skipped.
-Run it when an account with PGAS can fund it:
+A session is funded in PGAS (pipeline V1) when the player can pay the PGAS
+budget, else in PAS (pipeline V0). The PAS specs run every time. The spec
+derives each fresh product account in Node (`productAccount` in `chain.ts`)
+and checks it against the address the app shows, so it can revoke a session
+from outside the app and return the PAS to //Alice.
+
+The PGAS spec needs about 1.8 G PGAS: 1.5 G session budget (decision Q12),
+the 206.4 M owner record, and fees. On 2026-10-20 //Alice holds about 0.05 G
+and no dev account holds more, so the spec is skipped. Run it when an
+account with PGAS can fund it:
 
 ```bash
 OAB_E2E_SESSION=1 npm run test:e2e -- sponsored
@@ -143,7 +148,7 @@ Read the numbers with these facts:
 ## Limits
 
 - The test host cannot claim PGAS. That needs a real personhood proof, so
-  the session path needs PGAS from Alice to run.
+  the PGAS session path needs PGAS from Alice to run. The PAS path does not.
 - The test host signs every host transaction as a classic v4 (pipeline V0,
   native fee) and ignores `txExtVersion`
   (`@parity/host-api-test-sdk` 0.17 CHANGELOG). The setup batch of a

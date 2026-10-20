@@ -51,7 +51,13 @@ import {
   type BattleReportInfo,
   type ModeGameInfo,
 } from './codec';
-import { dryRunError, startWithHeadroom, type QueryResult, type TxOutcome } from './arenaFlows';
+import {
+  dryRunError,
+  startWithHeadroom,
+  withGasHeadroom,
+  type QueryResult,
+  type TxOutcome,
+} from './arenaFlows';
 import type { PrepareOptions, Prepared, StartMethod, TxOptions } from './arenaFlows';
 import { DERIVATION_INDEX, PRODUCT_ID } from './personhood';
 
@@ -96,8 +102,14 @@ export interface ContractBackend {
   readonly isConnected: boolean;
   getAccounts(): Promise<Account[]>;
   readonly selectedAccount: Account | null;
-  /** Sponsored play (PGAS + session key) state; `active` means no prompts. */
+  /** Sponsored play (session key) state; `active` means no prompts. */
   readonly sponsorStatus: SponsorStatus;
+  /**
+   * Logout of sponsored play: revoke the session key (one prompt if it is
+   * live) and return its leftover to the player. Later calls on this
+   * connection use normal signing.
+   */
+  endSession(): Promise<void>;
   selectAccount(account: Account): void;
   /** Start a casual game. Returns the run id of the dry-run (advisory). */
   startGame(setId: number): Promise<{ runId: bigint }>;
@@ -131,6 +143,7 @@ type NoArgWrite = {
 interface ArenaContract {
   startGame: StartMethod;
   submitTurn: {
+    query(action: string): Promise<QueryResult<unknown>>;
     tx(action: string, opts?: TxOptions): Promise<TxOutcome>;
     prepare(action: string, opts?: PrepareOptions): Promise<Prepared>;
   };
@@ -169,8 +182,9 @@ const ARENA_LIBRARY = '@oab/arena';
 const IDENTITY_LIBRARY = '@oab/identity';
 
 /**
- * Sponsored-play pattern. `registry`: an `@oab/identity` session key on
- * extension pipeline V1, fee in PGAS (`./registrySession.ts`, the M5 design).
+ * Sponsored-play pattern. `registry`: an `@oab/identity` session key, fee in
+ * PGAS on extension pipeline V1, or in PAS on V0 when the player cannot fund
+ * PGAS (`./registrySession.ts`, the M5 design).
  * `proxy`: the arena v2 proxy session (`./session.ts`), which buys its deposit
  * through the DOT<->PGAS pool. The proxy path stays until a registry session
  * is proven in a real host (M5 report).
@@ -181,6 +195,8 @@ const SESSION_KIND: 'registry' | 'proxy' = 'registry';
 interface GameSession {
   deps: SponsorDeps;
   submit(call: PreparedCall, options?: { onStatus?: (s: TxStatus) => void }): Promise<TxResult>;
+  /** Revoke and drain the key (registry sessions only). */
+  end?(): Promise<void>;
 }
 
 /** The one Scarcity collection view the app reads (individuality `IScarcityCollection.sol`). */
@@ -344,6 +360,17 @@ export function createContractBackend(deps: {
     }
     const signer = signerManager.getSigner();
     if (!signer) throw new Error('No signer for selected account');
+    // Read at the best block: the SDK check reads the finalized block, so a
+    // mapping the session setup batch just made (at best) looks missing and
+    // costs a second prompt.
+    const h160 = ss58ToH160(_selectedAccount.address);
+    const original = await client?.assetHub.query.Revive.OriginalAccount.getValue(h160, {
+      at: 'best',
+    });
+    if (original !== undefined) {
+      _mapped = true;
+      return;
+    }
     const r = await ensureContractAccountMapped(_runtime, _selectedAccount.address, signer, {
       onStatus: (s) => onStatus?.(s as TxStatus),
     });
@@ -360,7 +387,8 @@ export function createContractBackend(deps: {
     }
     return sendGameCall(
       label,
-      () => method.prepare(),
+      // Session key: headroom (see submitTurn).
+      () => method.prepare({ gasLimit: withGasHeadroom(dryRun.gasRequired) }),
       () => method.tx({ onStatus })
     );
   }
@@ -452,6 +480,12 @@ export function createContractBackend(deps: {
     get sponsorStatus() {
       return _sponsor.status;
     },
+    async endSession() {
+      const session = _session;
+      if (!session?.end) throw new Error('No session to end');
+      await session.end();
+      _sponsor = createSponsor(session.deps, 'declined');
+    },
     selectAccount(account: Account) {
       if (!signerManager) return;
       const r = signerManager.selectAccount(account.address);
@@ -494,12 +528,23 @@ export function createContractBackend(deps: {
       const game = _activeGame;
       if (!game) throw new Error('No game loaded');
       const action = '0x' + bytesToHex(actionScale);
-      // No explicit pre-query: `.tx()` / `.prepare()` already dry-run to size
-      // gas and fail fast with the typed revert, and a turn's dry-run runs the
-      // whole battle. The result comes from the BattleReported event.
+      // Normal signing: no explicit pre-query, `.tx()` already dry-runs to
+      // size gas and fail fast with the typed revert (a turn's dry-run runs the
+      // whole battle). Session key: the dry-run runs as the player (M5
+      // deviation 2), and a turn sent by the key with exactly that gas ran
+      // out of gas live (`Revive.OutOfGas`, 2026-10-20), so it gets the
+      // startGame headroom. The result comes from the BattleReported event.
       const tx = await sendGameCall(
         'submitTurn',
-        () => arena().submitTurn.prepare(action),
+        async () => {
+          const dryRun = await arena().submitTurn.query(action);
+          if (!dryRun.success) {
+            throw dryRunError(dryRun.value, () => new Error('Contract rejected submitTurn'));
+          }
+          return arena().submitTurn.prepare(action, {
+            gasLimit: withGasHeadroom(dryRun.gasRequired),
+          });
+        },
         () => arena().submitTurn.tx(action, { onStatus })
       );
       const reportBytes = findBattleReport(tx.events, playerH160());
