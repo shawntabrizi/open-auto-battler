@@ -27,15 +27,13 @@ No legacy single `abilities` lane is supported.
 ## 3.1 Shop Lane
 
 Trigger enum:
-- `ShopTrigger::{OnBuy, OnSell, OnShopStart}`
+- `ShopTrigger::{OnBuy, OnSell, OnShopStart, AfterLoss, AfterWin, AfterDraw}`
 
 Effect enum (`ShopEffect`):
 - `ModifyStatsPermanent`
 - `SpawnUnit`
 - `Destroy`
 - `GainMana`
-- `GrantStatusPermanent`
-- `RemoveStatusPermanent`
 
 Target enum:
 - `ShopTarget::{Position, Random, Standard, All}`
@@ -46,7 +44,7 @@ Scope enum:
 ## 3.2 Battle Lane
 
 Trigger enum:
-- `AbilityTrigger::{OnStart, OnFaint, OnAllyFaint, OnHurt, OnSpawn, OnAllySpawn, OnEnemySpawn, BeforeUnitAttack, AfterUnitAttack, BeforeAnyAttack, AfterAnyAttack}`
+- `AbilityTrigger::{OnStart, OnFaint, OnAllyFaint, OnHurt, OnSpawn, OnAllySpawn, OnEnemySpawn, BeforeUnitAttack, AfterUnitAttack, BeforeAnyAttack, AfterAnyAttack, AfterAllyAttack, AfterEnemyAttack}`
 
 Effect enum (`AbilityEffect`):
 - `Damage`
@@ -55,9 +53,10 @@ Effect enum (`AbilityEffect`):
 - `SpawnUnit`
 - `Destroy`
 - `GainMana`
-- `GrantStatusThisBattle`
-- `GrantStatusPermanent`
-- `RemoveStatusPermanent`
+
+The status effects (`GrantStatusThisBattle`, `GrantStatusPermanent`,
+`RemoveStatusPermanent`) were removed with the status system (see
+[STATUS_SYSTEM_SPEC.md](./STATUS_SYSTEM_SPEC.md)).
 
 Target enum:
 - `AbilityTarget::{Position, Adjacent, Random, Standard, All}`
@@ -68,19 +67,19 @@ Scope enum:
 ## 4. Execution Paths
 
 Shop execution:
-- Implemented in `core/src/commit.rs`
+- Implemented in `battle/src/commit.rs`
 - Only `shop_abilities` are collected and executed.
 
 Battle execution:
-- Implemented in `core/src/battle.rs`
+- Implemented in `battle/src/battle.rs`
 - Only `battle_abilities` are collected and executed.
 
 ## 5. Build-Time Validation
 
-`core/build.rs` enforces lane correctness:
+`assets/build.rs` enforces lane correctness:
 - shop-incompatible targets/scopes/effects are rejected
 - battle-incompatible triggers/effects are rejected
-- missing required fields (`target`, `amount`, `health`, `attack`, `status`, etc.) are rejected
+- missing required fields (`target`, `amount`, `health`, `attack`, etc.) are rejected
 - missing `SpawnUnit` card references are rejected
 
 Cards must declare:
@@ -90,13 +89,13 @@ Cards must declare:
 ## 6. Shared Contracts
 
 This architecture is propagated to:
-- `core/src/types.rs`
-- `core/src/bounded.rs`
-- pallet user card data and conversions
+- `battle/src/types.rs`
+- `battle/src/bounded.rs`
+- the arena contract's card registration (`registerCard`, SCALE `UnitCard`)
 - `web/src/types.ts`
 - frontend ability authoring/rendering paths
 
 ## 7. Compatibility
 
 This is a schema-level change across SCALE/serde boundaries.
-Runtime/client/pallet should be updated together.
+The engine, the WASM client, and the contract should be updated together.

@@ -88,7 +88,7 @@ less often, so its average impact across games is kept in check.
 
 ## Implementation Guardrails
 
-These rules exist to keep `docs/CARD_DESIGN.md`, `cards/cards.json`, and `cards/sets.json`
+These rules exist to keep `docs/CARD_DESIGN.md`, `assets/data/cards.json`, and `assets/data/sets.json`
 aligned.
 
 - If a design says `(perm)`, the implementation must use a permanent effect type rather than
@@ -107,11 +107,11 @@ aligned.
 
 Before shipping a card update:
 
-- Confirm the design row and `cards/cards.json` agree on stats, cost, burn, rarity, trigger,
+- Confirm the design row and `assets/data/cards.json` agree on stats, cost, burn, rarity, trigger,
   target, and whether the effect is permanent.
-- Confirm every spawned/reborn token exists in `cards/cards.json` and is present in any relevant
+- Confirm every spawned/reborn token exists in `assets/data/cards.json` and is present in any relevant
   curated set with `rarity: 0`.
-- Confirm `cards/sets.json` uses the intended rarity weights for all curated sets.
+- Confirm `assets/data/sets.json` uses the intended rarity weights for all curated sets.
 - Confirm [web/src/utils/abilityText.ts](../web/src/utils/abilityText.ts) still renders the card
   text accurately if the ability shape changed.
 - Add a focused regression test for positional, spawn, rebirth, or permanent-buff behavior.

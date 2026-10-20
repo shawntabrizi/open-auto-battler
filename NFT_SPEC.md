@@ -124,7 +124,7 @@ A complete UI theme definition. The `image` field points to an IPFS CID containi
 
 The JSON follows the `ThemeDefinition` interface. Only `base` is required; all other sections (`buttons`, `icons`, `battleOverlay`, etc.) are optional and inherit from the warm default. The `assets.playIcon` and `assets.burnIcon` fields may be omitted to use the warm defaults; custom asset URLs must be HTTPS or IPFS gateway URLs.
 
-See `cards/themes/cyberpunk.json` and `cards/themes/pastel.json` for complete examples.
+See `assets/data/themes/cyberpunk.json` and `assets/data/themes/pastel.json` for complete examples.
 
 ## Minting Flow
 
