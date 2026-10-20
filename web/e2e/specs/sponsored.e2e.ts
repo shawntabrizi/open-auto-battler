@@ -84,68 +84,69 @@ const sponsored = hostTest({
   behaviors: { resourceAllocation: { AutoSigning: false } },
 });
 
-sponsored('sponsored play: setup prompts once, then no prompts for game calls', async ({
-  testHost,
-}) => {
-  sponsored.skip(
-    process.env.OAB_E2E_SPONSORED !== '1',
-    'Uses the shared DOT<->PGAS pool; set OAB_E2E_SPONSORED=1 to run (once).'
-  );
-  const { frame, address } = await connect(testHost);
-  // PAS covers the proxy deposit, so the setup batch needs no PGAS->PAS swap.
-  await chain.topUp(address, 5n * PAS, 20n * PAS);
-  // Stand-in for the host's allowance claim: setup sends 3e9 to the session key.
-  await chain.topUpPgas(address, 4_000_000_000n);
-  const pgasBefore = await chain.pgas(address);
-  await testHost.clearSigningLog();
+sponsored(
+  'sponsored play: setup prompts once, then no prompts for game calls',
+  async ({ testHost }) => {
+    sponsored.skip(
+      process.env.OAB_E2E_SPONSORED !== '1',
+      'Uses the shared DOT<->PGAS pool; set OAB_E2E_SPONSORED=1 to run (once).'
+    );
+    const { frame, address } = await connect(testHost);
+    // PAS covers the proxy deposit, so the setup batch needs no PGAS->PAS swap.
+    await chain.topUp(address, 5n * PAS, 20n * PAS);
+    // Stand-in for the host's allowance claim: setup sends 3e9 to the session key.
+    await chain.topUpPgas(address, 4_000_000_000n);
+    const pgasBefore = await chain.pgas(address);
+    await testHost.clearSigningLog();
 
-  // First write of the connection: set up the session, then the game call.
-  // A game left by an aborted run resumes on the game page (decided from
-  // chain state: the arena shows Start Game before its own check finishes);
-  // its first turn is then the first write.
-  const leftover = !isNoGame(await chain.gameState(address));
-  await frame.getByRole('link', { name: 'Contract Arena' }).click();
-  const commit = frame.locator('[data-game-custom-action="true"]');
-  let turns = 2;
-  if (!leftover) {
-    const start = frame.getByRole('button', { name: 'Start Game' });
-    await expect(start).toBeEnabled({ timeout: 60_000 });
-    await start.click();
-    await expect(commit).toBeVisible({ timeout: 4 * 60_000 });
-  } else {
-    await expect(commit).toBeVisible({ timeout: 60_000 });
-    await playShopTurn(frame);
-    await commitTurn(frame);
-    await watchBattle(frame, testHost.page);
-    await expect(commit).toBeVisible({ timeout: 2 * 60_000 });
-    turns = 1;
+    // First write of the connection: set up the session, then the game call.
+    // A game left by an aborted run resumes on the game page (decided from
+    // chain state: the arena shows Start Game before its own check finishes);
+    // its first turn is then the first write.
+    const leftover = !isNoGame(await chain.gameState(address));
+    await frame.getByRole('link', { name: 'Contract Arena' }).click();
+    const commit = frame.locator('[data-game-custom-action="true"]');
+    let turns = 2;
+    if (!leftover) {
+      const start = frame.getByRole('button', { name: 'Start Game' });
+      await expect(start).toBeEnabled({ timeout: 60_000 });
+      await start.click();
+      await expect(commit).toBeVisible({ timeout: 4 * 60_000 });
+    } else {
+      await expect(commit).toBeVisible({ timeout: 60_000 });
+      await playShopTurn(frame);
+      await commitTurn(frame);
+      await watchBattle(frame, testHost.page);
+      await expect(commit).toBeVisible({ timeout: 2 * 60_000 });
+      turns = 1;
+    }
+    expect(isNoGame(await chain.gameState(address)), 'game active on chain').toBe(false);
+
+    // Setup is ONE product-account batch (PGAS budget, map, add_proxy), or none
+    // when a funded session key from an earlier run is still stored. A second
+    // prompt here is the redundant map_account: the SDK's mapping check reads the
+    // finalized block while setup just mapped the account at the best block.
+    const setup = await testHost.getSigningLog();
+    if (setup.length > 1) {
+      base.info().annotations.push({
+        type: 'app-bug',
+        description: `sponsored setup took ${setup.length} host signatures, expected 1`,
+      });
+    }
+    expect(setup.length).toBeLessThanOrEqual(2);
+
+    await testHost.clearSigningLog();
+    for (let turn = 0; turn < turns; turn++) {
+      await playShopTurn(frame);
+      await commitTurn(frame);
+      await watchBattle(frame, testHost.page);
+      await expect(commit).toBeVisible({ timeout: 2 * 60_000 });
+    }
+    await abandon(frame);
+
+    // Turns and the abandon were signed by the session key: no host prompt.
+    expect(await testHost.getSigningLog()).toEqual([]);
+    expect(isNoGame(await chain.gameState(address)), 'no game after abandon').toBe(true);
+    expect(await chain.pgas(address)).toBeLessThan(pgasBefore);
   }
-  expect(isNoGame(await chain.gameState(address)), 'game active on chain').toBe(false);
-
-  // Setup is ONE product-account batch (PGAS budget, map, add_proxy), or none
-  // when a funded session key from an earlier run is still stored. A second
-  // prompt here is the redundant map_account: the SDK's mapping check reads the
-  // finalized block while setup just mapped the account at the best block.
-  const setup = await testHost.getSigningLog();
-  if (setup.length > 1) {
-    base.info().annotations.push({
-      type: 'app-bug',
-      description: `sponsored setup took ${setup.length} host signatures, expected 1`,
-    });
-  }
-  expect(setup.length).toBeLessThanOrEqual(2);
-
-  await testHost.clearSigningLog();
-  for (let turn = 0; turn < turns; turn++) {
-    await playShopTurn(frame);
-    await commitTurn(frame);
-    await watchBattle(frame, testHost.page);
-    await expect(commit).toBeVisible({ timeout: 2 * 60_000 });
-  }
-  await abandon(frame);
-
-  // Turns and the abandon were signed by the session key: no host prompt.
-  expect(await testHost.getSigningLog()).toEqual([]);
-  expect(isNoGame(await chain.gameState(address)), 'no game after abandon').toBe(true);
-  expect(await chain.pgas(address)).toBeLessThan(pgasBefore);
-});
+);

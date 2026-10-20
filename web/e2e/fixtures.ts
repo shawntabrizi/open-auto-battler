@@ -74,7 +74,10 @@ function attachGuard(page: Page, guard: Guard): void {
   page.on('console', (msg) => {
     const text = msg.text();
     guard.console.push(`[${msg.type()}] ${text}`);
-    if (text.startsWith('[csp-violation]') || /Refused to (load|connect|execute|apply)/.test(text)) {
+    if (
+      text.startsWith('[csp-violation]') ||
+      /Refused to (load|connect|execute|apply)/.test(text)
+    ) {
       guard.problems.push({ kind: 'csp', text });
     }
   });

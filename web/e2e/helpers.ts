@@ -43,5 +43,6 @@ export async function watchForText(frame: Frame, text: string): Promise<() => Pr
     },
     [text, key] as const
   );
-  return () => frame.evaluate((k) => (window as unknown as Record<string, boolean>)[k] === true, key);
+  return () =>
+    frame.evaluate((k) => (window as unknown as Record<string, boolean>)[k] === true, key);
 }

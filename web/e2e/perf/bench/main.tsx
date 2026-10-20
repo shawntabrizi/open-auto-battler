@@ -78,8 +78,7 @@ async function main() {
   const pick = () => Array.from({ length: 5 }, () => ids[Math.floor(rand() * ids.length)]);
   const t0 = performance.now();
   let stalemates = 0;
-  let best: { output: BattleOutput; player: number[]; enemy: number[]; seed: number } | null =
-    null;
+  let best: { output: BattleOutput; player: number[]; enemy: number[]; seed: number } | null = null;
   for (let i = 0; i < candidates; i++) {
     const player = pick();
     const enemy = pick();

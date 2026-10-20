@@ -97,7 +97,11 @@ export function connectChain(): Chain {
       if (have >= amount) return;
       await atBestBlock(
         `PGAS top-up of ${address}`,
-        api.tx.Assets.transfer({ id: PGAS_ASSET_ID, target: Enum('Id', address), amount: amount - have }),
+        api.tx.Assets.transfer({
+          id: PGAS_ASSET_ID,
+          target: Enum('Id', address),
+          amount: amount - have,
+        }),
         signer
       );
     },

@@ -36,26 +36,26 @@ npm run typecheck:e2e                 # tsc for this folder
 
 Results go to `e2e/results/` (gitignored):
 
-| Path | Content |
-| --- | --- |
-| `results/screens/` | Screenshots of the arena, shop, battle, game over, leaderboard and badges |
-| `results/html/` | Playwright HTML report (`npx playwright show-report e2e/results/html`) |
-| `results/artifacts/` | Trace, video and screenshot of each failed test |
-| `results/perf/summary.json` | Perf numbers for every throttle rate |
-| `results/perf/battle-<rate>x.json` | One rate, with the battle that was measured |
-| `results/perf/trace-<rate>x.json` | Chrome trace (open in DevTools > Performance) |
-| `results/perf/battle.webm`, `battle.gif`, `battle-*.png` | Recording of the replay |
+| Path                                                     | Content                                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `results/screens/`                                       | Screenshots of the arena, shop, battle, game over, leaderboard and badges |
+| `results/html/`                                          | Playwright HTML report (`npx playwright show-report e2e/results/html`)    |
+| `results/artifacts/`                                     | Trace, video and screenshot of each failed test                           |
+| `results/perf/summary.json`                              | Perf numbers for every throttle rate                                      |
+| `results/perf/battle-<variant>-<rate>x.json`             | One run, with the battle that was measured                                |
+| `results/perf/trace-<variant>-<rate>x.json`              | Chrome trace (open in DevTools > Performance)                             |
+| `results/perf/battle.webm`, `battle.gif`, `battle-*.png` | Recording of the replay                                                   |
 
 ## E2E specs
 
-| Spec | What it proves |
-| --- | --- |
-| `connect` | CONNECT gets a host account, every permission request is approved, and nothing is signed. |
+| Spec         | What it proves                                                                                                                                                                                           |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `connect`    | CONNECT gets a host account, every permission request is approved, and nothing is signed.                                                                                                                |
 | `casual-run` | A full casual run through the UI: buy and place units, commit each turn on chain, see each replay and the game-over screen. `getGameState` is active during the run and empty after New Run (`endGame`). |
-| `ranked` | Ranked for an account without a personhood binding shows the reason and the bind action. No signature, no resource request, no transaction overlay. |
-| `pages` | Leaderboard and badges load from chain and show entries or the empty state, with no error panel. |
-| `sponsored` | Default: the host grants `SmartContractAllowance` but no PGAS arrives, so setup fails and play falls back to normal signing. Gated (`OAB_E2E_SPONSORED=1`): the full sponsored path. |
-| `guard` | Self-test: an error and a cross-origin load inside the product iframe are caught. |
+| `ranked`     | Ranked for an account without a personhood binding shows the reason and the bind action. No signature, no resource request, no transaction overlay.                                                      |
+| `pages`      | Leaderboard and badges load from chain and show entries or the empty state, with no error panel.                                                                                                         |
+| `sponsored`  | Default: the host grants `SmartContractAllowance` but no PGAS arrives, so setup fails and play falls back to normal signing. Gated (`OAB_E2E_SPONSORED=1`): the full sponsored path.                     |
+| `guard`      | Self-test: an error and a cross-origin load inside the product iframe are caught.                                                                                                                        |
 
 Every spec runs under a guard fixture (`fixtures.ts`). The guard fails the
 test on an uncaught page error or a CSP violation. The product document gets
@@ -68,12 +68,12 @@ The core derives the product account from the subtree
 `//<Dev>//oab-arena.paseo`, so each dev account gives a different OAB
 account:
 
-| Dev account | Used by | Notes |
-| --- | --- | --- |
-| Alice | `casual-run` | Topped up with PAS. Must hold no PGAS. |
-| Bob | `connect`, `ranked`, `pages`, `guard` | Never signs. Must stay unbound for `ranked`. |
-| Charlie | `sponsored` (fallback) | Topped up with PAS. Must hold no PGAS. |
-| Dave | `sponsored` (gated) | Gets PAS and PGAS from Alice. |
+| Dev account | Used by                               | Notes                                        |
+| ----------- | ------------------------------------- | -------------------------------------------- |
+| Alice       | `casual-run`                          | Topped up with PAS. Must hold no PGAS.       |
+| Bob         | `connect`, `ranked`, `pages`, `guard` | Never signs. Must stay unbound for `ranked`. |
+| Charlie     | `sponsored` (fallback)                | Topped up with PAS. Must hold no PGAS.       |
+| Dave        | `sponsored` (gated)                   | Gets PAS and PGAS from Alice.                |
 
 A spec that dies in the middle of a run leaves a game on chain. The next run
 resumes it from the game page.
@@ -97,23 +97,39 @@ not from the chain. On load, the page tries 600 random 5v5 boards with a
 fixed seed and keeps the battle with the most combat events. Battles that hit
 the battle limit (a stalemate, about 1100 events) are left out.
 
-The test sets a 390x844 viewport at DPR 3 and sets
-`Emulation.setCPUThrottlingRate`. Then it records a Chrome trace and every
-`requestAnimationFrame` timestamp, long task and JS heap sample, and plays the
+The bench is built twice:
+
+| Variant   | What it is                                                                                                                                                                                                                                                                                                                                                                                                          |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shipped` | `src/` as it is.                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `depsfix` | The same, but `BattleArena`'s event effect does not list `playerBoard` and `enemyBoard` as dependencies (the list before commit `d38bad2`). With them, every event that maps a board starts its own effect again, without end. The replay stops on the first stat change, and the main thread stays busy. This variant shows the DOM renderer's cost after that fix. Only the bench build changes; `src/` does not. |
+
+For each variant and rate, the test sets a 390x844 viewport at DPR 3 and
+`Emulation.setCPUThrottlingRate`. It records every `requestAnimationFrame`
+timestamp, long task, JS heap sample and the CDP task time, and plays the
 battle at the default 1x speed. A busy battle plays for several minutes, so
-the measured window stops at `OAB_PERF_MAX_S` (default 180 s).
+the measured window stops at `OAB_PERF_MAX_S` (default 120 s). A separate,
+short pass records one Chrome trace per variant and rate, so that tracing
+does not change the measured numbers.
 
-| Env | Default | Meaning |
-| --- | --- | --- |
-| `OAB_PERF_RATES` | `1,4,6` | CPU throttle rates |
-| `OAB_PERF_CANDIDATES` | `600` | Boards to try when searching for the busiest battle |
-| `OAB_PERF_MAX_S` | `180` | Cap on the measured window |
-| `OAB_PERF_TRACE` | `1` | `0` skips the trace files (they are large) |
-| `OAB_PERF_VIDEO` | `1` | `0` skips the video test |
+| Env                   | Default           | Meaning                                             |
+| --------------------- | ----------------- | --------------------------------------------------- |
+| `OAB_PERF_RATES`      | `1,4,6`           | CPU throttle rates                                  |
+| `OAB_PERF_VARIANTS`   | `shipped,depsfix` | Bench builds to measure                             |
+| `OAB_PERF_CANDIDATES` | `600`             | Boards to try when searching for the busiest battle |
+| `OAB_PERF_MAX_S`      | `120`             | Cap on the measured window                          |
+| `OAB_PERF_TRACE_S`    | `15`              | Length of each trace; `0` skips traces              |
+| `OAB_PERF_VIDEO`      | `1`               | `0` skips the video test                            |
 
-Headless Chromium has no real display, so FPS has an upper limit of the
-`requestAnimationFrame` rate (60 Hz). CPU throttling slows the main thread
-only. It does not slow the GPU or the compositor.
+Read the numbers with these facts:
+
+- Headless Chromium has no real display. FPS has an upper limit of the
+  `requestAnimationFrame` rate (60 Hz).
+- CPU throttling slows the main thread only. It does not slow the GPU or the
+  compositor, and most battle effects are CSS animations on the compositor.
+- `log rows` is the replay progress: the battle log lines shown at the end
+  of the window. A high FPS with few log rows means the replay is stuck.
+- `busy %` is main-thread task time per wall-clock second.
 
 ## Limits
 

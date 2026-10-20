@@ -69,9 +69,7 @@ test('casual run: shop, commit, replay each battle until game over; chain agrees
   const outcome = frame.getByRole('heading', { level: 1 });
   await expect(outcome).toHaveText(/Victory|Defeat/);
   await page.screenshot({ path: 'e2e/results/screens/game-over.png' });
-  expect(isNoGame(await chain.gameState(address)), 'game still on chain until endGame').toBe(
-    false
-  );
+  expect(isNoGame(await chain.gameState(address)), 'game still on chain until endGame').toBe(false);
 
   // New Run finalizes the run on chain (endGame) and returns to the arena.
   await gameOver.click();

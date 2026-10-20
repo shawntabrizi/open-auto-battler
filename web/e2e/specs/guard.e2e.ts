@@ -23,12 +23,8 @@ test('guard catches uncaught errors and CSP violations inside the product frame'
     document.body.appendChild(img);
   });
 
-  await expect
-    .poll(() => guard.problems.map((p) => p.kind).sort())
-    .toEqual(['csp', 'pageerror']);
-  expect(guard.console.some((l) => l.includes('guard-self-test: console from product'))).toBe(
-    true
-  );
+  await expect.poll(() => guard.problems.map((p) => p.kind).sort()).toEqual(['csp', 'pageerror']);
+  expect(guard.console.some((l) => l.includes('guard-self-test: console from product'))).toBe(true);
   expect(guard.problems.find((p) => p.kind === 'pageerror')?.text).toContain(
     'guard-self-test: uncaught'
   );

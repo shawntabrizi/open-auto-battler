@@ -19,12 +19,24 @@ export default defineConfig({
   timeout: 15 * 60_000,
   retries: 0,
   reporter: [['list']],
-  use: { browserName: 'chromium', baseURL: BENCH_URL },
+  use: {
+    browserName: 'chromium',
+    baseURL: BENCH_URL,
+    // performance.memory reports real (not bucketed) values with this flag.
+    launchOptions: { args: ['--enable-precise-memory-info'] },
+  },
   webServer: {
-    command: process.env.OAB_E2E_SKIP_BUILD
-      ? `npx vite preview --config e2e/perf/vite.bench.config.ts --port ${PORT} --strictPort`
-      : `npx vite build --config e2e/perf/vite.bench.config.ts && npx vite preview --config e2e/perf/vite.bench.config.ts --port ${PORT} --strictPort`,
-    url: BENCH_URL,
+    // Two bench builds (see e2e/perf/vite.bench.config.ts), served side by side.
+    command: [
+      ...(process.env.OAB_E2E_SKIP_BUILD
+        ? []
+        : [
+            'OAB_BENCH_VARIANT=shipped npx vite build --config e2e/perf/vite.bench.config.ts',
+            'OAB_BENCH_VARIANT=depsfix npx vite build --config e2e/perf/vite.bench.config.ts',
+          ]),
+      `npx vite preview --config e2e/perf/vite.bench.config.ts --outDir ../../results/bench-dist --port ${PORT} --strictPort`,
+    ].join(' && '),
+    url: `${BENCH_URL}/shipped/`,
     reuseExistingServer: !process.env.CI,
     timeout: 5 * 60_000,
   },

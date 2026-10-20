@@ -27,9 +27,9 @@ export async function playShopTurn(frame: FrameLocator): Promise<number> {
       const before = emptySlots;
       await affordable.first().click();
       await frame.getByRole('button', { name: 'Place unit here' }).first().click();
-      await expect(
-        frame.locator('[data-testid="board-slot"][data-occupied="false"]')
-      ).toHaveCount(before - 1);
+      await expect(frame.locator('[data-testid="board-slot"][data-occupied="false"]')).toHaveCount(
+        before - 1
+      );
       placed++;
       continue;
     }

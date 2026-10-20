@@ -10,7 +10,10 @@ test('ranked start without personhood: explains why, no signing prompt', async (
   await expect(frame.getByRole('button', { name: 'Start Game' })).toBeEnabled({ timeout: 60_000 });
 
   await testHost.clearSigningLog();
-  const sawSigningOverlay = await watchForText(productFrameHandle(testHost), 'Starting Ranked Game');
+  const sawSigningOverlay = await watchForText(
+    productFrameHandle(testHost),
+    'Starting Ranked Game'
+  );
 
   await frame.getByRole('button', { name: 'Ranked' }).click();
 
