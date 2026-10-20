@@ -15,6 +15,7 @@ For detailed agent and architecture docs, see the [agents/](../agents/) folder.
 - [UI_FLOW.md](./UI_FLOW.md) - Routes and navigation
 - [CARD_DESIGN.md](./CARD_DESIGN.md) - Card design rules
 - [../contract/README.md](../contract/README.md) - Arena contract API, deploy, and personhood
+- [CONTRACT_ARCHITECTURE.md](./CONTRACT_ARCHITECTURE.md) - Design: split the arena into engine, content, identity, mode, and records contracts
 - [../BETA_RELEASE_PLAN.md](../BETA_RELEASE_PLAN.md) - Roadmap and open items
 
 ## Architecture Highlights
