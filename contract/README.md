@@ -40,7 +40,7 @@ cargo build --release          # build.rs (PvmBuilder) links the PolkaVM blob + 
 ```
 
 Outputs (under `contract/target/release/`):
-- `oab-contract.polkavm` — PolkaVM bytecode (~99 KB)
+- `oab-contract.polkavm` — PolkaVM bytecode (~112 KB)
 - `oab-contract.abi.json` — Solidity-style ABI (camelCase selectors)
 
 The `build.rs` recursion guard means an outer host build re-enters the PVM
@@ -99,6 +99,9 @@ OAB_MNEMONIC="<deployer phrase>" bun run scripts/register-cards.ts /tmp/cards-du
 DUMP=/tmp/cards-dump.json node scripts/e2e-onchain.mjs
 ```
 
+Then, as the admin: `setPersonhoodContext(<context>)` (value below), fund the
+arena, and `initAchievements()` (see Achievement badges).
+
 Then deploy the frontend to a host (`playground deploy`) so it can reach Asset
 Hub through the Polkadot host.
 
@@ -125,6 +128,13 @@ game data is SCALE-encoded inside ABI `bytes` parameters.
 | `getLeaderboard(uint16, uint32, uint32)` | SCALE `Vec<LeaderboardEntry>` for a set, best first (set ID, offset, limit) |
 | `getPlayerRank(uint16, bytes32)` | 1-based place of an alias on a set's board; 0 if absent |
 | `getBestRun(uint16, bytes32)` | SCALE `LeaderboardEntry` of an alias's best run on a set; empty if none |
+| `initAchievements()`         | Admin, once: create the arena-owned "OAB Achievements" Scarcity collection and its badge items; returns the collection id |
+| `getBadgeConfig()`           | SCALE `BadgeConfig { collection: u32, items: Vec<u32> }`; empty before init |
+| `getBadges(address)`         | SCALE `Vec<BadgeRecord>` of a player's badges (`token: None` = pending) |
+| `claimPendingBadges()`       | Retry the caller's pending badge mints; returns how many minted |
+
+The contract also emits `BadgeMinted` / `BadgePending` from `endGame` and
+`claimPendingBadges` (see Achievement badges).
 
 The contract emits a `BattleReported` event after each `submitTurn` with the
 battle result and opponent board for client-side replay. The frontend reads it
@@ -151,6 +161,49 @@ reads it from the individuality personhood precompile at
   contract keeps the best run per (set, alias) and a top-100 board per set,
   ordered by wins, then lives left, then the earlier block. Abandoned and
   casual games never reach the board.
+
+### Personhood context (Paseo Next)
+
+The live arena uses context
+`0x51dccb5fc990cce21a58dcecc3334babcea01f0f034567f0d64ca4c423356012`
+(set 2026-10-20). It is OAB's product-scoped context for derivation index 0,
+built per truapi RFC-0004 / RFC-0024 and the host's `DerivationIndex32`:
+
+```
+magic   = blake2b_256("product-account-index")[..28]
+suffix  = u32_le(0) ++ magic                       // 32 bytes
+context = blake2b_256("product/" ++ "oab-arena.paseo" ++ "/" ++ suffix)
+```
+
+`oab-arena.paseo` is the dotNS product id on Paseo (`oab-arena.dot` on
+Polkadot, so mainnet needs a new value). Index 0 is the product account the
+web app signs with (`derivationIndex: 0` in `web/src/contract/index.ts`), so a
+player binds that account as their alias account in this context. The
+derivation reproduces the host test vector for `peopl.paseo`
+(`b6c21225…7ee3`).
+
+## Achievement badges
+
+`endGame` of a **ranked** run mints a soulbound badge NFT into the arena-owned
+"OAB Achievements" Scarcity collection (id 30 on Paseo Next):
+
+| Badge | Value | Condition |
+| ----- | ----- | --------- |
+| Victory | 0 | `wins >= 10` |
+| Flawless | 1 | `wins >= 10` and no life lost |
+
+- One badge per (account, badge, set), recorded in contract storage. Casual
+  runs never earn badges, because the arena pays a deposit (about 0.21 PAS)
+  for each badge and casual play is open to unlimited accounts.
+- Scarcity holds one NFT per key, so each badge goes to its own derived key:
+  `keccak256("oab/badge-purse/" ++ arena ++ player ++ badge ++ set_id_le)[12..]`.
+- A failed mint never fails `endGame`. The badge is stored as pending
+  (`BadgePending` event), and `claimPendingBadges()` retries it.
+- Setup after a deploy: send PAS to the arena's substrate account (its H160
+  followed by twelve `0xEE` bytes), then call `initAchievements()` as the
+  admin. It reverts with `BadgeSetupFailed()` if anything fails.
+
+Full design and the deployment record: `docs/NFT_DESIGN.md` section 9.
 
 ## Project structure
 
