@@ -2,8 +2,10 @@
 
 Status: Phase 6, part 2. Collection, items and claim minter are live on
 Paseo Asset Hub Next (part 1). The arena contract owns the "OAB Achievements"
-collection and mints soulbound badges (part 2, section 9). Frontend
-integration is a later step. This document replaces `NFT_SPEC.md` (the `pallet-nfts` design). The
+collection and mints soulbound badges (part 2, section 9). The frontend
+shows and claims badges (`/contract/badges`) and reads collectible item
+metadata; listing owned collectibles waits for the host NftPurse API
+(section 7). This document replaces `NFT_SPEC.md` (the `pallet-nfts` design). The
 per-slot asset rules (sizes, formats, `card_art` directory layout, theme JSON)
 in `NFT_SPEC.md` still apply to the asset files themselves.
 

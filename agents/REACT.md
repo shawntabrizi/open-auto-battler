@@ -1,22 +1,23 @@
 # React & Web Frontend Best Practices
 
-The frontend is a React application built with Vite and Tailwind CSS.
+The frontend is a React 18 application built with Vite and Tailwind CSS. It
+runs inside a Polkadot host (Polkadot Desktop, Polkadot Mobile, dot.li) and
+talks to the arena contract through the Polkadot Product SDK.
 
 ## State Management
 - **Zustand**: Primary state management.
   - `gameStore.ts`: Local game state, WASM engine instance, and UI states (modals, selections).
-  - `arenaStore.ts`: Wallet connection, account management, and on-chain syncing.
+  - `contractStore.ts`: Contract connection, account selection, arena turns, ranked play, personhood bind, leaderboard, badges, and sponsored-play status.
 - **WASM Bridge**: The `gameStore` initializes the `GameEngine`. All heavy game logic is delegated to the WASM module.
 
 ## UI/UX
-- **Tailwind CSS**: Use utility classes for styling. Follow the "monospace/retro-tech" aesthetic established in the `ArenaPage` and `Arena` components.
+- **Tailwind CSS**: Use utility classes for styling. Follow the theme variables in `web/src/index.css` and the existing theme classes (for example `theme-panel`, `theme-button`).
 - **Component Structure**:
-  - `GameShell.tsx`: Generic game layout with DndContext, GameTopBar, Arena, ManaBar, Shop, and overlays.
-  - `GameLayout.tsx`: Generic game wrapper that handles loading/error states and initialization, uses GameShell.
+  - `GameShell.tsx`: Game layout with DndContext, GameTopBar, Arena, ManaBar, Shop, and overlays.
   - `Arena.tsx`: Main game board rendering.
   - `Shop.tsx`: Card purchasing and turn preparation.
   - `UnitCard.tsx`: Reusable card component with drag-and-drop support.
-- **Feedback**: Use `react-hot-toast` for transaction feedback and validation errors.
+- **Feedback**: Use `react-hot-toast` (via `ThemedToaster`) for validation errors, and `TransactionOverlay` (driven by `txStore`) for transaction status.
 
 ## Custom Hooks
 
@@ -76,11 +77,10 @@ function MyComponent() {
 
 ## Naming Conventions
 
-- **`*Page`**: Route-level entry points with mode-specific setup (e.g., `ArenaPage`, `SandboxPage`, `VersusPage`)
-- **`*Layout`**: Layout wrappers that handle state/structure (e.g., `GameLayout`)
+- **`*Page`**: Route-level entry points (e.g., `ContractMenuPage`, `ContractArenaPage`, `LeaderboardPage`)
 - **`*Shell`**: The actual UI shell/container (e.g., `GameShell`)
 - **`*Overlay`**: Modal/overlay components (e.g., `BattleOverlay`, `BagOverlay`)
-- **`*Manager`**: Non-visual coordination components (e.g., `VersusManager`)
+- **`*Panel`**: Sections inside a page (e.g., `RankedPanel`, `CardDetailPanel`)
 - **No prefix**: Generic reusable UI components (e.g., `Arena`, `Shop`, `UnitCard`)
 
 ## Component Architecture
@@ -88,31 +88,26 @@ function MyComponent() {
 ```
 GameShell (generic)
 ├── GameTopBar
+├── CardDetailPanel
 ├── Arena
 ├── ManaBar
 ├── Shop
-├── CardDetailPanel
 ├── BattleOverlay
 ├── BagOverlay
+├── KeyboardShortcutsOverlay
 └── RotatePrompt
 
-GameLayout (generic wrapper)
-├── init() via useInitGuard
-├── Loading/error states
-└── GameShell
+ContractMenuPage (/contract)
+├── Connect / account selection
+└── Links: Contract Arena, Leaderboard, Badges
 
-PracticePage (practice route)
-└── GameLayout
+ContractArenaPage (/contract/arena)
+├── Start Game (casual)
+└── RankedPanel (ranked start, personhood bind, new badges)
 
-VersusGame (versus route)
-├── Connection guard
-├── VersusManager
-└── GameLayout
-
-ArenaPage (arena mode)
-├── Connection UI (when not connected)
-├── Session Setup UI (when no chain state)
-└── GameShell (when game is active)
+ContractArenaGamePage (/contract/arena/game)
+├── GameShell (while the game is active)
+└── ContractGameOverScreen (when the run is over)
 ```
 
 ## IMPORTANT: DndContext autoScroll Must Be Disabled
@@ -132,43 +127,12 @@ React's StrictMode (enabled in development) intentionally double-invokes effects
 2. Double-execution leads to memory leaks and corruption
 3. These bugs are hard to debug and may only appear intermittently
 
-**Use the `useInitGuard` hook:**
+**Current guards:**
+- `gameStore.initEngine()` keeps one shared init promise and returns early when the engine exists. Pages call it from an effect only when `engine` is null (`ContractArenaPage.tsx`, `ContractArenaGamePage.tsx`).
+- `contractStore.refreshGameState()` has a reentrancy guard, because a concurrent `init_from_scale` on the shared engine is not safe.
 
-```tsx
-import { useInitGuard } from '../hooks';
+**Rule:** Any new initialization that calls into the WASM engine MUST be idempotent: go through `initEngine()`, or wrap it in `useInitGuard`.
 
-function MyComponent() {
-  const init = useGameStore((state) => state.init);
+## CardDetailPanel
 
-  useInitGuard(() => {
-    init();
-  }, [init]);
-}
-```
-
-**Examples in codebase:**
-- `GameLayout.tsx` - guards `init()` call (used by PracticePage.tsx and VersusGame.tsx)
-- `PracticePage.tsx` - guards initialization
-- `SandboxPage.tsx` - guards `init()` call
-- `ArenaPage.tsx` - guards `init()` and `refresh()` calls
-- `AuthGate.tsx` - guards blockchain connection on mount
-- `LoginPage.tsx` - guards session restore
-- `AchievementsPage.tsx` - guards achievement data fetch
-- `TournamentLobbyPage.tsx` - guards tournament state initialization
-- `SetsPage.tsx`, `SetPage.tsx`, `GhostBrowserPage.tsx` - guard data fetches
-
-**Rule:** Any initialization that calls into the WASM engine MUST use `useInitGuard`.
-
-## CardDetailPanel Modes
-
-The `CardDetailPanel` supports a discriminated union for different modes:
-
-```tsx
-type CardDetailPanelMode =
-  | { type: 'standard' }
-  | { type: 'sandbox' }
-  | { type: 'readOnly' }
-  | { type: 'blockchain'; blockNumber: number | null; accounts: BlockchainAccount[]; ... }
-```
-
-Use the `mode` prop for new code. Legacy props (`isSandbox`, `isReadOnly`, `blockchainMode`) are still supported for backwards compatibility.
+`CardDetailPanel` takes `card`, `isVisible`, an optional `layout` (`'fixed'` or `'contained'`), `onClose`, and the card's rarity weights. It reads card names and the raw-JSON setting from `gameStore`.

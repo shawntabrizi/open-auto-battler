@@ -1,6 +1,6 @@
 # Status System Specification (v1.0)
 
-Status: Implemented
+Status: Removed (commit `fa96046`, "remove status from game"). Kept as design history; the engine has no status system now.
 Owner: Game Design + Core Engine
 Last Updated: 2026-02-27
 

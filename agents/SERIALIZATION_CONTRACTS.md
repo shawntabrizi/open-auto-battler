@@ -27,7 +27,12 @@ This document lists serialization boundaries derived from code usage.
   tracking.
 - `commit` types ↔ `client/src/engine.rs` for turn commitments.
 - `BattleReported` event payload (contract) ↔ `web/src/contract/index.ts`
-  for the post-turn battle replay.
+  (`decodeBattleReported`) for the post-turn battle replay.
+- `LeaderboardEntry`, `BadgeRecord`, `BadgeConfig`, and the
+  `BadgeMinted` / `BadgePending` events (contract) ↔
+  `web/src/contract/codec.ts`. The shared fixtures in
+  `web/src/contract/fixtures/scale.txt` are checked by the contract test
+  `frontend_scale_fixtures` and by `web/src/contract/codec.test.ts`.
 
 ## Update Rules
 - When a Rust view struct changes, update the matching TypeScript type.
@@ -36,4 +41,6 @@ This document lists serialization boundaries derived from code usage.
   and `web/src/components/BattleOverlay.tsx`.
 - When `BattlePhase` variants change, update `web/src/types.ts`.
 - When SCALE-encoded types change, update the contract's encode/decode paths
-  and `web/src/contract/abi.ts`.
+  and the decoders in `web/src/contract/index.ts` and
+  `web/src/contract/codec.ts`. Regenerate the fixtures with
+  `OAB_WRITE_FIXTURES=1` (contract test `frontend_scale_fixtures`).

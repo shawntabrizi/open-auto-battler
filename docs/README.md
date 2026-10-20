@@ -11,22 +11,28 @@ Start here:
 
 For detailed agent and architecture docs, see the [agents/](../agents/) folder.
 
+- [NFT_DESIGN.md](./NFT_DESIGN.md) - Scarcity NFTs, the claim minter, and achievement badges
+- [UI_FLOW.md](./UI_FLOW.md) - Routes and navigation
+- [CARD_DESIGN.md](./CARD_DESIGN.md) - Card design rules
+- [../contract/README.md](../contract/README.md) - Arena contract API, deploy, and personhood
+- [../BETA_RELEASE_PLAN.md](../BETA_RELEASE_PLAN.md) - Roadmap and open items
+
 ## Architecture Highlights
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    oab-core                       │
-│              (Rust - runs everywhere)                   │
+│          oab-battle + oab-game (Rust engine)            │
+│              (no_std - runs everywhere)                 │
 └────────────────────────┬────────────────────────────────┘
                          │
-          ┌──────────────┼──────────────┐
+          ┌──────────────┴──────────────┐
           ▼                             ▼
 ┌─────────────────────┐      ┌─────────────────────┐
-│   WASM (Browser)    │      │  Pallet (Chain)     │
-│   Fast iteration    │      │  Authoritative      │
-│   Local preview     │◄────►│  Verifies actions   │
+│   WASM (Browser)    │      │ PolkaVM contract    │
+│   Shop phase        │      │ @oab/arena          │
+│   Battle replay     │◄────►│ Authoritative       │
 └─────────────────────┘      └─────────────────────┘
                  SCALE encoding
 ```
 
-Key insight: The browser and blockchain run the **exact same** battle logic. SCALE encoding ensures byte-perfect compatibility.
+Key insight: The browser and the contract run the **exact same** battle logic. SCALE encoding ensures byte-perfect compatibility.

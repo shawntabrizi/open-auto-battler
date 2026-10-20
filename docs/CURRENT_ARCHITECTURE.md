@@ -1,124 +1,83 @@
-# Open Auto Battler: Current Architecture (January 30, 2026)
+# Open Auto Battler: Current Architecture (October 20, 2026)
 
-This document describes the current architecture of Open Auto Battler, an auto-battler game where the battle engine runs identically in the browser (via WASM) and on a blockchain (via Substrate pallet).
+This document describes the current architecture of Open Auto Battler, an auto-battler game where the battle engine runs identically in the browser (via WASM) and on chain (via a PolkaVM smart contract on Polkadot Asset Hub).
+
+The Substrate pallet runtime that earlier versions of this document described was removed on 2026-05-05.
 
 ## High-Level Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              USER'S BROWSER                                 │
+│                     POLKADOT HOST (Desktop / Mobile / dot.li)               │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │                         React Frontend                               │   │
 │  │                        (web/src/components)                          │   │
 │  └──────────────────────────────┬──────────────────────────────────────┘   │
-│                                 │                                           │
 │                    ┌────────────┴────────────┐                             │
 │                    ▼                         ▼                             │
 │  ┌─────────────────────────┐   ┌─────────────────────────────────────┐    │
-│  │      gameStore.ts       │   │       arenaStore.ts            │    │
-│  │   (Local Game State)    │   │   (Chain Sync & Transactions)       │    │
-│  └───────────┬─────────────┘   └─────────────────┬───────────────────┘    │
-│              │ Serde/JSON                        │ SCALE                   │
-│              ▼                                   │                         │
+│  │      gameStore.ts       │   │        contractStore.ts             │    │
+│  │   (Local Game State)    │   │  (web/src/contract: calls, signing, │    │
+│  └───────────┬─────────────┘   │   sponsored play, personhood)       │    │
+│              │ Serde/JSON      └─────────────────┬───────────────────┘    │
+│              ▼                                   │ SCALE in ABI bytes      │
 │  ┌─────────────────────────┐                    │                         │
 │  │    WASM Game Engine     │◄───────────────────┘                         │
 │  │     (client crate)      │                                               │
-│  │                         │                                               │
-│  │  ┌───────────────────┐  │                                               │
-│  │  │   oab-core  │  │                                               │
-│  │  │  (shared logic)   │  │                                               │
-│  │  └───────────────────┘  │                                               │
+│  │  oab-battle + oab-game  │                                               │
 │  └─────────────────────────┘                                               │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
-                                      │ SCALE-encoded actions
-                                      │ (via polkadot-api)
+                                      │ host-routed chain client
+                                      │ (@parity/product-sdk-*)
                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           SUBSTRATE BLOCKCHAIN                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                      auto-battle pallet                              │   │
-│  │                                                                      │   │
-│  │  ┌───────────────────┐    ┌────────────────────────────────────┐   │   │
-│  │  │   oab-core  │    │  Storage:                          │   │   │
-│  │  │  (shared logic)   │    │  - ActiveGame<AccountId>           │   │   │
-│  │  │                   │    │  - CardSets<SetId>                 │   │   │
-│  │  └───────────────────┘    └────────────────────────────────────┘   │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
+│                     PASEO ASSET HUB NEXT (pallet-revive)                    │
+│  ┌──────────────────────────────────┐   ┌──────────────────────────────┐   │
+│  │  @oab/arena (contract/)          │   │  @oab/nft-minter             │   │
+│  │  oab-battle + oab-game           │   │  (nft-minter/)               │   │
+│  │  sessions, ghosts, leaderboard,  │   │  claim item selector for     │   │
+│  │  badges                          │   │  collection 29               │   │
+│  └──────────────────────────────────┘   └──────────────────────────────┘   │
+│        │ precompiles: personhood, Scarcity collections                     │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Core Principle: Shared Battle Engine
 
-The key architectural decision is that **the same Rust code** (`oab-core`) executes in both environments:
+The key architectural decision is that **the same Rust code** executes in both environments:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      oab-core                             │
-│                      (core/ crate)                              │
+│              oab-battle (battle/)  +  oab-game (game/)          │
 │                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐ │
-│  │   battle.rs  │  │   state.rs   │  │      commit.rs        │ │
-│  │              │  │              │  │                       │ │
-│  │ - Combat     │  │ - GameState  │  │ - verify_and_apply_   │ │
-│  │ - Abilities  │  │ - CardSet    │  │   turn()              │ │
-│  │ - Events     │  │ - Phases     │  │                       │ │
-│  └──────────────┘  └──────────────┘  └───────────────────────┘ │
-│                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐ │
-│  │   units.rs   │  │  bounded.rs  │  │      types.rs         │ │
-│  │              │  │              │  │                       │ │
-│  │ - Card defs  │  │ - Bounded    │  │ - CommitTurnAction    │ │
-│  │ - Card sets  │  │   types for  │  │ - TurnAction          │ │
-│  │ - Genesis    │  │   on-chain   │  │ - BoardUnit           │ │
-│  └──────────────┘  └──────────────┘  └───────────────────────┘ │
+│  battle.rs   - combat, abilities, events                        │
+│  commit.rs   - verify_and_apply_turn(), shop triggers           │
+│  types.rs    - CommitTurnAction, TurnAction, Ability, ...       │
+│  limits.rs   - battle execution safeguards                      │
+│  bounded.rs  - bounded types for on-chain transport             │
+│  game/state.rs, game/view.rs - game state, UI views             │
 └─────────────────────────────────────────────────────────────────┘
           │                                      │
-          │ compiled to                          │ linked as
+          │ compiled to                          │ linked into
           ▼                                      ▼
 ┌─────────────────────┐              ┌─────────────────────────┐
-│   WASM (browser)    │              │   Native (blockchain)   │
-│   via client crate  │              │   via auto-battle pallet│
+│   WASM (browser)    │              │   PolkaVM (chain)       │
+│   via client crate  │              │   via contract/         │
 └─────────────────────┘              └─────────────────────────┘
 ```
 
-## Two Serialization Strategies
+Card and set data live in `assets/data/` (JSON, validated by `assets/build.rs`). On chain, the admin registers them with `registerCard` / `registerSet`.
 
-The system uses **two different serialization approaches** depending on the context:
+## Two Serialization Strategies
 
 ### Browser ↔ WASM: Serde/JSON
 
-For local gameplay (no blockchain), the React frontend communicates with the WASM engine using **Serde JSON serialization** via `serde-wasm-bindgen`:
+The React frontend communicates with the WASM engine using **Serde JSON serialization** via `serde-wasm-bindgen` (`engine.get_view()`, `engine.play_hand_card()`, ...). The shop phase runs locally, with no chain calls.
 
-```
-┌──────────────────┐     JSON (via serde)     ┌──────────────────┐
-│  React Frontend  │ ◄──────────────────────► │   WASM Engine    │
-│                  │                          │                  │
-│  gameStore.ts    │  engine.get_view()       │  GameEngine      │
-│                  │  engine.play_hand_card() │                  │
-└──────────────────┘                          └──────────────────┘
-```
+### Browser ↔ Contract: SCALE in ABI bytes
 
-This is fast and convenient for local iteration - no blockchain needed.
-
-### Browser ↔ Chain: SCALE
-
-For blockchain communication, we use **SCALE encoding** to ensure byte-perfect compatibility:
-
-```
-┌──────────────────┐    SCALE bytes     ┌──────────────────┐
-│  Browser (WASM)  │ ──────────────────►│  Chain (Pallet)  │
-│                  │                    │                  │
-│  Same Rust types │◄──────────────────│  Same Rust types │
-└──────────────────┘    SCALE bytes     └──────────────────┘
-```
-
-Why SCALE for chain communication?
-- **Byte-perfect**: Same Rust types encode identically in WASM and native
-- **No translation layer**: Actions encoded in browser decode exactly on-chain
-- **Type safety**: SCALE codec is derived from the same Rust structs
-
-### SCALE Flow in Practice
+The contract exposes a Solidity-style ABI (`web/cdm.json`). All game data travels as **SCALE bytes inside ABI `bytes` parameters**, so the same Rust types encode identically in WASM and in the contract.
 
 ```
                         SHOP PHASE (Browser)
@@ -127,511 +86,137 @@ Why SCALE for chain communication?
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  WASM Engine tracks actions in action_log: Vec<TurnAction>  │
-│                                                             │
-│  TurnAction::BurnFromHand { hand_index: 2 }               │
-│  TurnAction::PlayFromHand { hand_index: 0, board_slot: 1 } │
-│  TurnAction::SwapBoard { slot_a: 0, slot_b: 1 }            │
+│  WASM Engine tracks actions in action_log                   │
+│  get_commit_action_scale() -> CommitTurnAction.encode()     │
 └─────────────────────────────────────────────────────────────┘
                               │
-                              │ get_commit_action_scale()
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  CommitTurnAction.encode() -> Vec<u8>                       │
-│                                                             │
-│  Raw SCALE bytes: [0x0c, 0x00, 0x02, 0x01, 0x00, 0x01, ...] │
+│  web/src/contract/index.ts: submitTurn(bytes)               │
+│  signed by a sponsored session key or the product account   │
 └─────────────────────────────────────────────────────────────┘
                               │
-                              │ polkadot-api codec decode
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Frontend decodes to JavaScript object for tx submission    │
-│                                                             │
-│  const action = codecs.tx.AutoBattle.submit_turn.dec(raw);  │
-│  api.tx.AutoBattle.submit_turn(action).signAndSubmit(...);  │
+│  Contract submit_turn                                       │
+│    verify_and_apply_turn(&mut shop_state, &action)          │
+│      - Same function as browser!                            │
+│    select_ghost(set, round, wins, lives) -> opponent        │
+│    resolve_battle(player, ghost, rng(battle_seed))          │
+│    wins++ / lives--, next round or Completed                │
+│    emit BattleReported(result, wins, lives, round,          │
+│                        battle_seed, opponent board)         │
 └─────────────────────────────────────────────────────────────┘
                               │
-                              │ Extrinsic submitted
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Pallet receives BoundedCommitTurnAction<T>                 │
-│                                                             │
-│  verify_and_apply_turn(&mut core_state, &action)           │
-│    - Same function as browser!                              │
-│    - Validates all moves                                    │
-│    - Updates state identically                              │
+│  Browser reads BattleReported from Revive.ContractEmitted   │
+│  engine.resolve_battle_p2p(board, ghost, seed) -> replay    │
+│  getGameState() + getSet() -> engine.init_from_scale(...)   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### State Synchronization (Chain → Browser)
+The contract stores each player's session as a SCALE `ArenaSession`. The WASM engine decodes those bytes as `BoundedGameSession` (`game/src/bounded.rs`), so the two layouts must stay in step.
 
-```
-                    AFTER CHAIN PROCESSES TURN
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Browser fetches raw storage via polkadot-api               │
-│                                                             │
-│  const gameKey = api.query.AutoBattle.ActiveGame.getKey(); │
-│  const rawHex = await client.rawQuery(gameKey);            │
-│  const gameRaw = Binary.fromHex(rawHex).asBytes();         │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              │ Raw SCALE bytes
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│  WASM Engine decodes directly                               │
-│                                                             │
-│  engine.init_from_scale(gameRaw, cardSetRaw);              │
-│                                                             │
-│  Internally:                                                │
-│    BoundedLocalGameState::decode(&mut session_slice)       │
-│    BoundedCardSet::decode(&mut card_set_slice)             │
-│    GameState::reconstruct(card_pool, set_id, local_state)  │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-            Browser state is now identical to chain state
-```
+## Randomness
+
+Game seeds come from block entropy (`block_entropy()` in `contract/src/main.rs`), never from caller input. Each new round derives a fresh seed from the previous one. The browser never chooses a seed for an on-chain game.
 
 ## Bounded vs Unbounded Types
 
-The `oab-core` engine uses **unbounded types** (standard `Vec`, `BTreeMap`, etc.) for maximum flexibility. This allows the engine to support any configuration without compile-time limits.
-
-For **on-chain storage**, the pallet wraps these in **bounded types** with configurable limits:
-
-```rust
-// Core engine uses unbounded types
-pub struct GameState {
-    pub bag: Vec<CardId>,              // Any size
-    pub board: Vec<Option<BoardUnit>>, // Any size
-    pub hand: Vec<CardId>,             // Any size
-}
-
-// Pallet uses bounded versions with runtime-configurable limits
-pub type BoundedGameState<T> = CoreBoundedGameState<
-    <T as Config>::MaxBagSize,      // e.g., 100 cards
-    <T as Config>::MaxBoardSize,    // e.g., 5 slots
-    <T as Config>::MaxAbilities,    // e.g., 4 abilities per card
-    <T as Config>::MaxStringLen,    // e.g., 64 chars
-    <T as Config>::MaxHandActions,  // e.g., 14 actions per turn
->;
-```
-
-This separation means:
-- **WASM engine**: Can run games with any configuration (testing, custom modes)
-- **On-chain**: Has guaranteed bounds for storage and computation limits
-- **Conversion**: `bounded.rs` provides `From` implementations between bounded/unbounded
+The engine uses **unbounded types** (standard `Vec`, `BTreeMap`, etc.). `battle/src/bounded.rs` and `game/src/bounded.rs` (feature `bounded`) provide bounded wrappers and `From` conversions. The WASM bridge uses them to decode on-chain bytes with fixed limits.
 
 ## Battle Execution Limits
 
-The `oab-core` engine has **internal safeguards** to prevent infinite loops and stack overflows during battle resolution:
+The engine has **internal safeguards** to prevent infinite loops during battle resolution:
 
 ```rust
-// From core/src/limits.rs
-pub const MAX_RECURSION_DEPTH: u32 = 50;    // Nested ability triggers
-pub const MAX_SPAWNS_PER_BATTLE: u32 = 100; // Total units spawned
-pub const MAX_TRIGGERS_PER_PHASE: u32 = 200; // Ability activations per phase
-pub const MAX_TRIGGER_DEPTH: u32 = 10;      // Chained trigger depth
-pub const MAX_BATTLE_ROUNDS: u32 = 100;     // Combat rounds before draw
+// From battle/src/limits.rs
+pub const MAX_RECURSION_DEPTH: LimitValue = 50;    // Nested ability triggers
+pub const MAX_SPAWNS_PER_BATTLE: LimitValue = 100; // Total units spawned
+pub const MAX_TRIGGERS_PER_PHASE: LimitValue = 200; // Ability activations per phase
+pub const MAX_TRIGGER_DEPTH: LimitValue = 10;      // Chained trigger depth
+pub const MAX_BATTLE_ROUNDS: LimitValue = 100;     // Combat rounds before draw
 ```
 
-If any limit is exceeded, the offending team **loses the battle**. This prevents:
-- Infinite spawn loops (unit spawns unit spawns unit...)
-- Infinite trigger chains (ability triggers ability triggers...)
-- Battles that never resolve
+If any limit is exceeded, the offending team **loses the battle**.
 
 ## Ability System
 
-The engine features a composable ability system where complex card behaviors emerge from simple building blocks.
+Cards have two ability lanes: `shop_abilities` and `battle_abilities` (see [ABILITY_TWO_ENUM_SPEC.md](./ABILITY_TWO_ENUM_SPEC.md)). Triggers, effects, targets, scopes, and conditions are described in `agents/CORE_ENGINE.md` and defined in `battle/src/types.rs`. Card design rules are in [CARD_DESIGN.md](./CARD_DESIGN.md).
 
-### Ability Structure
+## Game Modes On Chain
 
-```rust
-pub struct Ability {
-    pub trigger: AbilityTrigger,    // When does it fire?
-    pub effect: AbilityEffect,      // What does it do?
-    pub conditions: Vec<Condition>, // Optional requirements (AND logic)
-    pub max_triggers: Option<u32>,  // Limit activations per battle
-}
-```
+| Mode | Entry | Who | Result |
+| ---- | ----- | --- | ------ |
+| Casual | `startGame(set_id)` | any account | none recorded |
+| Ranked | `startRankedGame(set_id)` | personhood Lite or Full, bound alias in OAB's context | `endGame` records the run on the set's top-100 leaderboard (keyed by personhood alias) and mints soulbound badges |
 
-### Building Blocks
-
-**Triggers** - When abilities activate:
-```
-OnStart          - Battle begins
-OnFaint          - This unit dies
-OnAllyFaint      - An ally dies
-OnHurt           - This unit takes damage
-OnSpawn          - This unit enters play
-OnAllySpawn      - An ally enters play
-OnEnemySpawn     - An enemy enters play
-BeforeUnitAttack - Before this unit attacks
-AfterUnitAttack  - After this unit attacks
-BeforeAnyAttack  - Before any unit attacks
-AfterAnyAttack   - After any unit attacks
-```
-
-**Effects** - What abilities do:
-```
-Damage { amount, target }           - Deal damage
-ModifyStats { health, attack, target } - Buff/debuff stats
-SpawnUnit { template_id }           - Create a new unit
-Destroy { target }                  - Instantly kill target
-```
-
-**Targets** - Who is affected:
-```
-Position { scope, index }  - Specific slot (0=front, -1=back)
-Random { scope, count }    - Random units from scope
-All { scope }              - All units in scope
-```
-
-**Scopes** - Which units to consider:
-```
-SelfUnit    - The ability owner
-Allies      - All friendly units
-AlliesOther - All allies except self
-Enemies     - All enemy units
-All         - Everyone
-```
-
-**Conditions** - Optional requirements:
-```
-StatValueCompare { scope, stat, op, value }  - Compare stat to number
-StatStatCompare { source, op, target, stat } - Compare two stats
-UnitCount { scope, op, value }               - Count units in scope
-```
-
-### Example Cards
-
-**Simple: Goblin Grunt** (no abilities)
-```rust
-CardTemplate {
-    template_id: "goblin_grunt",
-    name: "Goblin Grunt",
-    attack: 2, health: 2,
-    play_cost: 2, burn_value: 1,
-    abilities: vec![],  // Pure stats, no tricks
-}
-```
-
-**Basic Ability: Rat Swarm** (spawn on death)
-```rust
-CardTemplate {
-    template_id: "rat_swarm",
-    name: "Rat Swarm",
-    attack: 1, health: 1,
-    play_cost: 1, burn_value: 1,
-    abilities: vec![Ability {
-        trigger: AbilityTrigger::OnFaint,
-        effect: AbilityEffect::SpawnUnit {
-            template_id: String::from("rat_token"),
-        },
-        conditions: vec![],
-        max_triggers: Some(1),  // Only once per battle
-    }],
-}
-```
-
-**Positional: Scaredy Cat** (buffs ally behind)
-```rust
-CardTemplate {
-    template_id: "scaredy_cat",
-    name: "Scaredy Cat",
-    attack: 1, health: 3,
-    play_cost: 1, burn_value: 2,
-    abilities: vec![Ability {
-        trigger: AbilityTrigger::OnStart,
-        effect: AbilityEffect::ModifyStats {
-            health: 2, attack: 0,
-            target: AbilityTarget::Position {
-                scope: TargetScope::SelfUnit,
-                index: 1,  // One slot behind self
-            },
-        },
-        conditions: vec![],
-        max_triggers: None,
-    }],
-}
-```
-
-**Conditional: Nurse Goblin** (heals low-health allies)
-```rust
-CardTemplate {
-    template_id: "nurse_goblin",
-    name: "Nurse Goblin",
-    attack: 1, health: 3,
-    play_cost: 2, burn_value: 2,
-    abilities: vec![Ability {
-        trigger: AbilityTrigger::BeforeAnyAttack,
-        effect: AbilityEffect::ModifyStats {
-            health: 2, attack: 0,
-            target: AbilityTarget::Position {
-                scope: TargetScope::Allies,
-                index: 0,  // Front ally
-            },
-        },
-        conditions: vec![Condition::Is(Matcher::StatValueCompare {
-            scope: TargetScope::Allies,
-            stat: StatType::Health,
-            op: CompareOp::LessThanOrEqual,
-            value: 6,  // Only heals if health <= 6
-        })],
-        max_triggers: None,
-    }],
-}
-```
-
-**AOE: Abyssal Bomber** (damages everyone on death)
-```rust
-CardTemplate {
-    template_id: "abyssal_bomber",
-    name: "Abyssal Bomber",
-    attack: 2, health: 2,
-    play_cost: 4, burn_value: 2,
-    abilities: vec![Ability {
-        trigger: AbilityTrigger::OnFaint,
-        effect: AbilityEffect::Damage {
-            amount: 3,
-            target: AbilityTarget::All {
-                scope: TargetScope::All,  // Hits EVERYONE
-            },
-        },
-        conditions: vec![],
-        max_triggers: None,
-    }],
-}
-```
-
-**Sniper: Archer** (hits back line)
-```rust
-CardTemplate {
-    template_id: "archer",
-    name: "Archer",
-    attack: 1, health: 3,
-    play_cost: 3, burn_value: 2,
-    abilities: vec![Ability {
-        trigger: AbilityTrigger::OnStart,
-        effect: AbilityEffect::Damage {
-            amount: 1,
-            target: AbilityTarget::Position {
-                scope: TargetScope::Enemies,
-                index: -1,  // Back enemy
-            },
-        },
-        conditions: vec![],
-        max_triggers: None,
-    }],
-}
-```
+Default rules (contract `default_config()`): 3 lives, 10 wins to victory, board 5, hand 5, bag 50, mana limit 3 rising to 10. Details: `contract/README.md`.
 
 ## Directory Structure
 
 ```
-auto-battle/
-├── core/                    # Shared battle engine (oab-core)
-│   └── src/
-│       ├── battle.rs        # Combat resolution, abilities, events
-│       ├── bounded.rs       # Bounded types for on-chain storage
-│       ├── commit.rs        # Turn verification: verify_and_apply_turn()
-│       ├── limits.rs        # Battle execution safeguards
-│       ├── state.rs         # GameState, CardSet, phases
-│       ├── types.rs         # CommitTurnAction, TurnAction, Ability, etc.
-│       ├── units.rs         # Card definitions, sets, genesis bags
-│       └── tests/           # Comprehensive test suite
-│
-├── client/                  # WASM bindings for browser
-│   └── src/
-│       ├── engine.rs        # GameEngine with wasm_bindgen exports
-│       ├── lib.rs           # WASM entry point
-│       └── sandbox.rs       # Fuzz testing utilities
-│
-├── blockchain/              # Substrate blockchain
-│   ├── pallets/
-│   │   └── auto-battle/     # Game pallet
-│   │       └── src/lib.rs   # Extrinsics: start_game, submit_turn
-│   └── runtime/             # Runtime configuration
-│
+open-auto-battler/
+├── battle/                  # oab-battle: types, combat, turn validation, limits
+├── game/                    # oab-game: game state, config, views, bounded session
+├── assets/                  # oab-assets: cards/sets/styles/themes JSON (data/)
+├── client/                  # WASM bindings (GameEngine) for the browser
+├── contract/                # PolkaVM arena contract (@oab/arena)
+│   ├── src/main.rs          # contract + native tests
+│   └── tests-native/        # engine game-logic tests (oab-contract-tests)
+├── nft-minter/              # PolkaVM claim minter (@oab/nft-minter)
+├── register-cards/          # dumps cards/sets for registerCard/registerSet
 ├── web/                     # React frontend
+│   ├── cdm.json             # arena address + ABI
+│   ├── scripts/             # register-cards, live checks, on-chain E2E
 │   └── src/
-│       ├── store/
-│       │   ├── gameStore.ts      # Local WASM game state (Serde/JSON)
-│       │   └── arenaStore.ts # Chain sync & transactions (SCALE)
-│       ├── components/
-│       │   ├── ArenaPage.tsx      # On-chain gameplay UI
-│       │   └── SandboxPage.tsx    # Local-only testing
-│       └── wasm/            # Built WASM artifacts
-│
+│       ├── contract/        # arena client, session, personhood, codec
+│       ├── store/           # gameStore, contractStore, ...
+│       ├── components/      # pages and game UI
+│       └── wasm/            # built WASM artifacts
 └── docs/                    # Documentation
-    └── CURRENT_ARCHITECTURE.md
 ```
 
 ## Gameplay Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         COMPLETE TURN CYCLE                             │
-└─────────────────────────────────────────────────────────────────────────┘
-
 1. START GAME (Chain)
-   ┌─────────────────┐
-   │  User clicks    │
-   │  "Start Game"   │
-   └────────┬────────┘
-            │
-            ▼
-   ┌─────────────────┐     ┌─────────────────┐
-   │ api.tx.AutoBattle│────►│ Pallet creates  │
-   │ .start_game()   │     │ GameSession     │
-   └─────────────────┘     │ - Random seed   │
-                           │ - Genesis bag   │
-                           │ - Initial hand  │
-                           └────────┬────────┘
-                                    │
-                                    ▼
-   ┌─────────────────┐     ┌─────────────────┐
-   │ Browser syncs   │◄────│ SCALE bytes     │
-   │ via SCALE       │     │ from storage    │
-   └────────┬────────┘     └─────────────────┘
-            │
-            ▼
-2. SHOP PHASE (Browser - Local)
-   ┌─────────────────────────────────────────┐
-   │  User interacts with WASM engine:       │
-   │  - Burn cards for mana                 │
-   │  - Play units to board                  │
-   │  - Rearrange board positions            │
-   │                                         │
-   │  Engine records each action in log      │
-   └────────────────────┬────────────────────┘
-                        │
-                        ▼
-3. COMMIT TO CHAIN
-   ┌─────────────────┐     ┌─────────────────┐
-   │ endTurn() runs  │     │ Action log      │
-   │ battle locally  │────►│ encoded as      │
-   │ (preview)       │     │ SCALE bytes     │
-   └─────────────────┘     └────────┬────────┘
-                                    │
-                                    ▼
-   ┌─────────────────┐     ┌─────────────────┐
-   │ submitTurnOn-   │────►│ api.tx.AutoBattle│
-   │ Chain()         │     │ .submit_turn()   │
-   └─────────────────┘     └────────┬────────┘
-                                    │
-                                    ▼
-4. CHAIN EXECUTION
-   ┌─────────────────────────────────────────┐
-   │  Pallet executes (same code as WASM):   │
-   │                                         │
-   │  verify_and_apply_turn(&mut state, &act)│
-   │    ↓                                    │
-   │  resolve_battle(player, enemy, &mut rng)│
-   │    ↓                                    │
-   │  Apply result: wins++/lives--           │
-   │    ↓                                    │
-   │  Prepare next round: draw_hand()        │
-   └────────────────────┬────────────────────┘
-                        │
-                        ▼
-5. SYNC & CONTINUE
-   ┌─────────────────┐     ┌─────────────────┐
-   │ refreshGameState│◄────│ Updated state   │
-   │ ()              │     │ via SCALE       │
-   └────────┬────────┘     └─────────────────┘
-            │
-            ▼
-   ┌─────────────────┐
-   │ User sees new   │
-   │ round, new hand │
-   │                 │
-   │ Go to step 2    │
-   └─────────────────┘
+   startGame / startRankedGame  ──► contract creates ArenaSession
+                                    (seed from block entropy, bag, hand)
+2. SYNC
+   getGameState + getSet        ──► engine.init_from_scale(...)
+3. SHOP PHASE (Browser - Local)
+   burn / play / move / undo in the WASM engine; actions logged
+4. COMMIT
+   submitTurn(CommitTurnAction) ──► contract validates, fights a ghost,
+                                    emits BattleReported
+5. REPLAY & CONTINUE
+   resolve_battle_p2p(...) renders the battle; sync; go to step 3
+6. END
+   endGame (after 10 wins or 0 lives) ──► archive ghost; ranked: leaderboard
+                                          + badges. abandonGame forfeits.
 ```
 
 ## Current Limitations & Future Work
 
-### Immediate TODOs
+See [BETA_RELEASE_PLAN.md](../BETA_RELEASE_PLAN.md) for the roadmap and the open items (ranked allowlist, NftPurse, sponsored-play scaling, render layer).
 
-1. **Save User Boards**
-   - Currently: Players only fight AI opponents
-   - Future: Store player boards on-chain after each turn
-   - Storage: `SavedBoards<AccountId, Round> -> Board`
-
-2. **PvP Matchmaking**
-   - Currently: AI opponents generated from round number
-   - Future: Battle against other players' saved boards
-   - Could be async (fight ghost) or sync (real-time matching)
-
-3. **Card Creation & Set Management**
-   - Currently: Card sets hardcoded in `units.rs`
-   - Future: On-chain card set creation via governance
-   - Custom sets, seasonal rotations, community cards
-
-### Technical Debt
-
-4. **Error Recovery**
-   - Currently: Some edge cases can leave UI in inconsistent state
-   - Need: Better error boundaries, transaction retry logic
-
-5. **Weights & Benchmarks**
-   - Currently: `Weight::default()` used everywhere
-   - Need: Proper benchmarking for accurate fee estimation
-
-### Infrastructure
-
-6. **Versus Signaling**
-   - For real-time PvP: WebRTC or similar for board exchange
-   - Chain as fallback/verification layer
-
-7. **Indexer/History**
-   - Currently: No game history persisted
-   - Future: Index completed games, leaderboards, replays
-
-## Quick Start for New Contributors
-
-```bash
-# All-in-one: builds WASM, starts chain, starts web UI
-./start.sh
-
-# Or manually:
-
-# 1. Build the WASM client
-./build-wasm.sh
-
-# 2. Start the blockchain (in one terminal)
-cd blockchain && ./start_chain.sh
-
-# 3. Start the web UI (in another terminal)
-cd web && pnpm dev
-
-# 4. Open browser to http://practicehost:5173
-#    - Log in, then Play > Online Arena (on-chain) or Play > Offline (local)
-#    - Cards > Sandbox for card testing without a game
-```
-
-### Key Files to Understand
+## Key Files to Understand
 
 | File | Purpose |
 |------|---------|
-| `core/src/battle.rs` | Combat resolution - how battles work |
-| `core/src/commit.rs` | Turn verification - how actions are validated |
-| `core/src/types.rs` | Core types including Ability system |
-| `core/src/limits.rs` | Battle execution safeguards |
-| `core/src/state.rs` | Game state structure |
-| `client/src/engine.rs` | WASM bindings - browser ↔ core bridge |
-| `blockchain/pallets/auto-battle/src/lib.rs` | On-chain logic |
-| `web/src/store/arenaStore.ts` | SCALE sync & transactions |
+| `battle/src/battle.rs` | Combat resolution - how battles work |
+| `battle/src/commit.rs` | Turn verification - how actions are validated |
+| `battle/src/types.rs` | Core types including Ability system |
+| `battle/src/limits.rs` | Battle execution safeguards |
+| `game/src/state.rs` | Game state structure |
+| `client/src/engine.rs` | WASM bindings - browser ↔ engine bridge |
+| `contract/src/main.rs` | On-chain logic |
+| `web/src/contract/index.ts` | Contract calls, events, signing |
+| `web/src/store/contractStore.ts` | Contract state and turn submission |
 | `web/src/store/gameStore.ts` | Local state management (Serde/JSON) |
 
-### Running Tests
+## Running Tests
 
-```bash
-# Core engine tests (from project root)
-cargo test -p oab-core
-
-# Pallet tests (from project root)
-cargo test -p pallet-auto-battle
-```
+See `agents/TESTING_GUIDE.md`.
