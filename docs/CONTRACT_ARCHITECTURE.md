@@ -1871,6 +1871,15 @@ built from this branch equals the base commit, but neither equals the chain:
 the deployed content is the M1 build, and M3 changed `oab-protocol` after it.
 Content is not redeployed.
 
+Tests: `cargo test --workspace` 173 passed (243 before; the 70 arena v2
+`tests-native` tests went with arena v2). Contract native tests: arena 15,
+identity 14, content 10, engine-contract 3, nft-minter 7, all pass. Web:
+`npm test` 134 passed (163 before; the removed proxy, personhood, and badge
+decoder tests), lint, format, and build pass. `npm run test:e2e`: 5 passed,
+1 skipped (the gated PGAS spec). `npm run test:perf`: 5 passed; replay at 1x
+CPU 60 FPS, 7 % busy, 13.8 MB peak. Read-only live checks of the kept
+scripts pass: `check-engine`, `publish-content --verify-only`, `wire-arena`.
+
 ## 15. Where the direction meets the tooling
 
 These are places where the agreed direction and the code or tools pull apart.
