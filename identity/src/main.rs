@@ -298,9 +298,14 @@ mod oab_identity {
             );
         }
 
+        /// Deletes the owner's record. An empty `set_storage` value would keep
+        /// the item (and its item deposit) on chain; a zero word deletes it.
         fn clear_owner(&self, owner: &[u8; 20]) {
-            self.host()
-                .set_storage(StorageFlags::empty(), &self.skey(DOM_OWNER, owner), &[]);
+            self.host().set_storage_or_clear(
+                StorageFlags::empty(),
+                &self.skey(DOM_OWNER, owner),
+                &[0u8; 32],
+            );
         }
 
         fn admin(&self) -> [u8; 20] {

@@ -185,6 +185,12 @@ fn a_revoked_key_reverts_and_is_burned_for_good() {
     let revoked = ch.events(SessionRevoked::TOPIC);
     assert_eq!(revoked.len(), 1);
     assert_eq!(revoked[0].0[2], topic_addr(KEY_1));
+    // The owner record is deleted, not left as an empty item: an empty item
+    // keeps its item deposit locked on chain (seen live on Paseo Next).
+    // Left: admin, max ttl, and the burned key's record.
+    let dump = ch.m.storage_dump();
+    assert_eq!(dump.len(), 3);
+    assert!(dump.iter().all(|(_, v)| !v.is_empty()));
     // A burned key can never be registered again, by anyone.
     for owner in [ALICE, BOB] {
         assert!(matches!(
