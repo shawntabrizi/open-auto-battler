@@ -12,13 +12,12 @@ repository.workspace = true
 crate-type = ["cdylib"]
 
 [dependencies]
-oab-battle = { workspace = true, features = ["std", "bounded"] }
-oab-assets = { workspace = true, features = ["std", "bounded"] }
-oab-game = { workspace = true, features = ["std", "bounded"] }
+oab-battle = { workspace = true, features = ["std"] }
+oab-assets = { workspace = true, features = ["std"] }
+oab-game = { workspace = true, features = ["std"] }
 oab-engine = { workspace = true, features = ["std"] }
 oab-protocol = { workspace = true, features = ["std"] }
 parity-scale-codec = { workspace = true, features = ["derive"] }
-bounded-collections = { workspace = true }
 wasm-bindgen = { workspace = true }
 log = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

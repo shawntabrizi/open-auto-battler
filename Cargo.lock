@@ -342,7 +342,6 @@ dependencies = [
 name = "oab-client"
 version = "0.1.0"
 dependencies = [
- "bounded-collections",
  "console_error_panic_hook",
  "console_log",
  "getrandom",
