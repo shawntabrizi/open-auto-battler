@@ -1334,6 +1334,19 @@ The design above picks one answer for each. Shawn should confirm.
 
 ## 16. Open questions
 
+**Decided by Shawn (2026-10-20):**
+
+- **Q1:** house ghosts. Each set in Content publishes designer-made ghost
+  boards; a new mode deployment seeds its pools from them.
+- **Q2:** OAB's own session registry (in Identity), with expiry and burned
+  keys.
+- **Q3:** revert. A casual call fails when Identity fails; the contract never
+  guesses the player.
+- **Q11:** set ids are auto-assigned by Content.
+
+Q4–Q10 and Q13–Q14 are on hold with ranked play and Records. Q12 is decided
+after the M2 measurement.
+
 - **Q1. Ghost pools after an engine upgrade.** A new mode deployment starts
   with empty pools. Options: (a) accept it; (b) on a bracket miss, read the
   previous deployment's bracket through a view (adds a sub-call only on a
