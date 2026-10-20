@@ -22,8 +22,9 @@ const OAB_CONTEXT = '0x51dccb5fc990cce21a58dcecc3334babcea01f0f034567f0d64ca4c42
 const SETS = [0, 1, 2];
 const COLLECTIBLES = '0x0000001d00000000000000000000000005200000';
 const SLOTS = ['board_bg', 'hand_bg', 'card_style', 'avatar', 'card_art', 'theme'];
-// The deployer account's H160 (any address works; most hold no badges).
+// The deployer account: mapped, no personhood binding.
 const SAMPLE_PLAYER = '0x704eAd03A0a7c8b06c6EBbde97934AdC24F9f5f7';
+const SAMPLE_PLAYER_SS58 = '5CUbpNYAePqCdFkS6BWqVF4RDaAcsueW923DrJTnDUXHst7v';
 
 const cdm = JSON.parse(readFileSync(new URL('../cdm.json', import.meta.url)));
 const ADDRESS = cdm.contracts['@oab/arena'].address;
@@ -89,6 +90,16 @@ async function main() {
   const badges = decodeBadges(await q(arena, 'getBadges', SAMPLE_PLAYER));
   check(Array.isArray(badges), 'getBadges did not decode');
   log(`getBadges(${SAMPLE_PLAYER}):`, json(badges));
+
+  // The ineligible path the app explains: no AliasAccounts binding, so the
+  // ranked start dry-run (as the player) returns 0. Dry-run only.
+  const binding = await client
+    .getUnsafeApi()
+    .query.AliasAccounts.AccountToAlias.getValue(SAMPLE_PLAYER_SS58, { at: 'best' });
+  const ranked = await arena.startRankedGame.query(0, { origin: SAMPLE_PLAYER_SS58 });
+  check(binding === undefined, `sample player unexpectedly bound: ${json(binding)}`);
+  check(ranked.success && ranked.value === 0n, `startRankedGame dry-run: ${json(ranked)}`);
+  log('unbound account: AccountToAlias none, startRankedGame dry-run returns 0');
 
   const collection = createContractFromClient(client, paseo_asset_hub, COLLECTIBLES, ITEM_METADATA_ABI, {
     defaultOrigin: QUERY_FALLBACK_ORIGIN,
