@@ -178,9 +178,9 @@ context = blake2b_256("product/" ++ "oab-arena.paseo" ++ "/" ++ suffix)
 `oab-arena.paseo` is the dotNS product id on Paseo (`oab-arena.dot` on
 Polkadot, so mainnet needs a new value). Index 0 is the product account the
 web app signs with (`derivationIndex: 0` in `web/src/contract/index.ts`), so a
-player binds that account as their alias account in this context. The
-derivation reproduces the host test vector for `peopl.paseo`
-(`b6c21225…7ee3`).
+player binds that account as their alias account in this context. The value
+matches the product-sdk `productContext` for `oab-arena.paseo` and the
+context stored in the live arena (`getPersonhoodContext`).
 
 ## Achievement badges
 
