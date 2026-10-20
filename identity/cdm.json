@@ -1,0 +1,352 @@
+{
+  "dependencies": {
+    "@oab/identity": "latest"
+  },
+  "contracts": {
+    "@oab/identity": {
+      "version": 2,
+      "address": "0x7b41368859B67BB5c88500612eDe21AA6b837FBA",
+      "abi": [
+        {
+          "type": "constructor",
+          "inputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "registerSession",
+          "inputs": [
+            {
+              "name": "session",
+              "type": "address"
+            },
+            {
+              "name": "expires_at",
+              "type": "uint64"
+            }
+          ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "acceptSession",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "revokeSession",
+          "inputs": [],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "resolve",
+          "inputs": [
+            {
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "rankedIdentity",
+          "inputs": [
+            {
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "tuple",
+              "components": [
+                {
+                  "name": "",
+                  "type": "address"
+                },
+                {
+                  "name": "",
+                  "type": "uint8"
+                },
+                {
+                  "name": "",
+                  "type": "bytes32"
+                }
+              ]
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "sessionOf",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "address"
+            },
+            {
+              "name": "",
+              "type": "uint64"
+            },
+            {
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "keyOf",
+          "inputs": [
+            {
+              "name": "session",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "",
+              "type": "address"
+            },
+            {
+              "name": "",
+              "type": "uint64"
+            },
+            {
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "maxTtl",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "uint64"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "setMaxTtl",
+          "inputs": [
+            {
+              "name": "max_ttl",
+              "type": "uint64"
+            }
+          ],
+          "outputs": [],
+          "stateMutability": "nonpayable"
+        },
+        {
+          "type": "function",
+          "name": "adminAddress",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view"
+        },
+        {
+          "type": "error",
+          "name": "InvalidSessionKey",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "SessionKeyInUse",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "SessionKeyBurned",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "SessionKeyCannotOwn",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "OwnerCannotBeSessionKey",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "InvalidExpiry",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "TtlTooLong",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NoOffer",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "OfferExpired",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NoActiveSession",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "InvalidSession",
+          "inputs": [
+            {
+              "name": "",
+              "type": "address"
+            }
+          ]
+        },
+        {
+          "type": "error",
+          "name": "NotAdmin",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "SessionOffered",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "session",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "expires_at",
+              "type": "uint64",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "SessionRegistered",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "session",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "expires_at",
+              "type": "uint64",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "SessionRevoked",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "session",
+              "type": "address",
+              "indexed": true
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "event",
+          "name": "MaxTtlSet",
+          "inputs": [
+            {
+              "name": "max_ttl",
+              "type": "uint64",
+              "indexed": false
+            }
+          ],
+          "anonymous": false
+        },
+        {
+          "type": "error",
+          "name": "InvalidCalldata",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "CalldataTooLarge",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NoSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "UnknownSelector",
+          "inputs": []
+        },
+        {
+          "type": "error",
+          "name": "NonPayableValueReceived",
+          "inputs": []
+        }
+      ],
+      "metadataCid": "bafk2bzacebnfrdmbb5bm3ce3e7ujprsnch45uj5jtjbgt2s4x4hmots3s4tse"
+    }
+  },
+  "registry": "0xc1a73a4f93fde65b1cb1680baead248073566cb0"
+}

@@ -15,6 +15,7 @@ exclude = [
     "engine/arena-oracle",
     "engine-contract",
     "content",
+    "identity",
     "nft-minter",
     "register-cards",
 ]
