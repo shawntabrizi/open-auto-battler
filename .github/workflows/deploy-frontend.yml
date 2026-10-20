@@ -1,13 +1,14 @@
 name: Deploy Frontend
 
+# Builds on every push and PR; deploys only from master to oab-arena.paseo
+# (Paseo Next, served at https://oab-arena.paseo.li). Needs the DOTNS_MNEMONIC
+# repository secret: the owner phrase of oab-arena.paseo. No dev fallback.
 on:
   push:
     branches:
-      - production
       - master
   pull_request:
     branches:
-      - production
       - master
   workflow_dispatch:
     inputs:
@@ -20,7 +21,6 @@ permissions:
   contents: read
   statuses: write
   id-token: write
-  pull-requests: write
 
 concurrency:
   group: deploy-frontend-${{ github.event.pull_request.number || github.ref }}
@@ -103,19 +103,25 @@ jobs:
 
   deploy:
     needs: [check, build]
-    if: needs.check.outputs.cache-hit != 'true' || inputs.skip-cache
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master' && (needs.check.outputs.cache-hit != 'true' || inputs.skip-cache)
     name: Deploy
-    uses: paritytech/dotns-sdk/.github/workflows/deploy.yml@main
+    # Pinned to a release tag; keep bulletin-deploy-version in step with it and
+    # with the `deploy` script in web/package.json.
+    uses: paritytech/bulletin-deploy/.github/workflows/deploy.yml@v0.22.0
     with:
-      basename: ${{ github.ref == 'refs/heads/production' && 'open-auto-battler00' || 'dev-open-auto-battler00' }}
-      mode: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
-      subname-format: pr-number
+      dotns-domain: oab-arena
+      env: paseo-next-v2
       artifact-name: frontend-build
-      register-base: true
+      # The CLI walks up from here to find web/bulletin-deploy.config.ts, whose
+      # app executable is ./dist, so the manifest reuses the deployed CID.
+      build-dir: web/dist
+      bulletin-deploy-version: 0.22.0
+      js-merkle: true
+      gateway: paseo.li
       skip-cache: ${{ inputs.skip-cache || false }}
       max-retries: 3
     secrets:
-      dotns-mnemonic: ${{ secrets.DOTNS_MNEMONIC || 'bottom drive obey lake curtain smoke basket hold race lonely fit walk' }}
+      mnemonic: ${{ secrets.DOTNS_MNEMONIC }}
 
   post-deploy:
     needs: [check, deploy]
