@@ -82,14 +82,18 @@ function attachGuard(page: Page, guard: Guard): void {
 
 /** Build a `test` bound to one host configuration. */
 export function hostTest(opts: HostOptions = {}) {
-  const { testHost } = createTestHostFixture({
-    productUrl: PRODUCT_URL,
-    productId: PRODUCT_ID,
-    accounts: opts.accounts ?? ['bob'],
-    networks: [assetHubNext()],
-    productAccounts: opts.productSubtree ? { [PRODUCT_ID]: opts.productSubtree } : undefined,
-    behaviors: opts.behaviors ?? DEFAULT_BEHAVIORS,
-  });
+  // Built per test, not at import: the genesis is only known after global setup.
+  const testHost = async ({ page }: { page: Page }, use: (host: TestHost) => Promise<void>) => {
+    const fixture = createTestHostFixture({
+      productUrl: PRODUCT_URL,
+      productId: PRODUCT_ID,
+      accounts: opts.accounts ?? ['bob'],
+      networks: [assetHubNext()],
+      productAccounts: opts.productSubtree ? { [PRODUCT_ID]: opts.productSubtree } : undefined,
+      behaviors: opts.behaviors ?? DEFAULT_BEHAVIORS,
+    });
+    await fixture.testHost({ page }, use);
+  };
 
   return base.extend<{ guard: Guard; testHost: TestHost }>({
     guard: [

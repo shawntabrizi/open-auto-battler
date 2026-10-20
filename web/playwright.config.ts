@@ -27,10 +27,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
-  projects: [
-    { name: 'e2e', testMatch: /specs\/.*\.spec\.ts/ },
-    { name: 'perf', testMatch: /perf\/.*\.perf\.ts/, timeout: 20 * 60_000 },
-  ],
+  projects: [{ name: 'e2e', testMatch: /specs\/.*\.e2e\.ts/ }],
   webServer: {
     command: process.env.OAB_E2E_SKIP_BUILD
       ? `npx vite preview --port ${PORT} --strictPort`

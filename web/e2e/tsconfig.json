@@ -1,0 +1,8 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["./**/*.ts", "./**/*.tsx", "../playwright.config.ts", "../playwright.perf.config.ts", "../src/vite-env.d.ts"]
+}
