@@ -9,14 +9,12 @@ This document is derived from `web/src/*`.
   - `/contract` → `ContractMenuPage`
   - `/contract/arena` → `ContractArenaPage`
   - `/contract/arena/game` → `ContractArenaGamePage`
-  - `/contract/leaderboard` → `LeaderboardPage`
-  - `/contract/badges` → `BadgesPage`
   - `/customize`, `/customize/:category` — cosmetic customization
   - `/settings` — settings panel
 
 ## State Management
 - `web/src/store/gameStore.ts` owns the `GameEngine` lifecycle and core UI state (the WASM engine used for local battle replay).
-- `web/src/store/contractStore.ts` owns the contract connection, submits arena turns, and holds the ranked, personhood, leaderboard, badge, and sponsored-play state.
+- `web/src/store/contractStore.ts` owns the contract connection, submits arena turns, and holds the sponsored-play (session) state.
 - `web/src/store/customizationStore.ts` manages cosmetic customization state.
 - `web/src/store/themeStore.ts` manages the active visual theme.
 - `web/src/store/menuStore.ts` manages the hamburger menu open/close state.
@@ -32,19 +30,22 @@ This document is derived from `web/src/*`.
   signs via `@parity/product-sdk-signer`'s `SignerManager` (`HostProvider`
   with the `oab-arena.paseo` product account inside a Polkadot host,
   `DevProvider` dev accounts standalone).
-- The address and ABI come from the inline manifest in `web/cdm.json`
-  (written by `cdm install`). There is no runtime registry lookup and no
+- The addresses and ABIs of `@oab/arena`, `@oab/identity`, and
+  `@oab/content` come from the inline manifest in `web/cdm.json` (written by
+  `cdm install`, versions pinned). There is no runtime registry lookup and no
   generated bindings module; `index.ts` keeps a small typed `ArenaContract`
   view.
-- `web/src/contract/session.ts` — sponsored play: PGAS allowance plus a proxy
-  session key, with a fallback to normal signing.
-- `web/src/contract/personhood.ts` — ranked eligibility and the personhood
-  alias bind (`AliasAccounts.set_alias_account` with a ring-VRF proof from the
-  host).
+- `web/src/contract/registrySession.ts` — sponsored play: an `@oab/identity`
+  registry session key, funded in PGAS (pipeline V1) or else PAS (V0).
+- `web/src/contract/session.ts` — the chain-free sponsor policy: when to set
+  up a session, and the fallback to normal signing.
+- `web/src/contract/v1.ts` — options for v5 general transactions on
+  extension pipeline V1.
 - `web/src/contract/arenaFlows.ts` — chain-free rules of the arena calls (gas
-  headroom, ranked gate, badge claim), unit-tested.
-- `web/src/contract/codec.ts` — SCALE decoders for leaderboard and badge
-  views and events.
+  headroom), unit-tested.
+- `web/src/contract/codec.ts` — SCALE decoders for `ModeGame` and
+  `BattleReport`.
+- `web/src/contract/errors.ts` — typed arena reverts and their messages.
 - `BattleReported` events are extracted from the substrate `Revive.ContractEmitted`
   events surfaced in `TxResult.events`.
 
@@ -96,9 +97,6 @@ This document is derived from `web/src/*`.
 - `ContractArenaPage.tsx` — set selection.
 - `ContractArenaGamePage.tsx` — active arena game.
 - `ContractGameOverScreen.tsx` — wraps `GameOverScreen` for the contract path.
-- `LeaderboardPage.tsx` — per-set ranked leaderboard, with the player's rank and best run.
-- `BadgesPage.tsx` — the player's achievement badges, with a claim action for pending ones.
-- `RankedPanel.tsx`, `BadgeChip.tsx` — ranked entry (start, personhood bind) and badge display.
 - `CustomizePage.tsx`, `CustomizeCategoryPage.tsx` — cosmetic customization.
 - `SettingsPage.tsx` — display/battle settings.
 

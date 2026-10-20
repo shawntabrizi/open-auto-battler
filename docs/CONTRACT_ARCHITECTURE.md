@@ -1,20 +1,27 @@
 # OAB Contract Architecture (layered contracts)
 
-Status: **design; M1, M2, and M3 (casual Arena) implemented** (engine
-crate, `@oab/engine`, `@oab/content`, `@oab/identity`, `@oab/arena` version
-4, deployed on Paseo Next 2026-10-20; see
-[M1 status](#m1-status-2026-10-20), [M2 status](#m2-status-2026-10-20), and
-[M3 status](#m3-status-2026-10-20)).
+Status: **M1, M2, M3 (casual Arena), M5, and M6 done** (engine crate,
+`@oab/engine`, `@oab/content`, `@oab/identity`, `@oab/arena` CDM version 4
+on Paseo Next; the frontend on arena v4 with registry sessions; arena v2
+code removed). Ranked, personhood, and M4 Records are on hold. See the
+status notes in [section 14](#14-build-plan).
 Written 2026-10-20 against branch `update/oct-2026` at `6569b91`. Shawn
 approved the direction (five contracts). This document makes it concrete.
 
 All statements about current code cite a file. The code is the truth. If this
 document and the code disagree, the code wins and this document is stale.
 
+**Removed files.** M6 removed arena v2 (`contract/`), its tools, the proxy
+sessions, the ranked and badge client code, and the milestone scripts
+(`scripts/m1` to `scripts/m5`). Citations of those files (for example
+`contract/src/main.rs` line numbers, `BETA_RELEASE_PLAN.md`,
+`web/src/contract/personhood.ts`) refer to commit `c56d07f` in git history.
+
 Tool versions checked on 2026-10-20:
 
 - `cargo-pvm-contract`: `origin/main` is `d5991131`, the same rev the arena
-  pins (`contract/Cargo.toml`). No newer SDK features exist on `main`.
+  pinned (`contract/Cargo.toml`; now `arena/Cargo.toml`). No newer SDK
+  features exist on `main`.
 - `contract-dependency-manager` (CDM): `origin/main` is `5ecde00`.
 - Registry-session reference: `gaming-retreat-2026` `origin/main`,
   `.claude/skills/session-autosigning/references/`.
@@ -24,7 +31,7 @@ Tool versions checked on 2026-10-20:
 
 1. [Summary](#1-summary)
 2. [Goals and non-goals](#2-goals-and-non-goals)
-3. [The current system](#3-the-current-system)
+3. [The system before the split (arena v2)](#3-the-system-before-the-split-arena-v2)
 4. [The five contracts](#4-the-five-contracts)
 5. [Shared crates](#5-shared-crates)
 6. [Who may call what](#6-who-may-call-what)
@@ -43,7 +50,7 @@ Tool versions checked on 2026-10-20:
 
 ## 1. Summary
 
-Today one contract (`@oab/arena` v2, `contract/src/main.rs`) does everything:
+Before M3, one contract (`@oab/arena` v2, `contract/src/main.rs`) did everything:
 card storage, casual games, ranked games, ghost pools, the personhood gate,
 leaderboards, and badge NFTs. We split it into five layers:
 
@@ -118,30 +125,17 @@ The key rules:
   (section 13 lists what is lost).
 - No new render layer or frontend redesign.
 
-## 3. The current system
+## 3. The system before the split (arena v2)
+
+This section records arena v2 as it was at `c56d07f`. It explains the
+design choices. The engine entry points in section 3.2 still exist (line
+numbers as of `6569b91`).
 
 ### 3.1 Arena v2 (`contract/src/main.rs`)
 
 One `pvm-contract-sdk` contract, 2 405 lines with tests. Live at
 `0xA61f803AeEBFfF2c7568157756932D3944EDCa28`, CDM `@oab/arena` version 2
 (`contract/cdm.json`). Build blob about 112 KB (`contract/README.md`).
-
-| Concern | Where in `contract/src/main.rs` |
-| --- | --- |
-| Game config (copy of `oab_game::GameConfig`) | `GameConfig`, `default_config` lines 29–58 |
-| Game state | `ArenaSession` lines 60–74 (the `LocalGameState` fields plus `set_id`) |
-| Storage model | SCALE blobs at `keccak256(domain ++ key)`, domains `DOM_*` lines 265–282, helpers lines 409–451 |
-| Cards and sets | `register_card` 797–811, `register_set` 814–828, admin only, no overwrite |
-| Card pool per call | `build_card_pool_from_storage` 738–746: one storage read **per card** |
-| Seeds | `block_entropy` 764–786, `derive_seed` 748–756 (keyed by `msg.sender`) |
-| Start | `start_session` 859–899 (bag, hand draw, shop-start triggers) |
-| Turn | `submit_turn` 904–1079: verify, pick ghost, push ghost, battle, deltas, next shop, event |
-| Ghost pools | `push_ghost` 686–704, `select_ghost` 706–736, 10 boards per bracket (line 77) |
-| Bracket key | `bracket_bytes(set, round, wins, lives)` 290–298: **no casual/ranked flag** |
-| Personhood | `abi_import!` of `IPersonhood` 96–109, `personhood_status` 503–513 (fails closed), `ranked_identity` 517–525 |
-| Leaderboard | `LeaderboardEntry` 113–121, `insert_ranked` 133–150, top 100 per set, `record_ranked_result` 547–569 |
-| Badges | `BadgeConfig`/`BadgeRecord` 214–228, `badge_purse` 587–601, `mint_badge` 606–625, `award_badges` 649–675, `init_achievements` 1140–1180, `claim_pending_badges` 1202–1221 |
-| Battle event | `BATTLE_REPORTED_TOPIC` 285, packed bytes emitted at 1061–1076 |
 
 Facts that shape the design:
 
@@ -156,7 +150,7 @@ Facts that shape the design:
 - **`make_shop_state` hard-codes `set_id: 0`** (line 358). The engine does not
   read it today, but it is wrong data.
 - **The arena has no withdraw** and no Scarcity owner handover. Collection 30
-  cannot leave arena v2 (`docs/NFT_DESIGN.md` §8 item 4, §9).
+  cannot leave arena v2 (`docs/NFT_DESIGN.md` §9).
 - **Seeds use `msg.sender`.** With registry sessions, `msg.sender` is the
   session key. The new modes must seed from the resolved player.
 
@@ -197,28 +191,12 @@ Numbers measured on 2026-10-20 (SCALE, from `oab-assets`):
 
 All 111 cards are 3 317 bytes. The largest card is 48 bytes.
 
-### 3.3 The client
+### 3.3 The client (before M5)
 
-- `web/src/contract/index.ts` binds the arena from the inline address and ABI
-  in `web/cdm.json` (lines 268–273, 439–446). It does no registry lookup at
-  run time.
-- `getGameState` appends a hard-coded `GameConfig` (`[3,10,3,10,0,5,5,50]`) to
-  the `ArenaSession` bytes, because the WASM engine expects a `GameSession`
-  (`index.ts` lines 581–586).
-- Replay: `submitTurnOnChain` captures the **local** board before it submits
-  (`web/src/store/contractStore.ts`), reads `battleSeed` and the opponent board
-  from `BattleReported` (`index.ts` 832–885), then calls
-  `engine.resolve_battle_p2p(playerBoard, opponentBoard, seed)`
-  (`client/src/engine.rs:765`). That function rebuilds combat units itself. It
-  copies the contract code (`contract/src/main.rs` 933–950, 723–733). The
-  player board is not in the event, so a third party cannot replay a battle
-  from chain data alone.
-- Sponsored play uses **proxy sessions** (`web/src/contract/session.ts`).
-  `Proxy.proxy` is outside the `ChargePGAS` filter, so every call pays a fee in
-  PGAS through the thin DOT↔PGAS pool (`session.ts` header,
-  `BETA_RELEASE_PLAN.md` "Sponsored-play scale").
-- Personhood: the product account at derivation index 0 binds to an alias in
-  OAB's context (`web/src/contract/personhood.ts`).
+The client bound arena v2 from `web/cdm.json`, rebuilt each battle with its
+own copy of the arena code (`resolve_battle_p2p`, which clamped enemy health
+differently), and used proxy sessions that paid every fee in PGAS through the
+thin DOT↔PGAS pool. M5 replaced all three (section 11).
 
 ## 4. The five contracts
 
@@ -841,7 +819,7 @@ amount)`.
    (`contract/src/main.rs` 133–150).
 5. Mode has `BADGES` → evaluate `RULES`. At most one record per
    `(alias, badge, set)`. This makes badges **per person**, not per account
-   (resolves `docs/NFT_DESIGN.md` §8 item 7 in the direction of the alias;
+   (resolves the arena v2 per-account choice in the direction of the alias;
    see Q4).
 6. Mint each new badge. A failed mint leaves `token: None` and emits
    `BadgePending`. Rule 4 is already stored, so a mint failure never loses the
@@ -1244,18 +1222,12 @@ lookups. `ContractManager.getContract("@oab/...")` from
 `@parity/product-sdk-contracts` is the typed path (CDM README "Using
 Contracts From A Triangle App").
 
-Client changes:
-
-- `session.ts`: proxy sessions → registry sessions (flow 7.4). The
-  `Sponsor` policy object stays; `ProxySession` becomes a `RegistrySession`.
-  On first run after the switch, offer `Proxy.remove_proxies` to return the
-  proxy deposit.
-- Dry-runs use the session key as origin, so `resolve` sees the same caller as
-  the real call.
-- Views pass the player address explicitly.
-- `codec.ts` decodes `ModeGame`, `BattleReport`, `RunFact`, and the Records
-  views from `oab-protocol` fixtures.
-- Own purses for badges and cosmetics (section 4.3).
+Client as built (M5, PAS sessions, M6): registry sessions only
+(`web/src/contract/registrySession.ts`; the `Sponsor` policy in
+`session.ts`), views pass the player address, and `codec.ts` decodes
+`ModeGame` and `BattleReport` from fixtures captured on chain. Game-call
+dry-runs use the player as origin (M5 deviation 2). The proxy-removal offer
+was not built (M6). `RunFact`, the Records views, and own purses wait for M4.
 
 ## 12. Governance
 
@@ -1283,26 +1255,20 @@ Every admin setter emits an event, so changes are visible on chain.
 
 ## 13. Migration from arena v2
 
-Testnet only. A state reset is accepted. Arena v2 stays deployed (a contract
-cannot be removed). The frontend stops pointing at it.
+Done (M6). Testnet only; no state moved. Arena v2
+(`0xA61f803AeEBFfF2c7568157756932D3944EDCa28`) stays on chain, unused. The
+frontend and the repository no longer reference it.
 
-**What is lost or stranded:**
+Stranded or lost with arena v2: games in progress, ghost pools, leaderboards
+and best runs (likely empty: ranked play was blocked by the personhood bind),
+badge records, collection 30 (no owner handover; existing badges stay
+valid), the PAS on the arena account (no withdraw), and players' proxy
+sessions (still valid on chain, unused; a player can remove them with
+`Proxy.remove_proxies`).
 
-| Item | Where in v2 | Fate |
-| --- | --- | --- |
-| Games in progress | `DOM_SESSION` | Not moved. Players can finish them only with an old frontend. Proposal: announce, then switch. |
-| Ghost pools | `DOM_GHOST` | Lost. v2 has no view for them. They could be read off chain through raw storage and seeded by an admin (Q6). |
-| Leaderboards, best runs | `DOM_LEADERBOARD`, `DOM_BEST_RUN` | Lost. Readable through `getLeaderboard`. Likely empty: ranked play is blocked by the bind (`BETA_RELEASE_PLAN.md`). |
-| Badge records | `DOM_BADGES` | Lost. Likely empty for the same reason. |
-| Collection 30 | owned by v2 | Stranded. v2 has no owner handover. Existing badges stay valid in it. Records creates a new collection. |
-| Arena v2 PAS balance | arena account | Stranded. v2 has no withdraw (`docs/NFT_DESIGN.md` §8 item 4). |
-| Proxy sessions | `Proxy` pallet, per player | Still valid but unused. The client offers to remove them. |
-
-**Kept:** personhood bindings (pallet `AliasAccounts`, not contract state),
-the personhood context value (product-scoped, unchanged while the product id
-is `oab-arena.paseo`), collection 29 and `@oab/nft-minter`, card and set data
-(re-published from `assets/` into Content; set ids are auto-assigned in order,
-so 0, 1, 2 stay the same if published in order).
+Kept: personhood bindings (pallet `AliasAccounts`), the personhood context
+value (product-scoped), collection 29 and `@oab/nft-minter`, and the card and
+set data (re-published into Content with set ids 0, 1, 2).
 
 ## 14. Build plan
 
@@ -1395,17 +1361,13 @@ Deviations from the design:
 
 Open problems found in M1:
 
-- **Arena v2 leaderboard limit (from source, not tested live).**
-  `LeaderboardEntry` is 45 bytes SCALE; a board of 10 entries is 451 bytes,
-  above the 416-byte item limit. So the write for the 10th distinct ranked
-  finisher on a set should fail, and with it that `endGame`. Ranked play is
-  blocked today, so nobody has hit it. Records (M4) must page boards.
+- **Leaderboard pages.** An arena v2 board of 10 entries (451 bytes) was
+  above the 416-byte item limit. Records (M4) must page boards.
 - **Mode `SET_CACHE` and Records `BOARD`** cannot be single items (sections
   4.4, 4.5). Use 416-byte pages.
-- **Client replay differs from the chain** for a ghost unit with negative
-  health after buffs: `client/src/engine.rs` (`resolve_battle_p2p`) clamps
-  enemy health at 0, the arena and the engine do not. Moving the client to
-  `oab_engine::replay_battle` fixes it.
+- **Client replay differed from the chain** for a ghost unit with negative
+  health after buffs. Fixed in M5: the client replays with
+  `oab_engine::replay_battle`.
 - **A `CardSet` above 416 bytes** (about 138 cards) cannot be published.
   Larger sets need paging in Content.
 - **House ghosts are rule-made**, not hand-designed
@@ -1434,9 +1396,9 @@ cdm `paseo` account (H160 `0x704ead03a0a7c8b06c6ebbde97934adc24f9f5f7`).
 | Item | Value |
 | --- | --- |
 | `@oab/identity` (`identity/`) | `0x7b41368859B67BB5c88500612eDe21AA6b837FBA`, CDM version 2, block 2056840, 7 176-byte blob, metadata `bafk2bzacebnfrdmbb5bm3ce3e7ujprsnch45uj5jtjbgt2s4x4hmots3s4tse` |
-| Probe (`identity/probe`, test only, not in CDM) | `0x60ce23e6c109ef34b961c52af3bc4e15ac573479`, block 2056854 |
+| Probe (`identity/probe`, test only, not in CDM; source removed in M6) | `0x60ce23e6c109ef34b961c52af3bc4e15ac573479`, block 2056854 |
 | Do not use | CDM version 0 `0x954697369c81f5bfbf2a7c78d10a329671007b46` (block 2055508; its Bulletin metadata upload timed out, so `cdm i` cannot fetch it) and version 1 `0x13Aa48532372031ab58047B1a0cA8c956c5fCc03` (block 2056585; revoke left the owner record, see deviation 4) |
-| Scripts | `scripts/m2/deploy-probe.mjs`, `scripts/m2/check-identity.mjs` (polkadot-api 3.2.1) |
+| Scripts | `scripts/m2/deploy-probe.mjs`, `scripts/m2/check-identity.mjs` (polkadot-api 3.2.1; removed in M6, the web E2E spec `sponsored` is the live check now) |
 
 Checks that passed:
 
@@ -1602,7 +1564,7 @@ publish a new version of it. //Alice played the live games.
 | Cached sets | 0, 1, 2 (blocks 2057799–2057805): 5, 6, 6 pages; 10 house rounds each; hashes equal Content `setHash` |
 | Do not use | CDM version 3 `0xf65d6819811d71415f78348302a02261322296ef` (same code; its Bulletin metadata upload timed out, so `cdm i` cannot fetch it; never wired) |
 | `oab-protocol` | new `ModeGame`, `BattleReport` |
-| Scripts | `scripts/m3/wire-arena.mjs`, `scripts/m3/play-arena.mjs`, `scripts/m3/mutate-arena.py`; evidence in `scripts/m3/evidence/` |
+| Scripts | `scripts/m3/wire-arena.mjs` (now `scripts/wire-arena.mjs`), `scripts/m3/play-arena.mjs`, `scripts/m3/mutate-arena.py`; evidence in `scripts/m3/evidence/` (removed in M6; git history) |
 
 Checks that passed:
 
@@ -1714,9 +1676,6 @@ Open problems found in M3:
   native fee.
 - **Host signing on V1 and the web client** are still M5 work (M2 open
   problems).
-- `web/cdm.json` pins `@oab/arena` version 2 with dependency `latest`; a
-  `cdm i` in `web/` now installs version 4 and breaks the current frontend.
-  Do not run it before M5.
 - Arena v2 dry-run used an empty action and Alice's v2 game; the M3 turns
   played cards. Proof size does not depend much on the action, ref time does.
 
@@ -1756,7 +1715,7 @@ leaderboard, badges, and Records are on hold.
 | Casual game, normal signing (V0, native fee) | Works in the `@parity/host-api-test-sdk` host against Paseo Next: start, turns to game over, `endGame`, `abandonGame` |
 | Replay | From the `BattleReported` SCALE report with `oab_engine::replay_battle` in the WASM build (`replay_report`). It refuses another engine version and a result the replay does not reach. The card data is the arena's `getSetBundle`, checked against the game's set hash |
 | Registry sessions | Built (`web/src/contract/registrySession.ts`), unit-tested, V1 transactions validated free (`web/scripts/check-v1-session.mjs`). Not run live: see below |
-| Ranked, leaderboard, badges UI | Removed (pages, panel, routes, links). `personhood.ts` and the badge decoders stay for M4 |
+| Ranked, leaderboard, badges UI | Removed (pages, panel, routes, links). `personhood.ts` and the badge decoders were removed in M6 |
 
 Checks: `npm test` 153 passed; e2e 5 passed, 1 skipped (the gated session
 run); `npm run build`; replay perf at 1x CPU: 60 FPS, 7 % busy, 13.8 MB
@@ -1770,8 +1729,9 @@ Deviations:
 2. Dry-runs of game calls use the player as origin, not the session key.
    Before the key accepts, `resolve(key)` gives the key itself, so a dry-run
    as the key would read the wrong game.
-3. The proxy session code stays (`SESSION_KIND` in `web/src/contract/index.ts`)
-   until a registry session runs in a real host.
+3. The proxy session code stayed (`SESSION_KIND`) until a registry session
+   ran in a real host. M6 removed it without that run (no backward
+   compatibility in development).
 
 Blocked or open:
 
@@ -1886,10 +1846,30 @@ the next check.
 Success:
 
 - The deployed frontend has no reference to arena v2.
-- `docs/CURRENT_ARCHITECTURE.md`, `agents/ARCHITECTURE.md`,
-  `contract/README.md`, `docs/NFT_DESIGN.md`, and `BETA_RELEASE_PLAN.md`
-  describe the new contracts.
-- The client offers proxy removal to players who still have one.
+- The docs describe the new contracts.
+- ~~The client offers proxy removal to players who still have one.~~ Dropped:
+  no backward compatibility while the game is in development.
+
+### M6 status (2026-10-20)
+
+Done in the repository on branch `update/cleanup` (from `update/oct-2026` at
+`c56d07f`; not merged, not deployed). Arena v2 stays on chain, unused.
+
+Removed: arena v2 (`contract/`, with `tests-native`), `register-cards/`,
+`engine/arena-oracle`, the arena v2 web scripts, the proxy sessions and
+`SESSION_KIND`, the ranked, personhood, leaderboard, and badge client code,
+the arena v2 bridge in the WASM client (`resolve_battle_p2p`,
+`init_from_scale`), the pallet-era bounded types, the milestone scripts and
+their evidence, the identity probe, and the stale docs. The reusable tools
+are in `scripts/` with one `package.json`.
+
+Checks: the release blobs of `@oab/engine` and `@oab/arena`, built from this
+branch at their original build paths, equal `eth_getCode` on Paseo Next. The
+blob depends on the absolute build path (path dependencies change the crate
+hashes). `@oab/identity` equals the chain from any path. `@oab/content`
+built from this branch equals the base commit, but neither equals the chain:
+the deployed content is the M1 build, and M3 changed `oab-protocol` after it.
+Content is not redeployed.
 
 ## 15. Where the direction meets the tooling
 
@@ -1928,7 +1908,7 @@ The design above picks one answer for each. Shawn should confirm.
 7. **Records keyed by alias.** Casual players without personhood have no
    alias, so Records cannot rank them. The design ignores alias-less facts.
 8. **Badges per person.** Keying by alias makes badges one per person. The
-   current decision is one per account (`docs/NFT_DESIGN.md` §8 item 7).
+   arena v2 decision was one per account.
 9. **Collection 30 cannot move.** Arena v2 has no owner handover, so Records
    needs a new collection.
 
@@ -1959,7 +1939,7 @@ proposal from the M2 measurement (below); Shawn decides.
 - **Q3. Casual when Identity fails.** This design reverts. Should casual
   instead treat `msg.sender` as the player?
 - **Q4. Badges per person (alias) or per account?** The direction says alias.
-  `docs/NFT_DESIGN.md` §8 item 7 recorded "per account" as the integrator's
+  Arena v2 recorded "per account" as the integrator's
   request.
 - **Q5. Should casual runs reach Records at all?** This design reports them
   and Records ignores them. Option: do not report, save the sub-call.

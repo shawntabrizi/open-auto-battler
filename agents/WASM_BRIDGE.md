@@ -11,9 +11,9 @@ This document describes how the Rust engine is exposed to JavaScript.
 - State and view: `get_view`, `get_battle_output`, `get_card_set`, `get_bag`.
 - Card data: `load_card_set`, `load_full_card_pool`, `add_card`, `add_set`, `get_card_metas`, `get_set_metas`, `get_set_cards`.
 - Turn actions: `burn_hand_card`, `play_hand_card`, `swap_board_positions`, `move_board_position`, `burn_board_unit`, `undo`, `end_turn`, `continue_after_battle`, `new_run`, `new_run_constructed`.
-- Battle replay: `resolve_battle_p2p(player_board, opponent_board, seed)` replays the battle the contract reported (`BattleReported`); `web/src/store/contractStore.ts` calls it after each `submitTurn`.
+- Battle replay: `replay_report(report, bundle, board_size)` replays the battle in a `BattleReported` report with `oab_engine::replay_battle`; `web/src/store/contractStore.ts` calls it after each `submitTurn`. `engine_version()` gives the engine version of the build; the replay refuses another version.
 - Commitment API: `get_commit_action` and `get_commit_action_scale`.
-- SCALE init: `init_from_scale` restores the session from the contract's `getGameState` bytes.
+- SCALE init: `init_from_mode_game(game, bundle)` restores the game from the arena's `getGame` bytes and the set's `getSetBundle` bytes.
 - Local session: `get_local_session` and `restore_local_session` (JSON).
 
 ## Serialization Boundaries

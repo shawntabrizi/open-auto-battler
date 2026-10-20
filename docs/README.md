@@ -1,39 +1,21 @@
 # Open Auto Battler Documentation
 
-## For New Contributors
+## Contracts and frontend
 
-Start here:
+- [CONTRACT_ARCHITECTURE.md](./CONTRACT_ARCHITECTURE.md): the layered
+  contracts (engine, content, identity, modes, records), decisions, build
+  plan, and measurements
+- [NFT_DESIGN.md](./NFT_DESIGN.md): Scarcity collections, the claim minter,
+  and the asset rules per cosmetic slot
+- [UI_FLOW.md](./UI_FLOW.md): routes and navigation
+- The README in each contract folder (`arena/`, `identity/`, `content/`,
+  `engine-contract/`, `engine/`): API, deploy, and address
 
-1. **[QUICKSTART.md](./QUICKSTART.md)** - Get running in 5 minutes
-2. **[CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md)** - How everything fits together
+## Game design
 
-## Other Documentation
-
-For detailed agent and architecture docs, see the [agents/](../agents/) folder.
-
-- [NFT_DESIGN.md](./NFT_DESIGN.md) - Scarcity NFTs, the claim minter, and achievement badges
-- [UI_FLOW.md](./UI_FLOW.md) - Routes and navigation
-- [CARD_DESIGN.md](./CARD_DESIGN.md) - Card design rules
-- [../contract/README.md](../contract/README.md) - Arena contract API, deploy, and personhood
-- [CONTRACT_ARCHITECTURE.md](./CONTRACT_ARCHITECTURE.md) - Design: split the arena into engine, content, identity, mode, and records contracts
-- [../BETA_RELEASE_PLAN.md](../BETA_RELEASE_PLAN.md) - Roadmap and open items
-
-## Architecture Highlights
-
-```
-┌─────────────────────────────────────────────────────────┐
-│          oab-battle + oab-game (Rust engine)            │
-│              (no_std - runs everywhere)                 │
-└────────────────────────┬────────────────────────────────┘
-                         │
-          ┌──────────────┴──────────────┐
-          ▼                             ▼
-┌─────────────────────┐      ┌─────────────────────┐
-│   WASM (Browser)    │      │ PolkaVM contract    │
-│   Shop phase        │      │ @oab/arena          │
-│   Battle replay     │◄────►│ Authoritative       │
-└─────────────────────┘      └─────────────────────┘
-                 SCALE encoding
-```
-
-Key insight: The browser and the contract run the **exact same** battle logic. SCALE encoding ensures byte-perfect compatibility.
+- [CARD_DESIGN.md](./CARD_DESIGN.md): card design rules
+- [CARD_ART_DESCRIPTIONS.md](./CARD_ART_DESCRIPTIONS.md): image prompts for card art
+- [ABILITY_TWO_ENUM_SPEC.md](./ABILITY_TWO_ENUM_SPEC.md): shop and battle
+  ability lanes
+- [STATUS_SYSTEM_SPEC.md](./STATUS_SYSTEM_SPEC.md): Shield, Poison, Guard
+- [PAI_GOW_VARIANT.md](./PAI_GOW_VARIANT.md): idea for an async, single-commit game mode

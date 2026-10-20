@@ -4,70 +4,68 @@ An auto-battler card game on Polkadot. Draft cards from a bag, build a board
 in the shop phase, and battle ghost opponents. Win 10 rounds before you lose
 3 lives.
 
-One deterministic Rust engine runs in two places: in a PolkaVM smart contract
-on Asset Hub (the authority) and in the browser as WASM (the shop phase and
-the battle replay).
+One deterministic Rust engine runs in two places: in PolkaVM contracts on
+Asset Hub (the authority) and in the browser as WASM (the shop phase and the
+battle replay).
 
 Live on Paseo Asset Hub Next: https://oab-arena.paseo.li (product ID
 `oab-arena.paseo`). Open it inside a Polkadot host (Polkadot Desktop,
 Polkadot Mobile, or dot.li).
 
-## Stack
+## Layout
 
-| Part | Path | Notes |
-| ---- | ---- | ----- |
-| Engine | `battle/`, `game/`, `assets/` | no_std Rust, SCALE types, card data in `assets/data/` |
-| WASM bridge | `client/` | `wasm-bindgen` `GameEngine` |
-| Arena contract | `contract/` | `@oab/arena`, `cargo-pvm-contract` rev `d5991131`, polkavm 0.35. Casual and ranked games, leaderboard, badges |
-| Claim minter | `nft-minter/` | `@oab/nft-minter`, picks cosmetics for Scarcity credit claims |
-| Frontend | `web/` | React 18.3, Zustand, Tailwind, polkadot-api 3.2.2, `@parity/product-sdk` 0.38 |
+| Path | What |
+| ---- | ---- |
+| `battle/`, `game/`, `assets/` | no_std Rust engine: types, battle, turn rules, card data (`assets/data/`) |
+| `engine/` | `oab-engine`: the game pipeline that the contracts and the client share, golden vectors |
+| `protocol/` | `oab-protocol`: SCALE types that the contracts and the client share |
+| `client/` | `wasm-bindgen` bridge (`GameEngine`) for the browser |
+| `engine-contract/` | `@oab/engine`: the pure engine as a contract, for third parties |
+| `content/` | `@oab/content`: cards, sets, and house ghosts (immutable after publish) |
+| `identity/` | `@oab/identity`: registry session keys |
+| `arena/` | `@oab/arena` (CDM version 4): the casual game mode |
+| `nft-minter/` | `@oab/nft-minter`: picks the cosmetic for a Scarcity credit claim (collection 29) |
+| `scripts/` | deploy and check tools (`oab-plan`, `publish-content`, `wire-arena`, `check-code`, and more) |
+| `web/` | React frontend (Polkadot Product SDK, registry sessions) |
 
-Deployed addresses: arena v2 `0xA61f803AeEBFfF2c7568157756932D3944EDCa28`,
-CDM registry `0xc1a73a4f93fde65b1cb1680baead248073566cb0` (`web/cdm.json`).
+Each contract folder has a README with its API, deploy steps, and address.
+The design and the measurements are in `docs/CONTRACT_ARCHITECTURE.md`.
 
 ## Run
 
-Needs Rust, Node.js 22, and `wasm-pack`.
-
-```bash
-./start.sh                 # build the WASM engine and start the dev server
-```
-
-Or step by step:
+You need Rust, Node.js 22, and `wasm-pack`.
 
 ```bash
 ./build-wasm.sh            # client/ -> web/src/wasm/
 cd web
-npm install
+npm ci
 npm run dev                # http://localhost:5173
 ```
 
-Chain access goes through the Polkadot host, so contract play needs the app
-inside a host. See `docs/QUICKSTART.md`.
+Outside a host, the app uses dev accounts. Chain play with a product
+account needs the app inside a host.
 
 ## Test
 
 ```bash
-cargo test -p oab-battle -p oab-game -p oab-client -p oab-contract-tests
-CARGO_PVM_CONTRACT_INTERNAL=1 cargo test --manifest-path contract/Cargo.toml --features std
-CARGO_PVM_CONTRACT_INTERNAL=1 cargo test --manifest-path nft-minter/Cargo.toml --features std
+cargo test --workspace
+# each contract, from the repo root (also identity, content, engine-contract, nft-minter):
+CARGO_PVM_CONTRACT_INTERNAL=1 cargo test --manifest-path arena/Cargo.toml --features std
 cd web && npm test && npm run lint && npm run format:check && npm run build
+npm run test:e2e           # Playwright with a test host on Paseo Next (web/e2e/README.md)
 ```
-
-Live chain checks and on-chain E2E scripts: `agents/TESTING_GUIDE.md`.
 
 ## Deploy
 
-- Contract: `cdm deploy -n paseo` from `contract/`, then refresh `web/cdm.json`
-  with `cdm i -n paseo @oab/arena` in `web/`. See `contract/README.md`.
+- Contracts: `cdm deploy -n paseo` in the contract folder, then the steps in
+  its README. Then refresh `web/cdm.json` in `web/` with
+  `cdm i -n paseo @oab/arena:4 @oab/identity:2 @oab/content:0` (change the
+  versions to the new ones).
 - Frontend: `DOTNS_MNEMONIC="<owner phrase>" npm run deploy` in `web/`
-  (Bulletin + DotNS via `bulletin-deploy` 0.22.0). CI deploys `master` with
-  `.github/workflows/deploy-frontend.yml`.
+  (Bulletin + DotNS with `bulletin-deploy` 0.22.0). CI deploys `master`
+  with `.github/workflows/deploy-frontend.yml`.
 
 ## Docs
 
-- `agents/AGENTS.md` — start here for architecture and conventions
-- `docs/CURRENT_ARCHITECTURE.md` — how the pieces fit together
-- `contract/README.md` — contract API, ranked play, personhood, badges
-- `docs/NFT_DESIGN.md` — NFTs, claim minter, badges
-- `BETA_RELEASE_PLAN.md` — roadmap and open items
+- `AGENTS.md`: conventions for contributors and agents
+- `docs/README.md`: index of the design docs

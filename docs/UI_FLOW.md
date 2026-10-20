@@ -2,7 +2,7 @@
 
 This document tracks the complete menu and navigation structure of the game. Use it as the source of truth when adding new screens or changing navigation paths.
 
-Last updated: 2026-10-20 (routes in `web/src/main.tsx`). The pallet-era screens (Login, Main Menu, Play, Tournament, Practice, Versus, Sets, Cards, History, Creator Studio, Account, Network, Marketplace) were removed with the pallet runtime.
+Last updated: 2026-10-20 (routes in `web/src/main.tsx`). The pallet-era screens (Login, Main Menu, Play, Tournament, Practice, Versus, Sets, Cards, History, Creator Studio, Account, Network, Marketplace) were removed with the pallet runtime. Ranked play, the leaderboard, and badges are on hold until Records exists; their old routes redirect to `/contract`.
 
 ## Navigation Flowchart
 
@@ -11,12 +11,8 @@ flowchart TD
   Root["/"] -->|redirect| Contract["/contract (Contract Menu)"]
 
   Contract --> Arena["/contract/arena"]
-  Contract --> Leaderboard["/contract/leaderboard"]
-  Contract --> Badges["/contract/badges"]
 
-  Arena -->|Start Game / Ranked| ArenaGame["/contract/arena/game"]
-  Arena --> Leaderboard
-  Arena --> Badges
+  Arena -->|Start Game| ArenaGame["/contract/arena/game"]
   Arena -.->|active game| ArenaGame
 
   ArenaGame --> Shop["Shop Phase"]
@@ -107,7 +103,8 @@ Mounted once in `web/src/main.tsx`, outside `Routes`: `ThemedToaster`, `Transact
 **Contents:**
 - **Connect** — connects the signer: the host product account inside a Polkadot host, dev accounts standalone. Connect sends no transaction.
 - Account list (Host or Dev badge) once connected
-- **Contract Arena** (`/contract/arena`), **Leaderboard**, **Badges**
+- **Contract Arena** (`/contract/arena`)
+- **End session** (host accounts) — revokes the registry session key (one prompt when the key is live), then returns the key's funds to the player
 - **Disconnect**
 
 ## Contract Arena
@@ -120,12 +117,7 @@ Mounted once in `web/src/main.tsx`, outside `Routes`: `ThemedToaster`, `Transact
 
 **Contents:**
 - Set 0 ("Foundations of War")
-- **Start Game** — casual game (`startGame`)
-- **RankedPanel**:
-  - **Ranked** — ranked game (`startRankedGame`). Needs proof of personhood.
-  - If refused: the reason, and **Bind personhood** when the account is a host account with no binding
-  - **New badges** from the last ranked run, with a link to Badges for pending ones
-- Links to Leaderboard and Badges
+- **Start Game** — casual game (`startGame`). Inside a host, the first write sets up a registry session (one prompt); later game calls need no prompt.
 
 ## Arena Game
 
@@ -135,23 +127,7 @@ Mounted once in `web/src/main.tsx`, outside `Routes`: `ThemedToaster`, `Transact
 
 - Shop phase runs in the local WASM engine.
 - **Commit** submits the turn (`submitTurn`). The battle overlay replays the battle the contract reported.
-- When the run is over, `ContractGameOverScreen` shows. **New Run** calls `endGame` (a ranked run is recorded on the leaderboard and earns badges), then returns to `/contract/arena`.
-
-## Leaderboard
-
-**Route:** `/contract/leaderboard`
-
-**TopBar:** Back to `/contract/arena`, title "Leaderboard"
-
-**Contents:** Set picker, the set's ranked board (best first), and the player's rank and best run when the account has a personhood alias. Redirects to `/contract` when not connected.
-
-## Badges
-
-**Route:** `/contract/badges`
-
-**TopBar:** Back to `/contract/arena`, title "Badges"
-
-**Contents:** The account's achievement badges. Pending badges (earned, not minted) have a **Claim** action (`claimPendingBadges`). Redirects to `/contract` when not connected.
+- When the run is over, `ContractGameOverScreen` shows. **New Run** calls `endGame`, then returns to `/contract/arena`.
 
 ## Customize
 
@@ -189,8 +165,6 @@ Category pages list owned NFTs of that slot. Owned-NFT listing waits for the hos
 | `/contract` | Contract Menu | — |
 | `/contract/arena` | Contract Arena | `/contract` |
 | `/contract/arena/game` | Arena Game | — |
-| `/contract/leaderboard` | Leaderboard | `/contract/arena` |
-| `/contract/badges` | Badges | `/contract/arena` |
 | `/customize` | Customize | `/` |
 | `/customize/:category` | Customize Category | `/customize` |
 | `/settings` | Settings | `/` or game |
